@@ -7,6 +7,7 @@
 import datetime as dt
 import json
 from typing import Any, Dict, List, Optional, Tuple, Union
+from functools import singledispatch
 import re
 import httpx
 import pandas as pd
@@ -399,51 +400,48 @@ class CybereasonDriver(DriverBase):
         """Replace parameters in query template for Cybereason JSON queries."""
         query_dict = json.loads(query)
 
-        updated_query_dict = {
-            "customFields": param_dict.get(
-                "customFields",
-                param_dict.get("customFields", query_dict.get("customFields", [])),
-            )
-        }
-        updated_query_dict["queryPath"] = []
-        for path in query_dict.get("queryPath", []):
-            temp_path = {}
-            for path_key, path_values in path.items():
-                if path_key == "guidList":
-                    temp_path[path_key] = CybereasonDriver._find_and_replace(
-                        param_dict, path_values
-                    )
-                elif path_key == "connectionFeature":
-                    temp_path[path_key] = {
-                        key: CybereasonDriver._find_and_replace(param_dict, value)
-                        for key, value in path_values.items()
-                    }
-                elif path_key == "filters":
-                    temp_path[path_key] = [
-                        {
-                            key: CybereasonDriver._find_and_replace(param_dict, value)
-                            for key, value in path_value.items()
-                        }
-                        for path_value in path_values
-                    ]
-                else:
-                    temp_path[path_key] = path_values
-            updated_query_dict["queryPath"].append(temp_path)
+        return json.dumps(
+            CybereasonDriver._recursive_find_and_replace(query_dict, param_dict)
+        )
 
-        return json.dumps(updated_query_dict, indent=2)
-
+    @singledispatch
     @staticmethod
-    def _find_and_replace(parameters, values):
-        keys = re.findall(r"{([^}]+)}", str(values))
-        if len(keys) == 1:
-            new_value = parameters.get(keys[0], None)
-            if not isinstance(new_value, str):
-                return new_value
-            else:
-                return values.format(**parameters)
-        elif len(keys) > 1:
-            if isinstance(values, list):
-                return [parameters.get(key, None) for key in keys]
-            else:
-                return values.format(**parameters)
-        return values
+    def _recursive_find_and_replace(
+        parameters: Union[str, Dict, List], param_dict: Dict[str, Any]
+    ):
+        """Recursively find and replace parameters from query."""
+        if isinstance(parameters, (list, str, dict)):
+            return CybereasonDriver._recursive_find_and_replace(parameters, param_dict)
+        return parameters
+
+    @_recursive_find_and_replace.register(dict)
+    @staticmethod
+    def _(parameters: Dict[str, Any], param_dict: Dict[str, Any]):
+        return {
+            parameter: CybereasonDriver._recursive_find_and_replace(value, param_dict)
+            for parameter, value in parameters.items()
+        }
+
+    @_recursive_find_and_replace.register(list)
+    @staticmethod
+    def _(parameters: List, param_dict: Dict[str, Any]):
+        result = [
+            CybereasonDriver._recursive_find_and_replace(parameter, param_dict)
+            for parameter in parameters
+        ]
+        if all(isinstance(values, list) for values in result):
+            return sorted({value for values in result for value in values})
+        return result
+
+    @_recursive_find_and_replace.register(str)
+    @staticmethod
+    def _(parameters: str, param_dict: Dict[str, Any]):
+        """Recursively find and replace parameters from query."""
+        param_regex = r"{([^}]+)}"
+        matches = re.match(param_regex, parameters)
+        if matches:
+            result = [param_dict.get(match, parameters) for match in matches.groups()]
+            if len(result) == 1:
+                return result[0]
+            return result
+        return parameters
