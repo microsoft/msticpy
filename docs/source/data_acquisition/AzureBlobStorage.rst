@@ -16,7 +16,7 @@ Import the module
 
 .. code:: ipython3
 
-    from msticpy.data.storage import AzureBobStorage
+    from msticpy.data.storage import AzureBlobStorage
 
 See :py:mod:`azure_blob_storage<msticpy.data.storage.azure_blob_storage>` for API details.
 
