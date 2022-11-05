@@ -14,14 +14,15 @@ requests per minute for the account type that you have.
 """
 from datetime import datetime
 from functools import partial
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union, Dict
+
+import pandas as pd
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyImportExtraError, MsticpyUserError
 from ...common.utility import export
+from ..lookup_result import LookupStatus
 from .ti_provider_base import (
-    LookupResult,
-    LookupStatus,
     ResultSeverity,
     TIPivotProvider,
     TIProvider,
@@ -45,7 +46,7 @@ __author__ = "Mark Kendrick"
 class RiskIQ(TIProvider, TIPivotProvider):
     """RiskIQ Threat Intelligence Lookup."""
 
-    _IOC_QUERIES: dict = {
+    _QUERIES: Dict[str, str] = {
         "ipv4": "ALL",
         "ipv4-articles": "articles",
         "ipv4-artifacts": "artifacts",
@@ -80,21 +81,21 @@ class RiskIQ(TIProvider, TIPivotProvider):
     }
 
     # Aliases
-    _IOC_QUERIES["dns"] = _IOC_QUERIES["hostname"]
-    _IOC_QUERIES["dns-articles"] = _IOC_QUERIES["hostname-articles"]
-    _IOC_QUERIES["dns-artifacts"] = _IOC_QUERIES["hostname-artifacts"]
-    _IOC_QUERIES["dns-certificates"] = _IOC_QUERIES["hostname-certificates"]
-    _IOC_QUERIES["dns-components"] = _IOC_QUERIES["hostname-components"]
-    _IOC_QUERIES["dns-cookies"] = _IOC_QUERIES["hostname-cookies"]
-    _IOC_QUERIES["dns-hostpairchildren"] = _IOC_QUERIES["hostname-hostpairchildren"]
-    _IOC_QUERIES["dns-hostpairparents"] = _IOC_QUERIES["hostname-hostpairparents"]
-    _IOC_QUERIES["dns-passivedns"] = _IOC_QUERIES["hostname-passivedns"]
-    _IOC_QUERIES["dns-projects"] = _IOC_QUERIES["hostname-projects"]
-    _IOC_QUERIES["dns-malware"] = _IOC_QUERIES["hostname-malware"]
-    _IOC_QUERIES["dns-rep"] = _IOC_QUERIES["hostname-rep"]
-    _IOC_QUERIES["dns-summary"] = _IOC_QUERIES["hostname-summary"]
-    _IOC_QUERIES["dns-trackers"] = _IOC_QUERIES["hostname-trackers"]
-    _IOC_QUERIES["dns-whois"] = _IOC_QUERIES["hostname-whois"]
+    _QUERIES["dns"] = _QUERIES["hostname"]
+    _QUERIES["dns-articles"] = _QUERIES["hostname-articles"]
+    _QUERIES["dns-artifacts"] = _QUERIES["hostname-artifacts"]
+    _QUERIES["dns-certificates"] = _QUERIES["hostname-certificates"]
+    _QUERIES["dns-components"] = _QUERIES["hostname-components"]
+    _QUERIES["dns-cookies"] = _QUERIES["hostname-cookies"]
+    _QUERIES["dns-hostpairchildren"] = _QUERIES["hostname-hostpairchildren"]
+    _QUERIES["dns-hostpairparents"] = _QUERIES["hostname-hostpairparents"]
+    _QUERIES["dns-passivedns"] = _QUERIES["hostname-passivedns"]
+    _QUERIES["dns-projects"] = _QUERIES["hostname-projects"]
+    _QUERIES["dns-malware"] = _QUERIES["hostname-malware"]
+    _QUERIES["dns-rep"] = _QUERIES["hostname-rep"]
+    _QUERIES["dns-summary"] = _QUERIES["hostname-summary"]
+    _QUERIES["dns-trackers"] = _QUERIES["hostname-trackers"]
+    _QUERIES["dns-whois"] = _QUERIES["hostname-whois"]
 
     _PIVOT_ENTITIES = {
         prop: {"Dns": "DomainName", "IpAddress": "Address", "Host": "fqdn"}
@@ -151,7 +152,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
 
     def lookup_ioc(
         self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
-    ) -> LookupResult:
+    ) -> pd.DataFrame:
         """
         Lookup a single IoC observable.
 
@@ -168,7 +169,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
 
         Returns
         -------
-        LookupResult
+        pd.DataFrame
             The returned results.
 
         """
@@ -176,23 +177,21 @@ class RiskIQ(TIProvider, TIPivotProvider):
             ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
         )
 
-        if result.status:
-            return result
+        if result["Status"]:
+            return pd.DataFrame([result])
 
-        result.provider = kwargs.get("provider_name", self.__class__.__name__)
-        result.reference = self._REFERENCE
+        result["Provider"] = kwargs.get("provider_name", self.__class__.__name__)
+        result["Reference"] = self._REFERENCE
 
         if query_type is None:
             prop = "ALL"
-        elif query_type not in [
-            q.split("-", maxsplit=1)[-1] for q in self._IOC_QUERIES
-        ]:
-            result.result = False
-            result.status = LookupStatus.QUERY_FAILED.value
-            result.details = f"ERROR: unsupported query type {query_type}"
-            return result
+        elif query_type not in [q.split("-", maxsplit=1)[-1] for q in self._QUERIES]:
+            result["Result"] = False
+            result["Status"] = LookupStatus.QUERY_FAILED.value
+            result["Details"] = f"ERROR: unsupported query type {query_type}"
+            return pd.DataFrame([result])
         else:
-            prop = self._IOC_QUERIES.get(f"{result.ioc_type}-{query_type}", "ALL")
+            prop = self._QUERIES.get(f"{result['IocType']}-{query_type}", "ALL")
 
         try:
             ptanalyzer.set_context("msticpy", "ti", VERSION, prop)
@@ -202,56 +201,56 @@ class RiskIQ(TIProvider, TIPivotProvider):
             else:
                 result = self._parse_result_prop(pt_obj, prop, result)
         except ptanalyzer.AnalyzerError as err:
-            result.result = False
-            result.status = LookupStatus.QUERY_FAILED.value
-            result.details = f"ERROR: {err}"
-            result.raw_result = err
-            result.set_severity(ResultSeverity.unknown)
+            result["Result"] = False
+            result["Status"] = LookupStatus.QUERY_FAILED.value
+            result["Details"] = f"ERROR: {err}"
+            result["Raw_result"] = err
+            result["Severity"] = ResultSeverity.unknown.name
 
-        return result
+        return pd.DataFrame([result])
 
     def _parse_result_all_props(self, pt_result, ti_result):
         """Parse results for ALL properties."""
-        ti_result.details = {
+        ti_result["Details"] = {
             "summary": pt_result.summary.as_dict,
             "reputation": pt_result.reputation.as_dict,
         }
-        ti_result.raw_result = ti_result.details
-        ti_result.result = (
+        ti_result["RawResult"] = ti_result["Details"]
+        ti_result["Result"] = (
             pt_result.summary.total != 0 or pt_result.reputation.score != 0
         )
 
         rep_severity = self._severity_rep(pt_result.reputation.classification)
-        ti_result.set_severity(rep_severity)
+        ti_result["Severity"] = rep_severity.name
         if (
             "malware_hashes" in pt_result.summary.available
             or "articles" in pt_result.summary.available
         ):
-            ti_result.set_severity(max(rep_severity, ResultSeverity.high))
+            ti_result["Severity"] = (max(rep_severity, ResultSeverity.high)).name
         elif "projects" in pt_result.summary.available:
-            ti_result.set_severity(max(rep_severity, ResultSeverity.warning))
+            ti_result["Severity"] = (max(rep_severity, ResultSeverity.warning)).name
         return ti_result
 
     def _parse_result_prop(self, pt_result, pt_prop, ti_result):
         """Parse result for a specific property."""
         attr = getattr(pt_result, pt_prop)
         if pt_prop == "reputation":
-            ti_result.set_severity(self._severity_rep(attr.classification))
+            ti_result["Severity"] = self._severity_rep(attr.classification).name
         elif pt_prop == "malware_hashes" and len(attr) > 0:
-            ti_result.set_severity(ResultSeverity.high)
+            ti_result["Severity"] = ResultSeverity.high.name
         else:
-            ti_result.set_severity(ResultSeverity.information)
-        ti_result.details = ti_result.raw_result = attr.as_dict
-        ti_result.result = True
+            ti_result["Severity"] = ResultSeverity.information.name
+        ti_result["Details"] = ti_result["RawResult"] = attr.as_dict
+        ti_result["Result"] = True
         return ti_result
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : LookupResult
+        response : Dict
             The returned data response
 
         Returns
