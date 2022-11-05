@@ -42,7 +42,7 @@ class _IntSightsParams(APILookupParams):
 class IntSights(HttpTIProvider):
     """IntSights Lookup."""
 
-    _BASE_URL = "https://api.intsights.com"
+    _BASE_URL = "https://api.ti.insight.rapid7.com"
 
     _QUERIES = {
         "ipv4": _IntSightsParams(
