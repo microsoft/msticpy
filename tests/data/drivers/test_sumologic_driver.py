@@ -126,9 +126,9 @@ class SumologicService(MagicMock):
         # You can manually set the status from the test.
         return self.status
 
-    def search_job_records(self, searchjob, limit=None):
+    def search_job_records(self, searchjob, limit=None, **kwargs):
         """Return the record results."""
-        del limit
+        del limit, kwargs
         # Need to implement a SL results object
         if searchjob == self.SEARCH_JOBS["RecordSuccess | count records"]:
             return {"records": self._to_json_dict(self.data)}
@@ -252,7 +252,10 @@ _QUERY_TESTS = [
     ("RecordSuccess", 10),
     ("RecordSuccess | count records", 10),
     ("RecordFail", "Failed to get job messages: Message job failed"),
-    ("RecordFail | count records", "Failed to get search records: Record job failed"),
+    (
+        "RecordFail | count records",
+        "Failed to get search records (paging i 0 / 10): Record job failed",
+    ),
     ("Timeout", 0),
     ("Failjob", "Sumologic submit search_job"),
 ]
