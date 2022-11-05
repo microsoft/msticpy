@@ -1,0 +1,221 @@
+metadata:
+  version: 1
+  description: Kql Sentinel Windows Security Event Queries
+  data_environments: [LogAnalytics]
+  data_families: [WindowsSecurity]
+  tags: ['windows', 'event', 'security']
+defaults:
+  metadata:
+    data_source: 'security_event'
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'SecurityEvent'
+      query_project:
+        description: Column project statement
+        type: str
+        default: ''
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+sources:
+  list_host_events:
+    description: Retrieves list of all events on a host
+    metadata:
+      pivot:
+        short_name: all_events
+        direct_func_entities:
+          - Host
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where Computer {host_op} "{host_name}"
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
+      host_op:
+        description: The hostname match operator
+        type: str
+        default: has
+  list_host_events_by_id:
+    description: Retrieves list of events on a host
+    metadata:
+      pivot:
+        short_name: events_by_id
+        direct_func_entities:
+          - Host
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where EventID in ({event_list})
+        | where Computer {host_op} "{host_name}"
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
+      host_op:
+        description: The hostname match operator
+        type: str
+        default: has
+      event_list:
+        description: List of event IDs to match
+        type: list
+        default: has
+  list_other_events:
+    description: Retrieves list of events other than logon and process on a host
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where EventID !in ("4688", "4624", "4625")
+        | where Computer {host_op} "{host_name}"
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
+      host_op:
+        description: The hostname match operator
+        type: str
+        default: has
+  list_events:
+    description: Retrieves list of all events
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        {add_query_items}'
+    parameters:
+  list_events_by_id:
+    description: Retrieves list of events on a host
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where EventID in ({event_list})
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        {add_query_items}'
+    parameters:
+      event_list:
+        description: List of event IDs to match
+        type: list
+  summarize_events:
+    description: Summarizes a the events on a host
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer {host_op} "{host_name}"
+        | summarize count() by EventID, Channel, Activity, Account
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
+      host_op:
+        description: The hostname match operator
+        type: str
+        default: has
+  schdld_tasks_and_services:
+    description: Gets events related to scheduled tasks and services
+    args:
+      query: '
+        let account_evnt_ids = dynamic([4698, 4700, 4697, 4702]);
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer {host_op} "{host_name}"
+        | where EventID in (account_evnt_ids)
+        | extend EventData = parse_xml(EventData)
+        | project-reorder Activity
+        | extend Data = parse_json(tostring(EventData.EventData)).["Data"]
+        | extend Service = iif(isnotempty(ServiceFileName), ServiceFileName, Data[4].["#text"])
+        | extend Type = iif(isnotempty(ServiceFileName), "Service", "Scheduled Task")
+        | extend ServiceType = iif(Type =~ "Service", Data[6].["#text"], "")
+        | extend ServiceStartType = iif(Type =~ "Service", Data[7].["#text"], "")
+        | extend ServiceStartType = case(ServiceStartType==0, "Boot", ServiceStartType==1, "System", ServiceStartType==2, "Automatic", ServiceStartType==3, "Manual", ServiceStartType==4, "Disabled", ServiceStartType)
+        | extend ServiceType = case(ServiceType=="0x1", "Kernel Driver", ServiceType=="0x2", "File System Driver", ServiceType=="0x8", "Recognizer Driver", ServiceType=="0x10", "Win32 Own Process", ServiceType=="0x20", "Win32 Share Process",  ServiceType=="0x110", "Interactive Own Process", ServiceType=="0x120", "Interactive Share Process", ServiceType)
+        | extend ScheduledTaskDetails = iif(Data[5].["@Name"] == "TaskContent", parse_xml(tostring(Data[5].["#text"])), "")
+        | project-reorder Type, Service, ServiceType, ServiceStartType, ScheduledTaskDetails'
+    parameters:
+      host_name:
+        description: Name of host to get events from
+        type: str
+      host_op:
+        description: The hostname match operator
+        type: str
+        default: has
+  account_change_events:
+    description: Gets events related to account changes
+    args:
+      query: '
+        let account_evnt_ids = dynamic([4720, 4725, 4727, 4728, 4731, 4732, 4740, 4754, 4756, 4767]);
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer {host_op} "{host_name}"
+        | where EventID in (account_evnt_ids)'
+    parameters:
+      host_name:
+        description: Name of host to get events from
+        type: str
+      host_op:
+        description: The hostname match operator
+        type: str
+        default: has
+  notable_events:
+    description: Get notebable Windows events not returned in other queries
+    args:
+      query: '
+        let evnt_ids = dynamic([1102, 4657]);
+        let excld_evnt_ids = dynamic([4625, 4624, 4688, 4720, 4725, 4727, 4728, 4731, 4732, 4740, 4754, 4756, 4767, 4702]);
+        let rare_events = ({table}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where AccountType != "Machine"
+        | where Computer {host_op} "{host_name}"
+        | summarize dcount(Account), count() by EventID
+        | where dcount_Account ==1 and count_ < 100
+        | project EventID);
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer {host_op} "{host_name}"
+        | where EventID in (evnt_ids) or EventID in (rare_events) and EventID !in (excld_evnt_ids)
+        | where isnotempty(Account)
+        | project-reorder Activity, Account'
+    parameters:
+      host_name:
+        description: Name of host to get events from
+        type: str
+      host_op:
+        description: The hostname match operator
+        type: str
+        default: has

@@ -1,0 +1,102 @@
+metadata:
+  version: 1
+  description: MDATP Queries
+  data_environments: [MDATP, MDE, M365D, LogAnalytics]
+  data_families: [MDATP, MDE]
+  tags: ["user"]
+defaults:
+  metadata:
+    data_source: "user_events"
+  parameters:
+    start:
+      description: Query start time
+      type: datetime
+    end:
+      description: Query end time
+      type: datetime
+    add_query_items:
+      description: Additional query clauses
+      type: str
+      default: ""
+sources:
+  user_logons:
+    description: Lists all user logons by user
+    metadata:
+      pivot:
+        short_name: logon_events
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where AccountName has "{account_name}"
+        {add_query_items}'
+      uri: None
+    parameters:
+      table:
+        description: Logon events table
+        type: str
+        default: DeviceLogonEvents
+      account_name:
+        description: Name of user
+        type: str
+  user_processes:
+    description: Lists all processes created by a user
+    metadata:
+      pivot:
+        short_name: process_events
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where AccountName has "{account_name}"
+        {add_query_items}'
+    parameters:
+      table:
+        description: Process events table
+        type: str
+        default: DeviceProcessEvents
+      account_name:
+        description: Name of user
+        type: str
+  user_files:
+    description: Lists all files created by a user
+    metadata:
+      pivot:
+        short_name: file_events
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where InitiatingProcessAccountName contains "{account_name}"
+        {add_query_items}'
+    parameters:
+      table:
+        description: File events table
+        type: str
+        default: DeviceFileEvents
+      account_name:
+        description: Name of user
+        type: str
+  user_network:
+    description: Lists all network connections associated with a user
+    metadata:
+      pivot:
+        short_name: network_events
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where InitiatingProcessAccountName contains "{account_name}"
+        {add_query_items}'
+    parameters:
+      table:
+        description: Network events table
+        type: str
+        default: DeviceNetworkEvents
+      account_name:
+        description: Name of user
+        type: str

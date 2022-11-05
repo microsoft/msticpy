@@ -5,14 +5,17 @@
 # --------------------------------------------------------------------------
 """Module docstring."""
 import json
+from datetime import datetime
+from pathlib import Path
 
+import pandas as pd
 import pytest
 import pytest_check as check
 
-import pandas as pd
 from msticpy.datamodel import entities
-from msticpy.datamodel.entities import Host, OSFamily, Url, IpAddress
-from msticpy.datamodel.pivot import Pivot
+from msticpy.datamodel.entities import Alert, Host, IpAddress, OSFamily, Url
+from msticpy.datamodel.soc.sentinel_alert import SentinelAlert
+from msticpy.init.pivot import Pivot
 
 from ...unit_test_lib import get_test_data_path
 
@@ -21,15 +24,20 @@ __author__ = "Ian Hellen"
 # pylint: disable=redefined-outer-name, broad-except
 
 
-@pytest.fixture(scope="module")
-def fixture_name():
-    """Fixture_docstring."""
-
-
 def test_entity_merge():
     """Entity comparison and merging."""
-    host1 = Host(HostName="host1", DnsDomain="contoso.com", OSFamily=OSFamily.Windows)
-    host2 = Host(HostName="host1", DnsDomain="contoso.com", IsDomainJoined=True)
+    host1 = Host(
+        HostName="host1",
+        DnsDomain="contoso.com",
+        OSFamily=OSFamily.Windows,
+        TimeGenerated=datetime(2022, 1, 24, 23, 5, 5, 728510),
+    )
+    host2 = Host(
+        HostName="host1",
+        DnsDomain="contoso.com",
+        IsDomainJoined=True,
+        TimeGenerated=datetime(2022, 1, 24, 23, 5, 5, 728510),
+    )
     host3 = Host(HostName="host3", DnsDomain="contoso.com")
 
     check.not_equal(host1, host2)
@@ -66,9 +74,11 @@ def test_url():
     check.equal(url.fragment, "frag2?query=xxx")
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_pivot_shortcuts():
     """Test pivot function shortcut creation and deletion."""
-    Pivot()
+    pivot = Pivot()
+    pivot.reload_pivots()
 
     check.is_true(hasattr(IpAddress, "util"))
     util_ctnr = getattr(IpAddress, "util")
@@ -159,3 +169,23 @@ def test_entity_creation():
         parsed_entities.append(entity)
 
     check.greater_equal(len(parsed_entities), 7)
+
+
+def test_alert_entity_creation():
+    """Test creation of Alert entity."""
+    data_path = Path(get_test_data_path()) / "localdata"
+    alert_df = pd.read_pickle(Path(data_path).joinpath("alerts_list.pkl"))
+    alert_entity = Alert(src_event=alert_df.iloc[0])
+    assert len(alert_entity.properties) == 15
+    assert alert_entity.SystemAlertIds == "f1ce87ca-8863-4a66-a0bd-a4d3776a7c64"
+
+
+@pytest.mark.filterwarnings("ignore::UserWarning")
+def test_sentinel_entity_creation():
+    """Test creation of Sentinel Alert entity."""
+    data_path = Path(get_test_data_path()) / "localdata"
+    sent_alert_df = pd.read_pickle(Path(data_path).joinpath("alerts_list.pkl"))
+    sent_alert_entity = SentinelAlert(src_event=sent_alert_df.iloc[0])
+    assert len(sent_alert_entity.properties) == 29
+    assert "Search Query Results Overall Count" in sent_alert_entity.analytic
+    assert sent_alert_entity.is_in_log_analytics

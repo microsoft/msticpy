@@ -11,9 +11,9 @@ In particular, this module is for both modelling and visualising your session da
 
 import pandas as pd
 
-from ...nbtools import timeline
-from .model import Model
 from ...common.exceptions import MsticpyException
+from ...vis.timeline_values import display_timeline_values
+from .model import Model
 
 
 def score_sessions(
@@ -135,7 +135,7 @@ def visualise_scored_sessions(
     source_columns += [score_column, window_column, "time_col"]
     source_columns = list(set(source_columns))
 
-    timeline.display_timeline_values(
+    display_timeline_values(
         data=scored_sessions.loc[scored_sessions[score_column] <= score_upper_bound],
         y=score_column,
         time_column=time_column,

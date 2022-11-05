@@ -1,0 +1,118 @@
+metadata:
+  version: 1
+  description: TimeSeries - Series of TimeSeries queries for variety of Data Sources
+  data_environments: [LogAnalytics]
+  data_families: ['MultiDataSource']
+  tags: ['TimeSeries','host','ip','alert','network']
+defaults:
+  parameters:
+      table:
+        description: Table name
+        type: str
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      timeframe:
+        description: Aggregation TimeFrame
+        type: str
+        default: '1h'
+      scorethreshold:
+        description: Score threshold for alerting
+        type: str
+        default: '3'
+      where_clause:
+        description: Optional additional filter clauses
+        type: str
+        default: ''
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+      groupbycolumn:
+        description: Group by field to aggregate results
+        type: str
+        default: 'Type'
+      timestampcolumn:
+        description: Timestamp field to use from source dataset
+        type: str
+        default: 'TimeGenerated'
+      aggregatecolumn:
+        description: field to agregate from source dataset
+        type: str
+        default: 'Total'
+      aggregatefunction:
+        description: Aggregation functions to use - count(), sum(), avg() etc
+        type: str
+        default: 'count()'
+sources:
+  get_timeseries_data:
+    description: Retrieves TimeSeriesData prepared to use with built-in KQL time series functions
+    args:
+      query: '
+            {table}
+            {where_clause}
+            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
+            | where {timestampcolumn} >= datetime({start})
+            | where {timestampcolumn} <= datetime({end})
+            | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn}
+            {add_query_items}'
+  get_timeseries_decompose:
+    description: Time Series decomposition and anomalies generated using built-in KQL time series function- series_decompose
+    args:
+      query: '
+            {table}
+            {where_clause}
+            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
+            | where {timestampcolumn} >= datetime({start})
+            | where {timestampcolumn} <= datetime({end})
+            | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn}
+            | extend (baseline,seasonal,trend,residual) = series_decompose({aggregatecolumn})
+            | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), baseline to typeof(double), seasonal to typeof(double), trend to typeof(long), residual to typeof(long)
+            {add_query_items}'
+  get_timeseries_anomalies:
+    description: Time Series filtered anomalies detected using built-in KQL time series function-series_decompose_anomalies
+    args:
+      query: '
+            {table}
+            {where_clause}
+            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
+            | where {timestampcolumn} >= datetime({start})
+            | where {timestampcolumn} <= datetime({end})
+            | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn}
+            | extend (anomalies, score, baseline) = series_decompose_anomalies({aggregatecolumn}, {scorethreshold},-1,"linefit")
+            | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), anomalies to typeof(double), score to typeof(double), baseline to typeof(long)
+            | extend score = round(score,2)
+            {add_query_items}'
+  plot_timeseries_datawithbaseline:
+    description: Plot timeseries data using built-in KQL time series decomposition using built-in KQL render method
+    args:
+      query: '
+            {table}
+            {where_clause}
+            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
+            | where {timestampcolumn} >= datetime({start})
+            | where {timestampcolumn} <= datetime({end})
+            | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn}
+            | extend (baseline,seasonal,trend,residual) = series_decompose({aggregatecolumn})
+            | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), baseline to typeof(long), seasonal to typeof(long), trend to typeof(long), residual to typeof(long)
+            | project {timestampcolumn}, {aggregatecolumn}, baseline
+            | render timechart with (title="Time Series Decomposition - Baseline vs Observed TimeChart")
+            {add_query_items}'
+  plot_timeseries_scoreanomolies:
+    description: Plot timeseries anomaly score using built-in KQL render method
+    args:
+      query: '
+            {table}
+            {where_clause}
+            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
+            | where {timestampcolumn} >= datetime({start})
+            | where {timestampcolumn} <= datetime({end})
+            | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn}
+            | extend (anomalies, score, baseline) = series_decompose_anomalies({aggregatecolumn}, {scorethreshold},-1,"linefit")
+            | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), anomalies to typeof(double), score to typeof(double), baseline to typeof(long)
+            | project {timestampcolumn}, score
+            | render timechart with (title="Time Series Anomalies TimeChart")
+            {add_query_items}'

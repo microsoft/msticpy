@@ -6,10 +6,11 @@
 """Module docstring."""
 import json
 from pathlib import Path
-from unittest.mock import patch, PropertyMock
+from unittest.mock import PropertyMock, patch
 
 import pytest
 import pytest_check as check
+
 from msticpy.config.comp_edit import CompEditStatusMixin
 from msticpy.config.mp_config_file import MpConfigFile
 
@@ -24,10 +25,11 @@ CompEditStatusMixin.testing = True
 def test_mp_config_file_init():
     """Test MpConfigFile init."""
     mpc_file = MpConfigFile()
-    check.is_false(mpc_file.settings)
+    check.is_true(mpc_file.settings)
 
     # Test loading with empty settings
     mpc_file = MpConfigFile(settings={})
+    check.is_false(mpc_file.settings)
 
     mpc_file = MpConfigFile()
     # load file
@@ -36,6 +38,7 @@ def test_mp_config_file_init():
 
     config_path = Path(TEST_DATA_PATH).joinpath("msticpyconfig.yaml")
     mpc_file = MpConfigFile(file=config_path)
+    check.is_true(mpc_file.settings)
 
 
 def test_mp_config_file_load_default():
@@ -62,7 +65,7 @@ def test_mp_config_file_view_settings():
     mpc_file = MpConfigFile()
     mpc_file.txt_viewer.value = ""
     mpc_file.view_settings()
-    check.is_true(len(mpc_file.txt_viewer.value) > 0)
+    check.greater(len(mpc_file.txt_viewer.value), 0)
     mpc_file.buttons["view"].click()
     mpc_file.btn_close.click()
 
@@ -89,7 +92,7 @@ def test_mp_config_file_save():
     for test_file in Path().glob(f"{tgt_file}.save_*"):
         test_file.unlink()
 
-    mpc_file.txt_current_file.value = tgt_file
+    mpc_file.txt_current_config_path.value = tgt_file
     mpc_file.buttons["save"].click()  # same thing but via button click
     check.is_true(Path(tgt_file).is_file())
     Path(tgt_file).unlink()

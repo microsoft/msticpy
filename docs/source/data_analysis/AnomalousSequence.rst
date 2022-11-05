@@ -25,7 +25,7 @@ demonstrate how some other log types can be sessionized as well.
 .. code:: ipython3
 
     # Imports
-    from msticpy.nbtools.utility import check_py_version
+    from msticpy.common.utility import check_py_version
 
     MIN_REQ_PYTHON = (3, 6)
     check_py_version(MIN_REQ_PYTHON)
@@ -44,7 +44,7 @@ demonstrate how some other log types can be sessionized as well.
     from msticpy.analysis.anomalous_sequence import anomalous
     from msticpy.analysis.anomalous_sequence.model import Model
     from msticpy.data import QueryProvider
-    from msticpy.nbtools.wsconfig import WorkspaceConfig
+    from msticpy.common.wsconfig import WorkspaceConfig
 
     %env KQLMAGIC_LOAD_MODE=silent
 
@@ -1058,7 +1058,7 @@ might start to sessionize + model some other types of logs. We
 demonstrate how to use KQL to sessionize directly.
 
 In order to do the sessionizing using KQL, we use the
-`row\_window\_session <https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/row-window-session-function>`__
+`row\_window\_session <https://docs.microsoft.com/azure/data-explorer/kusto/query/row-window-session-function>`__
 function.
 
 .. important:: Throughout this section, the decisions made about which

@@ -42,7 +42,7 @@ TIProviders:
     Args:
       AuthKey: ""
     Primary: True
-    Provider: "Greynoise"
+    Provider: "GreyNoise"
   OpenPageRank:
     Args:
       AuthKey:
@@ -60,6 +60,10 @@ TIProviders:
         EnvironmentVar: "INTSIGHTS_AUTH"
     Primary: True
     Provider: IntSights
+  AzureSentinel:
+    Args:
+    Primary: True
+    Provider: "AzSTI"
 OtherProviders:
   GeoIPLite:
     Args:
@@ -88,3 +92,9 @@ DataProviders:
   Mordor:
     save_folder: ~/.msticpy/mordor
     use_cached: true
+  Cybereason:
+    Args:
+      TenantId: 8360dd21-0294-4240-9128-89611f415c53
+      ClientId: 1234
+      ClientSecret:
+        EnvironmentVar: "IPSTACK_AUTH"

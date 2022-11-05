@@ -12,7 +12,7 @@ from pathlib import Path
 from msticpy.common import pkg_config
 from msticpy.common.wsconfig import WorkspaceConfig
 
-from ..unit_test_lib import get_test_data_path, custom_mp_config
+from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 _TEST_DATA = get_test_data_path()
 
@@ -111,3 +111,28 @@ class TestPkgConfig(unittest.TestCase):
             )
             ws_config = WorkspaceConfig()
             ws_config.prompt_for_ws()
+
+    def test_wsconfig_single_ws(self):
+        test_config3 = Path(_TEST_DATA).joinpath(
+            "msticpyconfig-SingleAzSentSettings.yaml"
+        )
+        with custom_mp_config(test_config3):
+            # Single workspace
+            _NAMED_WS = {
+                "WorkspaceId": "a927809c-8142-43e1-96b3-4ad87cfe95a3",
+                "TenantId": "69d28fd7-42a5-48bc-a619-af56397b9f28",
+            }
+            wstest_config = WorkspaceConfig()
+            self.assertIn("workspace_id", wstest_config)
+            self.assertIsNotNone(wstest_config["workspace_id"])
+            self.assertEqual(wstest_config["workspace_id"], _NAMED_WS["WorkspaceId"])
+            self.assertIn("tenant_id", wstest_config)
+            self.assertEqual(wstest_config["tenant_id"], _NAMED_WS["TenantId"])
+            self.assertIsNotNone(wstest_config.code_connect_str)
+            self.assertTrue(
+                wstest_config.code_connect_str.startswith(
+                    "loganalytics://code().tenant("
+                )
+                and _NAMED_WS["WorkspaceId"] in wstest_config.code_connect_str
+                and _NAMED_WS["TenantId"] in wstest_config.code_connect_str
+            )

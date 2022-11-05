@@ -6,11 +6,11 @@
 """Python file import analyzer."""
 from collections import defaultdict, namedtuple
 from pathlib import Path
-from typing import Dict, Set, Tuple, Optional, List
+from typing import Dict, List, Optional, Set, Tuple
 from urllib import parse
 
+import httpx
 import markdown
-import requests
 from bs4 import BeautifulSoup
 
 # pylint: disable=relative-beyond-top-level
@@ -41,7 +41,7 @@ def check_url(url: str) -> UrlResult:
 
     """
     try:
-        resp = requests.get(url)
+        resp = httpx.get(url)
         report = str(resp.status_code)
         if resp.history:
             history_status_codes = [str(h.status_code) for h in resp.history]
@@ -124,7 +124,7 @@ def check_site(  # noqa: MC0001
         print("already visited")
         return {}, {}
 
-    resp = requests.get(page_url)
+    resp = httpx.get(page_url)
     if resp.headers["Content-Type"] != "text/html":
         print(resp.headers["Content-Type"])
         return {}, {}
@@ -273,7 +273,7 @@ def check_md_document(doc_path: str) -> Dict[str, UrlResult]:
         Dictionary of checked links
 
     """
-    with open(doc_path, "r") as doc_file:
+    with open(doc_path, "r", encoding="utf-8") as doc_file:
         body_markdown = doc_file.read()
     md_content = markdown.markdown(body_markdown)
     soup = BeautifulSoup(md_content, "html.parser")

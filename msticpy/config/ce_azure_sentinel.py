@@ -9,8 +9,13 @@ from datetime import datetime
 import ipywidgets as widgets
 
 from .._version import VERSION
-from .ce_common import ITEM_LIST_LAYOUT, print_debug
-from .ce_common import get_wgt_ctrl, get_or_create_mpc_section
+from ..context.azure.sentinel_core import MicrosoftSentinel
+from .ce_common import (
+    ITEM_LIST_LAYOUT,
+    get_or_create_mpc_section,
+    get_wgt_ctrl,
+    print_debug,
+)
 from .comp_edit import CEItemsBase, CompEditDisplayMixin
 from .mp_config_control import MpConfigControls
 
@@ -27,7 +32,19 @@ class CEAzureSentinel(CEItemsBase):
     _HELP_TEXT = """
     Supply the parameters for your Microsoft Sentinel workspaces here.<br>
 
-    You can get all of these (apart from 'TenantID') from your workspace portal.
+    You can use the URL import to quickly fetch Microsoft Sentinel Workspace
+    settings. In your browser, navigate to your Sentinel workspace in the
+    Azure portal (e.g. the Overview page). Copy the URL and paste into the
+    <b>Portal URL</b> text box, then click on <b>Import from URL</b>.
+
+    You can also add partial information (such as a Workspace ID) and use
+    the <b>Resolve Settings</b> button to fetch the other settings from
+    the Azure Resource Graph.
+
+    Note you must be authenticated to Azure for either of these to work.
+
+    You can also get all of these settings (apart from 'TenantID') from your
+    workspace portal manually.
     Navigate to "Settings" (on the left side of the screen), then click the
     "Workspace Settings" tab near the top of the page.
 
@@ -39,7 +56,7 @@ class CEAzureSentinel(CEItemsBase):
     </pre>
 
     The name that you use for workspace (the "Name" text box) does not have to
-    be the same as the official name. You can use any helpful name that you
+    be the same as the Workspace name. You can use any helpful name that you
     like. You can even have the same workspace included multiple times with
     different names.
 
@@ -82,16 +99,39 @@ class CEAzureSentinel(CEItemsBase):
         prov_name = self.select_item.label
         self.edit_ctrls = _get_ws_ctrls(prov_name, self.mp_controls, self._COMP_PATH)
         self.edit_ctrls.children[0].value = prov_name or ""
-        self.btn_set_default = widgets.Button(description="Set as default")
+        self.btn_set_default = widgets.Button(
+            description="Set as default",
+            tooltip="Set the current workspace as your default.",
+        )
+        btn_resolve = widgets.Button(
+            description="Resolve settings",
+            tooltip="Try to resolve any missing settings using the Azure resource graph.",
+        )
+        self.btn_imp_url = widgets.Button(
+            description="Import from URL",
+            tooltip="Try to lookup workspace settings from the Sentinel portal URL.",
+        )
+        self.txt_imp_url = widgets.Text(
+            description="Portal URL",
+            # Tooltip not yet supported in widgets.Text
+            # tooltip="Paste in the URL from the Sentinel Azure portal to fetch settings.",
+        )
+        self.ws_btns = widgets.HBox([self.btn_set_default, btn_resolve])
+        self.url_imp_ctrls = widgets.HBox([self.txt_imp_url, self.btn_imp_url])
         if prov_name:
-            self.edit_frame.children = [self.edit_ctrls, self.btn_set_default]
+            self.edit_frame.children = [
+                self.edit_ctrls,
+                self.ws_btns,
+                self.url_imp_ctrls,
+            ]
         else:
             self.edit_frame.children = [self.edit_ctrls]
         self.edit_buttons.btn_del.on_click(self._del_item)
         self.edit_buttons.btn_add.on_click(self._add_item)
         self.edit_buttons.btn_save.on_click(self._save_item)
         self.btn_set_default.on_click(self._set_default)
-
+        btn_resolve.on_click(self._resolve_settings)
+        self.btn_imp_url.on_click(self._imp_ws_from_url)
         self.current_workspace = prov_name
 
     @property
@@ -109,7 +149,7 @@ class CEAzureSentinel(CEItemsBase):
         self.edit_ctrls = _get_ws_ctrls(prov_name, self.mp_controls, self._COMP_PATH)
         self.edit_ctrls.children[0].value = prov_name
         self.current_workspace = prov_name
-        self.edit_frame.children = [self.edit_ctrls, self.btn_set_default]
+        self.edit_frame.children = [self.edit_ctrls, self.ws_btns, self.url_imp_ctrls]
         self.mp_controls.populate_ctrl_values(self.current_workspace)
 
     def _add_item(self, btn):
@@ -169,6 +209,54 @@ class CEAzureSentinel(CEItemsBase):
         self.select_item.options = self._get_select_opts()
         self.select_item.label = "Default"
 
+    def _imp_ws_from_url(self, btn):
+        """Import workspace settings from a portal URL."""
+        del btn
+        url = self.txt_imp_url.value
+        if not url:
+            self.set_status("Please paste portal URL into ")
+            return
+        self._update_settings(MicrosoftSentinel.get_workspace_details_from_url(url))
+
+    def _update_settings(self, ws_settings):
+        """Update current controls with workspace settings."""
+        if not ws_settings:
+            self.set_status("Could not resolve workspace from URL")
+            return
+        ws_name = next(iter(ws_settings))
+        _get_named_control(self.edit_ctrls, "Name").value = ws_name
+        for setting, value in ws_settings[ws_name].items():
+            ctrl = _get_named_control(self.edit_ctrls, setting)
+            if ctrl is None or ctrl.value:
+                # don't overwrite existing settings
+                continue
+            ctrl.value = value
+
+    def _resolve_settings(self, btn):
+        """Resolve missing settings for workspace."""
+        del btn
+        subscription_id = _get_named_control(self.edit_ctrls, "SubscriptionId").value
+        workspace_id = _get_named_control(self.edit_ctrls, "WorkspaceId").value
+        workspace_name = _get_named_control(self.edit_ctrls, "WorkspaceName").value
+        resource_group = _get_named_control(self.edit_ctrls, "ResourceGroup").value
+        if not (workspace_id or workspace_name):
+            self.set_status(
+                "Need at least WorkspaceId or WorkspaceName to lookup settings."
+            )
+            return
+        if workspace_id:
+            self._update_settings(
+                MicrosoftSentinel.get_workspace_settings(workspace_id=workspace_id)
+            )
+        else:
+            self._update_settings(
+                MicrosoftSentinel.get_workspace_settings_by_name(
+                    workspace_name=workspace_name,
+                    subscription_id=subscription_id,
+                    resource_group=resource_group,
+                )
+            )
+
     def _select_labels(self):
         return [label for label, _ in self.select_item.options]
 
@@ -197,6 +285,14 @@ def _get_ws_ctrls(workspace, mp_controls, conf_path):
     return widgets.VBox(ctrls)
 
 
+def _get_named_control(edit_ctrls, name):
+    """Get the control with matching name."""
+    try:
+        return next(ctrl for ctrl in edit_ctrls.children if ctrl.description == name)
+    except StopIteration:
+        return None
+
+
 def _validate_ws(workspace, mp_controls, conf_path):
     """Validate the settings for a workspace."""
     defn_path = f"{conf_path}.Default"
@@ -212,34 +308,3 @@ def _validate_ws(workspace, mp_controls, conf_path):
             validated = False
             status.append(mssg)
     return validated, "  ".join(status)
-
-
-#
-#
-# _KNOWN_SEC_NAMES = ("AuthKey", "ApiID", "clientSecret", "password")
-
-
-# def _enum_template(template: Dict[str, Any]):
-#     output: Dict[str, Any] = {}
-#     for key, value in template.items():
-#         if key in _KNOWN_SEC_NAMES:
-#             output[key] = ""
-#         elif isinstance(value, dict):
-#             output[key] = _enum_template(value)
-#         elif isinstance(value, tuple):
-#             val_type, val_opt = value
-#             if val_type == "str":
-#                 output[key] = val_opt.get("default", "")
-#             elif val_type == "bool":
-#                 bool_str = val_opt.get("default", False)
-#                 if isinstance(bool_str, str):
-#                     output[key] = bool_str.casefold() == "true"
-#                 else:
-#                     output[key] = bool_str
-#             elif val_type == "int":
-#                 output[key] = int(val_opt.get("default", 0))
-#             elif val_type == "enum":
-#                 output[key] = val_opt.get("default", val_opt.get("options")[0])
-#         else:
-#             output[key] = value
-#     return output

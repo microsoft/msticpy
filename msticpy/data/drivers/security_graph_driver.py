@@ -4,13 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Security Graph OData Driver class."""
-from typing import Union, Any
+from typing import Any, Union
+
 import pandas as pd
 
-from .odata_driver import OData, QuerySource
-from ...common.azure_auth_core import AzureCloudConfig
-from ...common.utility import export
 from ..._version import VERSION
+from ...auth.azure_auth_core import AzureCloudConfig
+from ...common.utility import export
+from .odata_driver import OData, QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -35,6 +36,7 @@ class SecurityGraphDriver(OData):
         """
         super().__init__(**kwargs)
         azure_cloud = AzureCloudConfig()
+        self.scopes = ["User.Read"]
         self.req_body = {
             "client_id": None,
             "client_secret": None,
@@ -42,7 +44,7 @@ class SecurityGraphDriver(OData):
             "scope": f"{azure_cloud.endpoints.microsoft_graph_resource_id}/.default",
         }
         self.oauth_url = (
-            f"{azure_cloud.endpoints.active_directory}/" "{tenantId}/oauth2/v2.0/token"
+            f"{azure_cloud.endpoints.active_directory}/{{tenantId}}/oauth2/v2.0/token"
         )
         self.api_root = azure_cloud.endpoints.microsoft_graph_resource_id
         self.api_ver = kwargs.get("api_ver", "v1.0")

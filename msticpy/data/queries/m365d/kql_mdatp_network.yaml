@@ -1,0 +1,98 @@
+metadata:
+  version: 1
+  description: MDE Queries
+  data_environments: [MDATP, MDE, M365D, LogAnalytics]
+  data_families: [MDATP, MDE]
+  tags: ["network"]
+defaults:
+  metadata:
+    data_source: "network_events"
+  parameters:
+    table:
+      description: Table name
+      type: str
+      default: "DeviceNetworkEvents"
+    start:
+      description: Query start time
+      type: datetime
+    end:
+      description: Query end time
+      type: datetime
+    add_query_items:
+      description: Additional query clauses
+      type: str
+      default: ""
+    time_column:
+      description: The name of the column detailing the time the event was generated.
+      type: str
+      default: "Timestamp"
+sources:
+  list_connections:
+    description: Retrieves list of all network connections
+    metadata:
+    args:
+      query: "
+        {table}
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
+        {add_query_items}"
+      uri: None
+    parameters:
+  host_connections:
+    description: Lists connections by for a specified hostname
+    metadata:
+    args:
+      query: '
+        {table}
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
+        | where DeviceName has "{host_name}"
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
+        aliases:
+          - hostname
+  ip_connections:
+    description: Lists network connections associated with a specified remote IP
+    metadata:
+    args:
+      query: '
+        {table}
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
+        | where RemoteIP has "{ip_address}" or where LocalIP has "{ip_address}"
+        {add_query_items}'
+    parameters:
+      ip_address:
+        description: Remote IP Address
+        type: str
+  url_connections:
+    description: Lists connections associated with a specified URL
+    metadata:
+    args:
+      query: '
+        {table}
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
+        | where RemoteUrl has "{url}"
+        {add_query_items}'
+    parameters:
+      url:
+        description: Remote URL
+        type: str
+  protocol_connections:
+    description: Lists connections associated with a specified protocol
+    metadata:
+    args:
+      query: "
+        {table}
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
+        | where RemotePort == {protocol}
+        {add_query_items}"
+    parameters:
+      protocol:
+        description: Port to query for
+        type: str

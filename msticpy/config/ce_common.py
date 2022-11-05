@@ -6,12 +6,13 @@
 """Component edit utility functions."""
 from typing import Any, Dict, Optional, Tuple, Union
 
+import httpx
 import ipywidgets as widgets
-import requests
 
-from ..common.azure_auth_core import AzureCloudConfig
-from .comp_edit import SettingsControl
 from .._version import VERSION
+from ..auth.azure_auth_core import AzureCloudConfig
+from ..common.utility import mp_ua_header
+from .comp_edit import SettingsControl
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -178,7 +179,9 @@ def get_def_tenant_id(sub_id: str) -> Optional[str]:
     get_tenant_url = (
         f"{res_mgmt_uri}/subscriptions/{{subscriptionid}}" + "?api-version=2015-01-01"
     )
-    resp = requests.get(get_tenant_url.format(subscriptionid=sub_id))
+    resp = httpx.get(
+        get_tenant_url.format(subscriptionid=sub_id), headers=mp_ua_header()
+    )
     # Tenant ID is returned in the WWW-Authenticate header/Bearer authorization_uri
     www_header = resp.headers.get("WWW-Authenticate")
     if not www_header:

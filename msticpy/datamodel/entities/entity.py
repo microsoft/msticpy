@@ -9,6 +9,7 @@ import pprint
 import typing
 from abc import ABC
 from copy import deepcopy
+from datetime import datetime
 from typing import Any, Dict, List, Mapping, Optional, Type, Union
 
 import networkx as nx
@@ -82,10 +83,10 @@ class Entity(ABC, Node):
 
         """
         super().__init__()
-        self.TimeGenerated = None
+        self.TimeGenerated = datetime.utcnow()
         self.Type = self._get_entity_type_name(type(self))
         # If we have an unknown entity see if we a type passed in
-        if self.Type == "unknownentity" and "Type" in kwargs:
+        if self.Type == "unknown" and "Type" in kwargs:
             self.Type = kwargs["Type"]
         # Make sure Type is in the class schema dictionary
         self._entity_schema["Type"] = None
@@ -241,7 +242,7 @@ class Entity(ABC, Node):
             params = f"{params}, edges={'. '.join(str(edge) for edge in self.edges)}"
 
         if len(params) > 80:
-            params = params[:80] + "..."
+            params = f"{params[:80]}..."
         return f"{self.__class__.__name__}({params})"
 
     def _to_dict(self) -> dict:
@@ -340,10 +341,10 @@ class Entity(ABC, Node):
         if not isinstance(other, Entity):
             return False
         return not any(
-            self.properties[prop] != other.properties[prop]
-            and self.properties[prop]
-            and other.properties[prop]
-            for prop in self.properties
+            self.__dict__[prop] != other.__dict__[prop]
+            and self.__dict__[prop]
+            and other.__dict__[prop]
+            for prop in self.__dict__  # pylint: disable=consider-using-dict-items
         )
 
     def merge(self, other: Any) -> "Entity":
@@ -369,7 +370,7 @@ class Entity(ABC, Node):
         for prop, value in other.properties.items():
             if not value:
                 continue
-            if not self.properties[prop]:
+            if not self.__dict__[prop]:
                 setattr(merged, prop, value)
             # Future (ianhelle) - cannot merge ID field
         if other.edges:
@@ -424,7 +425,7 @@ class Entity(ABC, Node):
         return {
             name: value
             for name, value in self.__dict__.items()
-            if not name.startswith("_") and name != "edges"
+            if not name.startswith("_") and name != "edges" and value
         }
 
     @property
@@ -509,12 +510,19 @@ class Entity(ABC, Node):
             The V3 serialized name.
 
         """
-        name = next(
-            iter(
-                (key for key, val in cls.ENTITY_NAME_MAP.items() if val == entity_type)
+        try:
+            name = next(
+                iter(
+                    (
+                        key
+                        for key, val in cls.ENTITY_NAME_MAP.items()
+                        if val == entity_type
+                    )
+                )
             )
-        )
-        return name or "unknown"
+        except StopIteration:
+            name = "unknown"
+        return name
 
     @property
     def node_properties(self) -> Dict[str, Any]:
@@ -580,7 +588,7 @@ class Entity(ABC, Node):
         return graph
 
     @classmethod
-    def get_pivot_list(cls) -> List[str]:
+    def get_pivot_list(cls, search_str: Optional[str] = None) -> List[str]:
         """
         Return list of current pivot functions.
 
@@ -596,12 +604,19 @@ class Entity(ABC, Node):
             if hasattr(attr, "pivot_properties"):
                 pivots.append(prop)
                 continue
-            if attr.__class__.__name__ != "QueryContainer":
+            if attr.__class__.__name__ != "PivotContainer":
                 continue
-            for name, qt_attr in attr:
-                if hasattr(qt_attr, "pivot_properties"):
-                    pivots.append(f"{prop}.{name}")
-        return sorted(pivots)
+            pivots.extend(
+                f"{prop}.{name}"
+                for name, qt_attr in attr
+                if hasattr(qt_attr, "pivot_properties")
+            )
+
+        return sorted(
+            pivot
+            for pivot in pivots
+            if search_str is None or search_str.casefold() in pivot.casefold()
+        )
 
     # alias for get_pivot_list
     pivots = get_pivot_list

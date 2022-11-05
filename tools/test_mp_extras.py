@@ -5,11 +5,12 @@
 # --------------------------------------------------------------------------
 """Script to test msticpy extras."""
 import argparse
-from datetime import datetime
-from pathlib import Path
-import pkg_resources
 import subprocess
 import sys
+from datetime import datetime
+from pathlib import Path
+
+import pkg_resources
 
 __author__ = "Ian Hellen"
 

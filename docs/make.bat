@@ -10,7 +10,24 @@ if "%SPHINXBUILD%" == "" (
 set SOURCEDIR=source
 set BUILDDIR=build
 
+if /I "%SPHINX_NOGEN%" NEQ "" goto no_gen_files
 if "%1" == "" goto help
+if /I "%1" NEQ "html" goto no_gen_files
+if /I "%2" EQU "nogen" goto no_gen_files
+
+REM Generate API source RST files
+echo Regenerating API source files...
+del /Q %SOURCEDIR%\api\*
+set APIDOC_OPTS=--force --module-first --separate
+sphinx-apidoc --o %SOURCEDIR%/api %APIDOC_OPTS% ../msticpy ../msticpy/sectools
+del %SOURCEDIR%\api\modules.rst
+
+REM generate query list
+echo Generating query list documentation
+python -m generate_query_docs doc --file source\data_acquisition\DataQueries.rst
+
+:no_gen_files
+
 
 %SPHINXBUILD% >NUL 2>NUL
 if errorlevel 9009 (

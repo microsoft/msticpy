@@ -4,26 +4,28 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for SecurityEvent class."""
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import pandas as pd
+from deprecated.sphinx import deprecated
 
+from .._version import VERSION
+from ..common.utility import export
 from ..datamodel.entities import (
+    Account,
     Entity,
     Host,
-    Process,
-    Account,
-    IpAddress,
     HostLogonSession,
+    IpAddress,
+    Process,
 )
 from .security_base import SecurityBase
-from ..common.utility import export
-from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+@deprecated(reason="Replaced by datamodel entities", version="1.7.0")
 @export
 class SecurityEvent(SecurityBase):
     """SecurityEvent class."""

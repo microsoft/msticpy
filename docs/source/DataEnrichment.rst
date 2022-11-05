@@ -8,3 +8,4 @@ Enriching Data
    data_acquisition/GeoIPLookups
    data_acquisition/AzureData
    data_acquisition/Sentinel
+   data_acquisition/IPWhois

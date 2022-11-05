@@ -16,6 +16,7 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 import pytest_check as check
+
 from msticpy.data import QueryProvider
 from msticpy.data.drivers.mordor_driver import (
     _MITRE_TACTICS_CACHE,
@@ -192,7 +193,7 @@ def test_mordor_query_provider(qry_provider):
     with contextlib.redirect_stdout(output):
         q_func("?")
     check.is_in("Query:", output.getvalue())
-    check.is_in("Data source:  Mordor", output.getvalue())
+    check.is_in("Data source:  OTRF", output.getvalue())
     check.is_in("Mordor ID:", output.getvalue())
     check.is_in("Mitre Techniques:", output.getvalue())
 

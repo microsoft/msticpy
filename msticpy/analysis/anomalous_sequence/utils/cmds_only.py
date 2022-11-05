@@ -5,15 +5,15 @@
 # --------------------------------------------------------------------------
 """Helper module for computations when each session is a list of strings."""
 
-from collections import defaultdict
-from typing import Tuple, List, Union, DefaultDict
 import copy
+from collections import defaultdict
+from typing import DefaultDict, List, Tuple, Union
 
 import numpy as np
 
+from ....common.exceptions import MsticpyException
 from ..utils.data_structures import StateMatrix
 from ..utils.laplace_smooth import laplace_smooth_cmd_counts
-from ....common.exceptions import MsticpyException
 
 
 def compute_counts(  # nosec
@@ -26,8 +26,10 @@ def compute_counts(  # nosec
     ----------
     sessions: List[List[str]]
         each session is a list of commands (strings)
-        an example session:
+        an example session::
+
             ['Set-User', 'Set-Mailbox']
+
     start_token: str
         dummy command to signify the start of a session (e.g. "##START##")
     end_token: str
@@ -134,8 +136,10 @@ def compute_likelihood_window(
     ----------
     window: List[str]
         part or all of a session, where a session is a list of commands (strings)
-        an example session:
+        an example session::
+
             ['Set-User', 'Set-Mailbox']
+
     prior_probs: Union[StateMatrix, dict]
         computed probabilities of individual commands
     trans_probs: Union[StateMatrix, dict]
@@ -208,8 +212,10 @@ def compute_likelihood_windows_in_session(
     ----------
     session: List[str]
         list of commands (strings)
-        an example session:
+        an example session::
+
             ['Set-User', 'Set-Mailbox']
+
     prior_probs: Union[StateMatrix, dict]
         computed probabilities of individual commands
     trans_probs: Union[StateMatrix, dict]
@@ -288,8 +294,10 @@ def rarest_window_session(
     ----------
     session: List[str]
         list of commands (strings)
-        an example session:
+        an example session::
+
             ['Set-User', 'Set-Mailbox']
+
     prior_probs: Union[StateMatrix, dict]
         computed probabilities of individual commands
     trans_probs: Union[StateMatrix, dict]

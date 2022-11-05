@@ -22,6 +22,7 @@
 definitions:
   # Azure Sentinel workspace definition
   workspace_defn: &workspace
+    WorkspaceName: str(required=False)
     WorkspaceId: str(format=uuid)
     TenantId: str(format=uuid)
     SubscriptionId: str(required=False, format=uuid)
@@ -48,7 +49,10 @@ AzureSentinel:
       <<: *workspace
 Azure:
   cloud: enum(required=False, options=[global; cn; usgov; de], default=global)
-  auth_methods: m_enum(required=False, options=[env; msi; cli; interactive], default=["cli"; "msi", "interactive"])
+  auth_methods: m_enum(required=False,
+    options=[env; msi; cli; devicecode; interactive; vscode; powershell; clientsecret; certificate],
+    default=["cli"; "msi", "interactive"]
+    )
 QueryDefinitions:
   # Add paths to folders containing custom query definitions here
   Custom: list(required=False)
@@ -121,7 +125,10 @@ OtherProviders:
 DataProviders:
   AzureCLI:
     Args:
-      auth_methods: m_enum(required=False, options=[env; msi; cli; interactive], default=["env"; "interactive"])
+      auth_methods: m_enum(required=False,
+        options=[env; msi; cli; devicecode; interactive; vscode; powershell; clientsecret; certificate],
+        default=["cli"; "msi", "interactive"]
+        )
       clientId: str(required=False, format=uuid)
       tenantId: str(required=False, format=uuid)
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
@@ -155,12 +162,14 @@ DataProviders:
     Args:
       ClientId: str(format=uuid)
       TenantId: str(format=uuid)
+      UserName: str(required=False)
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       ClientSecret: *cred_key
   MicrosoftGraph:
     Args:
       ClientId: str(format=uuid)
       TenantId: str(format=uuid)
+      UserName: str(required=False)
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       ClientSecret: *cred_key
   Sumologic:
@@ -169,10 +178,27 @@ DataProviders:
       accessid: str()
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       accesskey: *cred_key
+  Cybereason:
+    Args:
+      TenantId: str(format=uuid)
+      ClientId: str()
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      ClientSecret: *cred_key
+  Kusto:
+    Args:
+      Cluster: str()
+      TenantId: str(format=uuid)
+      IntegratedAuth: bool()
+      ClientId: str(required=False, format=uuid)
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      ClientSecret: *cred_key_opt
 AzureCLI:
   # Deprecated section - use DataProviders.AzureCLI
   Args:
-    auth_methods: m_enum(required=False, options=[env; msi; cli; interactive], default=["env"; "interactive"])
+    auth_methods: m_enum(required=False,
+      options=[env; msi; cli; devicecode; interactive; vscode; powershell; clientsecret; certificate],
+      default=["cli"; "msi", "interactive"]
+      )
     clientId: str(required=False, format=uuid)
     tenantId: str(required=False, format=uuid)
     # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]

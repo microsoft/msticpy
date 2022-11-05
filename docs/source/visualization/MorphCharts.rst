@@ -1,7 +1,7 @@
 Morph Charts
 ============
 
-:py:mod:`msticpy.nbtools.morph_charts`
+:py:mod:`msticpy.vis.morph_charts`
 
 This module formats data and configuration files for use with http://morphcharts.com/.
 In addition it renders http://morphcharts.com/ in an IFrame within the interface to allow
@@ -18,7 +18,7 @@ list_charts() returns a list of all available charts:
 
 .. code:: ipython3
 
-    from msticpy.nbtools.morph_charts import MorphCharts
+    from msticpy.vis.morph_charts import MorphCharts
     morph = MorphCharts()
     morph.list_charts()
 
@@ -48,16 +48,16 @@ call display() and pass it the data, and chart name:
 
     morph.display(data=query_data, chart_name="SigninsChart")
 
-This will format the data and chart configuration file and put them in a direcory named
+This will format the data and chart configuration file and put them in a directory named
 'morphchart_package' in the current working directory. It will also return an IFrame
 displaying http://morphcharts.com/. To load the charts within the IFrame click
 "Choose Files" under "Load Package" heading. Select the 'description.json' and
-'query_data.csv' files under the 'morphchart_package' folder to load the customised charts.
+'query_data.csv' files under the 'morphchart_package' folder to load the customized charts.
 
 Creating New Chart Templates
 ----------------------------
 You can create a add new chart templates for use by this module. The best way to do this
-is by creating a customized chart set using http://morphcharts.com/designer.html. Once complete
+is by creating a customized chart set using http://morphcharts.com. Once complete
 save the chart, which will download a filed called 'description.json'. To add this as a template
 by creating a YAML file with the following format:
 
@@ -70,4 +70,4 @@ by creating a YAML file with the following format:
     DescriptionFile: <The JSON blob from your description.json file>
 
 Then include the file in the msticpy/data/morph_charts folder and it will be discovered next time you
-intialize an MorphCharts object.
+initialize an MorphCharts object.

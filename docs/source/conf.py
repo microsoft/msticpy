@@ -27,7 +27,7 @@ import os
 import re
 import sys
 
-sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath("..//.."))
 
 # -- Project information -----------------------------------------------------
 
@@ -37,7 +37,7 @@ copyright = "2019, (c) Microsoft Corporation."
 author = "Ian Hellen"
 
 
-with open("../../msticpy/_version.py", "r") as fd:
+with open("../../msticpy/_version.py", "r", encoding="utf-8") as fd:
     v_match = re.search(r'^VERSION\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE)
     _ver = v_match.group(1) if v_match else "no version"
 
@@ -50,7 +50,7 @@ version = _ver
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
-# needs_sphinx = '1.0'
+needs_sphinx = "5.0"
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -59,9 +59,11 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.coverage",
-    "sphinx.ext.githubpages",
+    # "sphinx.ext.githubpages",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosectionlabel",
+    "sphinx.ext.intersphinx",
+    "seed_intersphinx_mapping",
 ]
 
 autosectionlabel_prefix_document = True
@@ -83,7 +85,7 @@ master_doc = "index"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -215,38 +217,61 @@ autoapi_dirs = ["../../msticpy"]
 
 autodoc_mock_imports = [
     "adal",
+    "azure",
     "azure.common.exceptions",
     "azure.core.exceptions",
-    "azure.core.pipeline",
     "azure.core.pipeline.policies",
     "azure.core.pipeline.transport",
+    "azure.core.pipeline",
     "azure.identity",
-    "azure.keyvault",
     "azure.keyvault.secrets",
-    "azure.mgmt.compute",
+    "azure.keyvault",
     "azure.mgmt.compute.models",
-    "azure.mgmt.keyvault",
+    "azure.mgmt.compute",
     "azure.mgmt.keyvault.models",
+    "azure.mgmt.keyvault",
     "azure.mgmt.monitor",
     "azure.mgmt.network",
     "azure.mgmt.resource",
     "azure.mgmt.resourcegraph",
     "azure.mgmt.subscription",
-    "azure.storage",
     "azure.storage.blob",
+    "azure.storage",
+    "bokeh",
+    "dnspython",
+    "dns",
+    "folium",
+    "geoip2",
+    "ipwhois",
+    "IPython",
+    "ipywidgets",
     "keyring",
     "Kqlmagic",
-    "matplotlib",
     "matplotlib.pyplot",
-    "moz_sql_parser",
-    "msrest.authentication",
+    "matplotlib",
+    "mo-sql-parsing",
+    "msal",
+    "msal_extensions",
+    "msrest",
     "msrestazure",
-    "statsmodels",
+    "msrest.authentication",
+    "nest_asyncio",
+    "networkx",
+    "openpyxl",
+    "passivetotal",
+    "pygeohash",
+    "pygments",
+    "python-dateutil",
+    "respx",
     "scipy",
+    "seaborn",
     "sklearn",
     "splunk-sdk",
     "splunklib",
-    "seaborn",
-    "vt",
+    "statsmodels",
+    "sumologic",
+    "tldextract",
+    "tqdm",
     "vt_graph_api",
+    "vt",
 ]

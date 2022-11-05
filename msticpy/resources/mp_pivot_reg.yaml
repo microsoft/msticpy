@@ -5,7 +5,7 @@ pivot_providers:
   #
   # new_pivot_func:
   #   ## The src_module to import
-  #   src_module: msticpy.sectools.ip_utils
+  #   src_module: msticpy.context.ip_utils
   #
   #   ## class to import and instantiate that contains the function/method
   #   ## (not needed if the target function is a Python function)
@@ -57,7 +57,7 @@ pivot_providers:
   #   func_input_value_arg: ip_address
   #
   who_is:
-    src_module: msticpy.sectools.ip_utils
+    src_module: msticpy.context.ip_utils
     src_func_name: get_whois_df
     func_new_name: whois
     input_type: dataframe
@@ -71,8 +71,20 @@ pivot_providers:
       show_progress: False
     func_input_value_arg: ip_address
     create_shortcut: True
+  who_asn:
+    src_module: msticpy.context.ip_utils
+    src_func_name: get_asn_from_ip
+    func_new_name: whois_asn
+    input_type: value
+    entity_map:
+      IpAddress: Address
+    can_iterate: True
+    func_df_param_name: ip
+    func_df_col_param_name: ip_column
+    func_input_value_arg: ip_address
+    create_shortcut: True
   ip_type:
-    src_module: msticpy.sectools.ip_utils
+    src_module: msticpy.context.ip_utils
     src_func_name: get_ip_type
     func_new_name: ip_type
     input_type: value
@@ -85,7 +97,7 @@ pivot_providers:
     func_input_value_arg: ip_str
     create_shortcut: True
   b64_unpack:
-    src_module: msticpy.sectools.base64unpack
+    src_module: msticpy.transform.base64unpack
     src_func_name: unpack_df
     func_new_name: b64decode
     input_type: dataframe
@@ -96,7 +108,7 @@ pivot_providers:
     func_df_col_param_name: column
     func_out_column_name: original_string
   ioc_extract:
-    src_module: msticpy.sectools.iocextract
+    src_module: msticpy.transform.iocextract
     src_class: IoCExtract
     src_func_name: extract_df
     func_new_name: extract_iocs
@@ -108,7 +120,7 @@ pivot_providers:
     func_out_column_name: Input
     func_df_col_param_name: columns
   domain_valid_tld:
-    src_module: msticpy.sectools.domain_utils
+    src_module: msticpy.context.domain_utils
     src_class: DomainValidator
     src_func_name: validate_tld
     func_new_name: dns_validate_tld
@@ -120,7 +132,7 @@ pivot_providers:
       Dns: DomainName
     func_input_value_arg: url_domain
   domain_valid_resolvable:
-    src_module: msticpy.sectools.domain_utils
+    src_module: msticpy.context.domain_utils
     src_class: DomainValidator
     src_func_name: is_resolvable
     func_new_name: dns_is_resolvable
@@ -133,7 +145,7 @@ pivot_providers:
     func_input_value_arg: url_domain
     create_shortcut: True
   domain_valid_in_abuse_list:
-    src_module: msticpy.sectools.domain_utils
+    src_module: msticpy.context.domain_utils
     src_class: DomainValidator
     src_func_name: in_abuse_list
     func_new_name: dns_in_abuse_list
@@ -145,7 +157,7 @@ pivot_providers:
       Dns: DomainName
     func_input_value_arg: url_domain
   brow_shot:
-    src_module: msticpy.sectools.domain_utils
+    src_module: msticpy.context.domain_utils
     src_func_name: screenshot
     func_new_name: url_screenshot
     input_type: value
@@ -154,7 +166,7 @@ pivot_providers:
       Url: Url
     func_input_value_arg: url
   domain_components:
-    src_module: msticpy.sectools.domain_utils
+    src_module: msticpy.context.domain_utils
     src_func_name: dns_components
     input_type: value
     can_iterate: True
@@ -164,7 +176,7 @@ pivot_providers:
       Dns: DomainName
     func_input_value_arg: domain
   url_components:
-    src_module: msticpy.sectools.domain_utils
+    src_module: msticpy.context.domain_utils
     src_func_name: url_components
     input_type: value
     can_iterate: True
@@ -172,8 +184,9 @@ pivot_providers:
       Url: Url
     func_input_value_arg: url
   dns_resolve:
-    src_module: msticpy.sectools.domain_utils
-    src_func_name: dns_resolve
+    src_module: msticpy.context.domain_utils
+    src_func_name: dns_resolve_df
+    func_new_name: dns_resolve
     input_type: value
     can_iterate: True
     entity_map:
@@ -183,15 +196,16 @@ pivot_providers:
     func_input_value_arg: url_domain
     create_shortcut: True
   ip_rev_resolve:
-    src_module: msticpy.sectools.domain_utils
-    src_func_name: ip_rev_resolve
+    src_module: msticpy.context.domain_utils
+    src_func_name: ip_rev_resolve_df
+    func_new_name: ip_rev_resolve
     input_type: value
     can_iterate: True
     entity_map:
       IpAddress: Address
     func_input_value_arg: ip_address
   geoip_maxmind:
-    src_module: msticpy.sectools.geoip
+    src_module: msticpy.context.geoip
     src_class: GeoLiteLookup
     src_func_name: lookup_ips
     func_new_name: geoloc
@@ -204,7 +218,7 @@ pivot_providers:
     func_input_value_arg: ip_address
     create_shortcut: True
   geoip_ipstack:
-    src_module: msticpy.sectools.geoip
+    src_module: msticpy.context.geoip
     src_class: IPStackLookup
     src_func_name: lookup_ips
     func_new_name: geoloc_ips

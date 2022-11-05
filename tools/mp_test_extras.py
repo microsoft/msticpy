@@ -1,9 +1,8 @@
 """Test runs for different extras."""
 import argparse
-from datetime import datetime
 import os
 import subprocess  # nosec
-
+from datetime import datetime
 
 # pylint: disable=subprocess-run-check
 
@@ -71,7 +70,7 @@ pywinpty            0.5.7
 pyzmq               19.0.2
 qtconsole           5.0.1
 QtPy                1.9.0
-responses           0.12.1
+respx               0.17.1
 Send2Trash          1.5.0
 setuptools          47.1.0
 six                 1.15.0
@@ -146,8 +145,8 @@ _MP_SRC = "/src/microsoft/msticpy"
 
 def _run_tests():
     os.environ["MSTICPYCONFIG"] = f"{_MP_SRC}/tests/msticpyconfig-test.yaml"
-    os.environ["MAXMIND_AUTH"] = "***REMOVED***"
-    os.environ["IPSTACK_AUTH"] = "***REMOVED***"
+    os.environ["MAXMIND_AUTH"] = "REDACTED"
+    os.environ["IPSTACK_AUTH"] = "REDACTED"
     sp_run = [
         "pytest",
         "-r",

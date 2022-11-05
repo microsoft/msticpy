@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-r"""
+"""
 eventcluster module.
 
 This module is intended to be used to summarize large numbers of events
@@ -12,8 +12,11 @@ often make it difficult to see unique and interesting items.
 
 The module contains functions to generate clusterable features from
 string data. For example, an administration command that does some
-maintenance on thousands of servers with a commandline such as:
-``install-update -hostname {host.fqdn} -tmp:/tmp/{GUID}/rollback``\  can
+maintenance on thousands of servers with a commandline such as:::
+
+    install-update -hostname {host.fqdn} -tmp:/tmp/{GUID}/rollback
+
+can
 be collapsed into a single cluster pattern by ignoring the character
 values in the string and using delimiters or tokens to group the values.
 
@@ -28,24 +31,24 @@ add_process_features: derives numerical features from text features such as
 commandline and process path.
 
 """
+import re
 from binascii import crc32
 from functools import lru_cache
-from math import log10, floor
-import re
-from typing import List, Any, Tuple, Union
+from math import floor, log10
+from typing import Any, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
 
+from .._version import VERSION
 from ..common.exceptions import MsticpyImportExtraError
 from ..common.utility import export
-from .._version import VERSION
 
 try:
-    from sklearn.cluster import DBSCAN
-    from sklearn.preprocessing import Normalizer
     import matplotlib.pyplot as plt
     from matplotlib import cm
+    from sklearn.cluster import DBSCAN
+    from sklearn.preprocessing import Normalizer
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
         "Cannot use this feature without Sklearn and matplotlib installed",
@@ -113,7 +116,7 @@ def dbcluster_events(
         else:
             x_input = data[cluster_columns].values
     elif isinstance(data, np.ndarray):
-        x_input = data if cluster_columns is None else data[:, cluster_columns].values
+        x_input = data if cluster_columns is None else data[:, cluster_columns]
     if x_input is None:
         type_list = ", ".join(str(t) for t in allowed_types)
         raise ValueError(
@@ -396,7 +399,9 @@ def delim_count(value: str, delim_list: str = r'[\s\-\\/\.,"\'|&:;%$()]') -> int
     value : str
         Data to process
     delim_list : str, optional
-        delimiters to use. (the default is r'[\\s\\\\-\\\\\\\\/\.,"\\\\'|&:;%$()]')
+        delimiters to use. The default is::
+
+          [\s\-\\/\.,"\'|&:;%$()]
 
     Returns
     -------
@@ -418,7 +423,9 @@ def delim_hash(value: str, delim_list: str = r'[\s\-\\/\.,"\'|&:;%$()]') -> int:
     value : str
         Data to process
     delim_list : str, optional
-        delimiters to use. (the default is r'[\\s\\\\-\\\\\\\\/\.,"\\\\'|&:;%$()]')
+        delimiters to use. The default is::
+
+            [\s\-\\/\.,"\'|&:;%$()]
 
     Returns
     -------
@@ -526,7 +533,9 @@ def delim_count_df(
     column : str
         The name of the column to process
     delim_list : str, optional
-        delimiters to use. (the default is r\'[\\s\\\\-\\\\\\\\/\.,"\\\\'|&:;%$()]\')
+        delimiters to use. The default is::
+
+            [\s\-\\/\.,"\'|&:;%$()]
 
     Returns
     -------

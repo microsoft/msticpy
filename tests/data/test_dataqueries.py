@@ -15,9 +15,15 @@ from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
 import pytest_check as check
+
 from msticpy.common.exceptions import MsticpyException
-from msticpy.data.data_providers import DriverBase, QueryContainer, QueryProvider
-from msticpy.data.query_source import QuerySource
+from msticpy.data.core.data_providers import (
+    DriverBase,
+    QueryContainer,
+    QueryProvider,
+    _calc_split_ranges,
+)
+from msticpy.data.core.query_source import QuerySource
 
 from ..unit_test_lib import get_test_data_path
 
@@ -350,7 +356,7 @@ class TestDataQuery(unittest.TestCase):
         end = datetime.utcnow() + pd.Timedelta("5min")
         delta = pd.Timedelta("1H")
 
-        ranges = QueryProvider._calc_split_ranges(start, end, delta)
+        ranges = _calc_split_ranges(start, end, delta)
         self.assertEqual(len(ranges), 5)
         self.assertEqual(ranges[0][0], start)
         self.assertEqual(ranges[-1][1], end)
@@ -360,7 +366,7 @@ class TestDataQuery(unittest.TestCase):
             self.assertNotIn(end_time, st_times)
 
         end = end + pd.Timedelta("20min")
-        ranges = QueryProvider._calc_split_ranges(start, end, delta)
+        ranges = _calc_split_ranges(start, end, delta)
         self.assertEqual(len(ranges), 5)
         self.assertEqual(ranges[0][0], start)
         self.assertEqual(ranges[-1][1], end)
@@ -373,7 +379,7 @@ class TestDataQuery(unittest.TestCase):
         end = datetime.utcnow() + pd.Timedelta("5min")
         delta = pd.Timedelta("1H")
 
-        ranges = QueryProvider._calc_split_ranges(start, end, delta)
+        ranges = _calc_split_ranges(start, end, delta)
         result_queries = la_provider.all_queries.list_alerts(
             "print", start=start, end=end, split_query_by="1H"
         )

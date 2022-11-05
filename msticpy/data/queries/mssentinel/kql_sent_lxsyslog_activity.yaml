@@ -1,0 +1,143 @@
+metadata:
+  version: 1
+  description: Linux Syslog Host Activity Queries
+  data_environments: [LogAnalytics]
+  data_families: [LinuxSyslog]
+  tags: ['linux', 'syslog']
+defaults:
+  metadata:
+    data_source: 'linux_syslog'
+    pivot:
+      direct_func_entities:
+        - Host
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'Syslog'
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+      subscription_filter:
+        description: Optional subscription/tenant filter expression
+        type: str
+        default: 'true'
+      host_name:
+        description: Hostname to query for
+        type: str
+        default: ''
+      host_op:
+        description: The hostname match operator
+        type: str
+        default: has
+      query_project:
+        description: Column project statement
+        type: str
+        default: '
+          | project
+            TenantId,
+            Computer,
+            Facility,
+            TimeGenerated,
+            HostName,
+            SeverityLevel,
+            SyslogMessage,
+            ProcessID,
+            ProcessName,
+            HostIP,
+          | extend TimeCreatedUtc=TimeGenerated'
+sources:
+  sudo_activity:
+    description: All sudo activity
+    args:
+      query: '
+        {table}
+        | where {subscription_filter}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer {host_op} "{host_name}"
+        | where ProcessName == "sudo"
+        | extend SudoResult = iif(SyslogMessage contains "authentication failure", "Failure", "Sucess")
+        | extend Sudoer = extract("(by |user=)([[:alnum:]]+)",2,SyslogMessage), SudoTo = extract("for user ([A-Z,a-z,0-9]+)",1,SyslogMessage),Command=extract("(COMMAND=|\\(command continued\\))(.*)$",2,SyslogMessage), CommandCallTmp=extract("COMMAND=([[:graph:]]*)",1,SyslogMessage)
+        | extend CommandCall = iif(isnotempty(Command),iif(isempty(CommandCallTmp), "None", CommandCallTmp),"")
+        | where SyslogMessage contains "{account_name}" or Sudoer contains "{account_name}" or SyslogMessage contains "session closed for user root"
+        {add_query_items}'
+    parameters:
+      account_name:
+        description: Username to filter the search by
+        type: str
+        default: ''
+  cron_activity:
+    description: All cron activity
+    args:
+      query: '
+        {table}
+        | where {subscription_filter}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer {host_op} "{host_name}"
+        | where ProcessName == "CRON" or Facility == "cron"
+        | extend CMD=extract("CMD(.*)",1,SyslogMessage), User=extract("for user ([[:alpha:]]*)",1,SyslogMessage), CronUser=extract("^[(]([[:alpha:]]*)",1,SyslogMessage),EditStatus=extract("[A-Z]+ EDIT",0,SyslogMessage)
+        {add_query_items}'
+    parameters:
+  user_group_activity:
+    description: All user/group additions, deletions, and modifications
+    args:
+      query: '
+        {table}
+        | where {subscription_filter}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer {host_op} "{host_name}"
+        | where Facility == "authpriv"
+        | extend UserGroupAction = iif((ProcessName == "groupadd" or ProcessName == "useradd") and (SyslogMessage contains "new group" or SyslogMessage contains "new user"), "Add",
+                                    iif((ProcessName == "groupdel" or ProcessName == "userdel") and (SyslogMessage contains "delete user" or SyslogMessage matches regex "(removed group|removed$)"), "Delete",
+                                    iif(ProcessName == "usermod" or ProcessName == "gpasswd", "Modify", "")
+                                        )
+                                    )
+        | extend User=extract("(user: name=|user '')([[:alnum:]]+)",2,SyslogMessage), Group=extract("(group: name=|group '')([[:alnum:]]+)",2,SyslogMessage), UID=extract("UID=([0-9]+)",1,SyslogMessage), GID=extract("GID=([0-9]+)",1,SyslogMessage)
+        | where UserGroupAction != ""
+        {add_query_items}'
+    parameters:
+  all_syslog:
+    description: Returns all syslog activity for a host
+    args:
+      query: '
+         {table}
+        | where {subscription_filter}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer {host_op} "{host_name}"
+        {add_query_items}'
+    parameters:
+  summarize_events:
+    description: Returns all syslog activity for a host
+    args:
+      query: '
+         {table}
+        | where {subscription_filter}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer {host_op} "{host_name}"
+        | summarize count() by Facility, SeverityLevel, ProcessName
+        {add_query_items}'
+    parameters:
+  notable_events:
+    description: Returns all syslog activity for a host
+    args:
+      query: '
+         {table}
+        | where {subscription_filter}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer {host_op} "{host_name}"
+        | where SeverityLevel in ("alert", "crit")
+        {add_query_items}'
+    parameters:

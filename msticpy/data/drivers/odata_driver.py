@@ -9,13 +9,15 @@ import re
 import urllib
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
+import httpx
 import pandas as pd
-import requests
 
 from ..._version import VERSION
+from ...auth.msal_auth import MSALDelegatedAuth
 from ...common import pkg_config as config
-from ...common.provider_settings import get_provider_settings
 from ...common.exceptions import MsticpyConnectionError, MsticpyUserConfigError
+from ...common.provider_settings import get_provider_settings
+from ...common.utility import mp_ua_header
 from .driver_base import DriverBase, QuerySource
 
 __version__ = VERSION
@@ -55,10 +57,14 @@ class OData(DriverBase):
             "Content-Type": "application/json",
             "Accept": "application/json",
             "Authorization": None,
+            **mp_ua_header(),
         }
         self._loaded = True
         self.aad_token = None
         self._debug = kwargs.get("debug", False)
+        self.token_type = "AAD"  # nosec
+        self.scopes = None
+        self.msal_auth = None
 
     @abc.abstractmethod
     def query(
@@ -109,6 +115,7 @@ class OData(DriverBase):
         apiVersion
 
         """
+        delegated_auth = kwargs.get("delegated_auth", False)
         cs_dict: Dict[str, Any] = {}
         if connection_str:
             self.current_connection = connection_str
@@ -122,10 +129,9 @@ class OData(DriverBase):
             cs_dict.update(kwargs)
 
         missing_settings = [
-            setting
-            for setting in ("tenant_id", "client_id", "client_secret")
-            if setting not in cs_dict
+            setting for setting in ("tenant_id", "client_id") if setting not in cs_dict
         ]
+        auth_present = "username" in cs_dict or "client_secret" in cs_dict
         if missing_settings:
             raise MsticpyUserConfigError(
                 "You must supply the following required connection parameter(s)",
@@ -134,25 +140,63 @@ class OData(DriverBase):
                 title="Missing connection parameters.",
                 help_uri=("Connecting to OData sources.", _HELP_URI),
             )
-
-        # self.oauth_url and self.req_body are correctly set in concrete
-        # instances __init__
-        req_url = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
-        req_body = dict(self.req_body)  # type: ignore
-        req_body["client_id"] = cs_dict["client_id"]
-        req_body["client_secret"] = cs_dict["client_secret"]
-
-        # Authenticate and obtain AAD Token for future calls
-        data = urllib.parse.urlencode(req_body).encode("utf-8")
-        response = requests.post(url=req_url, data=data)
-        json_response = response.json()
-        self.aad_token = json_response.get("access_token", None)
-        if not self.aad_token:
-            raise MsticpyConnectionError(
-                f"Could not obtain access token - {json_response['error_description']}"
+        if not auth_present:
+            raise MsticpyUserConfigError(
+                "You must supply either a client_secret, or username with which to",
+                "to the connect function or add them to your msticpyconfig.yaml.",
+                title="Missing connection parameters.",
+                help_uri=("Connecting to OData sources.", _HELP_URI),
             )
 
-        self.req_headers["Authorization"] = "Bearer " + self.aad_token
+        # Default to using application based authentication
+        if not delegated_auth:
+            _check_config(cs_dict, "client_secret", "application authentication")
+            # self.oauth_url and self.req_body are correctly set in concrete
+            # instances __init__
+            req_url = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
+            req_body = dict(self.req_body)  # type: ignore
+            req_body["client_id"] = cs_dict["client_id"]
+            req_body["client_secret"] = cs_dict["client_secret"]
+
+            # Authenticate and obtain AAD Token for future calls
+            data = urllib.parse.urlencode(req_body).encode("utf-8")
+            response = httpx.post(
+                url=req_url,
+                content=data,
+                timeout=self.get_http_timeout(**kwargs),
+                headers=mp_ua_header(),
+            )
+            json_response = response.json()
+            self.aad_token = json_response.get("access_token", None)
+            if not self.aad_token:
+                raise MsticpyConnectionError(
+                    f"Could not obtain access token - {json_response['error_description']}"
+                )
+        else:
+            _check_config(cs_dict, "username", "delegated authentication")
+            authority = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
+            if authority.startswith("https://login.microsoftonline.com/"):
+                authority = re.split(
+                    r"(https:\/\/login\.microsoftonline\.com\/[^\/]*)", authority
+                )[1]
+            self.msal_auth = MSALDelegatedAuth(
+                client_id=cs_dict["client_id"],
+                authority=authority,
+                username=cs_dict["username"],
+                scopes=self.scopes,
+                auth_type=kwargs["auth_type"]
+                if "auth_type" in kwargs
+                else "interactive",
+                location=cs_dict["location"]
+                if "location" in cs_dict
+                else "token_cache.bin",
+                connect=True,
+            )
+            self.aad_token = self.msal_auth.token
+            json_response = {}
+            self.token_type = "MSAL"  # nosec
+
+        self.req_headers["Authorization"] = f"Bearer {self.aad_token}"
         self.api_root = cs_dict.get("apiRoot", self.api_root)
         if not self.api_root:
             raise ValueError(
@@ -180,7 +224,7 @@ class OData(DriverBase):
         Returns
         -------
         Tuple[pd.DataFrame, results.ResultSet]
-            A DataFrame (if successfull) and
+            A DataFrame (if successful) and
             Kql ResultSet.
 
         """
@@ -197,16 +241,22 @@ class OData(DriverBase):
         # Build request based on whether endpoint requires data to be passed in
         # request body in or URL
         if kwargs["body"] is True:
-            req_url = self.request_uri + kwargs["api_end"]
+            req_url = f"{self.request_uri}{kwargs['api_end']}"
             req_url = urllib.parse.quote(req_url, safe="%/:=&?~#+!$,;'@()*[]")
-            body = {"Query": query}
-            response = requests.post(
-                url=req_url, headers=self.req_headers, data=str(body)
+            response = httpx.post(
+                url=req_url,
+                headers=self.req_headers,
+                json={"Query": query},
+                timeout=self.get_http_timeout(**kwargs),
             )
         else:
             # self.request_uri set if self.connected
-            req_url = self.request_uri + query  # type: ignore
-            response = requests.get(url=req_url, headers=self.req_headers)
+            req_url = f"{self.request_uri}{query}"
+            response = httpx.get(
+                url=req_url,
+                headers=self.req_headers,
+                timeout=self.get_http_timeout(**kwargs),
+            )
 
         self._check_response_errors(response)
 
@@ -216,13 +266,13 @@ class OData(DriverBase):
                 "Warning - query did not complete successfully.",
                 "Check returned response.",
             )
-            return None, json_response
+            return None, json_response  # type: ignore
 
         result = json_response.get("Results", json_response)
 
         if not result:
             print("Warning - query did not return any results.")
-            return None, json_response
+            return None, json_response  # type: ignore
         return pd.json_normalize(result), json_response
 
     # pylint: enable=too-many-branches
@@ -230,12 +280,12 @@ class OData(DriverBase):
     @staticmethod
     def _check_response_errors(response):
         """Check the response for possible errors."""
-        if response.status_code == requests.codes["ok"]:
+        if response.status_code == httpx.codes.OK:
             return
         print(response.json()["error"]["message"])
         if response.status_code == 401:
             raise ConnectionRefusedError(
-                "Authentication failed - possible ", "timeout. Please re-connect."
+                "Authentication failed - possible timeout. Please re-connect."
             )
         # Raise an exception to handle hitting API limits
         if response.status_code == 429:
@@ -289,6 +339,7 @@ _CONFIG_NAME_MAP = {
     "tenant_id": ("tenantid", "tenant_id"),
     "client_id": ("clientid", "client_id"),
     "client_secret": ("clientsecret", "client_secret"),
+    "username": ("username", "user_name"),
 }
 
 
@@ -309,6 +360,7 @@ def _get_driver_settings(
     """Try to retrieve config settings for OAuth drivers."""
     config_key = f"{config_name}-{instance}" if instance else config_name
     drv_config = get_provider_settings("DataProviders").get(config_key)
+
     app_config: Dict[str, str] = {}
     if drv_config:
         app_config = dict(drv_config.args)
@@ -324,3 +376,14 @@ def _get_driver_settings(
         return {}
     # map names to allow for different spellings
     return _map_config_dict_name(app_config)
+
+
+def _check_config(cs_config: dict, item_name: str, scope: str):
+    """Check if an iteam is present in a config."""
+    if item_name not in cs_config:
+        raise MsticpyUserConfigError(
+            f"To use {scope}, you must define {item_name}",
+            "or add them to your msticpyconfig.yaml.",
+            title="Missing connection parameters.",
+            help_uri=("Connecting to OData sources.", _HELP_URI),
+        )

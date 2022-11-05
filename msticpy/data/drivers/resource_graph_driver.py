@@ -4,32 +4,29 @@
 # license information.
 # --------------------------------------------------------------------------
 """Azure Resource Graph Driver class."""
-from typing import Any, Tuple, Union
 import warnings
+from typing import Any, Tuple, Union
 
 import pandas as pd
+
+# pylint: disable=wrong-import-order, ungrouped-imports
+from azure.mgmt.subscription import SubscriptionClient
 from pandas.core.frame import DataFrame
 
-from .driver_base import DriverBase, QuerySource
 from ..._version import VERSION
+from ...auth.azure_auth import AzureCloudConfig, az_connect, only_interactive_cred
+from ...common.exceptions import MsticpyImportExtraError, MsticpyNotConnectedError
 from ...common.utility import export
-from ...common.exceptions import (
-    MsticpyNotConnectedError,
-    MsticpyImportExtraError,
-)
-from ...common.azure_auth import az_connect, AzureCloudConfig, only_interactive_cred
-
-# pylint: disable=wrong-import-order
-from azure.mgmt.subscription import SubscriptionClient
+from .driver_base import DriverBase, QuerySource
 
 try:
     from azure.mgmt.resourcegraph import ResourceGraphClient
     from azure.mgmt.resourcegraph.models import (
-        ResultTruncated,
         QueryRequest,
         QueryRequestOptions,
         QueryResponse,
         ResultFormat,
+        ResultTruncated,
     )
 except ImportError as imp_err:
     raise MsticpyImportExtraError(

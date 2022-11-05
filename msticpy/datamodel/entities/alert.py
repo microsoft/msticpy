@@ -28,15 +28,15 @@ class Alert(Entity):
 
     Attributes
     ----------
-    DisplayName : str
+    AlertDisplayName : str
         Alert DisplayName
     CompromisedEntity : str
         Alert CompromisedEntity
     Count : int
         Alert Count
-    StartTime : datetime
+    StartTimeUtc : datetime
         Alert StartTime
-    EndTime : datetime
+    EndTimeUtc : datetime
         Alert EndTime
     Severity : str
         Alert Severity
@@ -83,8 +83,8 @@ class Alert(Entity):
         self.DisplayName: Optional[str] = None
         self.CompromisedEntity: Optional[str] = None
         self.Count: Any = None
-        self.StartTime: Optional[datetime] = None
-        self.EndTime: Optional[datetime] = None
+        self.StartTimeUtc: Optional[datetime] = None
+        self.EndTimeUtc: Optional[datetime] = None
         self.Severity: Any = None
         self.SystemAlertIds: List[str] = []
         self.AlertType: Optional[str] = None
@@ -92,17 +92,19 @@ class Alert(Entity):
         self.ProviderName: Optional[str] = None
         self.Entities: Optional[List] = None
         super().__init__(src_entity=src_entity, **kwargs)
-        if src_entity:
+        if src_entity is not None:
             self._create_from_ent(src_entity)
 
-        if isinstance(src_event, pd.Series) or src_event:
+        if isinstance(src_event, pd.Series) and not src_event.empty:
             self._create_from_event(src_event)
 
     def _create_from_ent(self, src_entity):  # noqa: MC0001
-        if "StartTime" in src_entity or "TimeGenerated" in src_entity:
-            self.TimeGenerated = src_entity["StartTime"] or src_entity["TimeGenerated"]
+        if "StartTime" in src_entity:
+            self.TimeGeneratedUtc = src_entity["StartTime"]
+        if "TimeGenerated" in src_entity:
+            self.TimeGeneratedUtc = src_entity["TimeGenerated"]
         if "EndTime" in src_entity:
-            self.EndTime = src_entity["EndTime"]
+            self.EndTimeUtc = src_entity["EndTime"]
         if "StartTime" in src_entity:
             self.StartTime = src_entity["StartTime"]
         if "AlertDisplayName" in src_entity:
@@ -124,28 +126,6 @@ class Alert(Entity):
             self.Entities = self._create_entities(ents)
         self._add_additional_data(src_entity)
 
-    def _extract_entities(self, src_row):  # noqa: MC0001
-        input_entities = []
-        if isinstance(src_row.Entities, str):
-            try:
-                ext_props = json.loads(src_row["Entities"])
-                for item in ext_props:
-                    for k, v in item.items():
-                        if isinstance(v, dict) and "$ref" in v.keys():
-                            item[k] = [x for x in ext_props if x["$id"] == v["$ref"]][0]
-                    input_entities.append(item)
-            except json.JSONDecodeError:
-                pass
-        if isinstance(src_row.ExtendedProperties, str):
-            try:
-                ext_props = json.loads(src_row["ExtendedProperties"])
-                for ent, val in ext_props.items():
-                    if ent in ["IpAddress", "Username"]:
-                        input_entities.append({"Entity": val, "Type": ent})
-            except json.JSONDecodeError:
-                pass
-        return input_entities
-
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
@@ -157,11 +137,11 @@ class Alert(Entity):
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
-        return f"Alert: {self.DisplayName}" or self.__class__.__name__
+        alert_name = self.AlertDisplayName or self.DisplayName or None
+        return f"Alert: {alert_name}" or self.__class__.__name__
 
     def _add_additional_data(self, src_entity: Mapping[str, Any]):
         """Populate additional alert properties."""
-        entity_props = set(self.__dict__.keys()) | {"AlertDisplayName", "SystemAlertId"}
         if isinstance(src_entity, dict):
             prop_list = src_entity.items()
         elif type(src_entity).__name__ == "SecurityAlert":
@@ -174,21 +154,23 @@ class Alert(Entity):
             return
 
         for prop_name, prop in prop_list:
-            if prop_name not in entity_props:
+            if prop_name not in self._entity_schema:
                 self.AdditionalData[prop_name] = prop
+            elif prop_name not in self.__dict__:
+                self.__dict__[prop_name] = prop
+            else:
+                continue
 
     def _create_from_event(self, src_event):
         """Create Alert from an alert event."""
         self.TimeGenerated = src_event.get("StartTime", src_event.get("TimeGenerated"))
-        self.DisplayName = src_event.get("DisplayName", src_event.get("Name"))
-        self.CompromisedEntity = src_event.get("CompromisedEntity")
-        self.StartTime = src_event.get("StartTime")
-        self.EndTime = src_event.get("EndTime")
-        self.Severity = src_event.get("AlertSeverity")
+        self.AlertDisplayName = src_event.get(
+            "AlertDisplayName", src_event.get("DisplayName", src_event.get("Name"))
+        )
+        self.StartTimeUtc = src_event.get("StartTimeUtc", src_event.get("StartTime"))
+        self.EndTimeUtc = src_event.get("EndTimeUtc", src_event.get("EndTime"))
+        self.Severity = src_event.get("Severity", src_event.get("AlertSeverity"))
         self.SystemAlertIds = src_event.get("SystemAlertId", src_event.get("ID"))
-        self.AlertType = src_event.get("AlertType")
-        self.VendorName = src_event.get("VendorName")
-        self.ProviderName = src_event.get("ProviderName")
         if isinstance(src_event["Entities"], str):
             try:
                 ents = _extract_entities(json.loads(src_event["Entities"]))
@@ -197,6 +179,101 @@ class Alert(Entity):
         else:
             ents = _extract_entities(src_event["Entities"])
         self.Entities = self._create_entities(ents)
+        for ent in self._entity_schema:
+            if ent not in self.__dict__:
+                self.__dict__[ent] = src_event.get(ent)
+        if "ExtendedProperties" in src_event:
+            ext_props = json.loads(src_event["ExtendedProperties"])
+            self._add_additional_data(ext_props)
+
+    _entity_schema = {
+        # CompromisedEntity (type String)
+        "CompromisedEntity": None,
+        # Count (type Int)
+        "Count": None,
+        # StartTimeUtc (type Datetime)
+        "StartTimeUtc": None,
+        # EndTimeUtc (type Datetime)
+        "EndTimeUtc": None,
+        # Severity (type String)
+        "Severity": None,
+        # SystemAlertIds (type String)
+        "SystemAlertId": None,
+        # AlertType (type System.String)
+        "AlertType": None,
+        # VendorName (type System.String)
+        "VendorName": None,
+        # ProviderName (type System.String)
+        "ProviderName": None,
+        # List of associated entities (type List)
+        "Entities": None,
+        # Time the alert was generated (type String)
+        "TimeGenerated": None,
+        # The product that generated the alert (type String)
+        "ProductName": None,
+        # The product component that generated the alert (type String)
+        "ProductComponentName": None,
+        # The version of the product generating the alert, if relevant (type String)
+        "ProductVersion": None,
+        # The time the alert was made available for consumption (type String)
+        "ProcessingEndTime": None,
+        # The life cycle status of the alert. This field is optional and all alerts would have the status (type String)
+        "Status": None,
+        # The alert provider or product internal life cycle status (type String)
+        "ProviderAlertStatus": None,
+        # The confidence level of this alert (type String)
+        "ConfidenceLevel": None,
+        # The confidence score of the alert (type Float)
+        "ConfidenceScore": None,
+        # The confidence score calculation status (type String)
+        "ConfidenceScoreStatus": None,
+        # A list of reasons for the confidence level of this alert (type List)
+        "ConfidenceReasons": None,
+        # The kill chain related intent behind the alert (type String)
+        "Intent": None,
+        # The kill chain related techniques behind the alert (type List)
+        "Techniques": None,
+        # The kill chain related sub-techniques behind the alert (type List)
+        "SubTechniques": None,
+        # If the alert is an incident or a regular alert (type Bool)
+        "IsIncident": None,
+        # If the alert is in preview (type Bool)
+        "IsPreview": None,
+        # Unique id for the specific alert instance set by the provider (type String)
+        "ProviderAlertId": None,
+        # Key to correlate multiple alerts together (type String)
+        "CorrelationKey": None,
+        # Identifiers of the Investigations created by the provider for the Alert (type List)
+        "InvestigationIds": None,
+        # The resource identifiers for this alert (type List)
+        "ResourceIdentifiers": None,
+        # Display name of the main entity being reported on (type String)
+        "CompromisedEntity": None,
+        # The display name of the alert (type String)
+        "AlertDisplayName": None,
+        # Alert description (type String)
+        "Description": None,
+        # Description arguments to build up Description field in placeholders (type Dict)
+        "DescriptionArguments": None,
+        # SupportingEvidence (type Dict)
+        "SupportingEvidence": None,
+        # Manual action items to take to remediate the alert (type List)
+        "RemediationSteps": None,
+        # A bag of fields which will be presented to the use (type Dict)
+        "ExtendedProperties": None,
+        # A bag for all links related to the alert (type Dict)
+        "ExtendedLinks": None,
+        # Metadata associated with the alert (type Dict)
+        "Metadata": None,
+        # A list of edges contained in this alert (type Dict)
+        "Edges": None,
+        # A direct link to view the specific alert in originating product portal (type String)
+        "AlertUri": None,
+        # Used to provide details about an anomaly in the data found by ML algorithms (type Dict)
+        "Anomaly": None,
+        # Used to provide details about a policy assocaited with the alert (type Dict)
+        "AlertPolicy": None,
+    }
 
     def _create_entities(self, entities):
         """Create alert entities from returned dicts."""
@@ -218,35 +295,7 @@ class Alert(Entity):
             new_ents.append(ent_obj)
         return new_ents
 
-    _entity_schema = {
-        # DisplayName (type System.String)
-        "DisplayName": None,
-        # CompromisedEntity (type System.String)
-        "CompromisedEntity": None,
-        # Count (type System.Nullable`1[System.Int32])
-        "Count": None,
-        # StartTimeUtc (type System.Nullable`1[System.DateTime])
-        "StartTime": None,
-        # EndTimeUtc (type System.Nullable`1[System.DateTime])
-        "EndTime": None,
-        # Severity (type System.Nullable`1
-        # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Severity])
-        "Severity": None,
-        # SystemAlertIds (type System.Collections.Generic.List`1[System.String])
-        "SystemAlertIds": None,
-        # AlertType (type System.String)
-        "AlertType": None,
-        # VendorName (type System.String)
-        "VendorName": None,
-        # ProviderName (type System.String)
-        "ProviderName": None,
-        # List of associated entities
-        "Entities": None,
-        # Time the alert was generated.
-        "TimeGenerated": None,
-    }
-
-    def to_html(self, show_entities=False) -> str:
+    def to_html(self) -> str:
         """Return the item as HTML string."""
         return (
             """
@@ -277,7 +326,7 @@ def _extract_entities(ents: list):
     out_ents = []
     for entity in ents:
         if isinstance(entity, dict) and "$ref" in entity:
-            out_ents.append(_find_og_ent(entity, base_ents))
+            out_ents.append(_find_original_entity(entity, base_ents))
         else:
             for k, val in entity.items():
                 if isinstance(val, (list, dict)):
@@ -285,18 +334,23 @@ def _extract_entities(ents: list):
                         nested_ents = []
                         for item in val:
                             if isinstance(item, dict) and "$ref" in item:
-                                nested_ents.append(_find_og_ent(item, base_ents))
+                                nested_ents.append(
+                                    _find_original_entity(item, base_ents)
+                                )
                                 entity[k] = nested_ents
                     elif isinstance(val, dict) and "$ref" in val:
-                        entity[k] = _find_og_ent(val, base_ents)
+                        entity[k] = _find_original_entity(val, base_ents)
             out_ents.append(entity)
     return out_ents
 
 
-def _find_og_ent(ent, base_ents):
+def _find_original_entity(ent, base_ents):
     """Find the original entity referenced by $ref entity."""
-    id = ent["$ref"]
-    return next(bent for bent in base_ents if ("$id" in bent) and bent["$id"] == id)
+    try:
+        id = ent["$ref"]
+        return next(bent for bent in base_ents if ("$id" in bent) and bent["$id"] == id)
+    except StopIteration:
+        return ent
 
 
 def _generate_base_ents(ents: list) -> list:  # noqa: MC0001

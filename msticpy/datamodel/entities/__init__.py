@@ -10,6 +10,7 @@ from .account import Account
 from .alert import Alert
 from .azure_resource import AzureResource
 from .cloud_application import CloudApplication
+from .cloud_logon_session import CloudLogonSession
 from .dns import Dns
 from .entity import Entity
 from .entity_enums import (  # noqa: F401
@@ -25,9 +26,9 @@ from .host import Host
 from .host_logon_session import HostLogonSession
 from .iot_device import IoTDevice
 from .ip_address import IpAddress
-from .mailbox import Mailbox
 from .mail_cluster import MailCluster
 from .mail_message import MailMessage
+from .mailbox import Mailbox
 from .malware import Malware
 from .network_connection import NetworkConnection
 from .process import Process
@@ -38,8 +39,8 @@ from .submission_mail import SubmissionMail
 from .threat_intelligence import Threatintelligence
 from .unknown_entity import UnknownEntity
 from .url import Url
-from .cloud_logon_session import CloudLogonSession
-from ..soc.incident import Incident
+
+from ..soc.incident import Incident  # isort: skip
 
 # Dictionary to map text names of types to the class.
 Entity.ENTITY_NAME_MAP.update(
@@ -58,6 +59,7 @@ Entity.ENTITY_NAME_MAP.update(
         "iotdevice": IoTDevice,
         "ip": IpAddress,
         "networkconnection": NetworkConnection,
+        "network-connection": NetworkConnection,
         "mailbox": Mailbox,
         "mail-message": MailMessage,
         "mailmessage": MailMessage,

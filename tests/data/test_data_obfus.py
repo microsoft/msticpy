@@ -11,10 +11,11 @@ from typing import Dict, Iterable
 import pandas as pd
 import pytest
 import pytest_check as check
+
 from msticpy.data import data_obfus
+from msticpy.init import mp_pandas_accessors
 
 from ..unit_test_lib import TEST_DATA_PATH
-
 
 _TEST_DATA: Dict[str, Iterable] = {
     "hash_string": [("string", True), ("42424", True), (["42424"], True)],
@@ -215,7 +216,7 @@ def test_pandas_accessor():
     """Test obfuscation with pandas accessor."""
     win_procs = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("win_proc_test.pkl"))
 
-    out_df = win_procs.mp_mask.mask()
+    out_df = win_procs.mp.mask()
     check.equal(len(out_df), len(win_procs))
     for idx, row in win_procs.loc[:2].iterrows():
         for mapped_col in win_procs.columns:

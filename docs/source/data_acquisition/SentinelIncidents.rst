@@ -8,7 +8,7 @@ It is possible to return a list of all incidents within a workspace, as well as 
 Whilst it is possible to access these incident details via the Incident table in the Workspace, you can also interact
 with them via the Microsoft Sentinel APIs which are utilized in these functions.
 
-See :py:meth:`get_incidents <msticpy.data.azure_sentinel.MicrosoftSentinel.list_incidents>`
+See :py:meth:`get_incidents <msticpy.context.azure_sentinel.MicrosoftSentinel.list_incidents>`
 
 .. code:: ipython3
 
@@ -21,7 +21,7 @@ This ID can be found in the name column of the DataFrame returned by `.get_incid
 You can also provide an incident name and it will attempt to get an ID from this. If there are no matches, or multiple
 matches an error will be raised.
 
-See :py:meth:`get_incident <msticpy.data.azure.sentinel_core.MicrosoftSentinel.get_incident>`
+See :py:meth:`get_incident <msticpy.context.azure.sentinel_core.MicrosoftSentinel.get_incident>`
 
 .. code:: ipython3
 
@@ -43,11 +43,12 @@ as well as adding comments to an incident.
 To interact with an incident use `.post_comment` or `.update_incident`.
 
 To update the incident's features you need to pass `.update_incident` a dictionary of parameters and values to update.
-Details of what parameters can be updated can be found in the `Microsoft Sentinel documentation. <https://docs.microsoft.com/en-us/rest/api/securityinsights/incidents/createorupdate>`_
+Details of what parameters can be updated can be found in the `Microsoft Sentinel documentation.
+<https://docs.microsoft.com/rest/api/securityinsights/stable/incidents/create-or-update>`_
 
 .. note:: When modifying severity, status, or title there is no need to include the 'properties.' in the key name within the update_items dictionary
 
-See :py:meth:`update_incident <msticpy.data.azure_sentinel.MicrosoftSentinel.update_incident>`
+See :py:meth:`update_incident <msticpy.context.azure_sentinel.MicrosoftSentinel.update_incident>`
 
 .. code:: ipython3
 
@@ -58,7 +59,7 @@ See :py:meth:`update_incident <msticpy.data.azure_sentinel.MicrosoftSentinel.upd
 Posting comments to an incident uses the `.post_comment` function. Simply pass this function a comment as a string,
 along with an incident and workspace ID. If successful  a "Comment posted." message will be displayed.
 
-See :py:meth:`post_comment <msticpy.data.azure_sentinel.MicrosoftSentinel.post_comment>`
+See :py:meth:`post_comment <msticpy.context.azure_sentinel.MicrosoftSentinel.post_comment>`
 
 .. code:: ipython3
 
@@ -66,7 +67,7 @@ See :py:meth:`post_comment <msticpy.data.azure_sentinel.MicrosoftSentinel.post_c
                 comment = "This is my comment",
                 )
 
-You can also attach boookmarks to an incident. To do this you need to pass in the incident ID or name, and a
+You can also attach bookmarks to an incident. To do this you need to pass in the incident ID or name, and a
 bookmark ID or name. This will then create a link between the incident and the bookmark.
 
 .. code:: ipython3
@@ -92,7 +93,7 @@ Optionally you can also provide the following details:
 - labels: A list of labels to attach to the incident
 - bookmarks: A list of bookmark IDs to associate with the incident
 
-See :py:meth:`create_incident <msticpy.data.azure.sentinel_core.MicrosoftSentinel.create_incident>`
+See :py:meth:`create_incident <msticpy.context.azure.sentinel_core.MicrosoftSentinel.create_incident>`
 
 .. code:: ipython3
 

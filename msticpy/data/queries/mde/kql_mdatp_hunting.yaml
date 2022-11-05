@@ -1,0 +1,509 @@
+metadata:
+  version: 1
+  description: MDATP Queries
+  data_environments: [MDATP, MDE, M365D, LogAnalytics]
+  data_families: [MDATP, MDE]
+  tags: ['user']
+defaults:
+  metadata:
+    data_source: 'hunting_queries'
+  parameters:
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+sources:
+  doc_with_link:
+    description: Looks for a Word document attachment, from which a link was clicked, and after which there was a browser download.
+    metadata:
+    args:
+      query: '
+        let minTimeRange = ago(7d);
+        let wordLinks =
+          DeviceEvents
+          // Filter on click on links from WinWord
+          | where Timestamp > minTimeRange and ActionType == "BrowserLaunchedToOpenUrl" and isnotempty(RemoteUrl) and InitiatingProcessFileName =~ "winword.exe"
+          | project ClickTime=Timestamp, DeviceId, DeviceName, ClickUrl=RemoteUrl;
+        let docAttachments =
+          DeviceFileEvents
+          | where Timestamp > minTimeRange
+			    // Query for common document file extensions
+            and (FileName endswith ".docx" or FileName endswith ".docm" or FileName endswith ".doc")
+			    // Query for files saved from email clients such as the Office Outlook app or the Windows Mail app
+            and InitiatingProcessFileName in~ ("outlook.exe", "hxoutlook.exe")
+          | summarize AttachmentSaveTime=min(Timestamp) by AttachmentName=FileName, DeviceId;
+        let browserDownloads =
+          DeviceFileEvents
+          | where Timestamp > minTimeRange
+			    // Query for files created by common browsers
+            and InitiatingProcessFileName in~ ("browser_broker.exe", "chrome.exe", "iexplore.exe", "firefox.exe")
+            // Exclude JS files that are used for loading sites (but still query for JS files that are known to be downloaded)
+            and not (FileName endswith ".js" and isempty(FileOriginUrl))
+          // Further filter to exclude file extensions that are less indicative of an attack (when there were already previously a doc attachment that included a link)
+          | where FileName !endswith ".partial" and FileName !endswith ".docx"
+          | summarize (Timestamp, SHA1) = argmax(Timestamp, SHA1) by FileName, DeviceId, FileOriginUrl;
+        // Perf tip: start the joins from the smallest table (put it on the left-most side of the joins)
+        wordLinks
+        | join kind= inner (docAttachments) on DeviceId | where ClickTime - AttachmentSaveTime between (0min..3min)
+        | join kind= inner (browserDownloads) on DeviceId | where Timestamp - ClickTime between (0min..3min)
+        // Aggregating multiple "attachments" together - because oftentimes the same file is stored multiple times under different names
+        | summarize Attachments=makeset(AttachmentName), AttachmentSaveTime=min(AttachmentSaveTime), ClickTime=min(ClickTime)
+        by bin(Timestamp, 1tick), FileName, FileOriginUrl, ClickUrl, SHA1, DeviceName, DeviceId
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Delivery/Doc%20attachment%20with%20link%20to%20download.txt"
+    parameters:
+  dropbox_link:
+    description: Looks for user content downloads from dropbox that originate from a link/redirect from a 3rd party site.
+    metadata:
+    args:
+      query: '
+        DeviceFileEvents
+        | where
+            Timestamp > ago(7d)
+            and FileOriginUrl startswith "https://dl.dropboxusercontent.com/"
+            and isnotempty(FileOriginReferrerUrl)
+            and FileOriginReferrerUrl !startswith "https://www.dropbox.com/"
+        | project FileOriginReferrerUrl, FileName
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Delivery/Dropbox%20downloads%20linked%20from%20other%20site.txt"
+    parameters:
+  email_smartscreen:
+    description: Look for links opened from outlook.exe, followed by a browser download and then a SmartScreen app warning
+    metadata:
+    args:
+      query: '
+        let smartscreenAppWarnings =
+        // Query for SmartScreen warnings of unknown executed applications
+            DeviceEvents
+            | where ActionType == "SmartScreenAppWarning"
+            | project WarnTime=Timestamp, DeviceName, WarnedFileName=FileName, WarnedSHA1=SHA1, ActivityId=extractjson("$.ActivityId", AdditionalFields, typeof(string))
+            // Select only warnings that the user has decided to ignore and has executed the app.
+            | join kind=leftsemi (
+                    DeviceEvents
+                    | where ActionType == "SmartScreenUserOverride"
+                    | project DeviceName, ActivityId=extractjson("$.ActivityId", AdditionalFields, typeof(string)))
+                on DeviceName, ActivityId
+          | project-away ActivityId;
+        // Query for links opened from outlook, that are close in time to a SmartScreen warning
+        let emailLinksNearSmartScreenWarnings =
+            DeviceEvents
+            | where ActionType == "BrowserLaunchedToOpenUrl" and isnotempty(RemoteUrl) and InitiatingProcessFileName =~ "outlook.exe"
+            | extend WasOutlookSafeLink=(tostring(parse_url(RemoteUrl).Host) endswith "safelinks.protection.outlook.com")
+            | project DeviceName, MailLinkTime=Timestamp,
+                MailLink=iff(WasOutlookSafeLink, url_decode(tostring(parse_url(RemoteUrl)["Query Parameters"]["url"])), RemoteUrl)
+            | join kind=inner smartscreenAppWarnings on DeviceName | where (WarnTime-MailLinkTime) between (0min..4min);
+        // Add the browser download event to tie in all the dots
+        DeviceFileEvents
+        | where isnotempty(FileOriginUrl) and InitiatingProcessFileName in~ ("chrome.exe", "browser_broker.exe")
+        | project FileName, FileOriginUrl, FileOriginReferrerUrl, DeviceName, Timestamp, SHA1
+        | join kind=inner emailLinksNearSmartScreenWarnings on DeviceName
+        | where (Timestamp-MailLinkTime) between (0min..3min) and (WarnTime-Timestamp) between (0min..1min)
+        | project FileName, MailLink, FileOriginUrl, FileOriginReferrerUrl, WarnedFileName, DeviceName, SHA1, WarnedSHA1, Timestamp
+        | distinct *
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Delivery/Email%20link%20%2B%20download%20%2B%20SmartScreen%20warning.txt"
+    parameters:
+  email_link:
+    description: Look for links opened from mail apps – if a detection occurred right afterwards
+    metadata:
+    args:
+      query: '
+        let minTimeRange = ago(7d);
+        let outlookLinks =
+            DeviceEvents
+            // Filter on click on links from outlook
+            | where Timestamp > minTimeRange and ActionType == "BrowserLaunchedToOpenUrl" and isnotempty(RemoteUrl)
+          | where
+              // outlook.exe is the Office Outlook app
+              InitiatingProcessFileName =~ "outlook.exe"
+              // RuntimeBroker.exe opens links for all apps from the Windows store, including the Windows Mail app (HxOutlook.exe).
+              // However, it will also include some links opened from other apps.
+                  or InitiatingProcessFileName =~ "runtimebroker.exe"
+            | project Timestamp, DeviceId, DeviceName, RemoteUrl, InitiatingProcessFileName, ParsedUrl=parse_url(RemoteUrl)
+            // When applicable, parse the link sent via email from the clicked O365 ATP SafeLink
+            | extend WasOutlookSafeLink=(tostring(ParsedUrl.Host) endswith "safelinks.protection.outlook.com")
+            | project Timestamp, DeviceId, DeviceName, WasOutlookSafeLink, InitiatingProcessFileName,
+                    OpenedLink=iff(WasOutlookSafeLink, url_decode(tostring(ParsedUrl["Query Parameters"]["url"])), RemoteUrl);
+        let alerts =
+            AlertInfo | join AlertEvidence on AlertId
+            | summarize (FirstDetectedActivity, Title)=argmin(Timestamp, Title) by AlertId, DeviceId
+            // Filter alerts that include events from before the queried time period
+            | where FirstDetectedActivity > minTimeRange;
+        // Join the two together - looking for alerts that are right after an abnormal network logon
+        alerts | join kind=inner (outlookLinks) on DeviceId | where FirstDetectedActivity - Timestamp between (0min..3min)
+        // If there are multiple alerts close to a single click-on-link, aggregate them together to a single row
+        // Note: bin(Timestamp, 1tick) is used because when summarizing by a datetime field, the default "bin" used is 1-hour.
+        | summarize FirstDetectedActivity=min(FirstDetectedActivity), AlertTitles=makeset(Title) by OpenedLink, InitiatingProcessFileName, Timestamp=bin(Timestamp, 1tick), DeviceName, DeviceId, WasOutlookSafeLink
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Delivery/Open%20email%20link.txt"
+    parameters:
+  av_sites:
+    description: Pivot from downloads detected by Windows Defender Antivirus to other files downloaded from the same sites
+    metadata:
+    args:
+      query: '
+        let detectedDownloads =
+            DeviceEvents
+            | where ActionType == "AntivirusDetection" and isnotempty(FileOriginUrl)
+            | project Timestamp, FileOriginUrl, FileName, DeviceId,
+                      ThreatName=tostring(parse_json(AdditionalFields).ThreatName)
+            // Filter out less severe threat categories on which we do not want to pivot
+            | where ThreatName !startswith "PUA"
+                    and ThreatName !startswith "SoftwareBundler:"
+                    and FileOriginUrl != "about:internet";
+        let detectedDownloadsSummary =
+            detectedDownloads
+            // Get a few examples for each detected Host:
+            // up to 4 filenames, up to 4 threat names, one full URL)
+            | summarize DetectedUrl=any(FileOriginUrl),
+                        DetectedFiles=makeset(FileName, 4),
+                        ThreatNames=makeset(ThreatName, 4)
+                        by Host=tostring(parse_url(FileOriginUrl).Host);
+        // Query for downloads from sites from which other downloads were detected by Windows Defender Antivirus
+        DeviceFileEvents
+        | where isnotempty(FileOriginUrl)
+        | project FileName, FileOriginUrl, DeviceId, Timestamp,
+                  Host=tostring(parse_url(FileOriginUrl).Host), SHA1
+        // Filter downloads from hosts serving detected files
+        | join kind=inner(detectedDownloadsSummary) on Host
+        // Filter out download file create events that were also detected.
+        // This is needed because sometimes both of these events will be reported,
+        // and sometimes only the AntivirusDetection event - depending on timing.
+        | join kind=leftanti(detectedDownloads) on DeviceId, FileOriginUrl
+        // Summarize a single row per host - with the machines count
+        // and an example event for a missed download (select the last event)
+        | summarize MachineCount=dcount(DeviceId), arg_max(Timestamp, *) by Host
+        // Filter out common hosts, as they probably ones that also serve benign files
+        | where MachineCount < 20
+        | project Host, MachineCount, DeviceId, FileName, DetectedFiles,
+                  FileOriginUrl, DetectedUrl, ThreatNames, Timestamp, SHA1
+        | order by MachineCount desc
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Delivery/Pivot%20from%20detections%20to%20related%20downloads.txt"
+    parameters:
+  tor:
+    description: Looks for Tor client, or for a common Tor plugin called Meek.
+    metadata:
+    args:
+      query: '
+        DeviceNetworkEvents
+        | where Timestamp < ago(3d) and InitiatingProcessFileName in~ ("tor.exe", "meek-client.exe")
+        // Returns MD5 hashes of files used by Tor, to enable you to block them.
+        // We count how prevalent each file is (by machines) and show examples for some of them (up to 5 machine names per hash).
+        | summarize MachineCount=dcount(DeviceName), MachineNames=makeset(DeviceName, 5) by InitiatingProcessMD5
+        | order by MachineCount desc
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Command%20and%20Control/Tor.txt"
+    parameters:
+  network_scans:
+    description: Looking for high volume queries against a given RemoteIP, per ComputerName, RemotePort and Process
+    metadata:
+    args:
+      query: '
+        let remotePortCountThreshold = 10; // Please change the min value, for a host reaching out to remote ports on a remote IP, that you consider to be threshold for a suspicious behavior
+        DeviceNetworkEvents
+        | where Timestamp > ago(1d) and RemoteIP startswith "172.16" or RemoteIP startswith "192.168"
+        | summarize
+            by DeviceName, RemoteIP, RemotePort, InitiatingProcessFileName
+        | summarize RemotePortCount=dcount(RemotePort) by DeviceName, RemoteIP, InitiatingProcessFileName
+        | where RemotePortCount > remotePortCountThreshold
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Command%20and%20Control/Tor.txt"
+    parameters:
+  user_enumeration:
+    description: The query finds attempts to list users or groups using Net commands
+    metadata:
+    args:
+      query: '
+        DeviceProcessEvents
+        | where Timestamp > ago(14d)
+        | where FileName == "net.exe" and AccountName != "" and ProcessCommandLine !contains "\\"  and ProcessCommandLine !contains "/add"
+        | where (ProcessCommandLine contains " user " or ProcessCommandLine contains " group ") and (ProcessCommandLine contains " /do" or ProcessCommandLine contains " /domain")
+        | extend Target = extract("(?i)[user|group] (\"*[a-zA-Z0-9-_ ]+\"*)", 1, ProcessCommandLine) | filter Target  != ""
+        | project AccountName, Target, ProcessCommandLine, DeviceName, Timestamp
+        | sort by AccountName, Target
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Discovery/Enumeration%20of%20users%20%26%20groups%20for%20lateral%20movement.txt"
+    parameters:
+  smb_discovery:
+    description: Query for processes that accessed more than 10 IP addresses over port 445 (SMB) - possibly scanning for network shares.
+    metadata:
+    args:
+      query: '
+        DeviceNetworkEvents
+        | where RemotePort == 445 and Timestamp > ago(7d)
+            // Exclude Kernel processes, as they are too noisy in this query
+            and InitiatingProcessId !in (0, 4)
+        | summarize RemoteIPCount=dcount(RemoteIP) by DeviceName, InitiatingProcessFileName, InitiatingProcessId, InitiatingProcessCreationTime
+        | where RemoteIPCount > 10
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Discovery/SMB%20shares%20discovery.txt"
+    parameters:
+  b64_pe:
+    description: Finding base64 encoded PE files header seen in the command line parameters
+    metadata:
+    args:
+      query: '
+        DeviceProcessEvents
+        | where Timestamp > ago(7d)
+        | where ProcessCommandLine contains "TVqQAAMAAAAEAAA"
+        | top 1000 by Timestamp
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Execution/Base64encodePEFile.txt"
+    parameters:
+  malware_recycle:
+    description: Finding attackers hiding malware in the recycle bin.
+    metadata:
+    args:
+      query: '
+        DeviceProcessEvents
+        | where Timestamp > ago(7d)
+        | where FileName in~("cmd.exe","ftp.exe","schtasks.exe","powershell.exe","rundll32.exe","regsvr32.exe","msiexec.exe")
+        | where ProcessCommandLine contains ":\\recycler"
+        | project Timestamp, DeviceName, ProcessCommandLine, InitiatingProcessFileName
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Execution/Malware_In_recyclebin.txt"
+    parameters:
+  powershell_downloads:
+    description: Finds PowerShell execution events that could involve a download.
+    metadata:
+    args:
+      query: '
+        DeviceProcessEvents
+        | where Timestamp > ago(7d)
+        | where FileName in~ ("powershell.exe", "powershell_ise.exe")
+        | where ProcessCommandLine has "Net.WebClient"
+          or ProcessCommandLine has "DownloadFile"
+          or ProcessCommandLine has "Invoke-WebRequest"
+          or ProcessCommandLine has "Invoke-Shellcode"
+          or ProcessCommandLine has "http"
+          or ProcessCommandLine has "IEX"
+          or ProcessCommandLine has "Start-BitsTransfer"
+          or ProcessCommandLine has "mpcmdrun.exe"
+        | project Timestamp, DeviceName, InitiatingProcessFileName, FileName, ProcessCommandLine
+        | top 100 by Timestamp
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Execution/PowerShell%20downloads.txt"
+    parameters:
+  uncommon_powershell:
+    description: Find which uncommon Powershell Cmdlets were executed on that machine in a certain time period.
+    metadata:
+    args:
+      query: '
+        let DeviceId = "{host_name}";
+        let timestamp = datetime({timestamp});
+        let powershellCommands =
+            DeviceEvents
+            | where ActionType == "PowerShellCommand"
+            // Extract the powershell command name from the Command field in the AdditionalFields JSON column
+            | project PowershellCommand=extractjson("$.Command", AdditionalFields, typeof(string)), InitiatingProcessCommandLine, InitiatingProcessParentFileName, Timestamp, DeviceId
+            | where PowershellCommand !endswith ".ps1" and PowershellCommand !endswith ".exe";
+        // Filter Powershell cmdlets executed on relevant machine and time period
+        powershellCommands | where DeviceId == DeviceId and Timestamp between ((timestamp-5min) .. 10min)
+        // Filter out common powershell cmdlets
+        | join kind=leftanti (powershellCommands | summarize MachineCount=dcount(DeviceId) by PowershellCommand | where MachineCount > 20) on PowershellCommand
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Execution/PowershellCommand%20-%20uncommon%20commands%20on%20machine.txt"
+    parameters:
+      host_name:
+        description: hostname of computer to focus query on
+        type: str
+        aliases:
+          - hostname
+      timestamp:
+        description: timestamp to base investigation scope on
+        type: str
+  cve_2018_1000006l:
+    description: Looks for CVE-2018-1000006 exploitation
+    metadata:
+    args:
+      query: '
+        DeviceProcessEvents
+        | where Timestamp > ago(14d)
+        | where FileName in~ ("code.exe", "skype.exe", "slack.exe", "teams.exe")
+        | where InitiatingProcessFileName in~ ("iexplore.exe", "runtimebroker.exe", "chrome.exe")
+        | where ProcessCommandLine has "--gpu-launcher"
+        | summarize FirstEvent=min(Timestamp), LastEvent=max(Timestamp) by DeviceName, ProcessCommandLine, FileName, InitiatingProcessFileName
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Exploits/Electron-CVE-2018-1000006.txt"
+    parameters:
+  cve_2018_4878:
+    description: This query checks for specific processes and domain TLD used in the CVE-2018-4878
+    metadata:
+    args:
+      query: '
+        DeviceNetworkEvents
+        | where Timestamp > ago(14d)
+        | where InitiatingProcessFileName =~ "cmd.exe" and InitiatingProcessParentFileName =~ "excel.exe"
+        | where RemoteUrl endswith ".kr"
+        | project Timestamp, DeviceName, RemoteIP, RemoteUrl
+        | top 100 by Timestamp
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Exploits/Flash-CVE-2018-4848.txt"
+    parameters:
+  cve_2018_1111:
+    description: Looks for CVE-2018-1111 exploitation
+    metadata:
+    args:
+      query: '
+        DeviceProcessEvents
+        | where InitiatingProcessCommandLine contains "/etc/NetworkManager/dispatcher.d/"
+            and InitiatingProcessCommandLine contains "-dhclient"
+            and isnotempty(ProcessCommandLine)
+            and FileName !endswith ".exe"
+        | project Timestamp, DeviceName , FileName, ProcessCommandLine, InitiatingProcessCommandLine
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Exploits/Linux-DynoRoot-CVE-2018-1111.txt"
+    parameters:
+  brute_force:
+    description: Look for public IP addresses that failed to logon to a computer multiple times, using multiple accounts, and eventually succeeded.
+    metadata:
+    args:
+      query: '
+        DeviceLogonEvents
+        | where isnotempty(RemoteIP)
+            and AccountName !endswith "$"
+            and RemoteIPType == "Public"
+        | extend Account=strcat(AccountDomain, "\\", AccountName)
+        | summarize
+            Successful=countif(ActionType == "LogonSuccess"),
+            Failed = countif(ActionType == "LogonFailed"),
+            FailedAccountsCount = dcountif(Account, ActionType == "LogonFailed"),
+            SuccessfulAccountsCount = dcountif(Account, ActionType == "LogonSuccess"),
+            FailedAccounts = makeset(iff(ActionType == "LogonFailed", Account, ""), 5),
+            SuccessfulAccounts = makeset(iff(ActionType == "LogonSuccess", Account, ""), 5)
+            by DeviceName, RemoteIP, RemoteIPType
+        | where Failed > 10 and Successful > 0 and FailedAccountsCount > 2 and SuccessfulAccountsCount == 1
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Lateral%20Movement/Account%20brute%20force.txt"
+    parameters:
+  service_account_powershell:
+    description: Service Accounts Performing Remote PowerShell
+    metadata:
+    args:
+      query: '
+        let InteractiveTypes = pack_array(
+            "Interactive",
+            "CachedInteractive",
+            "Unlock",
+            "RemoteInteractive",
+            "CachedRemoteInteractive",
+            "CachedUnlock"
+        );
+        let WhitelistedCmdlets = pack_array(
+            "Out-Default",
+            "out-lineoutput",
+            "format-default",
+            "Set-StrictMode",
+            "TabExpansion2"
+        );
+        let WhitelistedAccounts = pack_array("FakeWhitelistedAccount");
+        DeviceLogonEvents
+        | where AccountName !in~ (WhitelistedAccounts)
+        | where ActionType == "LogonSuccess"
+        | where AccountName !contains "$"
+        | where AccountName !has "winrm va_"
+        | extend IsInteractive=(LogonType in (InteractiveTypes))
+        | summarize HasInteractiveLogon=max(IsInteractive)
+                    by AccountName
+        | where HasInteractiveLogon == 0
+        | join kind=rightsemi (
+          DeviceEvents
+          | where ActionType == "PowerShellCommand"
+          | where InitiatingProcessFileName =~ "wsmprovhost.exe"
+            | extend AccountName = InitiatingProcessAccountName
+        ) on AccountName
+        | extend Command = tostring(extractjson("$.Command", AdditionalFields))
+        | where Command !in (WhitelistedCmdlets)
+        | summarize (Timestamp, ReportId)=argmax(Timestamp, ReportId),
+            makeset(Command), count(), min(Timestamp) by
+            AccountName, DeviceName, DeviceId
+        | order by AccountName asc
+        | where min_Timestamp > ago(1d)
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Lateral%20Movement/ServiceAccountsPerformingRemotePS.txt"
+    parameters:
+  accessibility_persistence:
+    description: This query looks for persistence or privilege escalation done using Windows Accessibility features.
+    metadata:
+    args:
+      query: '
+        let minTime = ago(7d);
+        let accessibilityProcessNames = dynamic(["utilman.exe","osk.exe","magnify.exe","narrator.exe","displayswitch.exe","atbroker.exe","sethc.exe", "helppane.exe"]);
+        // Query for debuggers attached using a Registry setting to the accessibility processes
+        let attachedDebugger =
+            DeviceRegistryEvents
+            | where Timestamp > minTime
+            and RegistryKey startswith @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\"
+            and RegistryValueName =~ "debugger"
+          // Parse the debugged process name from the registry key
+            | parse RegistryKey with @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\" FileName
+            | where FileName in~ (accessibilityProcessNames) and isnotempty(RegistryValueData)
+            | project Technique="AttachedDebugger", FileName, AttachedDebuggerCommandline=RegistryValueData, InitiatingProcessCommandLine, Timestamp, DeviceName;
+        // Query for overwrites of the accessibility files
+        let fileOverwiteOfAccessibilityFiles =
+            DeviceFileEvents
+            | where Timestamp > minTime
+                and FileName in~ (accessibilityProcessNames)
+                and FolderPath contains @"Windows\System32"
+            | project Technique="OverwriteFile", Timestamp, DeviceName, FileName, SHA1, InitiatingProcessCommandLine;
+        // Query for unexpected hashes of processes with names matching the accessibility processes.
+        // Specifically, query for hashes matching cmd.exe and powershell.exe, as these MS-signed general-purpose consoles are often used with this technique.
+        let executedProcessIsPowershellOrCmd =
+            DeviceProcessEvents
+            | project Technique="PreviousOverwriteFile", Timestamp, DeviceName, FileName, SHA1
+            | where Timestamp > minTime
+            | where FileName in~ (accessibilityProcessNames)
+            | join kind=leftsemi(
+                DeviceProcessEvents
+                | where Timestamp > ago(14d) and (FileName =~ "cmd.exe" or FileName =~ "powershell.exe")
+                | summarize MachinesCount = dcount(DeviceName) by SHA1
+                | where MachinesCount > 5
+                | project SHA1
+            ) on SHA1;
+        // Union all results together.
+        // An outer union is used because the schemas are a bit different between the tables - and we want to get the superset of all tables combined.
+        attachedDebugger
+        | union kind=outer fileOverwiteOfAccessibilityFiles
+        | union kind=outer executedProcessIsPowershellOrCmd
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Persistence/Accessibility%20Features.txt"
+    parameters:
+  smartscreen_ignored:
+    description: Query for SmartScreen URL blocks, where the user has decided to run the malware nontheless.
+    metadata:
+    args:
+      query: '
+        let minTimeRange = ago(7d);
+        let smartscreenUrlBlocks =
+            DeviceEvents
+            | where ActionType == "SmartScreenUrlWarning" and Timestamp > minTimeRange
+                    // Filter out SmartScreen test URLs under https://demo.smartscreen.msft.net/
+                    and RemoteUrl !startswith "https://demo.smartscreen.msft.net/"
+            | extend ParsedFields=parse_json(AdditionalFields)
+            | project Timestamp, DeviceName, BlockedUrl=RemoteUrl, Recommendation=tostring(ParsedFields.Recommendation), Experience=tostring(ParsedFields.Experience), ActivityId=tostring(ParsedFields.ActivityId);
+        // Query for UserDecision events - each one means the user has decided to ignore the warning and run the app.
+        let userIgnoredWarning=
+            DeviceEvents
+            | where ActionType == "SmartScreenUserOverride" and Timestamp > minTimeRange
+            | project DeviceName, ActivityId=extractjson("$.ActivityId", AdditionalFields, typeof(string));
+        // Join the block and user decision event using an ActivityId
+        let ignoredBlocks = smartscreenUrlBlocks | join kind=leftsemi (userIgnoredWarning) on DeviceName, ActivityId | project-away ActivityId;
+        // Optional additional filter - look only for cases where a file was downloaded from Microsoft Edge following the URL block being ignored
+        let edgeDownloads =
+            DeviceFileEvents
+            | where Timestamp > minTimeRange and InitiatingProcessFileName =~ "browser_broker.exe"
+            | summarize (DownloadTime, SHA1) = argmax(Timestamp, SHA1) by FileName, DeviceName, FileOriginUrl, FileOriginReferrerUrl;
+        ignoredBlocks
+        | join kind=inner (edgeDownloads) on DeviceName
+        | where DownloadTime - Timestamp between (0min .. 2min)
+        | project-away DeviceName1
+        {add_query_items}'
+      uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Protection%20events/SmartScreen%20URL%20block%20ignored%20by%20user.txt"
+    parameters:
