@@ -25,6 +25,23 @@ CLOUD_MAPPING = {
 
 CLOUD_ALIASES = {"public": "global", "gov": "usgov", "germany": "de", "china": "cn"}
 
+_DEFENDER_MAPPINGS = {
+    "global": "https://api.securitycenter.microsoft.com/",
+    "us": "https://api-us.securitycenter.microsoft.com/",
+    "eu": "https://api-eu.securitycenter.microsoft.com/",
+    "uk": "https://api-uk.securitycenter.microsoft.com/",
+    "gcc": "https://api-gcc.securitycenter.microsoft.us/",
+    "gcc-high": "https://api-gov.securitycenter.microsoft.us/",
+    "dod": "https://api-gov.securitycenter.microsoft.us/",
+}
+
+_M365D_MAPPINGS = {
+    "global": "https://api.security.microsoft.com/",
+    "us": "https://api-us.security.microsoft.com/",
+    "eu": "https://api-eu.security.microsoft.com/",
+    "uk": "https://api-uk.security.microsoft.com/",
+}
+
 
 def create_cloud_suf_dict(suffix: str) -> dict:
     """
@@ -259,3 +276,13 @@ class AzureCloudConfig:
     def token_uri(self) -> str:
         """Return the resource manager token URI."""
         return f"{self.endpoints.resource_manager}.default"
+
+
+def get_defender_endpoint(cloud: str) -> str:
+    """Get the URI of the applicable Defender for Endpoint API."""
+    return _DEFENDER_MAPPINGS[cloud.casefold()]
+
+
+def get_m365d_endpoint(cloud: str) -> str:
+    """Get the URI of the applicable Defender for Endpoint API."""
+    return _M365D_MAPPINGS[cloud]
