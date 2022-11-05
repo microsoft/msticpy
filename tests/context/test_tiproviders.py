@@ -851,7 +851,7 @@ _PROVIDER_RESPONSES = {
             ],
         },
     },
-    "https://api.intsights.com": {
+    "https://api.ti.insight.rapid7.com": {
         "ioc_param": "params",
         "response": {
             "Value": "124.5.6.7",
