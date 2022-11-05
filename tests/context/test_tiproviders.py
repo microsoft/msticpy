@@ -434,15 +434,15 @@ def test_check_ioc_type(ti_lookup):
     """Check IOC types."""
     provider = ti_lookup.loaded_providers["OTX"]
     lu_result = provider._check_ioc_type(ioc="a.b.c.d", ioc_type="ipv4")
-    check.equal(lu_result.status, 2)
+    check.equal(lu_result["Status"], 2)
     lu_result = provider._check_ioc_type(ioc="a.b.c.d", ioc_type="ipv6")
-    check.equal(lu_result.status, 2)
+    check.equal(lu_result["Status"], 2)
     lu_result = provider._check_ioc_type(ioc="url", ioc_type="ipv4")
-    check.equal(lu_result.status, 2)
+    check.equal(lu_result["Status"], 2)
     lu_result = provider._check_ioc_type(ioc="123", ioc_type="dns")
-    check.equal(lu_result.status, 2)
+    check.equal(lu_result["Status"], 2)
     lu_result = provider._check_ioc_type(ioc="424246", ioc_type="file_hash")
-    check.equal(lu_result.status, 2)
+    check.equal(lu_result["Status"], 2)
 
 
 def test_result_severity():
@@ -523,11 +523,11 @@ def test_iterable_generator():
     test_df = pd.DataFrame({"col1": _IOC_IPS, "col2": _IOC_IPS})
 
     # DataFrames
-    for ioc, _ in generate_items(test_df, obs_col="col1", ioc_type_col="col2"):
+    for ioc, _ in generate_items(test_df, item_col="col1", item_type_col="col2"):
         check.is_in(ioc, _IOC_IPS)
 
     # Iterables
-    for ioc, ioc_type in generate_items(test_df[["col1"]], obs_col="col1"):
+    for ioc, ioc_type in generate_items(test_df[["col1"]], item_col="col1"):
         check.is_in(ioc, _IOC_IPS)
         check.equal(ioc_type, "ipv4")
 
