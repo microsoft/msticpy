@@ -7,7 +7,7 @@
 import unittest
 from os import path
 
-from msticpy.context.tiproviders import preprocess_observable
+from msticpy.context.preprocess_observable import preprocess_observable
 from msticpy.context.vtlookupv3.vtlookup import VTLookup
 
 from ..unit_test_lib import TEST_DATA_PATH
@@ -80,7 +80,7 @@ class TestVTLookup(unittest.TestCase):
         vtlookup = VTLookup(vtkey="fake", verbosity=2)
 
         FILE_NAME = path.join(TEST_DATA_PATH, "fileresponse.json")
-        with open(FILE_NAME, "r") as file_handle:
+        with open(FILE_NAME, "r", encoding="utf8") as file_handle:
             txt = file_handle.read()
 
         vt_params = vtlookup._VT_API_TYPES["file"]
@@ -97,7 +97,7 @@ class TestVTLookup(unittest.TestCase):
 
         vtlookup = VTLookup(vtkey="fake", verbosity=2)
         FILE_NAME2 = path.join(TEST_DATA_PATH, "file-multi_pos.json")
-        with open(FILE_NAME2, "r") as file_handle:
+        with open(FILE_NAME2, "r", encoding="utf8") as file_handle:
             txt = file_handle.read()
 
         vt_params = vtlookup._VT_API_TYPES["file"]
@@ -116,7 +116,7 @@ class TestVTLookup(unittest.TestCase):
         vtlookup = VTLookup(vtkey="fake", verbosity=2)
 
         FILE_NAME = path.join(TEST_DATA_PATH, "url_pos.json")
-        with open(FILE_NAME, "r") as file_handle:
+        with open(FILE_NAME, "r", encoding="utf8") as file_handle:
             txt = file_handle.read()
 
         vt_params = vtlookup._VT_API_TYPES["url"]
@@ -132,7 +132,7 @@ class TestVTLookup(unittest.TestCase):
 
         vtlookup = VTLookup(vtkey="fake", verbosity=2)
         FILE_NAME2 = path.join(TEST_DATA_PATH, "url_neg.json")
-        with open(FILE_NAME2, "r") as file_handle:
+        with open(FILE_NAME2, "r", encoding="utf8") as file_handle:
             txt = file_handle.read()
 
         vt_params = vtlookup._VT_API_TYPES["url"]
@@ -150,7 +150,7 @@ class TestVTLookup(unittest.TestCase):
         vtlookup = VTLookup(vtkey="fake", verbosity=2)
 
         FILE_NAME = path.join(TEST_DATA_PATH, "domain_pos.json")
-        with open(FILE_NAME, "r") as file_handle:
+        with open(FILE_NAME, "r", encoding="utf8") as file_handle:
             txt = file_handle.read()
 
         vt_params = vtlookup._VT_API_TYPES["domain"]
@@ -171,7 +171,7 @@ class TestVTLookup(unittest.TestCase):
 
         vtlookup = VTLookup(vtkey="fake", verbosity=2)
         FILE_NAME2 = path.join(TEST_DATA_PATH, "domain_neg.json")
-        with open(FILE_NAME2, "r") as file_handle:
+        with open(FILE_NAME2, "r", encoding="utf8") as file_handle:
             txt = file_handle.read()
 
         vt_params = vtlookup._VT_API_TYPES["domain"]
@@ -191,7 +191,7 @@ class TestVTLookup(unittest.TestCase):
         vtlookup = VTLookup(vtkey="fake", verbosity=2)
 
         FILE_NAME = path.join(TEST_DATA_PATH, "ip-address_pos.json")
-        with open(FILE_NAME, "r") as file_handle:
+        with open(FILE_NAME, "r", encoding="utf8") as file_handle:
             txt = file_handle.read()
 
         vt_params = vtlookup._VT_API_TYPES["ip-address"]
@@ -210,7 +210,7 @@ class TestVTLookup(unittest.TestCase):
 
         vtlookup = VTLookup(vtkey="fake", verbosity=2)
         FILE_NAME2 = path.join(TEST_DATA_PATH, "ip-address_neg.json")
-        with open(FILE_NAME2, "r") as file_handle:
+        with open(FILE_NAME2, "r", encoding="utf8") as file_handle:
             txt = file_handle.read()
 
         vt_params = vtlookup._VT_API_TYPES["ip-address"]
