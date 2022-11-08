@@ -157,6 +157,7 @@ class ElasticDriver(DriverBase):
             the underlying provider result if an error occurs.
 
         """
+        raise NotImplementedError("Unsupported method.")
 
     # Parameter Formatting methods
     # If not needed, remove these and remove from self.formatters

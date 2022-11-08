@@ -539,6 +539,7 @@ class SumologicDriver(DriverBase):
             the underlying provider result if an error occurs.
 
         """
+        raise NotImplementedError("Unsupported method.")
 
     # Parameter Formatting methods
     @staticmethod
