@@ -255,6 +255,7 @@ class SplunkDriver(DriverBase):
             the underlying provider result if an error occurs.
 
         """
+        raise NotImplementedError("Unsupported method.")
 
     @property
     def service_queries(self) -> Tuple[Dict[str, str], str]:
