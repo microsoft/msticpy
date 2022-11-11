@@ -65,8 +65,6 @@ from ._version import VERSION
 from .common import pkg_config as settings
 from .common.check_version import check_version
 from .common.utility import search_name as search
-from .datamodel import entities
-from .init.pivot import Pivot
 
 __version__ = VERSION
 __author__ = "Ian Hellen, Pete Bryan, Ashwin Patil"
@@ -84,6 +82,7 @@ _DEFAULT_IMPORTS = {
     "ContextLookup": "msticpy.context.contextlookup",
     "GeoLiteLookup": "msticpy.context.geoip",
     "init_notebook": "msticpy.init.nbinit",
+    "reset_ipython_exception_handler": "msticpy.init.nbinit",
     "IPStackLookup": "msticpy.context.geoip",
     "MicrosoftSentinel": "msticpy.context.azure",
     "MpConfigEdit": "msticpy.config.mp_config_edit",
@@ -92,6 +91,8 @@ _DEFAULT_IMPORTS = {
     "TILookup": "msticpy.context.tilookup",
     "TimeSpan": "msticpy.common.timespan",
     "WorkspaceConfig": "msticpy.common.wsconfig",
+    "entities": "msticpy.datamodel",
+    "Pivot": "msticpy.init.pivot",
 }
 
 

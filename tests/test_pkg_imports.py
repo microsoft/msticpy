@@ -26,6 +26,7 @@ EXTRAS_EXCEPTIONS = {
     "seaborn",
     "msticpy",
     "msticnb",
+    "pygeohash",
     "pyperclip",
 }
 CONDA_PKG_EXCEPTIONS = {
