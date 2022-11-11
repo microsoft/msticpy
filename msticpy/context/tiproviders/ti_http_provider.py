@@ -12,19 +12,19 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import Dict, Any
-from json import JSONDecodeError
-
 from functools import lru_cache
+from json import JSONDecodeError
+from typing import Any, Dict
+
 import pandas as pd
 
 from ..._version import VERSION
-from .ti_provider_base import TIProvider
 from ...common.pkg_config import get_http_timeout
+from ...common.utility import export
 from ..http_provider import HttpProvider
 from ..lookup_result import LookupStatus
-from ...common.utility import export
 from .result_severity import ResultSeverity
+from .ti_provider_base import TIProvider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

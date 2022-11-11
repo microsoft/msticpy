@@ -19,10 +19,10 @@ import pandas as pd
 
 from ..._version import VERSION
 from ...common.utility import export
+from ..http_provider import APILookupParams
 from ..lookup_result import LookupStatus
 from ..provider_base import generate_items
 from .ti_http_provider import HttpTIProvider
-from ..http_provider import APILookupParams
 from .ti_provider_base import ResultSeverity
 
 __version__ = VERSION
