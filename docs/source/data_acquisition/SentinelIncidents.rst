@@ -4,7 +4,7 @@ Microsoft Sentinel Incidents
 List Incidents
 --------------
 
-It is possible to return a list of all incidents within a workspace, as well as get the details of a specific incident.
+It is possible to return a list incidents within a workspace, as well as get the details of a specific incident.
 Whilst it is possible to access these incident details via the Incident table in the Workspace, you can also interact
 with them via the Microsoft Sentinel APIs which are utilized in these functions.
 
@@ -14,7 +14,7 @@ See :py:meth:`get_incidents <msticpy.context.azure_sentinel.MicrosoftSentinel.li
 
     sentinel.list_incidents()
 
-This returns a DataFrame with details of all incidents.
+This returns a DataFrame with details of incidents.
 
 To get details of a single incident you can call `.get_incident` and pass the ID of an incident.
 This ID can be found in the name column of the DataFrame returned by `.get_incidents` and appears in the form of a GUID.
