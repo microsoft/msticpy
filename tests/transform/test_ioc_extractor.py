@@ -1,9 +1,34 @@
-import unittest
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
+"""IoC extract tests."""
 
 import pandas as pd
+import pytest
+import pytest_check as check
 
-# Test code
 from msticpy.transform.iocextract import IoCExtract
+
+from ..unit_test_lib import TEST_DATA_PATH
+
+__author__ = "Ian Hellen"
+
+# pylint: disable=redefined-outer-name
+
+
+@pytest.fixture(scope="module")
+def ioc_extract():
+    """Return IoCExtract instance."""
+    return IoCExtract()
+
+
+@pytest.fixture(scope="module")
+def ioc_extract_no_df():
+    """Return IoCExtract instance."""
+    return IoCExtract(defanged=False)
+
 
 TEST_CASES = {
     "ipv4_test": r"c:\one\path\or\another\myprocess -ip4:206.123.1.123",
@@ -21,180 +46,296 @@ TEST_CASES = {
     "domain1_test": "some text with a domain.like.uk in it",
     "domain_neg_test": "some text with a bad domain.like.iandom in it",
     "domain_short_test": "some text with a microsoft.com in it",
+    "email1_test": "some text with user@microsoft.com in it",
+    "email2_test": "some text with User <user@microsoft.com> in it",
+    "email3_test": "some text with user@microsoft.com (User XYZ)> in it",
+    "email4_test": "some text with user@abc.def.net> in it",
 }
 
 
-class TestIoCExtractor(unittest.TestCase):
-    """Unit test class."""
-
-    def __run_extract(self, extractor=None, testcase=None, expected_items=None):
-        if extractor is None or testcase is None or expected_items is None:
-            raise Exception("One or more required parameters were missing")
-
-        test_input = TEST_CASES[testcase + "_test"]
-        results = extractor.extract(test_input, include_paths=True)
-        for k, v in expected_items.items():
-            self.assertEqual(len(results[k]), v, "Unexpected value for " + k)
-
-    def setUp(self):
-        self.extractor = IoCExtract()
-
-    def test_ipv4(self):
-        self.__run_extract(self.extractor, "ipv4", {"ipv4": 1})
-
-    def test_ipv6(self):
-        self.__run_extract(self.extractor, "ipv6", {"ipv6": 3})
-
-    def test_url(self):
-        self.__run_extract(self.extractor, "url", {"url": 2, "dns": 2, "ipv4": 0})
-        self.__run_extract(self.extractor, "url2", {"url": 1, "dns": 1, "ipv4": 1})
-
-    def test_windows_path(self):
-        self.__run_extract(self.extractor, "windows_path", {"windows_path": 3})
-
-    def test_linux_path(self):
-        self.__run_extract(self.extractor, "linux_path", {"linux_path": 3})
-
-    def test_hashes(self):
-        self.__run_extract(self.extractor, "md5_hash", {"md5_hash": 3})
-        self.__run_extract(self.extractor, "sha1_hash", {"sha1_hash": 3})
-        self.__run_extract(self.extractor, "sha256_hash", {"sha256_hash": 3})
-
-    def test_dns(self):
-        self.__run_extract(self.extractor, "domain1", {"dns": 1})
-        self.__run_extract(self.extractor, "domain_neg", {"dns": 0})
-        self.__run_extract(self.extractor, "domain_short", {"dns": 1})
-
-    def test_dataframe(self):
-
-        input_df = pd.DataFrame.from_dict(
-            data=TEST_CASES, orient="index", columns=["input"]
-        )
-        output_df = self.extractor.extract(
-            data=input_df, columns=["input"], include_paths=True
-        )
-
-        self.assertGreater(output_df.shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "url"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "windows_path"].shape[0], 6)
-        self.assertEqual(output_df[output_df["IoCType"] == "linux_path"].shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "md5_hash"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "sha1_hash"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "sha256_hash"].shape[0], 3)
-
-        input_df = pd.DataFrame.from_dict(
-            data=TEST_CASES, orient="index", columns=["input"]
-        )
-        ioc_types = [
-            "ipv4",
-            "ipv6",
-            "url",
-            "linux_path",
-            "md5_hash",
-            "sha1_hash",
-            "sha256_hash",
-        ]
-        output_df = self.extractor.extract(
-            data=input_df, columns=["input"], include_paths=True, ioc_types=ioc_types
-        )
-        # for _, row in output_df[output_df['IoCType'] == 'url'].iterrows():
-        #     print(row.Observable)
-        self.assertGreater(output_df.shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "url"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "windows_path"].shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "linux_path"].shape[0], 8)
-        self.assertEqual(output_df[output_df["IoCType"] == "md5_hash"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "sha1_hash"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "sha256_hash"].shape[0], 3)
-
-    def test_dataframe_ioc_types(self):
-
-        input_df = pd.DataFrame.from_dict(
-            data=TEST_CASES, orient="index", columns=["input"]
-        )
-        output_df = self.extractor.extract(
-            data=input_df, columns=["input"], ioc_types=["ipv4", "url", "md5_hash"]
-        )
-
-        self.assertGreater(output_df.shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "url"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "windows_path"].shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "linux_path"].shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "md5_hash"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "sha1_hash"].shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "sha256_hash"].shape[0], 0)
-
-    def test_dataframe_new(self):
-
-        input_df = pd.DataFrame.from_dict(
-            data=TEST_CASES, orient="index", columns=["input"]
-        )
-        output_df = self.extractor.extract_df(
-            data=input_df, columns=["input"], include_paths=True
-        )
-
-        self.assertGreater(output_df.shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "url"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "windows_path"].shape[0], 6)
-        self.assertEqual(output_df[output_df["IoCType"] == "linux_path"].shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "md5_hash"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "sha1_hash"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "sha256_hash"].shape[0], 3)
-
-        input_df = pd.DataFrame.from_dict(
-            data=TEST_CASES, orient="index", columns=["input"]
-        )
-        ioc_types = [
-            "ipv4",
-            "ipv6",
-            "url",
-            "linux_path",
-            "md5_hash",
-            "sha1_hash",
-            "sha256_hash",
-        ]
-        output_df = self.extractor.extract_df(
-            data=input_df, columns=["input"], include_paths=True, ioc_types=ioc_types
-        )
-        # for _, row in output_df[output_df['IoCType'] == 'url'].iterrows():
-        #     print(row.Observable)
-        self.assertGreater(output_df.shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "url"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "windows_path"].shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "linux_path"].shape[0], 8)
-        self.assertEqual(output_df[output_df["IoCType"] == "md5_hash"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "sha1_hash"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "sha256_hash"].shape[0], 3)
-
-    def test_dataframe_ioc_types_new(self):
-
-        input_df = pd.DataFrame.from_dict(
-            data=TEST_CASES, orient="index", columns=["input"]
-        )
-        output_df = self.extractor.extract_df(
-            data=input_df, columns=["input"], ioc_types=["ipv4", "url", "md5_hash"]
-        )
-
-        self.assertGreater(output_df.shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "url"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "windows_path"].shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "linux_path"].shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "md5_hash"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "sha1_hash"].shape[0], 0)
-        self.assertEqual(output_df[output_df["IoCType"] == "sha256_hash"].shape[0], 0)
+def _run_extract(ioc_extract, testcase, expected_items):
+    """Run individual tests."""
+    test_input = TEST_CASES[testcase + "_test"]
+    results = ioc_extract.extract(test_input, include_paths=True)
+    for k, v in expected_items.items():
+        check.equal(len(results[k]), v, "Unexpected value for " + k)
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_ipv4(ioc_extract):
+    _run_extract(ioc_extract, "ipv4", {"ipv4": 1})
+
+
+def test_ipv6(ioc_extract):
+    _run_extract(ioc_extract, "ipv6", {"ipv6": 3})
+
+
+def test_url(ioc_extract):
+    _run_extract(ioc_extract, "url", {"url": 2, "dns": 2, "ipv4": 0})
+    _run_extract(ioc_extract, "url2", {"url": 1, "dns": 1, "ipv4": 1})
+
+
+def test_windows_path(ioc_extract):
+    _run_extract(ioc_extract, "windows_path", {"windows_path": 3})
+
+
+def test_linux_path(ioc_extract):
+    _run_extract(ioc_extract, "linux_path", {"linux_path": 3})
+
+
+def test_hashes(ioc_extract):
+    _run_extract(ioc_extract, "md5_hash", {"md5_hash": 3})
+    _run_extract(ioc_extract, "sha1_hash", {"sha1_hash": 3})
+    _run_extract(ioc_extract, "sha256_hash", {"sha256_hash": 3})
+
+
+def test_dns(ioc_extract):
+    _run_extract(ioc_extract, "domain1", {"dns": 1})
+    _run_extract(ioc_extract, "domain_neg", {"dns": 0})
+    _run_extract(ioc_extract, "domain_short", {"dns": 1})
+
+
+def test_email(ioc_extract):
+    _run_extract(ioc_extract, "email1", {"email": 1})
+    _run_extract(ioc_extract, "email2", {"email": 1})
+    _run_extract(ioc_extract, "email3", {"email": 1})
+    _run_extract(ioc_extract, "email4", {"email": 1})
+
+
+def test_dataframe(ioc_extract):
+
+    input_df = pd.DataFrame.from_dict(
+        data=TEST_CASES, orient="index", columns=["input"]
+    )
+    output_df = ioc_extract.extract(
+        data=input_df, columns=["input"], include_paths=True
+    )
+
+    check.greater(output_df.shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "ipv6"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "url"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "windows_path"].shape[0], 6)
+    check.equal(output_df[output_df["IoCType"] == "linux_path"].shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "md5_hash"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "sha1_hash"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "sha256_hash"].shape[0], 3)
+
+    input_df = pd.DataFrame.from_dict(
+        data=TEST_CASES, orient="index", columns=["input"]
+    )
+    ioc_types = [
+        "ipv4",
+        "ipv6",
+        "url",
+        "linux_path",
+        "md5_hash",
+        "sha1_hash",
+        "sha256_hash",
+    ]
+    output_df = ioc_extract.extract(
+        data=input_df, columns=["input"], include_paths=True, ioc_types=ioc_types
+    )
+    # for _, row in output_df[output_df['IoCType'] == 'url'].iterrows():
+    #     print(row.Observable)
+    check.greater(output_df.shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "ipv6"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "url"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "windows_path"].shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "linux_path"].shape[0], 8)
+    check.equal(output_df[output_df["IoCType"] == "md5_hash"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "sha1_hash"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "sha256_hash"].shape[0], 3)
+
+
+def test_dataframe_ioc_types(ioc_extract):
+
+    input_df = pd.DataFrame.from_dict(
+        data=TEST_CASES, orient="index", columns=["input"]
+    )
+    output_df = ioc_extract.extract(
+        data=input_df, columns=["input"], ioc_types=["ipv4", "url", "md5_hash"]
+    )
+
+    check.greater(output_df.shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "ipv6"].shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "url"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "windows_path"].shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "linux_path"].shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "md5_hash"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "sha1_hash"].shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "sha256_hash"].shape[0], 0)
+
+
+def test_dataframe_new(ioc_extract):
+
+    input_df = pd.DataFrame.from_dict(
+        data=TEST_CASES, orient="index", columns=["input"]
+    )
+    output_df = ioc_extract.extract_df(
+        data=input_df, columns=["input"], include_paths=True
+    )
+
+    check.greater(output_df.shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "ipv6"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "url"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "windows_path"].shape[0], 6)
+    check.equal(output_df[output_df["IoCType"] == "linux_path"].shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "md5_hash"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "sha1_hash"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "sha256_hash"].shape[0], 3)
+
+    input_df = pd.DataFrame.from_dict(
+        data=TEST_CASES, orient="index", columns=["input"]
+    )
+    ioc_types = [
+        "ipv4",
+        "ipv6",
+        "url",
+        "linux_path",
+        "md5_hash",
+        "sha1_hash",
+        "sha256_hash",
+    ]
+    output_df = ioc_extract.extract_df(
+        data=input_df, columns=["input"], include_paths=True, ioc_types=ioc_types
+    )
+    # for _, row in output_df[output_df['IoCType'] == 'url'].iterrows():
+    #     print(row.Observable)
+    check.greater(output_df.shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "ipv6"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "url"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "windows_path"].shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "linux_path"].shape[0], 8)
+    check.equal(output_df[output_df["IoCType"] == "md5_hash"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "sha1_hash"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "sha256_hash"].shape[0], 3)
+
+
+def test_dataframe_ioc_types_new(ioc_extract):
+
+    input_df = pd.DataFrame.from_dict(
+        data=TEST_CASES, orient="index", columns=["input"]
+    )
+    output_df = ioc_extract.extract_df(
+        data=input_df, columns=["input"], ioc_types=["ipv4", "url", "md5_hash"]
+    )
+
+    check.greater(output_df.shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "ipv6"].shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "url"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "windows_path"].shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "linux_path"].shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "md5_hash"].shape[0], 3)
+    check.equal(output_df[output_df["IoCType"] == "sha1_hash"].shape[0], 0)
+    check.equal(output_df[output_df["IoCType"] == "sha256_hash"].shape[0], 0)
+
+
+TEST_DF_CASES = {
+    "ipv4": [
+        (r"c:\one\path\or\another\myprocess -ip4:206[.]123.1.123", True),
+        (r"c:\one\path\or\another\myprocess -ip4:206[.]123[.]1[.]123", True),
+        (r"c:\one\path\or\another\myprocess -ip4:206.123[.]1[.]123", True),
+        (r"c:\one\path\or\another\myprocess -ip4:206.123[.]1[.]com", False),
+    ],
+    "url": [
+        (
+            r"curl 'hXXps://www.virustotal.com/en/ip-address/90.156.201.27/information/'",
+            True,
+        ),
+        (
+            r"curl 'ftp://www[.]virustotal.com/en/ip-address/90.156.201.27/information/'",
+            True,
+        ),
+        (
+            r"curl 'ftp://www[.]virustotal[.]com/en/ip-address/90.156.201.27/information/'",
+            True,
+        ),
+        (
+            r"curl 'sftp://www[.]virustotal.com/en/ip-address/90.156.201.27/information/'",
+            True,
+        ),
+        (
+            r"curl 'ftps://www[.]virustotal.com/en/ip-address/90.156.201.27/information/'",
+            True,
+        ),
+        (
+            r"curl 'fXp://www[.]virustotal.com/en/ip-address/90.156.201.27/information/'",
+            True,
+        ),
+        (
+            r"curl 'sfXp://www.virustotal.com/en/ip-address/90.156.201.27/information/'",
+            True,
+        ),
+        (
+            r"curl 'fXps://www[.]virustotal.com/en/ip-address/90.156.201.27/information/'",
+            True,
+        ),
+        (
+            r"curl 'file://www[.]virustotal.com/en/ip-address/90.156.201.27/information/'",
+            True,
+        ),
+        (
+            r"curl 'telnet://www[.]virustotal.com/en/ip-address/90.156.201.27/information/'",
+            True,
+        ),
+        (
+            r"curl 'telnet://www[.]virustotal.com/en/ip-address/90.156.201.27/information/'",
+            True,
+        ),
+    ],
+    "dns": [
+        ("some text with a domain[.]like.uk in it", True),
+        ("some text with a domain.like[.]uk in it", True),
+        ("some text with a domain[.]like[.]uk in it", True),
+    ],
+    "email": [
+        ("some text with a user@domain[.]like.uk in it", True),
+        ("some text with a userATdomain[.]like.uk in it", True),
+        ("some text with a userATdomain[.]like.uk in it", True),
+        ("some text with a userATdomain.like.uk in it", True),
+    ],
+}
+
+
+def _test_ids():
+    return [
+        f"{grp}_{idx}"
+        for grp, cases in TEST_DF_CASES.items()
+        for idx, _ in enumerate(cases)
+    ]
+
+
+def _tests():
+    return [
+        (ioc_type, case[0], case[1])
+        for ioc_type, cases in TEST_DF_CASES.items()
+        for case in cases
+    ]
+
+
+@pytest.mark.parametrize("ioc, test, expected", _tests(), ids=_test_ids())
+def test_defanged_iocs(ioc, test, expected, ioc_extract):
+    """Test defanged IoC Types."""
+    results = ioc_extract.extract(test)
+    if expected:
+        check.greater(len(results[ioc]), 0)
+    else:
+        check.equal(len(results[ioc]), 0)
+
+
+_DF_IP_CASES = TEST_DF_CASES["ipv4"]
+_IDS = [f"ipv4_{idx}" for idx in range(len(_DF_IP_CASES))]
+
+
+@pytest.mark.parametrize("test, expected", _DF_IP_CASES, ids=_IDS)
+def test_defanged_iocs_no_defang(test, expected, ioc_extract_no_df):
+    """Test defanged IoC Types without de-fanging."""
+    del expected
+    results = ioc_extract_no_df.extract(test)
+    # all IP cases should fail
+    check.equal(len(results["ipv4"]), 0)

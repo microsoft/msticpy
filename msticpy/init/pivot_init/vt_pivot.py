@@ -139,7 +139,7 @@ def _create_pivots(api_scope: Union[str, VTAPIScope, None]):
         scope = api_scope
     try:
         vt_client = VTLookupV3()
-    except ValueError:
+    except (ValueError, AttributeError):
         # Can't initialize VTLookup - don't add the pivot funcs
         return {}
 

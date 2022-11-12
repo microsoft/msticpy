@@ -12,15 +12,15 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 """
 import datetime as dt
-from typing import Any, Tuple, Dict
+from typing import Any, Dict, Tuple
 
 import attr
 
 from ..._version import VERSION
 from ...common.utility import export
-from .ti_http_provider import HttpTIProvider
 from ..http_provider import APILookupParams
 from .result_severity import ResultSeverity
+from .ti_http_provider import HttpTIProvider
 
 __version__ = VERSION
 __author__ = "Florian Bracq"
