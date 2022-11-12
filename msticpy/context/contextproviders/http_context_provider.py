@@ -11,17 +11,17 @@ It is used to interface with HTTP API providing additional contexts.
 It inherits from ContextProvider and HttpProvider
 
 """
-from typing import Dict, Any
-from json import JSONDecodeError
 from functools import lru_cache
-import pandas as pd
+from json import JSONDecodeError
+from typing import Any, Dict
 
+import pandas as pd
 
 from ..._version import VERSION
 from ...common.pkg_config import get_http_timeout
-from .context_provider_base import ContextProvider
+from ..http_provider import APILookupParams, HttpProvider
 from ..lookup_result import LookupStatus
-from ..http_provider import HttpProvider, APILookupParams
+from .context_provider_base import ContextProvider
 
 __version__ = VERSION
 __author__ = "Florian Bracq"

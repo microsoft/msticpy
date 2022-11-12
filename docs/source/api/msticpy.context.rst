@@ -26,7 +26,7 @@ Submodules
    msticpy.context.contextlookup
    msticpy.context.domain_utils
    msticpy.context.geoip
-   msticpy.context.http_lookup
+   msticpy.context.http_provider
    msticpy.context.ip_utils
    msticpy.context.lookup
    msticpy.context.lookup_result

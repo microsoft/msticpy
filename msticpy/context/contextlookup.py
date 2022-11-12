@@ -14,17 +14,15 @@ requests per minute for the account type that you have.
 """
 from typing import Iterable, List, Mapping, Optional, Union
 
-
 import pandas as pd
 
 from .._version import VERSION
 from ..common.utility import export
 
-from .lookup import Lookup
-from .provider_base import _make_sync
-
 # used in dynamic instantiation of providers
 from .contextproviders import CONTEXT_PROVIDERS
+from .lookup import Lookup
+from .provider_base import _make_sync
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
