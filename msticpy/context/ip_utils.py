@@ -60,7 +60,7 @@ def _fetch_asns():
     asns_soup: Optional[BeautifulSoup] = None
 
     def _get_asns_soup() -> BeautifulSoup:
-        """Return or fetch and return ASN Soup"""
+        """Return or fetch and return ASN Soup."""
         nonlocal asns_soup  # noqa
         if asns_soup is None:
             asns = httpx.get(_POTAROO_ASNS_URL)
