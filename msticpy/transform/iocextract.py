@@ -27,7 +27,7 @@ import re
 import warnings
 from collections import defaultdict, namedtuple
 from enum import Enum
-from typing import Any, Dict, List, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from urllib.parse import unquote
 
 import pandas as pd
@@ -46,6 +46,8 @@ def _compile_regex(regex):
 IoCPattern = namedtuple("IoCPattern", ["ioc_type", "comp_regex", "priority", "group"])
 
 _RESULT_COLS = ["IoCType", "Observable", "SourceIndex", "Input"]
+
+_DEFANG_TRANSLATION = {91: "", 93: ""}
 
 
 @export
@@ -311,6 +313,9 @@ class IoCExtract:
             If True, ignore the official Top Level Domains
             list when determining whether a domain name is
             a legal domain.
+        defanged : bool, optional
+            If False will remove any [] from email, dns and ip
+            entities.
 
         Returns
         -------
@@ -338,14 +343,15 @@ class IoCExtract:
         is True or explicitly included in `ioc_types`.
 
         """
-        check_kwargs(kwargs, ["ioc_types", "include_paths", "ignore_tlds"])
-        ioc_types = kwargs.get("ioc_types", [])
+        check_kwargs(kwargs, ["ioc_types", "include_paths", "ignore_tlds", "defanged"])
+        ioc_types = kwargs.get("ioc_types")
         include_paths = kwargs.get("include_paths", False)
         ignore_tld_current = self._ignore_tld
         self._ignore_tld = kwargs.get("ignore_tlds", False)
+        defanged = kwargs.get("defanged", True)
 
         if src and src.strip():
-            return self._scan_for_iocs(src=src, ioc_types=ioc_types)
+            return self._scan_for_iocs(src=src, ioc_types=ioc_types, defang=defanged)
 
         if data is None:
             raise ValueError("No source data was supplied to extract")
@@ -366,7 +372,7 @@ class IoCExtract:
         result_rows: List[pd.Series] = []
         for idx, datarow in data.iterrows():
             result_rows.extend(
-                self._search_in_row(datarow, idx, columns, ioc_types_to_use)
+                self._search_in_row(datarow, idx, columns, ioc_types_to_use, defanged)
             )
         self._ignore_tld = ignore_tld_current
         return pd.DataFrame(data=result_rows, columns=_RESULT_COLS)
@@ -378,11 +384,12 @@ class IoCExtract:
         idx: Any,
         columns: List[str],
         ioc_types_to_use: List[str],
+        defanged: bool = True,
     ) -> List[pd.Series]:
         """Return results for a single input row."""
         result_rows = []
         for col in columns:
-            ioc_results = self._scan_for_iocs(datarow[col], ioc_types_to_use)
+            ioc_results = self._scan_for_iocs(datarow[col], ioc_types_to_use, defanged)
             for result_type, result_set in ioc_results.items():
                 if result_set:
                     for observable in result_set:
@@ -445,11 +452,12 @@ class IoCExtract:
         is True or explicitly included in `ioc_types`.
 
         """
-        check_kwargs(kwargs, ["ioc_types", "include_paths", "ignore_tlds"])
-        ioc_types = kwargs.get("ioc_types", [])
+        check_kwargs(kwargs, ["ioc_types", "include_paths", "ignore_tlds", "defanged"])
+        ioc_types = kwargs.get("ioc_types")
         include_paths = kwargs.get("include_paths", False)
         ignore_tld_current = self._ignore_tld
         self._ignore_tld = kwargs.get("ignore_tlds", False)
+        defanged = kwargs.get("defanged", False)
 
         ioc_types_to_use = self._get_ioc_types_to_use(ioc_types, include_paths)
         if isinstance(columns, str):
@@ -465,13 +473,13 @@ class IoCExtract:
         result_rows = []
         for idx, datarow in data.iterrows():
             result_rows.extend(
-                self._search_in_row(datarow, idx, columns, ioc_types_to_use)
+                self._search_in_row(datarow, idx, columns, ioc_types_to_use, defanged)
             )
         self._ignore_tld = ignore_tld_current
         return pd.DataFrame(data=result_rows, columns=_RESULT_COLS)
 
     def _get_ioc_types_to_use(
-        self, ioc_types: List[str], include_paths: bool
+        self, ioc_types: Optional[List[str]], include_paths: bool
     ) -> List[str]:
         # Use only requested IoC Type patterns
         if ioc_types:
@@ -591,7 +599,10 @@ class IoCExtract:
         return self._dom_validator.validate_tld(domain.replace("[.]", "."))
 
     def _scan_for_iocs(
-        self, src: str, ioc_types: List[str] = None
+        self,
+        src: str,
+        ioc_types: List[str] = None,
+        defang: bool = True,
     ) -> Dict[str, Set[str]]:
         """Return IoCs found in the string."""
         ioc_results: Dict[str, Set] = defaultdict(set)
@@ -622,6 +633,8 @@ class IoCExtract:
                 match_pos = rgx_match.end()
 
         for ioc, ioc_result in iocs_found.items():
+            if not defang and ioc_result[0] in ["ipv4", "ipv6", "url", "dns", "email"]:
+                ioc = ioc.translate(_DEFANG_TRANSLATION)
             ioc_results[ioc_result[0]].add(ioc)
 
         return ioc_results

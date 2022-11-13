@@ -25,7 +25,7 @@ from urllib3.exceptions import LocationParseError
 from urllib3.util import parse_url
 
 from .._version import VERSION
-from ..common.utility import refang_ioc
+from ..common.utility.format import refang_ioc
 from ..transform.iocextract import IoCExtract
 from .lookup_result import SanitizedObservable
 
