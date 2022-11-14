@@ -12,17 +12,53 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+import re
 from abc import abstractmethod
+from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
 
 from ..._version import VERSION
 from ...common.utility import export
+from ..lookup_result import SanitizedObservable
 from ..provider_base import Provider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+# Regular expression from Grok patterns
+# https://github.com/hpcugent/logstash-patterns/blob/master/files/grok-patterns
+HOSTNAME_REGEX = (
+    r"\b(?:[0-9A-Za-z][0-9A-Za-z-]{0,62})"
+    r"(?:\.(?:[0-9A-Za-z][0-9A-Za-z-]{0,62}))*(\.?|\b)"
+)
+
+
+def _validate_hostname(hostname: str, **kwargs) -> SanitizedObservable:
+    """Validate that parameter is a valid hostname."""
+    del kwargs
+    match_hostname = re.compile(HOSTNAME_REGEX, re.I | re.X | re.M).search(hostname)
+    if not match_hostname:
+        return SanitizedObservable(None, "Unrecognized hostname")
+
+    return SanitizedObservable(match_hostname.group(0), "ok")
+
+
+def _validate_ip(ipaddress: str, **kwargs):
+    """Ensure Ip address is a valid public IPv4 address."""
+    version = kwargs.pop("version", 4)
+    try:
+        addr = ip_address(ipaddress)
+    except ValueError:
+        return SanitizedObservable(None, "IP address is invalid format")
+
+    if version == 4 and not isinstance(addr, IPv4Address):
+        return SanitizedObservable(None, "Not an IPv4 address")
+    if version == 6 and not isinstance(addr, IPv6Address):
+        return SanitizedObservable(None, "Not an IPv6 address")
+
+    return SanitizedObservable(ipaddress, "ok")
 
 
 @export
@@ -30,6 +66,16 @@ class ContextProvider(Provider):
     """Abstract base class for Context providers."""
 
     _REQUIRED_PARAMS: List[str] = []
+
+    def __init__(self, **kwargs) -> None:
+        """Initialize Context provider."""
+        super().__init__(**kwargs)
+        self._preprocessors._processors.pop("hostname")
+        self._preprocessors._processors.pop("ipv4")
+        self._preprocessors._processors.pop("ipv6")
+        self._preprocessors.add_check("hostname", _validate_hostname)
+        self._preprocessors.add_check("ipv4", _validate_ip)
+        self._preprocessors.add_check("ipv6", _validate_ip)
 
     def lookup_item(
         self,

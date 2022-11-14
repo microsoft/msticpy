@@ -14,7 +14,7 @@ requests per minute for the account type that you have.
 """
 from datetime import datetime
 from functools import partial
-from typing import Any, Optional, Tuple, Union, Dict
+from typing import Any, Dict, Optional, Tuple, Union
 
 import pandas as pd
 
@@ -22,11 +22,7 @@ from ..._version import VERSION
 from ...common.exceptions import MsticpyImportExtraError, MsticpyUserError
 from ...common.utility import export
 from ..lookup_result import LookupStatus
-from .ti_provider_base import (
-    ResultSeverity,
-    TIPivotProvider,
-    TIProvider,
-)
+from .ti_provider_base import ResultSeverity, TIPivotProvider, TIProvider
 
 try:
     from passivetotal import analyzer as ptanalyzer  # isort: skip
