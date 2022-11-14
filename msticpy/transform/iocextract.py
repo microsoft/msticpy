@@ -34,6 +34,7 @@ import pandas as pd
 
 from .._version import VERSION
 from ..common.utility import check_kwargs, export
+from ..common.utility.format import refang_ioc
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -46,8 +47,6 @@ def _compile_regex(regex):
 IoCPattern = namedtuple("IoCPattern", ["ioc_type", "comp_regex", "priority", "group"])
 
 _RESULT_COLS = ["IoCType", "Observable", "SourceIndex", "Input"]
-
-_DEFANG_TRANSLATION = {91: "", 93: ""}
 
 
 @export
@@ -634,7 +633,7 @@ class IoCExtract:
 
         for ioc, ioc_result in iocs_found.items():
             if not defang and ioc_result[0] in ["ipv4", "ipv6", "url", "dns", "email"]:
-                ioc = ioc.translate(_DEFANG_TRANSLATION)
+                ioc = refang_ioc(ioc, ioc_result[0])
             ioc_results[ioc_result[0]].add(ioc)
 
         return ioc_results
