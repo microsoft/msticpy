@@ -51,8 +51,26 @@ _REGISTRIES = {
         "url": "http://rdap.afrinic.net/rdap/ip/",
     },
 }
-_ASNS = httpx.get("https://bgp.potaroo.net/cidr/autnums.html")
-_ASNS_SOUP = BeautifulSoup(_ASNS.content, features="lxml")
+
+_POTAROO_ASNS_URL = "https://bgp.potaroo.net/cidr/autnums.html"
+
+
+def _fetch_asns():
+    """Create closure for ASN fetching."""
+    asns_soup: Optional[BeautifulSoup] = None
+
+    def _get_asns_soup() -> BeautifulSoup:
+        """Return or fetch and return ASN Soup."""
+        nonlocal asns_soup  # noqa
+        if asns_soup is None:
+            asns = httpx.get(_POTAROO_ASNS_URL)
+            asns_soup = BeautifulSoup(asns.content, features="lxml")
+        return asns_soup
+
+    return _get_asns_soup
+
+
+_ASNS_SOUP = _fetch_asns()
 
 
 @export  # noqa: MC0001
@@ -487,8 +505,9 @@ def get_asn_from_name(name: str) -> Dict:
     """
     name = name.casefold()
     asns_dict = {}
+    asns_soup = _ASNS_SOUP()
     try:
-        for asn in _ASNS_SOUP.find_all("a"):
+        for asn in asns_soup.find_all("a"):
             asns_dict[str(asn.next_element).strip()] = str(
                 asn.next_element.next_element
             ).strip()
