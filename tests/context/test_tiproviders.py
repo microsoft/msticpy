@@ -19,12 +19,9 @@ import pytest_check as check
 
 from msticpy.common import pkg_config
 from msticpy.common.provider_settings import get_provider_settings
-from msticpy.context.tilookup import TILookup
-from msticpy.context.preprocess_observable import (
-    _clean_url,
-    preprocess_observable,
-)
+from msticpy.context.preprocess_observable import _clean_url, preprocess_observable
 from msticpy.context.provider_base import generate_items
+from msticpy.context.tilookup import TILookup
 from msticpy.context.tiproviders.result_severity import ResultSeverity
 from msticpy.context.tiproviders.tor_exit_nodes import Tor
 
@@ -473,6 +470,7 @@ _OBS_TYPES = [
         "Observable does not match expected pattern for ipv4",
     ),
     ("ipv4", "185.92.220.35", "ok"),
+    ("ipv4", "185[.]92[.]220[.]35", "ok"),
     ("ipv6", "185.92.220.35", "Observable does not match expected pattern for ipv6"),
     (
         "ipv4",
@@ -482,6 +480,7 @@ _OBS_TYPES = [
     ("ipv6", "2001:0db8:85a3:0000:0000:8a2e:0370:7334", "IP address is not global"),
     ("ipv6", "2345:0425:2CA1:0000:0000:0567:5673:23b5", "ok"),
     ("dns", "www.python.com", "ok"),
+    ("dns", "www[.]python[.]com", "ok"),
     ("dns", "localhost", "Observable does not match expected pattern for dns"),
     ("dns", "185.92.220.35", "Observable does not match expected pattern for dns"),
     (
@@ -496,6 +495,9 @@ _OBS_TYPES = [
     ),
     ("md5_hash", "A123008438B9C391A123008438B9C391", "ok"),
     ("other_type", "A123008438B9C391", "ok"),
+    ("url", "https://www.python.com", "ok"),
+    ("url", "https://www[.]python[.]com", "ok"),
+    ("url", "hXXps://www[.]python[.]com", "ok"),
 ]
 
 

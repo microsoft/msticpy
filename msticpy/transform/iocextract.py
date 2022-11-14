@@ -27,7 +27,7 @@ import re
 import warnings
 from collections import defaultdict, namedtuple
 from enum import Enum
-from typing import Any, Dict, List, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from urllib.parse import unquote
 
 import pandas as pd
@@ -46,6 +46,8 @@ def _compile_regex(regex):
 IoCPattern = namedtuple("IoCPattern", ["ioc_type", "comp_regex", "priority", "group"])
 
 _RESULT_COLS = ["IoCType", "Observable", "SourceIndex", "Input"]
+
+_DEFANG_TRANSLATION = {91: "", 93: ""}
 
 
 @export
@@ -125,13 +127,30 @@ class IoCExtract:
     """
 
     IPV4_REGEX = r"(?P<ipaddress>(?:[0-9]{1,3}\.){3}[0-9]{1,3})"
+    IPV4_DF_REGEX = r"(?P<ipaddress>(?:[0-9]{1,3}\[?\.\]?){3}[0-9]{1,3})"
     IPV6_REGEX = r"(?<![:.\w])(?:[A-F0-9]{0,4}:){2,7}[A-F0-9]{0,4}(?![:.\w])"
     DNS_REGEX = r"((?=[a-z0-9-]{1,63}\.)[a-z0-9]+(-[a-z0-9]+)*\.){1,126}[a-z]{2,63}"
+    DNS_DF_REGEX = (
+        r"((?=[a-z0-9-]{1,63}\[?\.\]?)[a-z0-9]+(-[a-z0-9]+)*\[?\.\]?){1,126}[a-z]{2,63}"
+    )
+
+    EMAIL_USER_REGEX = r"(?P<user>[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+)(@|AT)"
+    EMAIL_REGEX = f"{EMAIL_USER_REGEX}(?P<domain>{DNS_REGEX})"
+    EMAIL_DF_REGEX = f"{EMAIL_USER_REGEX}(?P<domain>{DNS_DF_REGEX})"
 
     URL_REGEX = r"""
-            (?P<protocol>(https?|ftp|telnet|ldap|file)://)
+            (?P<protocol>(https?|s?ftps?|telnet|ldap|file)://)
             (?P<userinfo>([a-z0-9-._~!$&\'()*+,;=:]|%[0-9A-F]{2})*@)?
             (?P<host>([a-z0-9-._~!$&\'()*+,;=]|%[0-9A-F]{2})*)
+            (:(?P<port>\d*))?
+            (/(?P<path>([^?\#"<>\s]|%[0-9A-F]{2})*/?))?
+            (\?(?P<query>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?
+            (\#(?P<fragment>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?"""
+
+    URL_DF_REGEX = r"""
+            (?P<protocol>(https?|hXXps?|s?ftps?|s?fXps?|telnet|ldap|file)://)
+            (?P<userinfo>([a-z0-9-._~!$&\'()*+,;=:]|%[0-9A-F]{2})*@)?
+            (?P<host>([a-z0-9-._~!$&\'()*+,;=\[\]]|%[0-9A-F]{2})*)
             (:(?P<port>\d*))?
             (/(?P<path>([^?\#"<>\s]|%[0-9A-F]{2})*/?))?
             (\?(?P<query>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?
@@ -147,33 +166,47 @@ class IoCExtract:
     LXPATH_REGEX = r"""(?P<root>/+||[.]+)
             (?P<folder>/(?:[^\\/:*?<>|\r\n]+/)*)
             (?P<file>[^/\0<>|\r\n ]+)"""
-
+    LXSTDPATH_REGEX = r"""
+            (?P<root>/|/bin|/boot|/dev|/home|/lib|/lost\\+found|/misc|/mnt|/net|/opt|/proc|/root|/sbin|/tmp|/usr|/var)
+            (?P<folder>/(?:[^\\/:*?<>|\r\n]+/)*)
+            (?P<file>[^/\0<>|\r\n ]+)
+    """
     MD5_REGEX = r"(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{32})(?:$|[^A-Fa-f0-9])"
     SHA1_REGEX = r"(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{40})(?:$|[^A-Fa-f0-9])"
     SHA256_REGEX = r"(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{64})(?:$|[^A-Fa-f0-9])"
 
     _content_regex: Dict[str, IoCPattern] = {}
 
-    def __init__(self):
+    def __init__(self, defanged: bool = True):
         """Initialize new instance of IoCExtract."""
         # IP Addresses
-        self.add_ioc_type(IoCType.ipv4.name, self.IPV4_REGEX, 0, "ipaddress")
+        self.add_ioc_type(
+            IoCType.ipv4.name,
+            self.IPV4_DF_REGEX if defanged else self.IPV4_REGEX,
+            0,
+            "ipaddress",
+        )
         self.add_ioc_type(IoCType.ipv6.name, self.IPV6_REGEX, 0)
 
         # Dns Domains
         # This also matches IP addresses but IPs have higher
         # priority both matching on the same substring will defer
         # to the IP regex
-        self.add_ioc_type(IoCType.dns.name, self.DNS_REGEX, 1)
+        self.add_ioc_type(
+            IoCType.dns.name, self.DNS_DF_REGEX if defanged else self.DNS_REGEX, 2
+        )
 
-        # Http requests
-        self.add_ioc_type(IoCType.url.name, self.URL_REGEX, 0)
-
+        # URLs
+        self.add_ioc_type(
+            IoCType.url.name, self.URL_DF_REGEX if defanged else self.URL_REGEX, 0
+        )
+        # Email addresses (lower priority than URLs)
+        self.add_ioc_type(
+            IoCType.email.name, self.EMAIL_DF_REGEX if defanged else self.EMAIL_REGEX, 1
+        )
         # File paths
-        # Windows
-        self.add_ioc_type(IoCType.windows_path.name, self.WINPATH_REGEX, 2)
-
-        self.add_ioc_type(IoCType.linux_path.name, self.LXPATH_REGEX, 2)
+        self.add_ioc_type(IoCType.windows_path.name, self.WINPATH_REGEX, 3)
+        self.add_ioc_type(IoCType.linux_path.name, self.LXPATH_REGEX, 4)
 
         # MD5, SHA1, SHA256 hashes
         self.add_ioc_type(IoCType.md5_hash.name, self.MD5_REGEX, 1, "hash")
@@ -280,6 +313,9 @@ class IoCExtract:
             If True, ignore the official Top Level Domains
             list when determining whether a domain name is
             a legal domain.
+        defanged : bool, optional
+            If False will remove any [] from email, dns and ip
+            entities.
 
         Returns
         -------
@@ -304,17 +340,18 @@ class IoCExtract:
         'md5_hash', 'sha1_hash', 'sha256_hash'] plus any
         user-defined types.
         'windows_path', 'linux_path' are excluded unless `include_paths`
-        is True or explicitly included in `ioc_paths`.
+        is True or explicitly included in `ioc_types`.
 
         """
-        check_kwargs(kwargs, ["ioc_types", "include_paths", "ignore_tlds"])
-        ioc_types = kwargs.get("ioc_types", None)
+        check_kwargs(kwargs, ["ioc_types", "include_paths", "ignore_tlds", "defanged"])
+        ioc_types = kwargs.get("ioc_types")
         include_paths = kwargs.get("include_paths", False)
         ignore_tld_current = self._ignore_tld
         self._ignore_tld = kwargs.get("ignore_tlds", False)
+        defanged = kwargs.get("defanged", True)
 
         if src and src.strip():
-            return self._scan_for_iocs(src=src, ioc_types=ioc_types)
+            return self._scan_for_iocs(src=src, ioc_types=ioc_types, defang=defanged)
 
         if data is None:
             raise ValueError("No source data was supplied to extract")
@@ -335,7 +372,7 @@ class IoCExtract:
         result_rows: List[pd.Series] = []
         for idx, datarow in data.iterrows():
             result_rows.extend(
-                self._search_in_row(datarow, idx, columns, ioc_types_to_use)
+                self._search_in_row(datarow, idx, columns, ioc_types_to_use, defanged)
             )
         self._ignore_tld = ignore_tld_current
         return pd.DataFrame(data=result_rows, columns=_RESULT_COLS)
@@ -347,11 +384,12 @@ class IoCExtract:
         idx: Any,
         columns: List[str],
         ioc_types_to_use: List[str],
+        defanged: bool = True,
     ) -> List[pd.Series]:
         """Return results for a single input row."""
         result_rows = []
         for col in columns:
-            ioc_results = self._scan_for_iocs(datarow[col], ioc_types_to_use)
+            ioc_results = self._scan_for_iocs(datarow[col], ioc_types_to_use, defanged)
             for result_type, result_set in ioc_results.items():
                 if result_set:
                     for observable in result_set:
@@ -411,14 +449,15 @@ class IoCExtract:
         'md5_hash', 'sha1_hash', 'sha256_hash'] plus any
         user-defined types.
         'windows_path', 'linux_path' are excluded unless `include_paths`
-        is True or explicitly included in `ioc_paths`.
+        is True or explicitly included in `ioc_types`.
 
         """
-        check_kwargs(kwargs, ["ioc_types", "include_paths", "ignore_tlds"])
-        ioc_types = kwargs.get("ioc_types", None)
+        check_kwargs(kwargs, ["ioc_types", "include_paths", "ignore_tlds", "defanged"])
+        ioc_types = kwargs.get("ioc_types")
         include_paths = kwargs.get("include_paths", False)
         ignore_tld_current = self._ignore_tld
         self._ignore_tld = kwargs.get("ignore_tlds", False)
+        defanged = kwargs.get("defanged", False)
 
         ioc_types_to_use = self._get_ioc_types_to_use(ioc_types, include_paths)
         if isinstance(columns, str):
@@ -434,13 +473,13 @@ class IoCExtract:
         result_rows = []
         for idx, datarow in data.iterrows():
             result_rows.extend(
-                self._search_in_row(datarow, idx, columns, ioc_types_to_use)
+                self._search_in_row(datarow, idx, columns, ioc_types_to_use, defanged)
             )
         self._ignore_tld = ignore_tld_current
         return pd.DataFrame(data=result_rows, columns=_RESULT_COLS)
 
     def _get_ioc_types_to_use(
-        self, ioc_types: List[str], include_paths: bool
+        self, ioc_types: Optional[List[str]], include_paths: bool
     ) -> List[str]:
         # Use only requested IoC Type patterns
         if ioc_types:
@@ -458,7 +497,7 @@ class IoCExtract:
         self, input_str: str, ioc_type: str, ignore_tlds: bool = False
     ) -> bool:
         """
-        Check that `input_str` matches the regex for the specificed `ioc_type`.
+        Check that `input_str` matches the regex for the specified `ioc_type`.
 
         Parameters
         ----------
@@ -557,10 +596,13 @@ class IoCExtract:
         """If validate TLDS check with TLD list."""
         if self._ignore_tld:
             return True
-        return self._dom_validator.validate_tld(domain)
+        return self._dom_validator.validate_tld(domain.replace("[.]", "."))
 
     def _scan_for_iocs(
-        self, src: str, ioc_types: List[str] = None
+        self,
+        src: str,
+        ioc_types: List[str] = None,
+        defang: bool = True,
     ) -> Dict[str, Set[str]]:
         """Return IoCs found in the string."""
         ioc_results: Dict[str, Set] = defaultdict(set)
@@ -591,6 +633,8 @@ class IoCExtract:
                 match_pos = rgx_match.end()
 
         for ioc, ioc_result in iocs_found.items():
+            if not defang and ioc_result[0] in ["ipv4", "ipv6", "url", "dns", "email"]:
+                ioc = ioc.translate(_DEFANG_TRANSLATION)
             ioc_results[ioc_result[0]].add(ioc)
 
         return ioc_results

@@ -17,9 +17,9 @@ from typing import Any, Dict, Tuple
 
 from ..._version import VERSION
 from ...common.utility import export
-from .ti_http_provider import HttpTIProvider
 from ..http_provider import APILookupParams
 from .result_severity import ResultSeverity
+from .ti_http_provider import HttpTIProvider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

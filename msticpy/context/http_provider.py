@@ -12,20 +12,20 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from abc import abstractmethod
-from typing import Dict, List, Tuple, Any, Union
 import traceback
+from abc import abstractmethod
+from typing import Any, Dict, List, Tuple, Union
 
 import attr
 import httpx
-from attr import Factory
 import pandas as pd
+from attr import Factory
 
 from .._version import VERSION
-from .lookup_result import LookupStatus
-from ..common.utility import mp_ua_header
-from ..common.pkg_config import get_http_timeout
 from ..common.exceptions import MsticpyConfigException
+from ..common.pkg_config import get_http_timeout
+from ..common.utility import mp_ua_header
+from .lookup_result import LookupStatus
 from .provider_base import Provider
 
 __version__ = VERSION
