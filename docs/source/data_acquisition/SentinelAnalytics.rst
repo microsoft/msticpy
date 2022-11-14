@@ -12,7 +12,7 @@ See :py:meth:`list_alert_rules <msticpy.context.azure.sentinel_core.MicrosoftSen
 
 .. code:: ipython3
 
-    azs.list_alert_rules()
+    sentinel.list_alert_rules()
 
 You can also return details of avaliable Analytic templates with `list_analytic_templates`.
 
@@ -20,7 +20,7 @@ See :py:meth:`list_analytic_templates <msticpy.context.azure.sentinel_core.Micro
 
 .. code:: ipython3
 
-    azs.list_analytic_templates()
+    sentinel.list_analytic_templates()
 
 Create Analytics
 ----------------
@@ -34,7 +34,7 @@ When creating an analytic if a template name or ID is provided details from that
 
 .. code:: ipython3
 
-    azs.create_analytic_rule(template="f817f062-320c-4c18-891c-7c5cc64da6ee")
+    sentinel.create_analytic_rule(template="f817f062-320c-4c18-891c-7c5cc64da6ee")
 
 Otherwise you can specify details manually. Request elements include:
 -name: The name to give the analytic.
@@ -52,7 +52,7 @@ Otherwise you can specify details manually. Request elements include:
 
 .. code:: ipython3
 
-    azs.create_analytic_rule(name="Custom Analytic", query="SecurityAlert | take 10")
+    sentinel.create_analytic_rule(name="Custom Analytic", query="SecurityAlert | take 10")
 
 Delete Analytics
 ----------------
@@ -63,5 +63,5 @@ See :py:meth:`delete_analytic_rule <msticpy.context.azure.sentinel_core.Microsof
 
 .. code:: ipython3
 
-    azs.delete_analytic_rule(analytic_rule="a91d4cfa-1854-431b-a432-8742f9aa0d59")
+    sentinel.delete_analytic_rule(analytic_rule="a91d4cfa-1854-431b-a432-8742f9aa0d59")
 

@@ -12,7 +12,7 @@ See :py:meth:`list_bookmarks <msticpy.context.azure.sentinel_core.MicrosoftSenti
 
 .. code:: ipython3
 
-    azs.list_bookmarks()
+    sentinel.list_bookmarks()
 
 Create Bookmarks
 ----------------
@@ -29,7 +29,7 @@ See :py:meth:`create_bookmark <msticpy.context.azure.sentinel_core.MicrosoftSent
 
 .. code:: ipython3
 
-    azs.create_bookmark(name="Custom Bookmark", query="SecurityAlert | take 10", notes="Found by Pete")
+    sentinel.create_bookmark(name="Custom Bookmark", query="SecurityAlert | take 10", notes="Found by Pete")
 
 Delete Bookmarks
 ----------------
@@ -41,4 +41,4 @@ See :py:meth:`delete_bookmark <msticpy.context.azure.sentinel_core.MicrosoftSent
 
 .. code:: ipython3
 
-    azs.delete_bookmark(bookmark="8c9f6b38-53dc-458a-b436-350845224e3a")
+    sentinel.delete_bookmark(bookmark="8c9f6b38-53dc-458a-b436-350845224e3a")

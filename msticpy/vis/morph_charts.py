@@ -9,11 +9,11 @@ from pathlib import Path
 
 import pandas as pd
 import yaml
+from deprecated.sphinx import deprecated
 from IPython.display import IFrame
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyException
-from ..common.utility import export
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -21,10 +21,10 @@ __author__ = "Pete Bryan"
 _CHART_FOLDER = "morph_charts"
 
 
-@export
 class MorphCharts:
     """Create Morph Charts package data and render Morph Charts site."""
 
+    @deprecated("Morphchart functionality has been deprecated.", version="2.2.0")
     def __init__(self):
         """Create object and populate charts container."""
         self.charts = _get_charts(_CHART_FOLDER)
