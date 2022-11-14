@@ -309,7 +309,8 @@ class CybereasonDriver(DriverBase):
         if json_response["status"] != "SUCCESS":
             print(
                 "Warning - query did not complete successfully.",
-                "Check returned response.",
+                f"Status: {json_response['status']}.",
+                json_response["message"],
             )
             return pd.DataFrame(), json_response
 
