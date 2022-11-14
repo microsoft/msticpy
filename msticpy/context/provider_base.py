@@ -460,6 +460,7 @@ def _(data: pd.DataFrame, item_col: str, item_type_col: Optional[str] = None):
 
 @generate_items.register(dict)  # type: ignore
 def _(data: dict, item_col: Optional[str] = None, item_type_col: Optional[str] = None):
+    del item_col, item_type_col
     for item, item_type in data.items():
         if not item_type:
             item_type = Provider.resolve_item_type(item)

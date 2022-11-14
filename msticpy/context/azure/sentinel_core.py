@@ -17,6 +17,7 @@ from .sentinel_analytics import SentinelAnalyticsMixin, SentinelHuntingMixin
 from .sentinel_bookmarks import SentinelBookmarksMixin
 from .sentinel_incidents import SentinelIncidentsMixin
 from .sentinel_search import SentinelSearchlistsMixin
+from .sentinel_ti import SentinelTIMixin
 from .sentinel_utils import _PATH_MAPPING, SentinelUtilsMixin, validate_res_id
 from .sentinel_watchlists import SentinelWatchlistsMixin
 from .sentinel_workspaces import SentinelWorkspacesMixin
@@ -34,6 +35,7 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
     SentinelWatchlistsMixin,
     SentinelSearchlistsMixin,
     SentinelWorkspacesMixin,
+    SentinelTIMixin,
     AzureData,
 ):
     """Class for returning key Microsoft Sentinel elements."""
@@ -93,6 +95,7 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
             "alert_rules": self.url + _PATH_MAPPING["alert_rules"],
             "watchlists": self.url + _PATH_MAPPING["watchlists"],
             "search": self.url + _PATH_MAPPING["search"],
+            "ti": self.url + _PATH_MAPPING["ti_path"],
         }
 
     def connect(
