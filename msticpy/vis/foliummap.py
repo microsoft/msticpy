@@ -5,7 +5,6 @@
 # --------------------------------------------------------------------------
 """Folium map class."""
 
-
 import contextlib
 import itertools
 import math
@@ -24,14 +23,20 @@ from typing import (
 
 import folium
 import pandas as pd
-import pygeohash
 from folium.plugins import FeatureGroupSubGroup, MarkerCluster
 
 from .._version import VERSION
+from ..common.exceptions import MsticpyMissingDependencyError
 from ..common.utility import export
 from ..datamodel.entities import Entity, GeoLocation, IpAddress
 
 from ..context.geoip import GeoLiteLookup  # isort: skip
+
+try:
+    import pygeohash
+except ImportError:
+    pygeohash = None  # pylint: disable=invalid-name
+
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -524,8 +529,15 @@ def decode_geo_hash(geohash: str) -> Tuple[float, float, float, float]:
         (Latitude, Longitude,
         Latitude Error interval, Longitude Error Interval)
 
+    Raises
+    ------
+    MsticpyMissingDependencyError
+        If pygeohash is not installed.
+
     """
-    return pygeohash.decode_exactly(geohash)
+    if pygeohash is not None:
+        return pygeohash.decode_exactly(geohash)
+    raise MsticpyMissingDependencyError(packages="pygeohash")
 
 
 @export

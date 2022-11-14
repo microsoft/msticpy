@@ -725,18 +725,28 @@ def _check_and_reload_pkg(
 
 def _hook_ipython_exceptions(func):
     """Hooks the `func` and bypasses it if exception is MsticpyUserException."""
+    # if already wrapped, don't do it again
+    if hasattr(InteractiveShell.showtraceback, "__wrapped__"):
+        return InteractiveShell.showtraceback
 
     @wraps(func)
     def showtraceback(*args, **kwargs):
         """Replace IPython showtraceback."""
         # extract exception type, value and traceback
-        e_type, _, _ = sys.exc_info()
+        e_type, exception, _ = sys.exc_info()
         if e_type is not None and issubclass(e_type, MsticpyUserError):
+            exception.display_exception()
             return None
         # otherwise run the original hook
         return func(*args, **kwargs)
 
     return showtraceback
+
+
+def reset_ipython_exception_handler():
+    """Remove MSTICPy custom exception handler."""
+    if hasattr(InteractiveShell.showtraceback, "__wrapped__"):
+        InteractiveShell.showtraceback = InteractiveShell.showtraceback.__wrapped__
 
 
 def _check_azure_cli_status():
