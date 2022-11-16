@@ -75,7 +75,7 @@ class MsticpyUserError(MsticpyException):
             will be used to create a list of references in addition to
             the primary `help_uri`
         display : bool, optional
-            Display the exception when created. By default, True
+            Display the exception when created. By default, False
 
         Notes
         -----
@@ -99,9 +99,9 @@ class MsticpyUserError(MsticpyException):
             Union[str, Tuple[str, str], Tuple[Tuple[str, str], str]]
         ] = []
         title = kwargs.pop("title", "we've hit an error while running")
-        disp_exception = kwargs.pop("display", True)
+        disp_exception = kwargs.pop("display", False)
+        self._has_displayed = False
         self._output.append((f"{self.__class__.__name__} - {title}", "title"))
-
         self._output.extend(args)
 
         self._output.append("\nFor more help on fixing this error see:")
@@ -120,7 +120,7 @@ class MsticpyUserError(MsticpyException):
             frame_locals=sys._getframe(1).f_locals,
         )
         if _get_config("msticpy.FriendlyExceptions") and disp_exception:
-            self._display_exception()
+            self.display_exception()
 
         # add the extra elements to the the exception standard args.
         ex_args = [title, *args, help_uri, *help_args]
@@ -139,13 +139,15 @@ class MsticpyUserError(MsticpyException):
         """Get the default help URI."""
         return self.DEF_HELP_URI
 
-    def _display_exception(self):
-        if not self._display_exceptions:
+    def display_exception(self):
+        """Output the exception HTML or text friendly exception."""
+        if not self._display_exceptions or self._has_displayed:
             return
         if is_ipython(notebook=True):
             display(self)
         else:
             self._display_txt_exception()
+        self._has_displayed = True
 
     def _repr_html_(self):
         """Return HTML-formatted exception text."""
@@ -429,6 +431,48 @@ class MsticpyImportExtraError(MsticpyUserError, ImportError):
                 " to be installed.\n",
                 "To do this run the command:\n",
                 f"pip install msticpy[{extra}]",
+            ]
+        )
+        add_args = [*args, mssg]
+        uri = help_uri or self.DEF_HELP_URI
+        super().__init__(*add_args, help_uri=uri, **kwargs)
+
+
+class MsticpyMissingDependencyError(MsticpyUserError, ImportError):
+    """Exception class for Imports that are not installed."""
+
+    DEF_HELP_URI = (
+        "Installing msticpy",
+        "https://msticpy.readthedocs.io/en/latest/getting_started/Installing.html",
+    )
+
+    def __init__(
+        self, *args, help_uri: Union[Tuple[str, str], str, None] = None, **kwargs
+    ):
+        """
+        Create import missing extra exception.
+
+        Parameters
+        ----------
+        help_uri : Union[Tuple[str, str], str, None], optional
+            Override the default help URI.
+        packages : Union[str, List[str]]
+            The name of the packages or list of packages that need(s)
+            to be installed.
+
+        """
+        packages = kwargs.pop("packages", None)
+        if not packages:
+            raise AttributeError("Keyword argument 'packages' must be supplied")
+        packages = [packages] if isinstance(packages, str) else packages
+        mssg = "".join(
+            [
+                "This feature requires one or more additional packages",
+                " to be installed.\n",
+                "To do this run the command:\n",
+                f"pip install {' '.join(packages)}\n",
+                "In a notebook run:\n",
+                f"%pip install {' '.join(packages)}",
             ]
         )
         add_args = [*args, mssg]

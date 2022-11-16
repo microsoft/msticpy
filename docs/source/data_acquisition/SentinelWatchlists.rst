@@ -10,7 +10,7 @@ See :py:meth:`list_watchlists <msticpy.context.azure.MicrosoftSentinel.list_watc
 
 .. code:: ipython3
 
-    azs.list_watchlists()
+    sentinel.list_watchlists()
 
 Create Watchlists
 -----------------
@@ -28,7 +28,7 @@ An error will be raised if the Watchlist name already exists.
 
 .. code:: ipython3
 
-    azs.create_watchlist(watchlist_name="Custom Watchlist",
+    sentinel.create_watchlist(watchlist_name="Custom Watchlist",
         description="A Watchlist created from a notebook",
         search_key="IPAddress",
         data = df,
@@ -44,7 +44,7 @@ See :py:meth:`list_watchlist_items <msticpy.context.azure.MicrosoftSentinel.list
 
 .. code:: ipython3
 
-    azs.list_watchlist_items(watchlist_name="Custom Watchlist")
+    sentinel.list_watchlist_items(watchlist_name="Custom Watchlist")
 
 Each row in the returned DataFrame will represent an item in the Watchlist, and will include details such
 as who created it and when. Columns containing the data items from the Watchlist are prefixed with 'properties.itemsKeyValue.'.
@@ -56,7 +56,7 @@ See :py:meth:`add_watchlist_item <msticpy.context.azure.MicrosoftSentinel.add_wa
 
 .. code:: ipython3
 
-    azs.add_watchlist_item(watchlist_name="Custom Watchlist",
+    sentinel.add_watchlist_item(watchlist_name="Custom Watchlist",
         item={"IPAddress": ", "13.107.6.152", "Location": "USA"}
     )
 
@@ -72,4 +72,4 @@ See :py:meth:`delete_watchlist <msticpy.context.azure.MicrosoftSentinel.delete_w
 
 .. code:: ipython3
 
-    azs.delete_watchlist(watchlist_name="Custom Watchlist")
+    sentinel.delete_watchlist(watchlist_name="Custom Watchlist")

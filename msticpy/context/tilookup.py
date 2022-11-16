@@ -19,13 +19,11 @@ import pandas as pd
 
 from .._version import VERSION
 from ..common.utility import export
-
-from .provider_base import _make_sync
 from .lookup import Lookup
+from .provider_base import _make_sync
 
 # used in dynamic instantiation of providers
 from .tiproviders import TI_PROVIDERS
-
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
