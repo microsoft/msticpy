@@ -290,14 +290,14 @@ sources:
         | where DeviceVendor in ({vendors})
         | extend SourceIP = {source_ip_field}
         | extend DestinationIP = {dest_ip_field}
-        | where SourceIP == "{ip}" or DestinationIP == "{ip}"
+        | where SourceIP == "{ip_address}" or DestinationIP == "{ip_address}"
         {add_query_items}'
     parameters:
       table:
         description: The table to run against
         type: str
         default: "CommonSecurityLog"
-      ip:
+      ip_address:
         description: IP address of host
         type: str
         default: ""
@@ -357,7 +357,7 @@ sources:
         | where DeviceVendor in ({vendors})
         | extend SourceIP = {source_ip_field}
         | extend DestinationIP = {dest_ip_field}
-        | where SourceIP == "{ip}" or DestinationIP == "{ip}"
+        | where SourceIP == "{ip_address}" or DestinationIP == "{ip_address}"
         | summarize sources=make_set(SourceIP), dests=make_set(DestinationIP) by Computer
         {add_query_items}'
     parameters:
@@ -365,7 +365,7 @@ sources:
         description: The table to run against
         type: str
         default: "CommonSecurityLog"
-      ip:
+      ip_address:
         description: IP address of host
         type: str
         default: ""
