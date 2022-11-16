@@ -5,14 +5,17 @@
 # --------------------------------------------------------------------------
 """Unit tests for Folium wrapper."""
 import math
-import os
 from pathlib import Path
 from typing import Any, Optional
 
 import attr
 import folium
 import pandas as pd
-import pygeohash
+
+try:
+    import pygeohash
+except ImportError:
+    pygeohash = None  # pylint: disable=invalid-name
 import pytest
 import pytest_check as check
 
@@ -25,7 +28,7 @@ from msticpy.vis.foliummap import (
     plot_map,
 )
 
-from ..unit_test_lib import TEST_DATA_PATH, exec_notebook, get_test_data_path
+from ..unit_test_lib import TEST_DATA_PATH, get_test_data_path
 
 # pylint: disable=redefined-outer-name
 
@@ -128,6 +131,8 @@ def test_create_new_subgroup_with_locations(geo_loc_df):
 
 def test_create_new_subgroup_with_geohashes(geo_loc_df):
     """Test adding geohashes to subgroup."""
+    if pygeohash is None:
+        return
     geo_hashes = geo_loc_df.apply(
         lambda row: pygeohash.encode(row.Latitude, row.Longitude), axis=1
     ).values

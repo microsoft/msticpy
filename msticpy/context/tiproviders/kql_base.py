@@ -27,13 +27,9 @@ from ...common.exceptions import MsticpyConfigException
 from ...common.utility import export
 from ...common.wsconfig import WorkspaceConfig
 from ...data import QueryProvider
-from .ti_provider_base import (
-    LookupResult,
-    LookupStatus,
-    ResultSeverity,
-    TIProvider,
-    generate_items,
-)
+from ..lookup_result import LookupStatus
+from ..provider_base import generate_items
+from .ti_provider_base import ResultSeverity, TIProvider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -43,7 +39,7 @@ __author__ = "Ian Hellen"
 class KqlTIProvider(TIProvider):
     """KQL TI provider base class."""
 
-    _IOC_QUERIES: Dict[str, tuple] = {}
+    _QUERIES: Dict[str, tuple] = {}
 
     _CONNECT_STR = (
         "loganalytics://code().tenant('{TENANT_ID}').workspace('{WORKSPACE_ID}')"
@@ -75,92 +71,50 @@ class KqlTIProvider(TIProvider):
     @lru_cache(maxsize=256)
     def lookup_ioc(  # type: ignore
         self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
-    ) -> LookupResult:
+    ) -> pd.DataFrame:
         """
-        Lookup a single IoC observable.
+        Lookup from a value.
 
         Parameters
         ----------
         ioc : str
-            IoC observable
+            item to lookup
         ioc_type : str, optional
-            IocType, by default None (type will be inferred)
+            The Type of the item to lookup, by default None (type will be inferred)
         query_type : str, optional
             Specify the data subtype to be queried, by default None.
-            If not specified the default record type for the IoC type
+            If not specified the default record type for the item_value
             will be returned.
 
         Returns
         -------
-        LookupResult
-            The lookup result:
-            result - Positive/Negative,
-            details - Lookup Details (or status if failure),
-            raw_result - Raw Response
-            reference - URL of IoC
+        pd.DataFrame
+            DataFrame of results.
 
         Raises
         ------
-        LookupError
-            If a query could not be found for the ioc_type.
+        NotImplementedError
+            If attempting to use an HTTP method or authentication
+            protocol that is not supported.
 
         Notes
         -----
         Note: this method uses memoization (lru_cache) to cache results
-        for a particular observable to try avoid repeated network calls for
+        for a particular item to try avoid repeated network calls for
         the same item.
 
         """
-        if not self._connected:
-            self._connect()
-
-        if any(
-            table not in self._query_provider.schema for table in self._REQUIRED_TABLES
-        ):
-            return LookupResult(
-                ioc=ioc, ioc_type=ioc_type or "", status=LookupStatus.NO_DATA.value
-            )
-        # check and lookup (if needed) ioc_type
-        result = self._check_ioc_type(
-            ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
+        return self.lookup_iocs(
+            data={ioc: ioc_type},
+            query_type=query_type,
+            **kwargs,
         )
-        result.provider = kwargs.get("provider_name", self.__class__.__name__)
-        if result.status:
-            return result
-
-        try:
-            query_obj, query_params = self._get_query_and_params(
-                ioc=ioc, ioc_type=result.ioc_type, query_type=query_type, **kwargs
-            )
-        except LookupError as err:
-            result.details = err.args
-            result.raw_result = type(err).__name__ + "\n" + str(err) + "\n"
-            return result
-
-        if not query_obj:
-            raise LookupError(
-                f"Could not find query for {ioc} ({ioc_type}, {query_type})"
-            )
-        data_result = query_obj(**query_params)
-        if not isinstance(data_result, pd.DataFrame):
-            result.status = LookupStatus.QUERY_FAILED.value
-        elif data_result.empty:
-            result.details = "Not found."
-            result.status = LookupStatus.OK.value
-            return result
-
-        result.raw_result = data_result
-        result.result, severity, result.details = self.parse_results(result)
-        result.set_severity(severity)
-        # Save the query that was used.
-        result.reference = query_obj("print_query", **query_params)
-        return result
 
     # pylint: disable=too-many-locals
     def lookup_iocs(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        obs_col: str = None,
+        ioc_col: str = None,
         ioc_type_col: str = None,
         query_type: str = None,
         **kwargs,
@@ -176,7 +130,7 @@ class KqlTIProvider(TIProvider):
             `obs_col` parameter)
             2. Dict of observable, IoCType
             3. Iterable of observables - IoCTypes will be inferred
-        obs_col : str, optional
+        ioc_col : str, optional
             DataFrame column to use for observables, by default None
         ioc_type_col : str, optional
             DataFrame column to use for IoCTypes, by default None
@@ -200,19 +154,18 @@ class KqlTIProvider(TIProvider):
 
         # We need to partition the IoC types to invoke separate queries
         ioc_groups: DefaultDict[str, Set[str]] = defaultdict(set)
-        for ioc, ioc_type in generate_items(data, obs_col, ioc_type_col):
+        for ioc, ioc_type in generate_items(data, ioc_col, ioc_type_col):
             if not ioc:
                 continue
-            result = self._check_ioc_type(
-                ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
-            )
+            result = self._check_ioc_type(ioc, ioc_type, query_type)
 
-            if result.status != LookupStatus.NOT_SUPPORTED.value:
-                ioc_groups[result.ioc_type].add(result.ioc)
+            if result["Status"] != LookupStatus.NOT_SUPPORTED.value:
+                ioc_groups[result["IocType"]].add(result["Ioc"])
 
         all_results = []
         for ioc_type, obs_set in ioc_groups.items():
             kwargs.pop("ioc_type", None)  # we want to use locally-determine type
+            query_obj = None
             with contextlib.suppress(LookupError):
                 query_obj, query_params = self._get_query_and_params(
                     ioc=list(obs_set),
@@ -268,7 +221,7 @@ class KqlTIProvider(TIProvider):
             else "Not found"
         )
         src_ioc_frame["Status"] = lookup_status.value
-        src_ioc_frame["Severity"] = ResultSeverity.information.value
+        src_ioc_frame["Severity"] = ResultSeverity.information.name
 
     @staticmethod
     def _check_result_status(data_result):
@@ -291,27 +244,14 @@ class KqlTIProvider(TIProvider):
             print(f"Unknown response from provider: {str(data_result)}")
         return LookupStatus.QUERY_FAILED
 
-    async def lookup_iocs_async(
-        self,
-        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        obs_col: str = None,
-        ioc_type_col: str = None,
-        query_type: str = None,
-        **kwargs,
-    ) -> pd.DataFrame:
-        """Call base async wrapper."""
-        return await self._lookup_iocs_async_wrapper(
-            data, obs_col, ioc_type_col, query_type, **kwargs
-        )
-
     @abc.abstractmethod
-    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : LookupResult
+        response : Dict
             The returned data response
 
         Returns
@@ -383,7 +323,7 @@ class KqlTIProvider(TIProvider):
     ) -> Tuple[Callable, Dict[str, Any]]:
 
         ioc_key = f"{ioc_type}-{query_type}" if query_type else ioc_type
-        query_def = self._IOC_QUERIES.get(ioc_key, None)
+        query_def = self._QUERIES.get(ioc_key, None)
         if not query_def:
             raise LookupError(f"Provider does not support IoC type {ioc_key}.")
 

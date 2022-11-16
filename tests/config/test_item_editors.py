@@ -5,11 +5,13 @@
 # --------------------------------------------------------------------------
 """Config settings Items editors."""
 import os
+import re
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 import pytest_check as check
+import respx
 import yaml
 
 from msticpy.config.ce_azure import CEAzure
@@ -286,8 +288,32 @@ def test_tiproviders_editor(kv_sec, mp_conf_ctrl):
     check.equal(len(kv_sec.mock_calls), kv_call_count)
 
 
+@respx.mock
 def test_get_tenant_id():
     """Test get tenantID function."""
+    subs_uri = (
+        r"https://management\.azure\.com//subscriptions/"
+        r"40dcc8bf-0478-4f3b-b275-ed0a94f2c013.*"
+    )
+    subs_json = {
+        "error": {
+            "code": "AuthenticationFailed",
+            "message": "Authentication failed. The 'Authorization' header is missing.",
+        }
+    }
+    subs_headers = {
+        "content-type": "application/json; charset=utf-8",
+        "www-authenticate": (
+            "Bearer authorization_uri="
+            '"https://login.windows.net/72f988bf-86f1-41af-91ab-2d7cd011db47", '
+            'error="invalid_token", error_description="The authentication failed '
+            "because of missing 'Authorization' header.\""
+        ),
+        "date": "Mon, 14 Nov 2022 19:20:40 GMT",
+        "connection": "close",
+        "content-length": "115",
+    }
+    respx.get(re.compile(subs_uri)).respond(401, json=subs_json, headers=subs_headers)
     tenantid = get_def_tenant_id("40dcc8bf-0478-4f3b-b275-ed0a94f2c013")
     check.equal(tenantid.casefold(), "72f988bf-86f1-41af-91ab-2d7cd011db47".casefold())
 

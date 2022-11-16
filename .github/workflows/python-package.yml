@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
       # Print out details about the run
       - name: Dump GitHub context
@@ -60,7 +60,7 @@ jobs:
             python -m pip install pytest pytest-cov pytest-xdist pytest-check aiohttp nbconvert jupyter_contrib_nbextensions
             python -m pip install Pygments respx pytest-xdist markdown beautifulsoup4 Pillow async-cache
           fi
-          python -m pip install "pandas>=1.3.0"
+          python -m pip install "pandas>=1.3.0" "pygeohash>=1.2.0"
       - name: Prepare test dummy data
         run: |
           mkdir ~/.msticpy

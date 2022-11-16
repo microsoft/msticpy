@@ -4,7 +4,7 @@ Microsoft Sentinel Incidents
 List Incidents
 --------------
 
-It is possible to return a list of all incidents within a workspace, as well as get the details of a specific incident.
+It is possible to return a list incidents within a workspace, as well as get the details of a specific incident.
 Whilst it is possible to access these incident details via the Incident table in the Workspace, you can also interact
 with them via the Microsoft Sentinel APIs which are utilized in these functions.
 
@@ -12,9 +12,9 @@ See :py:meth:`get_incidents <msticpy.context.azure_sentinel.MicrosoftSentinel.li
 
 .. code:: ipython3
 
-    azs.list_incidents()
+    sentinel.list_incidents()
 
-This returns a DataFrame with details of all incidents.
+This returns a DataFrame with details of incidents.
 
 To get details of a single incident you can call `.get_incident` and pass the ID of an incident.
 This ID can be found in the name column of the DataFrame returned by `.get_incidents` and appears in the form of a GUID.
@@ -25,7 +25,7 @@ See :py:meth:`get_incident <msticpy.context.azure.sentinel_core.MicrosoftSentine
 
 .. code:: ipython3
 
-    azs.get_incidents(incident = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c")
+    sentinel.get_incidents(incident = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c")
 
 When calling `get_incident` there are a number of boolean flags you can set to return additional information
 related to the incident.
@@ -52,7 +52,7 @@ See :py:meth:`update_incident <msticpy.context.azure_sentinel.MicrosoftSentinel.
 
 .. code:: ipython3
 
-    azs.update_incident(incident = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c",
+    sentinel.update_incident(incident = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c",
                 update_items = {"severity":"High"},
                 )
 
@@ -63,7 +63,7 @@ See :py:meth:`post_comment <msticpy.context.azure_sentinel.MicrosoftSentinel.pos
 
 .. code:: ipython3
 
-    azs.post_comment(incident = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c",
+    sentinel.post_comment(incident = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c",
                 comment = "This is my comment",
                 )
 
@@ -72,7 +72,7 @@ bookmark ID or name. This will then create a link between the incident and the b
 
 .. code:: ipython3
 
-    azs.add_bookmark_to_incident(incident = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c",
+    sentinel.add_bookmark_to_incident(incident = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c",
                 bookmark = "f91f3c99-2651-47fc-b625-141d4a7e50ff",
                 )
 
@@ -97,6 +97,6 @@ See :py:meth:`create_incident <msticpy.context.azure.sentinel_core.MicrosoftSent
 
 .. code:: ipython3
 
-    azs.create_incident(title="A custom incident", severity="High"
+    sentinel.create_incident(title="A custom incident", severity="High"
 
 )

@@ -18,7 +18,7 @@ See :py:meth:`create_search <msticpy.context.azure.MicrosoftSentinel.create_sear
 
 .. code:: ipython3
 
-    azs.create_search(query="SecurityEvent | where * contains 'infected.exe'", search_name="docssearch")
+    sentinel.create_search(query="SecurityEvent | where * contains 'infected.exe'", search_name="docssearch")
 
 Check Search Status
 -------------------
@@ -31,7 +31,7 @@ If the Search results are ready for querying it will return True, otherwise Fals
 
 .. code:: ipython3
 
-    azs.check_search_status("docssearch")
+    sentinel.check_search_status("docssearch")
 
 If this funciton returns True you can run queries against the KQL table with the
 Search name to see the results. Note the table name has '_SRCH' appended to
@@ -50,4 +50,4 @@ This deletes the table associated with the search.
 
 .. code:: ipython3
 
-    azs.delete_search("docssearch")
+    sentinel.delete_search("docssearch")
