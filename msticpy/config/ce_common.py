@@ -251,13 +251,14 @@ def dict_to_txt(dict_val: Union[str, Dict[str, Any]]) -> str:
     return ""
 
 
+# pylint: disable=too-many-branches
 # flake8: noqa: F821
 def get_wgt_ctrl(
     setting_path: str,
     var_name: str,
     mp_controls: "MpConfigControls",  # type: ignore
     wgt_style: Optional[Dict[str, Any]] = None,
-    instance_path: str = None,
+    instance_name: str = None,
 ) -> widgets.Widget:
     """
     Return widget appropriate to value type of `var_name`.
@@ -278,9 +279,9 @@ def get_wgt_ctrl(
                 "style": {"description_width": "100px"},
                 "layout": widgets.Layout(width="50%")
             }
-    instance_path : Optional[str]
-        The path to the control settings, if different from
-        the definition path (e.g. ../path/Kusto-Cluster1)
+    instance_name : Optional[str]
+        An optional sub-path to an instance of this provider
+        (e.g. 'Cluster1' of path.Kusto-Cluster1)
 
     Returns
     -------
@@ -290,7 +291,15 @@ def get_wgt_ctrl(
     """
     if wgt_style is None:
         wgt_style = {}
-    var_path = f"{instance_path or setting_path}.{var_name}"
+    if instance_name:
+        # insert instance name into path
+        path_elems = setting_path.split(".")
+        var_root = ".".join(
+            [path_elems[0], f"{path_elems[1]}-{instance_name}", *path_elems[2:]]
+        )
+    else:
+        var_root = setting_path
+    var_path = f"{var_root}.{var_name}"
     ctrl = mp_controls.get_control(var_path)
     defn_path = f"{setting_path}.{var_name}"
     comp_defn = mp_controls.get_defn(defn_path)
