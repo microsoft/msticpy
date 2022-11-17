@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Module docstring."""
 from abc import ABC
-from typing import Optional
+from typing import List, Optional
 
 import ipywidgets as widgets
 
@@ -201,7 +201,7 @@ class CEProviders(CEItemsBase, ABC):
 
 
 def _get_prov_ctrls(prov_name, mp_controls, conf_path, prov_instance_name: str = None):
-    ctrls = []
+    ctrls: List[widgets.Widget] = []
     if not prov_name:
         return widgets.VBox(ctrls, layout=CompEditDisplayMixin.no_border_layout("95%"))
     # prov_path = f"{conf_path}.{prov_name}"
