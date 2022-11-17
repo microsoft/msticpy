@@ -34,7 +34,24 @@ _HUNTING_QUERIES = {
             },
             "name": "123",
             "type": "Microsoft.OperationalInsights/savedSearches",
-        }
+        },
+        {
+            "id": "subscriptions/123/resourceGroups/RG/providers/Microsoft.OperationalInsights/workspaces/WSNAME/savedSearches/123",
+            "etag": "Tag",
+            "properties": {
+                "category": "Saved Queries",
+                "DisplayName": "SavedQueries",
+                "Query": "SavedQueryText",
+                "Tags": [
+                    {"Name": "description", "Value": ""},
+                    {"Name": "tactics", "Value": ""},
+                    {"Name": "t-skang@microsoft.com", "Value": "false"},
+                ],
+                "Version": 2,
+            },
+            "name": "123",
+            "type": "Microsoft.OperationalInsights/savedSearches",
+        },
     ],
 }
 _ALERT_RULES = {
@@ -99,7 +116,20 @@ def test_sent_hunting_queries(sent_loader):
     )
     hqs = sent_loader.list_hunting_queries()
     assert isinstance(hqs, pd.DataFrame)
+    assert 1 == len(hqs.index)
     assert hqs["properties.Query"].iloc[0] == "QueryText"
+
+
+@respx.mock
+def test_sent_saved_queries(sent_loader):
+    """Test Sentinel hunting feature."""
+    respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
+        200, json=_HUNTING_QUERIES
+    )
+    sqs = sent_loader.list_saved_queries()
+    assert isinstance(sqs, pd.DataFrame)
+    assert 2 == len(sqs.index)
+    assert sqs["properties.Query"].iloc[1] == "SavedQueryText"
 
 
 @respx.mock
@@ -116,32 +146,26 @@ def test_sent_alert_rules(sent_loader):
 @respx.mock
 def test_sent_analytic_create(sent_loader):
     """Test Sentinel analytics feature."""
+    json_resp = {
+        "name": "508f3c50-f6d3-45b3-8321-fb674afe3478",
+        "properties": {
+            "displayName": "Test Bookmark",
+            "query": "SecurityAlert | take 10",
+            "queryFrequency": "PT1H",
+            "queryPeriod": "PT1H",
+            "severity": "Low",
+            "triggerOperator": "GreaterThan",
+            "triggerThreshold": 0,
+            "description": "Test Template",
+            "tactics": ["test1"],
+        },
+    }
     respx.put(re.compile(r"https://management\.azure\.com/.*/alertRules/.*")).respond(
-        201
+        201, json=json_resp
     )
     respx.get(
         re.compile(r"https://management\.azure\.com/.*/alertRuleTemplates")
-    ).respond(
-        200,
-        json={
-            "value": [
-                {
-                    "name": "508f3c50-f6d3-45b3-8321-fb674afe3478",
-                    "properties": {
-                        "displayName": "Test Bookmark",
-                        "query": "SecurityAlert | take 10",
-                        "queryFrequency": "PT1H",
-                        "queryPeriod": "PT1H",
-                        "severity": "Low",
-                        "triggerOperator": "GreaterThan",
-                        "triggerThreshold": 0,
-                        "description": "Test Template",
-                        "tactics": ["test1"],
-                    },
-                }
-            ]
-        },
-    )
+    ).respond(200, json={"value": [json_resp]})
     sent_loader.create_analytic_rule("508f3c50-f6d3-45b3-8321-fb674afe3478")
     sent_loader.create_analytic_rule("Test Bookmark")
     sent_loader.create_analytic_rule(name="Test Rule", query="SecurityAlert | take 10")

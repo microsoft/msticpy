@@ -38,7 +38,7 @@ try:
         # Try new version but keep backward compat with 1.0.1
         from azure.mgmt.monitor import MonitorManagementClient
     except ImportError:
-        from azure.mgmt.monitor import MonitorClient as MonitorManagementClient
+        from azure.mgmt.monitor import MonitorClient as MonitorManagementClient  # type: ignore
     from azure.mgmt.compute import ComputeManagementClient
     from azure.mgmt.compute.models import VirtualMachineInstanceView
 except ImportError as imp_err:

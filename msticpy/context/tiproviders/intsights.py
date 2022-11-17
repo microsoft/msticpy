@@ -12,14 +12,15 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 """
 import datetime as dt
-from typing import Any, Tuple
+from typing import Any, Dict, Tuple
 
 import attr
 
 from ..._version import VERSION
 from ...common.utility import export
-from .http_provider import HttpTIProvider, IoCLookupParams
-from .ti_provider_base import LookupResult, ResultSeverity
+from ..http_provider import APILookupParams
+from .result_severity import ResultSeverity
+from .ti_http_provider import HttpTIProvider
 
 __version__ = VERSION
 __author__ = "Florian Bracq"
@@ -30,8 +31,8 @@ _DEF_HEADERS = {"Content-Type": "application/json", "Accept": "application/json"
 
 # pylint: disable=too-few-public-methods
 @attr.s
-class _IntSightsParams(IoCLookupParams):
-    # override IoCLookupParams to set common defaults
+class _IntSightsParams(APILookupParams):
+    # override APILookupParams to set common defaults
     def __attrs_post_init__(self):
         self.auth_str = ["{API_ID}", "{API_KEY}"]
         self.auth_type = "HTTPBasic"
@@ -41,9 +42,9 @@ class _IntSightsParams(IoCLookupParams):
 class IntSights(HttpTIProvider):
     """IntSights Lookup."""
 
-    _BASE_URL = "https://api.intsights.com"
+    _BASE_URL = "https://api.ti.insight.rapid7.com"
 
-    _IOC_QUERIES = {
+    _QUERIES = {
         "ipv4": _IntSightsParams(
             path="/public/v2/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
@@ -88,13 +89,13 @@ class IntSights(HttpTIProvider):
 
     _REQUIRED_PARAMS = ["API_ID", "API_KEY"]
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : LookupResult
+        response : Dict
             The returned data response
 
         Returns
@@ -105,30 +106,32 @@ class IntSights(HttpTIProvider):
             Object with match details
 
         """
-        if self._failed_response(response) or not isinstance(response.raw_result, dict):
+        if self._failed_response(response) or not isinstance(
+            response["RawResult"], dict
+        ):
             return False, ResultSeverity.information, "Not found."
 
-        if response.raw_result["Whitelist"] == "True":
+        if response["RawResult"]["Whitelist"] == "True":
             return False, ResultSeverity.information, "Whitelisted."
 
-        sev = response.raw_result["Severity"]
+        sev = response["RawResult"]["Severity"]
         result_dict = {
-            "threat_actors": response.raw_result["RelatedThreatActors"],
-            "geolocation": response.raw_result.get("Geolocation", ""),
-            "response_code": response.status,
-            "tags": response.raw_result["Tags"] + response.raw_result["SystemTags"],
-            "malware": response.raw_result["RelatedMalware"],
-            "campaigns": response.raw_result["RelatedCampaigns"],
-            "sources": response.raw_result["Sources"],
-            "score": response.raw_result["Score"],
+            "threat_actors": response["RawResult"]["RelatedThreatActors"],
+            "geolocation": response["RawResult"].get("Geolocation", ""),
+            "response_code": response["Status"],
+            "tags": response["RawResult"]["Tags"] + response["RawResult"]["SystemTags"],
+            "malware": response["RawResult"]["RelatedMalware"],
+            "campaigns": response["RawResult"]["RelatedCampaigns"],
+            "sources": response["RawResult"]["Sources"],
+            "score": response["RawResult"]["Score"],
             "first_seen": dt.datetime.strptime(
-                response.raw_result["FirstSeen"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                response["RawResult"]["FirstSeen"], "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
             "last_seen": dt.datetime.strptime(
-                response.raw_result["LastSeen"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                response["RawResult"]["LastSeen"], "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
             "last_update": dt.datetime.strptime(
-                response.raw_result["LastUpdate"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                response["RawResult"]["LastUpdate"], "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
         }
 

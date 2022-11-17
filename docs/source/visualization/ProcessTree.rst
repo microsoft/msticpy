@@ -201,13 +201,15 @@ data (pd.DataFrame)
    DataFrame containing one or more Process Trees. This should be the
    output of ``build_process_tree`` described above.
 
-schema (ProcSchema, optional)
+schema (Dict | ProcSchema, optional)
    The data schema to use for the data set, by default None. If None
    the schema is inferred. A schema object maps generic field names
    (e.g. ``process_name``) on to a data-specific name (e.g. ``exe``
    in the case of Linux audit data). This is usually not required
    since the function will try to infer the schema from fields in the
    input DataFrame.
+   This can be supplied as a ProcSchema instance or a dictionary
+   with required schema mappings.
 
 output_var (str, optional)
    Output variable for selected items in the tree, by default None.
@@ -719,11 +721,11 @@ are shown below.
 ===================  =====================  =====================  ===========================
 Generic name         Win 4688 schema        Linux auditd schema    MDE schema
 ===================  =====================  =====================  ===========================
-time_stamp           TimeGenerated          TimeGenerated          CreatedProcessCreationTime
-process_name         NewProcessName         exe                    CreatedProcessName
-process_id           NewProcessId           pid                    CreatedProcessId
+\*time_stamp         TimeGenerated          TimeGenerated          CreatedProcessCreationTime
+\*process_name       NewProcessName         exe                    CreatedProcessName
+\*process_id         NewProcessId           pid                    CreatedProcessId
 parent_name          ParentProcessName      *(not used)*           ParentProcessName
-parent_id            ProcessId              ppid                   CreatedProcessParentId
+\*parent_id          ProcessId              ppid                   CreatedProcessParentId
 logon_id             SubjectLogonId         ses                    InitiatingProcessLogonId
 target_logon_id      TargetLogonId          *(not used)*           LogonId
 cmd_line             CommandLine            cmdline                CreatedProcessCommandLine
@@ -733,6 +735,9 @@ host_name_column     Computer               Computer               ComputerDnsNa
 event_id_column      EventID                EventType              *(not used)*
 ===================  =====================  =====================  ===========================
 
+\* indicates a mandatory field. You must supply mappings from your
+source data for these items. Others are optional but will provide more
+information to the user in the plotted tree.
 
 If your schema differs from, but is similar to one of the built-in
 schema mappings you can adapt one of these or supply a custom schema
@@ -783,11 +788,39 @@ You can also supply a schema as a Python ``dict``, with the keys
 being the generic internal name and the values, the names of the columns
 in the input data. Both keys and values are strings except where
 otherwise indicated above.
+Use :py:meth:`~msticpy.transform.process_tree_schema.ProcSchema.blank_schema_dict`
+to get a blank schema dictionary.
 
-The ``time_stamp`` column **must** be a pandas Timestamp (Python datetime)
-type. If your data is in another format (e.g. Unix timestamp or date string)
-you should
-convert this before trying to use the process tree tools. The example
+.. code:: python3
+
+   from msticpy.transform.proc_tree_schema import ProcSchema
+   ProcSchema.blank_schema_dict()
+
+.. parsed-literal::
+
+   {'process_name': 'required',
+   'process_id': 'required',
+   'parent_id': 'required',
+   'time_stamp': 'required',
+   'cmd_line': None,
+   'path_separator': None,
+   'user_name': None,
+   'logon_id': None,
+   'host_name_column': None,
+   'parent_name': None,
+   'target_logon_id': None,
+   'user_id': None,
+   'event_id_column': None,
+   'event_id_identifier': None}
+
+
+The ``time_stamp`` column **should** be a pandas ``Timestamp`` (Python ``datetime``)
+type. If your data is in another format (e.g. Unix timestamp or date string),
+the process tree module will try to convert it before building the process tree
+plot. This uses ``pandas`` to convert to native ``Timestamp``
+
+If the auto-conversion does not work, convert the timestamp field before
+trying to use the process tree tools. The example
 below shows extracting the timestamp from the auditd ``mssg_id`` field.
 
 

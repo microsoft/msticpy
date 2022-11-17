@@ -64,6 +64,14 @@ TIProviders:
     Args:
     Primary: True
     Provider: "AzSTI"
+ContextProviders:
+  ServiceNow:
+    Primary: True
+    Args:
+      TenantId: 8360dd21-0294-4240-9128-89611f415c53
+      AuthKey: "authkey"
+      AuthId: "authid"
+    Provider: "ServiceNow"
 OtherProviders:
   GeoIPLite:
     Args:

@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
       # Print out details about the run
       - name: Dump GitHub context
@@ -28,7 +28,7 @@ jobs:
       # end print details
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Cache pip
@@ -52,10 +52,15 @@ jobs:
           python -m pip install -e .
       - name: Install test dependencies
         run: |
-          python -m pip install flake8 black bandit mypy lxml pylint types-attrs
-          python -m pip install pytest pytest-cov pytest-xdist pytest-check aiohttp nbconvert jupyter_contrib_nbextensions
-          python -m pip install Pygments respx pytest-xdist markdown beautifulsoup4 Pillow async_lru
-          python -m pip install "pandas>=1.3.0"
+          if [ -f requirements-dev.txt ]; then
+            python -m pip install prospector
+            python -m pip install -r requirements-dev.txt
+          else
+            python -m pip install flake8 black bandit mypy lxml pylint types-attrs
+            python -m pip install pytest pytest-cov pytest-xdist pytest-check aiohttp nbconvert jupyter_contrib_nbextensions
+            python -m pip install Pygments respx pytest-xdist markdown beautifulsoup4 Pillow async-cache
+          fi
+          python -m pip install "pandas>=1.3.0" "pygeohash>=1.2.0"
       - name: Prepare test dummy data
         run: |
           mkdir ~/.msticpy
@@ -75,6 +80,37 @@ jobs:
         run: |
           pytest tests -n auto --junitxml=junit/test-${{ matrix.python-version }}-results.xml --cov=msticpy --cov-report=xml
         if: ${{ always() }}
+      - name: Upload pytest test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: pytest-results-${{ matrix.python-version }}
+          path: junit/test-${{ matrix.python-version }}-results.xml
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
+
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8"]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          if [ -f requirements-all.txt ]; then
+            python -m pip install -r requirements-all.txt
+          elif [ -f requirements.txt ]; then
+            python -m pip install -r requirements.txt;
+          fi
+          python -m pip install -e .
+      - name: Install test dependencies
+        run: |
+          python -m pip install flake8 black bandit mypy lxml pylint types-attrs
       - name: black
         run: |
           black --diff --check --exclude venv .
@@ -94,6 +130,13 @@ jobs:
         run: |
           mypy --ignore-missing-imports --follow-imports=silent --show-column-numbers --junit-xml junit/mypy-test-${{ matrix.python-version }}-results.xml msticpy
         if: ${{ always() }}
+      - name: Upload mypy test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: Mypy results ${{ matrix.python-version }}
+          path: junit/mypy-test-${{ matrix.python-version }}-results.xml
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
       - name: bandit
         run: |
           bandit -x tests -r -s B303,B404,B603,B607,B608 msticpy
@@ -107,18 +150,4 @@ jobs:
           # install this separately since it uses older versions of pylint/isort
           # chain running to installation since this sometimes fails
           python -m pip install prospector[with_pyroma] && prospector --ignore-paths tests --without-tool pylint
-        if: ${{ always() }}
-      - name: Upload pytest test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: pytest-results-${{ matrix.python-version }}
-          path: junit/test-${{ matrix.python-version }}-results.xml
-        # Use always() to always run this step to publish test results when there are test failures
-        if: ${{ always() }}
-      - name: Upload mypy test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: Mypy results ${{ matrix.python-version }}
-          path: junit/mypy-test-${{ matrix.python-version }}-results.xml
-        # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}

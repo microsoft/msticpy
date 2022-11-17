@@ -39,9 +39,13 @@ __version__ = VERSION
 __author__ = "Matt Richard, Ian Hellen"
 
 _KV_CLIENT_AUTH_ERROR = [
-    "Please use Azure CLI authentication:",
-    "1. Add 'cli' to the list of authentication methods in Azure/auth_methods"
-    " in msticpyconfig.yaml ",
+    "Retry authentication with msticpy.settings.auth_secrets_client",
+    "using a different credential type.",
+    "Alteratively use Azure CLI authentication:",
+    (
+        "1. Add 'cli' to the list of authentication methods in Azure/auth_methods"
+        " in msticpyconfig.yaml "
+    ),
     "2. run 'az login` at the start of your session.",
     "3. Re-run the MSTICPy function that failed with this error.",
     "",
@@ -73,6 +77,11 @@ class BHKeyVaultClient:
             The full URI of the keyvault, by default None
         vault_name : str, optional
             The name of the keyvault in the public cloud, by default None
+        settings : KeyVaultSettings
+            An instance of KeyVaultSettings containing KV parameters.
+
+        Other Parameters
+        ----------------
         auth_methods : List[str]
             The authentication methods to use for Key Vault auth
             Possible values are:
@@ -84,6 +93,8 @@ class BHKeyVaultClient:
             - "powershell" - to use PowerShell credentials
             - "interactive" - to prompt for interactive login
             - "cache" - to use shared token cache credentials
+            - "devicecode" - to use device code with web login
+            - "clientsecret" - to use client id/secret login.
         authn_type : str, optional
             [deprecated - use auth_methods]
             Authentication mode, by default 'interactive'
@@ -94,8 +105,12 @@ class BHKeyVaultClient:
             The AAD authority - one of 'global', 'usgov', 'de' or 'chi'
         authority_uri : str, optional
             The AAD authority URI - overrides `authority`
-        settings : KeyVaultSettings
-            An instance of KeyVaultSettings containing KV parameters.
+        credential : Optional[AzureCredential]
+            Azure credential
+        client_id : Optional[str]
+            Required if auth_methods is ["clientsecret"]
+        client_secret : Optional[str]
+            Required if auth_methods is ["clientsecret"]
         debug : bool, optional
             [description], by default False
 
@@ -140,38 +155,51 @@ class BHKeyVaultClient:
         self._vault_name, self.vault_uri = self._get_vault_name_and_uri(
             vault_name, vault_uri
         )
-        self.kv_client = self._get_secret_client()
+        self.kv_client = self._try_credential_types(**kwargs)
 
-    def _get_secret_client(self):
-        """Return the Secrets primed with credentials."""
-        # Create a secret client
-        return self._test_working_credentials()
-
-    def _test_working_credentials(self):
+    def _try_credential_types(self, **kwargs):
         """Try to access Key Vault to establish usable authentication method."""
+        credential = kwargs.pop("credential", None)
+        if credential:
+            kv_client = SecretClient(self.vault_uri, credential=credential)
+            try:
+                self._get_working_kv_client(kv_client)
+            except ClientAuthenticationError as client_err:
+                _print_status(
+                    f"Could not obtain access token using {credential.__class__.__name__}."
+                )
+                self._raise_auth_failed_error(client_err)
+
         for idx, auth_method in enumerate(self.auth_methods):
             _print_status(
                 f"Attempting connection to Key Vault using {auth_method} credentials...",
                 newline=False,
             )
-            credentials = az_connect_core(auth_methods=[auth_method])
-            kv_client = SecretClient(self.vault_uri, credentials.modern)
+            credential = az_connect_core(auth_methods=[auth_method], **kwargs)
+            kv_client = SecretClient(self.vault_uri, credential.modern)
             try:
-                # need to list to force iterator to run
-                list(kv_client.list_properties_of_secrets())
-                _print_status("done")
-                return kv_client
+                return self._get_working_kv_client(kv_client)
             except ClientAuthenticationError as client_err:
                 _print_status(f"Could not obtain access token using {auth_method}.")
                 if idx + 1 < len(self.auth_methods):
                     continue
-                raise MsticpyUserConfigError(
-                    "No configured authentication methods found with credentials "
-                    f"with access the Key Vault '{self._vault_name}'",
-                    *_KV_CLIENT_AUTH_ERROR,
-                    title="Key Vault authentication configuration failed.",
-                ) from client_err
+                self._raise_auth_failed_error(client_err)
         return None
+
+    def _get_working_kv_client(self, kv_client):
+        """Try to list secrets - will throw ClientAuthentication error on failure."""
+        # need to list to force iterator to run
+        list(kv_client.list_properties_of_secrets())
+        _print_status("done")
+        return kv_client
+
+    def _raise_auth_failed_error(self, client_err):
+        raise MsticpyUserConfigError(
+            "No configured authentication methods found with credentials "
+            f"with access the Key Vault '{self._vault_name}'",
+            *_KV_CLIENT_AUTH_ERROR,
+            title="Key Vault authentication configuration failed.",
+        ) from client_err
 
     def _get_vault_name_and_uri(self, vault_name, vault_uri):
         """Validate and return vault name and URI."""

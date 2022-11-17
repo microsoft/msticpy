@@ -113,7 +113,8 @@ class CEAzureSentinel(CEItemsBase):
         )
         self.txt_imp_url = widgets.Text(
             description="Portal URL",
-            tooltip="Paste in the URL from the Sentinel Azure portal to fetch settings.",
+            # Tooltip not yet supported in widgets.Text
+            # tooltip="Paste in the URL from the Sentinel Azure portal to fetch settings.",
         )
         self.ws_btns = widgets.HBox([self.btn_set_default, btn_resolve])
         self.url_imp_ctrls = widgets.HBox([self.txt_imp_url, self.btn_imp_url])
@@ -226,7 +227,7 @@ class CEAzureSentinel(CEItemsBase):
         _get_named_control(self.edit_ctrls, "Name").value = ws_name
         for setting, value in ws_settings[ws_name].items():
             ctrl = _get_named_control(self.edit_ctrls, setting)
-            if ctrl.value:
+            if ctrl is None or ctrl.value:
                 # don't overwrite existing settings
                 continue
             ctrl.value = value
@@ -286,7 +287,10 @@ def _get_ws_ctrls(workspace, mp_controls, conf_path):
 
 def _get_named_control(edit_ctrls, name):
     """Get the control with matching name."""
-    return next(ctrl for ctrl in edit_ctrls.children if ctrl.description == name)
+    try:
+        return next(ctrl for ctrl in edit_ctrls.children if ctrl.description == name)
+    except StopIteration:
+        return None
 
 
 def _validate_ws(workspace, mp_controls, conf_path):
