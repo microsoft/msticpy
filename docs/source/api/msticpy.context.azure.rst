@@ -18,6 +18,7 @@ Submodules
    msticpy.context.azure.sentinel_core
    msticpy.context.azure.sentinel_incidents
    msticpy.context.azure.sentinel_search
+   msticpy.context.azure.sentinel_ti
    msticpy.context.azure.sentinel_utils
    msticpy.context.azure.sentinel_watchlists
    msticpy.context.azure.sentinel_workspaces

@@ -7,7 +7,7 @@
 import re
 
 # from collections import ChainMap
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from numbers import Number
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -302,7 +302,7 @@ class QuerySource:
         if isinstance(param_value, Number):
             # datetime specified as a number - we
             # interpret this as an offset from utcnow
-            return datetime.utcnow() + timedelta(  # type: ignore
+            return datetime.now(tz=timezone.utc) + timedelta(  # type: ignore
                 param_value  # type: ignore
             )
         try:
@@ -356,7 +356,7 @@ class QuerySource:
         rounding = time_offset.split("@")[1].casefold() if "@" in time_offset else None
         # Calculate the raw offset
         t_delta = cls._parse_timedelta(delta)
-        result_date = datetime.utcnow() + t_delta
+        result_date = datetime.now(tz=timezone.utc) + t_delta
 
         # If rounding to a specified unit (e.g. -3d@d)
         if rounding:
