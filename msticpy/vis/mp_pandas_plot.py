@@ -619,14 +619,12 @@ class MsticpyPlotAccessor:
         )
 
     # pylint: disable=too-many-arguments
-    def heatmap(data: pd.DataFrame, **kwargs) -> LayoutDOM:
+    def heatmap(self, **kwargs) -> LayoutDOM:
         """
         Plot data as a heatmap.
 
         Parameters
         ----------
-        data : pd.DataFrame
-            The data to plot.
         x : str
             Column to plot on the x (horizontal) axis
         x_col : str
