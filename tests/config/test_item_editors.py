@@ -33,6 +33,10 @@ __author__ = "Ian Hellen"
 
 # pylint: disable=redefined-outer-name
 
+_KUSTO_DP_INST = {
+    "Args": {"Cluster": "https://msticti.kusto.windows.net", "IntegratedAuth": True}
+}
+
 
 @pytest.fixture
 def mp_conf_ctrl():
@@ -52,6 +56,9 @@ def mp_conf_ctrl():
     del nb_settings["query_provider"]["LocalData"]
     nb_settings["query_provider"]["AzureSentinel"] = q_prov
     conf_settings.update(user_defaults)
+
+    # Add a data provider instance
+    conf_settings["DataProviders"]["Kusto-TestCluster1"] = _KUSTO_DP_INST
 
     return MpConfigControls(mp_config_def=mp_defn, mp_config=conf_settings)
 
@@ -454,7 +461,42 @@ _DATA_PROVIDER_PARAMS = [
     "Sumologic",
     "Sumologic-europe",
     "Sumologic-northamerica",
+    "Kusto",
+    "Kusto-Cluster1",
 ]
+
+
+def test_read_dataprov_instance(mp_conf_ctrl):
+    """Test that selecting an item with an instance name returns correct values."""
+    edit_comp = CEDataProviders(mp_controls=mp_conf_ctrl)
+    edit_comp.select_item.label = "Kusto-TestCluster1"
+    check.equal(
+        _get_named_control(edit_comp, "Cluster").value,
+        _KUSTO_DP_INST["Args"]["Cluster"],
+    )
+    check.equal(
+        _get_named_control(edit_comp, "IntegratedAuth").value,
+        _KUSTO_DP_INST["Args"]["IntegratedAuth"],
+    )
+
+
+def test_add_dataprov_instance(mp_conf_ctrl):
+    """Test that adding a DP instance works."""
+    edit_comp = CEDataProviders(mp_controls=mp_conf_ctrl)
+    edit_comp.prov_options.label = "Kusto"
+    edit_comp.edit_buttons.btn_add.click()
+    edit_comp.text_prov_instance.value = "TestCluster3"
+    test_cluster = "https://kusto.com"
+    _get_named_control(edit_comp, "Cluster").value = test_cluster
+    _get_named_control(edit_comp, "IntegratedAuth").value = True
+    edit_comp.edit_buttons.btn_save.click()
+    check.is_in("Kusto-TestCluster3", mp_conf_ctrl.mp_config["DataProviders"])
+    check.equal(
+        test_cluster,
+        mp_conf_ctrl.mp_config["DataProviders"]["Kusto-TestCluster3"]["Args"][
+            "Cluster"
+        ],
+    )
 
 
 @pytest.mark.parametrize("test_opt", _DATA_PROVIDER_PARAMS)
