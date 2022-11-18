@@ -55,14 +55,17 @@ In order to connect to the Microsoft Sentinel API and retrieve the required data
 we need to instantiate the MicrosoftSentinel class and authenticate to Azure.
 Authentication to the Microsoft Sentinel API is handled via an the azure_auth package.
 
-By default `['env', 'cli', 'msi', 'interactive']` is used but you can provide an alternative
-list to `.connect` via the auth_methods parameter.
+By default ``['cli', 'msi', 'devicecode']`` is used but you can provide an alternative
+list to ``.connect`` via the auth_methods parameter.
 
 .. code:: ipython3
 
         sentinel = MicrosoftSentinel()
         sentinel.connect(auth_methods=['cli','interactive'])
 
+
+For more details see :doc:`../getting_started/AzureAuthentication`
+and :ref:`getting_started/SettingsEditor:Azure Cloud and Authentication Settings`.
 
 Get Microsoft Sentinel Workspaces
 ---------------------------------
