@@ -37,13 +37,16 @@ options. Available options are:
       `Azure Managed Identity. <https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview>`__
     * 'interactive' - This prompts the browser to interactively login using the device's browser.
 
-By default `['env', 'cli', 'msi', 'interactive']` is used but you can provide an alternative
-list to `.connect` via the auth_methods parameter.
+By default ``['cli', 'msi', 'devicecode']`` is used but you can provide an alternative
+list to ``.connect`` via the auth_methods parameter.
 
 .. code:: ipython3
 
         az = AzureData()
         az.connect(auth_methods=['cli','interactive'])
+
+
+For more details on Azure authentication see :doc:`../getting_started/AzureAuthentication`.
 
 
 Get Azure Subscription Details

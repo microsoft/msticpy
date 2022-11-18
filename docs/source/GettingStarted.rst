@@ -13,3 +13,4 @@ Getting Started
    getting_started/SettingsEditor
    getting_started/JupyterAndSecurity
    getting_started/JupyterAndAzureSentinel
+   getting_started/AzureAuthentication
