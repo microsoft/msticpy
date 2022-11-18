@@ -76,6 +76,8 @@ trying to access. In the default case it will do the following:
 1. Check to see if you are running on a system (a host/virtual machine)
    that has a system-assigned identity OR (as in the case of Azure
    Machine Learning) has support for user-assigned managed identities.
+   See here for detailed information about `Managed Identities
+   <https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview>`__
 2. Look for an authenticated Azure CLI session and try to obtain
    the credential from Azure CLI
 3. If both fail, it will prompt with a device code and login URL
