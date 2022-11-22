@@ -184,12 +184,8 @@ class OData(DriverBase):
                 authority=authority,
                 username=cs_dict["username"],
                 scopes=self.scopes,
-                auth_type=kwargs["auth_type"]
-                if "auth_type" in kwargs
-                else "interactive",
-                location=cs_dict["location"]
-                if "location" in cs_dict
-                else "token_cache.bin",
+                auth_type=kwargs.get("auth_type", "interactive"),
+                location=cs_dict.get("location", "token_cache.bin"),
                 connect=True,
             )
             self.aad_token = self.msal_auth.token
