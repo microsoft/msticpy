@@ -4,9 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Utility classes and functions."""
+
+import contextlib
 import difflib
 import sys
 from enum import Enum
+from functools import WRAPPER_ASSIGNMENTS
 from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
 
 from ..._version import VERSION
@@ -240,7 +243,11 @@ class SingletonClass:
         """Instantiate the class wrapper."""
         self.wrapped_cls = wrapped_cls
         self.instance = None
-        self.__doc__ = wrapped_cls.__doc__
+        for attrib in WRAPPER_ASSIGNMENTS:
+            cls_val = getattr(wrapped_cls, attrib, None)
+            if cls_val is not None:
+                with contextlib.suppress(AttributeError):
+                    setattr(self, attrib, cls_val)
 
     def __call__(self, *args, **kwargs):
         """Override the __call__ method for the wrapper class."""

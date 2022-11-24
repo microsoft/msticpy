@@ -20,7 +20,7 @@ import numbers
 import os
 from importlib.util import find_spec
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import httpx
 import pkg_resources
@@ -62,6 +62,7 @@ def _get_current_config() -> Callable[[Any], Optional[str]]:
 
 
 _CURRENT_CONF_FILE = _get_current_config()
+_SETTINGS_RELOAD_CALLBACKS: List[Callable[[], None]] = []
 
 
 def current_config_path() -> Optional[str]:
@@ -85,6 +86,14 @@ def refresh_config():
     custom_settings = _get_custom_config()
     custom_settings = _create_data_providers(custom_settings)
     settings = _consolidate_configs(default_settings, custom_settings)
+    for callback in _SETTINGS_RELOAD_CALLBACKS:
+        callback()
+
+
+def register_reload_refresh_cb(callback: Callable[[], None]):
+    """Add a callback to be called when settings are reloaded."""
+    if callback not in _SETTINGS_RELOAD_CALLBACKS:
+        _SETTINGS_RELOAD_CALLBACKS.append(callback)
 
 
 def get_config(setting_path: str) -> Any:
