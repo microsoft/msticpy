@@ -51,7 +51,7 @@ Azure:
   cloud: enum(required=False, options=[global; cn; usgov; de], default=global)
   auth_methods: m_enum(required=False,
     options=[env; msi; cli; devicecode; interactive; vscode; powershell; clientsecret; certificate],
-    default=["cli"; "msi", "interactive"]
+    default=["cli"; "msi", "devicecode"]
     )
 QueryDefinitions:
   # Add paths to folders containing custom query definitions here
@@ -165,6 +165,7 @@ DataProviders:
       UserName: str(required=False)
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       ClientSecret: *cred_key
+      Cloud: str(required=False)
   MicrosoftGraph:
     Args:
       ClientId: str(format=uuid)
@@ -184,6 +185,14 @@ DataProviders:
       ClientId: str()
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       ClientSecret: *cred_key
+  Kusto:
+    Args:
+      Cluster: str()
+      TenantId: str(format=uuid)
+      IntegratedAuth: bool()
+      ClientId: str(required=False, format=uuid)
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      ClientSecret: *cred_key_opt
 AzureCLI:
   # Deprecated section - use DataProviders.AzureCLI
   Args:

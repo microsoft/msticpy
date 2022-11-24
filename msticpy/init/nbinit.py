@@ -302,6 +302,7 @@ def init_notebook(
             "no_config_check",
             "verbosity",
             "verbose",
+            "config",
             *_SYNAPSE_KWARGS,
         ],
     )
@@ -332,9 +333,12 @@ def init_notebook(
 
     # Handle required packages and imports
     _pr_output("Processing imports....")
-    imp_ok = _global_imports(
-        namespace, additional_packages, user_install, extra_imports, def_imports
-    )
+    stdout_cap = io.StringIO()
+    with redirect_stdout(stdout_cap):
+        imp_ok = _global_imports(
+            namespace, additional_packages, user_install, extra_imports, def_imports
+        )
+        _pr_output(stdout_cap.getvalue())
 
     # Configuration check
     if no_config_check:
@@ -361,12 +365,14 @@ def init_notebook(
     # load pivots
     stdout_cap = io.StringIO()
     with redirect_stdout(stdout_cap):
+        _pr_output("Loading pivots.")
         _load_pivots(namespace=namespace)
         _pr_output(stdout_cap.getvalue())
 
     # User defaults
     stdout_cap = io.StringIO()
     with redirect_stdout(stdout_cap):
+        _pr_output("Loading user defaults.")
         prov_dict = load_user_defaults()
         _pr_output(stdout_cap.getvalue())
 
@@ -719,18 +725,28 @@ def _check_and_reload_pkg(
 
 def _hook_ipython_exceptions(func):
     """Hooks the `func` and bypasses it if exception is MsticpyUserException."""
+    # if already wrapped, don't do it again
+    if hasattr(InteractiveShell.showtraceback, "__wrapped__"):
+        return InteractiveShell.showtraceback
 
     @wraps(func)
     def showtraceback(*args, **kwargs):
         """Replace IPython showtraceback."""
         # extract exception type, value and traceback
-        e_type, _, _ = sys.exc_info()
+        e_type, exception, _ = sys.exc_info()
         if e_type is not None and issubclass(e_type, MsticpyUserError):
+            exception.display_exception()
             return None
         # otherwise run the original hook
         return func(*args, **kwargs)
 
     return showtraceback
+
+
+def reset_ipython_exception_handler():
+    """Remove MSTICPy custom exception handler."""
+    if hasattr(InteractiveShell.showtraceback, "__wrapped__"):
+        InteractiveShell.showtraceback = InteractiveShell.showtraceback.__wrapped__
 
 
 def _check_azure_cli_status():

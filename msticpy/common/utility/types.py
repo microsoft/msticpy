@@ -7,10 +7,11 @@
 
 import contextlib
 import difflib
+import inspect
 import sys
 from enum import Enum
-from functools import WRAPPER_ASSIGNMENTS
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from functools import WRAPPER_ASSIGNMENTS, wraps
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type, TypeVar, Union
 
 from ..._version import VERSION
 
@@ -28,6 +29,52 @@ def export(obj: Callable):
         all_list = [obj.__name__]
         setattr(mod, "__all__", all_list)
     return obj
+
+
+@export
+def checked_kwargs(legal_args: Iterable[str]):
+    """
+    Decorate function to check kwargs names against legal arg names.
+
+    Parameters
+    ----------
+    legal_args : Iterable[str]
+        Iterable of possible arguments.
+
+    Raises
+    ------
+    NameError
+        If any of the arguments are not legal. If the an arg is
+        a close match to one or more `legal_args`, these are
+        returned in the exception.
+
+    Notes
+    -----
+    The checking is done against the union of legal_args and
+    any named arguments of the wrapped function.
+
+    """
+
+    def arg_check_wrapper(func):
+        func_args = inspect.signature(func).parameters.keys() - {"args", "kwargs"}
+        valid_arg_names = set(legal_args) | func_args
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            """Inner argument name checker."""
+            name_errs = []
+            for name in kwargs:
+                try:
+                    check_kwarg(name, valid_arg_names)
+                except NameError as err:
+                    name_errs.append(err)
+            if name_errs:
+                raise NameError(name_errs)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return arg_check_wrapper
 
 
 @export
@@ -52,14 +99,15 @@ def check_kwarg(arg_name: str, legal_args: List[str]):
     """
     if arg_name not in legal_args:
         closest = difflib.get_close_matches(arg_name, legal_args)
-        mssg = f"{arg_name} is not a recognized argument or attribute. "
+        mssg = f"'{arg_name}' is not a recognized argument or attribute. "
         if len(closest) == 1:
             mssg += f"Closest match is '{closest[0]}'"
         elif closest:
             match_list = [f"'{match}'" for match in closest]
             mssg += f"Closest matches are {', '.join(match_list)}"
         else:
-            mssg += f"Valid options are {', '.join(legal_args)}"
+            valid_opts = [f"'{arg}'" for arg in legal_args]
+            mssg += f"Valid options are {', '.join(valid_opts)}"
         raise NameError(arg_name, mssg)
 
 

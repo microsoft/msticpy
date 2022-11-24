@@ -6,9 +6,10 @@ Description
 
 Azure Blob Storage provides a simple and flexible way to store and access data of any kind.
 This makes it ideal for storing a range of data relating to security investigations, whether
-it be raw data to analyse or to store outputs and findings.
+it be raw data to analyze or to store outputs and findings.
 
-This class wraps the `Azure Python SDK <https://github.com/Azure/azure-sdk-for-python>`_ and integrates it with other MSTICpy features.
+This class wraps the `Azure Python SDK <https://github.com/Azure/azure-sdk-for-python>`_
+and integrates it with other MSTICpy features.
 
 
 Import the module
@@ -16,27 +17,32 @@ Import the module
 
 .. code:: ipython3
 
-    from msticpy.data.storage import AzureBobStorage
+    from msticpy.data.storage import AzureBlobStorage
 
 See :py:mod:`azure_blob_storage<msticpy.data.storage.azure_blob_storage>` for API details.
 
 Initialize  the class and connect
 ---------------------------------
 
-Azure Blob Storage works on the basis of accounts, these are top level objects under which everything sits.
-When initializing `AzureBlobStorage` you need to provide the name of the account you wish to interact with.
-You then need to authenticate with the `connect` function. Authentication uses the `az_connect` feature of
-MSTICpy and the authentication methods can be customized by passing them to `connect` with the `auth_methods` keyword.
+Azure Blob Storage works on the basis of accounts, these are top level
+objects under which everything sits. When initializing ``AzureBlobStorage``
+you need to provide the name of the account you wish to interact with.
+You then need to authenticate with the ``connect`` function.
+Authentication uses the ``az_connect`` feature of
+MSTICpy and the authentication methods can be customized by passing them
+to ``connect`` with the ``auth_methods`` keyword.
 
 .. code:: ipython3
 
     abs = AzureBlobStorage("MyABSAccount")
     abs.connect(auth_methods=["cli"])
 
+For more details on Azure authentication see :doc:`../getting_started/AzureAuthentication`.
+
 List Containers
 ---------------
 
-`Containers` returns details on all the containers within an account.
+``Containers`` returns details on all the containers within an account.
 
 .. code:: ipython3
 
@@ -51,7 +57,7 @@ See :py:mod:`containers<msticpy.data.storage.azure_blob_storage.AzureBlobStorage
 Create a Container
 ------------------
 
-`create_container` creates a new container within the account.
+``create_container`` creates a new container within the account.
 
 .. code:: ipython3
 
@@ -66,7 +72,7 @@ See :py:mod:`create_container<msticpy.data.storage.azure_blob_storage.AzureBlobS
 List Blobs
 ----------
 
-`blobs` returns details on all the blobs in a container, due to the container scope it is required that you pass this function
+``blobs`` returns details on all the blobs in a container, due to the container scope it is required that you pass this function
 the name of the container you want to list blobs from.
 
 .. code:: ipython3
@@ -83,8 +89,8 @@ See :py:mod:`blobs<msticpy.data.storage.azure_blob_storage.AzureBlobStorage.blob
 Write to a Blob
 ---------------
 
-`upload_to_blob` writes data to a blob as specified. By default this will overwrite anything in the blob
-but you can set `overwrite=False` to stop an overwrite if the blob already has contents.
+``upload_to_blob`` writes data to a blob as specified. By default this will overwrite anything in the blob
+but you can set ``overwrite=False`` to stop an overwrite if the blob already has contents.
 The function returns True if the upload was successful.
 
 .. code:: ipython3
@@ -97,7 +103,7 @@ See :py:mod:`upload_to_blob<msticpy.data.storage.azure_blob_storage.AzureBlobSto
 Read from a Blob
 ----------------
 
-`get_blob` returns the contents of the specified blob.
+``get_blob`` returns the contents of the specified blob.
 
 .. code:: ipython3
 
@@ -110,7 +116,7 @@ See :py:mod:`get_blob<msticpy.data.storage.azure_blob_storage.AzureBlobStorage.g
 Delete a Blob
 -------------
 
-`delete_blob` deletes a blob. By default this will also delete any blob snapshots.
+``delete_blob`` deletes a blob. By default this will also delete any blob snapshots.
 Returns True if blob is successfully deleted.
 
 .. code:: ipython3
@@ -123,9 +129,9 @@ See :py:mod:`delete_blob<msticpy.data.storage.azure_blob_storage.AzureBlobStorag
 Generate a SAS Token for a Blob
 -------------------------------
 
-`get_sas_token` generates a `SAS token <https://docs.microsoft.com/azure/storage/common/storage-sas-overview>`_ for the specified blob.
+``get_sas_token`` generates a `SAS token <https://docs.microsoft.com/azure/storage/common/storage-sas-overview>`_ for the specified blob.
 By default the token generated is valid for read access for 7 days but permissions can be modified with the
-`permission` keyword, and validity time-frame with the `start` and `end` keywords.
+``permission`` keyword, and validity time-frame with the ``start`` and ``end`` keywords.
 The returned string is a full URI for the blob, with the SAS token appended.
 
 .. code:: ipython3

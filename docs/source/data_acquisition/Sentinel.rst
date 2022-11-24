@@ -10,6 +10,7 @@ Microsoft Sentinel APIs
    SentinelWatchlists
    SentinelSearch
    SentinelWorkspaces
+   SentinelTI
 
 Description
 -----------
@@ -54,14 +55,17 @@ In order to connect to the Microsoft Sentinel API and retrieve the required data
 we need to instantiate the MicrosoftSentinel class and authenticate to Azure.
 Authentication to the Microsoft Sentinel API is handled via an the azure_auth package.
 
-By default `['env', 'cli', 'msi', 'interactive']` is used but you can provide an alternative
-list to `.connect` via the auth_methods parameter.
+By default ``['cli', 'msi', 'devicecode']`` is used but you can provide an alternative
+list to ``.connect`` via the auth_methods parameter.
 
 .. code:: ipython3
 
-        azs = MicrosoftSentinel()
-        azs.connect(auth_methods=['cli','interactive'])
+        sentinel = MicrosoftSentinel()
+        sentinel.connect(auth_methods=['cli','interactive'])
 
+
+For more details see :doc:`../getting_started/AzureAuthentication`
+and :ref:`getting_started/SettingsEditor:Azure Cloud and Authentication Settings`.
 
 Get Microsoft Sentinel Workspaces
 ---------------------------------
@@ -78,7 +82,7 @@ a specified subscription.
 
 .. code:: ipython3
 
-    azs.get_sentinel_workspaces(sub_id="3b701f84-d04b-4479-89b1-fa8827eb537e")
+    sentinel.get_sentinel_workspaces(sub_id="3b701f84-d04b-4479-89b1-fa8827eb537e")
 
 Incidents
 ---------
@@ -97,7 +101,7 @@ See :py:meth:`list_hunting_queries <msticpy.context.azure.sentinel_core.Microsof
 
 .. code:: ipython3
 
-    azs.list_hunting_queries()
+    sentinel.list_hunting_queries()
 
 Analytics
 ---------
