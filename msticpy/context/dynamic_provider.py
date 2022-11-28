@@ -3,28 +3,31 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Dynamic TI provider to create provider from yaml/json definition."""
+"""Dynamic Context provider to create provider from yaml/json definition."""
 import operator
 import re
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union, cast
 
 import attr
 
-from ..._version import VERSION
-from ...common.utility import valid_pyname
-from .http_provider import HttpTIProvider, IoCLookupParams
-from .lookup_result import LookupResult
-from .result_severity import ResultSeverity
+from .._version import VERSION
+from ..common.utility import valid_pyname
+from .contextproviders.http_context_provider import HttpContextProvider
+from .http_provider import APILookupParams, HttpProvider
+from .tiproviders.result_severity import ResultSeverity
+from .tiproviders.ti_http_provider import HttpTIProvider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-TIProviderDef = Dict[str, Union[str, Dict[str, Any]]]
+ContextProviderDef = Dict[str, Union[str, Dict[str, Any]]]
+
+_TEMP_PROV_TYPE = "TI"
 
 
-def create_ti_provider(provider_def: TIProviderDef):
-    """Return an TI Provider class from a definition."""
+def create_ti_provider(provider_def: ContextProviderDef):
+    """Return an Context Provider class from a definition."""
     _validate_definition(provider_def, _PROVIDER_VALIDATION)
 
     cls_name = valid_pyname(cast(str, provider_def[_Fields.NAME]))
@@ -36,15 +39,17 @@ def create_ti_provider(provider_def: TIProviderDef):
         "parse_results": parse_results,
     }
 
-    cls = type(cls_name, (HttpTIProvider,), cls_attributes)
+    # Ian WORK HERE - determine TI or Context
+    prov_cls_base = HttpTIProvider if _TEMP_PROV_TYPE else HttpContextProvider
+    cls = type(cls_name, (prov_cls_base,), cls_attributes)
     cls.__doc__ = (
-        f"TI Provider for {provider_def.get('description', provider_def['name'])}."
+        f"Context Provider for {provider_def.get('description', provider_def['name'])}."
     )
     return cls
 
 
-def _parse_queries(provider_def: TIProviderDef) -> Dict[str, IoCLookupParams]:
-    """Parse dictionary of TI query definitions."""
+def _parse_queries(provider_def: ContextProviderDef) -> Dict[str, APILookupParams]:
+    """Parse dictionary of Context query definitions."""
     queries = cast(Dict[str, Dict], provider_def[_Fields.QUERIES])
     # create the main queries
     ioc_queries = {
@@ -61,15 +66,15 @@ def _parse_queries(provider_def: TIProviderDef) -> Dict[str, IoCLookupParams]:
 
 def _create_param(
     query: Dict[str, Any], provider_def: Dict[str, Any]
-) -> IoCLookupParams:
-    """Return IoCLookupParams instance for a query."""
+) -> APILookupParams:
+    """Return APILookupParams instance for a query."""
     macros = provider_def.get(_Fields.MACROS, {})
     query_replaced = {
         key: _replace_macros(value, macros)
         for key, value in query.items()
-        if key in attr.fields_dict(IoCLookupParams)
+        if key in attr.fields_dict(APILookupParams)
     }
-    ioc_params = IoCLookupParams(**query_replaced)
+    ioc_params = APILookupParams(**query_replaced)
     _set_request_default(ioc_params, _Fields.VERB, provider_def, "GET")
     _set_request_default(ioc_params, _Fields.HEADERS, provider_def, {})
     _set_request_default(ioc_params, _Fields.PARAMS, provider_def, {})
@@ -115,16 +120,16 @@ def _replace_macros(
 
 
 def parse_results(
-    self, response: LookupResult, result_processing
+    self, response: Dict[str, Any], result_processing: Dict[str, Any]
 ) -> Tuple[bool, ResultSeverity, Any]:
     """
     Return the details of the response.
 
     Parameters
     ----------
-    response : LookupResult
+    response : Dict[str, Any]
         The returned data response
-    result_processing : Dict
+    result_processing : Dict[str, Any]
         Rule dictionary for extracting severity
         and summary from response.
 
@@ -263,12 +268,11 @@ def _get_summary_items(response, summary_rules, def_result_key):
             if op_name != _Fields.GET_ITEM:
                 print(f"Unsupported operand {op_name}")
                 continue
-            if op_name == _Fields.GET_ITEM:
-                op_func = operator.itemgetter(operand)
-                if isinstance(key_value, list):
-                    item_list = [op_func(item) for item in key_value]
-                elif isinstance(key_value, dict):
-                    item_list = op_func(key_value)
+            op_func = operator.itemgetter(operand)
+            if isinstance(key_value, list):
+                item_list = [op_func(item) for item in key_value]
+            elif isinstance(key_value, dict):
+                item_list = op_func(key_value)
             if rule.get(_Fields.FLATTEN, False):
                 item_list = [elem for item in item_list for elem in item]
             summary_dict[name] = item_list
@@ -287,7 +291,7 @@ def _get_summary_items(response, summary_rules, def_result_key):
 
 
 # Definition validation
-class TIDefCheck(NamedTuple):
+class ProviderDefCheck(NamedTuple):
     """Validation class for checking definition files."""
 
     required: bool
@@ -299,7 +303,7 @@ class TIDefCheck(NamedTuple):
 
 
 def _validate_definition(provider_def, validation_rules):
-    """Validate TI provider definition."""
+    """Validate Context provider definition."""
     validation_errors = []
     for v_key, validation in validation_rules.items():
         print(v_key, validation)
@@ -330,6 +334,7 @@ def _validate_definition(provider_def, validation_rules):
 
 
 def _validate_type(value: Any, val_type, elem_type, legal_keys):
+    """Validate that `value` and value elements are of expected type(s)."""
     validation_errors = []
     print("_validate_type", value, val_type)
     if not isinstance(value, val_type):
@@ -365,6 +370,7 @@ def _validate_type(value: Any, val_type, elem_type, legal_keys):
 
 
 def _validate_queries(query_dict: Dict[str, Dict[str, Any]]) -> List[str]:
+    """Validate that queries have required elements."""
     validation_errors = []
     missing_path = [
         query for query, params in query_dict.items() if _Fields.PATH not in params
@@ -385,7 +391,7 @@ def _validate_queries(query_dict: Dict[str, Dict[str, Any]]) -> List[str]:
     invalid_ioc = [
         query
         for query in query_dict
-        if not HttpTIProvider.is_known_type(query.split(query, maxsplit=1)[0])
+        if not HttpProvider.is_known_type(query.split(query, maxsplit=1)[0])
     ]
     if invalid_ioc:
         validation_errors.append(
@@ -457,11 +463,11 @@ class _Fields:
 # Dictionary used by validation functions - outlines
 # Basic structure of definition file.
 _PROVIDER_VALIDATION = {
-    _Fields.NAME: TIDefCheck(True, str),
-    _Fields.DESCRIPTION: TIDefCheck(True, str),
-    _Fields.BASE_URL: TIDefCheck(False, str),
-    _Fields.REQUIRED_PARAMETERS: TIDefCheck(True, list, str),
-    _Fields.REQUEST_DEFAULTS: TIDefCheck(
+    _Fields.NAME: ProviderDefCheck(True, str),
+    _Fields.DESCRIPTION: ProviderDefCheck(True, str),
+    _Fields.BASE_URL: ProviderDefCheck(False, str),
+    _Fields.REQUIRED_PARAMETERS: ProviderDefCheck(True, list, str),
+    _Fields.REQUEST_DEFAULTS: ProviderDefCheck(
         True,
         dict,
         (str, (str, dict)),
@@ -473,10 +479,10 @@ _PROVIDER_VALIDATION = {
             _Fields.AUTH_STR,
         ],
     ),
-    _Fields.MACROS: TIDefCheck(False, dict, (str, str)),
-    _Fields.QUERIES: TIDefCheck(True, "queries_dict"),
+    _Fields.MACROS: ProviderDefCheck(False, dict, (str, str)),
+    _Fields.QUERIES: ProviderDefCheck(True, "queries_dict"),
     _Fields.RESULT_PROCESSING: {
-        _Fields.SEVERITY: TIDefCheck(True, _Fields.SEVERITY),
-        _Fields.SUMMARY: TIDefCheck(True, _Fields.SUMMARY),
+        _Fields.SEVERITY: ProviderDefCheck(True, _Fields.SEVERITY),
+        _Fields.SUMMARY: ProviderDefCheck(True, _Fields.SUMMARY),
     },
 }
