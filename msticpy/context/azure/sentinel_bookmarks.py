@@ -75,10 +75,10 @@ class SentinelBookmarksMixin:
         # Generate or use resource ID
         bkmark_id = str(uuid4())
         bookmark_url = self.sent_urls["bookmarks"] + f"/{bkmark_id}"  # type: ignore
-        data_items = {
+        data_items: Dict[str, Union[str, List]] = {
             "displayName": name,
             "query": query,
-        }  # type: Dict[str, Union[str, List]]
+        }
         if results:
             data_items["queryResult"] = results
         if notes:
