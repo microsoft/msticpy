@@ -257,14 +257,7 @@ class SentinelIncidentsMixin:
             content=str(data),
             timeout=get_http_timeout(),
         )
-        if response.status_code == 400:
-            print("Error")
-            print(response.content)
-            print(response)
         if response.status_code not in (200, 201):
-            print("Error")
-            print(response.content)
-            print(response)
             raise CloudError(response=response)
         print("Incident updated.")
 
@@ -318,11 +311,11 @@ class SentinelIncidentsMixin:
         incident_id = uuid4()
         incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
         params = {"api-version": "2020-01-01"}
-        data_items = {
+        data_items: Dict[str, Union[str, List]] = {
             "title": title,
             "severity": severity.capitalize(),
             "status": status.capitalize(),
-        }  # type: Dict[str, Union[str, List]]
+        }
         if description:
             data_items["description"] = description
         if labels:

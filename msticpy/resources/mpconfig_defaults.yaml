@@ -51,7 +51,7 @@ Azure:
   cloud: enum(required=False, options=[global; cn; usgov; de], default=global)
   auth_methods: m_enum(required=False,
     options=[env; msi; cli; devicecode; interactive; vscode; powershell; clientsecret; certificate],
-    default=["cli"; "msi", "interactive"]
+    default=["cli"; "msi", "devicecode"]
     )
 QueryDefinitions:
   # Add paths to folders containing custom query definitions here

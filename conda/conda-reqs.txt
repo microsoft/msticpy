@@ -17,7 +17,7 @@ dnspython>=2.0.0, <3.0.0
 folium>=0.9.0
 geoip2>=2.9.0
 html5lib
-httpx>=0.23
+httpx>=0.23.1
 ipython>=7.23.1
 ipywidgets>=7.4.2, <8.0.0
 keyring>=13.2.1
@@ -30,7 +30,6 @@ msrestazure>=0.6.0
 networkx>=2.2
 numpy>=1.15.4
 pandas>=1.4.0, <2.0.0
-pygeohash>=1.2.0
 pygments>=2.0.0
 pyjwt>=2.3.0
 python-dateutil>=2.8.1

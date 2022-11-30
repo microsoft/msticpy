@@ -634,10 +634,18 @@ In the Azure settings tab you can also specify the default authentication
 methods that you want to use. The available methods are:
 
 - **env** - Use credentials set in environment variables
-- **cli** - Using credentials available in an local AzureCLI logon
-- **msi** - Using the Managed Service Identity (MSI) credentials of the
+- **cli** - Use credentials available in an local AzureCLI logon
+- **msi** - Use the Managed Service Identity (MSI) credentials of the
   machine you are running the notebook kernel on
+- **devicecode** - use browser-based device code authentication flow
+- **vscode** - Use credentials from your authenticated VS Code session
+- **powershell** - Use credentials from an authenticated Azure Powershell session
+- **clientsecret** - Use an Azure AppID and client secret
+- **certificate** - Use client certificate authentication.
 - **interactive** - Interactive browser logon
+
+For more details on Azure authentication/credential types see
+:doc:`./AzureAuthentication`
 
 You can select one or more of these. When attempting to authenticate,
 MSTICPy will try each of the selected methods in turn until one
@@ -645,7 +653,7 @@ succeeds (or they all fail). This uses a mechanism known as a
 *ChainedCredential*. This does give you flexibility and a useful
 fallback, if your preferred authentication method does not work.
 However, it does take additional time to cycle through multiple
-methods. If you know, for example, that you always want to use *interactive*
+methods. If you know, for example, that you always want to use *devicecode*
 browser logon (with device code authorization), select this one
 and leave the others unselected.
 
@@ -659,7 +667,10 @@ and leave the others unselected.
    on. For environment variables, these must be set on the
    Jupyter server.
 
-   MSI authentication is not currently support on AML compute.
+   Although **interactive** is supported in MSTICPy, the client
+   code may not have the ability to open a browser on your machine.
+   This can be the case if you are using a remote Jupyter
+   hub such as Azure Machine Learning.
 
 Using Azure CLI as your default login method
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
