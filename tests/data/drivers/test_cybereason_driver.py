@@ -156,11 +156,11 @@ def test_query(driver):
         check.is_instance(data, pd.DataFrame)
 
 
-def test_custom_param_handler(driver):
+def test_custom_param_handler():
     """Test query formatter returns data in expected format."""
     query = _CR_QUERY.get("query", "")
     parameters = _CR_QUERY.get("params", {})
-    updated_query = driver._custom_param_handler(
+    updated_query = CybereasonDriver._custom_param_handler(
         query,
         parameters,
     )

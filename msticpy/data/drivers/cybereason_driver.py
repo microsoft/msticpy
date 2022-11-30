@@ -30,6 +30,7 @@ _HELP_URI = (
 CybereasonSettings = Dict[str, Dict[str, Union[str, ProviderArgs]]]
 
 
+# pylint: disable=too-many-instance-attributes
 class CybereasonDriver(DriverBase):
     """Class to interact with Cybereason."""
 
@@ -60,6 +61,7 @@ class CybereasonDriver(DriverBase):
         Union[pd.DataFrame, Any]
             A DataFrame (if successfull) or
             the underlying provider result if an error.
+
         """
         super().__init__(**kwargs)
         timeout = kwargs.get("timeout", 120)  # 2 minutes in milliseconds
@@ -85,9 +87,9 @@ class CybereasonDriver(DriverBase):
             headers=mp_ua_header(),
         )
         self.formatters = {
-            Formatters.PARAM_HANDLER: self._custom_param_handler,
-            Formatters.DATETIME: self._format_datetime,
-            Formatters.LIST: self._format_list,
+            Formatters.PARAM_HANDLER: CybereasonDriver._custom_param_handler,
+            Formatters.DATETIME: CybereasonDriver._format_datetime,
+            Formatters.LIST: CybereasonDriver._format_list,
         }
 
         self._debug = kwargs.get("debug", False)
