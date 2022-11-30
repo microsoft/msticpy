@@ -87,9 +87,9 @@ class CybereasonDriver(DriverBase):
             headers=mp_ua_header(),
         )
         self.formatters = {
-            Formatters.PARAM_HANDLER: CybereasonDriver._custom_param_handler,
-            Formatters.DATETIME: CybereasonDriver._format_datetime,
-            Formatters.LIST: CybereasonDriver._format_list,
+            Formatters.PARAM_HANDLER: self._custom_param_handler,
+            Formatters.DATETIME: self._format_datetime,
+            Formatters.LIST: self._format_list,
         }
 
         self._debug = kwargs.get("debug", False)

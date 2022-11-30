@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Miscellaneous data provider driver tests."""
-import re
 import json
+import re
 from hashlib import sha256
 
 import pandas as pd
@@ -13,6 +13,7 @@ import pytest
 import pytest_check as check
 import respx
 
+from msticpy.data.core.query_defns import Formatters
 from msticpy.data.drivers.cybereason_driver import CybereasonDriver
 
 from ...unit_test_lib import custom_mp_config, get_test_data_path
@@ -156,11 +157,11 @@ def test_query(driver):
         check.is_instance(data, pd.DataFrame)
 
 
-def test_custom_param_handler():
+def test_custom_param_handler(driver):
     """Test query formatter returns data in expected format."""
     query = _CR_QUERY.get("query", "")
     parameters = _CR_QUERY.get("params", {})
-    updated_query = CybereasonDriver._custom_param_handler(
+    updated_query = driver.formatters[Formatters.PARAM_HANDLER](
         query,
         parameters,
     )
