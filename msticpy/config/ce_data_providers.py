@@ -69,8 +69,8 @@ class CEDataProviders(CEProviders):
 
     @property
     def _current_path(self):
-        if self._current_instance_name:
-            return f"{self._COMP_PATH}.{self._prov_ctrl_name}-{self._current_instance_name}"
+        if self._form_current_instance_name:
+            return f"{self._COMP_PATH}.{self._prov_ctrl_name}-{self._form_current_instance_name}"
         return f"{self._COMP_PATH}.{self._prov_ctrl_name}"
 
     @property
@@ -82,22 +82,31 @@ class CEDataProviders(CEProviders):
     @property
     def _prov_ctrl_name(self):
         """Return the provider generic name (minus instance suffix)."""
+        if "-" in super()._prov_name:
+            return super()._prov_name.split("-", maxsplit=1)[0]
         return super()._prov_name
 
     @property
-    def _prov_instance_name(self):
+    def _select_prov_instance_name(self):
         """Return the provider instance name (minus instance suffix)."""
         if "-" in super()._prov_name:
             return super()._prov_name.split("-", maxsplit=1)[1]
-        return self.text_prov_instance.value
+        return ""
 
     @property
-    def _current_instance_name(self):
+    def _form_current_instance_name(self):
         """Return the current instance name."""
         return self.text_prov_instance.value.strip()
 
-    def _populate_edit_ctrls(self, control_name: Optional[str] = None):
-        super()._populate_edit_ctrls(control_name=control_name)
+    def _populate_edit_ctrls(
+        self,
+        control_name: Optional[str] = None,
+        new_provider: bool = False,
+    ):
+        """Retrieve and populate form controls for the provider to display."""
+        super()._populate_edit_ctrls(
+            control_name=control_name, new_provider=new_provider
+        )
         # add the instance text box
         self.edit_ctrls.children = [
             self.text_prov_instance,
@@ -106,19 +115,22 @@ class CEDataProviders(CEProviders):
         self.edit_frame.children = [self.edit_ctrls]
 
     def _select_provider(self, change):
+        self.text_prov_instance.value = self._select_prov_instance_name
         super()._select_provider(change)
-        self.text_prov_instance.value = self._prov_instance_name
         self._last_instance_path = self._current_path
 
     def _save_provider(self, btn):
-        if self._current_instance_name:
-            if not re.match(r"^[\w._:]+$", self._current_instance_name):
+        if self._form_current_instance_name:
+            if not re.match(r"^[\w._:]+$", self._form_current_instance_name):
                 self.set_status(
                     "Error: instance name can only contain alphanumeric and '._:'"
                 )
                 return
             # The instance name may have changed, which alters the path
-            self.mp_controls.rename_path(self._last_instance_path, self._current_path)
+            if self._last_instance_path != self._current_path:
+                self.mp_controls.rename_path(
+                    self._last_instance_path, self._current_path
+                )
         super()._save_provider(btn)
         # refresh the item list and re-select the current item
         edited_provider = self._prov_name

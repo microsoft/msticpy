@@ -41,7 +41,8 @@ An example.
       - interactive
       cloud: global
 
-See :ref:`getting_started/SettingsEditor:Azure Cloud and Authentication Settings`
+For more details see :doc:`../getting_started/AzureAuthentication`
+and :ref:`getting_started/SettingsEditor:Azure Cloud and Authentication Settings`.
 
 
 Loading a Query Provider for Azure Resource Graph
