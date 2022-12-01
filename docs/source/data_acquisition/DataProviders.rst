@@ -447,12 +447,53 @@ for Timedelta in the
       exactly on the time boundaries but some data sources may not use
       granular enough time stamps to avoid this.
 
+Dynamically adding new queries
+------------------------------
+
+You can use the :py:meth:`msticpy.data.core.data_providers.QueryProvider.add_query`
+to add parameterized queries from a notebook or script. This
+let you use temporary parameterized queries without having to
+add them to a YAML file (as described in `Creating new queries`_).
+
+get_host_events
+
+.. code:: python
+
+    # initialize a query provider
+    qry_prov = mp.QueryProvider("MSSentinel")
+
+    # define a query
+    query = """
+    SecurityEvent
+    | where EventID == {event_id}
+    | where TimeGenerated between (datetime({start}) .. datetime({end}))
+    | where Computer has "{host_name}"
+    """
+    # define the query parameters
+    # (these can also be passed as a list of raw tuples)
+    qp_host = qry_prov.Param("host_name", "str", "Name of Host")
+    qp_start = qry_prov.Param("start", "datetime")
+    qp_end = qry_prov.Param("end", "datetime")
+    qp_evt = qry_prov.Param("event_id", "int", None, 4688)
+
+    # add the query
+    qry_prov.add_custom_query(
+        name="get_host_events",
+        query=query,
+        family="Custom",
+        parameters=[qp_host, qp_start, qp_end, qp_evt]
+    )
+
+    # query is now available as
+    qry_prov.Custom.get_host_events(host_name="MyPC"....)
+
+
 Creating new queries
 --------------------
 
 *msticpy* provides a number of
 pre-defined queries to call with using the data package. You can also
-add in additional queries to be imported and used by your Query
+add additional queries to be imported and used by your Query
 Provider, these are defined in YAML format files and examples of these
 files can be found at the msticpy GitHub site
 https://github.com/microsoft/msticpy/tree/master/msticpy/data/queries.

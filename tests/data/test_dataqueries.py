@@ -465,3 +465,36 @@ def test_query_prov_properties():
     check.is_in("M365D", data_envs)
     check.is_in("LocalData", data_envs)
     check.is_in("ResourceGraph", data_envs)
+
+
+def test_add_query():
+    """Test adding a query dynamically."""
+    qry_prov = QueryProvider("MSSentinel")
+
+    # define a query
+    query = """
+    SecurityEvent
+    | where EventID == {event_id}
+    | where TimeGenerated between (datetime({start}) .. datetime({end}))
+    | where Computer has "{host_name}"
+    """
+    # define the query parameters
+    # (these can also be passed as a list of raw tuples)
+    qp_host = qry_prov.QueryParam("host_name", "str", "Name of Host")
+    qp_start = qry_prov.QueryParam("start", "datetime")
+    qp_end = qry_prov.QueryParam("end", "datetime")
+    qp_evt = qry_prov.QueryParam("event_id", "int", None, 4688)
+
+    # add the query
+    qry_prov.add_custom_query(
+        name="get_host_events",
+        query=query,
+        description="Get events of type from host",
+        family="Custom",
+        parameters=[qp_host, qp_start, qp_end, qp_evt],
+    )
+
+    check.is_true(hasattr(qry_prov, "Custom"))
+    check.is_true(hasattr(qry_prov.Custom, "get_host_events"))
+    check.is_true(callable(qry_prov.Custom.get_host_events))
+    check.is_in("Get events of type", qry_prov.Custom.get_host_events.__doc__)

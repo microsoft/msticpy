@@ -39,6 +39,7 @@ class QueryParam(NamedTuple):
 
     name and data_type are mandatory.
     description and default are optional.
+
     """
 
     name: str
@@ -57,7 +58,7 @@ class QueryProvider:
 
     """
 
-    QueryParam = QueryParam
+    ParamDef = QueryParam
 
     def __init__(  # noqa: MC0001
         self,
@@ -437,7 +438,7 @@ class QueryProvider:
         parameters: Optional[Iterable[QueryParam]] = None,
     ):
         """
-        Add a custom function to the provider
+        Add a custom function to the provider.
 
         Parameters
         ----------
@@ -452,9 +453,11 @@ class QueryProvider:
         description : Optional[str], optional
             Optional description (for query help), by default None
         parameters : Optional[Iterable[QueryParam]], optional
-            Optional list of parameter definitions, by default None
+            Optional list of parameter definitions, by default None.
             If the query is parameterized you must supply definitions
             for the parameters here - at least name and type.
+            Parameters can be the named tuple QueryParam (also
+            exposed as QueryProvider.Param) or a 4-value
 
         Examples
         --------
@@ -464,12 +467,12 @@ class QueryProvider:
         >>> qp_end = qp.QueryParam("end", "datetime")
         >>> qp_evt = qp.QueryParam("event_id", "int", None, 4688)
         >>>
-        >>> query = \"\"\"
+        >>> query = '''
         >>> SecurityEvent
         >>> | where EventID == {event_id}
         >>> | where TimeGenerated between (datetime({start}) .. datetime({end}))
         >>> | where Computer has "{host_name}"
-        >>> \"\"\"
+        >>> '''
         >>>
         >>> qp.add_custom_query(
         >>>     name="test_host_proc",
@@ -477,10 +480,19 @@ class QueryProvider:
         >>>     family="Custom",
         >>>     parameters=[qp_host, qp_start, qp_end, qp_evt]
         >>> )
+
         """
-        param_dict = {
-            param[0]: {"type": param[1], "default": param[2]} for param in parameters
-        }
+        if parameters:
+            param_dict = {
+                param[0]: {
+                    "type": param[1],
+                    "default": param[2],
+                    "description": param[3],
+                }
+                for param in parameters
+            }
+        else:
+            param_dict = {}
         source = {
             "args": {"query": query},
             "description": description,
@@ -488,7 +500,7 @@ class QueryProvider:
         }
         metadata = {"data_families": [family] if isinstance(family, str) else family}
         query_source = QuerySource(
-            name=name, source=source, defaults=None, metadata=metadata
+            name=name, source=source, defaults={}, metadata=metadata
         )
         self.query_store.add_data_source(query_source)
         self._add_query_functions()
