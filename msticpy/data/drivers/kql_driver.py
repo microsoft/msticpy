@@ -58,6 +58,7 @@ _KQL_CLOUD_MAP = {
 }
 
 _KQL_OPTIONS = ["timeout"]
+_KQL_ENV_OPTS = "KQLMAGIC_CONFIGURATION"
 
 _AZ_CLOUD_MAP = {kql_cloud: az_cloud for az_cloud, kql_cloud in _KQL_CLOUD_MAP.items()}
 
@@ -103,6 +104,7 @@ class KqlDriver(DriverBase):
             self._load_kql_magic()
 
         self._set_kql_option("request_user_agent_tag", MSTICPY_USER_AGENT)
+        self._set_kql_env_option("enable_add_items_to_help", False)
         self._schema: Dict[str, Any] = {}
         self.environment = kwargs.pop("data_environment", DataEnvironment.MSSentinel)
         self.kql_cloud, self.az_cloud = self._set_kql_cloud()
@@ -393,6 +395,21 @@ class KqlDriver(DriverBase):
         return result
 
     @staticmethod
+    def _set_kql_env_option(option, value):
+        """Set an item in the KqlMagic main config environment variable."""
+        kql_config = os.environ.get(_KQL_ENV_OPTS, "")
+        print(kql_config)
+        current_opts = {
+            opt.split("=")[0].strip(): opt.split("=")[1]
+            for opt in kql_config.split(";")
+        }
+        print(current_opts)
+        current_opts[option] = value
+        kql_config = ";".join(f"{opt}={val}" for opt, val in current_opts.items())
+        print(kql_config)
+        os.environ[_KQL_ENV_OPTS] = kql_config
+
+    @staticmethod
     def _get_kql_current_connection():
         """Get the current connection Workspace ID from KQLMagic."""
         connections = kql_exec("--conn")
@@ -402,7 +419,7 @@ class KqlDriver(DriverBase):
     def _set_kql_cloud(self):
         """If cloud is set in Azure Settings override default."""
         # Check that there isn't a cloud setting in the KQLMAGIC env var
-        kql_config = os.environ.get("KQLMAGIC_CONFIGURATION", "")
+        kql_config = os.environ.get(_KQL_ENV_OPTS, "")
         if "cloud" in kql_config:
             # Set by user - we don't want to override this
             kql_cloud = self._get_kql_option("cloud")
