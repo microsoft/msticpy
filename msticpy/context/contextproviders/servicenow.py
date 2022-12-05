@@ -17,10 +17,10 @@ from typing import Any, Dict, Tuple
 
 import attr
 
+from ..._version import VERSION
+from ...common.utility import export
 from ..http_provider import APILookupParams
 from .http_context_provider import HttpContextProvider
-from ...common.utility import export
-from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Florian Bracq"
@@ -88,6 +88,9 @@ class ServiceNow(HttpContextProvider):
             headers=_DEF_HEADERS,
         ),
     }
+    _QUERIES["host_name"] = _QUERIES["hostname"]
+    _QUERIES["account_name"] = _QUERIES["user"]
+    _QUERIES["ip"] = _QUERIES["ipv4"]
 
     _REQUIRED_PARAMS = ["API_ID", "API_KEY", "INSTANCE"]
 
