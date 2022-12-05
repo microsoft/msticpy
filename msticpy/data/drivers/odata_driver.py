@@ -184,7 +184,7 @@ class OData(DriverBase):
                 authority=authority,
                 username=cs_dict["username"],
                 scopes=self.scopes,
-                auth_type=kwargs.get("auth_type", "interactive"),
+                auth_type=kwargs.get("auth_type", "device"),
                 location=cs_dict.get("location", "token_cache.bin"),
                 connect=True,
             )
