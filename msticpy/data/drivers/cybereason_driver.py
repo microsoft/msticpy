@@ -433,7 +433,11 @@ class CybereasonDriver(DriverBase):
             for parameter in parameters
         ]
         if all(isinstance(values, list) for values in result):
-            return sorted({value for values in result for value in values})
+            try:
+                return sorted({value for values in result for value in values})
+            except TypeError:
+                # If we have a list with different types,convert all to string.
+                return sorted({str(value) for values in result for value in values})
         return result
 
     @_recursive_find_and_replace.register(str)
