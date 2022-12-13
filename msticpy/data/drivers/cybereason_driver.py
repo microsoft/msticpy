@@ -403,52 +403,49 @@ class CybereasonDriver(DriverBase):
         """Replace parameters in query template for Cybereason JSON queries."""
         query_dict = json.loads(query)
 
-        return json.dumps(
-            CybereasonDriver._recursive_find_and_replace(query_dict, param_dict)
-        )
+        return json.dumps(_recursive_find_and_replace(query_dict, param_dict))
 
-    @singledispatch
-    @staticmethod
-    def _recursive_find_and_replace(
-        parameters: Union[str, Dict, List], param_dict: Dict[str, Any]
-    ):
-        """Recursively find and replace parameters from query."""
-        if isinstance(parameters, (list, str, dict)):
-            return CybereasonDriver._recursive_find_and_replace(parameters, param_dict)
-        return parameters
 
-    @_recursive_find_and_replace.register(dict)
-    @staticmethod
-    def _(parameters: Dict[str, Any], param_dict: Dict[str, Any]):
-        return {
-            parameter: CybereasonDriver._recursive_find_and_replace(value, param_dict)
-            for parameter, value in parameters.items()
-        }
+@singledispatch
+def _recursive_find_and_replace(
+    parameters: Union[str, Dict, List], param_dict: Dict[str, Any]
+):
+    """Recursively find and replace parameters from query."""
+    if isinstance(parameters, (list, str, dict)):
+        return _recursive_find_and_replace(parameters, param_dict)
+    return parameters
 
-    @_recursive_find_and_replace.register(list)
-    @staticmethod
-    def _(parameters: List, param_dict: Dict[str, Any]):
-        result = [
-            CybereasonDriver._recursive_find_and_replace(parameter, param_dict)
-            for parameter in parameters
-        ]
-        if all(isinstance(values, list) for values in result):
-            try:
-                return sorted({value for values in result for value in values})
-            except TypeError:
-                # If we have a list with different types,convert all to string.
-                return sorted({str(value) for values in result for value in values})
+
+@_recursive_find_and_replace.register(dict)
+def _(parameters: Dict[str, Any], param_dict: Dict[str, Any]):
+    return {
+        parameter: _recursive_find_and_replace(value, param_dict)
+        for parameter, value in parameters.items()
+    }
+
+
+@_recursive_find_and_replace.register(list)
+def _(parameters: List, param_dict: Dict[str, Any]):
+    result = [
+        _recursive_find_and_replace(parameter, param_dict) for parameter in parameters
+    ]
+    if all(isinstance(values, list) for values in result):
+        try:
+            return sorted({value for values in result for value in values})
+        except TypeError:
+            # If we have a list with different types,convert all to string.
+            return sorted({str(value) for values in result for value in values})
+    return result
+
+
+@_recursive_find_and_replace.register(str)
+def _(parameters: str, param_dict: Dict[str, Any]):
+    """Recursively find and replace parameters from query."""
+    param_regex = r"{([^}]+)}"
+    matches = re.match(param_regex, parameters)
+    if matches:
+        result = [param_dict.get(match, parameters) for match in matches.groups()]
+        if len(result) == 1:
+            return result[0]
         return result
-
-    @_recursive_find_and_replace.register(str)
-    @staticmethod
-    def _(parameters: str, param_dict: Dict[str, Any]):
-        """Recursively find and replace parameters from query."""
-        param_regex = r"{([^}]+)}"
-        matches = re.match(param_regex, parameters)
-        if matches:
-            result = [param_dict.get(match, parameters) for match in matches.groups()]
-            if len(result) == 1:
-                return result[0]
-            return result
-        return parameters
+    return parameters
