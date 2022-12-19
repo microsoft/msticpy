@@ -79,7 +79,7 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
         super().__init__(connect=connect, cloud=self.user_cloud)
         self.config = None  # type: ignore
         if "workspace" in kwargs:
-            self.config = kwargs["workspace"]
+            self.config = WorkspaceConfig(kwargs["workspace"])
         self.base_url = self.endpoints.resource_manager
         self.default_subscription: Optional[str] = None
         self.default_workspace: Optional[Tuple[str, str]] = None
@@ -129,12 +129,12 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
                 self.credentials, tenant_id=tenant_id, cloud=self.user_cloud  # type: ignore
             )
 
-        with contextlib.suppress(KeyError):
-            self.default_subscription = ws_config[WorkspaceConfig.CONF_SUB_ID_KEY]
-            self.set_default_workspace(
-                self.default_subscription,
-                ws_config[WorkspaceConfig.CONF_WS_NAME_KEY],
-            )
+        #with contextlib.suppress(KeyError):
+        #    self.default_subscription = ws_config[WorkspaceConfig.CONF_SUB_ID_KEY]
+        #    self.set_default_workspace(
+        #        self.default_subscription,
+        #        ws_config[WorkspaceConfig.CONF_WS_NAME_KEY],
+        #  )
         # self.res_group_url = None
         # self.prov_path = None
 
