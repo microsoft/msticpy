@@ -1,6 +1,7 @@
 # MSTIC Jupyter and Python Security Tools
 
-[![Build Status](https://dev.azure.com/mstic-detections/mstic-jupyter/_apis/build/status/microsoft.msticpy?branchName=main)](https://dev.azure.com/mstic-detections/mstic-jupyter/_build/latest?definitionId=14&branchName=main)
+![Github Build Status](https://github.com/microsoft/msticpy/actions/workflows/python-package.yml/badge.svg)
+[![Az DevOps Build Status](https://dev.azure.com/mstic-detections/mstic-jupyter/_apis/build/status/microsoft.msticpy?branchName=main)](https://dev.azure.com/mstic-detections/mstic-jupyter/_build/latest?definitionId=14&branchName=main)
 [![Downloads](https://pepy.tech/badge/msticpy)](https://pepy.tech/project/msticpy)
 [![BlackHat Arsenal 2020](https://raw.githubusercontent.com/toolswatch/badges/master/arsenal/usa/2020.svg)](https://www.blackhat.com/us-20/arsenal/schedule/#msticpy-the-security-analysis-swiss-army-knife-19872)
 
