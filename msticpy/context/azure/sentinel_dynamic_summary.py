@@ -17,7 +17,13 @@ from ...common.exceptions import MsticpyAzureConnectionError, MsticpyParameterEr
 from ...common.pkg_config import get_config, get_http_timeout
 from ...data import QueryProvider
 from .azure_data import get_api_headers
-from .sentinel_dynamic_summary_obj import DynamicSummary, df_to_dynamic_summary
+
+# pylint: disable=unused-import
+from .sentinel_dynamic_summary_types import (  # noqa: F401
+    DynamicSummary,
+    DynamicSummaryItem,
+    df_to_dynamic_summary,
+)
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

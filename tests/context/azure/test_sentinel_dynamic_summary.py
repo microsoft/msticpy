@@ -19,8 +19,8 @@ import respx
 from msticpy.common.exceptions import MsticpyAzureConnectionError
 from msticpy.common.pkg_config import get_config
 from msticpy.context.azure import MicrosoftSentinel
-from msticpy.context.azure.sentinel_dynamic_summary_mixin import SentinelQueryProvider
-from msticpy.context.azure.sentinel_dynamic_summary_obj import (
+from msticpy.context.azure.sentinel_dynamic_summary import SentinelQueryProvider
+from msticpy.context.azure.sentinel_dynamic_summary_types import (
     _API_TO_CLS_MAP,
     DynamicSummary,
 )

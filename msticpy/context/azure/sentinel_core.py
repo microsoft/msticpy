@@ -16,10 +16,7 @@ from ...common.wsconfig import WorkspaceConfig
 from .azure_data import AzureData, get_token
 from .sentinel_analytics import SentinelAnalyticsMixin, SentinelHuntingMixin
 from .sentinel_bookmarks import SentinelBookmarksMixin
-from .sentinel_dynamic_summary_mixin import (
-    SentinelDynamicSummaryMixin,
-    SentinelQueryProvider,
-)
+from .sentinel_dynamic_summary import SentinelDynamicSummaryMixin, SentinelQueryProvider
 from .sentinel_incidents import SentinelIncidentsMixin
 from .sentinel_search import SentinelSearchlistsMixin
 from .sentinel_ti import SentinelTIMixin

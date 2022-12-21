@@ -15,7 +15,7 @@ Operations available include:
 - Update an existing dynamic summary
 
 There is also a MSTICPy Python class
-:py:class:`DynamicSummary <msticpy.msticpy.context.azure.sentinel_dynamic_summary.DynamicSummary>`
+:py:class:`DynamicSummary <msticpy.context.azure.sentinel_dynamic_summary_types.DynamicSummary>`
 that lets you work with dynamic summary data in your notebook or Python application.
 
 List Dynamic Summaries
@@ -46,11 +46,11 @@ Create a Dynamic Summary
 ------------------------
 
 To create a dynamic summary, you may find it easier to work with the MSTICPy
-:py:class:`DynamicSummary <msticpy.msticpy.context.azure.sentinel_dynamic_summary.DynamicSummary>`
+:py:class:`DynamicSummary <msticpy.context.azure.sentinel_dynamic_summary_types.DynamicSummary>`
 class. You can read more about this in the `DynamicSummary Class`_ section below.
 
 You can create a Dynamic Summary in MS Sentinel using the
-:py:meth:`<msticpy.context.azure.sentinel_core.MicrosoftSentinel.create_dynamic_summary>`.
+:py:meth:`create_dynamic_summary<msticpy.context.azure.sentinel_core.MicrosoftSentinel.create_dynamic_summary>`.
 This creates and uploads the summary object to the Sentinel workspace.
 
 You can supply the properties of the dynamic summary as parameters to the function:
@@ -66,7 +66,7 @@ You can supply the properties of the dynamic summary as parameters to the functi
 
 You can supply additional properties of the summary by adding additional
 keyword parameters to the ``create_dynamic_summary`` call. See
-:py:class:`DynamicSummary <msticpy.msticpy.context.azure.sentinel_dynamic_summary.DynamicSummary>`
+:py:class:`DynamicSummary <msticpy.context.azure.sentinel_dynamic_summary_types.DynamicSummary>`
 for a list of available properties.
 
 .. code:: python
@@ -99,7 +99,7 @@ Get a Dynamic Summary
 ---------------------
 
 You can retrieve a DynamicSummary using the
-:py:meth:`<msticpy.context.azure.sentinel_core.MicrosoftSentinel.get_dynamic_summary>`
+:py:meth:`get_dynamic_summary<msticpy.context.azure.sentinel_core.MicrosoftSentinel.get_dynamic_summary>`
 method.
 
 .. code:: python
@@ -115,6 +115,7 @@ method.
 
 .. note:: The Sentinel API does not return any Summary Item records,
     only the metadata properties associated with the DynamicSummary record.
+    Use the ``summary_items`` parameter described next.
 
 Supplying a ``summary_items=True`` parameter will re-route the
 request for Dynamic Summary data to the MS Sentinel ``DynamicSummary`` table.
@@ -179,7 +180,7 @@ Update a Dynamic Summary
 
 You can add additional summary items to an existing Dynamic Summary
 using the
-:py:meth:`<msticpy.context.azure.sentinel_core.MicrosoftSentinel.update_dynamic_summary>`
+:py:meth:`update_dynamic_summary <msticpy.context.azure.sentinel_core.MicrosoftSentinel.update_dynamic_summary>`
 method. You can also change existing properties of the DynamicSummary.
 
 .. warning:: if the summary_id supplied does not exist a new DynamicSummary
@@ -210,7 +211,7 @@ Delete a Dynamic Summary
 ------------------------
 
 Dynamic Summaries can be deleted by calling
-:py:meth:`<msticpy.context.azure.sentinel_core.MicrosoftSentinel.delete_dynamic_summary>`
+:py:meth:`delete_dynamic_summary <msticpy.context.azure.sentinel_core.MicrosoftSentinel.delete_dynamic_summary>`
 and passing in the ``summary_id``.
 
 .. note:: Since MS Sentinel/Log Analytics tables are append-only, the records
@@ -224,7 +225,7 @@ and passing in the ``summary_id``.
 DynamicSummary Class
 --------------------
 
-API reference: :py:class:`DynamicSummary <msticpy.msticpy.context.azure.sentinel_dynamic_summary.DynamicSummary>`
+API reference: :py:class:`DynamicSummary <msticpy.context.azure.sentinel_dynamic_summary_types.DynamicSummary>`
 
 This is Python class to encapsulate a Sentinel Dynamic Summary object. It is
 used only for local manipulation of the Summary object and does not
@@ -243,7 +244,7 @@ The most important methods are described below.
 DynamicSummary initializer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:py:class:`DynamicSummary() <msticpy.msticpy.context.azure.sentinel_dynamic_summary.DynamicSummary`
+:py:class:`DynamicSummary <msticpy.context.azure.sentinel_dynamic_summary_types.DynamicSummary>`
 
 You can create a ``DynamicSummary`` object by supplying the required attributes as
 parameters or create a "bare" class and add them as attributes.
@@ -266,7 +267,7 @@ parameters or create a "bare" class and add them as attributes.
 
 You can also pass a DataFrame to ``new_summary`` as ``summary_items`` instead
 of adding them with a separate call to
-:py:meth:`add_summary_items <msticpy.context.azure.sentinel_dynamic_summary.DynamicSummary.add_summary_items>`.
+:py:meth:`add_summary_items <msticpy.context.azure.sentinel_dynamic_summary_types.DynamicSummary.add_summary_items>`.
 
 Adding and appending Summary items
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -275,13 +276,13 @@ The ``add_summary_items`` method takes one of:
 
 - A pandas DataFrame
 - A list/iterable of
-  :py:class:`<msticpy.context.azure.sentinel_dynamic_summary.DynamicSummaryItem>`.
+  :py:class:`DynamicSummaryItem <msticpy.context.azure.sentinel_dynamic_summary_types.DynamicSummaryItem>`.
 - A list/iterable of dictionaries, each of which contains the keys and values
   need for the summary item.
 
 You can specify additional properties for the summary items by adding additional
 parameters to ``add_summary_items``.
-See :py:class:`<msticpy.context.azure.sentinel_dynamic_summary.DynamicSummaryItem>`
+See :py:meth:`add_summary_items <msticpy.context.azure.sentinel_dynamic_summary_types.DynamicSummary.add_summary_items>`
 for a list of available properties.
 
 .. code:: python
@@ -316,7 +317,7 @@ to populate the property value for that row.
 ``add_summary_items`` will remove any existing summary items and
 replace with the new set specified.
 
-:py:meth:`<msticpy.context.azure.sentinel_dynamic_summary.DynamicSummary.append_summary_items>`
+:py:meth:`append_summary_items <msticpy.context.azure.sentinel_dynamic_summary_types.DynamicSummary.append_summary_items>`
 works in the same as ``add_summary_items`` but will add to the current set without
 erasing existing summary items. This is useful for updating an existing
 summary with new rows.
@@ -325,12 +326,14 @@ summary with new rows.
 
     dyn_summary = sentinel.get_dynamic_summary(summary_id="123123...")
     dyn_summary.append_summary_items(data=new_items_df)
-    sentine.update_dynamic_summary(dyn_summary)
+    sentinel.update_dynamic_summary(dyn_summary)
 
 Output SummaryItems as DataFrame
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can retrieve the summary items as a DataFrame.
+You can retrieve the summary items as a DataFrame using the
+:py:meth:`to_df <msticpy.context.azure.sentinel_dynamic_summary_types.DynamicSummary.to_df>`
+method.
 
 .. code:: python
 
@@ -351,11 +354,17 @@ You can retrieve the summary items as a DataFrame.
 Convert Dynamic Summary to/from JSON
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The instance method ``to_json()`` returns the summary object
-serialized to a JSON string. The ``to_json_api()`` method also does this
+The instance method
+:py:meth:`to_json <msticpy.context.azure.sentinel_dynamic_summary_types.DynamicSummary.to_json>`
+returns the summary object
+serialized to a JSON string. The
+:py:meth:`to_json_api <msticpy.context.azure.sentinel_dynamic_summary_types.DynamicSummary.to_json_api>`
+method also does this
 but adds a wrapper layer that's expected by the Sentinel API.
 
-The class method ``from_json()`` will return a DynamicSummary instance from
+The class method
+:py:meth:`from_json <msticpy.context.azure.sentinel_dynamic_summary_types.DynamicSummary.from_json>`
+will return a DynamicSummary instance from
 the JSON data. The input to this can either be the simple format (as returned
 by ``to_json()``) or the API wrapped format (``to_json_api()``)
 
@@ -388,4 +397,47 @@ by running it in a cell or printing it with the Python ``print`` function
         summary_status='Active'
         updated_by='user@microsoft.com'
         summary_items=6
+    )
+
+Using the ``fields`` attribute for legal field names
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When creating a DynamicSummary or DynamicSummaryItem you
+frequently need to specify the field names as parameters.
+To help prevent typos, both classes have a ``fields`` attribute
+that contains the names of all legal fields.
+
+You can list all of the fields for each class just by running
+(in a notebook/IPython) or printing the ``fields`` attribute.
+
+.. code:: python
+
+    DynamicSummary.fields
+
+.. parsed-literal::
+
+    Fields:
+        SUMMARY_ID='summary_id'
+        SUMMARY_NAME='summary_name'
+        SUMMARY_DESCRIPTION='summary_description'
+        TENANT_ID='tenant_id'
+        RELATION_NAME='relation_name'
+        RELATION_ID='relation_id'
+        SEARCH_KEY='search_key'
+        TACTICS='tactics'
+        TECHNIQUES='techniques'
+        SOURCE_INFO='source_info'
+        SUMMARY_ITEMS='summary_items'
+
+This example shows how you might use the ``fields`` attribute in
+code.
+
+.. code:: python
+
+    dyn_summary.add_summary_items(
+        data=df,
+        summary_fields = {
+            DynamicSummaryItem.fields.EVENT_TIME_UTC: "TimeGenerated",
+            DynamicSummaryItem.fields.SEARCH_KEY: "UserPrincipalName",
+        }
     )

@@ -9,7 +9,7 @@ import json
 import uuid
 from datetime import datetime
 from functools import singledispatchmethod
-from typing import Any, Dict, Iterable, List, Optional, Union, cast
+from typing import Any, ClassVar, Dict, Iterable, List, Optional, Union, cast
 
 import pandas as pd
 
@@ -39,6 +39,19 @@ _CLS_TO_API_MAP = {
     "summary_item_id": "summaryItemId",
 }
 _API_TO_CLS_MAP = {val: key for key, val in _CLS_TO_API_MAP.items()}
+
+
+class FieldList:
+    """Class to hold field names."""
+
+    def __init__(self, fieldnames: Iterable[str]):
+        """Add fields to field mapping."""
+        self.__dict__.update({field.upper(): field for field in fieldnames})
+
+    def __repr__(self):
+        """Return list of field attributes and values."""
+        field_names = "\n    ".join(f"{key}='{val}'" for key, val in vars(self).items())
+        return f"Fields:\n    {field_names}"
 
 
 @dataclasses.dataclass
@@ -71,6 +84,7 @@ class DynamicSummaryItem:
 
     """
 
+    fields: ClassVar
     summary_item_id: Optional[str] = None
     relation_name: Optional[str] = None
     relation_id: Optional[str] = None
@@ -107,6 +121,12 @@ class DynamicSummaryItem:
         }
 
 
+# Add helper class attribute for field names.
+DynamicSummaryItem.fields = FieldList(
+    [field.name for field in dataclasses.fields(DynamicSummaryItem)]
+)
+
+
 def _to_datetime_utc_str(date_time):
     if not isinstance(date_time, datetime):
         return date_time
@@ -123,6 +143,13 @@ def _dict_dates_to_str(input_dict: Dict[Any, Any]) -> Dict[Any, Any]:
 
 class DynamicSummary:
     """Dynamic Summary class."""
+
+    fields = FieldList(
+        ["summary_id", "summary_name", "summary_description"]
+        + ["tenant_id", "relation_name", "relation_id"]  # noqa: W503
+        + ["search_key", "tactics", "techniques", "source_info"]  # noqa: W503
+        + ["summary_items"]  # noqa: W503
+    )
 
     def __init__(self, summary_id: str = None, **kwargs):
         """
@@ -174,15 +201,15 @@ class DynamicSummary:
 
     def __repr__(self) -> str:
         """Return simple representation of instance."""
-        attribs = {
-            key: val
+        attributes = {
+            key: f"'{val}'" if isinstance(val, str) else val
             for key, val in vars(self).items()
-            if key != "summary_items" and val not in (None, pd.NaT, "")
+            if key != "summary_items" and val not in (None, pd.NaT, "", [])
         }
         return "\n".join(
             [
                 "DynamicSummary(",
-                *(f"  {key}='{val}'" for key, val in attribs.items()),
+                *(f"  {key}={val}" for key, val in attributes.items()),
                 f"  summary_items={len(self.summary_items)}",
                 ")",
             ]
@@ -396,13 +423,18 @@ class DynamicSummary:
                     field_name: row.get(column_name)
                     for field_name, column_name in summary_fields.items()
                 }
+            # if event time not in summary_fields, try to get from
+            # kwargs or from data
+            if "event_time_utc" not in summary_params:
+                summary_params["event_time_utc"] = kwargs.pop(
+                    "event_time_utc", row.get("TimeGenerated")
+                )
             # Create DynamicSummaryItem instance for each row
             self.summary_items.append(
                 DynamicSummaryItem(
-                    event_time_utc=row.get("TimeGenerated"),
                     packed_content=row,
                     **summary_params,
-                    **kwargs,  # pass kwargs as summary item properties
+                    **kwargs,  # pass remaining kwargs as summary item properties
                 )
             )
 
