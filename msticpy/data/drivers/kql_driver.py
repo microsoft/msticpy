@@ -152,9 +152,9 @@ class KqlDriver(DriverBase):
             print("Connecting...", end=" ")
 
         mp_az_auth = kwargs.get("mp_az_auth", "default")
-        mp_az_tenant_id = kwargs.get("mp_az_tenant_id", None)
-        workspace = kwargs.get("workspace", None)
-        if workspace:
+        mp_az_tenant_id = kwargs.get("mp_az_tenant_id")
+        workspace = kwargs.get("workspace")
+        if workspace or connection_str is None:
             connection_str = WorkspaceConfig(workspace=workspace)  # type: ignore
 
         if isinstance(connection_str, WorkspaceConfig):

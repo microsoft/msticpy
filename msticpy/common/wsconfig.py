@@ -190,6 +190,13 @@ class WorkspaceConfig:
         """Return contents of current config."""
         return self._config.__repr__()
 
+    def get(self, key, default: Any = None):
+        """Return key value or default."""
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
     @property
     def config_loaded(self) -> bool:
         """

@@ -6,6 +6,7 @@ Microsoft Sentinel APIs
 
    SentinelAnalytics
    SentinelBookmarks
+   SentinelDynamicSummaries
    SentinelIncidents
    SentinelWatchlists
    SentinelSearch
