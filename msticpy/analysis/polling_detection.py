@@ -10,12 +10,43 @@ This module is used to highlight edges that are highly periodic and likely to be
 generated automatically. The periodic edges could be software polling a server for 
 updates or malware beaconing and checking for instructions.
 
-The main function in this module is `auto_filter_periodic_edges` which given a timeseries
-of the number of events between two IPs it will test if there are any significant
-periodicities.
+There is currently is only one technique available for filtering polling data which is
+the class PeriodogramPollingDetector. This requires a dataframe containing a time series
+of source --> destination pairs. 
 
-Contains:
-auto_filter_periodic_edges: Method to automatically classify edges as periodic or not.
+.. list-table:: Example DataFrame
+   :header-rows: 1
+
+   * - datetime
+     - source_ip
+     - destination_ip
+   * - 2022-01-01 00:00:03
+     - ip1
+     - ip2
+   * - 2022-01-01 00:02:34
+     - ip1
+     - ip2
+   * - 2022-01-01 00:02:55
+     - ip1
+     - ip2
+   * - ...
+     - ip1
+     - ip2
+   * - 2022-01-01 07:22:11
+     - ip1
+     - ip3
+   * - 2022-01-01 14:45:07
+     - ip1
+     - ip3
+   * - 2022-01-01 15:10:23
+     - ip1
+     - ip3
+   * - ...
+     - ip1
+     - ip3
+
+The PeriodogramPollingDetector.detect_polling() function will then identify edges
+(source --> destination pairs) that are highly periodic and likely include polling traffic
 """
 import numpy as np
 import numpy.typing as npt
@@ -23,14 +54,25 @@ import pandas as pd
 
 from scipy import signal
 from scipy import special
-from typing import Tuple
+from typing import Tuple, Union
 
+# TODO: Split data transformation and polling detector into separate classes
 
 class PeriodogramPollingDetector:
     def __init__(self, edges_df: pd.DataFrame) -> None:
-        pass
+        if self._check_data_frame_columns(edges_df):
+            self.edges_df = edges_df
+        else:
+            raise ValueError(
+                (
+                    "Dataframe supplied is missing some columns. Please ensure that dataframe "
+                    "contains columns ['source_ip', 'destination_ip', 'datetime']"
+                )
+            )
 
-    def _g_test(self, PSD: npt.ArrayLike, exclude_pi: bool = False) -> Tuple[float, float]:
+    def _g_test(
+        self, PSD: npt.ArrayLike, exclude_pi: bool = False
+    ) -> Tuple[float, float]:
         """
         Carry out fishers g test for periodicity
 
@@ -75,6 +117,111 @@ class PeriodogramPollingDetector:
 
         return test_statistic, p_value
 
+    def _check_equally_spaced(self, df: pd.DataFrame) -> bool:
+        """
+        Check if the time series is equally spaced
 
-    def _check_equally_spaced(self) -> bool:
-        pass
+        Parameters
+        ----------
+        df: DataFrame
+          The dataframe containing the time series for a single edge
+
+        Returns
+        -------
+        bool
+            True if time series is equally spaced, False otherwise
+        """
+        return df["datetime"].diff().nunique() == 1
+
+    def _check_data_frame_columns(self, df: pd.DataFrame) -> bool:
+        """
+        Check if the time series has the required columns
+
+        Parameters
+        ----------
+        df: DataFrame
+          The dataframe containing the edge time series data
+
+        Returns
+        -------
+          bool
+            True if dataframe has the required columns, false otherwise
+        """
+        return all(
+            pd.Index(["edges", "datetime"]).isin(df.columns)
+        )
+
+    def transform_data(
+        self,
+        df: pd.DataFrame,
+        freq: Union[str, pd.tseries.offsets.DateOffset],
+        min_datetime: str,
+        max_datetime: str
+    ) -> pd.DataFrame:
+        """
+        Transforms edge time series data to a discrete time bernoulli process
+
+        The dataframe supplied should have connection times for a single edge, this function then transforms
+        this to a discrete time bernoulli process. The data for this process is a dataframe of equally space
+        datetimes with a 1 if there was at least 1 connection during this interval or 0 otherwise.
+
+        Parameters
+        ----------
+        df: DataFrame
+          The dataframe containing the edge time series data
+        freq: str or DateOffset
+          A frequency string representing the bin size of the discrete time bernoulli process. For example
+          a bernoulli process with observations every 5 minutes would have a frequency string of '5T'. 
+          More information can be found at https://pandas.pydata.org/docs/user_guide/timeseries.html#timeseries-offset-aliases
+
+        Returns
+        -------
+        DataFrame
+          The transformed data
+        """
+        if df["edges"].nunique() != 1:
+          raise ValueError(
+            f"This function only transforms data for a single edge. The data frame supplied has {df['edges'].nunique()} edges"
+          )
+
+        expected_datetimes = pd.date_range(
+            min_datetime, max_datetime, freq=freq, inclusive="left"
+        ).to_series(name="datetime")
+
+        connections = (
+            df.set_index("datetime")
+            .resample(freq)
+            .apply(lambda x: any(x) * 1)[["edges"]]
+            .rename({"edges": "connection"}, axis=1)
+            .reset_index()
+        )
+
+        merged_df = pd.merge(
+          expected_datetimes,
+          connections,
+          how="left",
+          on="datetime"
+        ).fillna(0)
+
+        merged_df["connection"] = merged_df["connection"].astype("int64")
+        merged_df["edges"] = df["edges"].iloc[1]
+
+        return merged_df
+
+    def detect_polling(self, df: pd.DataFrame) -> pd.DataFrame:
+        edges = []
+        for edge in df["edges"].unique():
+            edge_df = df[df["edges"] == edge]
+            edge_df = self.transform_data(edge_df, "T", "2022-01-01 00:00:00", "2022-01-02 00:00:00")
+
+            f, Pxx = signal.periodogram(edge_df["connection"])
+
+            test_stat, p_val = self._g_test(Pxx)
+
+            edges.append(pd.DataFrame({"edges": [edge], "p_val": [p_val]}))
+        
+        edges = pd.concat(edges)
+
+        return edges.sort_values(by="p_val")
+
+

@@ -12,60 +12,115 @@ from msticpy.analysis import polling_detection as poll
 
 __author__ = "Daniel Yates"
 
-np.random.seed(10)
 
-## ######## ##
-## Fixtures ##
-## ######## ##
+## ###### ##
+## g_test ##
+## ###### ##
 
-@pytest.fixture(scope="module")
-def transformed_data():
-    """Simulated periodic data"""
-    n = 1440
-    periodic = 3 * np.sin(2 * np.pi * 0.05 * np.arange(n))
-    noise = np.random.randn(n)
-
-    return pd.DataFrame(
-        {
-            "src": ["ip1" for _ in range(n)],
-            "dst": ["ip2" for _ in range(n)],
-            "datetime": pd.date_range(
-                "2022-01-01 09:00:00",
-                "2022-01-02 09:00:00",
-                freq="min",
-                inclusive="left"
-            ),
-            "number_of_connections": periodic + noise
-        }
-    )
-
-@pytest.fixture(scope="module")
-def null_df():
-    """Simulated periodic data"""
-
-    return pd.DataFrame(
-        {
-            "src": "ip1",
-            "dst": "ip2",
-            "number_of_connections": [np.nan]
-        }
-    )
-
-## ##### ##
-## Tests ##
-## ##### ##
-
-@pytest.mark.parametrize("exclude_pi, expected", [(True, 0.5857339), (False, 0.5357916)])
+@pytest.mark.parametrize(
+    "exclude_pi, expected", [(True, 0.5857339), (False, 0.5357916)]
+)
 def test_g_test(null_df, exclude_pi, expected):
     test_power_spectral_density = [10, 60, 20, 30, 40, 10, 10, 10]
 
     per = poll.PeriodogramPollingDetector(null_df)
 
-    test_stat, pval = per._g_test(test_power_spectral_density, exclude_pi) 
-    
+    test_stat, pval = per._g_test(test_power_spectral_density, exclude_pi)
+
     assert round(pval, 7) == expected
 
-def test_time_series_equally_spaced(transformed_data):
-    per = poll.PeriodogramPollingDetector(transformed_data)
 
-    assert poll._check_equally_spaced() == True
+## ##################### ##
+## _check_equally_spaced ##
+## ##################### ##
+
+@pytest.mark.parametrize(
+    "df_name, expected", [("transformed_data_ip1_5T", True), ("edge_data", False)]
+)
+def test_check_equally_spaced(null_df, request, df_name, expected):
+    per = poll.PeriodogramPollingDetector(null_df)
+
+    df = request.getfixturevalue(df_name)
+    df = df[df["edges"] == "ip1:ip2"]
+
+    assert per._check_equally_spaced(df) == expected
+
+
+## ######################### ##
+## _check_data_frame_columns ##
+## ######################### ##
+
+@pytest.mark.parametrize(
+    "df_name, expected", [("null_df", True), ("null_df_wrong_cols", False)]
+)
+def test_check_data_frame_columns(null_df, request, df_name, expected):
+    per = poll.PeriodogramPollingDetector(null_df)
+
+    df = request.getfixturevalue(df_name)
+
+    assert per._check_data_frame_columns(df) == expected
+
+
+## ####################################### ##
+## _check_data_frame_columns at class init ##
+## ####################################### ##
+
+def test_check_data_frame_columns_on_init(null_df):
+    per = poll.PeriodogramPollingDetector(null_df)
+
+    pd.testing.assert_frame_equal(null_df, per.edges_df)
+
+
+def test_check_data_frame_columns_on_init_raises_exception(null_df_wrong_cols):
+    with pytest.raises(ValueError):
+        poll.PeriodogramPollingDetector(null_df_wrong_cols)
+
+
+## ############## ##
+## transform_data ##
+## ############## ##
+
+def test_transform_data(edge_data, transformed_data_ip1_5T):
+    per = poll.PeriodogramPollingDetector(edge_data)
+
+    edge_df = edge_data[edge_data["edges"] == "ip1:ip2"]
+
+    transformed = per.transform_data(edge_df, "5T", "2022-01-01 00:00:00", "2022-01-01 01:00:00")
+
+    pd.testing.assert_frame_equal(transformed_data_ip1_5T, transformed, check_like=True)
+
+def test_transform_data_multiple_edges_fails(edge_data):
+    per = poll.PeriodogramPollingDetector(edge_data)
+
+    with pytest.raises(ValueError):
+        per.transform_data(edge_data, "5T", "2022-01-01 00:00:00", "2022-01-01 01:00:00")
+
+def test_transform_data_different_freq(edge_data, transformed_data_ip1_10T):
+    per = poll.PeriodogramPollingDetector(edge_data)
+
+    edge_df = edge_data[edge_data["edges"] == "ip1:ip2"]
+
+    transformed = per.transform_data(edge_df, "10T", "2022-01-01 00:00:00", "2022-01-01 01:00:00")
+
+    pd.testing.assert_frame_equal(transformed_data_ip1_10T, transformed, check_like=True)
+
+def test_transform_data_custom_time_frame(edge_data, transformed_data_ip1_5T_diff_time_frame):
+    per = poll.PeriodogramPollingDetector(edge_data)
+
+    edge_df = edge_data[edge_data["edges"] == "ip1:ip2"]
+
+    transformed = per.transform_data(edge_df, "5T", "2022-01-01 00:00:00", "2022-01-01 02:00:00")
+
+
+## ############## ##
+## detect_polling ##
+## ############## ##
+
+def test_detect_polling_detects_freq(periodic_data, null_df):
+    per = poll.PeriodogramPollingDetector(null_df)
+
+    edges = per.detect_polling(periodic_data)
+
+    assert edges["edges"].tolist() == ["ip1:ip2", "ip2:ip3"]
+    assert edges["p_val"].dtype == np.dtype("float64")
+
