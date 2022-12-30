@@ -431,7 +431,7 @@ class QuerySource:
                 fmt_list.append(f"'{item}'")
             else:
                 fmt_list.append(f"{item}")
-        return ",".join(fmt_list)
+        return ", ".join(fmt_list)
 
     def help(self):
         """Print help for query."""
