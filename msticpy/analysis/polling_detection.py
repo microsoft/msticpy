@@ -18,8 +18,7 @@ import numpy.typing as npt
 import pandas as pd
 
 from collections import Counter
-from scipy import signal
-from scipy import special
+from scipy import signal, special
 from typing import Tuple, Union
 
 from ..common.utility import export
@@ -137,7 +136,7 @@ class PeriodogramPollingDetector:
         dN = np.array([counting_process[t] for t in time_steps])
         dN_star = dN - len(timestamps) / len(time_steps)
 
-        f, Pxx = signal.periodogram(dN_star)
+        _, Pxx = signal.periodogram(dN_star)
 
         _, p_val = self._g_test(Pxx)
 
