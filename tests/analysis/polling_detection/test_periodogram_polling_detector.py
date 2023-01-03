@@ -78,6 +78,18 @@ def test_detect_polling_non_significant(non_periodic_data):
     assert p_val > 0.5
 
 
+def test_detect_polling_multiple_observations_per_second(periodic_data):
+    additional_observations = np.random.choice(periodic_data[:10000], size = 10000, replace=True)
+    periodic_data_add_obs = np.append(periodic_data, additional_observations)
+
+    per = poll.PeriodogramPollingDetector()
+
+    p_val_add_obs = per.detect_polling(periodic_data_add_obs, min(periodic_data_add_obs), max(periodic_data_add_obs))
+    p_val = per.detect_polling(periodic_data, min(periodic_data), max(periodic_data))
+
+    assert p_val == p_val_add_obs
+
+
 ## ########### ##
 ## Integration ##
 ## ########### ##
