@@ -19,7 +19,7 @@ import pandas as pd
 
 from collections import Counter
 from scipy import signal, special
-from typing import Tuple, Union
+from typing import Tuple
 
 from ..common.utility import export
 
