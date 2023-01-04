@@ -9,6 +9,7 @@ import pytest
 
 np.random.seed(10)
 
+
 @pytest.fixture(scope="module")
 def periodic_data():
     N = 86400
@@ -23,6 +24,7 @@ def periodic_data():
     ts = np.arange(start_ts, end_ts)[x]
 
     return ts
+
 
 @pytest.fixture(scope="module")
 def non_periodic_data():

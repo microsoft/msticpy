@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuite errors="0" failures="1" name="mypy" skips="0" tests="1" time="6.692">
+  <testcase classname="mypy" file="mypy" line="1" name="mypy-py3_8-linux" time="6.692">
+    <failure message="mypy produced messages">msticpy/analysis/polling_detection.py:80:19: error: Value of type "Union[_SupportsArray[dtype[Any]], _NestedSequence[_SupportsArray[dtype[Any]]], bool, int, float, complex, str, bytes, _NestedSequence[Union[bool, int, float, complex, str, bytes]]]" is not indexable  [index]
+msticpy/analysis/polling_detection.py:82:26: error: Argument 1 to "len" has incompatible type "Union[_SupportsArray[dtype[Any]], _NestedSequence[_SupportsArray[dtype[Any]]], bool, int, float, complex, str, bytes, _NestedSequence[Union[bool, int, float, complex, str, bytes]]]"; expected "Sized"  [arg-type]
+msticpy/analysis/polling_detection.py:83:44: error: Argument 1 to "sum" has incompatible type "Union[_SupportsArray[dtype[Any]], _NestedSequence[_SupportsArray[dtype[Any]]], bool, int, float, complex, str, bytes, _NestedSequence[Union[bool, int, float, complex, str, bytes]]]"; expected "Iterable[bool]"  [arg-type]
+msticpy/analysis/polling_detection.py:149:36: error: Argument 1 to "Counter" has incompatible type "Union[_SupportsArray[dtype[Any]], _NestedSequence[_SupportsArray[dtype[Any]]], bool, int, float, complex, str, bytes, _NestedSequence[Union[bool, int, float, complex, str, bytes]]]"; expected "Iterable[Union[int, str, _SupportsArray[dtype[Any]], _NestedSequence[_SupportsArray[dtype[Any]]], float, complex, bytes, _NestedSequence[Union[bool, int, float, complex, str, bytes]]]]"  [arg-type]
+msticpy/analysis/polling_detection.py:152:29: error: Argument 1 to "len" has incompatible type "Union[_SupportsArray[dtype[Any]], _NestedSequence[_SupportsArray[dtype[Any]]], bool, int, float, complex, str, bytes, _NestedSequence[Union[bool, int, float, complex, str, bytes]]]"; expected "Sized"  [arg-type]</failure>
+  </testcase>
+</testsuite>
