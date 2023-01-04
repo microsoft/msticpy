@@ -13,26 +13,38 @@ updates or malware beaconing and checking for instructions.
 There is currently only one technique available for filtering polling data which is
 the class PeriodogramPollingDetector.
 """
+from collections import Counter
+from typing import Tuple
+
 import numpy as np
 import numpy.typing as npt
 
-from collections import Counter
 from scipy import signal, special
-from typing import Tuple
 
 from ..common.utility import export
 
 
 @export
 class PeriodogramPollingDetector:
+    """
+    Polling detector using the Periodogram to detect strong frequencies.
+
+    Methods
+    -------
+    detect_polling(timestamps, process_start, process_end, interval)
+        Detect strong periodic frequencies
+
+    """
+
     def __init__(self) -> None:
+        """Create periodogram polling detector."""
         pass
 
     def _g_test(
-        self, pxx: npt.ArrayLike, exclude_pi: bool = False
+        self, pxx: npt.NDArray, exclude_pi: bool = False
     ) -> Tuple[float, float]:
         """
-        Carry out fishers g test for periodicity
+        Carry out fishers g test for periodicity.
 
         Fisher's g test tests the null hypothesis that the time series is gaussian white noise
         against the alternative that there is a deterministic periodic component[1]
@@ -60,8 +72,11 @@ class PeriodogramPollingDetector:
 
         References
         ----------
-        [1] M. Ahdesmaki, H. Lahdesmaki and O. Yli-Harja, "Robust Fisher's Test for Periodicity Detection in Noisy Biological Time Series," 2007 IEEE International Workshop on Genomic Signal Processing and Statistics, 2007, pp. 1-4, doi: 10.1109/GENSIPS.2007.4365817.
+        [1] M. Ahdesmaki, H. Lahdesmaki and O. Yli-Harja, "Robust Fisher's Test for Periodicity
+        Detection in Noisy Biological Time Series," 2007 IEEE International Workshop on Genomic
+        Signal Processing and Statistics, 2007, pp. 1-4, doi: 10.1109/GENSIPS.2007.4365817.
         [2] https://github.com/cran/GeneCycle/blob/master/R/fisher.g.test.R
+
         """
         if exclude_pi:
             pxx = pxx[:-1]
@@ -85,23 +100,24 @@ class PeriodogramPollingDetector:
 
             p_value = sum(compose)
 
-        if p_value > 1:
-            p_value = 1
+        p_value = min(p_value, 1)
 
         return test_statistic, p_value
 
     def detect_polling(
         self,
-        timestamps: npt.ArrayLike,
+        timestamps: npt.NDArray,
         process_start: int,
         process_end: int,
         interval: int = 1,
     ) -> float:
         """
-        Carry out periodogram polling detecton
+        Carry out periodogram polling detecton.
 
-        Carries out the the procedure outlined in [1] to detect if the arrival times have a strong periodic component.
-        The procedure estimates the periodogram for the data and passes the results to fishers G test.
+        Carries out the the procedure outlined in [1] to detect if the arrival times have a strong
+        periodic component.
+        The procedure estimates the periodogram for the data and passes the results to fishers G
+        test.
 
         For more information run PeriodogramPollingDetector._g_test.__doc__
 
@@ -125,15 +141,17 @@ class PeriodogramPollingDetector:
 
         References
         ----------
-          [1] Heard, N. A. and Rubin-Delanchy, P. T. G. and Lawson, D. J. (2014) Filtering automated polling traffic in computer network flow data. In proceedings of IEEE Joint Intelligence and Security Informatics Conference 2014
+          [1] Heard, N. A. and Rubin-Delanchy, P. T. G. and Lawson, D. J. (2014) Filtering
+          automated polling traffic in computer network flow data. In proceedings of IEEE
+          Joint Intelligence and Security Informatics Conference 2014
           [2] https://github.com/fraspass/human_activity/blob/master/fourier.py
 
         """
         time_steps = np.arange(process_start, process_end, step=interval)
         counting_process = Counter(timestamps)
 
-        dn = np.array([counting_process[t] for t in time_steps])
-        dn_star = dn - len(timestamps) / len(time_steps)
+        dn_ = np.array([counting_process[t] for t in time_steps])
+        dn_star = dn_ - len(timestamps) / len(time_steps)
 
         _, pxx = signal.periodogram(dn_star)
 
