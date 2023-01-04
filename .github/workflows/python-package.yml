@@ -149,5 +149,6 @@ jobs:
         run: |
           # install this separately since it uses older versions of pylint/isort
           # chain running to installation since this sometimes fails
-          python -m pip install prospector[with_pyroma] && prospector --ignore-paths tests --without-tool pylint
+          # Temporarily fixing Prospector to 1.7.7 - due to bug wrt to PyRoma - https://github.com/PyCQA/prospector/issues/562
+          python -m pip install prospector[with_pyroma]==1.7.7 && prospector --ignore-paths tests --without-tool pylint
         if: ${{ always() }}
