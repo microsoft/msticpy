@@ -27,7 +27,7 @@ from ..common.utility import export
 @export
 class PeriodogramPollingDetector:
     """
-    Polling detector using the Periodogram to detect strong frequencies
+    Polling detector using the Periodogram to detect strong frequencies.
 
     Methods
     -------
@@ -37,13 +37,14 @@ class PeriodogramPollingDetector:
     """
 
     def __init__(self) -> None:
+        """Create periodogram polling detector."""
         pass
 
     def _g_test(
-        self, pxx: npt.ArrayLike, exclude_pi: bool = False
+        self, pxx: npt.NDArray, exclude_pi: bool = False
     ) -> Tuple[float, float]:
         """
-        Carry out fishers g test for periodicity
+        Carry out fishers g test for periodicity.
 
         Fisher's g test tests the null hypothesis that the time series is gaussian white noise
         against the alternative that there is a deterministic periodic component[1]
@@ -75,6 +76,7 @@ class PeriodogramPollingDetector:
         Detection in Noisy Biological Time Series," 2007 IEEE International Workshop on Genomic
         Signal Processing and Statistics, 2007, pp. 1-4, doi: 10.1109/GENSIPS.2007.4365817.
         [2] https://github.com/cran/GeneCycle/blob/master/R/fisher.g.test.R
+
         """
         if exclude_pi:
             pxx = pxx[:-1]
@@ -104,14 +106,14 @@ class PeriodogramPollingDetector:
 
     def detect_polling(
         self,
-        timestamps: npt.ArrayLike,
+        timestamps: npt.NDArray,
         process_start: int,
         process_end: int,
         interval: int = 1,
     ) -> float:
         """
-        Carry out periodogram polling detecton
-
+        Carry out periodogram polling detecton.
+        
         Carries out the the procedure outlined in [1] to detect if the arrival times have a strong
         periodic component.
         The procedure estimates the periodogram for the data and passes the results to fishers G
