@@ -1,7 +1,6 @@
 import attr
 from attr import attrs, attrib
  
-import requests
 import zipfile
 import io
 import re
@@ -18,6 +17,7 @@ import yaml
 import json
 import csv
 import os
+import httpx
 
 import matplotlib.pyplot as plt
 import sys
@@ -75,15 +75,12 @@ def get_sentinel_queries_from_github(
         outputdir = Path.joinpath(Path("~").expanduser(), ".msticpy", "Azure-Sentinel")
 
     try:
-        with requests.get(git_url, stream=True) as response:
-            response = requests.get(git_url, stream=True)
-            total_size_in_bytes= int(response.headers.get('content-length', 0))
+        with httpx.stream("GET", url, follow_redirects=True) as response:
             block_size = 1024
             progress_bar = tqdm(desc="Downloading from Microsoft Sentinel Github" , initial= 0, unit='iB', unit_scale=True)
-            response.raise_for_status()
             repo_zip = Path.joinpath(Path(outputdir),"Azure-Sentinel.zip")
             with open(repo_zip, 'wb') as file:
-                for data in response.iter_content(chunk_size=10000):
+                for data in response.iter_bytes(chunk_size=10000):
                     progress_bar.update(len(data))
                     file.write(data)
             progress_bar.close()
@@ -105,7 +102,22 @@ def get_sentinel_queries_from_github(
         warnings.warn(f"HTTP error occurred trying to download from Github: {http_err}")
 
 
-def read_yaml_files(parent_dir, child_dir) -> dict:
+def read_yaml_files(parent_dir: str, child_dir: str) -> dict:
+    """
+    test2
+
+    Parameters
+    ----------
+    parent_dir : str
+        _description_
+    child_dir : str
+        _description_
+
+    Returns
+    -------
+    dict
+        _description_
+    """    
     # enumerate the files and read the yaml
     yaml_queries = glob.glob(f"{parent_dir}/{child_dir}/**/*.yaml", recursive=True)
     
@@ -157,7 +169,7 @@ def _import_sentinel_query(yaml_path, yaml_text, query_type) -> SentinelQuery:
         return  # better alternative for this?
 
         
-def format_query_name(qname):
+def _format_query_name(qname):
     del_chars_pattern = "[%*\*\'\"\\.()[\]{}-]"
     repl_str = re.sub(del_chars_pattern, "", qname)
     repl_str = repl_str.replace(" ", "_").replace("__", "_")
@@ -200,8 +212,9 @@ def write_to_yaml(query_list, query_type, output_folder):
 
         for cur_query in query_dict_by_folder[source_folder]:
             # skipping instances where there is no name but should probably have a better solution
+            # switch to if to check for None == cur_query
             try:
-                formatted_qname = format_query_name(cur_query.name)
+                formatted_qname = _format_query_name(cur_query.name)
             except:
                 print('source_folder', source_folder)
                 print(cur_query)
