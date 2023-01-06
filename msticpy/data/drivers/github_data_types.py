@@ -30,7 +30,7 @@ from requests_html import HTMLSession
 from collections import Counter
 
 @attrs
-class SentinelQuery(object): # 
+class SentinelQuery(object):
     id: str = attrib(factory=str)
     name: str = attrib(factory=str)
     description: str = attrib(factory=str)
