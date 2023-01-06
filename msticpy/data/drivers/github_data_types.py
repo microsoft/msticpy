@@ -104,19 +104,20 @@ def get_sentinel_queries_from_github(
 
 def read_yaml_files(parent_dir: str, child_dir: str) -> dict:
     """
-    test2
+    Create dictionary mapping query file paths with the yaml file text each contains
 
     Parameters
     ----------
     parent_dir : str
-        _description_
+        Directory storing the Hunting and Detections directories
     child_dir : str
-        _description_
+        Either "Hunting Queries" or "Detections" or otherwise named query category
 
     Returns
     -------
     dict
-        _description_
+       Dictionary mapping query file paths to corresponding yaml file text in the parent_dir/child_dir specified.
+       Only identifies .yaml files.
     """    
     # enumerate the files and read the yaml
     yaml_queries = glob.glob(f"{parent_dir}/{child_dir}/**/*.yaml", recursive=True)
@@ -129,12 +130,43 @@ def read_yaml_files(parent_dir: str, child_dir: str) -> dict:
     return parsed_query_dict
 
 
-def import_sentinel_queries(yaml_files, query_type) -> list:
-     return [_import_sentinel_query(yaml_path, yaml_text, query_type) for yaml_path, yaml_text in yaml_files.items()]
+def import_sentinel_queries(yaml_files: dict, query_type: str) -> list:
+    """
+    Create list of SentinelQuery attr objects
+
+    Parameters
+    ----------
+    yaml_files : dict
+        Dictionary mapping query file addresses to yaml file text created by read_yaml_files
+    query_type : str
+        Either "Hunting Queries" or "Detections" or otherwise named query category
+
+    Returns
+    -------
+    list
+        Returns a list of SentinelQuery attr objects from a dict of yaml files and query type given
+    """
+    return [_import_sentinel_query(yaml_path, yaml_text, query_type) for yaml_path, yaml_text in yaml_files.items()]
 
 
-def _import_sentinel_query(yaml_path, yaml_text, query_type) -> SentinelQuery:
-    # most of the stuff that's in your current "parse_yaml" function
+def _import_sentinel_query(yaml_path: str, yaml_text: str, query_type: str) -> SentinelQuery:
+    """
+    Create a SentinelQuery attr object for a given yaml query
+
+    Parameters
+    ----------
+    yaml_path : str
+        File path to a YAML Sentinel query 
+    yaml_text : str
+        YAML text (Sentinel query) associated with the yaml_path
+    query_type : str
+        Either "Hunting Queries" or "Detections" or otherwise named query category
+
+    Returns
+    -------
+    SentinelQuery
+        Returns an attrs object called SentinelQuery with all the YAML query information
+    """
     try:
         parsed_yaml_dict = yaml.load(yaml_text, Loader=yaml.FullLoader)
         new_query = SentinelQuery(name=parsed_yaml_dict.get("name"), 
@@ -169,14 +201,40 @@ def _import_sentinel_query(yaml_path, yaml_text, query_type) -> SentinelQuery:
         return  # better alternative for this?
 
         
-def _format_query_name(qname):
+def _format_query_name(qname: str) -> str:
+    """
+    Formats the inputted query name for use as a file name
+
+    Parameters
+    ----------
+    qname : str
+        Name of a Sentinel Query as read from the corresponding YAML file
+
+    Returns
+    -------
+    str
+        Returns the inputted string with non-alphanumeric characters removed and spaces replaced with an underscore
+    """
     del_chars_pattern = "[%*\*\'\"\\.()[\]{}-]"
     repl_str = re.sub(del_chars_pattern, "", qname)
     repl_str = repl_str.replace(" ", "_").replace("__", "_")
     return repl_str
 
 
-def _organize_query_list_by_folder(query_list):
+def _organize_query_list_by_folder(query_list: list) -> dict:
+    """
+    Creates a dictionary mapping each folder name with related SentinelQuery objects
+
+    Parameters
+    ----------
+    query_list : list
+        List of SentinelQuery objects returned by import_sentinel_queries()
+
+    Returns
+    -------
+    dict
+        Returns a dictionary mapping each folder name with the SentinelQuery objects associated with it
+    """
     queries_by_folder = {}
     for query in query_list:
         if query.folder_name == '':
@@ -189,7 +247,20 @@ def _organize_query_list_by_folder(query_list):
     return queries_by_folder
 
 
-def _create_queryfile_metadata(folder_name):
+def _create_queryfile_metadata(folder_name: str) -> dict:
+    """
+    Generate metadata section of the YAML file for the given folder_name
+
+    Parameters
+    ----------
+    folder_name : str
+        Either "Hunting Queries" or "Detections" or otherwise named query category
+
+    Returns
+    -------
+    dict
+        Returns a generated metadata section for the YAML files in the given folder_name
+    """
     dict_to_write = {'metadata': dict(), 'defaults': dict(), 'sources': dict()}
     dict_to_write['metadata']['version'] = 1 # write update version functionality 
     dict_to_write['metadata']['description'] = "Sentinel Alert Queries - " + folder_name
@@ -199,7 +270,24 @@ def _create_queryfile_metadata(folder_name):
     return dict_to_write
 
 
-def write_to_yaml(query_list, query_type, output_folder):
+def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool:
+    """
+    Write out generated YAML files of the given query_list into the given output_folder  
+
+    Parameters
+    ----------
+    query_list : list
+        List of SentinelQuery attr objects generated by import_sentinel_queries()
+    query_type : str
+        Either "Hunting Queries" or "Detections" or otherwise named query category
+    output_folder : str
+        The name of the folder you want the written YAML files to be stored in
+
+    Returns
+    -------
+    bool
+        True if succeeded; False if an error occurred
+    """
     query_dict_by_folder = _organize_query_list_by_folder(query_list)
     all_folders = query_dict_by_folder.keys()
         
@@ -248,12 +336,26 @@ def write_to_yaml(query_list, query_type, output_folder):
                 path = os.path.join(output_folder, query_type)
                 os.mkdir(path)
             Path(output_folder + "/" + query_type + "/" + source_folder + ".yaml").write_text(query_text.decode('utf-8'))
+            return True
+            print("done writing query files")
         except OSError as e:
             print(e)
-    print("done writing query files")
+            return False
 
 
-def import_and_write_sentinel_queries(base_dir, query_type, output_folder):
+def import_and_write_sentinel_queries(base_dir: str, query_type: str, output_folder: str):
+    """
+    Calls all appropriate functions to write YAML files for the given query_type within the base_dir directory into the given output_folder
+
+    Parameters
+    ----------
+    base_dir : str
+        Path to the directory storing the folders containing the original query YAML files; most likely the downloaded Github repo's location
+    query_type : str
+        Either "Hunting Queries" or "Detections" or otherwise named query category
+    output_folder : str
+        Path to the folder you want the new generated YAML files to be stored in
+    """
     print('read yaml_files')
     yaml_files = read_yaml_files(parent_dir=base_dir, child_dir=query_type)
     print('get query_list')
