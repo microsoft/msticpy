@@ -38,11 +38,8 @@ class PeriodogramPollingDetector:
 
     def __init__(self) -> None:
         """Create periodogram polling detector."""
-        pass
 
-    def _g_test(
-        self, pxx: npt.NDArray, exclude_pi: bool = False
-    ) -> Tuple[float, float]:
+    def _g_test(self, pxx: npt.NDArray, exclude_pi: bool) -> Tuple[float, float]:
         """
         Carry out fishers g test for periodicity.
 
@@ -153,8 +150,21 @@ class PeriodogramPollingDetector:
         dn_ = np.array([counting_process[t] for t in time_steps])
         dn_star = dn_ - len(timestamps) / len(time_steps)
 
-        _, pxx = signal.periodogram(dn_star)
+        freq, pxx = signal.periodogram(dn_star)
 
-        _, p_val = self._g_test(pxx)
+        max_pxx_freq = freq[np.argmax(pxx)]
+
+        print(
+            (
+                f"Dominant frequency detected at {round(1 / max_pxx_freq)} seconds\n"
+                f"\tFrequency: {max_pxx_freq}\n"
+                f"\tTime domain: {1 / max_pxx_freq}"
+            )
+        )
+
+        if len(dn_star) % 2 == 0:
+            _, p_val = self._g_test(pxx, True)
+        else:
+            _, p_val = self._g_test(pxx, False)
 
         return p_val
