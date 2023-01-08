@@ -110,7 +110,7 @@ class PeriodogramPollingDetector:
     ) -> float:
         """
         Carry out periodogram polling detecton.
-        
+
         Carries out the the procedure outlined in [1] to detect if the arrival times have a strong
         periodic component.
         The procedure estimates the periodogram for the data and passes the results to fishers G
