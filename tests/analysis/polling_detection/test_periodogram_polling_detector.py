@@ -10,6 +10,7 @@ The g test outputs are tested against the fisher.g.test.single function in the G
 
 The code for this is located at https://github.com/cran/GeneCycle/blob/master/R/fisher.g.test.R
 """
+import unittest.mock as mock
 import numpy as np
 import pandas as pd
 import pytest
@@ -98,6 +99,22 @@ def test_detect_polling_multiple_observations_per_second(periodic_data):
     assert p_val == p_val_add_obs
 
 
+def test_detect_polling_prints_frequency(periodic_data, capsys):
+    per = poll.PeriodogramPollingDetector()
+
+    _ = per.detect_polling(periodic_data, min(periodic_data), max(periodic_data))
+
+    captured = capsys.readouterr()
+
+    expected_msg = (
+        "Dominant frequency detected at 60 seconds\n"
+        "\tFrequency: 0.016666859570133915\n"
+        "\tTime domain: 59.99930555555555"
+    )
+
+    assert expected_msg in captured.out
+
+
 ## ########### ##
 ## Integration ##
 ## ########### ##
@@ -120,3 +137,17 @@ def test_detect_polling_works_on_grouped_df(periodic_data, non_periodic_data):
 
     assert output.loc["edge1"] < 0.01
     assert output.loc["edge2"] > 0.5
+
+
+@pytest.mark.parametrize("offset, pi_excluded", [(0, False), (1, True)])
+@mock.patch.object(poll.PeriodogramPollingDetector, "_g_test", return_value=(0.5, 0.5))
+def test_pi_freq_exclusion(g_test, periodic_data, offset, pi_excluded):
+    per = poll.PeriodogramPollingDetector()
+
+    _ = per.detect_polling(
+        periodic_data, min(periodic_data), max(periodic_data) - offset
+    )
+
+    args = g_test.call_args.args
+
+    assert args[1] == pi_excluded
