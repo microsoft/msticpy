@@ -172,7 +172,7 @@ class ResourceGraphDriver(DriverBase):
             options=request_options,
         )
 
-        response = self.client.resources(request)  # type: QueryResponse
+        response: QueryResponse = self.client.resources(request)
 
         # Pagination logic adapted from azure-cli-extensions
         # https://github.com/Azure/azure-cli-extensions/blob/8dade2f6fe28803d0fbdb1700c3ab4e4d71e5318/src/resource-graph/azext_resourcegraph/custom.py#L75

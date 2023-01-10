@@ -24,7 +24,7 @@ repos:
     hooks:
       - id: flake8
         args:
-          - --extend-ignore=E0401,E501,W503
+          - --extend-ignore=E401,E501,W503
           - --max-line-length=90
           - --exclude=tests,test*.py
   - repo: https://github.com/pycqa/isort

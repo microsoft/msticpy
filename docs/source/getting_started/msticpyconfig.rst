@@ -174,27 +174,29 @@ Legal values for ``cloud`` are:
 - de - German national cloud (no longer used)
 
 The ``auth_methods`` key lists the types of authentication
-methods that you want to enable. MSTICPy uses the Azure identity
-`DefaultCredential <https://docs.microsoft.com/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python>`__
-class to authenticate. This has a hard-coded order in which it
-attempts to find and use credentials. It will use the first valid
-credential type available.
+methods that you want to enable.
 
-.. important:: In some cases ``DefaultCredential`` may find a valid
+
+.. important:: In some cases MSTICPy may find a valid
    credential type but is unable to authenticate with this type due
    to Conditional access policies or other restrictions. If you
-   find issues authenticating, edit this list to specify specific
-   credential types that you are able to use.
+   find issues authenticating, edit the ```auth_methods`` list to use specific
+   credential types that can be authorized with the service that you
+   are using.
 
 Possible credential types (``auth_methods``) are:
 
-- "cli": Use credentials from authenticated Azure CLI session
-- "env": Azure credentials stored in environment variables
-- "msi": Use Managed identity credentials
-- "vscode": Use credentials from authenticated VS Code session
-- "powershell": Use credentials from authenticated PowerShel session
-- "interactive": Use interactive browser device code authentication
-- "cache": Use MSAL cached credentials store
+- **env** - Use credentials set in environment variables
+- **cli** - Use credentials available in an local AzureCLI logon
+- **msi** - Use the Managed Service Identity (MSI) credentials of the
+  machine you are running the notebook kernel on
+- **devicecode** - use browser-based device code authentication flow
+- **vscode** - Use credentials from your authenticated VS Code session
+- **powershell** - Use credentials from an authenticated Azure Powershell session
+- **clientsecret** - Use an Azure AppID and client secret
+- **certificate** - Use client certificate authentication.
+- **interactive** - Interactive browser logon
+
 
 .. warning:: Some environments (such as Azure Machine Learning notebooks)
    do not allow notebooks to open browser windows, so "interactive"
@@ -207,6 +209,8 @@ Possible credential types (``auth_methods``) are:
       cloud: "global"
       auth_methods: ["cli", "msi", "interactive"]
 
+For more details on Azure authentication/credential types see
+:doc:`./AzureAuthentication`
 
 User Defaults
 ~~~~~~~~~~~~~

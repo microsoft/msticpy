@@ -123,11 +123,16 @@ we can use the ``WorkspaceConfig`` class.
 WorkspaceConfig
 ~~~~~~~~~~~~~~~
 
-This handles loading your workspace configuration and generating a
+.. note:: From v2.0.0 of MSTICPy the MS Sentinel QueryProvider
+   will automatically create a WorkspaceConfig from your settings.
+   Simply call ``connect`` with a ``workspace="YourWorkspace"`` parameter
+
+
+``WorkspaceConfig`` handles loading your workspace configuration and generating a
 connection string from your configuration.
 See :py:mod:`WorkspaceConfig API documentation<msticpy.common.wsconfig>`
 
-``WorkspaceConfig``  works with workspace configuration stored in *msticpyconfig.yaml*
+``WorkspaceConfig`` works with workspace configuration stored in *msticpyconfig.yaml*
 or *config.json* (although the former takes precedence).
 
 To use ``WorkspaceConfig``, simple create an instance of it. It will automatically build
@@ -175,21 +180,27 @@ Entries in msticpyconfig always take precedence over settings in your
 config.json. If you want to force use of the config.json, specify the path
 to the config.json file in the ``config_file`` parameter to ``WorkspaceConfig``.
 
-Connecting to the workspace
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-When connecting you can just pass an instance of WorkspaceConfig to
-the query provider's ``connect`` method.
-
-.. code:: IPython
-
-    qry_prov.connect(WorkspaceConfig())
-    # or
-    qry_prov.connect(WorkspaceConfig(workspace="TestWorkspace"))
-
 If you need use a specific instance of a config.json you can specify a full
 path to the file you want to use when you create your ``WorkspaceConfig``
 instance.
+
+
+Connecting to the workspace
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When connecting you can just pass the name of your workspace or
+an instance of WorkspaceConfig to the query provider's ``connect`` method.
+
+.. code:: IPython
+
+    qry_prov.connect(workspace="Default")
+    qry_prov.connect(workspace="MyOtherWorkspace")
+
+    # or, passing WorkspaceConfig
+    qry_prov.connect(WorkspaceConfig())
+    # or
+    qry_prov.connect(WorkspaceConfig(workspace="MyOtherWorkspace"))
+
 
 
 MS Sentinel Authentication options
@@ -219,6 +230,8 @@ the *msticpyconfig*.
    `Azure Lighthouse <https://azure.microsoft.com/services/azure-lighthouse/>`__.
    This allows delegated access to workspaces in multiple tenants from a single
    tenant.
+
+For more details on Azure authentication see :doc:`../getting_started/AzureAuthentication`.
 
 Other MS Sentinel Documentation
 -------------------------------
