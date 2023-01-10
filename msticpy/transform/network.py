@@ -60,7 +60,7 @@ def df_to_networkx(
         data, source_col, target_col, source_attrs, target_attrs, edge_attrs
     )
     # remove any source or target rows that are NaN
-    data = data.dropna(axis="rows", subset=[source_col, target_col])
+    data = data.dropna(axis="index", subset=[source_col, target_col])
     nx_graph = nx.from_pandas_edgelist(
         data,
         source=source_col,
