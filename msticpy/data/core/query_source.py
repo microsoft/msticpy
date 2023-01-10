@@ -275,8 +275,14 @@ class QuerySource:
             self._format_parameter(p_name, param_dict, settings, formatters)
 
         if formatters and Formatters.PARAM_HANDLER in formatters:
-            return formatters[Formatters.PARAM_HANDLER](self._query, param_dict)
-        return self._query.format(**param_dict)
+            return formatters[Formatters.PARAM_HANDLER](self._query, **param_dict)
+        query = self._query.format(**param_dict)
+        # Remove empty lines if variables supposed to contain new pipe elements.
+        # Example:
+        # MyTable
+        # {timeCondition}
+        # | where key == "value"
+        return re.sub(r"\n\s*\n", "\n", query)
 
     def _format_parameter(self, p_name, param_dict, param_settings, formatters):
         # The parameter may need custom formatting
@@ -428,7 +434,7 @@ class QuerySource:
                 fmt_list.append(f"'{item}'")
             else:
                 fmt_list.append(f"{item}")
-        return ",".join(fmt_list)
+        return ", ".join(fmt_list)
 
     def help(self):
         """Print help for query."""
