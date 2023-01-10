@@ -64,6 +64,12 @@ class MDATPDriver(OData):
         self.api_root = api_uri
         self.api_ver = "api"
         self.api_suffix = api_suffix
+        if self.data_environment == DataEnvironment.M365D:
+            self.scopes = ["https://api.security.microsoft.com/AdvancedHunting.Read"]
+        else:
+            self.scopes = [
+                "https://api.securitycenter.microsoft.com/AdvancedQuery.Read"
+            ]
 
         if connection_str:
             self.current_connection = connection_str
