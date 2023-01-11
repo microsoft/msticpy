@@ -23,7 +23,7 @@ def md(
     string: str,
     styles: Union[str, Iterable[str]] = None,
     disp_id: Optional[Union[bool, DisplayHandle]] = None,
-) -> DisplayHandle:
+) -> Optional[DisplayHandle]:
     """
     Display a string as Markdown with optional style.
 
