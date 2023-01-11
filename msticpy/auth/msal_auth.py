@@ -54,10 +54,8 @@ class MSALDelegatedAuth:
 
         """
         self.token_cache = None
-        self.location = (
-            kwargs["location"] if "location" in kwargs else "token_cache.bin"
-        )
-        self.auth_type = kwargs["auth_type"] if "auth_type" in kwargs else "interactive"
+        self.location = kwargs.get("location", "token_cache.bin")
+        self.auth_type = kwargs.get("auth_type", "interactive")
         self.username = username
         self.scopes = scopes
         self.result = None

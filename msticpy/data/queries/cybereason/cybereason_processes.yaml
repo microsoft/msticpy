@@ -54,27 +54,27 @@ sources:
     metadata:
     args:
       query: |-
-        {{
+        {
           "queryPath" : [
-              {{
+              {
                   "requestedType": "Process",
                   "filters":[
-                      {{
+                      {
                           "facetName": "commandLine",
                           "values": [ "{command}" ],
                           "filterType":"ContainsIgnoreCase"
-                      }},
-                      {{
+                      },
+                      {
                           "facetName": "{timefield}",
-                          "values": [ {start}, {end} ],
+                          "values": [ "{start}", "{end}" ],
                           "filterType":"Between"
-                      }}
+                      }
                   ],
                   "isResult": true
-              }}
+              }
           ],
-          "customFields": [{customFields}]
-        }}
+          "customFields": ["{customFields}"]
+        }
     parameters:
       command:
         description: Command to search for
@@ -84,27 +84,27 @@ sources:
     metadata:
     args:
       query: |-
-        {{
+        {
           "queryPath" : [
-              {{
+              {
                   "requestedType": "Process",
                   "filters":[
-                      {{
+                      {
                           "facetName": "{suspicion}",
                           "values": [ true ],
                           "filterType":"Equals"
-                      }},
-                      {{
+                      },
+                      {
                           "facetName": "{timefield}",
-                          "values": [ {start}, {end} ],
+                          "values": [ "{start}", "{end}" ],
                           "filterType":"Between"
-                      }}
+                      }
                   ],
                   "isResult": true
-              }}
+              }
           ],
-          "customFields": [{customFields}]
-        }}
+          "customFields": ["{customFields}"]
+        }
     parameters:
       suspicion:
         description: Suspicion that the process should have
@@ -114,32 +114,32 @@ sources:
     metadata:
     args:
       query: |-
-        {{
+        {
           "queryPath" : [
-              {{
+              {
                   "requestedType": "Process",
                   "filters":[
-                      {{
+                      {
                           "facetName": "applicablePid",
-                          "values":[ {pid} ],
+                          "values":[ "{pid}" ],
                           "filterType":"Equals"
-                      }},
-                      {{
+                      },
+                      {
                           "facetName": "ownerMachine",
-                          "values":[ {hostname} ],
+                          "values":[ "{hostname}" ],
                           "filterType":"ContainsIgnoreCase"
-                      }},
-                      {{
+                      },
+                      {
                           "facetName": "{timefield}",
-                          "values": [ {start}, {end} ],
+                          "values": [ "{start}", "{end}" ],
                           "filterType":"Between"
-                      }}
+                      }
                   ],
                   "isResult": true
-              }}
+              }
           ],
-          "customFields": [{customFields}]
-        }}
+          "customFields": ["{customFields}"]
+        }
     parameters:
       pid:
         description: Process Id to search for

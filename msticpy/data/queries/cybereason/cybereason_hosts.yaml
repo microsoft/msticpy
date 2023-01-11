@@ -49,22 +49,22 @@ sources:
           - Dns
     args:
       query: |-
-        {{
+        {
           "queryPath" : [
-              {{
+              {
                   "requestedType": "Machine",
                   "filters":[
-                      {{
+                      {
                           "facetName": "elementDisplayName",
-                          "values":[ {domain_list} ],
+                          "values":[ "{domain_list}" ],
                           "filterType":"MatchesToken"
-                      }}
+                      }
                   ],
                   "isResult": true
-              }}
+              }
           ],
-          "customFields": [{customFields}]
-        }}
+          "customFields": ["{customFields}"]
+        }
     parameters:
       domain_list:
         description: Hostnames to search for
