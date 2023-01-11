@@ -275,7 +275,7 @@ class QuerySource:
             self._format_parameter(p_name, param_dict, settings, formatters)
 
         if formatters and Formatters.PARAM_HANDLER in formatters:
-            return formatters[Formatters.PARAM_HANDLER](self._query, **param_dict)
+            return formatters[Formatters.PARAM_HANDLER](self._query, param_dict)
         query = self._query.format(**param_dict)
         # Remove empty lines if variables supposed to contain new pipe elements.
         # Example:
