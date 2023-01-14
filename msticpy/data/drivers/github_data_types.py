@@ -1,3 +1,10 @@
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
+"""Github Sentinel Query repo import class and helpers"""
+
 import attr
 from attr import attrs, attrib
  
@@ -75,8 +82,7 @@ def get_sentinel_queries_from_github(
         outputdir = Path.joinpath(Path("~").expanduser(), ".msticpy", "Azure-Sentinel")
 
     try:
-        with httpx.stream("GET", url, follow_redirects=True) as response:
-            block_size = 1024
+        with httpx.stream("GET", git_url, follow_redirects=True) as response:
             progress_bar = tqdm(desc="Downloading from Microsoft Sentinel Github" , initial= 0, unit='iB', unit_scale=True)
             repo_zip = Path.joinpath(Path(outputdir),"Azure-Sentinel.zip")
             with open(repo_zip, 'wb') as file:
@@ -97,9 +103,11 @@ def get_sentinel_queries_from_github(
             ):
                 archive.extract(file, path=outputdir)
         print("Downloaded and Extracted Files successfully")
+        return True
 
     except HTTPError as http_err:
         warnings.warn(f"HTTP error occurred trying to download from Github: {http_err}")
+        return False
 
 
 def read_yaml_files(parent_dir: str, child_dir: str) -> dict:
@@ -125,7 +133,7 @@ def read_yaml_files(parent_dir: str, child_dir: str) -> dict:
     parsed_query_dict = {}
     
     for query in yaml_queries: 
-        parsed_query_dict[query] = yaml_text = open(query, encoding="utf8", errors="ignore").read()
+        parsed_query_dict[query] = open(query, encoding="utf8", errors="ignore").read()
         
     return parsed_query_dict
 
@@ -300,7 +308,6 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
 
         for cur_query in query_dict_by_folder[source_folder]:
             # skipping instances where there is no name but should probably have a better solution
-            # switch to if to check for None == cur_query
             try:
                 formatted_qname = _format_query_name(cur_query.name)
             except:
@@ -327,6 +334,7 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
 
         try: # Path(def_path).joinpath("save_queries")
 #             Path(path).mkdir(parents=True, errors=False)
+            def_path = Path.joinpath(Path(os.getcwd()))
             path_main = os.path.join(def_path, output_folder + "/")
             path_type = os.path.join(output_folder + "/" + query_type)
             if not os.path.exists(path_main):
@@ -336,12 +344,9 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
                 path = os.path.join(output_folder, query_type)
                 os.mkdir(path)
             Path(output_folder + "/" + query_type + "/" + source_folder + ".yaml").write_text(query_text.decode('utf-8'))
-            return True
-            print("done writing query files")
         except OSError as e:
             print(e)
-            return False
-
+    print("done writing query files")
 
 def import_and_write_sentinel_queries(base_dir: str, query_type: str, output_folder: str):
     """
