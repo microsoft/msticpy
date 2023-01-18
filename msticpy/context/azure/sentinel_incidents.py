@@ -489,6 +489,6 @@ class SentinelIncidentsMixin:
             If incidents could not be retrieved.
 
         """
-        return self._list_items(item_type="incidents")  # type: ignore
+        return self._list_items(item_type="incidents", follow_next=False)  # type: ignore
 
     get_incidents = list_incidents

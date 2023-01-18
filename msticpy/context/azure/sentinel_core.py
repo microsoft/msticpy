@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Uses the Microsoft Sentinel APIs to interact with Microsoft Sentinel Workspaces."""
 
-import contextlib
+# import contextlib
 from typing import List, Optional, Tuple
 
 import pandas as pd
@@ -84,9 +84,11 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
         self.default_subscription: Optional[str] = None
         self.default_workspace: Optional[Tuple[str, str]] = None
 
-        res_id = res_id or self._get_default_workspace()
-        if not res_id:
+        if not res_id and sub_id and res_grp and ws_name:
             res_id = self._build_sent_res_id(sub_id, res_grp, ws_name)
+        else:
+            res_id = res_id or self._get_default_workspace()
+
         res_id = validate_res_id(res_id)
         self.url = self._build_sent_paths(res_id, self.base_url)  # type: ignore
         self.sent_urls = {
@@ -129,12 +131,12 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
                 self.credentials, tenant_id=tenant_id, cloud=self.user_cloud  # type: ignore
             )
 
-        with contextlib.suppress(KeyError):
-            self.default_subscription = ws_config[WorkspaceConfig.CONF_SUB_ID_KEY]
-            self.set_default_workspace(
-                self.default_subscription,
-                ws_config[WorkspaceConfig.CONF_WS_NAME_KEY],
-            )
+        # with contextlib.suppress(KeyError):
+        #    self.default_subscription = ws_config[WorkspaceConfig.CONF_SUB_ID_KEY]
+        #    self.set_default_workspace(
+        #        self.default_subscription,
+        #        ws_config[WorkspaceConfig.CONF_WS_NAME_KEY],
+        #    )
         # self.res_group_url = None
         # self.prov_path = None
 

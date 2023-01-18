@@ -53,6 +53,7 @@ class SentinelUtilsMixin:
         item_type: str,
         api_version: str = "2020-01-01",
         appendix: str = None,
+        follow_next: bool = False,
     ) -> pd.DataFrame:
         """
         Return lists of core resources from APIs.
@@ -88,7 +89,7 @@ class SentinelUtilsMixin:
         j_resp = response.json()
         results = [results_df]
         # If nextLink in reponse, go get that data as well
-        while "nextLink" in j_resp:
+        while follow_next and "nextLink" in j_resp:
             next_url = j_resp["nextLink"]
             next_response = self._get_items(next_url, api_version)
             next_results_df = _azs_api_result_to_df(next_response)
