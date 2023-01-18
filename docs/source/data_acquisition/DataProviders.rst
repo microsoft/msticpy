@@ -471,10 +471,10 @@ get_host_events
     """
     # define the query parameters
     # (these can also be passed as a list of raw tuples)
-    qp_host = qry_prov.Param("host_name", "str", "Name of Host")
-    qp_start = qry_prov.Param("start", "datetime")
-    qp_end = qry_prov.Param("end", "datetime")
-    qp_evt = qry_prov.Param("event_id", "int", None, 4688)
+    qp_host = qry_prov.create_param("host_name", "str", "Name of Host")
+    qp_start = qry_prov.create_param("start", "datetime")
+    qp_end = qry_prov.create_param("end", "datetime")
+    qp_evt = qry_prov.create_param("event_id", "int", None, 4688)
 
     # add the query
     qry_prov.add_custom_query(

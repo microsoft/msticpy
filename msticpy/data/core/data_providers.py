@@ -58,7 +58,7 @@ class QueryProvider:
 
     """
 
-    ParamDef = QueryParam
+    create_param = QueryParam
 
     def __init__(  # noqa: MC0001
         self,
@@ -462,10 +462,10 @@ class QueryProvider:
         Examples
         --------
         >>> qp = QueryProvider("MSSentinel")
-        >>> qp_host = qp.QueryParam("host_name", "str", "Name of Host")
-        >>> qp_start = qp.QueryParam("start", "datetime")
-        >>> qp_end = qp.QueryParam("end", "datetime")
-        >>> qp_evt = qp.QueryParam("event_id", "int", None, 4688)
+        >>> qp_host = qp.create_paramramram("host_name", "str", "Name of Host")
+        >>> qp_start = qp.create_param("start", "datetime")
+        >>> qp_end = qp.create_param("end", "datetime")
+        >>> qp_evt = qp.create_param("event_id", "int", None, 4688)
         >>>
         >>> query = '''
         >>> SecurityEvent
