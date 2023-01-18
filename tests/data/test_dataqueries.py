@@ -484,7 +484,7 @@ def test_add_query():
     qp_host = qry_prov.create_param("host_name", "str", "Name of Host")
     qp_start = qry_prov.create_param("start", "datetime")
     qp_end = qry_prov.create_param("end", "datetime")
-    qp_evt = qry_prov.create_paramram("event_id", "int", None, 4688)
+    qp_evt = qry_prov.create_param("event_id", "int", None, 4688)
 
     # add the query
     qry_prov.add_custom_query(
