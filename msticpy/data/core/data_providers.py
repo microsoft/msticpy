@@ -4,11 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data provider loader."""
+import re
+from collections import abc
 from datetime import datetime
 from functools import partial
 from itertools import tee
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Union
+from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Pattern, Union
 
 import pandas as pd
 from tqdm.auto import tqdm
@@ -316,6 +318,70 @@ class QueryProvider:
                 )
             )
         return list(self.query_store.query_names)
+
+    def search(
+        self,
+        search: Union[str, Iterable[str]] = None,
+        table: Union[str, Iterable[str]] = None,
+        param: Union[str, Iterable[str]] = None,
+        ignore_case: bool = True,
+    ) -> List[str]:
+        """
+        Search queries for match properties.
+
+        Parameters
+        ----------
+        search : Union[str, Iterable[str]], optional
+            String or iterable of search terms to match on
+            any property of the query, by default None.
+            The properties include: name, description, table,
+            parameter names and query_text.
+        table : Union[str, Iterable[str]], optional
+            String or iterable of search terms to match on
+            the query table name, by default None
+        param : Union[str, Iterable[str]], optional
+            String or iterable of search terms to match on
+            the query parameter names, by default None
+        ignore_case : bool
+            Use case-insensitive search, default is True.
+
+        Returns
+        -------
+        List[str]
+            A list of matched queries
+
+        Notes
+        -----
+        Search terms are treated as regular expressions.
+        Supplying multiple parameters returns the intersection
+        of matches for each category. For example:
+        `qry_prov.search(search="account", table="syslog")` will
+        match queries that have a table parameter of "syslog" AND
+        have the term "Account" somewhere in the query properties.
+
+        """
+        if not (search or table or param):
+            return []
+
+        glob_searches = _normalize_to_regex(search, ignore_case)
+        table_searches = _normalize_to_regex(table, ignore_case)
+        param_searches = _normalize_to_regex(param, ignore_case)
+        search_hits: List[str] = []
+        for query, search_data in self.query_store.search_items.items():
+            glob_match = (not glob_searches) or any(
+                re.search(term, prop)
+                for term in glob_searches
+                for prop in search_data.values()
+            )
+            table_match = (not table_searches) or any(
+                re.search(term, search_data["table"]) for term in table_searches
+            )
+            param_match = (not param_searches) or any(
+                re.search(term, search_data["params"]) for term in param_searches
+            )
+            if glob_match and table_match and param_match:
+                search_hits.append(query)
+        return sorted(search_hits)
 
     def list_connections(self) -> List[str]:
         """
@@ -769,3 +835,17 @@ def _get_query_options(
         # Any kwargs left over we send to the query provider driver
         query_options = {key: val for key, val in kwargs.items() if key not in params}
     return query_options
+
+
+def _normalize_to_regex(
+    search_term: Union[str, Iterable[str], None], ignore_case: bool
+) -> List[Pattern[str]]:
+    """Return iterable or str search term as list of compiled reg expressions."""
+    if not search_term:
+        return []
+    regex_opts = [re.IGNORECASE] if ignore_case else []
+    if isinstance(search_term, str):
+        return [re.compile(search_term, *regex_opts)]
+    if isinstance(search_term, abc.Iterable):
+        return [re.compile(term, *regex_opts) for term in set(search_term)]
+    return []

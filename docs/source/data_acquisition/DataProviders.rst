@@ -271,6 +271,65 @@ This will display:
      | project-away extendedProps {add_query_items}
 
 
+Searching for a query
+---------------------
+
+The data providers have a simple search capability letting you search
+over the names or properties of queries. It takes four parameters:
+
+- search - search terms to look for in the
+  query name, description, parameter names, table and query text.
+- table - search terms to match on the target table of the query.
+  (note: not all queries have the table parameter defined in their
+  metadata)
+- param - search terms to match on a parameter name
+- case - boolean to force case-sensitive matching (default is case-sensitive).
+
+The first three parameters can be a simple string or an iterable (e.g. list, tuple)
+of search terms. The search terms are treated as regular expressions. This
+means that a the search terms are treated as substrings (if no other
+regular expression syntax is included).
+
+Find all queries that have the term "syslog" in their properties
+
+.. code:: ipython3
+
+    qry_prov.search("syslog")
+    # equivalent to qry_prov.search(search="syslog")
+
+.. parsed-literal::
+
+    ['LinuxSyslog.all_syslog',
+    'LinuxSyslog.cron_activity',
+    'LinuxSyslog.list_account_logon_failures',
+    'LinuxSyslog.list_host_logon_failures',
+    'LinuxSyslog.list_ip_logon_failures',
+    'LinuxSyslog.list_logon_failures',
+    ...
+
+Other examples:
+
+.. code:: ipython3
+
+    # Find queries that target the "syslog" table and have the term "logon"
+    qry_prov.search("logon", table="Syslog")
+
+.. parsed-literal::
+
+    ['LinuxSyslog.list_account_logon_failures',
+    'LinuxSyslog.list_host_logon_failures',
+    'LinuxSyslog.list_ip_logon_failures',
+    'LinuxSyslog.list_logon_failures',
+    'LinuxSyslog.list_logons_for_account',
+    ...
+
+.. code:: ipython3
+
+    # Queries with the term "Azure" and a parameter beginning with "ip"
+    qry_prov.search("Azure", param="ip.*")
+
+    # Table name contains "sign" and has a parameter matching "ip..."
+    qry_prov.search(table="sign", param="ip.*")
 
 
 Running a pre-defined query
