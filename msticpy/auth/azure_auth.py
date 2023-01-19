@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Azure authentication handling."""
 import os
-from typing import List
+from typing import List, Optional
 
 from azure.common.exceptions import CloudError
 from azure.identity import DeviceCodeCredential
@@ -33,8 +33,8 @@ __author__ = "Pete Bryan"
 
 
 def az_connect(
-    auth_methods: List[str] = None,
-    tenant_id: str = None,
+    auth_methods: Optional[List[str]] = None,
+    tenant_id: Optional[str] = None,
     silent: bool = False,
     **kwargs,
 ) -> AzCredentials:
@@ -101,7 +101,7 @@ def az_connect(
     )
     sub_client = SubscriptionClient(
         credential=credentials.modern,
-        base_url=az_cloud_config.endpoints.resource_manager,
+        base_url=az_cloud_config.endpoints.resource_manager,  # type: ignore
         credential_scopes=[az_cloud_config.token_uri],
     )
     if not sub_client:
@@ -110,7 +110,9 @@ def az_connect(
     return credentials
 
 
-def az_user_connect(tenant_id: str = None, silent: bool = False) -> AzCredentials:
+def az_user_connect(
+    tenant_id: Optional[str] = None, silent: bool = False
+) -> AzCredentials:
     """
     Authenticate to the SDK using user based authentication methods, Azure CLI or interactive logon.
 
@@ -132,7 +134,9 @@ def az_user_connect(tenant_id: str = None, silent: bool = False) -> AzCredential
     )
 
 
-def fallback_devicecode_creds(cloud: str = None, tenant_id: str = None, **kwargs):
+def fallback_devicecode_creds(
+    cloud: Optional[str] = None, tenant_id: Optional[str] = None, **kwargs
+):
     """
     Authenticate using device code as a fallback method.
 

@@ -130,47 +130,6 @@ class WorkspaceConfig:
         else:
             self._determine_config_source(workspace)
 
-    def _determine_config_source(self, workspace):
-        # First, try default MSTICPy config
-        self._read_pkg_config_values(workspace_name=workspace)
-        if self.config_loaded:
-            return
-        # Next, search for a config.json in the current director
-        if Path("./config.json").exists():
-            self._config_file = "./config.json"
-        else:
-            self._config_file = self._search_for_file("**/config.json")
-        if self._config_file:
-            self._config.update(self._read_config_values(self._config_file))
-            return
-
-        # Finally, search for a msticpyconfig.yaml
-        if (
-            os.environ.get("MSTICPYCONFIG")
-            and Path(os.environ.get("MSTICPYCONFIG")).exists()
-        ):
-            self._config_file = os.environ.get("MSTICPYCONFIG")
-        elif Path("./msticpyconfig.yaml").exists():
-            self._config_file = "./msticpyconfig.yaml"
-        else:
-            self._config_file = self._search_for_file("**/msticpyconfig.yaml")
-        if self._config_file:
-            os.environ["MSTICPYCONFIG"] = self._config_file
-            pkg_config.refresh_config()
-            self._read_pkg_config_values(workspace_name=workspace)
-            return
-        # Finally, throw an exception (unless non-interactive)
-        if self._interactive:
-            # If we've arrived here after searching current folder and parent
-            # then we give up. (We create but don't raise an actual exception)
-            display(
-                MsticpyUserConfigError(
-                    *_NO_CONFIG_ERR,
-                    title="Workspace configuration missing.",
-                    **{f"nb_{idx}_uri": res for idx, res in enumerate(_RESOURCES)},
-                )
-            )
-
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
         if key in self._config:
@@ -237,6 +196,30 @@ class WorkspaceConfig:
             )
         return f"loganalytics://code().tenant('{ten_id}').workspace('{ws_id}')"
 
+    @property
+    def mp_settings(self):
+        """Return the equivalent MSTICPY settings dictionary."""
+        return {
+            self.PKG_CONF_NAME_KEY: self._config.get(self.CONF_WS_NAME_KEY),
+            self.PKG_CONF_SUB_KEY: self._config.get(self.CONF_SUB_ID_KEY),
+            self.PKG_CONF_WS_KEY: self._config.get(self.CONF_WS_ID_KEY),
+            self.PKG_CONF_TENANT_KEY: self._config.get(self.CONF_TENANT_ID_KEY),
+            self.PKG_CONF_RES_GROUP_KEY: self._config.get(self.CONF_RES_GROUP_KEY),
+        }
+
+    @classmethod
+    def from_settings(cls, settings: Dict[str, Any]):
+        """Create a WorkstationConfig from MSTICPY Workspace settings."""
+        ws_config = cls(workspace="**DUMMY_WORKSPACE**")  # type: ignore
+        ws_config._config = {  # type: ignore
+            cls.CONF_WS_NAME_KEY: settings.get(cls.PKG_CONF_NAME_KEY),  # type: ignore
+            cls.CONF_SUB_ID_KEY: settings.get(cls.PKG_CONF_SUB_KEY),  # type: ignore
+            cls.CONF_WS_ID_KEY: settings.get(cls.PKG_CONF_WS_KEY),  # type: ignore
+            cls.CONF_TENANT_ID_KEY: settings.get(cls.PKG_CONF_TENANT_KEY),  # type: ignore
+            cls.CONF_RES_GROUP_KEY: settings.get(cls.PKG_CONF_RES_GROUP_KEY),  # type: ignore
+        }
+        return ws_config
+
     @staticmethod
     def _read_config_values(file_path: str) -> Dict[str, str]:
         """Read configuration file."""
@@ -260,15 +243,17 @@ class WorkspaceConfig:
 
         """
         ws_settings = pkg_config.settings.get("AzureSentinel", {}).get("Workspaces")
-        if not ws_settings:
-            return {}
-        return {
-            ws_name: {
-                cls.PKG_CONF_WS_KEY: ws.get(cls.PKG_CONF_WS_KEY),
-                cls.PKG_CONF_TENANT_KEY: ws.get(cls.PKG_CONF_TENANT_KEY),
+        return (
+            {
+                ws_name: {
+                    cls.PKG_CONF_WS_KEY: ws.get(cls.PKG_CONF_WS_KEY),
+                    cls.PKG_CONF_TENANT_KEY: ws.get(cls.PKG_CONF_TENANT_KEY),
+                }
+                for ws_name, ws in ws_settings.items()
             }
-            for ws_name, ws in ws_settings.items()
-        }
+            if ws_settings
+            else {}
+        )
 
     def prompt_for_ws(self):
         """Display an interactive prompt for Workspace details."""
@@ -300,6 +285,47 @@ class WorkspaceConfig:
                 "Connecting to a Microsoft Sentinel Workspace</a>"
             ),
         )
+
+    def _determine_config_source(self, workspace):
+        # First, try default MSTICPy config
+        self._read_pkg_config_values(workspace_name=workspace)
+        if self.config_loaded:
+            return
+        # Next, search for a config.json in the current director
+        if Path("./config.json").exists():
+            self._config_file = "./config.json"
+        else:
+            self._config_file = self._search_for_file("**/config.json")
+        if self._config_file:
+            self._config.update(self._read_config_values(self._config_file))
+            return
+
+        # Finally, search for a msticpyconfig.yaml
+        if (
+            os.environ.get("MSTICPYCONFIG")
+            and Path(os.environ.get("MSTICPYCONFIG")).exists()
+        ):
+            self._config_file = os.environ.get("MSTICPYCONFIG")
+        elif Path("./msticpyconfig.yaml").exists():
+            self._config_file = "./msticpyconfig.yaml"
+        else:
+            self._config_file = self._search_for_file("**/msticpyconfig.yaml")
+        if self._config_file:
+            os.environ["MSTICPYCONFIG"] = self._config_file
+            pkg_config.refresh_config()
+            self._read_pkg_config_values(workspace_name=workspace)
+            return
+        # Finally, throw an exception (unless non-interactive)
+        if self._interactive:
+            # If we've arrived here after searching current folder and parent
+            # then we give up. (We create but don't raise an actual exception)
+            display(
+                MsticpyUserConfigError(
+                    *_NO_CONFIG_ERR,
+                    title="Workspace configuration missing.",
+                    **{f"nb_{idx}_uri": res for idx, res in enumerate(_RESOURCES)},
+                )
+            )
 
     def _read_pkg_config_values(self, workspace_name: str = None):
         as_settings = pkg_config.settings.get("AzureSentinel")

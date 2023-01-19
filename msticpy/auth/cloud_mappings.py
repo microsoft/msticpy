@@ -166,7 +166,7 @@ def default_auth_methods() -> List[str]:
 class AzureCloudConfig:
     """Azure Cloud configuration."""
 
-    def __init__(self, cloud: str = None, tenant_id: Optional[str] = None):
+    def __init__(self, cloud: Optional[str] = None, tenant_id: Optional[str] = None):
         """
         Initialize AzureCloudConfig from `cloud` or configuration.
 
@@ -270,7 +270,7 @@ class AzureCloudConfig:
             If the cloud name is not valid.
 
         """
-        return vars(get_all_suffixes(self.cloud))
+        return vars(get_all_suffixes(self.cloud))  # type: ignore
 
     @property
     def token_uri(self) -> str:

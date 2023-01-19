@@ -6,7 +6,7 @@
 """Uses the Microsoft Sentinel APIs to interact with Microsoft Sentinel Workspaces."""
 
 import contextlib
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
@@ -33,7 +33,8 @@ __version__ = VERSION
 __author__ = "Pete Bryan"
 
 
-class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
+# pylint: disable=too-many-ancestors, too-many-instance-attributes
+class MicrosoftSentinel(
     SentinelAnalyticsMixin,
     SentinelHuntingMixin,
     SentinelBookmarksMixin,
@@ -50,12 +51,12 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
 
     def __init__(
         self,
-        res_id: str = None,
-        connect: bool = False,
-        cloud: str = None,
-        sub_id: str = None,
-        res_grp: str = None,
-        ws_name: str = None,
+        res_id: Optional[str] = None,
+        connect: Optional[bool] = False,
+        cloud: Optional[str] = None,
+        sub_id: Optional[str] = None,
+        res_grp: Optional[str] = None,
+        ws_name: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -86,25 +87,30 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
 
         """
         self.user_cloud = cloud
-        super().__init__(connect=connect, cloud=self.user_cloud)
+        super().__init__(connect=connect or False, cloud=self.user_cloud)
         self.base_url = self.endpoints.resource_manager
         self.default_subscription: Optional[str] = None
-        self._default_workspace: Tuple[Optional[str], Optional[str]] = None, None
+        self._resource_id = res_id
         self._default_resource_group: Optional[str] = None
         self.sent_urls: Dict[str, str] = {}
         self.sent_data_query: Optional[SentinelQueryProvider] = None  # type: ignore
         self.url: Optional[str] = None
 
         workspace = kwargs.get("workspace", ws_name)
+        self._default_workspace: Optional[str] = workspace
         self.workspace_config = WorkspaceConfig(workspace)
 
-        if res_id:
+        if self._resource_id:
             # If a resource ID is supplied, use that
-            self.url = self._build_sent_paths(res_id, self.base_url)
-            res_id_parts = parse_resource_id(res_id)
+            self.url = self._build_sent_paths(self._resource_id, self.base_url)  # type: ignore
+            res_id_parts = parse_resource_id(self._resource_id)
             self.default_subscription = res_id_parts["subscription_id"]
             self._default_resource_group = res_id_parts["resource_group"]
-            self._default_workspace = res_id_parts["workspace_name"], res_id
+            self._default_workspace = workspace or res_id_parts["workspace_name"]
+            if self._default_workspace in WorkspaceConfig.list_workspaces():
+                self.workspace_config = WorkspaceConfig(
+                    workspace=self._default_workspace
+                )
         else:
             # Otherwise - use details from specified workspace or default from settings
             self.default_subscription = self.workspace_config.get(
@@ -114,21 +120,23 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
                 "resource_group", res_grp
             )
             workspace_name = self.workspace_config.get("workspace_name", workspace)
-            res_id = self._build_sent_res_id(
+            self._resource_id = self._build_sent_res_id(
                 sub_id=self.default_subscription,
                 res_grp=self._default_resource_group,
                 ws_name=workspace_name,
             )
-            self._default_workspace = workspace_name, res_id
-            self.url: Optional[str] = self._build_sent_paths(res_id, self.base_url)
+            self._default_workspace = workspace_name
+            self.url = self._build_sent_paths(
+                self._resource_id, self.base_url  # type: ignore
+            )
 
         if connect:
             self.connect()
 
     def connect(
         self,
-        auth_methods: List = None,
-        tenant_id: str = None,
+        auth_methods: Optional[List] = None,
+        tenant_id: Optional[str] = None,
         silent: bool = False,
         **kwargs,
     ):
@@ -189,10 +197,10 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
         """Save configuration and build API URLs for workspace."""
         if workspace_name:
             self.workspace_config = WorkspaceConfig(workspace=workspace_name)
-        az_resource_id = az_resource_id or self._get_default_workspace()
+        az_resource_id = az_resource_id or self._resource_id
         if not az_resource_id:
             az_resource_id = self._build_sent_res_id(
-                subscription_id, resource_group, workspace_name
+                subscription_id, resource_group, workspace_name  # type: ignore
             )
         az_resource_id = validate_res_id(az_resource_id)
         self.url = self._build_sent_paths(az_resource_id, self.base_url)  # type: ignore
@@ -242,35 +250,40 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
                 "Please configure the subscription ID for your workspace in your"
                 "msticpyconfig.yaml",
             )
-        workspaces = self.get_sentinel_workspaces(sub_id=sub_id)
-        if len(workspaces) == 1:
-            self._default_workspace = next(iter(workspaces.items()))
-        elif workspace in workspaces:
-            self._default_workspace = workspace, workspaces[workspace]
+        self._default_workspace = workspace
+        ws_res_id: Optional[str] = None
+        # if workspace not supplied trying looking up in subscription
+        if not workspace:
+            workspaces = self.get_sentinel_workspaces(sub_id=sub_id)
+            if len(workspaces) == 1:
+                # if only one, use that one
+                name, ws_res_id = next(iter(workspaces.items()))
+                self._default_workspace = name
 
-    def _get_default_workspace(self):
-        """Return the default workspace ResourceID."""
-        return self.default_workspace[1] if self.default_workspace else None
+        # if workspace is one that we have configuration for, get the details from there.
+        if self._default_workspace in WorkspaceConfig.list_workspaces():
+            self.workspace_config = WorkspaceConfig(workspace=self._default_workspace)
+        elif ws_res_id:
+            # otherwise construct partial settings
+            res_id_parts = parse_resource_id(ws_res_id)
+            self.workspace_config = WorkspaceConfig.from_settings(
+                {
+                    "WorkspaceName": self._default_workspace
+                    or res_id_parts["workspace_name"],
+                    "SubscriptionId": res_id_parts["subscription_id"],
+                    "ResourceGroup": res_id_parts["resource_group"],
+                }
+            )
 
     @property
-    def default_workspace(self) -> Tuple[Optional[str], Optional[str]]:
-        """Return tuple of default workspace name and resource ID."""
-        if self._default_workspace is None and self.workspace_config is not None:
-            try:
-                self.set_default_workspace(
-                    sub_id=self.workspace_config.get(WorkspaceConfig.CONF_SUB_ID_KEY),
-                    workspace=self.workspace_config.get(
-                        WorkspaceConfig.CONF_WS_NAME_KEY
-                    ),
-                )
-            except ValueError:
-                return None, None
-        return self._default_workspace
+    def default_workspace_settings(self) -> Optional[Dict[str, Any]]:
+        """Return current default workspace settings."""
+        return self.workspace_config.mp_settings
 
     @property
     def default_workspace_name(self):
-        """Return the default workspace ResourceID."""
-        return self.default_workspace[0] if self.default_workspace else None
+        """Return the default workspace name."""
+        return self._default_workspace
 
     def list_data_connectors(self) -> pd.DataFrame:
         """

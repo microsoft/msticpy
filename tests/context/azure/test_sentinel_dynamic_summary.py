@@ -18,6 +18,7 @@ import respx
 
 from msticpy.common.exceptions import MsticpyAzureConnectionError
 from msticpy.common.pkg_config import get_config
+from msticpy.common.wsconfig import WorkspaceConfig
 from msticpy.context.azure import MicrosoftSentinel
 from msticpy.context.azure.sentinel_dynamic_summary import SentinelQueryProvider
 from msticpy.context.azure.sentinel_dynamic_summary_types import (
@@ -243,29 +244,8 @@ def _set_default_workspace(self, sub_id, workspace=None):
     """Mock set_default_workspace for MSSentinel."""
     del sub_id, workspace
     ws_key, settings = _get_test_ws_settings()
-    self._default_workspace = (
-        ws_key,
-        f"/subscriptions/{settings.get('SubscriptionId', '1231456')}/"
-        f"resourceGroups/{settings.get('ResourceGroup', 'RG')}/providers/"
-        f"Microsoft.OperationalInsights/workspaces/{settings.get('WorkspaceName', ws_key)}",
-    )
-
-
-# @pytest.fixture
-# @patch(f"{MicrosoftSentinel.__module__}.get_token")
-# @patch(f"{MicrosoftSentinel.__module__}.AzureData.connect")
-# def sent_loader(mock_creds, get_token, monkeypatch):
-#     """Generate MicrosoftSentinel instance for testing."""
-#     monkeypatch.setattr(MicrosoftSentinel, "set_default_workspace", _set_default_workspace)
-#     mock_creds.return_value = None
-#     get_token.return_value = "fd09863b-5cec-4833-ab9c-330ad07b0c1a"
-#     sent = MicrosoftSentinel(
-#         sub_id="fd09863b-5cec-4833-ab9c-330ad07b0c1a", res_grp="RG", ws_name="WSName"
-#     )
-#     sent.connect()
-#     sent.connected = True
-#     sent.token = "fd09863b-5cec-4833-ab9c-330ad07b0c1a"
-#     return sent
+    self._default_workspace = ws_key
+    self.workspace_config = WorkspaceConfig.from_settings(settings)
 
 
 @pytest.fixture
@@ -285,7 +265,7 @@ def sentinel_loader(mock_creds, get_token, monkeypatch):
         res_grp=settings.get("ResourceGroup", "RG"),
         ws_name=settings.get("WorkspaceName", "Default"),
     )
-    sent._default_workspace = ws_key, "ws_resource_id"
+    sent._default_workspace = ws_key
     sent.connect(workspace=ws_key)
     sent.connected = True
     sent.token = "fd09863b-5cec-4833-ab9c-330ad07b0c1a"
@@ -342,8 +322,8 @@ def test_sent_dynamic_summary_create_df(sentinel_loader):
     respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(
         201, json={"name": "test_id"}
     )
-    ds = DynamicSummary.from_json(json.dumps(_DYN_SUMMARY_RESP))
-    sum_id = sentinel_loader.create_dynamic_summary(summary=ds)
+    dyn_summary = DynamicSummary.from_json(json.dumps(_DYN_SUMMARY_RESP))
+    sum_id = sentinel_loader.create_dynamic_summary(summary=dyn_summary)
     check.equal(sum_id, "test_id")
 
 
@@ -384,8 +364,8 @@ def test_sent_dynamic_summary_update_df(sentinel_loader):
     respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(
         200, json={"name": "test_id"}
     )
-    ds = DynamicSummary.from_json(json.dumps(_DYN_SUMMARY_RESP))
-    sum_id = sentinel_loader.update_dynamic_summary(summary=ds)
+    dyn_summary = DynamicSummary.from_json(json.dumps(_DYN_SUMMARY_RESP))
+    sum_id = sentinel_loader.update_dynamic_summary(summary=dyn_summary)
     check.equal(sum_id, "test_id")
 
 

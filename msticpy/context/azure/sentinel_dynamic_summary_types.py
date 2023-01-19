@@ -151,7 +151,7 @@ class DynamicSummary:
         + ["summary_items"]  # noqa: W503
     )
 
-    def __init__(self, summary_id: str = None, **kwargs):
+    def __init__(self, summary_id: Optional[str] = None, **kwargs):
         """
         Initialize a DynamicSummary instance.
 
@@ -432,7 +432,7 @@ class DynamicSummary:
             # Create DynamicSummaryItem instance for each row
             self.summary_items.append(
                 DynamicSummaryItem(
-                    packed_content=row,
+                    packed_content=row,  # type: ignore
                     **summary_params,
                     **kwargs,  # pass remaining kwargs as summary item properties
                 )
@@ -667,13 +667,13 @@ def df_to_dynamic_summary(data: pd.DataFrame) -> DynamicSummary:
 
     """
     dyn_summary = DynamicSummary()
-    dyn_summary.__dict__.update(_get_summary_record(data).to_dict())
+    dyn_summary.__dict__.update(_get_summary_record(data).to_dict())  # type: ignore
 
     items_list = _get_summary_items(data).to_dict(orient="records")
     items = []
     for item in items_list:
         ds_item = DynamicSummaryItem()
-        ds_item.__dict__.update(item)
+        ds_item.__dict__.update(item)  # type: ignore
         items.append(ds_item)
     dyn_summary.add_summary_items(items)
     return dyn_summary

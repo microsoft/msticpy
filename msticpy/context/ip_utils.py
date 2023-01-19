@@ -566,12 +566,13 @@ class _IpWhoIsResult(NamedTuple):
 
 @lru_cache(maxsize=1024)
 def _whois_lookup(
-    ip_addr: Union[str, IpAddress], raw: bool = False, retry_count: int = 5
+    ip_addr: Union[str, IpAddress], raw: bool = False, retry_count: int = 5  # type: ignore
 ) -> _IpWhoIsResult:
     """Conduct lookup of IP Whois information."""
-    if isinstance(ip_addr, IpAddress):
+    if isinstance(ip_addr, IpAddress):  # type: ignore
         ip_addr = ip_addr.Address
     asn_items = get_asn_from_ip(ip_addr.strip())
+    registry_url: Optional[str] = None
     if asn_items and "Error: no ASN or IP match on line 1." not in asn_items:
         ipwhois_result = _IpWhoIsResult(asn_items["AS Name"], {})  # type: ignore
         ipwhois_result.properties["asn"] = asn_items["AS"]
@@ -585,7 +586,7 @@ def _whois_lookup(
     if not asn_items or not registry_url:
         return _IpWhoIsResult(None)
     return _add_rdap_data(
-        ipwhois_result=ipwhois_result,
+        ipwhois_result=ipwhois_result,  # type: ignore
         rdap_reg_url=f"{registry_url}{ip_addr}",
         retry_count=retry_count,
         raw=raw,
@@ -671,6 +672,7 @@ def _create_net(data: Dict) -> Dict:
             for net_prefix in net_prefixes
         )
     address = ""
+    created = updated = None
     for item in data["events"]:
         created = item["eventDate"] if item["eventAction"] == "last changed" else None
         updated = item["eventDate"] if item["eventAction"] == "registration" else None

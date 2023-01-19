@@ -167,12 +167,12 @@ You can display the summary items as a DataFrame.
 ==========  =============================================  =========  ==============  ==========  ========  ==========  ============================================  ================================
 index       Ioc                                            IocType    QuerySubtype    Provider    Result      Severity  Details                                       TimeGenerated
 ==========  =============================================  =========  ==============  ==========  ========  ==========  ============================================  ================================
-OTX         http://38.75.137.9:9088/static/encrypt.min.js  url                        OTX         True               2  {'pulse_count': 3, 'names': ['Underminer EK'  2022-12-15 01:55:15.135136+00:00
-VirusTotal  http://38.75.137.9:9088/static/encrypt.min.js  url                        VirusTotal  False              0  Request forbidden. Allowed query rate may ha  2022-12-15 01:55:15.135136+00:00
-XForce      http://38.75.137.9:9088/static/encrypt.min.js  url                        XForce      False              0  Not found.                                    2022-12-15 01:55:15.135136+00:00
-AzSTI       http://38.75.137.9:9088/static/encrypt.min.js  url                        AzSTI       False              0  Not found.                                    2022-12-15 01:55:15.135136+00:00
-OPR         http://38.75.137.9:9088/static/encrypt.min.js  url                        OPR         False              0  IoC type url not supported.                   2022-12-15 01:55:15.135136+00:00
-Tor         http://38.75.137.9:9088/static/encrypt.min.js  url                        Tor         True               0  IoC type url not supported.                   2022-12-15 01:55:15.135136+00:00
+OTX         hXXp://38[.]75[.]37[.]1/static/encrypt.min.js  url                        OTX         True               2  {'pulse_count': 3, 'names': ['Underminer EK'  2022-12-15 01:55:15.135136+00:00
+VirusTotal  hXXp://38[.]75[.]37[.]1/static/encrypt.min.js  url                        VirusTotal  False              0  Request forbidden. Allowed query rate may ha  2022-12-15 01:55:15.135136+00:00
+XForce      hXXp://38[.]75[.]37[.]1/static/encrypt.min.js  url                        XForce      False              0  Not found.                                    2022-12-15 01:55:15.135136+00:00
+AzSTI       hXXp://38[.]75[.]37[.]1/static/encrypt.min.js  url                        AzSTI       False              0  Not found.                                    2022-12-15 01:55:15.135136+00:00
+OPR         hXXp://38[.]75[.]37[.]1/static/encrypt.min.js  url                        OPR         False              0  IoC type url not supported.                   2022-12-15 01:55:15.135136+00:00
+Tor         hXXp://38[.]75[.]37[.]1/static/encrypt.min.js  url                        Tor         True               0  IoC type url not supported.                   2022-12-15 01:55:15.135136+00:00
 ==========  =============================================  =========  ==============  ==========  ========  ==========  ============================================  ================================
 
 Update a Dynamic Summary
@@ -343,12 +343,12 @@ method.
 ====  ==========  =============================================  =========  ==============  ==========
   ..  index       Ioc                                            IocType    QuerySubtype    Provider
 ====  ==========  =============================================  =========  ==============  ==========
-   0  OTX         http://38.75.137.9:9088/static/encrypt.min.js  url                        OTX
-   1  VirusTotal  http://38.75.137.9:9088/static/encrypt.min.js  url                        VirusTotal
-   2  XForce      http://38.75.137.9:9088/static/encrypt.min.js  url                        XForce
-   3  AzSTI       http://38.75.137.9:9088/static/encrypt.min.js  url                        AzSTI
-   4  OPR         http://38.75.137.9:9088/static/encrypt.min.js  url                        OPR
-   5  Tor         http://38.75.137.9:9088/static/encrypt.min.js  url                        Tor
+   0  OTX         hXXp://38[.]75[.]37[.]1/static/encrypt.min.js  url                        OTX
+   1  VirusTotal  hXXp://38[.]75[.]37[.]1/static/encrypt.min.js  url                        VirusTotal
+   2  XForce      hXXp://38[.]75[.]37[.]1/static/encrypt.min.js  url                        XForce
+   3  AzSTI       hXXp://38[.]75[.]37[.]1/static/encrypt.min.js  url                        AzSTI
+   4  OPR         hXXp://38[.]75[.]37[.]1/static/encrypt.min.js  url                        OPR
+   5  Tor         hXXp://38[.]75[.]37[.]1/static/encrypt.min.js  url                        Tor
 ====  ==========  =============================================  =========  ==============  ==========
 
 Convert Dynamic Summary to/from JSON
