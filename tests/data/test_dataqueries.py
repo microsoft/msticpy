@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
+import pytest
 import pytest_check as check
 
 from msticpy.common.exceptions import MsticpyException
@@ -30,7 +31,7 @@ from ..unit_test_lib import get_test_data_path
 _TEST_DATA = get_test_data_path()
 
 
-# pylint: disable=protected-access, invalid-name
+# pylint: disable=protected-access, invalid-name, redefined-outer-name
 class UTDataDriver(DriverBase):
     """Test class."""
 
@@ -465,3 +466,42 @@ def test_query_prov_properties():
     check.is_in("M365D", data_envs)
     check.is_in("LocalData", data_envs)
     check.is_in("ResourceGraph", data_envs)
+
+
+_SEARCH_TESTS = [
+    ((None, None, None), 0),
+    (("syslog", None, None), 15),
+    (("syslog", "syslog", None), 15),
+    ((None, "syslog", None), 15),
+    ((None, "sys", None), 15),
+    ((None, "sys.*", None), 15),
+    ((None, None, "ip_address"), 25),
+    ((None, "syslog", "ip_address"), 2),
+    ((None, ["syslog", "signinlogs"], None), 15),
+    ((None, ["syslog", "signinlogs"], ["(ip.*)|(host.*)", "account.*"]), 15),
+    ((None, "syslog", None, False), 0),
+]
+
+
+@pytest.fixture(scope="module")
+def sentinel_qry_prov():
+    """Return initialized query provider."""
+    driver = UTDataDriver()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        qry_prov = QueryProvider(data_environment="MSSentinel", driver=driver)
+    qry_prov.connect()
+    check.greater_equal(len(qry_prov.list_queries()), 30)
+    return qry_prov
+
+
+_SEARCH_IDS = [", ".join([str(i) for i in item[0]]) for item in _SEARCH_TESTS]
+
+
+@pytest.mark.parametrize("search, expected", _SEARCH_TESTS, ids=_SEARCH_IDS)
+def test_query_search(search, expected, sentinel_qry_prov):
+    """Test query search."""
+    results = sentinel_qry_prov.search(*search)
+    print(search, len(results))
+    print(results[:5])
+    check.greater_equal(len(results), expected)
