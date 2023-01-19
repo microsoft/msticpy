@@ -77,10 +77,10 @@ class Items:
     managed_by: Optional[str] = None
     sku: Optional[str] = None
     identity: Optional[str] = None
-    state: Optional[str] = None
+    state: Any = None
 
 
-@attr.s
+@attr.s(auto_attribs=True)
 class NsgItems:
     """attr class to build NSG rule dictionary."""
 
@@ -88,26 +88,26 @@ class NsgItems:
     description: Optional[str] = None
     protocol: Optional[str] = None
     direction: Optional[str] = None
-    src_ports: Optional[Any] = None
-    dst_ports: Optional[Any] = None
-    src_addrs: Optional[Any] = None
-    dst_addrs: Optional[Any] = None
+    src_ports: Optional[str] = None
+    dst_ports: Optional[str] = None
+    src_addrs: Optional[str] = None
+    dst_addrs: Optional[str] = None
     action: Optional[str] = None
 
 
-@attr.s
+@attr.s(auto_attribs=True)
 class InterfaceItems:
     """attr class to build network interface details dictionary."""
 
-    interface_id = attr.ib()
-    private_ip = attr.ib()
-    private_ip_allocation = attr.ib()
-    public_ip = attr.ib()
-    public_ip_allocation = attr.ib()
-    app_sec_group = attr.ib()
-    subnet = attr.ib()
-    subnet_nsg = attr.ib()
-    subnet_route_table = attr.ib()
+    interface_id: Optional[str] = None
+    private_ip: Optional[str] = None
+    private_ip_allocation: Optional[str] = None
+    public_ip: Optional[str] = None
+    public_ip_allocation: Optional[str] = None
+    app_sec_group: Optional[List[Any]] = None
+    subnet: Optional[str] = None
+    subnet_nsg: Any = None
+    subnet_route_table: Any = None
 
 
 class AzureData:
@@ -628,7 +628,7 @@ class AzureData:
 
         self._check_client("network_client", sub_id)
 
-        # Get interface details and parse relevent elements into a dataframe
+        # Get interface details and parse relevant elements into a dataframe
         try:
             details = self.network_client.network_interfaces.get(  # type: ignore
                 network_id.split("/")[4], network_id.split("/")[8]
@@ -643,15 +643,21 @@ class AzureData:
         for ip_addr in details.ip_configurations:  # type: ignore
             ip_details = attr.asdict(
                 InterfaceItems(  # type: ignore
-                    network_id,
-                    ip_addr.private_ip_address,
-                    ip_addr.private_ip_allocation_method,
-                    ip_addr.public_ip_address.ip_address,  # type: ignore
-                    ip_addr.public_ip_address.public_ip_allocation_method,  # type: ignore
-                    ip_addr.application_security_groups,  # type: ignore
-                    ip_addr.subnet.name,  # type: ignore
-                    ip_addr.subnet.network_security_group,  # type: ignore
-                    ip_addr.subnet.route_table,  # type: ignore
+                    id=network_id,
+                    private_ip=ip_addr.private_ip_address,
+                    private_ip_allocation=str(ip_addr.private_ip_allocation_method),
+                    public_ip=ip_addr.public_ip_address.ip_address
+                    if ip_addr.public_ip_address
+                    else None,
+                    public_ip_allocation=(
+                        ip_addr.public_ip_address.public_ip_allocation_method
+                        if ip_addr.public_ip_address
+                        else None
+                    ),
+                    app_sec_group=ip_addr.application_security_groups,  # type: ignore
+                    subnet=ip_addr.subnet.name,  # type: ignore
+                    subnet_nsg=ip_addr.subnet.network_security_group,  # type: ignore
+                    subnet_route_table=ip_addr.subnet.route_table,  # type: ignore
                 )
             )
             ips.append(ip_details)
@@ -669,15 +675,15 @@ class AzureData:
             for nsg in nsg_details.default_security_rules:  # type: ignore
                 rules = attr.asdict(
                     NsgItems(  # type: ignore
-                        nsg.name,
-                        nsg.description,
-                        nsg.protocol,
-                        nsg.direction,
-                        nsg.source_port_range,
-                        nsg.destination_port_range,
-                        nsg.source_address_prefix,
-                        nsg.destination_address_prefix,
-                        nsg.access,
+                        rule_name=nsg.name,
+                        description=nsg.description,
+                        protocol=str(nsg.protocol),
+                        direction=str(nsg.direction),
+                        src_ports=nsg.source_port_range,
+                        dst_ports=nsg.destination_port_range,
+                        src_addrs=nsg.source_address_prefix,
+                        dst_addrs=nsg.destination_address_prefix,
+                        action=str(nsg.access),
                     )
                 )
                 nsg_rules.append(rules)
