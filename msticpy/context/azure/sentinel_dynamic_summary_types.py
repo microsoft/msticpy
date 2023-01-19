@@ -54,6 +54,7 @@ class FieldList:
         return f"Fields:\n    {field_names}"
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclasses.dataclass
 class DynamicSummaryItem:
     """
@@ -672,6 +673,8 @@ def df_to_dynamic_summary(data: pd.DataFrame) -> DynamicSummary:
     items_list = _get_summary_items(data).to_dict(orient="records")
     items = []
     for item in items_list:
+        # pylint: disable=no-value-for-parameter
+        # "fields" attrib is a ClassVar
         ds_item = DynamicSummaryItem()
         ds_item.__dict__.update(item)  # type: ignore
         items.append(ds_item)
