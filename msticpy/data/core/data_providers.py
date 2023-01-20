@@ -10,7 +10,7 @@ from datetime import datetime
 from functools import partial
 from itertools import tee
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Pattern, Union
+from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Pattern, Union
 
 import pandas as pd
 from tqdm.auto import tqdm
@@ -35,6 +35,21 @@ _DEBUG_FLAGS = ("print", "debug_query", "print_query")
 _COMPATIBLE_DRIVER_MAPPINGS = {"mssentinel": ["m365d"], "mde": ["m365d"]}
 
 
+class QueryParam(NamedTuple):
+    """
+    Named tuple for custom query parameters.
+
+    name and data_type are mandatory.
+    description and default are optional.
+
+    """
+
+    name: str
+    data_type: str
+    description: Optional[str] = None
+    default: Optional[str] = None
+
+
 @export
 class QueryProvider:
     """
@@ -44,6 +59,8 @@ class QueryProvider:
     methods for a specific data environment.
 
     """
+
+    create_param = QueryParam
 
     def __init__(  # noqa: MC0001
         self,
@@ -477,6 +494,82 @@ class QueryProvider:
     def query_time(self):
         """Return the default QueryTime control for queries."""
         return self._query_time
+
+    def add_custom_query(
+        self,
+        name: str,
+        query: str,
+        family: Union[str, Iterable[str]],
+        description: Optional[str] = None,
+        parameters: Optional[Iterable[QueryParam]] = None,
+    ):
+        """
+        Add a custom function to the provider.
+
+        Parameters
+        ----------
+        name : str
+            The name of the query.
+        query : str
+            The query text (optionally parameterized).
+        family : Union[str, Iterable[str]]
+            The query group/family or list of families. The query will
+            be added to attributes of the query provider with these
+            names.
+        description : Optional[str], optional
+            Optional description (for query help), by default None
+        parameters : Optional[Iterable[QueryParam]], optional
+            Optional list of parameter definitions, by default None.
+            If the query is parameterized you must supply definitions
+            for the parameters here - at least name and type.
+            Parameters can be the named tuple QueryParam (also
+            exposed as QueryProvider.Param) or a 4-value
+
+        Examples
+        --------
+        >>> qp = QueryProvider("MSSentinel")
+        >>> qp_host = qp.create_paramramram("host_name", "str", "Name of Host")
+        >>> qp_start = qp.create_param("start", "datetime")
+        >>> qp_end = qp.create_param("end", "datetime")
+        >>> qp_evt = qp.create_param("event_id", "int", None, 4688)
+        >>>
+        >>> query = '''
+        >>> SecurityEvent
+        >>> | where EventID == {event_id}
+        >>> | where TimeGenerated between (datetime({start}) .. datetime({end}))
+        >>> | where Computer has "{host_name}"
+        >>> '''
+        >>>
+        >>> qp.add_custom_query(
+        >>>     name="test_host_proc",
+        >>>     query=query,
+        >>>     family="Custom",
+        >>>     parameters=[qp_host, qp_start, qp_end, qp_evt]
+        >>> )
+
+        """
+        if parameters:
+            param_dict = {
+                param[0]: {
+                    "type": param[1],
+                    "default": param[2],
+                    "description": param[3],
+                }
+                for param in parameters
+            }
+        else:
+            param_dict = {}
+        source = {
+            "args": {"query": query},
+            "description": description,
+            "parameters": param_dict,
+        }
+        metadata = {"data_families": [family] if isinstance(family, str) else family}
+        query_source = QuerySource(
+            name=name, source=source, defaults={}, metadata=metadata
+        )
+        self.query_store.add_data_source(query_source)
+        self._add_query_functions()
 
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:
