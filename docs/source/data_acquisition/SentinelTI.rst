@@ -15,6 +15,7 @@ with them via the Microsoft Sentinel APIs which are utilized in these functions.
 See :py:meth:`get_all_indicators <msticpy.context.azure_sentinel_core.MicrosoftSentinel.get_all_indicators>`
 
 .. code:: ipython3
+
     sentinel = MicrosoftSentinel()
     sentinel.get_all_indicators()
 

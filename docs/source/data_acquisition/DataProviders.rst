@@ -506,12 +506,53 @@ for Timedelta in the
       exactly on the time boundaries but some data sources may not use
       granular enough time stamps to avoid this.
 
+Dynamically adding new queries
+------------------------------
+
+You can use the :py:meth:`msticpy.data.core.data_providers.QueryProvider.add_query`
+to add parameterized queries from a notebook or script. This
+let you use temporary parameterized queries without having to
+add them to a YAML file (as described in `Creating new queries`_).
+
+get_host_events
+
+.. code:: python
+
+    # initialize a query provider
+    qry_prov = mp.QueryProvider("MSSentinel")
+
+    # define a query
+    query = """
+    SecurityEvent
+    | where EventID == {event_id}
+    | where TimeGenerated between (datetime({start}) .. datetime({end}))
+    | where Computer has "{host_name}"
+    """
+    # define the query parameters
+    # (these can also be passed as a list of raw tuples)
+    qp_host = qry_prov.create_param("host_name", "str", "Name of Host")
+    qp_start = qry_prov.create_param("start", "datetime")
+    qp_end = qry_prov.create_param("end", "datetime")
+    qp_evt = qry_prov.create_param("event_id", "int", None, 4688)
+
+    # add the query
+    qry_prov.add_custom_query(
+        name="get_host_events",
+        query=query,
+        family="Custom",
+        parameters=[qp_host, qp_start, qp_end, qp_evt]
+    )
+
+    # query is now available as
+    qry_prov.Custom.get_host_events(host_name="MyPC"....)
+
+
 Creating new queries
 --------------------
 
 *msticpy* provides a number of
 pre-defined queries to call with using the data package. You can also
-add in additional queries to be imported and used by your Query
+add additional queries to be imported and used by your Query
 Provider, these are defined in YAML format files and examples of these
 files can be found at the msticpy GitHub site
 https://github.com/microsoft/msticpy/tree/master/msticpy/data/queries.
@@ -580,7 +621,7 @@ Each query key has the following structure:
   the query before being passed to the data provider. Each parameter
   must have a unique name (for each query, not globally). All parameters
   specified in the query text must have an entry here or in the file
-  defauls section. The parameter subsection has the following sub-keys:
+  defaults section. The parameter subsection has the following sub-keys:
 
   - **description**: A description of what the parameter is (used for generating
     documentation strings.
@@ -599,14 +640,42 @@ Some common parameters used in the queries are:
 
 .. code:: yaml
 
-    table:
-        description: The table name
-        type: str
-        default: SecurityEvent | where EventID == 4624
+    parameters:
+        table:
+            description: The table name
+            type: str
+            default: SecurityEvent | where EventID == 4624
 
 - **add_query_items**: This is a useful way of extending queries by adding
   ad hoc statements to the end of the query (e.g. additional filtering order
   summarization).
+
+Using known parameter names
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Try to use standard names for common entities and other parameter values.
+This makes things easier for users of the queries and, in some cases,
+enables functionality such as automatic insertion of times.
+
+Always use these names for common parameters
+
+=================  =================================  ============= ===============
+Query Parameter    Description                        type          default
+=================  =================================  ============= ===============
+start              The start datetime for the query   datetime      N/A
+end                The end datetime for the query     datetime      N/A
+table              The name of the main table (opt)   str           the table name
+add_query_items    Placeholder for additional query   str           ""
+=================  =================================  ============= ===============
+
+Entity names
+For entities such as IP address, host name, account name, process, domain, etc.,
+always use one of the standard names - these are used by pivot functions to
+map queries to the correct entity.
+
+For the current set of names see the following section in the Pivot Functions
+documentation - :ref:`data_analysis/PivotFunctions:How are queries assigned to specific entities?`
+
 
 Using yaml aliases and macros in your queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
