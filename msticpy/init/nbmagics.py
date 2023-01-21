@@ -104,7 +104,7 @@ if is_ipython():
                     b_soup = BeautifulSoup(xml_str, "xml")
                     results = b_soup.prettify()
             if args.out is not None:
-                self.shell.user_ns[args.out] = (results, df_results)
+                self.shell.user_ns[args.out] = (results, df_results)  # type: ignore
             return results
 
     @magics_class
@@ -164,7 +164,7 @@ if is_ipython():
             iocs = [(ioc_type, list(ioc_res)) for ioc_type, ioc_res in results.items()]
 
             if args.out is not None:
-                self.shell.user_ns[args.out] = results
+                self.shell.user_ns[args.out] = results  # type: ignore
             return iocs
 
     IPYTHON = get_ipython()
