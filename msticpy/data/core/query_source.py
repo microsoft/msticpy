@@ -7,12 +7,15 @@
 import re
 
 # from collections import ChainMap
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from numbers import Number
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+import json
+from json.decoder import JSONDecodeError
 
 from dateutil.parser import ParserError, parse  # type: ignore
 from dateutil.relativedelta import relativedelta
+
 
 from ..._version import VERSION
 from ...common.utility import collapse_dicts
@@ -272,8 +275,14 @@ class QuerySource:
             self._format_parameter(p_name, param_dict, settings, formatters)
 
         if formatters and Formatters.PARAM_HANDLER in formatters:
-            return formatters[Formatters.PARAM_HANDLER](self._query, **param_dict)
-        return self._query.format(**param_dict)
+            return formatters[Formatters.PARAM_HANDLER](self._query, param_dict)
+        query = self._query.format(**param_dict)
+        # Remove empty lines if variables supposed to contain new pipe elements.
+        # Example:
+        # MyTable
+        # {timeCondition}
+        # | where key == "value"
+        return re.sub(r"\n\s*\n", "\n", query)
 
     def _format_parameter(self, p_name, param_dict, param_settings, formatters):
         # The parameter may need custom formatting
@@ -302,7 +311,7 @@ class QuerySource:
         if isinstance(param_value, Number):
             # datetime specified as a number - we
             # interpret this as an offset from utcnow
-            return datetime.utcnow() + timedelta(  # type: ignore
+            return datetime.now(tz=timezone.utc) + timedelta(  # type: ignore
                 param_value  # type: ignore
             )
         try:
@@ -356,7 +365,7 @@ class QuerySource:
         rounding = time_offset.split("@")[1].casefold() if "@" in time_offset else None
         # Calculate the raw offset
         t_delta = cls._parse_timedelta(delta)
-        result_date = datetime.utcnow() + t_delta
+        result_date = datetime.now(tz=timezone.utc) + t_delta
 
         # If rounding to a specified unit (e.g. -3d@d)
         if rounding:
@@ -425,7 +434,7 @@ class QuerySource:
                 fmt_list.append(f"'{item}'")
             else:
                 fmt_list.append(f"{item}")
-        return ",".join(fmt_list)
+        return ", ".join(fmt_list)
 
     def help(self):
         """Print help for query."""
@@ -510,7 +519,15 @@ class QuerySource:
         # check that every parameter specified in the query has a corresponding
         # 'parameter definition in either the source or the defaults.
         source_params = self.params.keys()
-        q_params = set(re.findall(param_pattern, self._query))
+        try:
+            data = json.loads(self._query)
+            q_params = {
+                value
+                for line in json.dumps(data, indent=2).split("\n")
+                for value in set(re.findall(param_pattern, line))
+            }
+        except JSONDecodeError:
+            q_params = set(re.findall(param_pattern, self._query))
 
         missing_params = q_params - source_params
         if missing_params:

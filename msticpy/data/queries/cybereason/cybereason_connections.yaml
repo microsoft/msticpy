@@ -52,40 +52,40 @@ sources:
     metadata:
     args:
       query: |-
-        {{
+        {
           "queryPath" : [
-              {{
+              {
                   "requestedType": "Process",
                   "filters":[
-                      {{
+                      {
                           "facetName": "applicablePid",
-                          "values":[ {pid} ],
+                          "values":[ "{pid}" ],
                           "filterType":"Equals"
-                      }},
-                      {{
+                      },
+                      {
                           "facetName": "ownerMachine",
-                          "values":[ {hostname} ],
+                          "values":[ "{hostname}" ],
                           "filterType":"Equals"
-                      }},
-                      {{
+                      },
+                      {
                           "facetName": "{timefield}",
-                          "values": [ {start}, {end} ],
+                          "values": [ "{start}", "{end}" ],
                           "filterType":"Between"
-                      }}
+                      }
                   ],
-                  "connectionFeature": {{
+                  "connectionFeature": {
                     "elementInstanceType": "Process",
                     "featureName": "connections"
-                  }}
-              }},
-              {{
+                  }
+              },
+              {
                   "requestedType": "Connection",
                   "filters":[],
                   "isResult": true
-              }}
+              }
           ],
-          "customFields": [{customFields}]
-        }}
+          "customFields": ["{customFields}"]
+        }
     parameters:
       pid:
         description: Command to search for
