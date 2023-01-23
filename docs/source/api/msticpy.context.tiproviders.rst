@@ -14,7 +14,6 @@ Submodules
 
    msticpy.context.tiproviders.alienvault_otx
    msticpy.context.tiproviders.azure_sent_byoti
-   msticpy.context.tiproviders.dynamic_provider-old
    msticpy.context.tiproviders.greynoise
    msticpy.context.tiproviders.ibm_xforce
    msticpy.context.tiproviders.intsights
