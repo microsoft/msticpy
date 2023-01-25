@@ -5,16 +5,15 @@
 # --------------------------------------------------------------------------
 """Azure Sentinel unit tests."""
 import re
-from unittest.mock import patch
 
 import pandas as pd
 import pytest
 import respx
 
 from msticpy.common.exceptions import MsticpyUserError
-from msticpy.context.azure import MicrosoftSentinel
 
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name, unused-import, no-name-in-module
+from .sentinel_test_fixtures import sent_loader
 
 _TI_RESULTS = {
     "value": [
@@ -184,20 +183,6 @@ _TI_METRICS = {
         }
     ]
 }
-
-
-@pytest.fixture(scope="module")
-@patch(MicrosoftSentinel.__module__ + ".MicrosoftSentinel.connect")
-def sent_loader(mock_creds):
-    """Generate MicrosoftSentinel for testing."""
-    mock_creds.return_value = None
-    sent = MicrosoftSentinel(
-        sub_id="fd09863b-5cec-4833-ab9c-330ad07b0c1a", res_grp="RG", ws_name="WSName"
-    )
-    sent.connect()
-    sent.connected = True
-    sent.token = "fd09863b-5cec-4833-ab9c-330ad07b0c1a"
-    return sent
 
 
 @respx.mock
