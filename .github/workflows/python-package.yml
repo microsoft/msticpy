@@ -182,13 +182,7 @@ jobs:
     steps:
       - name: Check build status
         id: check-build-status
-        if: ${{ env.GITHUB_REF_NAME == 'main' }}
-        run: |
-          if [ ${{ jobs.build.result }} == failure ] || [ ${{ jobs.lint.result }} == failure ]; then
-            echo "build_failed=true" >> $GITHUB_OUTPUT
-          fi
-      - name: File issue
-        if: steps.check-build-status.outputs.build_failed == 'true'
+        if: ${{ env.GITHUB_REF_NAME == 'main' && ( jobs.build.result == failure || jobs.lint.result == failure ) }}
         uses: dacbd/create-issue-action@v1
         with:
           token: ${{ github.token }}
