@@ -8,6 +8,8 @@ on:
     branches: [main]
   pull_request:
     branches: [main, release/*]
+  schedule:
+    - cron: "0 0 * * 0,2,4"
 
 jobs:
   build:
@@ -174,3 +176,28 @@ jobs:
           # Temporarily fixing Prospector to 1.7.7 - due to bug wrt to PyRoma - https://github.com/PyCQA/prospector/issues/562
           python -m pip install prospector[with_pyroma]==1.7.7 && prospector --ignore-paths tests --without-tool pylint
         if: ${{ always() }}
+  check_status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check build status
+        id: check-build-status
+        if: ${{ env.GITHUB_REF_NAME == "main" }}
+        run: |
+          if [ "${jobs.build.result}" == failure ] || [ "${jobs.lint.result}" == failure ]; then
+            echo "::set-output name=build_failed::true"
+          fi
+      - name: File issue
+        if: steps.check-build-status.outputs.build_failed == 'true'
+        uses: actions/create-an-issue@v1
+        with:
+          repository-dispatch: true
+          title: "Build failed for main branch"
+          body: "The build failed on branch ${{ github.ref }}. Please investigate."
+          labels: build_break, bug, high_severity
+      - name: File issue test
+        uses: actions/create-an-issue@v1
+        with:
+          repository-dispatch: true
+          title: "TEST Build failed for main branch"
+          body: "TEST The build failed on branch ${{ github.ref }}. Please investigate."
+          labels: build_break, bug, high_severity
