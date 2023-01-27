@@ -178,12 +178,13 @@ jobs:
         if: ${{ always() }}
   check_status:
     runs-on: ubuntu-latest
+    needs: [build, lint]
     steps:
       - name: Check build status
         id: check-build-status
         if: ${{ env.GITHUB_REF_NAME == 'main' }}
         run: |
-          if [ "${jobs.build.result}" == failure ] || [ "${jobs.lint.result}" == failure ]; then
+          if [ ${{ jobs.build.result }} == failure ] || [ ${{ jobs.lint.result }} == failure ]; then
             echo "build_failed=true" >> $GITHUB_OUTPUT
           fi
       - name: File issue
