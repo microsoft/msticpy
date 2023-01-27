@@ -188,16 +188,20 @@ jobs:
           fi
       - name: File issue
         if: steps.check-build-status.outputs.build_failed == 'true'
-        uses: actions/create-an-issue@v1
+        uses: dacbd/create-issue-action@v1
         with:
-          repository-dispatch: true
+          token: ${{ github.token }}
           title: "Build failed for main branch"
-          body: "The build failed on branch ${{ github.ref }}. Please investigate."
+          body: The build failed on branch ${{ github.ref }}. Please investigate
           labels: build_break, bug, high_severity
       - name: File issue test
-        uses: actions/create-an-issue@v1
+        uses: dacbd/create-issue-action@v1
         with:
-          repository-dispatch: true
+          token: ${{ github.token }}
           title: "TEST Build failed for main branch"
-          body: "TEST The build failed on branch ${{ github.ref }}. Please investigate."
+          body: |
+            TEST The build failed on branch ${{ github.ref }}.
+            Build result: ${{ jobs.build.result }}
+            Lint result: ${{ jobs.lint.result }}
+            Please investigate."
           labels: build_break, bug, high_severity
