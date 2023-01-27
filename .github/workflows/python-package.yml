@@ -181,7 +181,7 @@ jobs:
     steps:
       - name: Check build status
         id: check-build-status
-        if: ${{ env.GITHUB_REF_NAME == "main" }}
+        if: ${{ env.GITHUB_REF_NAME == main }}
         run: |
           if [ "${jobs.build.result}" == failure ] || [ "${jobs.lint.result}" == failure ]; then
             echo "::set-output name=build_failed::true"
