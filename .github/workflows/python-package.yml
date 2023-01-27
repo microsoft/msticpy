@@ -179,10 +179,12 @@ jobs:
   check_status:
     runs-on: ubuntu-latest
     needs: [build, lint]
+    env:
+      BUILD_RESULT: ${{ jobs.build.result }}
+      LINT_RESULT: ${{ jobs.lint.result }}
     steps:
-      - name: Check build status
-        id: check-build-status
-        if: ${{ env.GITHUB_REF_NAME == 'main' && ( jobs.build.result == failure || jobs.lint.result == failure ) }}
+      - name: File build fail issue
+        if: ${{ env.GITHUB_REF_NAME == 'main' && ( env.BUILD_RESULT == 'failure' || env.LINT_RESULT == 'failure' ) }}
         uses: dacbd/create-issue-action@v1
         with:
           token: ${{ github.token }}
