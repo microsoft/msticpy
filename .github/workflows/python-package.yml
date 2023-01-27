@@ -179,26 +179,12 @@ jobs:
   check_status:
     runs-on: ubuntu-latest
     needs: [build, lint]
-    env:
-      BUILD_RESULT: ${{ needs.build.result }}
-      LINT_RESULT: ${{ needs.lint.result }}
     steps:
       - name: File build fail issue
-        if: ${{ env.GITHUB_REF_NAME == 'main' && ( env.BUILD_RESULT == 'failure' || env.LINT_RESULT == 'failure' ) }}
+        if: ${{ env.GITHUB_REF_NAME == 'main' && ( needs.build.result == 'failure' || needs.lint.result == 'failure' ) }}
         uses: dacbd/create-issue-action@v1
         with:
           token: ${{ github.token }}
           title: "Build failed for main branch"
           body: The build failed on branch ${{ github.ref }}. Please investigate
-          labels: build_break, bug, high_severity
-      - name: File issue test
-        uses: dacbd/create-issue-action@v1
-        with:
-          token: ${{ github.token }}
-          title: "TEST Build failed for main branch"
-          body: |
-            TEST The build failed on branch ${{ github.ref }}.
-            Build result: ${{ env.BUILD_RESULT }}
-            Lint result: ${{ env.LINT_RESULT }}
-            Please investigate."
           labels: build_break, bug, high_severity
