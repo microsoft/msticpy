@@ -242,7 +242,7 @@ SYSMON_PROCESS_CREATE_EVENT_SCH = ProcSchema(
     host_name_column="Computer",
 )
 
-# HX ProcessEvent
+# FireEye HX processEvent from 'stateagentinspector' or 'eventbuffer' audits
 HX_PROCESSEVENT_SCH = ProcSchema(
     time_stamp="starttime",
     process_name="process",
