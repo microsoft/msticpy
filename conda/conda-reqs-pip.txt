@@ -1,8 +1,7 @@
 azure-mgmt-monitor>=2.0.0
 azure-mgmt-resourcegraph>=8.0.0
-azure-mgmt-subscription>=1.0.0
-ipwhois>=1.1.0
+azure-mgmt-subscription>=3.0.0
 KqlmagicCustom[jupyter-basic,auth_code_clipboard]>=0.1.114
-moz_sql_parser>=4.5.0,<=4.11.21016
+mo-sql-parsing>=8, <9.0.0
 passivetotal>=2.5.3
 splunk-sdk>=1.6.0

@@ -184,12 +184,8 @@ class OData(DriverBase):
                 authority=authority,
                 username=cs_dict["username"],
                 scopes=self.scopes,
-                auth_type=kwargs["auth_type"]
-                if "auth_type" in kwargs
-                else "interactive",
-                location=cs_dict["location"]
-                if "location" in cs_dict
-                else "token_cache.bin",
+                auth_type=kwargs.get("auth_type", "device"),
+                location=cs_dict.get("location", "token_cache.bin"),
                 connect=True,
             )
             self.aad_token = self.msal_auth.token
@@ -224,7 +220,7 @@ class OData(DriverBase):
         Returns
         -------
         Tuple[pd.DataFrame, results.ResultSet]
-            A DataFrame (if successfull) and
+            A DataFrame (if successful) and
             Kql ResultSet.
 
         """
@@ -240,20 +236,18 @@ class OData(DriverBase):
 
         # Build request based on whether endpoint requires data to be passed in
         # request body in or URL
-        body = None
         if kwargs["body"] is True:
-            req_url = self.request_uri + kwargs["api_end"]
+            req_url = f"{self.request_uri}{kwargs['api_end']}"
             req_url = urllib.parse.quote(req_url, safe="%/:=&?~#+!$,;'@()*[]")
-            body = {"Query": query}
             response = httpx.post(
                 url=req_url,
                 headers=self.req_headers,
-                content=str(body),
+                json={"Query": query},
                 timeout=self.get_http_timeout(**kwargs),
             )
         else:
             # self.request_uri set if self.connected
-            req_url = self.request_uri + query  # type: ignore
+            req_url = f"{self.request_uri}{query}"
             response = httpx.get(
                 url=req_url,
                 headers=self.req_headers,

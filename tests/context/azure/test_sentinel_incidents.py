@@ -6,15 +6,12 @@
 """Azure Sentinel unit tests."""
 import re
 from typing import List
-from unittest.mock import patch
 
 import pandas as pd
-import pytest
 import respx
 
-from msticpy.context.azure import MicrosoftSentinel
-
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name, unused-import, no-name-in-module
+from .sentinel_test_fixtures import sent_loader
 
 _INCIDENT = {
     "value": [
@@ -57,20 +54,6 @@ _INCIDENT = {
         },
     ]
 }
-
-
-@pytest.fixture(scope="module")
-@patch(MicrosoftSentinel.__module__ + ".MicrosoftSentinel.connect")
-def sent_loader(mock_creds):
-    """Generate MicrosoftSentinel for testing."""
-    mock_creds.return_value = None
-    azs = MicrosoftSentinel(
-        sub_id="fd09863b-5cec-4833-ab9c-330ad07b0c1a", res_grp="RG", ws_name="WSName"
-    )
-    azs.connect()
-    azs.connected = True
-    azs.token = "fd09863b-5cec-4833-ab9c-330ad07b0c1a"
-    return azs
 
 
 @respx.mock
@@ -206,5 +189,7 @@ def test_sent_bookmarks(sent_loader):
 @respx.mock
 def test_sent_incident_create(sent_loader):
     """Test incident creation."""
-    respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(201)
+    respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(
+        201, json=_INCIDENT["value"][0]
+    )
     sent_loader.create_incident(title="Test Incident", severity="Low")

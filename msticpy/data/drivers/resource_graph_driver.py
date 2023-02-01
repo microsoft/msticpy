@@ -92,9 +92,10 @@ class ResourceGraphDriver(DriverBase):
             credential_scopes=[self.az_cloud_config.token_uri],
         )
         self.subscription_ids = [
-            sub.subscription_id
-            for sub in self.sub_client.subscriptions.list()  # type: ignore
+            sub.subscription_id for sub in self.sub_client.subscriptions.list()
         ]
+        # Add blank subscription to match items with no subscription PR #496
+        self.subscription_ids.append("")
 
         self._connected = True
         self._loaded = True
@@ -171,7 +172,7 @@ class ResourceGraphDriver(DriverBase):
             options=request_options,
         )
 
-        response = self.client.resources(request)  # type: QueryResponse
+        response: QueryResponse = self.client.resources(request)
 
         # Pagination logic adapted from azure-cli-extensions
         # https://github.com/Azure/azure-cli-extensions/blob/8dade2f6fe28803d0fbdb1700c3ab4e4d71e5318/src/resource-graph/azext_resourcegraph/custom.py#L75

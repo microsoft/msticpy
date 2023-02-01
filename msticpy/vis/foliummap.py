@@ -5,7 +5,6 @@
 # --------------------------------------------------------------------------
 """Folium map class."""
 
-
 import contextlib
 import itertools
 import math
@@ -24,14 +23,20 @@ from typing import (
 
 import folium
 import pandas as pd
-import pygeohash
 from folium.plugins import FeatureGroupSubGroup, MarkerCluster
 
 from .._version import VERSION
+from ..common.exceptions import MsticpyMissingDependencyError
 from ..common.utility import export
 from ..datamodel.entities import Entity, GeoLocation, IpAddress
 
 from ..context.geoip import GeoLiteLookup  # isort: skip
+
+try:
+    import pygeohash
+except ImportError:
+    pygeohash = None  # pylint: disable=invalid-name
+
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -524,8 +529,15 @@ def decode_geo_hash(geohash: str) -> Tuple[float, float, float, float]:
         (Latitude, Longitude,
         Latitude Error interval, Longitude Error Interval)
 
+    Raises
+    ------
+    MsticpyMissingDependencyError
+        If pygeohash is not installed.
+
     """
-    return pygeohash.decode_exactly(geohash)
+    if pygeohash is not None:
+        return pygeohash.decode_exactly(geohash)
+    raise MsticpyMissingDependencyError(packages="pygeohash")
 
 
 @export
@@ -729,9 +741,11 @@ def plot_map(
         ).dropna(axis="index", subset=["Latitude", "Longitude"])
         lat_column, long_column = ["Latitude", "Longitude"]
         if not tooltip_columns:
-            tooltip_columns = [ip_column, "CountryCode", "City"]
+            tooltip_columns = _default_columns(data, [ip_column, "CountryCode", "City"])
         if not popup_columns:
-            popup_columns = [ip_column, "CountryName", "City", lat_column, long_column]
+            popup_columns = _default_columns(
+                data, [ip_column, "CountryName", "City", lat_column, long_column]
+            )
     else:
         if not tooltip_columns:
             tooltip_columns = []
@@ -745,8 +759,10 @@ def plot_map(
         ip_column,
         lat_column,
         long_column,
-        [layer_column, icon_column, popup_columns, tooltip_columns],
+        [layer_column, icon_column],
     )
+    popup_columns = _validate_optional_columns(data, popup_columns)
+    tooltip_columns = _validate_optional_columns(data, tooltip_columns)
 
     folium_map.locations.extend(
         data.apply(lambda row: (row[lat_column], row[long_column]), axis=1)
@@ -780,10 +796,16 @@ def plot_map(
             )
             feature_group.add_to(folium_map.folium_map)
         folium.LayerControl().add_to(folium_map.folium_map)
+    if "location" not in kwargs:
+        folium_map.center_map()
     return folium_map
 
 
 # pylint: enable=too-many-locals, too-many-arguments
+
+
+def _default_columns(data, defaults: Iterable[str]) -> List[str]:
+    return [col_name for col_name in defaults if col_name in data.columns]
 
 
 def _validate_columns(data, ip_column, lat_column, long_column, other_columns):
@@ -807,6 +829,11 @@ def _validate_columns(data, ip_column, lat_column, long_column, other_columns):
             "The following columns are not in the supplied DataFrame",
             ",".join(f"'{col}'" for col in missing_columns),
         )
+
+
+def _validate_optional_columns(data, optional_columns: Iterable[str]) -> List[str]:
+    """Validate that optional columns are in the data."""
+    return [col for col in optional_columns if col in data.columns]
 
 
 # pylint: disable=too-many-arguments

@@ -4,18 +4,23 @@
 # license information.
 # --------------------------------------------------------------------------
 """Test Pivot registered functions."""
+import re
 import warnings
 from collections import namedtuple
 from contextlib import redirect_stdout
 from io import StringIO
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
 import pytest_check as check
+import respx
 
 from msticpy.context.geoip import GeoLiteLookup
 from msticpy.context.tilookup import TILookup
 from msticpy.datamodel import entities
+
+from ...context.test_ip_utils import ASN_RESPONSE, RDAP_RESPONSE
 
 # pylint: disable=redefined-outer-name, unused-import, unused-argument
 from .pivot_fixtures import create_pivot
@@ -46,7 +51,7 @@ _ENTITY_QUERIES = [
     pytest.param(
         EntityQuery(
             entity="IpAddress",
-            args=dict(Address="104.211.30.1"),
+            args=dict(Address="13.107.4.50"),
             attrib="Address",
             provider="util",
             pivot_func="whois",
@@ -60,7 +65,21 @@ _ENTITY_QUERIES = [
     pytest.param(
         EntityQuery(
             entity="IpAddress",
-            args=dict(Address="104.211.30.1"),
+            args=dict(Address="13.107.4.50"),
+            attrib="Address",
+            provider="util",
+            pivot_func="whois_asn",
+            func_param="ip_address",
+            src_col="ip",
+            exp_col="AS Name",
+            exp_val="MICROSOFT-CORP-MSN-AS-BLOCK",
+        ),
+        id="IpAddress-who_is_asn",
+    ),
+    pytest.param(
+        EntityQuery(
+            entity="IpAddress",
+            args=dict(Address="13.107.4.50"),
             attrib="Address",
             provider="util",
             pivot_func="ip_type",
@@ -232,21 +251,31 @@ _ENTITY_QUERIES = [
 ]
 
 
+@respx.mock
 @pytest.mark.parametrize("test_case", _ENTITY_QUERIES)
-def test_entity_attr_funcs_entity(create_pivot, test_case):
+@patch("msticpy.context.ip_utils._asn_whois_query")
+def test_entity_attr_funcs_entity(mock_asn_whois_query, create_pivot, test_case):
     """Test calling function with entity attributes."""
+    mock_asn_whois_query.return_value = ASN_RESPONSE
+    respx.get(re.compile(r"http://rdap\.arin\.net/.*")).respond(200, json=RDAP_RESPONSE)
     # Test entity
     ent_cls = getattr(entities, test_case.entity)
     entity = ent_cls(**(test_case.args))
     func = getattr(getattr(entity, test_case.provider), test_case.pivot_func)
     # Test entity input
     result_df = func(entity)
+    print(result_df)
+    print(result_df.iloc[0], test_case.exp_col)
     check.is_in(test_case.exp_val, result_df.iloc[0][test_case.exp_col])
 
 
+@respx.mock
 @pytest.mark.parametrize("test_case", _ENTITY_QUERIES)
-def test_entity_attr_funcs_value(create_pivot, test_case):
+@patch("msticpy.context.ip_utils._asn_whois_query")
+def test_entity_attr_funcs_value(mock_asn_whois_query, create_pivot, test_case):
     """Test calling function with value."""
+    mock_asn_whois_query.return_value = ASN_RESPONSE
+    respx.get(re.compile(r"http://rdap\.arin\.net/.*")).respond(200, json=RDAP_RESPONSE)
     ent_cls = getattr(entities, test_case.entity)
     entity = ent_cls(**(test_case.args))
     func = getattr(getattr(entity, test_case.provider), test_case.pivot_func)
@@ -257,9 +286,13 @@ def test_entity_attr_funcs_value(create_pivot, test_case):
     check.is_in(test_case.exp_val, result_df.iloc[0][test_case.exp_col])
 
 
+@respx.mock
 @pytest.mark.parametrize("test_case", _ENTITY_QUERIES)
-def test_entity_attr_funcs_itbl(create_pivot, test_case):
+@patch("msticpy.context.ip_utils._asn_whois_query")
+def test_entity_attr_funcs_itbl(mock_asn_whois_query, create_pivot, test_case):
     """Test calling function with iterable input."""
+    mock_asn_whois_query.return_value = ASN_RESPONSE
+    respx.get(re.compile(r"http://rdap\.arin\.net/.*")).respond(200, json=RDAP_RESPONSE)
     ent_cls = getattr(entities, test_case.entity)
     entity = ent_cls(**(test_case.args))
     func = getattr(getattr(entity, test_case.provider), test_case.pivot_func)
@@ -270,9 +303,13 @@ def test_entity_attr_funcs_itbl(create_pivot, test_case):
     check.is_in(test_case.exp_val, result_df.iloc[0][test_case.exp_col])
 
 
+@respx.mock
 @pytest.mark.parametrize("test_case", _ENTITY_QUERIES)
-def test_entity_attr_funcs_df(create_pivot, test_case):
+@patch("msticpy.context.ip_utils._asn_whois_query")
+def test_entity_attr_funcs_df(mock_asn_whois_query, create_pivot, test_case):
     """Test calling function with DF input attributes."""
+    mock_asn_whois_query.return_value = ASN_RESPONSE
+    respx.get(re.compile(r"http://rdap\.arin\.net/.*")).respond(200, json=RDAP_RESPONSE)
     ent_cls = getattr(entities, test_case.entity)
     entity = ent_cls(**(test_case.args))
     func = getattr(getattr(entity, test_case.provider), test_case.pivot_func)

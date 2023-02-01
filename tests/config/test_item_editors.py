@@ -5,11 +5,13 @@
 # --------------------------------------------------------------------------
 """Config settings Items editors."""
 import os
+import re
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 import pytest_check as check
+import respx
 import yaml
 
 from msticpy.config.ce_azure import CEAzure
@@ -31,6 +33,10 @@ __author__ = "Ian Hellen"
 
 # pylint: disable=redefined-outer-name
 
+_KUSTO_DP_INST = {
+    "Args": {"Cluster": "https://msticti.kusto.windows.net", "IntegratedAuth": True}
+}
+
 
 @pytest.fixture
 def mp_conf_ctrl():
@@ -50,6 +56,9 @@ def mp_conf_ctrl():
     del nb_settings["query_provider"]["LocalData"]
     nb_settings["query_provider"]["AzureSentinel"] = q_prov
     conf_settings.update(user_defaults)
+
+    # Add a data provider instance
+    conf_settings["DataProviders"]["Kusto-TestCluster1"] = _KUSTO_DP_INST
 
     return MpConfigControls(mp_config_def=mp_defn, mp_config=conf_settings)
 
@@ -279,8 +288,32 @@ def test_tiproviders_editor(kv_sec, mp_conf_ctrl):
     check.equal(len(kv_sec.mock_calls), kv_call_count)
 
 
+@respx.mock
 def test_get_tenant_id():
     """Test get tenantID function."""
+    subs_uri = (
+        r"https://management\.azure\.com//subscriptions/"
+        r"40dcc8bf-0478-4f3b-b275-ed0a94f2c013.*"
+    )
+    subs_json = {
+        "error": {
+            "code": "AuthenticationFailed",
+            "message": "Authentication failed. The 'Authorization' header is missing.",
+        }
+    }
+    subs_headers = {
+        "content-type": "application/json; charset=utf-8",
+        "www-authenticate": (
+            "Bearer authorization_uri="
+            '"https://login.windows.net/72f988bf-86f1-41af-91ab-2d7cd011db47", '
+            'error="invalid_token", error_description="The authentication failed '
+            "because of missing 'Authorization' header.\""
+        ),
+        "date": "Mon, 14 Nov 2022 19:20:40 GMT",
+        "connection": "close",
+        "content-length": "115",
+    }
+    respx.get(re.compile(subs_uri)).respond(401, json=subs_json, headers=subs_headers)
     tenantid = get_def_tenant_id("40dcc8bf-0478-4f3b-b275-ed0a94f2c013")
     check.equal(tenantid.casefold(), "72f988bf-86f1-41af-91ab-2d7cd011db47".casefold())
 
@@ -428,7 +461,42 @@ _DATA_PROVIDER_PARAMS = [
     "Sumologic",
     "Sumologic-europe",
     "Sumologic-northamerica",
+    "Kusto",
+    "Kusto-Cluster1",
 ]
+
+
+def test_read_dataprov_instance(mp_conf_ctrl):
+    """Test that selecting an item with an instance name returns correct values."""
+    edit_comp = CEDataProviders(mp_controls=mp_conf_ctrl)
+    edit_comp.select_item.label = "Kusto-TestCluster1"
+    check.equal(
+        _get_named_control(edit_comp, "Cluster").value,
+        _KUSTO_DP_INST["Args"]["Cluster"],
+    )
+    check.equal(
+        _get_named_control(edit_comp, "IntegratedAuth").value,
+        _KUSTO_DP_INST["Args"]["IntegratedAuth"],
+    )
+
+
+def test_add_dataprov_instance(mp_conf_ctrl):
+    """Test that adding a DP instance works."""
+    edit_comp = CEDataProviders(mp_controls=mp_conf_ctrl)
+    edit_comp.prov_options.label = "Kusto"
+    edit_comp.edit_buttons.btn_add.click()
+    edit_comp.text_prov_instance.value = "TestCluster3"
+    test_cluster = "https://kusto.com"
+    _get_named_control(edit_comp, "Cluster").value = test_cluster
+    _get_named_control(edit_comp, "IntegratedAuth").value = True
+    edit_comp.edit_buttons.btn_save.click()
+    check.is_in("Kusto-TestCluster3", mp_conf_ctrl.mp_config["DataProviders"])
+    check.equal(
+        test_cluster,
+        mp_conf_ctrl.mp_config["DataProviders"]["Kusto-TestCluster3"]["Args"][
+            "Cluster"
+        ],
+    )
 
 
 @pytest.mark.parametrize("test_opt", _DATA_PROVIDER_PARAMS)

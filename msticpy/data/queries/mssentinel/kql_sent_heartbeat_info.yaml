@@ -29,8 +29,7 @@ defaults:
       add_query_items:
         description: Additional query clauses
         type: str
-        default: '
-        | top 1 by TimeGenerated desc nulls last'
+        default: '| top 1 by TimeGenerated desc nulls last'
 sources:
   get_info_by_hostname:
     description: Deprecated - use 'get_heartbeat_for_host'

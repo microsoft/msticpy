@@ -19,12 +19,10 @@ import pytest_check as check
 
 from msticpy.common import pkg_config
 from msticpy.common.provider_settings import get_provider_settings
+from msticpy.context.preprocess_observable import _clean_url, preprocess_observable
+from msticpy.context.provider_base import generate_items
 from msticpy.context.tilookup import TILookup
-from msticpy.context.tiproviders.preprocess_observable import (
-    _clean_url,
-    preprocess_observable,
-)
-from msticpy.context.tiproviders.ti_provider_base import ResultSeverity, generate_items
+from msticpy.context.tiproviders.result_severity import ResultSeverity
 from msticpy.context.tiproviders.tor_exit_nodes import Tor
 
 from ..unit_test_lib import custom_mp_config, get_test_data_path
@@ -172,10 +170,23 @@ def test_ti_provider(ti_lookup, provider_name):
     # Lookup multiple IoCs
     for ioc, ioc_params in _TEST_IOCS.items():
         result = ti_lookup.lookup_ioc(
+            ioc=ioc,
+            ioc_type=ioc_params[0],
+            ioc_query_type=ioc_params[1],
+            providers=[provider_name],
+            show_not_supported=True,
+        )
+        verify_result(result, ti_lookup)
+
+    # Check if lookup works with observable parameter
+    for ioc, ioc_params in _TEST_IOCS.items():
+        result = ti_lookup.lookup_ioc(
+            ioc=None,
             observable=ioc,
             ioc_type=ioc_params[0],
             ioc_query_type=ioc_params[1],
             providers=[provider_name],
+            show_not_supported=True,
         )
         verify_result(result, ti_lookup)
 
@@ -201,35 +212,32 @@ def test_ti_provider(ti_lookup, provider_name):
 def verify_result(result, ti_lookup):
     """Verify return results."""
     check.is_not_none(result)
-    for prov, lu_result in result[1]:
+    check.is_instance(result, pd.DataFrame)
+    check.is_false(result.empty)
+    check.equal(1, len(result))
+    for lu_result in result.to_dict(orient="records"):
         check.is_in(
-            prov,
+            lu_result["Provider"],
             ["OTX", "XForce", "VirusTotal", "GreyNoise", "RiskIQ", "IntSights"],
         )
-        check.is_not_none(lu_result.ioc)
-        check.is_not_none(lu_result.ioc_type)
-        if lu_result.result:
-            check.is_not_none(lu_result.details)
-            check.is_not_none(lu_result.raw_result)
-            check.is_not_none(lu_result.reference)
+        check.is_not_none(lu_result["Ioc"])
+        check.is_not_none(lu_result["IocType"])
+        if lu_result["Result"]:
+            check.is_not_none(lu_result["Details"])
+            check.is_not_none(lu_result["RawResult"])
+            check.is_not_none(lu_result["Reference"])
             # exercise summary functions of Lookup class
-            output = io.StringIO()
-            with redirect_stdout(output):
-                lu_result.summary
-            check.is_not_none(output.getvalue())
-            output = io.StringIO()
-            with redirect_stdout(output):
-                lu_result.raw_result_fmtd
-            check.is_not_none(output.getvalue())
 
     # test browser with raw result
     # note something wrong with RiskIQ raw output.
-    if result[1][0][0] != "RiskIQ":
-        ti_lookup.browse(result)
-    # test convert to DF
-    result_df = ti_lookup.result_to_df(result)
-    check.is_instance(result_df, pd.DataFrame)
-    check.is_false(result_df.empty)
+    riskiq_result = result[
+        (result.Provider == "RiskIQ") & (result.Severity != ResultSeverity.unknown.name)
+    ]
+    if not riskiq_result.empty:
+        ti_lookup.browse(riskiq_result)
+        # test convert to DF
+        result_df = ti_lookup.result_to_df(riskiq_result)
+        check.is_instance(result_df, pd.DataFrame)
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
@@ -298,33 +306,35 @@ def test_opr_single_result(ti_lookup):
     # Lookup multiple IoCs
     for ioc, ioc_params in iocs.items():
         result = ti_lookup.lookup_ioc(
-            observable=ioc,
+            ioc=ioc,
             ioc_type=ioc_params[0],
             ioc_query_type=ioc_params[1],
             providers=["OPR"],
+            show_not_supported=True,
         )
         check.is_not_none(result)
-        for _, lu_result in result[1]:
-            check.is_not_none(lu_result.ioc)
-            check.is_not_none(lu_result.ioc_type)
-            if lu_result.severity in ["warning", "high"]:
+        for lu_result in result.to_dict(orient="records"):
+            check.is_not_none(lu_result["Ioc"])
+            check.is_not_none(lu_result["IocType"])
+            if lu_result["Severity"] in ["warning", "high"]:
                 check.is_true(
-                    "rank" in lu_result.details and lu_result.details["rank"] is None
+                    "rank" in lu_result["Details"]
+                    and lu_result["Details"]["rank"] is None
                 )
                 check.is_true(
-                    "error" in lu_result.details
-                    and lu_result.details["error"] == "Domain not found"
+                    "error" in lu_result["Details"]
+                    and lu_result["Details"]["error"] == "Domain not found"
                 )
             else:
                 check.is_true(
-                    "rank" in lu_result.details
-                    and lu_result.details["rank"].isdigit()
-                    and int(lu_result.details["rank"]) > 0
+                    "rank" in lu_result["Details"]
+                    and lu_result["Details"]["rank"].isdigit()
+                    and int(lu_result["Details"]["rank"]) > 0
                 )
                 check.is_true(
-                    "response" in lu_result.raw_result
-                    and lu_result.raw_result["response"][0]
-                    and lu_result.raw_result["response"][0]["domain"] == ioc
+                    "response" in lu_result["RawResult"]
+                    and lu_result["RawResult"]["response"][0]
+                    and lu_result["RawResult"]["response"][0]["domain"] == ioc
                 )
 
 
@@ -342,7 +352,7 @@ def test_opr_multi_result(ti_lookup):
     )
 
     results_df = ti_lookup.lookup_iocs(
-        data=gen_doms, obs_col="domain", ioc_type_col="ioc_type", providers=["OPR"]
+        data=gen_doms, ioc_col="domain", ioc_type_col="ioc_type", providers=["OPR"]
     )
     check.equal(n_requests, len(results_df))
     check.greater_equal(
@@ -393,13 +403,17 @@ def test_tor_exit_nodes(ti_lookup, monkeypatch):
     pos_results = []
     neg_results = []
     for ioc in tor_nodes + other_ips:
-        result = ti_lookup.lookup_ioc(observable=ioc, providers=["Tor"])
-        lu_result = result[1][0][1]
-        check.is_true(lu_result.result)
-        check.is_true(bool(lu_result.reference))
-        if lu_result.severity in ["warning", "high"]:
-            check.is_true(bool(lu_result.details))
-            check.is_true(bool(lu_result.raw_result))
+        result = ti_lookup.lookup_ioc(
+            ioc=ioc,
+            providers=["Tor"],
+            show_not_supported=True,
+        )
+        lu_result = result.to_dict(orient="records")[0]
+        check.is_true(lu_result["Result"])
+        check.is_true(bool(lu_result["Reference"]))
+        if lu_result["Severity"] in ["warning", "high"]:
+            check.is_true(bool(lu_result["Details"]))
+            check.is_true(bool(lu_result["RawResult"]))
             pos_results.append(lu_result)
         else:
             neg_results.append(lu_result)
@@ -420,15 +434,15 @@ def test_check_ioc_type(ti_lookup):
     """Check IOC types."""
     provider = ti_lookup.loaded_providers["OTX"]
     lu_result = provider._check_ioc_type(ioc="a.b.c.d", ioc_type="ipv4")
-    check.equal(lu_result.status, 2)
+    check.equal(lu_result["Status"], 2)
     lu_result = provider._check_ioc_type(ioc="a.b.c.d", ioc_type="ipv6")
-    check.equal(lu_result.status, 2)
+    check.equal(lu_result["Status"], 2)
     lu_result = provider._check_ioc_type(ioc="url", ioc_type="ipv4")
-    check.equal(lu_result.status, 2)
+    check.equal(lu_result["Status"], 2)
     lu_result = provider._check_ioc_type(ioc="123", ioc_type="dns")
-    check.equal(lu_result.status, 2)
+    check.equal(lu_result["Status"], 2)
     lu_result = provider._check_ioc_type(ioc="424246", ioc_type="file_hash")
-    check.equal(lu_result.status, 2)
+    check.equal(lu_result["Status"], 2)
 
 
 def test_result_severity():
@@ -456,6 +470,7 @@ _OBS_TYPES = [
         "Observable does not match expected pattern for ipv4",
     ),
     ("ipv4", "185.92.220.35", "ok"),
+    ("ipv4", "185[.]92[.]220[.]35", "ok"),
     ("ipv6", "185.92.220.35", "Observable does not match expected pattern for ipv6"),
     (
         "ipv4",
@@ -465,6 +480,7 @@ _OBS_TYPES = [
     ("ipv6", "2001:0db8:85a3:0000:0000:8a2e:0370:7334", "IP address is not global"),
     ("ipv6", "2345:0425:2CA1:0000:0000:0567:5673:23b5", "ok"),
     ("dns", "www.python.com", "ok"),
+    ("dns", "www[.]python[.]com", "ok"),
     ("dns", "localhost", "Observable does not match expected pattern for dns"),
     ("dns", "185.92.220.35", "Observable does not match expected pattern for dns"),
     (
@@ -479,6 +495,9 @@ _OBS_TYPES = [
     ),
     ("md5_hash", "A123008438B9C391A123008438B9C391", "ok"),
     ("other_type", "A123008438B9C391", "ok"),
+    ("url", "https://www.python.com", "ok"),
+    ("url", "https://www[.]python[.]com", "ok"),
+    ("url", "hXXps://www[.]python[.]com", "ok"),
 ]
 
 
@@ -509,11 +528,11 @@ def test_iterable_generator():
     test_df = pd.DataFrame({"col1": _IOC_IPS, "col2": _IOC_IPS})
 
     # DataFrames
-    for ioc, _ in generate_items(test_df, obs_col="col1", ioc_type_col="col2"):
+    for ioc, _ in generate_items(test_df, item_col="col1", item_type_col="col2"):
         check.is_in(ioc, _IOC_IPS)
 
     # Iterables
-    for ioc, ioc_type in generate_items(test_df[["col1"]], obs_col="col1"):
+    for ioc, ioc_type in generate_items(test_df[["col1"]], item_col="col1"):
         check.is_in(ioc, _IOC_IPS)
         check.equal(ioc_type, "ipv4")
 
@@ -837,7 +856,7 @@ _PROVIDER_RESPONSES = {
             ],
         },
     },
-    "https://api.intsights.com": {
+    "https://api.ti.insight.rapid7.com": {
         "ioc_param": "params",
         "response": {
             "Value": "124.5.6.7",

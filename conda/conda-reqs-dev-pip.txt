@@ -1,3 +1,6 @@
-
+async-cache>=1.1.1
+pygeohash>=1.2.0
 pyroma>=3.1
 pytest-check>=1.0.1
+pytest-xdist>=2.5.0
+types-attrs>=19.0.0

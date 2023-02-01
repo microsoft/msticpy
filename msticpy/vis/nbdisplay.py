@@ -19,6 +19,7 @@ from .network_plot import plot_entity_graph
 
 # pylint: disable=unused-import
 from .timeline import display_timeline  # noqa: F401
+from .timeline_values import display_timeline_values  # noqa: F401
 
 # pylint: disable=unused-import
 

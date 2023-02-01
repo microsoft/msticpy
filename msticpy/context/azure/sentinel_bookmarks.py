@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Bookmark Features."""
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 from uuid import UUID, uuid4
 
 import httpx
@@ -43,9 +43,9 @@ class SentinelBookmarksMixin:
         results: str = None,
         notes: str = None,
         labels: List[str] = None,
-    ):
+    ) -> Optional[str]:
         """
-        Create a bookmark in the Sentinel Workpsace.
+        Create a bookmark in the Sentinel Workspace.
 
         Parameters
         ----------
@@ -60,22 +60,27 @@ class SentinelBookmarksMixin:
         labels : List[str], optional
             Any labels you want associated with the bookmark, by default None
 
+        Returns
+        -------
+        Optional[str]
+            The name/ID of the bookmark.
+
         Raises
         ------
         CloudError
-            If API retunrs an error.
+            If API returns an error.
 
         """
         self.check_connected()  # type: ignore
         # Generate or use resource ID
         bkmark_id = str(uuid4())
         bookmark_url = self.sent_urls["bookmarks"] + f"/{bkmark_id}"  # type: ignore
-        data_items = {
+        data_items: Dict[str, Union[str, List]] = {
             "displayName": name,
             "query": query,
-        }  # type: Dict[str, Union[str, List]]
+        }
         if results:
-            data_items["queryResults"] = results
+            data_items["queryResult"] = results
         if notes:
             data_items["notes"] = notes
         if labels:
@@ -91,8 +96,8 @@ class SentinelBookmarksMixin:
         )
         if response.status_code == 200:
             print("Bookmark created.")
-        else:
-            raise CloudError(response=response)
+            return response.json().get("name")
+        raise CloudError(response=response)
 
     def delete_bookmark(
         self,

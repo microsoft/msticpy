@@ -31,7 +31,7 @@ from .._version import VERSION
 from ..auth.azure_auth_core import AzureCliStatus, check_cli_credentials
 from ..common.check_version import check_version
 from ..common.exceptions import MsticpyException, MsticpyUserError
-from ..common.pkg_config import get_config, refresh_config, validate_config
+from ..common.pkg_config import _HOME_PATH, get_config, refresh_config, validate_config
 from ..common.utility import (
     check_and_install_missing_packages,
     check_kwargs,
@@ -42,6 +42,7 @@ from ..common.utility import (
 )
 from .azure_ml_tools import check_versions as check_versions_aml
 from .azure_ml_tools import is_in_aml, populate_config_to_mp_config
+from .azure_synapse_tools import init_synapse, is_in_synapse
 from .pivot import Pivot
 from .user_config import load_user_defaults
 
@@ -158,12 +159,18 @@ _MP_IMPORTS = [
     dict(pkg="msticpy.init.pivot", tgt="Pivot"),
     dict(pkg="msticpy.datamodel", tgt="entities"),
     dict(pkg="msticpy.init", tgt="nbmagics"),
+    dict(pkg="msticpy.nbtools", tgt="SecurityAlert"),
     dict(pkg="msticpy.vis", tgt="mp_pandas_plot"),
+    dict(pkg="msticpy.vis", tgt="nbdisplay"),
     dict(pkg="msticpy.init", tgt="mp_pandas_accessors"),
     dict(pkg="msticpy", tgt="nbwidgets"),
 ]
 
-_MP_IMPORT_ALL: List[Dict[str, str]] = [dict(module_name="msticpy.datamodel.entities")]
+_MP_IMPORT_ALL: List[Dict[str, str]] = [
+    dict(module_name="msticpy.datamodel.entities"),
+    dict(module_name="msticpy.nbtools"),
+    dict(module_name="msticpy.sectools"),
+]
 
 _CONF_URI = (
     "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html"
@@ -186,6 +193,8 @@ _CLI_WIKI_MSSG_SHORT = (
 )
 
 current_providers: Dict[str, Any] = {}  # pylint: disable=invalid-name
+
+_SYNAPSE_KWARGS = ["identity_type", "storage_svc_name", "tenant_id", "cloud"]
 
 
 def _pr_output(*args):
@@ -213,7 +222,7 @@ def init_notebook(
     additional_packages: List[str] = None,
     extra_imports: List[str] = None,
     **kwargs,
-) -> bool:
+):
     """
     Initialize the notebook environment.
 
@@ -255,7 +264,7 @@ def init_notebook(
         an additional placeholder comma: e.g. "pandas, , pd"
     friendly_exceptions : Optional[bool]
         Setting this to True causes msticpy to hook the notebook
-        exception hander. Any exceptions derived from MsticpyUserException
+        exception handler. Any exceptions derived from MsticpyUserException
         are displayed but do not produce a stack trace, etc.
         Defaults to system/user settings if no value is supplied.
     verbose : Union[int, bool], optional
@@ -270,12 +279,6 @@ def init_notebook(
     no_config_check : bool, optional
         Skip the check for valid configuration. Default is False.
     verbosity : int, optional
-
-
-    Returns
-    -------
-    bool
-        True if successful
 
     Raises
     ------
@@ -299,6 +302,8 @@ def init_notebook(
             "no_config_check",
             "verbosity",
             "verbose",
+            "config",
+            *_SYNAPSE_KWARGS,
         ],
     )
     user_install: bool = kwargs.pop("user_install", False)
@@ -320,11 +325,20 @@ def init_notebook(
             check_version()
             _pr_output(stdout_cap.getvalue())
 
+    if is_in_synapse():
+        synapse_params = {
+            key: val for key, val in kwargs.items() if key in _SYNAPSE_KWARGS
+        }
+        init_synapse(**synapse_params)
+
     # Handle required packages and imports
     _pr_output("Processing imports....")
-    imp_ok = _global_imports(
-        namespace, additional_packages, user_install, extra_imports, def_imports
-    )
+    stdout_cap = io.StringIO()
+    with redirect_stdout(stdout_cap):
+        imp_ok = _global_imports(
+            namespace, additional_packages, user_install, extra_imports, def_imports
+        )
+        _pr_output(stdout_cap.getvalue())
 
     # Configuration check
     if no_config_check:
@@ -344,19 +358,21 @@ def init_notebook(
     if friendly_exceptions:
         if _VERBOSITY() == 2:  # type: ignore
             _pr_output("Friendly exceptions enabled.")
-        InteractiveShell.showtraceback = _hook_ipython_exceptions(
+        InteractiveShell.showtraceback = _hook_ipython_exceptions(  # type: ignore
             InteractiveShell.showtraceback
         )
 
     # load pivots
     stdout_cap = io.StringIO()
     with redirect_stdout(stdout_cap):
+        _pr_output("Loading pivots.")
         _load_pivots(namespace=namespace)
         _pr_output(stdout_cap.getvalue())
 
     # User defaults
     stdout_cap = io.StringIO()
     with redirect_stdout(stdout_cap):
+        _pr_output("Loading user defaults.")
         prov_dict = load_user_defaults()
         _pr_output(stdout_cap.getvalue())
 
@@ -366,9 +382,8 @@ def init_notebook(
         _pr_output("Auto-loaded components:", ", ".join(prov_dict.keys()))
 
     # show any warnings
-    init_status = _show_init_warnings(imp_ok, conf_ok)
+    _show_init_warnings(imp_ok, conf_ok)
     _pr_output("<h4>Notebook initialization complete</h4>")
-    return init_status
 
 
 def _show_init_warnings(imp_ok, conf_ok):
@@ -534,7 +549,7 @@ def _get_or_create_config() -> bool:
     if mp_path and not Path(mp_path).is_file():
         _err_output(_MISSING_MPCONFIG_ENV_ERR)
     if not mp_path or not Path(mp_path).is_file():
-        mp_path = search_for_file("msticpyconfig.yaml", paths=["."])
+        mp_path = search_for_file("msticpyconfig.yaml", paths=[".", _HOME_PATH])
 
     if mp_path:
         errs: List[str] = []
@@ -593,6 +608,7 @@ def _load_pivots(namespace):
     # pylint: disable=no-member
     if not Pivot.current():
         pivot = Pivot()
+        pivot.reload_pivots()
         namespace["pivot"] = pivot
         # pylint: disable=import-outside-toplevel, cyclic-import
         import msticpy
@@ -709,18 +725,28 @@ def _check_and_reload_pkg(
 
 def _hook_ipython_exceptions(func):
     """Hooks the `func` and bypasses it if exception is MsticpyUserException."""
+    # if already wrapped, don't do it again
+    if hasattr(InteractiveShell.showtraceback, "__wrapped__"):
+        return InteractiveShell.showtraceback
 
     @wraps(func)
     def showtraceback(*args, **kwargs):
         """Replace IPython showtraceback."""
         # extract exception type, value and traceback
-        e_type, _, _ = sys.exc_info()
+        e_type, exception, _ = sys.exc_info()
         if e_type is not None and issubclass(e_type, MsticpyUserError):
+            exception.display_exception()
             return None
         # otherwise run the original hook
         return func(*args, **kwargs)
 
     return showtraceback
+
+
+def reset_ipython_exception_handler():
+    """Remove MSTICPy custom exception handler."""
+    if hasattr(InteractiveShell.showtraceback, "__wrapped__"):
+        InteractiveShell.showtraceback = InteractiveShell.showtraceback.__wrapped__
 
 
 def _check_azure_cli_status():

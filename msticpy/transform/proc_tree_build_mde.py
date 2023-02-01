@@ -321,7 +321,7 @@ _UNK_TIME = pd.Timestamp("1970-01-01", tz="UTC")
 
 
 def convert_mde_schema_to_internal(
-    data: pd.DataFrame, schema: ProcSchema
+    data: pd.DataFrame, schema: ProcSchema, **kwargs
 ) -> pd.DataFrame:
     """
     Convert DeviceProcessEvents schema data to internal MDE schema.
@@ -360,5 +360,14 @@ def convert_mde_schema_to_internal(
     data["InitiatingProcessFolderPath"] = data.InitiatingProcessFolderPath.apply(
         lambda x: x.rsplit("\\", maxsplit=1)[0]
     )
+    # re-write any field name references in kwargs
+    plot_args = kwargs.pop("plot_args", {})
+    for arg_name, arg_value in plot_args.items():
+        if isinstance(arg_value, str) and arg_value in _SENTINEL_MDE_MAP:
+            plot_args[arg_name] = _SENTINEL_MDE_MAP[arg_value]
+        if isinstance(arg_value, list):
+            plot_args[arg_name] = [
+                _SENTINEL_MDE_MAP.get(field, field) for field in arg_value
+            ]
 
     return data.rename(columns=_SENTINEL_MDE_MAP)

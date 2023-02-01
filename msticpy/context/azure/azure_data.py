@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to collect and return details related to Azure."""
 import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import attr
 import numpy as np
@@ -38,7 +38,7 @@ try:
         # Try new version but keep backward compat with 1.0.1
         from azure.mgmt.monitor import MonitorManagementClient
     except ImportError:
-        from azure.mgmt.monitor import MonitorClient as MonitorManagementClient
+        from azure.mgmt.monitor import MonitorClient as MonitorManagementClient  # type: ignore
     from azure.mgmt.compute import ComputeManagementClient
     from azure.mgmt.compute.models import VirtualMachineInstanceView
 except ImportError as imp_err:
@@ -62,58 +62,58 @@ _CLIENT_MAPPING = {
 
 # pylint: disable=too-few-public-methods, too-many-instance-attributes
 # attr class doesn't need a method
-@attr.s
+@attr.s(auto_attribs=True)
 class Items:
     """attr class to build resource details dictionary."""
 
-    resource_id = attr.ib()
-    name = attr.ib()
-    resource_type = attr.ib()
-    location = attr.ib()
-    tags = attr.ib()
-    plan = attr.ib()
-    properties = attr.ib()
-    kind = attr.ib()
-    managed_by = attr.ib()
-    sku = attr.ib()
-    identity = attr.ib()
-    state = attr.ib()
+    resource_id: Optional[str] = None
+    name: Optional[str] = None
+    resource_type: Optional[str] = None
+    location: Optional[str] = None
+    tags: Optional[Any] = None
+    plan: Optional[Any] = None
+    properties: Optional[Any] = None
+    kind: Optional[str] = None
+    managed_by: Optional[str] = None
+    sku: Optional[str] = None
+    identity: Optional[str] = None
+    state: Any = None
 
 
-@attr.s
+@attr.s(auto_attribs=True)
 class NsgItems:
     """attr class to build NSG rule dictionary."""
 
-    rule_name = attr.ib()
-    description = attr.ib()
-    protocol = attr.ib()
-    direction = attr.ib()
-    src_ports = attr.ib()
-    dst_ports = attr.ib()
-    src_addrs = attr.ib()
-    dst_addrs = attr.ib()
-    action = attr.ib()
+    rule_name: Optional[str] = None
+    description: Optional[str] = None
+    protocol: Optional[str] = None
+    direction: Optional[str] = None
+    src_ports: Optional[str] = None
+    dst_ports: Optional[str] = None
+    src_addrs: Optional[str] = None
+    dst_addrs: Optional[str] = None
+    action: Optional[str] = None
 
 
-@attr.s
+@attr.s(auto_attribs=True)
 class InterfaceItems:
     """attr class to build network interface details dictionary."""
 
-    interface_id = attr.ib()
-    private_ip = attr.ib()
-    private_ip_allocation = attr.ib()
-    public_ip = attr.ib()
-    public_ip_allocation = attr.ib()
-    app_sec_group = attr.ib()
-    subnet = attr.ib()
-    subnet_nsg = attr.ib()
-    subnet_route_table = attr.ib()
+    interface_id: Optional[str] = None
+    private_ip: Optional[str] = None
+    private_ip_allocation: Optional[str] = None
+    public_ip: Optional[str] = None
+    public_ip_allocation: Optional[str] = None
+    app_sec_group: Optional[List[Any]] = None
+    subnet: Optional[str] = None
+    subnet_nsg: Any = None
+    subnet_route_table: Any = None
 
 
 class AzureData:
     """Class for returning data on an Azure tenant."""
 
-    def __init__(self, connect: bool = False, cloud: str = None):
+    def __init__(self, connect: bool = False, cloud: Optional[str] = None):
         """Initialize connector for Azure Python SDK."""
         self.az_cloud_config = AzureCloudConfig(cloud)
         self.connected = False
@@ -129,7 +129,10 @@ class AzureData:
             self.connect()
 
     def connect(
-        self, auth_methods: List = None, tenant_id: str = None, silent: bool = False
+        self,
+        auth_methods: Optional[List] = None,
+        tenant_id: Optional[str] = None,
+        silent: bool = False,
     ):
         """
         Authenticate to the Azure SDK.
@@ -202,9 +205,9 @@ class AzureData:
             sub_list = list(self.sub_client.subscriptions.list())  # type: ignore
 
         for item in sub_list:  # type: ignore
-            subscription_ids.append(item.subscription_id)
-            display_names.append(item.display_name)
-            states.append(str(item.state))
+            subscription_ids.append(item.subscription_id)  # type: ignore
+            display_names.append(item.display_name)  # type: ignore
+            states.append(str(item.state))  # type: ignore
 
         return pd.DataFrame(
             {
@@ -246,13 +249,14 @@ class AzureData:
             self._legacy_auth("sub_client")
             sub = self.sub_client.subscriptions.get(sub_id)  # type: ignore
 
+        sub_loc = sub.subscription_policies.location_placement_id  # type: ignore
         return {
             "Subscription ID": sub.subscription_id,
             "Display Name": sub.display_name,
             "State": str(sub.state),
-            "Subscription Location": sub.subscription_policies.location_placement_id,
-            "Subscription Quota": sub.subscription_policies.quota_id,
-            "Spending Limit": sub.subscription_policies.spending_limit,
+            "Subscription Location": sub_loc,
+            "Subscription Quota": sub.subscription_policies.quota_id,  # type: ignore
+            "Spending Limit": sub.subscription_policies.spending_limit,  # type: ignore
         }
 
     def list_sentinel_workspaces(self, sub_id: str) -> Dict[str, str]:
@@ -299,7 +303,7 @@ class AzureData:
     get_sentinel_workspaces = list_sentinel_workspaces
 
     def get_resources(  # noqa: MC0001
-        self, sub_id: str, rgroup: str = None, get_props: bool = False
+        self, sub_id: str, rgroup: Optional[str] = None, get_props: bool = False
     ) -> pd.DataFrame:
         """
         Return details on all resources in a subscription or Resource Group.
@@ -370,9 +374,9 @@ class AzureData:
                 props = resource.properties
                 state = None
 
-            # Parse relevent resource attributes into a dataframe and return it
+            # Parse relevant resource attributes into a dataframe and return it
             resource_details = attr.asdict(
-                Items(
+                Items(  # type: ignore
                     resource.id,
                     resource.name,
                     resource.type,
@@ -392,7 +396,10 @@ class AzureData:
         return pd.DataFrame(resource_items)
 
     def get_resource_details(  # noqa: MC0001
-        self, sub_id: str, resource_id: str = None, resource_details: dict = None
+        self,
+        sub_id: str,
+        resource_id: Optional[str] = None,
+        resource_details: Optional[dict] = None,
     ) -> dict:
         """
         Return the details of a specific Azure resource.
@@ -482,7 +489,7 @@ class AzureData:
 
         # Parse relevent details into a dictionary to return
         resource_details = attr.asdict(
-            Items(
+            Items(  # type: ignore
                 resource.id,
                 resource.name,
                 resource.type,
@@ -501,7 +508,10 @@ class AzureData:
         return resource_details
 
     def _get_api(  # noqa: MC0001
-        self, resource_id: str = None, sub_id: str = None, resource_provider: str = None
+        self,
+        resource_id: Optional[str] = None,
+        sub_id: Optional[str] = None,
+        resource_provider: Optional[str] = None,
     ) -> str:
         """
         Return the latest avaliable API version for the resource.
@@ -518,7 +528,7 @@ class AzureData:
         Returns
         -------
         api_ver: str
-            The latest avaliable non-preview API version
+            The latest available non-preview API version
 
         """
         # Check if connection and client required are already present
@@ -562,11 +572,16 @@ class AzureData:
         try:
             provider = self.resource_client.providers.get(namespace)  # type: ignore
         except AttributeError:
-            self._legacy_auth("resource_client", sub_id)
+            self._legacy_auth("resource_client", sub_id)  # type: ignore
             provider = self.resource_client.providers.get(namespace)  # type: ignore
 
         resource_types = next(
-            (t for t in provider.resource_types if t.resource_type == service), None
+            (
+                t
+                for t in provider.resource_types  # type: ignore
+                if t.resource_type == service
+            ),
+            None,
         )
 
         # Get first API version that isn't in preview
@@ -574,10 +589,12 @@ class AzureData:
             raise MsticpyResourceException("Resource provider not found")
 
         api_version = [
-            v for v in resource_types.api_versions if "preview" not in v.lower()
+            v
+            for v in resource_types.api_versions  # type: ignore
+            if "preview" not in v.lower()
         ]
         if api_version is None or not api_version:
-            api_ver = resource_types.api_versions[0]
+            api_ver = resource_types.api_versions[0]  # type: ignore
         else:
             api_ver = api_version[0]
         return str(api_ver)
@@ -611,7 +628,7 @@ class AzureData:
 
         self._check_client("network_client", sub_id)
 
-        # Get interface details and parse relevent elements into a dataframe
+        # Get interface details and parse relevant elements into a dataframe
         try:
             details = self.network_client.network_interfaces.get(  # type: ignore
                 network_id.split("/")[4], network_id.split("/")[8]
@@ -623,18 +640,24 @@ class AzureData:
             )
 
         ips = []
-        for ip in details.ip_configurations:  # pylint: disable=invalid-name
+        for ip_addr in details.ip_configurations:  # type: ignore
             ip_details = attr.asdict(
-                InterfaceItems(
-                    network_id,
-                    ip.private_ip_address,
-                    ip.private_ip_allocation_method,
-                    ip.public_ip_address.ip_address,
-                    ip.public_ip_address.public_ip_allocation_method,
-                    ip.application_security_groups,
-                    ip.subnet.name,
-                    ip.subnet.network_security_group,
-                    ip.subnet.route_table,
+                InterfaceItems(  # type: ignore
+                    id=network_id,
+                    private_ip=ip_addr.private_ip_address,
+                    private_ip_allocation=str(ip_addr.private_ip_allocation_method),
+                    public_ip=ip_addr.public_ip_address.ip_address
+                    if ip_addr.public_ip_address
+                    else None,
+                    public_ip_allocation=(
+                        ip_addr.public_ip_address.public_ip_allocation_method
+                        if ip_addr.public_ip_address
+                        else None
+                    ),
+                    app_sec_group=ip_addr.application_security_groups,  # type: ignore
+                    subnet=ip_addr.subnet.name,  # type: ignore
+                    subnet_nsg=ip_addr.subnet.network_security_group,  # type: ignore
+                    subnet_route_table=ip_addr.subnet.route_table,  # type: ignore
                 )
             )
             ips.append(ip_details)
@@ -643,24 +666,24 @@ class AzureData:
 
         nsg_df = pd.DataFrame()
         if details.network_security_group is not None:
-            # Get NSG details and parse relevent elements into a dataframe
+            # Get NSG details and parse relevant elements into a dataframe
             nsg_details = self.network_client.network_security_groups.get(  # type: ignore
-                details.network_security_group.id.split("/")[4],
-                details.network_security_group.id.split("/")[8],
+                details.network_security_group.id.split("/")[4],  # type: ignore
+                details.network_security_group.id.split("/")[8],  # type: ignore
             )
             nsg_rules = []
-            for nsg in nsg_details.default_security_rules:
+            for nsg in nsg_details.default_security_rules:  # type: ignore
                 rules = attr.asdict(
-                    NsgItems(
-                        nsg.name,
-                        nsg.description,
-                        nsg.protocol,
-                        nsg.direction,
-                        nsg.source_port_range,
-                        nsg.destination_port_range,
-                        nsg.source_address_prefix,
-                        nsg.destination_address_prefix,
-                        nsg.access,
+                    NsgItems(  # type: ignore
+                        rule_name=nsg.name,
+                        description=nsg.description,
+                        protocol=str(nsg.protocol),
+                        direction=str(nsg.direction),
+                        src_ports=nsg.source_port_range,
+                        dst_ports=nsg.destination_port_range,
+                        src_addrs=nsg.source_address_prefix,
+                        dst_addrs=nsg.destination_address_prefix,
+                        action=str(nsg.access),
                     )
                 )
                 nsg_rules.append(rules)
@@ -728,7 +751,7 @@ class AzureData:
             mon_details = self.monitoring_client.metrics.list(  # type: ignore
                 resource_id,
                 timespan=f"{end}/{start}",
-                interval=interval,
+                interval=interval,  # type: ignore
                 metricnames=f"{metrics}",
                 aggregation="Total",
             )
@@ -737,13 +760,13 @@ class AzureData:
             mon_details = self.monitoring_client.metrics.list(  # type: ignore
                 resource_id,
                 timespan=f"{end}/{start}",
-                interval=interval,
+                interval=interval,  # type: ignore
                 metricnames=f"{metrics}",
                 aggregation="Total",
             )
         results = {}
         # Create a dict of all the results returned
-        for metric in mon_details.value:
+        for metric in mon_details.value:  # type: ignore
             times = []
             output = []
             for time in metric.timeseries:
@@ -801,9 +824,9 @@ class AzureData:
                 r_group, name
             )
 
-        return instance_details
+        return instance_details  # type: ignore
 
-    def _check_client(self, client_name: str, sub_id: str = None):
+    def _check_client(self, client_name: str, sub_id: Optional[str] = None):
         """
         Check required client is present, if not create it.
 
@@ -815,8 +838,8 @@ class AzureData:
             The subscription ID for the client to connect to, by default None
 
         """
-        client = _CLIENT_MAPPING[client_name]
         if getattr(self, client_name) is None:
+            client = _CLIENT_MAPPING[client_name]
             if sub_id is None:
                 setattr(
                     self,
@@ -842,7 +865,7 @@ class AzureData:
         if getattr(self, client_name) is None:
             raise CloudError("Could not create client")
 
-    def _legacy_auth(self, client_name: str, sub_id: str = None):
+    def _legacy_auth(self, client_name: str, sub_id: Optional[str] = None):
         """
         Create client with v1 authentication token.
 
@@ -900,7 +923,9 @@ def get_api_headers(token: str) -> Dict:
 
 
 def get_token(
-    credential: AzCredentials, tenant_id: str = None, cloud: str = None
+    credential: AzCredentials,
+    tenant_id: Optional[str] = None,
+    cloud: Optional[str] = None,
 ) -> str:
     """
     Extract token from a azure.identity object.

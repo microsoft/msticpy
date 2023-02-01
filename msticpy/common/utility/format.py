@@ -91,3 +91,57 @@ def escape_windows_path(str_path: str) -> str:
 def unescape_windows_path(str_path: str) -> str:
     """Remove escaping from backslash characters in a string."""
     return str_path.replace("\\\\", "\\") if is_not_empty(str_path) else str_path
+
+
+@export
+def defang_ioc(ioc: str, ioc_type: str = None) -> str:
+    """
+    Return de-fanged observable.
+
+    Parameters
+    ----------
+    ioc : str
+        The observable.
+    ioc_type : str
+        The type of IoC. If URL or Email it will do
+        extra processing to neuter the URL protocol and email @ symbol
+
+    Returns
+    -------
+    str
+        The de-fanged observable.
+
+    """
+    de_fanged = ioc
+    if ioc_type == "email":
+        de_fanged = de_fanged.replace("@", "AT")
+    elif ioc_type == "url":
+        de_fanged = de_fanged.replace("http", "hXXp").replace("ftp", "fXp")
+    return de_fanged.replace(".", "[.]")
+
+
+@export
+def refang_ioc(ioc: str, ioc_type: str = None) -> str:
+    """
+    Return observable with removed de-fanging elements.
+
+    Parameters
+    ----------
+    ioc : str
+        The observable to re-fang.
+    ioc_type : str
+        The type of IoC. If URL or Email it will do
+        extra processing to restore protocol and @ symbol
+
+    Returns
+    -------
+    str
+        The re-fanged observable.
+
+    """
+    re_fanged = ioc
+    if ioc_type == "email":
+        re_fanged = re_fanged.replace("AT", "@")
+    elif ioc_type == "url":
+        re_fanged = re_fanged.replace("hXXp", "http").replace("fXp", "ftp")
+    return re_fanged.replace("[.]", ".")

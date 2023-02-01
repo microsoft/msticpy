@@ -57,6 +57,8 @@ _KQL_CLOUD_MAP = {
     "de": "germany",
 }
 
+_KQL_OPTIONS = ["timeout"]
+
 _AZ_CLOUD_MAP = {kql_cloud: az_cloud for az_cloud, kql_cloud in _KQL_CLOUD_MAP.items()}
 
 _LOGANALYTICS_URL_BY_CLOUD = {
@@ -150,9 +152,9 @@ class KqlDriver(DriverBase):
             print("Connecting...", end=" ")
 
         mp_az_auth = kwargs.get("mp_az_auth", "default")
-        mp_az_tenant_id = kwargs.get("mp_az_tenant_id", None)
-        workspace = kwargs.get("workspace", None)
-        if workspace:
+        mp_az_tenant_id = kwargs.get("mp_az_tenant_id")
+        workspace = kwargs.get("workspace")
+        if workspace or connection_str is None:
             connection_str = WorkspaceConfig(workspace=workspace)  # type: ignore
 
         if isinstance(connection_str, WorkspaceConfig):
@@ -238,7 +240,7 @@ class KqlDriver(DriverBase):
         Returns
         -------
         Union[pd.DataFrame, results.ResultSet]
-            A DataFrame (if successfull) or
+            A DataFrame (if successful) or
             the underlying provider result if an error.
 
         """
@@ -297,7 +299,13 @@ class KqlDriver(DriverBase):
         if not query.strip().endswith(";"):
             query = f"{query}\n;"
 
-        result = kql_exec(query, options=kwargs)
+        # Add any Kqlmagic options from kwargs
+        kql_opts = {
+            option: option_val
+            for option, option_val in kwargs.items()
+            if option in _KQL_OPTIONS
+        }
+        result = kql_exec(query, options=kql_opts)
         self._set_kql_option(option="auto_dataframe", value=auto_dataframe)
         if result is not None:
             if isinstance(result, pd.DataFrame):
@@ -373,8 +381,16 @@ class KqlDriver(DriverBase):
     @staticmethod
     def _set_kql_option(option, value):
         """Set a Kqlmagic notebook option."""
-        opt_val = f"'{value}'" if isinstance(value, str) else value
-        return kql_exec(f"--config {option}={opt_val}")
+        kql_exec("--config short_errors=False")
+        result: Any
+        try:
+            opt_val = f"'{value}'" if isinstance(value, str) else value
+            result = kql_exec(f"--config {option}={opt_val}")
+        except ValueError:
+            result = None
+        finally:
+            kql_exec("--config short_errors=True")
+        return result
 
     @staticmethod
     def _get_kql_current_connection():
@@ -412,7 +428,7 @@ class KqlDriver(DriverBase):
                 fmt_list.append(f"'{item}'")
             else:
                 fmt_list.append(f"{item}")
-        return ",".join(fmt_list)
+        return ", ".join(fmt_list)
 
     @staticmethod
     def _raise_query_failure(query, result):

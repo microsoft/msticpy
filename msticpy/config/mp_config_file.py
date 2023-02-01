@@ -6,7 +6,6 @@
 """Msticpy Config class."""
 
 import io
-import os
 import pprint
 from contextlib import redirect_stdout, suppress
 from datetime import datetime
@@ -32,7 +31,7 @@ try:
     _SENTINEL = True
 except ImportError:
     _SENTINEL = False
-from ..common.pkg_config import refresh_config, validate_config
+from ..common.pkg_config import current_config_path, refresh_config, validate_config
 from .comp_edit import CompEditDisplayMixin, CompEditStatusMixin
 from .file_browser import FileBrowser
 
@@ -76,13 +75,24 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         Parameters
         ----------
         file : Optional[str], optional
-            config file to load, by default None
+            config file path to use.
+            If `file` is not supplied, the msticpyconfig path defaults to the system
+            default location for msticpyconfig.yaml (MSTICPYCONFIG env var,
+            current directory, home directory). This path will also be used as
+            the location to save any changed settings.
+            If `file` is supplied and exists, the configuration will be loaded from here,
+            unless `settings` parameter is also is supplied. If `settings` is supplied
+            the `file` path is used as the file to save configuration but
+            the configuration settings are taken from the `settings` parameter
+            If `file` is supplied but does not exist, no configuration
+            is loaded but this path will be used as the file name to
+            save any configuration by default None
         settings : Optional[Dict[str, Any]], optional
             setting dict to load, by default None
+            If a settings dictionary is supplied it will override any settings
+            read from the `file` parameter.
 
         """
-        self.settings = settings or {}
-
         self.kv_client: Any = None
 
         # Set up controls
@@ -94,10 +104,11 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         self.btn_close.on_click(self._close_view)
 
         self.html_title = widgets.HTML("<h3>MSTICPy settings</h3>")
-        self.txt_current_file = widgets.Text(description="Current file", **_TXT_STYLE)
-        self.txt_current_file.observe(self._update_curr_file, "value")
-        self.txt_curr_mpconfig = widgets.Text(
-            description="MSTICPYCONFIG setting", **_TXT_STYLE
+        self.txt_current_config_path = widgets.Text(
+            description="Current file", **_TXT_STYLE
+        )
+        self.txt_default_config_path = widgets.Text(
+            description="Default Config path", **_TXT_STYLE
         )
         self._txt_import_url = widgets.Text(
             description="MS Sentinel Portal URL", **_TXT_STYLE
@@ -107,8 +118,8 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         self.btn_pane = self._setup_buttons()
         self.info_pane = widgets.VBox(
             [
-                self.txt_current_file,
-                self.txt_curr_mpconfig,
+                self.txt_current_config_path,
+                self.txt_default_config_path,
                 self._txt_import_url,
             ],
             layout=self.border_layout("80%"),
@@ -124,47 +135,48 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
             layout=self.border_layout("99%"),
         )
 
-        self.mp_config_env_path = os.environ.get("MSTICPYCONFIG", None)
-        self.txt_curr_mpconfig.value = self.mp_config_env_path or ""
-        self.mp_config_def_path = self.mp_config_env_path
-        if (
-            self.mp_config_env_path is not None
-            and not Path(self.mp_config_env_path).is_file()
-        ):
-            self.set_status(
-                "MSTICPYCONFIG env variable is pointing to invalid path."
-                + self.mp_config_env_path
-            )
-            self.mp_config_def_path = self._DEF_FILENAME
-        if settings is not None:
-            self.current_file = file or self._DEF_FILENAME
+        if file is None:
+            self.current_file = current_config_path()
+            if self.current_file is None:
+                self.current_file = self._DEF_FILENAME
         else:
-            self.current_file = file or self.mp_config_def_path
+            self.current_file = file
 
-        self.txt_current_file.value = self.current_file or ""
+        # set the default location even if user supplied file parameter
+        self.mp_config_def_path = current_config_path() or self.current_file
 
         if settings is not None:
             # If caller has supplied settings, we don't want to load
             # anything from a file
+            self.settings = settings
             return
+        # otherwise load settings from the current config file.
         if self.current_file and Path(self.current_file).is_file():
             self.load_from_file(self.current_file)
         else:
+            # no file so set default empty settings
+            self.settings = {}
             self.set_status(f"Filename does not exist: '{self.current_file}'.")
 
     @property
     def current_file(self):
         """Return currently loaded file path."""
-        return self._current_file
+        return self.txt_current_config_path.value
 
     @current_file.setter
     def current_file(self, file_name: Union[str, Path]):
-        self._current_file = str(file_name)
-        self.txt_current_file.value = self._current_file or ""
+        """Set currently loaded file path."""
+        self.txt_current_config_path.value = str(file_name)
 
-    def _update_curr_file(self, change):
-        del change
-        self.current_file = self.txt_current_file.value
+    @property
+    def default_config_file(self):
+        """Return default msticpyconfig path."""
+        return self.txt_default_config_path.value
+
+    @default_config_file.setter
+    def default_config_file(self, file_name: Union[str, Path]):
+        """Set default msticpyconfig path."""
+        self.txt_default_config_path.value = file_name
 
     def load_default(self):
         """Load default settings specified by MSTICPYCONFIG env var."""
@@ -174,7 +186,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
                 self.load_from_file(self.mp_config_def_path)
 
     def browse_for_file(self, show: bool = True):
-        """Open the browser to browser/search fr a file."""
+        """Open the browser to browser/search for a file."""
         self.viewer.children = [self.file_browser.layout, self.btn_close]
         if show:
             display(self.viewer)
