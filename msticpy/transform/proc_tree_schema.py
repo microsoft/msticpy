@@ -249,7 +249,6 @@ HX_PROCESSEVENT_SCH = ProcSchema(
     process_id="pid",
     parent_name="parentprocess",
     parent_id="parentpid",
-    logon_id="uid",
     cmd_line="processcmdline",
     user_name="username",
     path_separator="\\",
