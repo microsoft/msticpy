@@ -11,8 +11,8 @@ import os
 from pathlib import Path
 from datetime import datetime
 
-from msticpy.data.drivers.github_data_types import get_sentinel_queries_from_github, read_yaml_files, _import_sentinel_query, import_sentinel_queries, write_to_yaml, _format_query_name, _organize_query_list_by_folder, _create_queryfile_metadata
-from msticpy.data.drivers.github_data_types import SentinelQuery
+from msticpy.data.drivers.sentinel_query_reader import get_sentinel_queries_from_github, read_yaml_files, _import_sentinel_query, import_sentinel_queries, write_to_yaml, _format_query_name, _organize_query_list_by_folder, _create_queryfile_metadata
+from msticpy.data.drivers.sentinel_query_reader import SentinelQuery
 
 # variables used throughout tests
 DEF_PATH = Path.joinpath(Path(os.getcwd()))

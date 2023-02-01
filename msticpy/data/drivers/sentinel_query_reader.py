@@ -7,34 +7,17 @@
 
 import attr
 from attr import attrs, attrib
- 
 import zipfile
-import io
 import re
 import glob
-import IPython
-import pandas as pd
-from ipywidgets import widgets as ipywidgets, Layout
-from IPython.display import display, HTML
 from pathlib import Path
 from requests.exceptions import HTTPError
-from typing import Callable, List, Optional, Set, Tuple, IO
-
+from typing import Optional
 import yaml
-import json
-import csv
 import os
 import httpx
-
-import matplotlib.pyplot as plt
-import sys
-
-from pandas import json_normalize
 from tqdm.notebook import tqdm
-from datetime import date
 from datetime import datetime
-from requests_html import HTMLSession
-from collections import Counter
 
 @attrs
 class SentinelQuery(object):
