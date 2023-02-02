@@ -40,7 +40,7 @@ _CONFIG_ENV_VAR: str = "MSTICPYCONFIG"
 _DP_KEY = "DataProviders"
 _AZ_SENTINEL = "AzureSentinel"
 _AZ_CLI = "AzureCLI"
-_HOME_PATH = f"~/.msticpy/{_CONFIG_FILE}"
+_HOME_PATH = "~/.msticpy/"
 
 # pylint: disable=invalid-name
 default_settings: Dict[str, Any] = {}
@@ -245,7 +245,7 @@ def _get_custom_config():
         _CURRENT_CONF_FILE(str(Path(".").joinpath(_CONFIG_FILE).resolve()))
         return _read_config_file(current_config_path())
 
-    home_config = Path(_HOME_PATH).expanduser().resolve()
+    home_config = Path(os.path.join(_HOME_PATH, _CONFIG_FILE)).expanduser().resolve()
     if home_config.is_file():
         _CURRENT_CONF_FILE(str(home_config))
         return _read_config_file(current_config_path())

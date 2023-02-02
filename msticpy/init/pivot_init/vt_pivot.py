@@ -5,7 +5,6 @@
 # --------------------------------------------------------------------------
 """VirusTotal Pivot functions."""
 
-import contextlib
 from enum import Flag, auto
 from functools import partial
 from typing import Dict, Optional, Tuple, Union
@@ -13,13 +12,12 @@ from typing import Dict, Optional, Tuple, Union
 from ..._version import VERSION
 from ...common.provider_settings import get_provider_settings
 from ...common.utility import enum_parse
+from ...context import VT3_AVAILABLE
 from ..pivot import Pivot, PivotRegistration
 
-_VT_3_AVAILABLE = False
-with contextlib.suppress(ImportError):
+if VT3_AVAILABLE:
     from ...context.vtlookupv3.vtlookupv3 import VTLookupV3
 
-    _VT_3_AVAILABLE = True
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
@@ -103,7 +101,7 @@ _ENTITY_PROPS = {
 
 def init():
     """Load VT3 Pivots if vt library is available."""
-    if _VT_3_AVAILABLE:
+    if VT3_AVAILABLE:
         add_pivot_functions()
 
 
@@ -141,7 +139,7 @@ def _create_pivots(api_scope: Union[str, VTAPIScope, None]):
         scope = api_scope
     try:
         vt_client = VTLookupV3()
-    except ValueError:
+    except (ValueError, AttributeError):
         # Can't initialize VTLookup - don't add the pivot funcs
         return {}
 
@@ -194,7 +192,7 @@ def _get_vt_api_scope() -> VTAPIScope:
     if vt_settings:
         return (
             VTAPIScope.PRIVATE
-            if vt_settings.args.get("UseVT3PrivateAPI", False)
+            if vt_settings.args.get(_USE_PRIVATE_API_KEY, False)
             else VTAPIScope.PUBLIC
         )
     return VTAPIScope.PUBLIC

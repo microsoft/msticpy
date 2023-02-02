@@ -50,7 +50,9 @@ class SecurityBase(QueryParamProvider):
 
     def __init__(self, src_row: pd.Series = None):
         """Instantiate a security alert from a pandas Series."""
-        self._source_data: pd.Series = src_row
+        self._source_data: pd.Series = (
+            src_row if src_row is not None else pd.Series(dtype="object")
+        )
         self._custom_query_params: Dict[str, Any] = {}
         self._entities: List[Entity] = []
 
@@ -84,7 +86,7 @@ class SecurityBase(QueryParamProvider):
 
     def __getattr__(self, name):
         """Return the value of the named property 'name'."""
-        if name in self._source_data:
+        if self._source_data is not None and name in self._source_data:
             return self._source_data[name]
         raise AttributeError(f"{name} is not a valid attribute.")
 
@@ -99,10 +101,14 @@ class SecurityBase(QueryParamProvider):
 
     def __repr__(self) -> str:
         """Return repr of item."""
-        params = ", ".join([f"{name}={val}" for name, val in self.properties.items()])
-        if len(params) > 80:
-            params = params[:80] + "..."
-        return f"{self.__class__.__name__}({params})"
+        if self.properties:
+            params = ", ".join(
+                [f"{name}={val}" for name, val in self.properties.items()]
+            )
+            if len(params) > 80:
+                params = params[:80] + "..."
+            return f"{self.__class__.__name__}({params})"
+        return f"{self.__class__.__name__}()"
 
     def _repr_html_(self) -> str:
         """Display in IPython."""

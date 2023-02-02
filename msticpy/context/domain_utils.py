@@ -94,7 +94,7 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
     )
     image_string = (
         f"https://api.browshot.com/api/v1/screenshot/thumbnail?id={bs_id}"
-        "&zoom=50&key={bs_api_key}"
+        f"&zoom=50&key={bs_api_key}"
     )
     # Wait until the screenshot is ready and keep user updated with progress
     print("Getting screenshot")
@@ -306,6 +306,31 @@ def dns_resolve(url_domain: str, rec_type: str = "A") -> Dict[str, Any]:
 
 
 @export
+def dns_resolve_df(url_domain: str, rec_type: str = "A") -> pd.DataFrame:
+    """
+    Validate if a domain or URL be be resolved to an IP address.
+
+    Parameters
+    ----------
+    url_domain : str
+        The url or domain to validate.
+    rec_type : str
+        The DNS record type to query, by default "A"
+
+    Returns
+    -------
+    pd.DataFrame:
+        Resolver result as dataframe with individual resolution
+        results as separate rows.
+
+    """
+    results = pd.DataFrame([dns_resolve(url_domain, rec_type)])
+    if "rrset" in results.columns:
+        return results.explode(column="rrset")
+    return results
+
+
+@export
 def ip_rev_resolve(ip_address: str) -> Dict[str, Any]:
     """
     Reverse lookup for IP Address.
@@ -329,6 +354,29 @@ def ip_rev_resolve(ip_address: str) -> Dict[str, Any]:
             "rdtype": "PTR",
             "response": str(err),
         }
+
+
+@export
+def ip_rev_resolve_df(ip_address: str) -> pd.DataFrame:
+    """
+    Reverse lookup for IP Address.
+
+    Parameters
+    ----------
+    ip_address : str
+        The IP address to query.
+
+    Returns
+    -------
+    pd.DataFrame:
+        Resolver result as dataframe with individual resolution
+        results as separate rows.
+
+    """
+    results = pd.DataFrame([ip_rev_resolve(ip_address)])
+    if "rrset" in results.columns:
+        return results.explode(column="rrset")
+    return results
 
 
 @export

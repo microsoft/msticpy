@@ -12,11 +12,12 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import Any, Tuple
+from typing import Any, Dict, Tuple
 
 from ..._version import VERSION
-from .http_provider import HttpTIProvider, IoCLookupParams
-from .ti_provider_base import LookupResult, ResultSeverity
+from ..http_provider import APILookupParams
+from .ti_http_provider import HttpTIProvider
+from .ti_provider_base import ResultSeverity
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -27,31 +28,31 @@ class GreyNoise(HttpTIProvider):
 
     _BASE_URL = "https://api.greynoise.io"
 
-    _IOC_QUERIES = {
+    _QUERIES = {
         # Community API
-        "ipv4": IoCLookupParams(
+        "ipv4": APILookupParams(
             path="/v3/community/{observable}",
             headers={"key": "{API_KEY}"},
         ),
         # Enterprise API Quick Lookup
-        "ipv4-quick": IoCLookupParams(
+        "ipv4-quick": APILookupParams(
             path="/v2/noise/quick/{observable}",
             headers={"key": "{API_KEY}"},
         ),
         # Enterprise API Full Lookup
-        "ipv4-full": IoCLookupParams(
+        "ipv4-full": APILookupParams(
             path="/v2/noise/context/{observable}",
             headers={"key": "{API_KEY}"},
         ),
     }
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : LookupResult
+        response : Dict
             The returned data response
 
         Returns
@@ -62,40 +63,42 @@ class GreyNoise(HttpTIProvider):
             Object with match details
 
         """
-        if self._failed_response(response) or not isinstance(response.raw_result, dict):
+        if self._failed_response(response) or not isinstance(
+            response["RawResult"], dict
+        ):
             return False, ResultSeverity.information, "Not found."
         result = True
         result_dict = {}
         # If community API response extract key elements
-        if "riot" in response.raw_result:
+        if "riot" in response["RawResult"]:
             result_dict.update(
                 {
-                    "Classification": response.raw_result.get("classification"),
-                    "Name": response.raw_result.get("name"),
-                    "Last Seen": response.raw_result.get("last_seen"),
-                    "Message": response.raw_result.get("message"),
-                    "Noise": response.raw_result.get("noise"),
-                    "RIOT": response.raw_result.get("riot"),
+                    "Classification": response["RawResult"].get("classification"),
+                    "Name": response["RawResult"].get("name"),
+                    "Last Seen": response["RawResult"].get("last_seen"),
+                    "Message": response["RawResult"].get("message"),
+                    "Noise": response["RawResult"].get("noise"),
+                    "RIOT": response["RawResult"].get("riot"),
                 }
             )
         # If enterprise full lookup response extract key elements
-        if "actor" in response.raw_result:
+        if "actor" in response["RawResult"]:
             result_dict.update(
                 {
-                    "Classification": response.raw_result.get("classification"),
-                    "First Seen": response.raw_result.get("first_seen"),
-                    "Last Seen": response.raw_result.get("last_seen"),
-                    "Actor": response.raw_result.get("actor"),
-                    "Tags": response.raw_result.get("tags"),
-                    "VPN": response.raw_result.get("vpn_service", False),
-                    "Metadata": response.raw_result.get("metadata"),
+                    "Classification": response["RawResult"].get("classification"),
+                    "First Seen": response["RawResult"].get("first_seen"),
+                    "Last Seen": response["RawResult"].get("last_seen"),
+                    "Actor": response["RawResult"].get("actor"),
+                    "Tags": response["RawResult"].get("tags"),
+                    "VPN": response["RawResult"].get("vpn_service", False),
+                    "Metadata": response["RawResult"].get("metadata"),
                 }
             )
         # If enterprise quick lookup just return raw data is its so small
-        if "code" in response.raw_result:
-            result_dict = response.raw_result
+        if "code" in response["RawResult"]:
+            result_dict = response["RawResult"]
 
         severity = ResultSeverity.information
-        if response.raw_result["classification"] == "malicious":
+        if response["RawResult"]["classification"] == "malicious":
             severity = ResultSeverity.high
         return result, severity, result_dict

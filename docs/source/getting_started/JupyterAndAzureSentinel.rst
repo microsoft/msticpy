@@ -155,6 +155,11 @@ the workspace parameter to pick a named workspace.
 
    qry_prov.connect(mp.WorkspaceConfig(workspace="MyHuntingWorkspace"))
 
+.. note:: From version 2.0 you can also use a shortcut parameter to
+   connect to specify the workspace directly.
+   ``qry_prov.connect(workspace="MyHuntingWorkspace")``
+   to use the Default workspace, use "Default" as the workspace name.
+
 
 Query Help
 ~~~~~~~~~~
@@ -213,7 +218,7 @@ Example Notebooks
 Some examples:
 
 - `Getting started <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/A%20Getting%20Started%20Guide%20For%20Azure%20Sentinel%20ML%20Notebooks.ipynb>`__
-- `MSTICPy CyberSec Features tour <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/A%20Tour%20of%20Cybersec%20notebook%20features.ipynb>`
+- `MSTICPy CyberSec Features tour <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/A%20Tour%20of%20Cybersec%20notebook%20features.ipynb>`__
 - `Account Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Account.ipynb>`__
 - `Domain and URL Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Domain%20and%20URL.ipynb>`__
 - `IP Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20IP%20Address.ipynb>`__

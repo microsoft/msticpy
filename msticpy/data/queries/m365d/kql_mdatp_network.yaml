@@ -62,7 +62,7 @@ sources:
         {table}
         | where {time_column} >= datetime({start})
         | where {time_column} <= datetime({end})
-        | where RemoteIP has "{ip_address}" or where LocalIP has "{ip_address}"
+        | where RemoteIP has "{ip_address}" or LocalIP has "{ip_address}"
         {add_query_items}'
     parameters:
       ip_address:

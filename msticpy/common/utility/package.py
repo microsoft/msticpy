@@ -195,7 +195,7 @@ def search_for_file(
     """Search `paths` for file `pattern`."""
     paths = paths or [".", ".."]
     for start_path in paths:
-        found_files = list(Path(start_path).glob(pattern))
+        found_files = list(Path(start_path).glob(pattern)) if start_path else []
         if found_files:
             return str(found_files[0])
     return None

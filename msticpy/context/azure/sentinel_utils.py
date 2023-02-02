@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Utilties."""
 from collections import Counter
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
 
 import httpx
 import pandas as pd
@@ -31,6 +31,8 @@ _PATH_MAPPING = {
     "watchlists": "/providers/Microsoft.SecurityInsights/watchlists",
     "alert_template": "/providers/Microsoft.SecurityInsights/alertRuleTemplates",
     "search": "/tables",
+    "ti": "/providers/Microsoft.SecurityInsights/threatIntelligence/main",
+    "dynamic_summary": "/providers/Microsoft.SecurityInsights/dynamicSummaries",
 }
 
 
@@ -84,9 +86,18 @@ class SentinelUtilsMixin:
             results_df = _azs_api_result_to_df(response)
         else:
             raise CloudError(response=response)
-        return results_df
+        j_resp = response.json()
+        results = [results_df]
+        # If nextLink in response, go get that data as well
+        while "nextLink" in j_resp:
+            next_url = j_resp["nextLink"]
+            next_response = self._get_items(next_url, api_version)
+            next_results_df = _azs_api_result_to_df(next_response)
+            results.append(next_results_df)
+            j_resp = next_response.json()
+        return pd.concat(results)
 
-    def _check_config(self, items: List) -> Dict:
+    def _check_config(self, items: List, workspace_name: Optional[str] = None) -> Dict:
         """
         Get parameters from default config files.
 
@@ -94,6 +105,8 @@ class SentinelUtilsMixin:
         ----------
         items : List
             The items to get from the config.
+        workspace_name : str
+            The workspace name supplied by the user.
 
         Returns
         -------
@@ -102,13 +115,15 @@ class SentinelUtilsMixin:
 
         """
         config_items = {}
-        if not self.config:  # type: ignore
-            self.config = WorkspaceConfig()  # type: ignore
+        if not self.workspace_config:  # type: ignore
+            self.workspace_config = WorkspaceConfig(workspace_name)  # type: ignore
         for item in items:
-            if item in self.config:  # type: ignore
-                config_items[item] = self.config[item]  # type: ignore
+            if item in self.workspace_config:  # type: ignore
+                config_items[item] = self.workspace_config[item]  # type: ignore
             else:
-                raise MsticpyAzureConfigError(f"No {item} available in config.")
+                raise MsticpyAzureConfigError(
+                    f"No {item} available in config for workspace {workspace_name}."
+                )
 
         return config_items
 
@@ -135,7 +150,8 @@ class SentinelUtilsMixin:
         """
         if not sub_id or not res_grp or not ws_name:
             config = self._check_config(
-                ["subscription_id", "resource_group", "workspace_name"]
+                workspace_name=ws_name,
+                items=["subscription_id", "resource_group", "workspace_name"],
             )
             sub_id = config["subscription_id"]
             res_grp = config["resource_group"]
@@ -238,7 +254,7 @@ def _build_sent_data(items: dict, props: bool = False, **kwargs) -> dict:
 
     """
     data_body = {"properties": {}}  # type: Dict[str, Dict[str, str]]
-    for key, _ in items.items():
+    for key in items:
         if key in ["severity", "status", "title", "message", "searchResults"] or props:
             data_body["properties"].update({key: items[key]})  # type:ignore
         else:
@@ -258,6 +274,16 @@ def validate_res_id(res_id):
         raise MsticpyAzureConfigError("The Resource ID provided is not valid.")
 
     return res_id
+
+
+def parse_resource_id(res_id: str) -> Dict[str, Any]:
+    """Extract components from workspace resource ID."""
+    res_id_parts = res_id.split("/")
+    return {
+        "subscription_id": res_id_parts[1] if len(res_id_parts) > 1 else None,
+        "resource_group": res_id_parts[3] if len(res_id_parts) > 3 else None,
+        "workspace_name": res_id_parts[7] if len(res_id_parts) > 7 else None,
+    }
 
 
 def _validator(res_id):

@@ -4,32 +4,29 @@
 # license information.
 # --------------------------------------------------------------------------
 """
-HTTP TI Provider base.
+HTTP Lookup base class.
 
-Input can be a single IoC observable or a pandas DataFrame containing
-multiple observables. Processing may require a an API key and
+Input can be a single item or a pandas DataFrame containing
+multiple items. Processing may require a an API key and
 processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-import abc
 import traceback
-from functools import lru_cache
-from http import client
-from json import JSONDecodeError
-from typing import Any, Dict, List, Tuple
+from abc import abstractmethod
+from typing import Any, Dict, List, Tuple, Union
 
 import attr
 import httpx
+import pandas as pd
 from attr import Factory
 
-from ..._version import VERSION
-from ...common.exceptions import MsticpyConfigException
-from ...common.pkg_config import get_http_timeout
-from ...common.utility import export, mp_ua_header
-from .lookup_result import LookupResult, LookupStatus
-from .result_severity import ResultSeverity
-from .ti_provider_base import TIProvider
+from .._version import VERSION
+from ..common.exceptions import MsticpyConfigException
+from ..common.pkg_config import get_http_timeout
+from ..common.utility import mp_ua_header
+from .lookup_result import LookupStatus
+from .provider_base import Provider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -37,34 +34,99 @@ __author__ = "Ian Hellen"
 
 # pylint: disable=too-few-public-methods
 @attr.s(auto_attribs=True)
-class IoCLookupParams:
-    """IoC HTTP Lookup Params definition."""
+class APILookupParams:
+    """HTTP Lookup Params definition."""
 
     path: str = ""
     verb: str = "GET"
     full_url: bool = False
     headers: Dict[str, str] = Factory(dict)
-    params: Dict[str, str] = Factory(dict)
+    params: Dict[str, Union[str, int, float]] = Factory(dict)
     data: Dict[str, str] = Factory(dict)
     auth_type: str = ""
     auth_str: List[str] = Factory(list)
     sub_type: str = ""
 
 
-@export
-class HttpTIProvider(TIProvider, abc.ABC):
-    """HTTP API Lookup provider base class."""
+class HttpProvider(Provider):
+    """
+    HTTP Generic lookup provider base class.
 
+    For subclasses:
+
+    Define Base URL of the service
+
+    .. code:: python
+
+        _BASE_URL = "https://my.api.org/"
+
+    Define query parameters for different item types (keys)
+
+    ..code:: python
+
+        _QUERIES: Dict[str, APILookupParams] = {}
+
+    For example:
+
+    .. code:: python
+
+        _QUERIES = {
+        # Community API
+        "ipv4": APILookupParams(
+            path="/v3/community/{observable}",
+            headers={"key": "{API_KEY}"},
+        ),
+        # Enterprise API Quick Lookup
+        "ipv4-quick": APILookupParams(
+            ...
+
+
+    Define list of required __init__ params
+
+    .. code:: python
+
+        _REQUIRED_PARAMS: List[str] = []
+
+    For example:
+
+    .. code:: python
+
+        _REQUIRED_PARAMS = ["API_KEY"]
+
+    In __init__
+
+    Be sure to call
+
+    .. code::
+
+        super().__init__(**kwargs)``
+
+    Supply any additional checkers/pre-processors
+    with
+
+    .. code: python
+
+        self._preprocessors.add_check(type, check_func)
+
+    See Also
+    --------
+    PreProcessor
+    HttpTIProvider
+
+    """
+
+    # Base URL of the service
     _BASE_URL = ""
 
-    _IOC_QUERIES: Dict[str, IoCLookupParams] = {}
+    # Define query parameters for different item types (keys)
+    _QUERIES: Dict[str, APILookupParams] = {}
 
+    # List of required __init__ params
     _REQUIRED_PARAMS: List[str] = []
 
     def __init__(self, **kwargs):
-        """Initialize a new instance of the class."""
+        """Initialize the class."""
         super().__init__(**kwargs)
-
         self._httpx_client = httpx.Client(timeout=get_http_timeout(**kwargs))
         self._request_params = {}
         if "ApiID" in kwargs:
@@ -73,12 +135,18 @@ class HttpTIProvider(TIProvider, abc.ABC):
         if "AuthKey" in kwargs:
             auth_key = kwargs.pop("AuthKey")
             self._request_params["API_KEY"] = auth_key.strip() if auth_key else None
+        if "Instance" in kwargs:
+            auth_key = kwargs.pop("Instance")
+            self._request_params["INSTANCE"] = auth_key.strip() if auth_key else None
 
         missing_params = [
             param
             for param in self._REQUIRED_PARAMS
             if param not in self._request_params
         ]
+
+        missing_params = []
+
         if missing_params:
             param_list = ", ".join(f"'{param}'" for param in missing_params)
             raise MsticpyConfigException(
@@ -86,19 +154,26 @@ class HttpTIProvider(TIProvider, abc.ABC):
                 f"Missing parameters are: {param_list}",
             )
 
-    @lru_cache(maxsize=256)
-    def lookup_ioc(  # type: ignore
-        self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
-    ) -> LookupResult:
+        # In __init__ you might want to
+        # supply additional checkers/preprocessors
+        # with
+        # self._preprocessors.add_check(type, check_func)
+        # or replace the default PreProcessors
+        # self._preprocessors = MyPreProcessor()
+
+    @abstractmethod
+    def lookup_item(
+        self, item: str, item_type: str = None, query_type: str = None, **kwargs
+    ) -> pd.DataFrame:
         """
-        Lookup a single item.
+        Lookup from an item value.
 
         Parameters
         ----------
-        ioc : str
-            Item value to lookup
-        ioc_type : str, optional
-            The Type of the value to lookup, by default None (type will be inferred)
+        item : str
+            item to lookup
+        item_type : str, optional
+            The Type of the item to lookup, by default None (type will be inferred)
         query_type : str, optional
             Specify the data subtype to be queried, by default None.
             If not specified the default record type for the item_value
@@ -106,7 +181,7 @@ class HttpTIProvider(TIProvider, abc.ABC):
 
         Returns
         -------
-        LookupResult
+        pd.DataFrame
             The lookup result:
             result - Positive/Negative,
             details - Lookup Details (or status if failure),
@@ -122,59 +197,10 @@ class HttpTIProvider(TIProvider, abc.ABC):
         Notes
         -----
         Note: this method uses memoization (lru_cache) to cache results
-        for a particular observable to try avoid repeated network calls for
+        for a particular item to try avoid repeated network calls for
         the same item.
 
         """
-        result = self._check_ioc_type(
-            ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
-        )
-
-        result.provider = kwargs.get("provider_name", self.__class__.__name__)
-        if result.status != LookupStatus.OK.value:
-            return result
-
-        req_params: Dict[str, Any] = {}
-        try:
-            verb, req_params = self._substitute_parms(
-                result.safe_ioc, result.ioc_type, query_type
-            )
-            if verb == "GET":
-                response = self._httpx_client.get(
-                    **req_params, timeout=get_http_timeout(**kwargs)
-                )
-            else:
-                raise NotImplementedError(f"Unsupported verb {verb}")
-            result.status = response.status_code
-            result.reference = req_params["url"]
-            if result.status == 200:
-                try:
-                    result.raw_result = response.json()
-                    result.result, severity, result.details = self.parse_results(result)
-                except JSONDecodeError:
-                    result.raw_result = f"""There was a problem parsing results from this lookup:
-                                        {response.text}"""
-                    result.result = False
-                    severity = ResultSeverity.information
-                    result.details = {}
-                result.set_severity(severity)
-                result.status = LookupStatus.OK.value
-            else:
-                result.raw_result = str(response)
-                result.result = False
-                result.details = self._response_message(result.status)
-            return result
-        except (
-            LookupError,
-            JSONDecodeError,
-            NotImplementedError,
-            ConnectionError,
-        ) as err:
-            self._err_to_results(result, err)
-            if not isinstance(err, LookupError):
-                url = req_params.get("url", None) if req_params else None
-                result.reference = url
-            return result
 
     # pylint: enable=duplicate-code
     def _substitute_parms(
@@ -203,7 +229,7 @@ class HttpTIProvider(TIProvider, abc.ABC):
         req_params = {"observable": value}
         req_params.update(self._request_params)
         value_key = f"{value_type}-{query_type}" if query_type else value_type
-        src = self.ioc_query_defs.get(value_key, None)
+        src = self.item_query_defs.get(value_key, None)
         if not src:
             raise LookupError(f"Provider does not support this type {value_key}.")
 
@@ -211,9 +237,9 @@ class HttpTIProvider(TIProvider, abc.ABC):
         # substitute any parameter value from our req_params dict
         req_dict: Dict[str, Any] = {
             "headers": {},
-            "url": src.path.format(observable=value)
+            "url": src.path.format(**req_params)
             if src.full_url
-            else self._BASE_URL + src.path.format(**req_params),
+            else (self._BASE_URL + src.path).format(**req_params),
         }
 
         if src.headers:
@@ -225,7 +251,8 @@ class HttpTIProvider(TIProvider, abc.ABC):
             req_dict["headers"].update(mp_ua_header())
         if src.params:
             q_params: Dict[str, Any] = {
-                key: val.format(**req_params) for key, val in src.params.items()
+                key: val.format(**req_params) if isinstance(val, str) else val
+                for key, val in src.params.items()
             }
             req_dict["params"] = q_params
         if src.data:
@@ -241,33 +268,14 @@ class HttpTIProvider(TIProvider, abc.ABC):
                 raise NotImplementedError(f"Unknown auth type {src.auth_type}")
         return src.verb, req_dict
 
-    @abc.abstractmethod
-    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
-        """
-        Return the details of the response.
-
-        Parameters
-        ----------
-        response : LookupResult
-            The returned data response
-
-        Returns
-        -------
-        Tuple[bool, ResultSeverity, Any]
-            bool = positive or negative hit
-            ResultSeverity = enumeration of severity
-            Object with match details
-
-        """
-
     @staticmethod
-    def _failed_response(response: LookupResult) -> bool:
+    def _failed_response(response: Dict) -> bool:
         """
         Return True if negative response.
 
         Parameters
         ----------
-        response : LookupResult
+        response : Dict
             The returned data response
 
         Returns
@@ -277,15 +285,15 @@ class HttpTIProvider(TIProvider, abc.ABC):
 
         """
         return (
-            response.status != 200
-            or not response.raw_result
-            or not isinstance(response.raw_result, dict)
+            response["Status"] not in (200, LookupStatus.OK.value)
+            or not response["RawResult"]
+            or not isinstance(response["RawResult"], dict)
         )
 
     @staticmethod
-    def _err_to_results(result: LookupResult, err: Exception):
-        result.details = err.args
-        result.raw_result = (
+    def _err_to_results(result: Dict, err: Exception):
+        result["Details"] = err.args
+        result["RawResult"] = (
             type(err).__name__ + "\n" + str(err) + "\n" + traceback.format_exc()
         )
 
@@ -297,4 +305,4 @@ class HttpTIProvider(TIProvider, abc.ABC):
             return "Authorization failed. Check account and key details."
         if status_code == 403:
             return "Request forbidden. Allowed query rate may have been exceeded."
-        return client.responses.get(status_code, "Unknown HTTP status code.")
+        return httpx.codes.get_reason_phrase(status_code) or "Unknown HTTP status code."
