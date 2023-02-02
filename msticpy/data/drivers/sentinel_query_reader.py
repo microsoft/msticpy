@@ -5,19 +5,20 @@
 # --------------------------------------------------------------------------
 """Github Sentinel Query repo import class and helpers"""
 
-import attr
-from attr import attrs, attrib
-import zipfile
-import re
 import glob
-from pathlib import Path
-from requests.exceptions import HTTPError
-from typing import Optional
-import yaml
 import os
-import httpx
-from tqdm.notebook import tqdm
+import re
+import zipfile
 from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
+import attr
+import httpx
+import yaml
+from attr import attrib, attrs
+from requests.exceptions import HTTPError
+from tqdm.notebook import tqdm
 
 
 @attrs

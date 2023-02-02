@@ -5,23 +5,24 @@
 # --------------------------------------------------------------------------
 """Github Sentinel Query repo import class and helpers tests"""
 
+import os
+from datetime import datetime
+from pathlib import Path
+
 import pytest
 import pytest_check as check
-import os
-from pathlib import Path
-from datetime import datetime
 
 from msticpy.data.drivers.sentinel_query_reader import (
-    get_sentinel_queries_from_github,
-    read_yaml_files,
-    _import_sentinel_query,
-    import_sentinel_queries,
-    write_to_yaml,
-    _format_query_name,
-    _organize_query_list_by_folder,
+    SentinelQuery,
     _create_queryfile_metadata,
+    _format_query_name,
+    _import_sentinel_query,
+    _organize_query_list_by_folder,
+    get_sentinel_queries_from_github,
+    import_sentinel_queries,
+    read_yaml_files,
+    write_to_yaml,
 )
-from msticpy.data.drivers.sentinel_query_reader import SentinelQuery
 
 # variables used throughout tests
 DEF_PATH = Path.joinpath(Path(os.getcwd()))
