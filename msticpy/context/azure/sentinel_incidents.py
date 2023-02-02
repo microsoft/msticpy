@@ -260,6 +260,7 @@ class SentinelIncidentsMixin:
         if response.status_code not in (200, 201):
             raise CloudError(response=response)
         print("Incident updated.")
+        return response.json().get("name")
 
     def create_incident(  # pylint: disable=too-many-arguments, too-many-locals
         self,
@@ -433,6 +434,7 @@ class SentinelIncidentsMixin:
         if response.status_code not in (200, 201):
             raise CloudError(response=response)
         print("Comment posted.")
+        return response.json().get("name")
 
     def add_bookmark_to_incident(self, incident: str, bookmark: str):
         """
@@ -473,6 +475,7 @@ class SentinelIncidentsMixin:
         if response.status_code not in (200, 201):
             raise CloudError(response=response)
         print("Bookmark added to incident.")
+        return response.json().get("name")
 
     def list_incidents(self, params: Optional[dict] = None) -> pd.DataFrame:
         """
