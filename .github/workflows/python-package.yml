@@ -169,12 +169,13 @@ jobs:
         run: |
           flake8 --max-line-length=90 --exclude=tests* . --ignore=E501,W503 --jobs=auto
         if: ${{ always() }}
-      - name: prospector
+      - name: pydocstyle
         run: |
-          # install this separately since it uses older versions of pylint/isort
-          # chain running to installation since this sometimes fails
-          # Temporarily fixing Prospector to 1.7.7 - due to bug wrt to PyRoma - https://github.com/PyCQA/prospector/issues/562
-          python -m pip install prospector[with_pyroma]==1.7.7 && prospector --ignore-paths tests --without-tool pylint
+          pydocstyle --convention=numpy msticpy
+        if: ${{ always() }}
+      - name: pyroma
+        run: |
+          pyroma --min 10 .
         if: ${{ always() }}
   check_status:
     runs-on: ubuntu-latest

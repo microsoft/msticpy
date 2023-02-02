@@ -35,6 +35,12 @@ repos:
         args:
           - --profile
           - black
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.3.0
+    hooks:
+    - id: pydocstyle
+      args:
+        - --convention=numpy
   - repo: local
     hooks:
       - id: check_reqs_all
