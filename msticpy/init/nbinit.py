@@ -146,7 +146,7 @@ _NB_IMPORTS = [
 if sns is not None:
     _NB_IMPORTS.append(dict(pkg="seaborn", alias="sns"))
 
-_MP_IMPORTS = (
+_MP_IMPORTS = [
     dict(pkg="msticpy"),
     dict(pkg="msticpy.data", tgt="QueryProvider"),
     dict(pkg="msticpy.vis.foliummap", tgt="FoliumMap"),
@@ -165,13 +165,13 @@ _MP_IMPORTS = (
     dict(pkg="msticpy.vis", tgt="nbdisplay"),
     dict(pkg="msticpy.init", tgt="mp_pandas_accessors"),
     dict(pkg="msticpy", tgt="nbwidgets"),
-)
+]
 
-_MP_IMPORT_ALL: List[Dict[str, str]] = (
+_MP_IMPORT_ALL: List[Dict[str, str]] = [
     dict(module_name="msticpy.datamodel.entities"),
     dict(module_name="msticpy.nbtools"),
     dict(module_name="msticpy.sectools"),
-)
+]
 # pylint: enable=use-dict-literal
 
 _CONF_URI = (
