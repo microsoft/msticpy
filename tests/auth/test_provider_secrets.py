@@ -60,7 +60,6 @@ class _KeyringTestBackend(keyring.backend.KeyringBackend):
         super().__init__()
 
     def get_password(self, service, username):
-
         return self._secrets.get(username, None)
 
     def set_password(self, service, username, password=None):

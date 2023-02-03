@@ -22,7 +22,7 @@ import pandas as pd
 from attr import Factory
 
 from .._version import VERSION
-from ..common.exceptions import MsticpyConfigException
+from ..common.exceptions import MsticpyConfigError
 from ..common.pkg_config import get_http_timeout
 from ..common.utility import mp_ua_header
 from .lookup_result import LookupStatus
@@ -149,7 +149,7 @@ class HttpProvider(Provider):
 
         if missing_params:
             param_list = ", ".join(f"'{param}'" for param in missing_params)
-            raise MsticpyConfigException(
+            raise MsticpyConfigError(
                 f"Parameter values missing for Provider '{self.__class__.__name__}'",
                 f"Missing parameters are: {param_list}",
             )

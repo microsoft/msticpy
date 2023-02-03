@@ -89,7 +89,6 @@ base_pkgs = [pkg.split()[0] for pkg in DEF_PKG_LIST.split("\n") if pkg]
 
 
 def _install_pkg(app_args):
-
     extra_spec = f"[{','.join(app_args.extras)}]" if app_args.extras else ""
     sp_run = [
         "python",
