@@ -6,9 +6,10 @@
 """Cybereason Driver class."""
 import datetime as dt
 import json
-from typing import Any, Dict, List, Optional, Tuple, Union
-from functools import singledispatch
 import re
+from functools import singledispatch
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import httpx
 import pandas as pd
 
@@ -47,7 +48,7 @@ class CybereasonDriver(DriverBase):
         Instantiate Cybereason driver.
 
         Additional Parameters
-        ----------
+        ---------------------
         timeout : int
             Query timeout in seconds. Defaults to 2min
         max_results : int

@@ -100,7 +100,6 @@ class QueryStore:
 
         """
         for family in sorted(self.data_families):
-
             yield from [
                 f"{family}.{query}"
                 for query in sorted(self.data_families[family].keys())
