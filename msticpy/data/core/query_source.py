@@ -4,18 +4,17 @@
 # license information.
 # --------------------------------------------------------------------------
 """Intake kql driver."""
+import json
 import re
 
 # from collections import ChainMap
 from datetime import datetime, timedelta, timezone
+from json.decoder import JSONDecodeError
 from numbers import Number
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-import json
-from json.decoder import JSONDecodeError
 
 from dateutil.parser import ParserError, parse  # type: ignore
 from dateutil.relativedelta import relativedelta
-
 
 from ..._version import VERSION
 from ...common.utility import collapse_dicts

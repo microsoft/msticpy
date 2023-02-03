@@ -26,15 +26,15 @@ def _get_config(setting_path: str):
 
 
 # Standard exception types
-class MsticpyException(Exception):
+class MsticpyException(Exception):  # noqa: N818
     """Default exception class for msticpy."""
 
 
-class MsticpyConfigException(MsticpyException):
+class MsticpyConfigError(MsticpyException):
     """Configuration exception class for msticpy."""
 
 
-class MsticpyResourceException(MsticpyException):
+class MsticpyResourceError(MsticpyException):
     """Exception class for resource errors."""
 
 

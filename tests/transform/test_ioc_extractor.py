@@ -102,7 +102,6 @@ def test_email(ioc_extract):
 
 
 def test_dataframe(ioc_extract):
-
     input_df = pd.DataFrame.from_dict(
         data=TEST_CASES, orient="index", columns=["input"]
     )
@@ -149,7 +148,6 @@ def test_dataframe(ioc_extract):
 
 
 def test_dataframe_ioc_types(ioc_extract):
-
     input_df = pd.DataFrame.from_dict(
         data=TEST_CASES, orient="index", columns=["input"]
     )
@@ -169,7 +167,6 @@ def test_dataframe_ioc_types(ioc_extract):
 
 
 def test_dataframe_new(ioc_extract):
-
     input_df = pd.DataFrame.from_dict(
         data=TEST_CASES, orient="index", columns=["input"]
     )
@@ -216,7 +213,6 @@ def test_dataframe_new(ioc_extract):
 
 
 def test_dataframe_ioc_types_new(ioc_extract):
-
     input_df = pd.DataFrame.from_dict(
         data=TEST_CASES, orient="index", columns=["input"]
     )
