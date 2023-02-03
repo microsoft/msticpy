@@ -472,22 +472,22 @@ def _create_dict_from_grouping(
         series_count = len(grouped_data)
         colors, palette_size = get_color_palette(series_count)
         for color_index, (group_name, group_df) in enumerate(grouped_data):
-            series_dict[str(group_name)] = dict(
-                data=group_df,
-                time_column=time_column,
-                source_columns=source_columns,
-                color=colors[color_index % palette_size],
-                size=size,
-            )
+            series_dict[str(group_name)] = {
+                "data": group_df,
+                "time_column": time_column,
+                "source_columns": source_columns,
+                "color": colors[color_index % palette_size],
+                "size": size,
+            }
     else:
         group_df = data[list(data_columns)].copy()
-        series_dict["unnamed series"] = dict(
-            data=group_df,
-            time_column=time_column,
-            source_columns=source_columns,
-            color=color,
-            size=size,
-        )
+        series_dict["unnamed series"] = {
+            "data": group_df,
+            "time_column": time_column,
+            "source_columns": source_columns,
+            "color": color,
+            "size": size,
+        }
 
     return series_dict
 

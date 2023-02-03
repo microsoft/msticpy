@@ -56,7 +56,6 @@ class TestEventCluster(unittest.TestCase):
         self.assertIn("pathHash", out_df.columns)
 
     def test_custom_features(self):
-
         input_str = (
             "The quick & sly (as all foxes might be/or not) fox, jumped over a frog."
         )

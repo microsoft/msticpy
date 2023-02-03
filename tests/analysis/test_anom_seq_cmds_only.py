@@ -107,7 +107,6 @@ class TestCmdsOnly(unittest.TestCase):
         self.assertDictEqual(seq2_actual, seq2_expected)
 
     def test_compute_likelihood_window(self):
-
         actual = cmds_only.compute_likelihood_window(
             window=[],
             prior_probs=self.prior_probs,
@@ -267,7 +266,6 @@ class TestCmdsOnly(unittest.TestCase):
         self.assertEqual(len(actual), 1)
 
     def test_rarest_window_session(self):
-
         actual = cmds_only.rarest_window_session(
             session=[],
             prior_probs=self.prior_probs,

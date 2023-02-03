@@ -219,7 +219,6 @@ class VTFileBehavior:
         accordion = widgets.Accordion()
         child_tabs = {}
         for group, sub_cats in groupings.items():
-
             sub_cat_tab = widgets.Tab()
             tab_content = {
                 section: widgets.HTML(value=_format_widget_data(items))
