@@ -179,7 +179,7 @@ def _import_sentinel_query(
 
     """
     try:
-        parsed_yaml_dict = yaml.load(yaml_text, Loader=yaml.FullLoader)
+        parsed_yaml_dict = yaml.load(yaml_text, Loader=yaml.SafeLoader)
         new_query = SentinelQuery(
             name=parsed_yaml_dict.get("name"),
             id=parsed_yaml_dict.get("id", ""),
