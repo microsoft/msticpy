@@ -23,7 +23,7 @@ from typing import Any, Callable, DefaultDict, Dict, Iterable, List, Set, Tuple,
 import pandas as pd
 
 from ..._version import VERSION
-from ...common.exceptions import MsticpyConfigException
+from ...common.exceptions import MsticpyConfigError
 from ...common.utility import export
 from ...common.wsconfig import WorkspaceConfig
 from ...data import QueryProvider
@@ -62,7 +62,7 @@ class KqlTIProvider(TIProvider):
             )
 
         if not self._query_provider:
-            raise MsticpyConfigException("Query provider for KQL could not be created.")
+            raise MsticpyConfigError("Query provider for KQL could not be created.")
 
     @property
     def _connected(self):

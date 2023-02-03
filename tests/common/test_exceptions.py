@@ -13,7 +13,7 @@ from pytest import raises
 # pylint: disable=relative-beyond-top-level, redefined-outer-name
 from msticpy.common.exceptions import (
     MsticpyAzureConfigError,
-    MsticpyConfigException,
+    MsticpyConfigError,
     MsticpyConnectionError,
     MsticpyDataQueryError,
     MsticpyException,
@@ -24,15 +24,15 @@ from msticpy.common.exceptions import (
     MsticpyMissingDependencyError,
     MsticpyNoDataSourceError,
     MsticpyNotConnectedError,
-    MsticpyResourceException,
+    MsticpyResourceError,
     MsticpyUserConfigError,
     MsticpyUserError,
 )
 
 BASE_EX_CASES: List[Any] = [
     MsticpyException,
-    MsticpyConfigException,
-    MsticpyResourceException,
+    MsticpyConfigError,
+    MsticpyResourceError,
 ]
 
 USER_EX_CASES: List[Any] = [

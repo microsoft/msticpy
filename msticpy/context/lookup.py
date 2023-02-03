@@ -23,7 +23,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 from .._version import VERSION
-from ..common.exceptions import MsticpyConfigException, MsticpyUserConfigError
+from ..common.exceptions import MsticpyConfigError, MsticpyUserConfigError
 from ..common.provider_settings import get_provider_settings, reload_settings
 from ..common.utility import export, is_ipython
 from ..vis.ti_browser import browse_results
@@ -686,7 +686,7 @@ class Lookup:
             # instantiate class sending args from settings to init
             try:
                 provider_instance = provider_class(**(settings.args))
-            except MsticpyConfigException as mp_ex:
+            except MsticpyConfigError as mp_ex:
                 # If the TI Provider didn't load, raise an exception
                 raise MsticpyUserConfigError(
                     f"Could not load Provider {provider_name}",
