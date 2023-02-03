@@ -292,7 +292,9 @@ def test_sent_get_dynamic_summary(sentinel_loader):
     respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         200, json=get_resp
     )
-    dyn_summary = sentinel_loader.get_dynamic_summary(summary_id="test")
+    dyn_summary = sentinel_loader.get_dynamic_summary(
+        summary_id="fd09863b-5cec-4833-ab9c-330ad07b0c1a"
+    )
     check.is_instance(dyn_summary, DynamicSummary)
     check.equal(len(dyn_summary.summary_items), 0)
     check.equal(dyn_summary.summary_name, "test")
@@ -373,12 +375,23 @@ _TEST_SUMMARY = DynamicSummary(summary_name="test summary")
 
 _CONNECT_FAILURES = [
     ("list_dynamic_summaries", {}, Exception),
-    ("get_dynamic_summary", {"summary_id": "12345"}, MsticpyAzureConnectionError),
+    (
+        "get_dynamic_summary",
+        {"summary_id": "fd09863b-5cec-4833-ab9c-330ad07b0c1a"},
+        LookupError,
+    ),
     ("create_dynamic_summary", {"name": "12345"}, MsticpyAzureConnectionError),
-    ("delete_dynamic_summary", {"summary_id": "12345"}, MsticpyAzureConnectionError),
+    (
+        "delete_dynamic_summary",
+        {"summary_id": "fd09863b-5cec-4833-ab9c-330ad07b0c1a"},
+        MsticpyAzureConnectionError,
+    ),
     (
         "update_dynamic_summary",
-        {"summary_id": "12345", "summary": _TEST_SUMMARY},
+        {
+            "summary_id": "fd09863b-5cec-4833-ab9c-330ad07b0c1a",
+            "summary": _TEST_SUMMARY,
+        },
         MsticpyAzureConnectionError,
     ),
 ]
@@ -389,13 +402,13 @@ _CONNECT_FAILURES = [
 def test_connection_failures(func, params, expected, sentinel_loader):
     """Test connection failures for different APIs."""
     respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(
-        400, json={"name": "test_id"}
+        400, json={"name": "fd09863b-5cec-4833-ab9c-330ad07b0c1a"}
     )
     respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
-        400, json={"name": "test_id"}
+        400, json={"name": "fd09863b-5cec-4833-ab9c-330ad07b0c1a"}
     )
     respx.delete(re.compile(r"https://management\.azure\.com/.*")).respond(
-        400, json={"name": "test_id"}
+        400, json={"name": "fd09863b-5cec-4833-ab9c-330ad07b0c1a"}
     )
     meth = getattr(sentinel_loader, func)
     with pytest.raises(expected):
@@ -432,7 +445,7 @@ def test_sent_get_dynamic_summary_plus_items(qry_prov, sentinel_loader):
     qry_prov_instance.MSSentinel.get_dynamic_summary_by_id.return_value = dyn_summary_df
 
     dyn_summary = sentinel_loader.get_dynamic_summary(
-        summary_id="test", summary_items=True
+        summary_id="fd09863b-5cec-4833-ab9c-330ad07b0c1a", summary_items=True
     )
 
     check.equal(dyn_summary.summary_name, "test2")
@@ -509,3 +522,11 @@ def test_add_summary_items_dict():
 
     dyn_summary.append_summary_items(mapped_items)
     check.equal(len(dyn_summary.summary_items), 2 * len(mapped_items))
+
+
+# More tests:
+# - add dynamic summary (no ID) - new summary - success
+# - add dynamic summary (ID) - new summary - fail
+# - update dynamic summary (ID) - succeed if name exists
+# - update dynamic summary (no ID, name) - succeed if name exists
+# - update dynamic summary (no ID, name) - fail if name not exists

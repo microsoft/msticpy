@@ -327,7 +327,7 @@ class WorkspaceConfig:
                 )
             )
 
-    def _read_pkg_config_values(self, workspace_name: str = None):
+    def _read_pkg_config_values(self, workspace_name: Optional[str] = None):
         as_settings = pkg_config.settings.get("AzureSentinel")
         if not as_settings:
             return {}

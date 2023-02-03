@@ -4,13 +4,19 @@
 # license information.
 # --------------------------------------------------------------------------
 """Microsoft Sentinel core unit tests."""
+from typing import Any, Dict, NamedTuple
 from unittest.mock import MagicMock, Mock, patch
 
 import pandas as pd
 import pytest
+import pytest_check as check
 from azure.core.exceptions import ClientAuthenticationError
 
+from msticpy.common.exceptions import MsticpyParameterError
+from msticpy.common.wsconfig import WorkspaceConfig
 from msticpy.context.azure import AzureData, MicrosoftSentinel
+
+from ...unit_test_lib import custom_mp_config
 
 # pylint: disable=redefined-outer-name, protected-access
 
@@ -102,3 +108,127 @@ def test_azuresent_workspaces(mock_res_dets, mock_res, sentinel_inst_loader):
     workspaces = sentinel_inst_loader.get_sentinel_workspaces(sub_id="123")
     assert isinstance(workspaces, dict)
     assert workspaces["ABC"] == "ABC"
+
+
+class SentinelOption(NamedTuple):
+    """Test cases for MSSentinel init and connect."""
+
+    name: str
+    init_args: Dict[str, str]
+    connect_args: Dict[str, str]
+    exception: Any = None
+
+
+_RES_ID = (
+    "subscriptions/cd928da3-dcde-42a3-aad7-d2a1268c2f48/resourceGroups/RG/providers/"
+    "Microsoft.OperationalInsights/workspaces/WSName"
+)
+_WS_PARAMS = {
+    "sub_id": "cd928da3-dcde-42a3-aad7-d2a1268c2f48",
+    "res_grp": "RG",
+    "workspace": "WSName",
+}
+_TEST_DEFAULT_WS = {
+    "WorkspaceId": "52b1ab41-869e-4138-9e40-2a4457f09bf3",
+    "TenantId": "72f988bf-86f1-41af-91ab-2d7cd011db49",
+    "SubscriptionId": "cd928da3-dcde-42a3-aad7-d2a1268c2f48",
+    "ResourceGroup": "ABC",
+    "WorkspaceName": "Workspace1",
+}
+
+_SENTINEL_INPUTS = [
+    SentinelOption("init-default", {}, {}, None),
+    SentinelOption("init-res_id", {"res_id": _RES_ID}, {}, None),
+    SentinelOption("init-ws_name", {"ws_name": "WSName"}, {}, None),
+    SentinelOption("init-params", _WS_PARAMS, {}, None),
+    SentinelOption("conn-res_id", {}, {"res_id": _RES_ID}, None),
+    SentinelOption(
+        "conn-ws_name", {"ws_name": "WSName"}, {"ws_name": "MyTestWS"}, None
+    ),
+    SentinelOption("conn-params", {}, _WS_PARAMS, None),
+    SentinelOption(
+        "init-params-fail", {"sub_id": _WS_PARAMS["sub_id"]}, {}, MsticpyParameterError
+    ),
+]
+
+
+@patch(MicrosoftSentinel.__module__ + ".AzureData.connect")
+@patch(MicrosoftSentinel.__module__ + ".get_token")
+@pytest.mark.parametrize(
+    "test_opts", _SENTINEL_INPUTS, ids=[t.name for t in _SENTINEL_INPUTS]
+)
+def test_sentinel_connect_options(get_token: Mock, az_data_connect: Mock, test_opts):
+    """Test initialization and connect success with diff parameters."""
+    if test_opts.exception:
+        with pytest.raises(MsticpyParameterError):
+            sentinel = MicrosoftSentinel(**(test_opts.init_args))
+        return
+
+    default_ws_name = _TEST_DEFAULT_WS["WorkspaceName"]
+    with custom_mp_config("tests/msticpyconfig-test.yaml"):
+        sentinel = MicrosoftSentinel(**(test_opts.init_args))
+        if test_opts.init_args:
+            check.equal(sentinel.default_subscription, _WS_PARAMS["sub_id"])
+            check.equal(sentinel._default_resource_group, _WS_PARAMS["res_grp"])
+            check.equal(sentinel.default_workspace_name, _WS_PARAMS["workspace"])
+            check.is_not_none(sentinel.url)
+            check.greater_equal(len(sentinel.sent_urls), 4)
+            check.is_instance(sentinel.workspace_config, WorkspaceConfig)
+            check.equal(sentinel.default_subscription, _WS_PARAMS["sub_id"])
+            check.equal(sentinel._default_resource_group, _WS_PARAMS["res_grp"])
+            check.equal(sentinel.default_workspace_name, _WS_PARAMS["workspace"])
+            default_ws_name = sentinel.default_workspace_name
+        else:
+            check.is_instance(sentinel.workspace_config, WorkspaceConfig)
+            check.equal(
+                sentinel.default_workspace_name, _TEST_DEFAULT_WS["WorkspaceName"]
+            )
+            # check.equal(sentinel.workspace_config["WorkspaceName"], _TEST_DEFAULT_WS["WorkspaceName"])
+            # check.equal(sentinel.workspace_config["SubscriptionId"], _TEST_DEFAULT_WS["SubscriptionId"])
+
+        sentinel.connect(**(test_opts.connect_args))
+        if test_opts.connect_args:
+            if test_opts.connect_args.get("ws_name") == "MyTestWS":
+                expected = WorkspaceConfig("MyTestWS")
+                check.equal(
+                    sentinel.default_subscription,
+                    expected[WorkspaceConfig.CONF_SUB_ID_KEY],
+                )
+                check.equal(
+                    sentinel._default_resource_group,
+                    expected[WorkspaceConfig.CONF_RES_GROUP_KEY],
+                )
+                check.equal(
+                    sentinel.default_workspace_name,
+                    expected[WorkspaceConfig.CONF_WS_NAME_KEY],
+                )
+                check.is_not_none(sentinel.url)
+                check.greater_equal(len(sentinel.sent_urls), 4)
+                check.is_instance(sentinel.workspace_config, WorkspaceConfig)
+                check.equal(
+                    sentinel.default_subscription,
+                    expected[WorkspaceConfig.CONF_SUB_ID_KEY],
+                )
+                check.equal(
+                    sentinel._default_resource_group,
+                    expected[WorkspaceConfig.CONF_RES_GROUP_KEY],
+                )
+                check.equal(
+                    sentinel.default_workspace_name,
+                    expected[WorkspaceConfig.CONF_WS_NAME_KEY],
+                )
+
+            else:
+                check.equal(sentinel.default_subscription, _WS_PARAMS["sub_id"])
+                check.equal(sentinel._default_resource_group, _WS_PARAMS["res_grp"])
+                check.equal(sentinel.default_workspace_name, _WS_PARAMS["workspace"])
+                check.is_not_none(sentinel.url)
+                check.greater_equal(len(sentinel.sent_urls), 4)
+                check.is_instance(sentinel.workspace_config, WorkspaceConfig)
+                check.equal(sentinel.default_subscription, _WS_PARAMS["sub_id"])
+                check.equal(sentinel._default_resource_group, _WS_PARAMS["res_grp"])
+                check.equal(sentinel.default_workspace_name, _WS_PARAMS["workspace"])
+        else:
+            check.is_instance(sentinel.workspace_config, WorkspaceConfig)
+            check.equal(sentinel.default_workspace_name, default_ws_name)
+    print(test_opts)

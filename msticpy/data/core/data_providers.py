@@ -528,7 +528,7 @@ class QueryProvider:
         Examples
         --------
         >>> qp = QueryProvider("MSSentinel")
-        >>> qp_host = qp.create_paramramram("host_name", "str", "Name of Host")
+        >>> qp_host = qp.create_param("host_name", "str", "Name of Host")
         >>> qp_start = qp.create_param("start", "datetime")
         >>> qp_end = qp.create_param("end", "datetime")
         >>> qp_evt = qp.create_param("event_id", "int", None, 4688)

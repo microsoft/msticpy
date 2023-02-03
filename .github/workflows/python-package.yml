@@ -184,6 +184,7 @@ jobs:
   check_status:
     runs-on: ubuntu-latest
     needs: [build, lint]
+    if: ${{ always() }}
     steps:
       - name: File build fail issue
         if: ${{ env.GITHUB_REF_NAME == 'main' && ( needs.build.result == 'failure' || needs.lint.result == 'failure' ) }}

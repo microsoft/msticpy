@@ -14,7 +14,11 @@ from azure.common.exceptions import CloudError
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
-from .sentinel_utils import _azs_api_result_to_df, _build_sent_data, get_http_timeout
+from .sentinel_utils import (
+    _azs_api_result_to_df,
+    build_sentinel_api_req_data,
+    get_http_timeout,
+)
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -167,7 +171,7 @@ class SentinelTIMixin:
             "source": "MSTICPy",
         }
         data_items.update(_build_additional_indicator_items(**kwargs))
-        data = _build_sent_data(data_items, props=True)
+        data = build_sentinel_api_req_data(data_items, props=True)
         data["kind"] = "indicator"
         response = httpx.post(
             ti_url,
@@ -296,7 +300,7 @@ class SentinelTIMixin:
         data_items = _build_additional_indicator_items(**kwargs)
         data_items.pop("validFrom")
         full_data_items = _add_missing_items(data_items, indicator_details)
-        data = _build_sent_data(full_data_items, props=True)
+        data = build_sentinel_api_req_data(full_data_items, props=True)
         data["etag"] = indicator_details["etag"]
         data["kind"] = "indicator"
         params = {"api-version": "2021-10-01"}

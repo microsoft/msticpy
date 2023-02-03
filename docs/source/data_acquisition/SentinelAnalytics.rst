@@ -38,7 +38,7 @@ When creating an analytic if a template name or ID is provided details from that
 
 Otherwise you can specify details manually. Request elements include:
 -name: The name to give the analytic.
--query: The KQL query string to use in the anlaytic.
+-query: The KQL query string to use in the analytic.
 -query_frequency: How often the query should run in ISO8601 format, by default "PT5H" (or 5 hours)
 -query_period: How far back the query should look in ISO8601 format, by default "PT5H" (or 5 hours)
 -severity: The severity to raise incidents as, by default "Medium" but options include "Informational", "Low", "Medium", "High"

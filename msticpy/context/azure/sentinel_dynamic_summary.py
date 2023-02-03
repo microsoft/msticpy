@@ -15,6 +15,7 @@ import pandas as pd
 from ..._version import VERSION
 from ...common.exceptions import MsticpyAzureConnectionError, MsticpyParameterError
 from ...common.pkg_config import get_config, get_http_timeout
+from ...common.utility.format import is_valid_uuid
 from ...data import QueryProvider
 from .azure_data import get_api_headers
 
@@ -29,6 +30,11 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 _DYN_SUM_API_VERSION = "2023-03-01-preview"
+
+RTD_SENTINEL_DS_URL = (
+    "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
+    "SentinelDynamicSummaries.html"
+)
 
 
 class SentinelDynamicSummaryMixin:
@@ -70,15 +76,20 @@ class SentinelDynamicSummaryMixin:
         )
 
     def get_dynamic_summary(
-        self, summary_id: str, summary_items=False
+        self,
+        summary_id: Optional[str] = None,
+        summary_name: Optional[str] = None,
+        summary_items: bool = False,
     ) -> DynamicSummary:
         """
         Return DynamicSummary for ID.
 
         Parameters
         ----------
-        summary_id : str
+        summary_id : Optional[str]
             The ID of the Dynamic summary object.
+        summary_name : Optional[str]
+            The name of the Dynamic summary object.
         summary_items : bool, optional
             Use a data query to retrieve the dynamic summary along
             with summary items (data records), by default, false.
@@ -90,26 +101,41 @@ class SentinelDynamicSummaryMixin:
 
         Raises
         ------
-        MsticpyAzureConnectionError
-            If API returns an error.
+        LookupError
+            If Sentinel workspace settings cannot be found.
+            If the Dynamic Summary cannot be found.
+            If Sentinel API returns an error.
 
         """
-        if summary_items:
+        if not summary_id and not summary_name:
+            raise MsticpyParameterError(
+                "Must supply either summary_id or summary_name", parameter="summary_id"
+            )
+        if summary_name is None and not is_valid_uuid(summary_id):
+            summary_name = summary_id
+        if summary_items or summary_name:
+            # note: can only get summary items by name using query
             if not self.sent_data_query:  # type: ignore
                 try:
                     self.sent_data_query = SentinelQueryProvider(
                         self.default_workspace_name  # type: ignore
                     )
-                except LookupError:
-                    print(
+                except LookupError as ws_lookup_err:
+                    raise LookupError(
                         "Unable to find default workspace.",
-                        "Use 'sentinel.set_default_workspace(workspace='my_ws_name'",
+                        "Use 'sentinel.set_default_workspace(workspace='my_ws_name')",
                         "and retry.",
-                    )
+                    ) from ws_lookup_err
             if self.sent_data_query:
-                return df_to_dynamic_summary(
-                    self.sent_data_query.get_dynamic_summary(summary_id)
+                result = (
+                    self.sent_data_query.get_dynamic_summary_by_name(summary_name)
+                    if summary_name
+                    else self.sent_data_query.get_dynamic_summary(summary_id)
                 )
+                if result is None or result.empty:
+                    raise LookupError("No dynamic summary found for ID/name")
+                return df_to_dynamic_summary(result)
+            print("Unable to get data query provider for Sentinel workspace.")
 
         dyn_sum_url = self.sent_urls["dynamic_summary"] + f"/{summary_id}"  # type: ignore
 
@@ -122,7 +148,11 @@ class SentinelDynamicSummaryMixin:
         )
         if response.status_code == 200:
             return DynamicSummary.from_json(response.json())
-        raise MsticpyAzureConnectionError(response.json())
+        raise LookupError(
+            "Error returned from Sentinel API."
+            "Dynamic summary not found or the API returned an error.",
+            response.text,
+        )
 
     def create_dynamic_summary(
         self,
@@ -161,13 +191,18 @@ class SentinelDynamicSummaryMixin:
             if not summary.summary_name:
                 raise MsticpyParameterError(
                     "DynamicSummary must have unique `summary_name`.",
-                    parameters="summary_name",
+                    parameter="summary_name",
+                    title="Missing summary name.",
+                    help_uri=RTD_SENTINEL_DS_URL,
                 )
             return self._create_dynamic_summary(summary)
         # pylint: disable=unexpected-keyword-arg
         if not name:
             raise MsticpyParameterError(
-                "DynamicSummary must have unique name", parameters="name"
+                "DynamicSummary must have unique name",
+                parameter="name",
+                title="Missing summary name.",
+                help_uri=RTD_SENTINEL_DS_URL,
             )
         return self._create_dynamic_summary(
             name, description=description, data=data, **kwargs
@@ -220,6 +255,8 @@ class SentinelDynamicSummaryMixin:
             ),
             "Text response:",
             response.text,
+            title="Could not create/update dynamic summary",
+            help_uri=RTD_SENTINEL_DS_URL,
         )
 
     @_create_dynamic_summary.register
@@ -311,12 +348,15 @@ class SentinelDynamicSummaryMixin:
             f"Dynamic summary deletion failed with status {response.status_code}",
             "Text response:",
             response.text,
+            title="Could not delete dynamic summary",
+            help_uri=RTD_SENTINEL_DS_URL,
         )
 
     def update_dynamic_summary(
         self,
         summary: Optional[DynamicSummary] = None,
         summary_id: Optional[str] = None,
+        name: Optional[str] = None,
         data: Optional[pd.DataFrame] = None,
         **kwargs,
     ):
@@ -329,13 +369,13 @@ class SentinelDynamicSummaryMixin:
             DynamicSummary instance.
         summary_id : str
             The ID of the summary to update.
+        name : str
+            The name of the dynamic summary to update
         data : pd.DataFrame
             The summary data
 
         Other Parameters
         ----------------
-        name : str
-            The name of the dynamic summary to create
         description : str
             Dynamic Summary description
         relation_name : str, optional
@@ -366,13 +406,29 @@ class SentinelDynamicSummaryMixin:
         MsticpyAzureConnectionError
             If API returns an error.
 
+        Notes
+        -----
+        You can supply either a DynamicSummary instance or
+        specify the Dynamic Summary details as parameters.
+
+        See Also
+        --------
+        DynamicSummary
+
         """
         if (summary and not summary.summary_id) or (
             data is not None and not summary_id
         ):
-            raise MsticpyParameterError(
-                "You must supply a summary ID to update", parameters="summary_id"
-            )
+            summary_name = name or (summary.summary_name if summary else None)
+            if summary_name:
+                existing_summary = self.get_dynamic_summary(summary_name=summary_name)
+                summary_id = existing_summary.summary_id
+            else:
+                raise MsticpyParameterError(
+                    "You must supply a summary ID to update",
+                    parameter="summary_id",
+                    help_uri=RTD_SENTINEL_DS_URL,
+                )
         return self.create_dynamic_summary(
             summary=summary, data=data, summary_id=summary_id, **kwargs
         )
@@ -409,6 +465,12 @@ class SentinelQueryProvider:
     def get_dynamic_summary(self, summary_id) -> pd.DataFrame:
         """Retrieve dynamic summary from MS Sentinel table."""
         return self.qry_prov.MSSentinel.get_dynamic_summary_by_id(summary_id=summary_id)
+
+    def get_dynamic_summary_by_name(self, summary_name) -> pd.DataFrame:
+        """Retrieve dynamic summary from MS Sentinel table."""
+        return self.qry_prov.MSSentinel.get_dynamic_summary_by_name(
+            summary_name=summary_name
+        )
 
     def get_dynamic_summaries(self, start: datetime, end: datetime) -> pd.DataFrame:
         """Return dynamic summaries for date range."""

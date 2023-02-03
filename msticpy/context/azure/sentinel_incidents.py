@@ -16,7 +16,11 @@ from IPython.display import display
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
-from .sentinel_utils import _azs_api_result_to_df, _build_sent_data, get_http_timeout
+from .sentinel_utils import (
+    _azs_api_result_to_df,
+    build_sentinel_api_req_data,
+    get_http_timeout,
+)
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -249,7 +253,9 @@ class SentinelIncidentsMixin:
             update_items["title"] = incident_dets.iloc[0]["properties.title"]
         if "status" not in update_items.keys():
             update_items["status"] = incident_dets.iloc[0]["properties.status"]
-        data = _build_sent_data(update_items, etag=incident_dets.iloc[0]["etag"])
+        data = build_sentinel_api_req_data(
+            update_items, etag=incident_dets.iloc[0]["etag"]
+        )
         response = httpx.put(
             incident_url,
             headers=get_api_headers(self.token),  # type: ignore
@@ -326,7 +332,7 @@ class SentinelIncidentsMixin:
             data_items["firstActivityTimeUtc"] = first_activity_time.isoformat()
         if last_activity_time:
             data_items["lastActivityTimeUtc"] = last_activity_time.isoformat()
-        data = _build_sent_data(data_items, props=True)
+        data = build_sentinel_api_req_data(data_items, props=True)
         response = httpx.put(
             incident_url,
             headers=get_api_headers(self.token),  # type: ignore
@@ -343,7 +349,7 @@ class SentinelIncidentsMixin:
                 mark_res_id = self.sent_urls["bookmarks"] + f"/{bookmark_id}"  # type: ignore
                 relations_url = incident_url + f"/relations/{relation_id}"
                 bkmark_data_items = {"relatedResourceId": mark_res_id}
-                data = _build_sent_data(bkmark_data_items, props=True)
+                data = build_sentinel_api_req_data(bkmark_data_items, props=True)
                 params = {"api-version": "2021-04-01"}
                 response = httpx.put(
                     relations_url,
@@ -423,7 +429,7 @@ class SentinelIncidentsMixin:
             self.sent_urls["incidents"] + f"/{incident_id}/comments/{uuid4()}"  # type: ignore
         )
         params = {"api-version": "2020-01-01"}
-        data = _build_sent_data({"message": comment})
+        data = build_sentinel_api_req_data({"message": comment})
         response = httpx.put(
             comment_url,
             headers=get_api_headers(self.token),  # type: ignore
@@ -463,7 +469,7 @@ class SentinelIncidentsMixin:
         bkmark_data_items = {
             "relatedResourceId": mark_res_id.split("https://management.azure.com")[1]
         }
-        data = _build_sent_data(bkmark_data_items, props=True)
+        data = build_sentinel_api_req_data(bkmark_data_items, props=True)
         params = {"api-version": "2021-04-01"}
         response = httpx.put(
             bookmark_url,

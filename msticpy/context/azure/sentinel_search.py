@@ -12,7 +12,7 @@ from azure.common.exceptions import CloudError
 
 from ..._version import VERSION
 from .azure_data import get_api_headers
-from .sentinel_utils import _build_sent_data
+from .sentinel_utils import build_sentinel_api_req_data
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -71,7 +71,7 @@ class SentinelSearchlistsMixin:
                 "endSearchTime": f"{search_end.isoformat()}",
             }
         }
-        search_body = _build_sent_data(search_items)
+        search_body = build_sentinel_api_req_data(search_items)
         search_create_response = httpx.put(
             search_url,
             headers=get_api_headers(self.token),  # type: ignore

@@ -183,7 +183,7 @@ class DynamicSummary:
             Collection of summary items, by default None
 
         """
-        self.summary_id: str = summary_id or str(uuid.uuid4())
+        self.summary_id: Optional[str] = summary_id or str(uuid.uuid4())
         self.summary_name: str = kwargs.pop("summary_name", None)
         self.summary_description: str = kwargs.pop("summary_description", None)
         self.tenant_id: str = kwargs.pop(

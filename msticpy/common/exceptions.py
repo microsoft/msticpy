@@ -7,7 +7,7 @@
 import contextlib
 import sys
 import traceback
-from typing import List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 from IPython.display import display
 
@@ -219,8 +219,19 @@ class MsticpyUserError(MsticpyException):
         return "\n".join(out_lines)
 
     @staticmethod
-    def _format_exception_context(stack, frame_locals):
-        context_lines: List[str] = ["Stack:", *stack, "---", "Locals:"]
+    def _format_exception_context(stack: List[str], frame_locals: Dict[str, Any]):
+        """Format the exception context."""
+        separator_line = "-" * 80
+        context_lines: List[str] = [
+            f"MSTICPy version: {VERSION}",
+            f"Python version: {sys.version}",
+            f"Platform: {sys.platform}",
+            separator_line,
+            "Stack:",
+            *stack,
+            separator_line,
+            "Locals:",
+        ]
         context_lines.extend(
             f"{var} ({type(val).__name__}) = {val}" for var, val in frame_locals.items()
         )
@@ -228,7 +239,7 @@ class MsticpyUserError(MsticpyException):
         if ex_traceback:
             context_lines.extend(
                 (
-                    "---",
+                    separator_line,
                     "Exception was raised by:",
                     *(traceback.format_exception(ex_type, ex_value, ex_traceback)),
                 )
@@ -505,8 +516,8 @@ class MsticpyParameterError(MsticpyUserError):
         ----------
         help_uri : Union[Tuple[str, str], str, None], optional
             Override the default help URI.
-        parameters : Union[str, List[str]
-            The name of the bad parameter(s).
+        parameter : Union[str, List[str]
+            The name(s) of the bad parameter(s).
 
         """
         parameter = kwargs.pop("parameter", None)

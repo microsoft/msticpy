@@ -14,7 +14,7 @@ from azure.common.exceptions import CloudError
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
-from .sentinel_utils import _build_sent_data, get_http_timeout
+from .sentinel_utils import build_sentinel_api_req_data, get_http_timeout
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -103,7 +103,7 @@ class SentinelWatchlistsMixin:
         if isinstance(data, pd.DataFrame) and not data.empty:
             data_csv = data.to_csv(index=False)
             data_items["rawContent"] = str(data_csv)
-        request_data = _build_sent_data(data_items, props=True)
+        request_data = build_sentinel_api_req_data(data_items, props=True)
         response = httpx.put(
             watchlist_url,
             headers=get_api_headers(self.token),  # type: ignore
