@@ -768,15 +768,15 @@ def plot_map(
         data.apply(lambda row: (row[lat_column], row[long_column]), axis=1)
     )
     # common dictionary of kwargs to _create_feature_group
-    static_kwargs = dict(
-        lat_column=lat_column,
-        long_column=long_column,
-        icon_column=icon_column,
-        icon_map=icon_map,
-        popup_cols=popup_columns,
-        tooltip_cols=tooltip_columns,
-        use_marker_cluster=kwargs.pop("marker_cluster", True),
-    )
+    static_kwargs = {
+        "lat_column": lat_column,
+        "long_column": long_column,
+        "icon_column": icon_column,
+        "icon_map": icon_map,
+        "popup_cols": popup_columns,
+        "tooltip_cols": tooltip_columns,
+        "use_marker_cluster": kwargs.pop("marker_cluster", True),
+    }
     if layer_column is None:
         feature_group = _create_feature_group(
             data=data,

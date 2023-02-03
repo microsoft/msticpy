@@ -66,7 +66,7 @@ _MISSING_PKG_WARN = """
 incorrect version</h3></font>
 """
 
-_HELP_URIS = [
+_HELP_URIS = (
     (
         '<li><a href="https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/'
         'A%20Getting%20Started%20Guide%20For%20Azure%20Sentinel%20ML%20Notebooks.ipynb"'
@@ -97,7 +97,7 @@ _HELP_URIS = [
         'target="_blank" rel="noopener noreferrer">'
         "Trouble-Shooting Notebooks (notebook)</a></li>"
     ),
-]
+)
 
 _MISSING_MPCONFIG_ENV_ERR = f"""
 <h3><font color='orange'>Warning: no <i>msticpyconfig.yaml</i> found</h3></font>
@@ -130,6 +130,7 @@ def _get_verbosity_setting() -> Callable[[Optional[int]], int]:
 
 _VERBOSITY: Callable[[Optional[int]], int] = _get_verbosity_setting()
 
+# pylint: disable=use-dict-literal
 _NB_IMPORTS = [
     dict(pkg="pandas", alias="pd"),
     dict(pkg="IPython", tgt="get_ipython"),
@@ -145,7 +146,7 @@ _NB_IMPORTS = [
 if sns is not None:
     _NB_IMPORTS.append(dict(pkg="seaborn", alias="sns"))
 
-_MP_IMPORTS = [
+_MP_IMPORTS = (
     dict(pkg="msticpy"),
     dict(pkg="msticpy.data", tgt="QueryProvider"),
     dict(pkg="msticpy.vis.foliummap", tgt="FoliumMap"),
@@ -164,13 +165,14 @@ _MP_IMPORTS = [
     dict(pkg="msticpy.vis", tgt="nbdisplay"),
     dict(pkg="msticpy.init", tgt="mp_pandas_accessors"),
     dict(pkg="msticpy", tgt="nbwidgets"),
-]
+)
 
-_MP_IMPORT_ALL: List[Dict[str, str]] = [
+_MP_IMPORT_ALL: List[Dict[str, str]] = (
     dict(module_name="msticpy.datamodel.entities"),
     dict(module_name="msticpy.nbtools"),
     dict(module_name="msticpy.sectools"),
-]
+)
+# pylint: enable=use-dict-literal
 
 _CONF_URI = (
     "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html"

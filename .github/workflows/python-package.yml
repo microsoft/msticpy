@@ -55,10 +55,10 @@ jobs:
       - name: Install test dependencies
         run: |
           if [ -f requirements-dev.txt ]; then
-            python -m pip install prospector
             python -m pip install -r requirements-dev.txt
           else
-            python -m pip install flake8 black bandit mypy lxml pylint types-attrs
+            echo "Missing requirements-dev.txt. Installing minimal requirements for testing."
+            python -m pip install flake8 black bandit mypy lxml pylint types-attrs pydocstyle pyroma
             python -m pip install pytest pytest-cov pytest-xdist pytest-check aiohttp nbconvert jupyter_contrib_nbextensions
             python -m pip install Pygments respx pytest-xdist markdown beautifulsoup4 Pillow async-cache
           fi

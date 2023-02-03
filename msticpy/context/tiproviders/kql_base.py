@@ -321,7 +321,6 @@ class KqlTIProvider(TIProvider):
         query_type: str = None,
         **kwargs,
     ) -> Tuple[Callable, Dict[str, Any]]:
-
         ioc_key = f"{ioc_type}-{query_type}" if query_type else ioc_type
         query_def = self._QUERIES.get(ioc_key, None)
         if not query_def:

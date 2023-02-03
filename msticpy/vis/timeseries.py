@@ -214,15 +214,16 @@ def display_timeseries_anomalies(
     )
 
     # create default plot args
-    arg_dict: Dict[str, Any] = dict(
-        x=time_column,
-        y=value_column,
-        size=12,
-        color=color[2],
-        fill_alpha=0.2,
-        legend_label="anomalies",
-        source=ColumnDataSource(data_anomaly),
-    )
+    # pylint: disable=use-dict-literal
+    arg_dict: Dict[str, Any] = {
+        "x": time_column,
+        "y": value_column,
+        "size": 12,
+        "color": color[2],
+        "fill_alpha": 0.2,
+        "legend_label": "anomalies",
+        "source": ColumnDataSource(data_anomaly),
+    }
 
     # setting the visualization types for anomalies based on user input to kind
     if kind == "cross":
@@ -262,7 +263,7 @@ def display_timeseries_anomalies(
     return plot
 
 
-# Keep misspelled name for backward compatability
+# Keep misspelled name for backward compatibility
 @export
 @deprecated(
     "Will be removed in version 2.0.0. Please use display_timeseries_anomalies",

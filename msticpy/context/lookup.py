@@ -97,7 +97,6 @@ class Lookup:
 
         primary_providers = kwargs.pop("primary_providers", None)
         if primary_providers:
-
             for prov in primary_providers:
                 self.add_provider(prov, primary=True)
         secondary_providers = kwargs.pop("secondary_providers", None)

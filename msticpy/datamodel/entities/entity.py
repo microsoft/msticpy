@@ -38,7 +38,6 @@ class _EntityJSONEncoder(json.JSONEncoder):
     """Encode entity to JSON."""
 
     def default(self, o):
-
         if isinstance(o, Entity):
             return {
                 name: value
