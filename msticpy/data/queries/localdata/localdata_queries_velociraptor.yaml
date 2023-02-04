@@ -1,0 +1,87 @@
+metadata:
+  version: 1
+  description: Local Data Queries for Velociraptor Offline Collection - Windows
+  data_environments: [LocalData]
+  data_families: [WindowsSecurity, Network]
+  tags: ['process', 'account', 'network']
+defaults:
+  metadata:
+    data_source: 'security_alert'
+sources:
+  pslist:
+    description: List Windows Processes
+    metadata:
+      data_families: [windows]
+    args:
+      query: windows.system.pslist.json
+    parameters:
+  netstat:
+    description: List Windows netstat
+    metadata:
+      data_families: [windows]
+    args:
+      query: windows.network.netstat.json
+    parameters:
+  autoruns:
+    description: List Autoruns by sysinternals
+    metadata:
+      data_families: [windows]
+    args:
+      query: windows.sysinternals.autoruns.json
+    parameters:
+  taskscheduler:
+    description: List scheduled tasks
+    metadata:
+      data_families: [windows]
+    args:
+     query: analysis.json
+    parameters:
+  mft:
+    description: List NTFS MFT$
+    metadata:
+      data_families: [windows]
+    args:
+      query: windows.ntfs.mft.json
+    parameters:
+  usn:
+    description: List NTFS Update Sequence Number Journal
+    metadata:
+      data_families: [windows]
+    args:
+      query: windows.forensics.usn.json
+    parameters:
+  inventoryapplicationfile:
+    description: List Applications
+    metadata:
+      data_families: [windows]
+    args:
+      query: inventoryapplicationfile.json
+    parameters:
+  chromeextensions:
+    description: List Chrome extensions
+    metadata:
+      data_families: [windows]
+    args:
+      query: windows.applications.chrome.extensions.json
+    parameters:
+  chromehistory:
+    description: List Chrome history
+    metadata:
+      data_families: [windows]
+    args:
+      query: windows.applications.chrome.history.json
+    parameters:
+  users:
+    description: List system users
+    metadata:
+      data_families: [windows]
+    args:
+      query: windows.sys.users.json
+    parameters:
+  services:
+    description: List system services
+    metadata:
+      data_families: [windows]
+    args:
+      query: custom.windows.system.services.json
+    parameters:
