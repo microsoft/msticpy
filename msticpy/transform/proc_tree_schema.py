@@ -242,12 +242,29 @@ SYSMON_PROCESS_CREATE_EVENT_SCH = ProcSchema(
     host_name_column="Computer",
 )
 
+# Osquery process (may vary depending on exact query)
+OSQUERY_EVENT_SCH = ProcSchema(
+    time_stamp="calendarTime",
+    # host_name_column = "hostIdentifier",
+    process_name="columns_name",
+    process_id="columns_pid",
+    parent_name="columns_pcmdline",
+    parent_id="columns_parent",
+    logon_id=None,
+    target_logon_id=None,
+    cmd_line="columns_cmdline",
+    user_name="columns_username",
+    path_separator="/",
+    user_id="columns_uid",
+)
+
 SUPPORTED_SCHEMAS = (
     WIN_EVENT_SCH,
     LX_EVENT_SCH,
     MDE_INT_EVENT_SCH,
     MDE_EVENT_SCH,
     SYSMON_PROCESS_CREATE_EVENT_SCH,
+    OSQUERY_EVENT_SCH,
 )
 
 

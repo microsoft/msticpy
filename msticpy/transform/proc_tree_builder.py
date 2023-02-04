@@ -21,6 +21,7 @@ from .proc_tree_schema import (  # noqa: F401
     SUPPORTED_SCHEMAS,
     SYSMON_PROCESS_CREATE_EVENT_SCH,
     WIN_EVENT_SCH,
+    OSQUERY_EVENT_SCH,
 )
 from .proc_tree_schema import ColNames as Col
 from .process_tree_utils import get_summary_info

@@ -1,0 +1,59 @@
+metadata:
+  version: 1
+  description: Local Data Queries for Osquery Linux log - osqueryd.{results,snapshots}.{log,json}
+  data_environments: [LocalOsquery]
+  data_families: [linux, network, process, file]
+  tags: ['process', 'account', 'network', 'file']
+defaults:
+  metadata:
+    data_source: 'security_alert'
+sources:
+  processes:
+    description: Linux Processes history
+    metadata:
+      data_families: [linux, process]
+    args:
+      query: pack_osquery-custom-pack2_processes
+    parameters:
+  process_binding_to_ports:
+    description: Linux Processes binding to ports
+    metadata:
+      data_families: [linux, process, network]
+    args:
+      query: pack_osquery-custom-pack2_process_binding_to_ports
+    parameters:
+  osquery_info:
+    description: Osquery Information
+    metadata:
+      data_families: [linux]
+    args:
+      query: pack_osquery-monitoring_osquery_info
+    parameters:
+  outbound_connections:
+    description: Network outbound connections
+    metadata:
+      data_families: [linux, network]
+    args:
+     query: pack_osquery-custom-pack2_outbound_connections
+    parameters:
+  fim:
+    description: File Integrity Monitoring
+    metadata:
+      data_families: [linux, file]
+    args:
+      query: fim
+    parameters:
+  shell_history:
+    description: Shell history
+    metadata:
+      data_families: [linux, shell]
+    args:
+      query: pack_incident-response_shell_history
+    parameters:
+  deb_packages:
+    description: Deb packages
+    metadata:
+      data_families: [linux, file]
+    args:
+      query: pack_vuln-management_deb_packages
+    parameters:
