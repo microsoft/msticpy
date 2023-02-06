@@ -54,7 +54,9 @@ class AzureCredEnvNames:
     AZURE_CLIENT_SECRET = "AZURE_CLIENT_SECRET"  # nosec  # noqa
 
 
-def _build_env_client(aad_uri: str = None, **kwargs) -> Optional[EnvironmentCredential]:
+def _build_env_client(
+    aad_uri: Optional[str] = None, **kwargs
+) -> Optional[EnvironmentCredential]:
     """Build a credential from environment variables."""
     del kwargs
     if (
@@ -73,7 +75,7 @@ def _build_cli_client(**kwargs) -> AzureCliCredential:
 
 
 def _build_msi_client(
-    tenant_id: str = None, aad_uri: str = None, **kwargs
+    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
 ) -> ManagedIdentityCredential:
     """Build a credential from Managed Identity."""
     msi_kwargs = kwargs.copy()
@@ -86,7 +88,7 @@ def _build_msi_client(
 
 
 def _build_vscode_client(
-    tenant_id: str = None, aad_uri: str = None, **kwargs
+    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
 ) -> VisualStudioCodeCredential:
     """Build a credential from Visual Studio Code."""
     del kwargs
@@ -94,7 +96,7 @@ def _build_vscode_client(
 
 
 def _build_interactive_client(
-    tenant_id: str = None, aad_uri: str = None, **kwargs
+    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
 ) -> InteractiveBrowserCredential:
     """Build a credential from Interactive Browser logon."""
     return InteractiveBrowserCredential(
@@ -103,14 +105,14 @@ def _build_interactive_client(
 
 
 def _build_device_code_client(
-    tenant_id: str = None, aad_uri: str = None, **kwargs
+    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
 ) -> DeviceCodeCredential:
     """Build a credential from Device Code."""
     return DeviceCodeCredential(authority=aad_uri, tenant_id=tenant_id, **kwargs)
 
 
 def _build_client_secret_client(
-    tenant_id: str = None, aad_uri: str = None, **kwargs
+    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
 ) -> ClientSecretCredential:
     """Build a credential from Client Secret."""
     client_id = kwargs.pop("client_id", None)
@@ -127,7 +129,7 @@ def _build_client_secret_client(
 
 
 def _build_certificate_client(
-    tenant_id: str = None, aad_uri: str = None, **kwargs
+    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
 ) -> CertificateCredential:
     """Build a credential from Certificate."""
     client_id = kwargs.pop("client_id", None)
@@ -173,9 +175,9 @@ def list_auth_methods() -> List[str]:
 
 
 def _az_connect_core(
-    auth_methods: List[str] = None,
-    cloud: str = None,
-    tenant_id: str = None,
+    auth_methods: Optional[List[str]] = None,
+    cloud: Optional[str] = None,
+    tenant_id: Optional[str] = None,
     silent: bool = False,
     **kwargs,
 ) -> AzCredentials:
@@ -265,7 +267,7 @@ def _az_connect_core(
 def _build_chained_creds(
     aad_uri,
     requested_clients: Union[List[str], None] = None,
-    tenant_id: str = None,
+    tenant_id: Optional[str] = None,
     **kwargs,
 ) -> ChainedTokenCredential:
     """
@@ -356,7 +358,7 @@ az_connect_core = _az_connect_core
 
 
 def only_interactive_cred(chained_cred: ChainedTokenCredential):
-    """Return True if only interactivebrowser credentials available."""
+    """Return True if only interactive browser credentials available."""
     return len(chained_cred.credentials) == 1 and isinstance(
         chained_cred.credentials[0], InteractiveBrowserCredential
     )

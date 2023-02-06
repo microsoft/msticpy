@@ -16,6 +16,8 @@ Submodules
    msticpy.context.azure.sentinel_analytics
    msticpy.context.azure.sentinel_bookmarks
    msticpy.context.azure.sentinel_core
+   msticpy.context.azure.sentinel_dynamic_summary
+   msticpy.context.azure.sentinel_dynamic_summary_types
    msticpy.context.azure.sentinel_incidents
    msticpy.context.azure.sentinel_search
    msticpy.context.azure.sentinel_ti

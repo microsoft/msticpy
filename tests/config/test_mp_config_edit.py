@@ -56,7 +56,6 @@ def test_mp_edit_load(mp_edit):
     _check_tab_state(mp_edit, enabled=len(mp_edit.controls), dummy=0)
 
     for idx, (title, tab) in enumerate(mp_edit.controls.items()):
-
         check.equal(mp_edit.tab_ctrl.tab.get_title(idx), title)
 
         check.is_instance(tab, (CEItemsBase, CESimpleSettings))

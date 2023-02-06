@@ -96,7 +96,6 @@ def _get_supported_ioc_types(ti_lookup: TILookup) -> Dict[str, Set[str]]:
 def _create_lookup_func(
     ti_lookup: TILookup, ioc, ioc_name, providers
 ) -> Tuple[str, str, Callable[..., pd.DataFrame]]:
-
     suffix = f"_{ioc_name}"
     short_func_name = f"lookup{suffix}"
     func_name = f"{short_func_name}_{ioc_name}"

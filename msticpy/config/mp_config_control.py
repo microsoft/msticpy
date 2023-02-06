@@ -211,7 +211,6 @@ class MpConfigControls:
         """Create a blank control dictionary from settings."""
         ctrl_dict = config_dict.copy()
         for name, val in ctrl_dict.items():
-
             if (
                 isinstance(val, dict)
                 and STORE_KEYVAULT not in val
