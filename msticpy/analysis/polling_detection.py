@@ -14,8 +14,7 @@ There is currently only one technique available for filtering polling data which
 the class PeriodogramPollingDetector.
 """
 from collections import Counter
-from datetime import datetime
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, List
 
 import numpy as np
 import numpy.typing as npt
@@ -34,7 +33,7 @@ class PeriodogramPollingDetector:
     Attributes
     ----------
     data: DataFrame
-        Dataframe containing the data to be analysed. Must contain a    
+        Dataframe containing the data to be analysed. Must contain a
         column of edges and a column of timestamps
 
     Methods
@@ -51,7 +50,7 @@ class PeriodogramPollingDetector:
         Parameters
         ----------
         data: DataFrame
-            Dataframe containing the data to be analysed. Must contain a    
+            Dataframe containing the data to be analysed. Must contain a
             column of edges and a column of timestamps
 
         copy: bool
@@ -61,7 +60,6 @@ class PeriodogramPollingDetector:
             self.data = data.copy()
         else:
             self.data = data
-
 
     def _g_test(self, pxx: npt.NDArray, exclude_pi: bool) -> Tuple[float, float]:
         """
@@ -133,7 +131,7 @@ class PeriodogramPollingDetector:
         interval: int = 1,
     ) -> Tuple[float, float, float]:
         """
-        Carry out periodogram polling detecton.
+        Carry out periodogram polling detecton on an array of timestamps.
 
         Carries out the the procedure outlined in [1] to detect if the arrival times have a strong
         periodic component.
@@ -186,21 +184,31 @@ class PeriodogramPollingDetector:
         return p_val, max_pxx_freq, 1 / max_pxx_freq
 
     def detect_polling(
-        self, 
-        time_column: str,
-        groupby: str = None
+        self, time_column: str, groupby: Optional[Union[List[str], str]] = None
     ) -> None:
+        """
+        Detect the time interval which is highly periodic.
+
+        Runs PeriodogramPollingDetector._detect_polling_arr on the time_column and populates a
+        p_value column, dominant_frequency column and dominant_interval column.
+
+        If groupby column(s) are given then PeriodogramPollingDetector._detect_polling_arr is ran on
+        each group.
+
+        Parameters
+        ----------
+        time_column: str
+            The name of the column that contains timestamps
+        groupby: str or list[str], optional
+            Column(s) to group by
+        """
         ts_col = self.data[time_column]
 
         start = min(ts_col)
         end = max(ts_col)
-        
+
         if not groupby:
-            p_value, freq, interval = self._detect_polling_arr(
-                ts_col,
-                start,
-                end
-            )
+            p_value, freq, interval = self._detect_polling_arr(ts_col, start, end)
 
             self.data["p_value"] = p_value
             self.data["dominant_frequency"] = freq
@@ -208,16 +216,14 @@ class PeriodogramPollingDetector:
         else:
             grouped_results = self.data.groupby(groupby).apply(
                 lambda x: self._detect_polling_arr(
-                    x[time_column],
-                    min(x[time_column]),
-                    max(x[time_column])
+                    x[time_column], min(x[time_column]), max(x[time_column])
                 )
             )
 
             grouped_results_df = pd.DataFrame(
                 grouped_results.tolist(),
                 columns=["p_value", "dominant_frequency", "dominant_interval"],
-                index=grouped_results.index
+                index=grouped_results.index,
             ).reset_index()
 
             self.data = self.data.merge(grouped_results_df)

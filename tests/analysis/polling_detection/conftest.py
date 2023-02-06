@@ -14,7 +14,7 @@ np.random.seed(10)
 @pytest.fixture()
 def periodic_data():
     np.random.seed(10)
-    
+
     N = 86400
     start_ts = 1669852800
     end_ts = start_ts + N
