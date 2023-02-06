@@ -14,10 +14,12 @@ There is currently only one technique available for filtering polling data which
 the class PeriodogramPollingDetector.
 """
 from collections import Counter
-from typing import Tuple
+from datetime import datetime
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 
 from scipy import signal, special
 
@@ -29,6 +31,12 @@ class PeriodogramPollingDetector:
     """
     Polling detector using the Periodogram to detect strong frequencies.
 
+    Attributes
+    ----------
+    data: DataFrame
+        Dataframe containing the data to be analysed. Must contain a    
+        column of edges and a column of timestamps
+
     Methods
     -------
     detect_polling(timestamps, process_start, process_end, interval)
@@ -36,8 +44,24 @@ class PeriodogramPollingDetector:
 
     """
 
-    def __init__(self) -> None:
-        """Create periodogram polling detector."""
+    def __init__(self, data: pd.DataFrame, copy: bool = False) -> None:
+        """
+        Create periodogram polling detector.
+
+        Parameters
+        ----------
+        data: DataFrame
+            Dataframe containing the data to be analysed. Must contain a    
+            column of edges and a column of timestamps
+
+        copy: bool
+            A bool to indicate whether to copy the dataframe supplied to data
+        """
+        if copy:
+            self.data = data.copy()
+        else:
+            self.data = data
+
 
     def _g_test(self, pxx: npt.NDArray, exclude_pi: bool) -> Tuple[float, float]:
         """
@@ -101,13 +125,13 @@ class PeriodogramPollingDetector:
 
         return test_statistic, p_value
 
-    def detect_polling(
+    def _detect_polling_arr(
         self,
         timestamps: npt.NDArray,
         process_start: int,
         process_end: int,
         interval: int = 1,
-    ) -> float:
+    ) -> Tuple[float, float, float]:
         """
         Carry out periodogram polling detecton.
 
@@ -154,17 +178,46 @@ class PeriodogramPollingDetector:
 
         max_pxx_freq = freq[np.argmax(pxx)]
 
-        print(
-            (
-                f"Dominant frequency detected at {round(1 / max_pxx_freq)} seconds\n"
-                f"\tFrequency: {max_pxx_freq}\n"
-                f"\tTime domain: {1 / max_pxx_freq}"
-            )
-        )
-
         if len(dn_star) % 2 == 0:
             _, p_val = self._g_test(pxx, True)
         else:
             _, p_val = self._g_test(pxx, False)
 
-        return p_val
+        return p_val, max_pxx_freq, 1 / max_pxx_freq
+
+    def detect_polling(
+        self, 
+        time_column: str,
+        groupby: str = None
+    ) -> None:
+        ts_col = self.data[time_column]
+
+        start = min(ts_col)
+        end = max(ts_col)
+        
+        if not groupby:
+            p_value, freq, interval = self._detect_polling_arr(
+                ts_col,
+                start,
+                end
+            )
+
+            self.data["p_value"] = p_value
+            self.data["dominant_frequency"] = freq
+            self.data["dominant_interval"] = interval
+        else:
+            grouped_results = self.data.groupby(groupby).apply(
+                lambda x: self._detect_polling_arr(
+                    x[time_column],
+                    min(x[time_column]),
+                    max(x[time_column])
+                )
+            )
+
+            grouped_results_df = pd.DataFrame(
+                grouped_results.tolist(),
+                columns=["p_value", "dominant_frequency", "dominant_interval"],
+                index=grouped_results.index
+            ).reset_index()
+
+            self.data = self.data.merge(grouped_results_df)

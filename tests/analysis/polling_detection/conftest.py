@@ -5,13 +5,16 @@
 # --------------------------------------------------------------------------
 """Polling detection module test fixtures"""
 import numpy as np
+import pandas as pd
 import pytest
 
 np.random.seed(10)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def periodic_data():
+    np.random.seed(10)
+    
     N = 86400
     start_ts = 1669852800
     end_ts = start_ts + N
@@ -23,11 +26,13 @@ def periodic_data():
     x = (periodic + homo_pois).astype("bool")
     ts = np.arange(start_ts, end_ts)[x]
 
-    return ts
+    return pd.DataFrame({"edges": "periodic_edge", "timestamps": ts})
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def non_periodic_data():
+    np.random.seed(10)
+
     N = 86400
     start_ts = 1669852800
     end_ts = start_ts + N
@@ -36,4 +41,4 @@ def non_periodic_data():
     x = homo_pois.astype("bool")
     ts = np.arange(start_ts, end_ts)[x]
 
-    return ts
+    return pd.DataFrame({"edges": "non_periodic_edge", "timestamps": ts})

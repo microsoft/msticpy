@@ -10,7 +10,10 @@ The g test outputs are tested against the fisher.g.test.single function in the G
 
 The code for this is located at https://github.com/cran/GeneCycle/blob/master/R/fisher.g.test.R
 """
+from datetime import datetime
+
 import unittest.mock as mock
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -18,6 +21,19 @@ import pytest
 from msticpy.analysis import polling_detection as poll
 
 __author__ = "Daniel Yates"
+
+## #### ##
+## init ##
+## #### ##
+@pytest.mark.parametrize(
+    "copy, equality_assertion", [(True, lambda x, y: x != y), (False, lambda x, y: x == y)]
+)
+def test_df_copied(copy, equality_assertion):
+    null_df = pd.DataFrame()
+
+    per = poll.PeriodogramPollingDetector(null_df, copy=copy)
+
+    assert equality_assertion(id(null_df), id(per.data))
 
 
 ## ###### ##
@@ -31,8 +47,9 @@ __author__ = "Daniel Yates"
 def test_g_test_small_sample(exclude_pi, expected):
     test_power_spectral_density = [10, 60, 20, 30, 40, 10, 10, 10]
 
-    per = poll.PeriodogramPollingDetector()
+    null_df = pd.DataFrame()
 
+    per = poll.PeriodogramPollingDetector(null_df)
     _, pval = per._g_test(test_power_spectral_density, exclude_pi)
 
     assert round(pval, 7) == expected
@@ -42,111 +59,116 @@ def test_g_test_small_sample(exclude_pi, expected):
 def test_g_test_large_sample(exclude_pi, expected):
     test_power_spectral_density = [10, 60, 20, 30, 40, 10, 10, 10] * 200
 
-    per = poll.PeriodogramPollingDetector()
+    null_df = pd.DataFrame()
 
+    per = poll.PeriodogramPollingDetector(null_df)
     _, pval = per._g_test(test_power_spectral_density, exclude_pi)
 
     assert round(pval, 7) == expected
+
+
+## ################### ##
+## _detect_polling_arr ##
+## ################### ##
+
+
+def test__detect_polling_arr_significant(periodic_data):
+    per = poll.PeriodogramPollingDetector(periodic_data)
+
+    ts = per.data["timestamps"]
+
+    p_value, _, _ = per._detect_polling_arr(ts, min(ts), max(ts))
+
+    assert p_value < 0.01
+
+def test__detect_polling_arr_non_significant(non_periodic_data):
+    per = poll.PeriodogramPollingDetector(non_periodic_data)
+
+    ts = per.data["timestamps"]
+
+    p_value, _, _ = per._detect_polling_arr(ts, min(ts), max(ts))
+
+    assert p_value > 0.5
+
+
+def test__detect_polling_arr_multiple_observations_per_second(periodic_data):
+    periodic_data_add_obs = pd.concat([
+        periodic_data, periodic_data.sample(n=10000, replace=True)
+    ])
+    per = poll.PeriodogramPollingDetector(periodic_data)
+    
+    ts = per.data["timestamps"]
+    
+    p_value, _, _ = per._detect_polling_arr(ts, min(ts), max(ts))
+
+    per_add_obs = poll.PeriodogramPollingDetector(periodic_data_add_obs)
+
+    ts_add_obs = per_add_obs.data["timestamps"]
+
+    p_value_add_obs, _, _ = per_add_obs._detect_polling_arr(ts_add_obs, min(ts_add_obs), max(ts_add_obs))
+
+    assert p_value == p_value_add_obs
+
+
+def test_detect_polling_arr_returns_frequency(periodic_data):
+    per = poll.PeriodogramPollingDetector(periodic_data)
+
+    ts = per.data["timestamps"]
+
+    _, freq, freq_reciprocal = per._detect_polling_arr(ts, min(ts), max(ts))
+
+    assert round(freq, 6) == 0.016667
+    assert round(freq_reciprocal, 6) == 59.999306
 
 
 ## ############## ##
 ## detect_polling ##
 ## ############## ##
 
+def test_detect_polling_periodic_df(periodic_data):
+    per = poll.PeriodogramPollingDetector(periodic_data)
 
-def test_detect_polling_significant(periodic_data):
-    per = poll.PeriodogramPollingDetector()
+    per.detect_polling("timestamps")
 
-    p_val = per.detect_polling(periodic_data, min(periodic_data), max(periodic_data))
+    assert all(per.data["p_value"] < 0.01)
 
-    assert p_val < 0.01
+    assert all(per.data["dominant_frequency"].round(6) == 0.016667)
 
-
-@pytest.mark.parametrize("transform", [list, pd.Series])
-def test_detect_polling_different_input_types(transform, periodic_data):
-    data = transform(periodic_data)
-
-    per = poll.PeriodogramPollingDetector()
-
-    p_val = per.detect_polling(data, min(periodic_data), max(periodic_data))
-
-    assert p_val < 0.01
+    assert all(per.data["dominant_interval"].round(0) == 60)
 
 
-def test_detect_polling_non_significant(non_periodic_data):
-    per = poll.PeriodogramPollingDetector()
+def test_detect_polling_non_periodic_df(non_periodic_data):
+    per = poll.PeriodogramPollingDetector(non_periodic_data)
+    per.detect_polling("timestamps")
 
-    p_val = per.detect_polling(
-        non_periodic_data, min(non_periodic_data), max(non_periodic_data)
-    )
-
-    assert p_val > 0.5
+    assert all(per.data["p_value"].unique() > 0.5)
 
 
-def test_detect_polling_multiple_observations_per_second(periodic_data):
-    additional_observations = np.random.choice(
-        periodic_data[:10000], size=10000, replace=True
-    )
-    periodic_data_add_obs = np.append(periodic_data, additional_observations)
+def test_detect_polling_on_grouped_df(periodic_data, non_periodic_data):
+    df = pd.concat([periodic_data, non_periodic_data])
 
-    per = poll.PeriodogramPollingDetector()
+    per = poll.PeriodogramPollingDetector(df)
+    per.detect_polling("timestamps", groupby="edges")
 
-    p_val_add_obs = per.detect_polling(
-        periodic_data_add_obs, min(periodic_data_add_obs), max(periodic_data_add_obs)
-    )
-    p_val = per.detect_polling(periodic_data, min(periodic_data), max(periodic_data))
-
-    assert p_val == p_val_add_obs
-
-
-def test_detect_polling_prints_frequency(periodic_data, capsys):
-    per = poll.PeriodogramPollingDetector()
-
-    _ = per.detect_polling(periodic_data, min(periodic_data), max(periodic_data))
-
-    captured = capsys.readouterr()
-
-    expected_msg = (
-        "Dominant frequency detected at 60 seconds\n"
-        "\tFrequency: 0.016666859570133915\n"
-        "\tTime domain: 59.99930555555555"
-    )
-
-    assert expected_msg in captured.out
+    assert all(per.data[per.data["edges"] == "periodic_edge"]["p_value"].values < 0.01)
+    assert all(per.data[per.data["edges"] == "non_periodic_edge"]["p_value"].values > 0.5)
 
 
 ## ########### ##
 ## Integration ##
 ## ########### ##
 
-
-def test_detect_polling_works_on_grouped_df(periodic_data, non_periodic_data):
-    df = pd.concat(
-        [
-            pd.DataFrame({"edge": "edge1", "timestamps": periodic_data}),
-            pd.DataFrame({"edge": "edge2", "timestamps": non_periodic_data}),
-        ]
-    )
-    per = poll.PeriodogramPollingDetector()
-
-    output = df.groupby("edge").apply(
-        lambda x: per.detect_polling(
-            x["timestamps"], min(x["timestamps"]), max(x["timestamps"])
-        )
-    )
-
-    assert output.loc["edge1"] < 0.01
-    assert output.loc["edge2"] > 0.5
-
-
 @pytest.mark.parametrize("offset, pi_excluded", [(0, False), (1, True)])
 @mock.patch.object(poll.PeriodogramPollingDetector, "_g_test", return_value=(0.5, 0.5))
 def test_pi_freq_exclusion(g_test, periodic_data, offset, pi_excluded):
-    per = poll.PeriodogramPollingDetector()
+    max_ts = periodic_data["timestamps"].max()
+    periodic_data = pd.concat([
+        periodic_data,
+        pd.DataFrame({"edges": ["periodic_edge"], "timestamps": [max_ts + offset]})
+    ])
 
-    _ = per.detect_polling(
-        periodic_data, min(periodic_data), max(periodic_data) - offset
-    )
+    per = poll.PeriodogramPollingDetector(periodic_data)
+    per.detect_polling("timestamps")
 
     args = g_test.call_args.args
 
