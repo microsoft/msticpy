@@ -189,6 +189,7 @@ class LocalOsqueryDriver(DriverBase):
             # because of log rotation
             try:
                 with open(file_path, mode="r", encoding="utf-8") as logfile:
+                    json_out: Dict[Dict[Any]]
                     json_out = {"lines": []}
                     while True:
                         next_line = logfile.readline()
@@ -199,7 +200,10 @@ class LocalOsqueryDriver(DriverBase):
                         df_all_queries = pd.json_normalize(
                             json_out["lines"], max_level=3
                         )
+            except ValueError as exc:
+                raise ValueError(f"Read error on file {file_path}: {exc}.") from exc
 
+            try:
                 # Don't want dot in columns name
                 df_all_queries.columns = df_all_queries.columns.str.replace(
                     ".", "_", regex=False
@@ -219,7 +223,7 @@ class LocalOsqueryDriver(DriverBase):
 
                 return df_all_queries
             except ValueError as exc:
-                raise ValueError(f"Read error on file {file_path}: {exc}.") from exc
+                raise ValueError(f"Error when processing data from file {file_path}: {exc}.") from exc
 
         data_df = pd.read_pickle(file_path)
         if isinstance(data_df, pd.DataFrame):
