@@ -80,7 +80,6 @@ class QueryProviderDemo(QueryProvider):
             query_family = getattr(self, family)
 
             for query_name, file_name in queries.items():
-
                 # Create the partial function
                 query_func = partial(
                     self._execute_query,

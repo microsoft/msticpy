@@ -50,7 +50,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-class GeoIPDatabaseException(Exception):
+class GeoIPDatabaseError(Exception):
     """Exception when GeoIP database cannot be found."""
 
 
