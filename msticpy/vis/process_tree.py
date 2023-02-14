@@ -239,9 +239,13 @@ def plot_process_tree(  # noqa: MC0001
 
     # dodge to align rectangle with grid
     rect_x = dodge("Level", 1.75, range=b_plot.x_range)
-    rect_plot_params = dict(
-        width=3.5, height=0.95, source=source, fill_alpha=0.4, fill_color=fill_map
-    )
+    rect_plot_params = {
+        "width": 3.5,
+        "height": 0.95,
+        "source": source,
+        "fill_alpha": 0.4,
+        "fill_color": fill_map,
+    }
 
     if color_bar:
         b_plot.add_layout(color_bar, "right")
@@ -453,7 +457,7 @@ def _create_js_callback(source: ColumnDataSource, result_var: str) -> CustomJS:
         IPython.notebook.kernel.execute(py_str);
     """
     return CustomJS(
-        args=dict(source=source, itemkey=Col.proc_key, output_var=result_var),
+        args={"source": source, "itemkey": Col.proc_key, "output_var": result_var},
         code=ret_var_js,
     )
 

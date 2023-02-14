@@ -291,7 +291,7 @@ def get_whois_info(
             if show_progress:
                 print(".", end="")
             return whois_result  # type: ignore
-        except (MsticpyException) as err:
+        except MsticpyException as err:
             return f"Error during lookup of {ip_str} {type(err)}", {}
     return f"No ASN Information for IP type: {ip_type}", {}
 

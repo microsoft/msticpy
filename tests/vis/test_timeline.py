@@ -201,7 +201,6 @@ TIMELINE_VALUES = TIMELINE_COMMON_ARGS + TL_SRC_COLS + TL_VALUES_ARGS
 def test_timeline_values(data, param, expected):
     """Test display_timeline_values."""
     for param, p_vals in param.items():
-
         for idx, p_val in enumerate(p_vals):
             expect_result = expected[idx]
             if param == "kind_grp":
