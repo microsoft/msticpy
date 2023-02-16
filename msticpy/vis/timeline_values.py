@@ -198,8 +198,8 @@ def display_timeline_values(  # noqa: C901, MC0001
     plot = figure(
         x_range=(start_range, end_range),
         min_border_left=50,
-        plot_height=height,
-        plot_width=param.width,
+        height=height,
+        width=param.width,
         x_axis_label="Event Time",
         x_axis_type="datetime",
         x_minor_ticks=10,

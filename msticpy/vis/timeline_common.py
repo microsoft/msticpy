@@ -272,8 +272,8 @@ def create_range_tool(
     rng_select = figure(
         x_range=(ext_min, ext_max),
         title="Range Selector",
-        plot_height=plot_height,
-        plot_width=width,
+        height=plot_height,
+        width=width,
         x_axis_type="datetime",
         y_axis_type=None,
         tools="",
@@ -339,7 +339,6 @@ def plot_ref_line(
         text=f"< {ref_text}",
         text_font_size="8pt",
         text_alpha=0.5,
-        render_mode="css",
         border_line_color="red",
         border_line_alpha=0.3,
         background_fill_color="white",

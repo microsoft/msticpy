@@ -222,8 +222,8 @@ def plot_process_tree(  # noqa: MC0001
     y_start_range = (n_rows - visible_range, n_rows + 1)
     b_plot = figure(
         title=title,
-        plot_width=plot_width,
-        plot_height=plot_height,
+        width=plot_width,
+        height=plot_height,
         x_range=(min_level, max_level),
         y_range=y_start_range,
         tools=["reset", "save", "tap", "ywheel_pan"],
@@ -501,8 +501,8 @@ def _create_vert_range_tool(
 ):
     """Return vertical range too for plot."""
     rng_select = figure(
-        plot_width=width,
-        plot_height=height,
+        width=width,
+        height=height,
         y_range=(min_y - 1, max_y + 1),
         toolbar_location=None,
     )

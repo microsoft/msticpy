@@ -167,8 +167,8 @@ def plot_matrix(data: pd.DataFrame, **kwargs) -> LayoutDOM:
 
     plot = figure(
         title=param.title,
-        plot_width=param.width,
-        plot_height=param.height,
+        width=param.width,
+        height=param.height,
         x_range=x_range,
         y_range=y_range,
         tools=["wheel_zoom", "box_zoom", "pan", "reset", "save"],

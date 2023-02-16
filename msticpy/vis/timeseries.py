@@ -167,8 +167,8 @@ def display_timeseries_anomalies(
     plot = figure(
         x_range=(start_range, end_range),
         min_border_left=50,
-        plot_height=height,
-        plot_width=width,
+        height=height,
+        width=width,
         x_axis_label=time_column,
         x_axis_type="datetime",
         y_axis_label=value_column,
