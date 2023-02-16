@@ -6,7 +6,11 @@
 """Test module for EntityGraph."""
 import pandas as pd
 from bokeh.models.layouts import Column
-from bokeh.plotting.figure import Figure
+try:
+    from bokeh.plotting import Figure
+except ImportError:
+    from bokeh.models import LayoutDOM
+    Figure=LayoutDOM
 
 from msticpy.datamodel.entities import Alert, Entity, Incident
 from msticpy.nbtools.security_alert import SecurityAlert
