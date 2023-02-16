@@ -240,12 +240,12 @@ def display_timeline_values(  # noqa: C901, MC0001
             )
             plot.add_layout(ext_legend, param.legend)
     else:
-        plot_args = dict(
-            x=time_column,
-            color=param.color,
-            alpha=0.7,
-            source=ColumnDataSource(graph_df),
-        )
+        plot_args = {
+            "x": time_column,
+            "color": param.color,
+            "alpha": 0.7,
+            "source": ColumnDataSource(graph_df),
+        }
         if "vbar" in plot_kinds:
             plot.vbar(top=value_col, width=4, **plot_args)
         if "circle" in plot_kinds:
@@ -316,7 +316,11 @@ def _plot_param_group(
         row_source = ColumnDataSource(graph_df[graph_df[param.group_by] == group_id])
         p_series = []
         # create default plot args
-        plot_args: Dict[str, Any] = dict(x=time_column, alpha=0.7, source=row_source)
+        plot_args: Dict[str, Any] = {
+            "x": time_column,
+            "alpha": 0.7,
+            "source": row_source,
+        }
         if param.legend != "none":
             plot_args["legend_label"] = inline_legend
 

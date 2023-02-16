@@ -75,7 +75,7 @@ class SentinelAnalyticsMixin:
 
         """
         return self._list_items(  # type: ignore
-            item_type="alert_rules", api_version="2021-10-01"
+            item_type="alert_rules", api_version="2022-11-01"
         )
 
     def _get_template_id(

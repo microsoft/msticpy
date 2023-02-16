@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Utilties."""
 from collections import Counter
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
 
 import httpx
 import pandas as pd
@@ -31,20 +31,23 @@ _PATH_MAPPING = {
     "watchlists": "/providers/Microsoft.SecurityInsights/watchlists",
     "alert_template": "/providers/Microsoft.SecurityInsights/alertRuleTemplates",
     "search": "/tables",
-    "ti_path": "/providers/Microsoft.SecurityInsights/threatIntelligence/main",
+    "ti": "/providers/Microsoft.SecurityInsights/threatIntelligence/main",
+    "dynamic_summary": "/providers/Microsoft.SecurityInsights/dynamicSummaries",
 }
 
 
 class SentinelUtilsMixin:
     """Mixin class for Sentinel core feature integrations."""
 
-    def _get_items(self, url: str, params: str = "2020-01-01") -> httpx.Response:
+    def _get_items(self, url: str, params: Optional[dict] = None) -> httpx.Response:
         """Get items from the API."""
         self.check_connected()  # type: ignore
+        if params is None:
+            params = {"api-version": "2020-01-01"}
         return httpx.get(
             url,
             headers=get_api_headers(self.token),  # type: ignore
-            params={"api-version": params},
+            params=params,
             timeout=get_http_timeout(),
         )
 
@@ -52,7 +55,9 @@ class SentinelUtilsMixin:
         self,
         item_type: str,
         api_version: str = "2020-01-01",
-        appendix: str = None,
+        appendix: Optional[str] = None,
+        next_follow: bool = False,
+        params: Optional[Dict[str, Any]] = None,
     ) -> pd.DataFrame:
         """
         Return lists of core resources from APIs.
@@ -65,7 +70,10 @@ class SentinelUtilsMixin:
             The API version to use, by default '2020-01-01'
         appendix: str, optional
             Any appendix that needs adding to the URI, default is None
-
+        next_follow: bool, optional
+            If True, follow the nextLink to get all results, by default False
+        params: Dict, optional
+            Any additional parameters to pass to the API call, by default None
         Returns
         -------
         pd.DataFrame
@@ -80,23 +88,30 @@ class SentinelUtilsMixin:
         item_url = self.url + _PATH_MAPPING[item_type]  # type: ignore
         if appendix:
             item_url = item_url + appendix
-        response = self._get_items(item_url, api_version)
+        if params is None:
+            params = {}
+        params["api-version"] = api_version
+        response = self._get_items(item_url, params)
         if response.status_code == 200:
             results_df = _azs_api_result_to_df(response)
         else:
             raise CloudError(response=response)
         j_resp = response.json()
         results = [results_df]
-        # If nextLink in reponse, go get that data as well
-        while "nextLink" in j_resp:
-            next_url = j_resp["nextLink"]
-            next_response = self._get_items(next_url, api_version)
-            next_results_df = _azs_api_result_to_df(next_response)
-            results.append(next_results_df)
-            j_resp = next_response.json()
+        # If nextLink in response, go get that data as well
+        if next_follow:
+            i = 0
+            # Limit to 5 nextLinks to prevent infinite loop
+            while "nextLink" in j_resp and i < 5:
+                next_url = j_resp["nextLink"]
+                next_response = self._get_items(next_url, params)
+                next_results_df = _azs_api_result_to_df(next_response)
+                results.append(next_results_df)
+                j_resp = next_response.json()
+                i += 1
         return pd.concat(results)
 
-    def _check_config(self, items: List) -> Dict:
+    def _check_config(self, items: List, workspace_name: Optional[str] = None) -> Dict:
         """
         Get parameters from default config files.
 
@@ -104,6 +119,8 @@ class SentinelUtilsMixin:
         ----------
         items : List
             The items to get from the config.
+        workspace_name : str
+            The workspace name supplied by the user.
 
         Returns
         -------
@@ -112,18 +129,23 @@ class SentinelUtilsMixin:
 
         """
         config_items = {}
-        if not self.config:  # type: ignore
-            self.config = WorkspaceConfig()  # type: ignore
+        if not self.workspace_config:  # type: ignore
+            self.workspace_config = WorkspaceConfig(workspace_name)  # type: ignore
         for item in items:
-            if item in self.config:  # type: ignore
-                config_items[item] = self.config[item]  # type: ignore
+            if item in self.workspace_config:  # type: ignore
+                config_items[item] = self.workspace_config[item]  # type: ignore
             else:
-                raise MsticpyAzureConfigError(f"No {item} available in config.")
+                raise MsticpyAzureConfigError(
+                    f"No {item} available in config for workspace {workspace_name}."
+                )
 
         return config_items
 
     def _build_sent_res_id(
-        self, sub_id: str = None, res_grp: str = None, ws_name: str = None
+        self,
+        sub_id: Optional[str] = None,
+        res_grp: Optional[str] = None,
+        ws_name: Optional[str] = None,
     ) -> str:
         """
         Build a resource ID.
@@ -145,7 +167,8 @@ class SentinelUtilsMixin:
         """
         if not sub_id or not res_grp or not ws_name:
             config = self._check_config(
-                ["subscription_id", "resource_group", "workspace_name"]
+                workspace_name=ws_name,
+                items=["subscription_id", "resource_group", "workspace_name"],
             )
             sub_id = config["subscription_id"]
             res_grp = config["resource_group"]
@@ -157,7 +180,7 @@ class SentinelUtilsMixin:
             ]
         )
 
-    def _build_sent_paths(self, res_id: str, base_url: str = None) -> str:
+    def _build_sent_paths(self, res_id: str, base_url: Optional[str] = None) -> str:
         """
         Build an API URL from an Azure resource ID.
 
@@ -196,7 +219,7 @@ class SentinelUtilsMixin:
 
     def check_connected(self):
         """Check that Sentinel workspace is connected."""
-        if not self.connected:
+        if not self.connected:  # type: ignore
             raise MsticpyAzureConnectionError(
                 "Not connected to Sentinel, ensure you run `.connect` before calling functions."
             )
@@ -248,7 +271,7 @@ def _build_sent_data(items: dict, props: bool = False, **kwargs) -> dict:
 
     """
     data_body = {"properties": {}}  # type: Dict[str, Dict[str, str]]
-    for key, _ in items.items():
+    for key in items:
         if key in ["severity", "status", "title", "message", "searchResults"] or props:
             data_body["properties"].update({key: items[key]})  # type:ignore
         else:
@@ -268,6 +291,16 @@ def validate_res_id(res_id):
         raise MsticpyAzureConfigError("The Resource ID provided is not valid.")
 
     return res_id
+
+
+def parse_resource_id(res_id: str) -> Dict[str, Any]:
+    """Extract components from workspace resource ID."""
+    res_id_parts = res_id.split("/")
+    return {
+        "subscription_id": res_id_parts[1] if len(res_id_parts) > 1 else None,
+        "resource_group": res_id_parts[3] if len(res_id_parts) > 3 else None,
+        "workspace_name": res_id_parts[7] if len(res_id_parts) > 7 else None,
+    }
 
 
 def _validator(res_id):
