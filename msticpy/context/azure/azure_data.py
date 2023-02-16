@@ -27,7 +27,7 @@ from ...common.exceptions import (
     MsticpyAzureConfigError,
     MsticpyImportExtraError,
     MsticpyNotConnectedError,
-    MsticpyResourceException,
+    MsticpyResourceError,
 )
 
 try:
@@ -547,7 +547,7 @@ class AzureData:
                 namespace = resource_id.split("/")[6]
                 service = resource_id.split("/")[7]
             except IndexError as idx_err:
-                raise MsticpyResourceException(
+                raise MsticpyResourceError(
                     "Provided Resource ID isn't in the correct format.",
                     "It should look like:",
                     "/subscriptions/SUB_ID/resourceGroups/RESOURCE_GROUP/"
@@ -559,7 +559,7 @@ class AzureData:
                 namespace = resource_provider.split("/")[0]
                 service = resource_provider.split("/")[1]
             except IndexError as idx_err:
-                raise MsticpyResourceException(
+                raise MsticpyResourceError(
                     "Provided Resource Provider isn't in the correct format.",
                     "It should look like: NAMESPACE/SERVICE_NAME",
                 ) from idx_err
@@ -586,7 +586,7 @@ class AzureData:
 
         # Get first API version that isn't in preview
         if not resource_types:
-            raise MsticpyResourceException("Resource provider not found")
+            raise MsticpyResourceError("Resource provider not found")
 
         api_version = [
             v

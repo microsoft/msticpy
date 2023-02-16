@@ -41,6 +41,7 @@ _TEST_FIELDS = {
     "timestamp",
 }
 
+
 # pylint: disable=unsupported-assignment-operation
 def test_create_observation_class():
     """Test creating observations instance."""
