@@ -22,7 +22,14 @@ from bokeh.models import (
 from bokeh.palettes import Palette, viridis
 
 # pylint: enable=no-name-in-module
-from bokeh.plotting import Figure, figure
+from bokeh.plotting import figure
+
+try:
+    from bokeh.plotting import Figure
+except ImportError:
+    from bokeh.models import LayoutDOM
+    Figure=LayoutDOM
+
 from pandas.api.types import is_datetime64_any_dtype
 from pandas.errors import OutOfBoundsDatetime
 
