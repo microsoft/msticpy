@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Check current version against PyPI."""
+import contextlib
+
 import httpx
 from pkg_resources import parse_version
 
@@ -20,9 +22,14 @@ def check_version():
 
     # fetch package metadata from PyPI
     pypi_url = "https://pypi.org/pypi/msticpy/json"
-    pkg_data = httpx.get(
-        pypi_url, timeout=httpx.Timeout(10.0, connect=30.0), headers=mp_ua_header()
-    ).json()
+    pkg_data = {"info": {"version": "unknown"}}
+    with contextlib.suppress(httpx.ConnectError):
+        resp = httpx.get(
+            pypi_url, timeout=httpx.Timeout(2.0, connect=2.0), headers=mp_ua_header()
+        )
+        if resp.status_code == 200:
+            pkg_data = resp.json()
+
     latest_version = pkg_data.get("info", {}).get("version", None)
     if latest_version:
         latest_version = parse_version(latest_version)
@@ -40,4 +47,4 @@ def check_version():
         print(f"A newer version of msticpy - {latest_version} is available.")
         print("Upgrade with 'pip install --upgrade msticpy'")
     else:
-        print("Latest version is installed.")
+        print("Latest known version is installed.")
