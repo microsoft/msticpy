@@ -409,6 +409,11 @@ class Lookup:
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
+
+        Other Parameters
+        ----------------
+        progress : bool
+            Use progress bar to track completion, by default True
         kwargs :
             Additional arguments passed to the underlying provider(s)
 
@@ -466,7 +471,7 @@ class Lookup:
     ) -> pd.DataFrame:
         """Lookup items async."""
         item_col = item_col or kwargs.pop("col", kwargs.pop("column", None))
-
+        progress = kwargs.pop("progress")
         selected_providers = self._select_providers(
             providers or default_providers, prov_scope
         )
@@ -480,9 +485,11 @@ class Lookup:
         event_loop = asyncio.get_event_loop()
         result_futures: List[Any] = []
         provider_names: List[str] = []
+
         prog_counter = ProgressCounter(
             total=len(data) * len(selected_providers)  # type: ignore
         )
+
         # create a list of futures/tasks to await
         for prov_name, provider in selected_providers.items():
             provider_names.append(prov_name)
@@ -492,12 +499,13 @@ class Lookup:
                     item_col=item_col,
                     item_type_col=item_type_col,
                     query_type=query_type,
-                    prog_counter=prog_counter,
+                    prog_counter=prog_counter if progress else None,
                     **kwargs,
                 )
             )
-        # Create a task for tqdm
-        prog_task = event_loop.create_task(self._track_completion(prog_counter))
+        if progress:
+            # Create a task for tqdm
+            prog_task = event_loop.create_task(self._track_completion(prog_counter))
         # collect the return values of the tasks
         results = await asyncio.gather(*result_futures)
         # cancel the progress task if results have completed.
