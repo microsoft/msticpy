@@ -50,6 +50,10 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+class GeoIPDatabaseError(Exception):
+    """Exception when GeoIP database cannot be found."""
+
+
 class GeoIpLookup(metaclass=ABCMeta):
     """
     Abstract base class for GeoIP Lookup classes.

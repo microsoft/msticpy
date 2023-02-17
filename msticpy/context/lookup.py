@@ -471,7 +471,7 @@ class Lookup:
     ) -> pd.DataFrame:
         """Lookup items async."""
         item_col = item_col or kwargs.pop("col", kwargs.pop("column", None))
-        progress = kwargs.pop("progress")
+        progress = kwargs.pop("progress", True)
         selected_providers = self._select_providers(
             providers or default_providers, prov_scope
         )

@@ -10,7 +10,7 @@ import httpx
 from pkg_resources import parse_version
 
 from .._version import VERSION
-from .utility import mp_ua_header
+from .utility import mp_ua_header, unit_testing
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -24,11 +24,14 @@ def check_version():
     pypi_url = "https://pypi.org/pypi/msticpy/json"
     pkg_data = {"info": {"version": "unknown"}}
     with contextlib.suppress(httpx.ConnectError):
-        resp = httpx.get(
-            pypi_url, timeout=httpx.Timeout(2.0, connect=2.0), headers=mp_ua_header()
-        )
-        if resp.status_code == 200:
-            pkg_data = resp.json()
+        if not unit_testing():
+            resp = httpx.get(
+                pypi_url,
+                timeout=httpx.Timeout(2.0, connect=2.0),
+                headers=mp_ua_header(),
+            )
+            if resp.status_code == 200:
+                pkg_data = resp.json()
 
     latest_version = pkg_data.get("info", {}).get("version", None)
     if latest_version:
