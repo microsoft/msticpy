@@ -485,8 +485,15 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
         )
     )
 
+    entity_graph_df = nx.to_pandas_edgelist(entity_graph)
+    entity_graph_df["source_name"] = entity_graph_df["source"]
+    entity_graph_df["target_name"] = entity_graph_df["target"]
+    entity_graph_df["source"] = pd.factorize(entity_graph_df["source"])[0]
+    entity_graph_df["target"] = pd.factorize(entity_graph_df["target"])[0]
+    entity_graph_for_plotting = nx.from_pandas_edgelist(entity_graph_df, source="source", target="target", edge_attr=["source_name", "target_name"])
+
     graph_renderer = from_networkx(
-        entity_graph, nx.spring_layout, scale=scale, center=(0, 0)
+        entity_graph_for_plotting, nx.spring_layout, scale=scale, center=(0, 0)
     )
 
     graph_renderer.node_renderer.glyph = Circle(
@@ -502,7 +509,7 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
             y=pos[1],
             x_offset=5,
             y_offset=5,
-            text=name,
+            text=str(name),
             text_font_size=font_pnt,
         )
         plot.add_layout(label)

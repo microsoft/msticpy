@@ -7,6 +7,7 @@
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import networkx as nx
+import pandas as pd
 from bokeh.io import output_notebook
 from bokeh.models import (
     BoxSelectTool,
@@ -23,6 +24,8 @@ from bokeh.models import (
 from bokeh.palettes import Spectral4
 from bokeh.plotting import figure, from_networkx, show
 from typing_extensions import Literal
+
+from msticpy.transform.network import df_to_networkx
 
 from .._version import VERSION
 
@@ -141,9 +144,22 @@ def plot_nx_graph(
         width=width,
         height=height,
     )
+    
+    nx_graph_df = nx.to_pandas_edgelist(nx_graph)
+    nx_graph_df["source_name"] = nx_graph_df["source"]
+    nx_graph_df["target_name"] = nx_graph_df["target"]
+    nx_graph_df["source"] = pd.factorize(nx_graph_df["source"])[0]
+    nx_graph_df["target"] = pd.factorize(nx_graph_df["target"])[0]
+    
+    nx_graph_for_plotting = nx.from_pandas_edgelist(
+        nx_graph_df,
+        source="source",
+        target="target"
+        )
+    
+    graph_layout = _get_graph_layout(nx_graph_for_plotting, layout, **kwargs)
 
-    graph_layout = _get_graph_layout(nx_graph, layout, **kwargs)
-    graph_renderer = from_networkx(nx_graph, graph_layout, scale=scale, center=(0, 0))
+    graph_renderer = from_networkx(nx_graph_for_plotting, graph_layout, scale=scale, center=(0, 0))
     _create_edge_renderer(graph_renderer, edge_color=edge_color)
     _create_node_renderer(graph_renderer, node_size, "node_color")
 
@@ -168,7 +184,7 @@ def plot_nx_graph(
             y=pos[1],
             x_offset=5,
             y_offset=5,
-            text=name,
+            text=str(name),
             text_font_size=font_pnt,
         )
         plot.add_layout(label)
@@ -316,7 +332,7 @@ def plot_entity_graph(
             y=pos[1],
             x_offset=5,
             y_offset=5,
-            text=name,
+            text=str(name),
             text_font_size=font_pnt,
         )
         plot.add_layout(label)
