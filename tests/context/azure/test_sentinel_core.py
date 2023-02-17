@@ -39,14 +39,6 @@ _RES_ID = (
 )
 
 
-def test_azuresent_init():
-    """Test class initialization."""
-    sentinel_inst = MicrosoftSentinel(sub_id="123", res_grp="RG", ws_name="WSName")
-    assert isinstance(sentinel_inst, MicrosoftSentinel)
-    sentinel_inst = MicrosoftSentinel(res_id=_RES_ID)
-    assert isinstance(sentinel_inst, MicrosoftSentinel)
-
-
 @patch(MicrosoftSentinel.__module__ + ".AzureData.connect")
 @patch(MicrosoftSentinel.__module__ + ".get_token")
 def test_azuresent_connect_token(get_token: Mock, az_data_connect: Mock):
@@ -99,6 +91,7 @@ def sentinel_inst_loader(mock_creds):
     return sentinel_inst
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @patch(AzureData.__module__ + ".AzureData.get_resources")
 @patch(AzureData.__module__ + ".AzureData.get_resource_details")
 def test_azuresent_workspaces(mock_res_dets, mock_res, sentinel_inst_loader):
@@ -157,6 +150,7 @@ _SENTINEL_INPUTS = [
 @pytest.mark.parametrize(
     "test_opts", _SENTINEL_INPUTS, ids=[t.name for t in _SENTINEL_INPUTS]
 )
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_sentinel_connect_options(get_token: Mock, az_data_connect: Mock, test_opts):
     """Test initialization and connect success with diff parameters."""
     if test_opts.exception:

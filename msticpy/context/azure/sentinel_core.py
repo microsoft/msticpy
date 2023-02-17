@@ -288,8 +288,8 @@ class MicrosoftSentinel(
         warnings.warn(
             (
                 "Using separate subscription ID, resource group"
-                "and workspace is deprecated. Please use a configured"
-                "workspace name or an Azure resource ID of the workspace."
+                " and workspace is deprecated. Please use a configured"
+                " workspace name or an Azure resource ID of the workspace."
             ),
             category=DeprecationWarning,
         )

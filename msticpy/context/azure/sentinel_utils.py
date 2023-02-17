@@ -6,7 +6,7 @@
 """Mixin Classes for Sentinel Utilities."""
 import re
 from collections import Counter
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import httpx
 import pandas as pd
