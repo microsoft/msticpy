@@ -50,10 +50,6 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-class GeoIPDatabaseError(Exception):
-    """Exception when GeoIP database cannot be found."""
-
-
 class GeoIpLookup(metaclass=ABCMeta):
     """
     Abstract base class for GeoIP Lookup classes.
@@ -67,11 +63,6 @@ class GeoIpLookup(metaclass=ABCMeta):
 
     _LICENSE_TXT: Optional[str] = None
     _LICENSE_HTML: Optional[str] = None
-    _license_shown: bool = False
-
-    def __init__(self):
-        """Initialize instance of GeoIpLookup class."""
-        self._print_license()
 
     @abstractmethod
     def lookup_ip(
@@ -170,17 +161,12 @@ class GeoIpLookup(metaclass=ABCMeta):
             return [ip_entity.Address]
         raise ValueError("No valid ip addresses were passed as arguments.")
 
-    # pylint: disable=protected-access
-    def _print_license(self):
-        if self.__class__._license_shown:
-            return
+    def print_license(self):
+        """Print license information for providers."""
         if self._LICENSE_HTML and is_ipython(notebook=True):
             display(HTML(self._LICENSE_HTML))
         elif self._LICENSE_TXT:
             print(self._LICENSE_TXT)
-        self.__class__._license_shown = True
-
-    # pylint: enable=protected-access
 
 
 @export
@@ -233,8 +219,6 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
             per address)
 
         """
-        super().__init__()
-
         self.settings: Optional[ProviderSettings] = None
         self._api_key: Optional[str] = api_key
         self.bulk_lookup = bulk_lookup
@@ -467,8 +451,6 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             Print additional debugging information, default is False.
 
         """
-        super().__init__()
-
         self._debug = debug
         if self._debug:
             self._debug_init_state(api_key, db_folder, force_update, auto_update)
@@ -722,7 +704,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 db_archive_path.unlink()
         return False
 
-    def _extract_to_folder(self, db_archive_path):
+    def _extract_to_folder(self, db_archive_path: Path):
         self._pr_debug(f"Extracting tarfile {db_archive_path}")
         temp_folder: Optional[Path] = None
         with tarfile.open(db_archive_path) as tar_archive:
@@ -770,7 +752,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         if self._debug:
             print(*args)
 
-    def _geolite_warn(self, mssg):
+    def _geolite_warn(self, mssg: str):
         self._pr_debug(mssg)
         warnings.warn(
             f"GeoIpLookup: {mssg}",
