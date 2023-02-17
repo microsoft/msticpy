@@ -107,8 +107,10 @@ Some functionality (such as Threat Intel lookups) will not function without
 valid configuration settings.<br>
 The following resources will help you set up your configuration:
 <ul>{"".join(_HELP_URIS)}</ul>
-<br>You can load and run the first two of these from the Microsoft Sentinel
-<b>Notebooks</b> tab
+<br>The first two of these are notebooks from the <b>Microsoft Sentinel
+Notebooks</b> repo.
+You can download and run these to set up your configuration in
+another tab.
 """
 
 

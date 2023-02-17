@@ -224,7 +224,7 @@ def populate_config_to_mp_config(mp_path):
         return None
 
     # if we found one, use it to populate msticpyconfig.yaml
-    mp_path = mp_path or "./msticpyconfig.yaml"
+    mp_path = mp_path or str(get_aml_user_folder().joinpath("/msticpyconfig.yaml"))
     mp_config_convert = MpConfigFile(file=config_json)
     azs_settings = mp_config_convert.map_json_to_mp_ws()
     def_azs_settings = next(
