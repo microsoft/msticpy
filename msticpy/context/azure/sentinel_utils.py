@@ -39,13 +39,15 @@ _PATH_MAPPING = {
 class SentinelUtilsMixin:
     """Mixin class for Sentinel core feature integrations."""
 
-    def _get_items(self, url: str, params: str = "2020-01-01") -> httpx.Response:
+    def _get_items(self, url: str, params: Optional[dict] = None) -> httpx.Response:
         """Get items from the API."""
         self.check_connected()  # type: ignore
+        if params is None:
+            params = {"api-version": "2020-01-01"}
         return httpx.get(
             url,
             headers=get_api_headers(self.token),  # type: ignore
-            params={"api-version": params},
+            params=params,
             timeout=get_http_timeout(),
         )
 
@@ -53,7 +55,9 @@ class SentinelUtilsMixin:
         self,
         item_type: str,
         api_version: str = "2020-01-01",
-        appendix: str = None,
+        appendix: Optional[str] = None,
+        next_follow: bool = False,
+        params: Optional[Dict[str, Any]] = None,
     ) -> pd.DataFrame:
         """
         Return lists of core resources from APIs.
@@ -66,7 +70,10 @@ class SentinelUtilsMixin:
             The API version to use, by default '2020-01-01'
         appendix: str, optional
             Any appendix that needs adding to the URI, default is None
-
+        next_follow: bool, optional
+            If True, follow the nextLink to get all results, by default False
+        params: Dict, optional
+            Any additional parameters to pass to the API call, by default None
         Returns
         -------
         pd.DataFrame
@@ -81,7 +88,10 @@ class SentinelUtilsMixin:
         item_url = self.url + _PATH_MAPPING[item_type]  # type: ignore
         if appendix:
             item_url = item_url + appendix
-        response = self._get_items(item_url, api_version)
+        if params is None:
+            params = {}
+        params["api-version"] = api_version
+        response = self._get_items(item_url, params)
         if response.status_code == 200:
             results_df = _azs_api_result_to_df(response)
         else:
@@ -89,12 +99,16 @@ class SentinelUtilsMixin:
         j_resp = response.json()
         results = [results_df]
         # If nextLink in response, go get that data as well
-        while "nextLink" in j_resp:
-            next_url = j_resp["nextLink"]
-            next_response = self._get_items(next_url, api_version)
-            next_results_df = _azs_api_result_to_df(next_response)
-            results.append(next_results_df)
-            j_resp = next_response.json()
+        if next_follow:
+            i = 0
+            # Limit to 5 nextLinks to prevent infinite loop
+            while "nextLink" in j_resp and i < 5:
+                next_url = j_resp["nextLink"]
+                next_response = self._get_items(next_url, params)
+                next_results_df = _azs_api_result_to_df(next_response)
+                results.append(next_results_df)
+                j_resp = next_response.json()
+                i += 1
         return pd.concat(results)
 
     def _check_config(self, items: List, workspace_name: Optional[str] = None) -> Dict:
@@ -128,7 +142,10 @@ class SentinelUtilsMixin:
         return config_items
 
     def _build_sent_res_id(
-        self, sub_id: str = None, res_grp: str = None, ws_name: str = None
+        self,
+        sub_id: Optional[str] = None,
+        res_grp: Optional[str] = None,
+        ws_name: Optional[str] = None,
     ) -> str:
         """
         Build a resource ID.
@@ -163,7 +180,7 @@ class SentinelUtilsMixin:
             ]
         )
 
-    def _build_sent_paths(self, res_id: str, base_url: str = None) -> str:
+    def _build_sent_paths(self, res_id: str, base_url: Optional[str] = None) -> str:
         """
         Build an API URL from an Azure resource ID.
 
@@ -202,7 +219,7 @@ class SentinelUtilsMixin:
 
     def check_connected(self):
         """Check that Sentinel workspace is connected."""
-        if not self.connected:
+        if not self.connected:  # type: ignore
             raise MsticpyAzureConnectionError(
                 "Not connected to Sentinel, ensure you run `.connect` before calling functions."
             )
