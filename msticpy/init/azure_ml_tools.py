@@ -221,7 +221,7 @@ def populate_config_to_mp_config(mp_path):
     # Look for a config.json
     config_json = search_for_file("config.json", paths=[get_aml_user_folder()])
     if not config_json:
-        return None
+        return "Could not find a 'config.json' from MS Sentinel."
 
     # if we found one, use it to populate msticpyconfig.yaml
     mp_path = mp_path or str(get_aml_user_folder().joinpath("/msticpyconfig.yaml"))
@@ -234,7 +234,10 @@ def populate_config_to_mp_config(mp_path):
         mp_config_convert.settings["AzureSentinel"]["Workspaces"][
             "Default"
         ] = def_azs_settings.copy()
-    mssg = f"Created '{mp_path}'' with Microsoft Sentinel settings."
+    mssg = (
+        f"Created '{mp_path}' with Microsoft Sentinel settings"
+        f" imported from {config_json}."
+    )
     if Path(mp_path).exists():
         # If there is an existing file read it in
         mp_config_text = Path(mp_path).read_text(encoding="utf-8")
@@ -243,7 +246,10 @@ def populate_config_to_mp_config(mp_path):
         mp_config_settings.update(mp_config_convert.settings)
         # update MpConfigFile with the merged settings
         mp_config_convert.settings = mp_config_settings
-        mssg = f"Updated '{mp_path}'' with Microsoft Sentinel settings."
+        mssg = (
+            f"Updated '{mp_path}' with Microsoft Sentinel settings"
+            f" imported from {config_json}."
+        )
     # Save the file
     mp_config_convert.save_to_file(mp_path, backup=True)
     return mssg
