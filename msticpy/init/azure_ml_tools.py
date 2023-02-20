@@ -221,7 +221,7 @@ def populate_config_to_mp_config(mp_path):
     # Look for a config.json
     config_json = search_for_file("config.json", paths=[get_aml_user_folder()])
     if not config_json:
-        return "Could not find a 'config.json' from MS Sentinel."
+        return None
 
     # if we found one, use it to populate msticpyconfig.yaml
     mp_path = mp_path or str(get_aml_user_folder().joinpath("/msticpyconfig.yaml"))
