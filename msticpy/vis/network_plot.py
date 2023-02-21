@@ -148,10 +148,12 @@ def plot_nx_graph(
     nx_graph_for_plotting = nx.Graph()
     index_node = 0
     rev_index = {}
+    fwd_index = {}
     node_attributes = {}
     for node_key in nx_graph.nodes:
         nx_graph_for_plotting.add_node(index_node)
         rev_index[node_key] = index_node
+        fwd_index[index_node] = node_key
         node_attributes[index_node] = nx_graph.nodes[node_key]
         index_node += 1
 
@@ -181,13 +183,13 @@ def plot_nx_graph(
 
     # Create labels
     # pylint: disable=no-member
-    for name, pos in graph_renderer.layout_provider.graph_layout.items():
+    for index, pos in graph_renderer.layout_provider.graph_layout.items():
         label = Label(
             x=pos[0],
             y=pos[1],
             x_offset=5,
             y_offset=5,
-            text=str(name),
+            text=fwd_index[int(index)],
             text_font_size=font_pnt,
         )
         plot.add_layout(label)

@@ -152,7 +152,12 @@ class Process(Entity):
     def name_str(self) -> str:
         """Return Entity Name."""
         if self.ImageFile:
-            return f"{self.ImageFile.name_str}[pid:{self.ProcessId}]"
+            if isinstance(self.ImageFile, str):
+                return f"{self.ImageFile}[pid:{self.ProcessId}]"
+            if isinstance(self.ImageFile, File):
+                return f"{self.ImageFile.name_str}[pid:{self.ProcessId}]"
+            else:
+                return super().name_str
         return self.ImageFile.name_str if self.ImageFile else super().name_str
 
     _entity_schema = {
