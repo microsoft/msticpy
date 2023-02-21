@@ -18,6 +18,7 @@ import pandas as pd
 from azure.core.exceptions import ClientAuthenticationError
 from IPython import get_ipython
 
+from ..._version import VERSION
 from ...auth.azure_auth import AzureCloudConfig, az_connect, only_interactive_cred
 from ...common.exceptions import (
     MsticpyDataQueryError,
@@ -31,6 +32,26 @@ from ...common.wsconfig import WorkspaceConfig
 from ..core.query_defns import DataEnvironment
 from .driver_base import DriverBase, QuerySource
 
+_KQL_ENV_OPTS = "KQLMAGIC_CONFIGURATION"
+
+
+# Need to set KQL option before importing
+def _set_kql_env_option(option, value):
+    """Set an item in the KqlMagic main config environment variable."""
+    kql_config = os.environ.get(_KQL_ENV_OPTS, "")
+    current_opts = {
+        opt.split("=")[0].strip(): opt.split("=")[1]
+        for opt in kql_config.split(";")
+        if opt.strip() and "=" in opt
+    }
+
+    current_opts[option] = value
+    kql_config = ";".join(f"{opt}={val}" for opt, val in current_opts.items())
+    os.environ[_KQL_ENV_OPTS] = kql_config
+
+
+_set_kql_env_option("enable_add_items_to_help", False)
+
 try:
     from Kqlmagic import kql as kql_exec
     from Kqlmagic.kql_engine import KqlEngineError
@@ -40,11 +61,12 @@ try:
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
         "Cannot use this feature without Kqlmagic installed",
+        "Install msticpy with the [kql] extra or one of the following:",
+        "%pip install Kqlmagic   # notebook",
+        "python -m pip install Kqlmagic   # python",
         title="Error importing Kqlmagic",
         extra="kql",
     ) from imp_err
-
-from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
