@@ -67,7 +67,7 @@ class QueryStore:
 
     def __init__(self, environment: str):
         """
-        Intialize a QueryStore for a new environment.
+        Initialize a QueryStore for a new environment.
 
         Parameters
         ----------

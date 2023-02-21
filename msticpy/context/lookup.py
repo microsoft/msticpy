@@ -16,7 +16,7 @@ import asyncio
 import importlib
 import warnings
 from collections import ChainMap
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union, cast
 
 import nest_asyncio
 import pandas as pd
@@ -70,6 +70,7 @@ class Lookup:
     _HELP_URI = "https://msticpy.readthedocs.io/en/latest/DataEnrichment.html"
 
     PROVIDERS: Dict[str, Tuple[str, str]] = {}
+    CUSTOM_PROVIDERS: Dict[str, Union[type, Provider]]
 
     PACKAGE: str = ""
 
@@ -608,7 +609,7 @@ class Lookup:
             List of TI Provider classes.
 
         """
-        return list(self.PROVIDERS)
+        return list(self.PROVIDERS) + list(self.CUSTOM_PROVIDERS.values())
 
     @classmethod
     def list_available_providers(
@@ -651,10 +652,15 @@ class Lookup:
         mod_name, cls_name = cls.PROVIDERS.get(provider, (None, None))
 
         if not (mod_name and cls_name):
+            if (
+                hasattr(cls, "CUSTOM_PROVIDERS")
+                and provider.casefold() in cls.CUSTOM_PROVIDERS
+            ):
+                return cast(Provider, cls.CUSTOM_PROVIDERS[provider])
             raise LookupError(
-                f"No driver available for environment {provider}.",
+                f"No provider named '{provider}'.",
                 "Possible values are:",
-                ", ".join(list(cls.PROVIDERS)),
+                ", ".join(list(cls.PROVIDERS) + list(cls.CUSTOM_PROVIDERS)),
             )
 
         imp_module = importlib.import_module(

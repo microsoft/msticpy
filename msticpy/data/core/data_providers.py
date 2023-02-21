@@ -18,7 +18,7 @@ from ...common import pkg_config as config
 from ...common.exceptions import MsticpyDataQueryError
 from ...common.utility import export, valid_pyname
 from ...nbwidgets import QueryTime
-from ..drivers import DriverBase, import_driver
+from ..drivers import CUSTOM_PROVIDERS, DriverBase, import_driver
 from .param_extractor import extract_query_params
 from .query_container import QueryContainer
 from .query_defns import DataEnvironment
@@ -78,13 +78,7 @@ class QueryProvider:
         # pylint: enable=import-outside-toplevel
         setattr(self.__class__, "_add_pivots", add_data_queries_to_entities)
 
-        if isinstance(data_environment, str):
-            data_env = DataEnvironment.parse(data_environment)
-            if data_env != DataEnvironment.Unknown:
-                data_environment = data_env
-            else:
-                raise TypeError(f"Unknown data environment {data_environment}")
-        self.environment = data_environment.name
+        data_environment = self._check_environment(data_environment)
 
         self._driver_kwargs = kwargs.copy()
         if driver is None:
@@ -112,6 +106,21 @@ class QueryProvider:
         )
         self._add_query_functions()
         self._query_time = QueryTime(units="day")
+
+    def _check_environment(self, data_environment):
+        """Check environment against known names."""
+        if isinstance(data_environment, str):
+            data_env = DataEnvironment.parse(data_environment)
+            if data_env != DataEnvironment.Unknown:
+                data_environment = data_env
+                self.environment = data_environment.name
+            elif data_environment.casefold() in CUSTOM_PROVIDERS:
+                self.environment = data_environment
+            else:
+                raise TypeError(f"Unknown data environment {data_environment}")
+        else:
+            data_env = data_environment
+        return data_environment
 
     def __getattr__(self, name):
         """Return the value of the named property 'name'."""
