@@ -75,7 +75,9 @@ def test_sent_incidents(sent_loader):
 @respx.mock
 def test_sent_updates(sent_loader):
     """Test Sentinel incident update feature."""
-    respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(201, json={'name': '97446b1b-26cf-4034-832b-895da135c535'})
+    respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(
+        201, json={"name": "97446b1b-26cf-4034-832b-895da135c535"}
+    )
     respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         200, json=_INCIDENT
     )
@@ -87,7 +89,9 @@ def test_sent_updates(sent_loader):
 @respx.mock
 def test_sent_comments(sent_loader):
     """Test Sentinel comments feature."""
-    respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(200, json={'name': '97446b1b-26cf-4034-832b-895da135c535'})
+    respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(
+        200, json={"name": "97446b1b-26cf-4034-832b-895da135c535"}
+    )
     respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         200, json=_INCIDENT
     )
