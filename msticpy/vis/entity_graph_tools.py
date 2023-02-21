@@ -485,12 +485,20 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
         )
     )
 
-    entity_graph_df = nx.to_pandas_edgelist(entity_graph)
-    entity_graph_df["source_name"] = entity_graph_df["source"]
-    entity_graph_df["target_name"] = entity_graph_df["target"]
-    entity_graph_df["source"] = pd.factorize(entity_graph_df["source"])[0]
-    entity_graph_df["target"] = pd.factorize(entity_graph_df["target"])[0]
-    entity_graph_for_plotting = nx.from_pandas_edgelist(entity_graph_df, source="source", target="target", edge_attr=["source_name", "target_name"])
+    entity_graph_for_plotting = nx.Graph()
+    index_node = 0
+    rev_index = {}
+    node_attributes = {}
+    for node_key in entity_graph.nodes:
+        entity_graph_for_plotting.add_node(index_node)
+        rev_index[node_key] = index_node
+        node_attributes[index_node] = entity_graph.nodes[node_key]
+        index_node += 1
+
+    nx.set_node_attributes(entity_graph_for_plotting, node_attributes)
+
+    for source_node, target_node in entity_graph.edges:
+        entity_graph_for_plotting.add_edge(rev_index[source_node], rev_index[target_node])
 
     graph_renderer = from_networkx(
         entity_graph_for_plotting, nx.spring_layout, scale=scale, center=(0, 0)

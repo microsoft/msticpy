@@ -145,18 +145,21 @@ def plot_nx_graph(
         height=height,
     )
     
-    nx_graph_df = nx.to_pandas_edgelist(nx_graph)
-    nx_graph_df["source_name"] = nx_graph_df["source"]
-    nx_graph_df["target_name"] = nx_graph_df["target"]
-    nx_graph_df["source"] = pd.factorize(nx_graph_df["source"])[0]
-    nx_graph_df["target"] = pd.factorize(nx_graph_df["target"])[0]
-    
-    nx_graph_for_plotting = nx.from_pandas_edgelist(
-        nx_graph_df,
-        source="source",
-        target="target"
-        )
-    
+    nx_graph_for_plotting = nx.Graph()
+    index_node = 0
+    rev_index = {}
+    node_attributes = {}
+    for node_key in nx_graph.nodes:
+        nx_graph_for_plotting.add_node(index_node)
+        rev_index[node_key] = index_node
+        node_attributes[index_node] = nx_graph.nodes[node_key]
+        index_node += 1
+
+    nx.set_node_attributes(nx_graph_for_plotting, node_attributes)
+
+    for source_node, target_node in nx_graph.edges:
+        nx_graph_for_plotting.add_edge(rev_index[source_node], rev_index[target_node])
+
     graph_layout = _get_graph_layout(nx_graph_for_plotting, layout, **kwargs)
 
     graph_renderer = from_networkx(nx_graph_for_plotting, graph_layout, scale=scale, center=(0, 0))
