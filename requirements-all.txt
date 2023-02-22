@@ -25,8 +25,8 @@ ipython >= 7.1.1; python_version < "3.8"
 ipython >= 7.23.1; python_version >= "3.8"
 ipywidgets>=7.4.2, <8.0.0
 keyring>=13.2.1
-KqlmagicCustom[jupyter-basic,auth_code_clipboard]>=0.1.114
-KqlmagicCustom[jupyter-extended]>=0.1.114
+KqlmagicCustom[jupyter-basic,auth_code_clipboard]>=0.1.114.post22
+KqlmagicCustom[jupyter-extended]>=0.1.114.post22
 lxml>=4.6.5
 matplotlib>=3.0.0
 mo-sql-parsing>=8, <9.0.0
