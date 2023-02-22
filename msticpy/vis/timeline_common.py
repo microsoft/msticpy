@@ -28,7 +28,6 @@ from .figure_dimension import set_figure_size
 try:
     from bokeh.plotting import Figure
 except ImportError:
-    from bokeh.models import LayoutDOM
     Figure = LayoutDOM
 
 from pandas.api.types import is_datetime64_any_dtype
@@ -282,7 +281,7 @@ def create_range_tool(
         height=plot_height,
         width=width,
     )
-    
+
     help_str = (
         "Drag the middle or edges of the selection box to change "
         + "the range in the main chart"

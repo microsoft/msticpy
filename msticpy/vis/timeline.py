@@ -289,7 +289,7 @@ def _display_timeline_dict(
         height=height,
         width=param.width,
     )
-    
+
     set_axes_and_grids(data, plot, param.yaxis, param.ygrid, param.xgrid)
 
     # Create plot bar to act as as range selector

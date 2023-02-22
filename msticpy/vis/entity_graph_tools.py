@@ -34,7 +34,6 @@ req_alert_cols = ["DisplayName", "Severity", "AlertType"]
 req_inc_cols = ["id", "name", "properties.severity"]
 
 
-            
 @export
 class EntityGraph:
     """Create a graph for visualizing and tracking links between entities."""

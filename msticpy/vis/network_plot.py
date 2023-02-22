@@ -143,7 +143,7 @@ def plot_nx_graph(
         width=width,
         height=height,
     )
-        
+
     nx_graph_for_plotting = nx.Graph()
     index_node = 0
     rev_index = {}
