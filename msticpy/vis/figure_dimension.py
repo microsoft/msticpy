@@ -3,10 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""
-figure_dimension - helps set the width and height properties of a figure for plotting
-
-"""
+"""figure_dimension - helps set the width and height properties of a figure for plotting."""
 from bokeh.plotting import figure
 
 from .._version import VERSION
@@ -18,15 +15,17 @@ __author__ = "Claudiu Toma"
 
 @export
 def set_figure_size(fig: figure, width: int, height: int) -> figure:
-    """Sets the figure size
+    """Set the figure size.
 
     Args:
         fig (figure): initial figure
         width (int): width dimension
         height (int): height dimension
 
-    Returns:
+    Returns
+    -------
         figure: figure with correct width and height
+        
     """
     if hasattr(figure(), "height"):
         setattr(fig, 'height', height)
