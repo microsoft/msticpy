@@ -8,8 +8,9 @@ figure_dimension - helps set the width and height properties of a figure for plo
 
 """
 from bokeh.plotting import figure
-from ..common.utility import export
+
 from .._version import VERSION
+from ..common.utility import export
 
 __version__ = VERSION
 __author__ = "Claudiu Toma"

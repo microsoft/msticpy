@@ -13,11 +13,10 @@ import pandas as pd
 from bokeh.io import output_notebook, reset_output, show
 from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM
 from bokeh.plotting import figure
-from .figure_dimension import set_figure_size
-
 
 from .._version import VERSION
 from ..common.utility import check_kwargs
+from .figure_dimension import set_figure_size
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

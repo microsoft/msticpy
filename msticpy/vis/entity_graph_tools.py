@@ -14,8 +14,6 @@ from bokeh.io import output_notebook, show
 from bokeh.layouts import column
 from bokeh.models import Circle, HoverTool, Label, LayoutDOM
 from bokeh.plotting import figure, from_networkx
-from .figure_dimension import set_figure_size
-
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
@@ -26,6 +24,7 @@ from ..datamodel.soc.incident import Incident
 from ..nbtools.security_alert import SecurityAlert
 from ..vis.timeline import display_timeline
 from ..vis.timeline_duration import display_timeline_duration
+from .figure_dimension import set_figure_size
 
 __version__ = VERSION
 __author__ = "Pete Bryan"

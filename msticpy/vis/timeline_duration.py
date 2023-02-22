@@ -16,12 +16,11 @@ from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM
 # pylint: enable=no-name-in-module
 from bokeh.plotting import figure, reset_output
 from bokeh.transform import dodge
-from .figure_dimension import set_figure_size
-
 
 from .._version import VERSION
 from ..common.data_utils import ensure_df_datetimes
 from ..common.utility import check_kwargs, export
+from .figure_dimension import set_figure_size
 from .timeline_common import (
     calc_auto_plot_height,
     check_df_columns,

@@ -25,6 +25,7 @@ from bokeh.palettes import Palette, viridis
 from bokeh.plotting import figure
 
 from .figure_dimension import set_figure_size
+
 try:
     from bokeh.plotting import Figure
 except ImportError:

@@ -29,8 +29,6 @@ from bokeh.palettes import viridis
 from bokeh.plotting import figure
 from bokeh.transform import dodge, factor_cmap, linear_cmap
 from deprecated.sphinx import deprecated
-from .figure_dimension import set_figure_size
-
 
 from .._version import VERSION
 from ..common.utility import check_kwargs, export
@@ -54,6 +52,7 @@ from ..transform.process_tree_utils import (
     get_summary_info,
     get_tree_depth,
 )
+from .figure_dimension import set_figure_size
 
 # pylint: enable=unused-import
 

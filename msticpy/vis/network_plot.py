@@ -23,8 +23,9 @@ from bokeh.models import (
 from bokeh.palettes import Spectral4
 from bokeh.plotting import figure, from_networkx, show
 from typing_extensions import Literal
-from .figure_dimension import set_figure_size
+
 from .._version import VERSION
+from .figure_dimension import set_figure_size
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

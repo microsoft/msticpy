@@ -13,12 +13,11 @@ from bokeh.io import output_notebook, show
 from bokeh.layouts import column
 from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM, Legend
 from bokeh.plotting import figure, reset_output
-from .figure_dimension import set_figure_size
-
 
 from .._version import VERSION
 from ..common.data_utils import ensure_df_datetimes
 from ..common.utility import check_kwargs, export
+from .figure_dimension import set_figure_size
 from .timeline_common import (
     TIMELINE_HELP,
     calc_auto_plot_height,
