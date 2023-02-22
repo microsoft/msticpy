@@ -29,7 +29,7 @@ from bokeh.palettes import viridis
 from bokeh.plotting import figure
 from bokeh.transform import dodge, factor_cmap, linear_cmap
 from deprecated.sphinx import deprecated
-from msticpy.vis.figure_dimension import set_figure_size
+from .figure_dimension import set_figure_size
 
 
 from .._version import VERSION

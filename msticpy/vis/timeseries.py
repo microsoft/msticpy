@@ -15,7 +15,7 @@ from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter
 # pylint: disable=no-name-in-module
 from bokeh.plotting import figure, reset_output
 from deprecated.sphinx import deprecated
-from msticpy.vis.figure_dimension import set_figure_size
+from .figure_dimension import set_figure_size
 
 from .._version import VERSION
 from ..common.utility import check_kwargs, export

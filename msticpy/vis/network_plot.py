@@ -23,7 +23,7 @@ from bokeh.models import (
 from bokeh.palettes import Spectral4
 from bokeh.plotting import figure, from_networkx, show
 from typing_extensions import Literal
-from msticpy.vis.figure_dimension import set_figure_size
+from .figure_dimension import set_figure_size
 from .._version import VERSION
 
 __version__ = VERSION

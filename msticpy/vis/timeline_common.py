@@ -24,7 +24,7 @@ from bokeh.palettes import Palette, viridis
 # pylint: enable=no-name-in-module
 from bokeh.plotting import figure
 
-from msticpy.vis.figure_dimension import set_figure_size
+from .figure_dimension import set_figure_size
 try:
     from bokeh.plotting import Figure
 except ImportError:

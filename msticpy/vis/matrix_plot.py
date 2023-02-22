@@ -13,7 +13,7 @@ import pandas as pd
 from bokeh.io import output_notebook, reset_output, show
 from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM
 from bokeh.plotting import figure
-from msticpy.vis.figure_dimension import set_figure_size
+from .figure_dimension import set_figure_size
 
 
 from .._version import VERSION

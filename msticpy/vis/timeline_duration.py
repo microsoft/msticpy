@@ -16,7 +16,7 @@ from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM
 # pylint: enable=no-name-in-module
 from bokeh.plotting import figure, reset_output
 from bokeh.transform import dodge
-from msticpy.vis.figure_dimension import set_figure_size
+from .figure_dimension import set_figure_size
 
 
 from .._version import VERSION

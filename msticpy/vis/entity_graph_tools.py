@@ -14,7 +14,7 @@ from bokeh.io import output_notebook, show
 from bokeh.layouts import column
 from bokeh.models import Circle, HoverTool, Label, LayoutDOM
 from bokeh.plotting import figure, from_networkx
-from msticpy.vis.figure_dimension import set_figure_size
+from .figure_dimension import set_figure_size
 
 
 from .._version import VERSION
