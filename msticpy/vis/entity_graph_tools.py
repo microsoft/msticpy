@@ -15,6 +15,8 @@ from bokeh.layouts import column
 from bokeh.models import Circle, HoverTool, Label, LayoutDOM
 from bokeh.plotting import figure, from_networkx
 
+from msticpy.vis.figure_dimension import figure_dimension
+
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
 from ..common.utility import export
@@ -32,6 +34,7 @@ req_alert_cols = ["DisplayName", "Severity", "AlertType"]
 req_inc_cols = ["id", "name", "properties.severity"]
 
 
+            
 @export
 class EntityGraph:
     """Create a graph for visualizing and tracking links between entities."""
@@ -467,12 +470,14 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
 
     nx.set_node_attributes(entity_graph, node_attrs, "node_color")
 
-    plot = figure(
-        title="Alert Entity graph",
-        x_range=(-3, 3),
-        y_range=(-3, 3),
+    plot = figure_dimension.set_size(
+        figure(
+            title="Alert Entity graph",
+            x_range=(-3, 3),
+            y_range=(-3, 3)
+        ),
         width=width,
-        height=height,
+        height=height
     )
 
     plot.add_tools(

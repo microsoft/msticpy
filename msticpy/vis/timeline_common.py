@@ -24,6 +24,8 @@ from bokeh.palettes import Palette, viridis
 # pylint: enable=no-name-in-module
 from bokeh.plotting import figure
 
+from msticpy.vis.figure_dimension import figure_dimension
+
 try:
     from bokeh.plotting import Figure
 except ImportError:
@@ -269,16 +271,19 @@ def create_range_tool(
     ext_min = min_time - ((max_time - min_time) * 0.15)
     ext_max = max_time + ((max_time - min_time) * 0.15)
     plot_height = max(120, int(height * 0.20))
-    rng_select = figure(
-        x_range=(ext_min, ext_max),
-        title="Range Selector",
+    rng_select = figure_dimension.set_size(
+        figure(
+            x_range=(ext_min, ext_max),
+            title="Range Selector",
+            x_axis_type="datetime",
+            y_axis_type=None,
+            tools="",
+            toolbar_location=None,
+        ),
         height=plot_height,
         width=width,
-        x_axis_type="datetime",
-        y_axis_type=None,
-        tools="",
-        toolbar_location=None,
     )
+    
     help_str = (
         "Drag the middle or edges of the selection box to change "
         + "the range in the main chart"

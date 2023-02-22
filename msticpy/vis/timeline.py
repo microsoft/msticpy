@@ -15,6 +15,8 @@ from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM, Legend
 from bokeh.models.annotations import LegendItem
 from bokeh.plotting import figure, reset_output
 
+from msticpy.vis.figure_dimension import figure_dimension
+
 from .._version import VERSION
 from ..common.data_utils import ensure_df_datetimes
 from ..common.utility import check_kwargs, export
@@ -273,19 +275,21 @@ def _display_timeline_dict(
     start_range, end_range, min_time, max_time = get_time_bounds(min_time, max_time)
     height = param.height or calc_auto_plot_height(len(data))
     y_range = ((-1 / series_count), series_count - 1 + (1 / series_count))
-    plot = figure(
-        x_range=(start_range, end_range),
-        y_range=y_range,
-        min_border_left=50,
+    plot = figure_dimension.set_size(
+        figure(
+            x_range=(start_range, end_range),
+            y_range=y_range,
+            min_border_left=50,
+            x_axis_label="Event Time",
+            x_axis_type="datetime",
+            x_minor_ticks=10,
+            tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
+            title=param.fmt_title,
+        ),
         height=height,
         width=param.width,
-        x_axis_label="Event Time",
-        x_axis_type="datetime",
-        x_minor_ticks=10,
-        tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
-        title=param.fmt_title,
     )
-
+    
     set_axes_and_grids(data, plot, param.yaxis, param.ygrid, param.xgrid)
 
     # Create plot bar to act as as range selector

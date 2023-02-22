@@ -30,6 +30,8 @@ from bokeh.plotting import figure
 from bokeh.transform import dodge, factor_cmap, linear_cmap
 from deprecated.sphinx import deprecated
 
+from msticpy.vis.figure_dimension import figure_dimension
+
 from .._version import VERSION
 from ..common.utility import check_kwargs, export
 from ..transform.proc_tree_builder import build_process_tree, infer_schema
@@ -220,15 +222,17 @@ def plot_process_tree(  # noqa: MC0001
         title += " (color bar = {legend_col})"
     visible_range = int(plot_height / 35)
     y_start_range = (n_rows - visible_range, n_rows + 1)
-    b_plot = figure(
-        title=title,
+    b_plot = figure_dimension.set_size(
+        figure(
+            title=title,
+            x_range=(min_level, max_level),
+            y_range=y_start_range,
+            tools=["reset", "save", "tap", "ywheel_pan"],
+            toolbar_location="above",
+            active_scroll="ywheel_pan",
+        ),
         width=plot_width,
         height=plot_height,
-        x_range=(min_level, max_level),
-        y_range=y_start_range,
-        tools=["reset", "save", "tap", "ywheel_pan"],
-        toolbar_location="above",
-        active_scroll="ywheel_pan",
     )
 
     hover = HoverTool(
@@ -500,11 +504,13 @@ def _create_vert_range_tool(
     data, min_y, max_y, plot_range, width, height, x_col, y_col, fill_map="navy"
 ):
     """Return vertical range too for plot."""
-    rng_select = figure(
+    rng_select = figure_dimension.set_size(
+        figure(
+            y_range=(min_y - 1, max_y + 1),
+            toolbar_location=None,
+        ),
         width=width,
         height=height,
-        y_range=(min_y - 1, max_y + 1),
-        toolbar_location=None,
     )
 
     x_dodge = dodge(x_col, -0.5)

@@ -26,6 +26,7 @@ from bokeh.plotting import figure, from_networkx, show
 from typing_extensions import Literal
 
 from msticpy.transform.network import df_to_networkx
+from msticpy.vis.figure_dimension import figure_dimension
 
 from .._version import VERSION
 
@@ -137,14 +138,16 @@ def plot_nx_graph(
     nx.set_node_attributes(nx_graph, node_attrs, "node_color")
     hide = kwargs.pop("hide", False)
 
-    plot = figure(
-        title=title,
-        x_range=(-3, 3),
-        y_range=(-3, 3),
+    plot = figure_dimension.set_size(
+        figure(
+            title=title,
+            x_range=(-3, 3),
+            y_range=(-3, 3),
+        ),
         width=width,
         height=height,
     )
-    
+        
     nx_graph_for_plotting = nx.Graph()
     index_node = 0
     rev_index = {}
@@ -302,10 +305,12 @@ def plot_entity_graph(
     }
     nx.set_node_attributes(entity_graph, node_attrs, "node_color")
 
-    plot = figure(
-        title="Alert Entity graph",
-        x_range=(-3, 3),
-        y_range=(-3, 3),
+    plot = figure_dimension.set_size(
+        figure(
+            title="Alert Entity graph",
+            x_range=(-3, 3),
+            y_range=(-3, 3),
+        ),
         width=width,
         height=height,
     )
