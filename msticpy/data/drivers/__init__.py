@@ -46,7 +46,7 @@ def import_driver(data_environment) -> type:
 
 
 @import_driver.register
-def _import_driver(data_environment: DataEnvironment) -> type:
+def _(data_environment: DataEnvironment) -> type:
     """Import driver class for a data environment."""
     mod_name, cls_name = _ENVIRONMENT_DRIVERS.get(data_environment, (None, None))
 
@@ -64,7 +64,7 @@ def _import_driver(data_environment: DataEnvironment) -> type:
 
 
 @import_driver.register
-def _import_driver(data_environment: str) -> type:
+def _(data_environment: str) -> type:
     """Import custom driver class for a data environment."""
     if plugin_cls := CUSTOM_PROVIDERS.get(data_environment):
         return plugin_cls

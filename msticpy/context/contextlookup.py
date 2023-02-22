@@ -21,9 +21,8 @@ from ..common.utility import export
 
 # used in dynamic instantiation of providers
 from .contextproviders import CONTEXT_PROVIDERS
-from .contextproviders.context_provider_base import ContextProvider
 from .lookup import Lookup
-from .provider_base import _make_sync
+from .provider_base import Provider, _make_sync
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -46,7 +45,7 @@ class ContextLookup(Lookup):
     PACKAGE = "contextproviders"
 
     PROVIDERS = CONTEXT_PROVIDERS
-    CUSTOM_PROVIDERS: Dict[str, ContextProvider] = {}
+    CUSTOM_PROVIDERS: Dict[str, Provider] = {}
 
     # pylint: disable=too-many-arguments
     def lookup_observable(
