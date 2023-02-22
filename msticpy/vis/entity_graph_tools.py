@@ -469,13 +469,9 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
     nx.set_node_attributes(entity_graph, node_attrs, "node_color")
 
     plot = set_figure_size(
-        figure(
-            title="Alert Entity graph",
-            x_range=(-3, 3),
-            y_range=(-3, 3)
-        ),
+        figure(title="Alert Entity graph", x_range=(-3, 3), y_range=(-3, 3)),
         width=width,
-        height=height
+        height=height,
     )
 
     plot.add_tools(
@@ -503,7 +499,9 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
     nx.set_node_attributes(entity_graph_for_plotting, node_attributes)
 
     for source_node, target_node in entity_graph.edges:
-        entity_graph_for_plotting.add_edge(rev_index[source_node], rev_index[target_node])
+        entity_graph_for_plotting.add_edge(
+            rev_index[source_node], rev_index[target_node]
+        )
 
     graph_renderer = from_networkx(
         entity_graph_for_plotting, nx.spring_layout, scale=scale, center=(0, 0)

@@ -25,14 +25,14 @@ def set_figure_size(fig: figure, width: int, height: int) -> figure:
     Returns
     -------
         figure: figure with correct width and height
-        
+
     """
     if hasattr(figure(), "height"):
-        setattr(fig, 'height', height)
+        setattr(fig, "height", height)
     if hasattr(figure(), "plot_height"):
-        setattr(fig, 'plot_height', height)
+        setattr(fig, "plot_height", height)
     if hasattr(figure(), "width"):
-        setattr(fig, 'width', width)
+        setattr(fig, "width", width)
     if hasattr(figure(), "plot_width"):
-        setattr(fig, 'plot_width', width)
+        setattr(fig, "plot_width", width)
     return fig

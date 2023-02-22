@@ -164,7 +164,9 @@ def plot_nx_graph(
 
     graph_layout = _get_graph_layout(nx_graph_for_plotting, layout, **kwargs)
 
-    graph_renderer = from_networkx(nx_graph_for_plotting, graph_layout, scale=scale, center=(0, 0))
+    graph_renderer = from_networkx(
+        nx_graph_for_plotting, graph_layout, scale=scale, center=(0, 0)
+    )
     _create_edge_renderer(graph_renderer, edge_color=edge_color)
     _create_node_renderer(graph_renderer, node_size, "node_color")
 
