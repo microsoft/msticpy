@@ -16,8 +16,8 @@ from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM
 # pylint: enable=no-name-in-module
 from bokeh.plotting import figure, reset_output
 from bokeh.transform import dodge
+from msticpy.vis.figure_dimension import set_figure_size
 
-from msticpy.vis.figure_dimension import figure_dimension
 
 from .._version import VERSION
 from ..common.data_utils import ensure_df_datetimes
@@ -185,7 +185,7 @@ def display_timeline_duration(
     else:
         y_range = grouped_data[group_by[0]]
 
-    plot = figure_dimension.set_size(
+    plot = set_figure_size(
         figure(
             x_range=(start_range, end_range),
             y_range=y_range,

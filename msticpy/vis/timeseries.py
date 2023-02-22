@@ -15,8 +15,7 @@ from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter
 # pylint: disable=no-name-in-module
 from bokeh.plotting import figure, reset_output
 from deprecated.sphinx import deprecated
-
-from msticpy.vis.figure_dimension import figure_dimension
+from msticpy.vis.figure_dimension import set_figure_size
 
 from .._version import VERSION
 from ..common.utility import check_kwargs, export
@@ -166,7 +165,7 @@ def display_timeseries_anomalies(
     end_range = max_time + ((max_time - min_time) * 0.05)
     height = height or calc_auto_plot_height(series_count)
 
-    plot = figure_dimension.set_size(
+    plot = set_figure_size(
         figure(
             x_range=(start_range, end_range),
             min_border_left=50,

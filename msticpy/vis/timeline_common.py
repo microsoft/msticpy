@@ -24,13 +24,12 @@ from bokeh.palettes import Palette, viridis
 # pylint: enable=no-name-in-module
 from bokeh.plotting import figure
 
-from msticpy.vis.figure_dimension import figure_dimension
-
+from msticpy.vis.figure_dimension import set_figure_size
 try:
     from bokeh.plotting import Figure
 except ImportError:
     from bokeh.models import LayoutDOM
-    Figure=LayoutDOM
+    Figure = LayoutDOM
 
 from pandas.api.types import is_datetime64_any_dtype
 from pandas.errors import OutOfBoundsDatetime
@@ -271,7 +270,7 @@ def create_range_tool(
     ext_min = min_time - ((max_time - min_time) * 0.15)
     ext_max = max_time + ((max_time - min_time) * 0.15)
     plot_height = max(120, int(height * 0.20))
-    rng_select = figure_dimension.set_size(
+    rng_select = set_figure_size(
         figure(
             x_range=(ext_min, ext_max),
             title="Range Selector",

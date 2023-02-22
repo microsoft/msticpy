@@ -14,8 +14,8 @@ from bokeh.io import output_notebook, show
 from bokeh.layouts import column
 from bokeh.models import Circle, HoverTool, Label, LayoutDOM
 from bokeh.plotting import figure, from_networkx
+from msticpy.vis.figure_dimension import set_figure_size
 
-from msticpy.vis.figure_dimension import figure_dimension
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
@@ -470,7 +470,7 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
 
     nx.set_node_attributes(entity_graph, node_attrs, "node_color")
 
-    plot = figure_dimension.set_size(
+    plot = set_figure_size(
         figure(
             title="Alert Entity graph",
             x_range=(-3, 3),

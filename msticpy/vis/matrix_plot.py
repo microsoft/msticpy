@@ -13,8 +13,8 @@ import pandas as pd
 from bokeh.io import output_notebook, reset_output, show
 from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM
 from bokeh.plotting import figure
+from msticpy.vis.figure_dimension import set_figure_size
 
-from msticpy.vis.figure_dimension import figure_dimension
 
 from .._version import VERSION
 from ..common.utility import check_kwargs
@@ -167,7 +167,7 @@ def plot_matrix(data: pd.DataFrame, **kwargs) -> LayoutDOM:
     plot_data["plt_size"] = plot_data["size"] * 10 / max_size
     source = ColumnDataSource(data=plot_data)
 
-    plot = figure_dimension.set_size(
+    plot = set_figure_size(
         figure(
             title=param.title,
             x_range=x_range,
@@ -178,7 +178,6 @@ def plot_matrix(data: pd.DataFrame, **kwargs) -> LayoutDOM:
         width=param.width,
         height=param.height,
     )
-    
 
     tool_tips = [
         (param.x_column, f"@{param.x_column}"),

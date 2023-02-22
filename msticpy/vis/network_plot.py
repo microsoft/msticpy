@@ -7,7 +7,6 @@
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import networkx as nx
-import pandas as pd
 from bokeh.io import output_notebook
 from bokeh.models import (
     BoxSelectTool,
@@ -24,10 +23,7 @@ from bokeh.models import (
 from bokeh.palettes import Spectral4
 from bokeh.plotting import figure, from_networkx, show
 from typing_extensions import Literal
-
-from msticpy.transform.network import df_to_networkx
-from msticpy.vis.figure_dimension import figure_dimension
-
+from msticpy.vis.figure_dimension import set_figure_size
 from .._version import VERSION
 
 __version__ = VERSION
@@ -138,7 +134,7 @@ def plot_nx_graph(
     nx.set_node_attributes(nx_graph, node_attrs, "node_color")
     hide = kwargs.pop("hide", False)
 
-    plot = figure_dimension.set_size(
+    plot = set_figure_size(
         figure(
             title=title,
             x_range=(-3, 3),
@@ -305,7 +301,7 @@ def plot_entity_graph(
     }
     nx.set_node_attributes(entity_graph, node_attrs, "node_color")
 
-    plot = figure_dimension.set_size(
+    plot = set_figure_size(
         figure(
             title="Alert Entity graph",
             x_range=(-3, 3),

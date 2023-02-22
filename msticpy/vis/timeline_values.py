@@ -13,8 +13,8 @@ from bokeh.io import output_notebook, show
 from bokeh.layouts import column
 from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM, Legend
 from bokeh.plotting import figure, reset_output
+from msticpy.vis.figure_dimension import set_figure_size
 
-from msticpy.vis.figure_dimension import figure_dimension
 
 from .._version import VERSION
 from ..common.data_utils import ensure_df_datetimes
@@ -197,7 +197,7 @@ def display_timeline_values(  # noqa: C901, MC0001
     end_range = max_time + ((max_time - min_time) * 0.1)
     height = param.height or calc_auto_plot_height(series_count)
 
-    plot = figure_dimension.set_size(
+    plot = set_figure_size(
         figure(
             x_range=(start_range, end_range),
             min_border_left=50,
