@@ -12,7 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import Iterable, List, Mapping, Optional, Union
+from typing import Dict, Iterable, List, Mapping, Optional, Union
 
 import pandas as pd
 
@@ -21,6 +21,7 @@ from ..common.utility import export
 
 # used in dynamic instantiation of providers
 from .contextproviders import CONTEXT_PROVIDERS
+from .contextproviders.context_provider_base import ContextProvider
 from .lookup import Lookup
 from .provider_base import _make_sync
 
@@ -45,6 +46,7 @@ class ContextLookup(Lookup):
     PACKAGE = "contextproviders"
 
     PROVIDERS = CONTEXT_PROVIDERS
+    CUSTOM_PROVIDERS: Dict[str, ContextProvider] = {}
 
     # pylint: disable=too-many-arguments
     def lookup_observable(

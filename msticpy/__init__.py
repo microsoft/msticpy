@@ -56,7 +56,7 @@ Configuration:
 """
 import importlib
 import os
-from typing import Any
+from typing import Any, Iterable, Union
 
 from . import nbwidgets
 
@@ -125,3 +125,26 @@ def __getattr__(attrib: str) -> Any:
 def __dir__():
     """Return attribute list."""
     return sorted(set(_STATIC_ATTRIBS + list(_DEFAULT_IMPORTS)))
+
+
+def load_plugins(plugin_paths: Union[str, Iterable[str]]):
+    """
+    Load plugins from specified paths or configuration.
+
+    Parameters
+    ----------
+    plugin_paths : Union[str, Iterable[str]]
+        A path or collection of paths from which to
+        load plugins. If not supplied, msticpyconfig is checked for
+        a PluginFolders key and list of paths are read from there.
+
+    Notes
+    -----
+    No attempt to load plugins is made if both parameter and
+    configuration are empty.
+
+    """
+    # pylint: disable=import-outside-toplevel
+    from .init.mp_plugins import read_plugins
+
+    read_plugins(plugin_paths)

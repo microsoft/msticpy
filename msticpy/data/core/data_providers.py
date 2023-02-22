@@ -18,7 +18,8 @@ from ...common import pkg_config as config
 from ...common.exceptions import MsticpyDataQueryError
 from ...common.utility import export, valid_pyname
 from ...nbwidgets import QueryTime
-from ..drivers import CUSTOM_PROVIDERS, DriverBase, import_driver
+from .. import drivers
+from ..drivers import DriverBase, import_driver
 from .param_extractor import extract_query_params
 from .query_container import QueryContainer
 from .query_defns import DataEnvironment
@@ -114,7 +115,7 @@ class QueryProvider:
             if data_env != DataEnvironment.Unknown:
                 data_environment = data_env
                 self.environment = data_environment.name
-            elif data_environment.casefold() in CUSTOM_PROVIDERS:
+            elif data_environment in drivers.CUSTOM_PROVIDERS:
                 self.environment = data_environment
             else:
                 raise TypeError(f"Unknown data environment {data_environment}")

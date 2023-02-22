@@ -37,7 +37,16 @@ CUSTOM_PROVIDERS: Dict[str, type] = {}
 
 
 @singledispatch
-def import_driver(data_environment: DataEnvironment) -> type:
+def import_driver(data_environment) -> type:
+    """Unsupported type for environment."""
+    raise TypeError(
+        "'data_environment' must be a str or DataEnvironment type.",
+        f"Called with type: {type(data_environment)}",
+    )
+
+
+@import_driver.register
+def _import_driver(data_environment: DataEnvironment) -> type:
     """Import driver class for a data environment."""
     mod_name, cls_name = _ENVIRONMENT_DRIVERS.get(data_environment, (None, None))
 
@@ -54,14 +63,14 @@ def import_driver(data_environment: DataEnvironment) -> type:
     return getattr(imp_module, cls_name)
 
 
-@import_driver
+@import_driver.register
 def _import_driver(data_environment: str) -> type:
     """Import custom driver class for a data environment."""
-    if plugin_cls := CUSTOM_PROVIDERS.get(data_environment.casefold()):
+    if plugin_cls := CUSTOM_PROVIDERS.get(data_environment):
         return plugin_cls
 
     raise ValueError(
         f"No driver available for environment {data_environment}.",
         "Possible values are:",
-        ", ".join(env.name for env in CUSTOM_PROVIDERS),
+        ", ".join(CUSTOM_PROVIDERS),
     )

@@ -70,7 +70,7 @@ class Lookup:
     _HELP_URI = "https://msticpy.readthedocs.io/en/latest/DataEnrichment.html"
 
     PROVIDERS: Dict[str, Tuple[str, str]] = {}
-    CUSTOM_PROVIDERS: Dict[str, Union[type, Provider]]
+    CUSTOM_PROVIDERS: Dict[str, Provider]
 
     PACKAGE: str = ""
 
@@ -601,7 +601,7 @@ class Lookup:
     @property
     def available_providers(self) -> List[str]:
         """
-        Return a list of builtin providers.
+        Return a list of builtin and plugin providers.
 
         Returns
         -------
@@ -609,7 +609,7 @@ class Lookup:
             List of TI Provider classes.
 
         """
-        return list(self.PROVIDERS) + list(self.CUSTOM_PROVIDERS.values())
+        return list(self.PROVIDERS) + list(self.CUSTOM_PROVIDERS)
 
     @classmethod
     def list_available_providers(
@@ -642,9 +642,7 @@ class Lookup:
             if show_query_types and provider_class:
                 provider_class.usage()
 
-        if as_list:
-            return providers
-        return None
+        return providers if as_list else None
 
     @classmethod
     def import_provider(cls, provider: str) -> Provider:
@@ -652,10 +650,7 @@ class Lookup:
         mod_name, cls_name = cls.PROVIDERS.get(provider, (None, None))
 
         if not (mod_name and cls_name):
-            if (
-                hasattr(cls, "CUSTOM_PROVIDERS")
-                and provider.casefold() in cls.CUSTOM_PROVIDERS
-            ):
+            if hasattr(cls, "CUSTOM_PROVIDERS") and provider in cls.CUSTOM_PROVIDERS:
                 return cast(Provider, cls.CUSTOM_PROVIDERS[provider])
             raise LookupError(
                 f"No provider named '{provider}'.",
@@ -672,21 +667,21 @@ class Lookup:
         """Load provider classes based on config."""
         prov_type = kwargs.get("providers", "Providers")
         prov_settings = get_provider_settings(prov_type)
-
-        for provider_entry, settings in prov_settings.items():
-            # Allow overriding provider name to use another class
-            provider_name = settings.provider or provider_entry
+        provider_class: Provider
+        for provider_name, settings in prov_settings.items():
             if (
                 self._providers_to_load is not None
                 and provider_name not in self._providers_to_load
-            ) or provider_name == "--no-load--":
+            ) or settings.provider == "--no-load--":
                 continue
             try:
-                provider_class: Provider = self.import_provider(provider_name)
+                provider_name = settings.provider or provider_name
+                provider_class = self.import_provider(provider_name)
             except LookupError:
                 warnings.warn(
                     f"Could not find provider class for {provider_name} "
-                    f"in config section {provider_entry}"
+                    f"in config section '{provider_name}'. "
+                    f"Provider class name in config is '{settings.provider}'"
                 )
                 continue
 
