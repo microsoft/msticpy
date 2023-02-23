@@ -25,10 +25,13 @@ from bokeh.plotting import figure, from_networkx, show
 from typing_extensions import Literal
 
 from .._version import VERSION
-from .figure_dimension import set_figure_size
+from .figure_dimension import bokeh_figure
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+# wrap figure function to handle v2/v3 parameter renaming
+figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
 
 GraphLayout = Union[
@@ -135,12 +138,10 @@ def plot_nx_graph(
     nx.set_node_attributes(nx_graph, node_attrs, "node_color")
     hide = kwargs.pop("hide", False)
 
-    plot = set_figure_size(
-        figure(
-            title=title,
-            x_range=(-3, 3),
-            y_range=(-3, 3),
-        ),
+    plot = figure(
+        title=title,
+        x_range=(-3, 3),
+        y_range=(-3, 3),
         width=width,
         height=height,
     )
@@ -172,7 +173,8 @@ def plot_nx_graph(
 
     graph_renderer.selection_policy = NodesAndLinkedEdges()
     graph_renderer.inspection_policy = EdgesAndLinkedNodes()
-    plot.renderers.append(graph_renderer)  # pylint: disable=no-member
+    # pylint: disable=no-member
+    plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
 
     hover_tools = [
         _create_node_hover(source_attrs, target_attrs, [graph_renderer.node_renderer])
@@ -304,12 +306,10 @@ def plot_entity_graph(
     }
     nx.set_node_attributes(entity_graph, node_attrs, "node_color")
 
-    plot = set_figure_size(
-        figure(
-            title="Alert Entity graph",
-            x_range=(-3, 3),
-            y_range=(-3, 3),
-        ),
+    plot = figure(
+        title="Alert Entity graph",
+        x_range=(-3, 3),
+        y_range=(-3, 3),
         width=width,
         height=height,
     )
@@ -332,7 +332,7 @@ def plot_entity_graph(
         size=node_size, fill_color="node_color", fill_alpha=0.5
     )
     # pylint: disable=no-member
-    plot.renderers.append(graph_renderer)
+    plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
 
     # Create labels
     for name, pos in graph_renderer.layout_provider.graph_layout.items():

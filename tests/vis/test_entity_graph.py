@@ -6,11 +6,13 @@
 """Test module for EntityGraph."""
 import pandas as pd
 from bokeh.models.layouts import Column
+
 try:
     from bokeh.plotting import Figure
 except ImportError:
     from bokeh.models import LayoutDOM
-    Figure=LayoutDOM
+
+    Figure = LayoutDOM
 
 from msticpy.datamodel.entities import Alert, Entity, Incident
 from msticpy.nbtools.security_alert import SecurityAlert
@@ -210,6 +212,7 @@ def test_df_plot():
     plot = sent_incidents.mp_plot.incident_graph(timeline=True)
     assert isinstance(plot, Column)
 
+
 def test_alert_plot():
     sample_alert = {
         "StartTimeUtc": "2018-09-27 16:59:16",
@@ -222,9 +225,7 @@ def test_alert_plot():
         "AlertDisplayName": "Windows registry persistence method detected",
         "Severity": "Low",
         "IsIncident": False,
-        "ExtendedProperties": {
-            "resourceType": "Non-Azure Resource"
-        },
+        "ExtendedProperties": {"resourceType": "Non-Azure Resource"},
         "CompromisedEntity": "TESTHOST",
         "Entities": [
             {

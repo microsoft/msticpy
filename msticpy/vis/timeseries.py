@@ -18,7 +18,7 @@ from deprecated.sphinx import deprecated
 
 from .._version import VERSION
 from ..common.utility import check_kwargs, export
-from .figure_dimension import set_figure_size
+from .figure_dimension import bokeh_figure
 from .timeline_common import (
     calc_auto_plot_height,
     create_range_tool,
@@ -53,6 +53,9 @@ _DEFAULT_KWARGS = [
 ]
 _TL_VALUE_KWARGS = ["kind", "y", "x"]
 _TS_KWARGS = ["xgrid", "ygrid"]
+
+# wrap figure function to handle v2/v3 parameter renaming
+figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
 
 # pylint: disable=invalid-name, too-many-locals, too-many-statements
@@ -165,18 +168,16 @@ def display_timeseries_anomalies(
     end_range = max_time + ((max_time - min_time) * 0.05)
     height = height or calc_auto_plot_height(series_count)
 
-    plot = set_figure_size(
-        figure(
-            x_range=(start_range, end_range),
-            min_border_left=50,
-            x_axis_label=time_column,
-            x_axis_type="datetime",
-            y_axis_label=value_column,
-            x_minor_ticks=10,
-            tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
-            toolbar_location="above",
-            title=title,
-        ),
+    plot = figure(
+        x_range=(start_range, end_range),
+        min_border_left=50,
+        x_axis_label=time_column,
+        x_axis_type="datetime",
+        y_axis_label=value_column,
+        x_minor_ticks=10,
+        tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
+        toolbar_location="above",
+        title=title,
         height=height,
         width=width,
     )
@@ -248,7 +249,7 @@ def display_timeseries_anomalies(
         y="score",
         min_time=min_time,
         max_time=max_time,
-        plot_range=plot.x_range,
+        plot_range=plot.x_range,  # type: ignore[arg-type]
         width=width,
         height=height,
         time_column=time_column,

@@ -34,7 +34,7 @@ from pandas.errors import OutOfBoundsDatetime
 from .._version import VERSION
 from ..common.exceptions import MsticpyParameterError
 from ..common.utility import export
-from .figure_dimension import set_figure_size
+from .figure_dimension import bokeh_figure
 
 # pylint: enable=unused-import
 
@@ -45,6 +45,9 @@ TIMELINE_HELP = (
     "https://msticpy.readthedocs.io/en/latest/msticpy.vis.html"
     "#msticpy.vis.timeline.{plot_type}"
 )
+
+# wrap figure function to handle v2/v3 parameter renaming
+figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
 
 @export
@@ -268,15 +271,13 @@ def create_range_tool(
     ext_min = min_time - ((max_time - min_time) * 0.15)
     ext_max = max_time + ((max_time - min_time) * 0.15)
     plot_height = max(120, int(height * 0.20))
-    rng_select = set_figure_size(
-        figure(
-            x_range=(ext_min, ext_max),
-            title="Range Selector",
-            x_axis_type="datetime",
-            y_axis_type=None,
-            tools="",
-            toolbar_location=None,
-        ),
+    rng_select = figure(
+        x_range=(ext_min, ext_max),
+        title="Range Selector",
+        x_axis_type="datetime",
+        y_axis_type=None,
+        tools="",
+        toolbar_location=None,
         height=plot_height,
         width=width,
     )
@@ -307,7 +308,7 @@ def create_range_tool(
     range_tool.overlay.fill_alpha = 0.2  # type: ignore
     rng_select.ygrid.grid_line_color = None
     rng_select.add_tools(range_tool)
-    rng_select.toolbar.active_multi = range_tool
+    rng_select.toolbar.active_multi = range_tool  # type: ignore
     return rng_select
 
 

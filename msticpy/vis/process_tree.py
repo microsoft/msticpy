@@ -56,15 +56,17 @@ from ..transform.process_tree_utils import (
     get_summary_info,
     get_tree_depth,
 )
-from .figure_dimension import set_figure_size
+from .figure_dimension import bokeh_figure
 
 # pylint: enable=unused-import
-
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 _DEFAULT_KWARGS = ["height", "title", "width", "hide_legend", "pid_fmt"]
+
+# wrap figure function to handle v2/v3 parameter renaming
+figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
 
 @export
@@ -225,15 +227,13 @@ def plot_process_tree(  # noqa: MC0001
         title += " (color bar = {legend_col})"
     visible_range = int(plot_height / 35)
     y_start_range = (n_rows - visible_range, n_rows + 1)
-    b_plot = set_figure_size(
-        figure(
-            title=title,
-            x_range=(min_level, max_level),
-            y_range=y_start_range,
-            tools=["reset", "save", "tap", "ywheel_pan"],
-            toolbar_location="above",
-            active_scroll="ywheel_pan",
-        ),
+    b_plot = figure(
+        title=title,
+        x_range=(min_level, max_level),
+        y_range=y_start_range,
+        tools=["reset", "save", "tap", "ywheel_pan"],
+        toolbar_location="above",
+        active_scroll="ywheel_pan",
         width=plot_width,
         height=plot_height,
     )
@@ -245,7 +245,7 @@ def plot_process_tree(  # noqa: MC0001
     b_plot.add_tools(hover)
 
     # dodge to align rectangle with grid
-    rect_x = dodge("Level", 1.75, range=b_plot.x_range)
+    rect_x = dodge("Level", 1.75, range=b_plot.x_range)  # type: ignore
     rect_plot_params = {
         "width": 3.5,
         "height": 0.95,
@@ -507,11 +507,9 @@ def _create_vert_range_tool(
     data, min_y, max_y, plot_range, width, height, x_col, y_col, fill_map="navy"
 ):
     """Return vertical range too for plot."""
-    rng_select = set_figure_size(
-        figure(
-            y_range=(min_y - 1, max_y + 1),
-            toolbar_location=None,
-        ),
+    rng_select = figure(
+        y_range=(min_y - 1, max_y + 1),
+        toolbar_location=None,
         width=width,
         height=height,
     )

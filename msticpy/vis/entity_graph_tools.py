@@ -24,13 +24,16 @@ from ..datamodel.soc.incident import Incident
 from ..nbtools.security_alert import SecurityAlert
 from ..vis.timeline import display_timeline
 from ..vis.timeline_duration import display_timeline_duration
-from .figure_dimension import set_figure_size
+from .figure_dimension import bokeh_figure
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
 req_alert_cols = ["DisplayName", "Severity", "AlertType"]
 req_inc_cols = ["id", "name", "properties.severity"]
+
+# wrap figure function to handle v2/v3 parameter renaming
+figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
 
 @export
@@ -348,7 +351,7 @@ class EntityGraph:
         return tl_df
 
     def _add_incident_or_alert_node(self, incident: Union[Incident, Alert, None]):
-        """Check what type of entity is passed in and creates relevent graph."""
+        """Check what type of entity is passed in and creates relevant graph."""
         if isinstance(incident, Incident):
             self._add_incident_node(incident)
         elif isinstance(incident, Alert):
@@ -468,8 +471,10 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
 
     nx.set_node_attributes(entity_graph, node_attrs, "node_color")
 
-    plot = set_figure_size(
-        figure(title="Alert Entity graph", x_range=(-3, 3), y_range=(-3, 3)),
+    plot = figure(
+        title="Alert Entity graph",
+        x_range=(-3, 3),
+        y_range=(-3, 3),
         width=width,
         height=height,
     )
@@ -511,7 +516,7 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
         size=node_size, fill_color="node_color", fill_alpha=0.5
     )
     # pylint: disable=no-member
-    plot.renderers.append(graph_renderer)
+    plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
 
     # Create labels
     for index, pos in graph_renderer.layout_provider.graph_layout.items():

@@ -18,7 +18,7 @@ from bokeh.plotting import figure, reset_output
 from .._version import VERSION
 from ..common.data_utils import ensure_df_datetimes
 from ..common.utility import check_kwargs, export
-from .figure_dimension import set_figure_size
+from .figure_dimension import bokeh_figure
 from .timeline_common import (
     calc_auto_plot_height,
     create_range_tool,
@@ -42,6 +42,9 @@ from .timeline_values import display_timeline_values  # noqa F401
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+# wrap figure function to handle v2/v3 parameter renaming
+figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
 
 @attr.s(auto_attribs=True)
@@ -234,7 +237,7 @@ def display_timeline(
 
 def _display_timeline_dict(
     data: dict, param: PlotParams
-) -> figure:  # noqa: C901, MC0001
+) -> LayoutDOM:  # noqa: C901, MC0001
     """
     Display a timeline of events.
 
@@ -258,8 +261,8 @@ def _display_timeline_dict(
 
     Returns
     -------
-    figure
-        The bokeh plot figure.
+    LayoutDOM
+        The bokeh plot layout.
 
     """
     reset_output()
@@ -277,17 +280,15 @@ def _display_timeline_dict(
     start_range, end_range, min_time, max_time = get_time_bounds(min_time, max_time)
     height = param.height or calc_auto_plot_height(len(data))
     y_range = ((-1 / series_count), series_count - 1 + (1 / series_count))
-    plot = set_figure_size(
-        figure(
-            x_range=(start_range, end_range),
-            y_range=y_range,
-            min_border_left=50,
-            x_axis_label="Event Time",
-            x_axis_type="datetime",
-            x_minor_ticks=10,
-            tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
-            title=param.fmt_title,
-        ),
+    plot = figure(
+        x_range=(start_range, end_range),
+        y_range=y_range,
+        min_border_left=50,
+        x_axis_label="Event Time",
+        x_axis_type="datetime",
+        x_minor_ticks=10,
+        tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
+        title=param.fmt_title,
         height=height,
         width=param.width,
     )
@@ -299,7 +300,7 @@ def _display_timeline_dict(
         data=data,
         min_time=min_time,
         max_time=max_time,
-        plot_range=plot.x_range,
+        plot_range=plot.x_range,  # type: ignore[arg-type]
         width=param.width,
         height=height,
     )

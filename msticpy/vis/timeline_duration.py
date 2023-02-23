@@ -20,7 +20,7 @@ from bokeh.transform import dodge
 from .._version import VERSION
 from ..common.data_utils import ensure_df_datetimes
 from ..common.utility import check_kwargs, export
-from .figure_dimension import set_figure_size
+from .figure_dimension import bokeh_figure
 from .timeline_common import (
     calc_auto_plot_height,
     check_df_columns,
@@ -46,6 +46,9 @@ _TIMELINE_HELP = (
     "https://msticpy.readthedocs.io/en/latest/msticpy.init.html"
     "#msticpy.init.timeline_duration.{plot_type}"
 )
+
+# wrap figure function to handle v2/v3 parameter renaming
+figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
 
 @attr.s(auto_attribs=True)
@@ -184,18 +187,16 @@ def display_timeline_duration(
     else:
         y_range = grouped_data[group_by[0]]
 
-    plot = set_figure_size(
-        figure(
-            x_range=(start_range, end_range),
-            y_range=y_range,
-            min_border_left=50,
-            x_axis_label="Event Time",
-            y_axis_label=", ".join(group_by),
-            x_axis_type="datetime",
-            x_minor_ticks=10,
-            tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
-            title=title,
-        ),
+    plot = figure(
+        x_range=(start_range, end_range),
+        y_range=y_range,
+        min_border_left=50,
+        x_axis_label="Event Time",
+        y_axis_label=", ".join(group_by),
+        x_axis_type="datetime",
+        x_minor_ticks=10,
+        tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
+        title=title,
         height=height,
         width=param.width,
     )
@@ -227,7 +228,7 @@ def display_timeline_duration(
         data=all_data,
         min_time=min_time,
         max_time=max_time,
-        plot_range=plot.x_range,
+        plot_range=plot.x_range,  # type: ignore[arg-type]
         width=param.width,
         height=height,
         time_column=time_column,
