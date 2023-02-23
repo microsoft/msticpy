@@ -3,7 +3,45 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Initialization for Jupyter Notebooks."""
+"""
+Initialization for Jupyter Notebooks.
+
+This module performs several steps to initialize MSTICPy:
+- imports a number of standard packages (e.g. pandas) into the notebook
+- imports a number of modules and functions from msticpy
+- checks the version of MSTICPy
+- checks for presence and validates msticpyconfig.yaml
+
+In the Azure ML and Azure Synapse environments, some additional
+initialization and checks are performed.
+
+One frequent problem in bootstrapping MSTICPy is obtaining or
+creating a valid `msticpyconfig.yaml`. This is needed for many
+configuration settings such as MS Sentinel workspaces, Threat
+Intelligence (TI) providers, Azure authentication, Key Vault
+settings and more.
+
+If you are having trouble with this, you should check out the
+following resources:
+
+The basic structure of msticpyconfig.yaml
+
+https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html
+
+Using the msticpy settings editor to create or modify
+msticpyconfig.yaml
+
+https://msticpy.readthedocs.io/en/latest/getting_started/SettingsEditor.html
+
+MS Sentinel and Azure ML resources:
+
+Getting started notebook
+https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/A%20Getting%20Started%20Guide%20For%20Azure%20Sentinel%20ML%20Notebooks.ipynb
+
+Configuring your environment notebook
+https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/ConfiguringNotebookEnvironment.ipynb
+
+"""
 import importlib
 import io
 import os
@@ -107,8 +145,10 @@ Some functionality (such as Threat Intel lookups) will not function without
 valid configuration settings.<br>
 The following resources will help you set up your configuration:
 <ul>{"".join(_HELP_URIS)}</ul>
-<br>You can load and run the first two of these from the Microsoft Sentinel
-<b>Notebooks</b> tab
+<br>The first two of these are notebooks from the <b>Microsoft Sentinel
+Notebooks</b> repo.
+You can download and run these to set up your configuration in
+another tab.
 """
 
 
@@ -213,8 +253,19 @@ def _err_output(*args):
     """Output to IPython display or print - always output regardless of verbosity."""
     if is_ipython():
         display(HTML(" ".join([*args, "<br>"]).replace("\n", "<br>")))
+        display(
+            HTML(
+                "For more info and options run:"
+                "<pre>import msticpy as mp\nhelp(mp.nbinit)</pre>"
+            )
+        )
     else:
         print(*args)
+        print(
+            "\nFor more info and options run:",
+            "\n    import msticpy as mp",
+            "\n    help(mp.nbinit)",
+        )
 
 
 # pylint: disable=too-many-statements
@@ -288,6 +339,48 @@ def init_notebook(
         If extra_imports data format is incorrect.
         If package with required version check has no version
         information.
+
+    Notes
+    -----
+    This module performs several steps to initialize MSTICPy:
+    - imports a number of standard packages (e.g. pandas) into the notebook
+    - imports a number of modules and functions from msticpy
+    - checks the version of MSTICPy
+    - checks for presence and validates msticpyconfig.yaml
+
+    In the Azure ML and Azure Synapse environments, some additional
+    initialization and checks are performed.
+
+    One frequent problem in bootstrapping MSTICPy is obtaining or
+    creating a valid `msticpyconfig.yaml`. This is needed for many
+    configuration settings such as MS Sentinel workspaces, Threat
+    Intelligence (TI) providers, Azure authentication, Key Vault
+    settings and more.
+
+    If you are having trouble with this, you should do the following:
+    1. Run `init_notebook` again using the `verbosity=2` parameter
+       This will print out additional status and debugging information
+
+    2. Run mp.MpConfigEdit() to edit (or create) a msticpyconfig file.
+
+    3. Check out the following resources:
+
+    The basic structure of msticpyconfig.yaml
+
+    https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html
+
+    Using the msticpy settings editor to create or modify
+    msticpyconfig.yaml
+
+    https://msticpy.readthedocs.io/en/latest/getting_started/SettingsEditor.html
+
+    MS Sentinel and Azure ML resources:
+
+    Getting started notebook
+    https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/A%20Getting%20Started%20Guide%20For%20Azure%20Sentinel%20ML%20Notebooks.ipynb
+
+    Configuring your environment notebook
+    https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/ConfiguringNotebookEnvironment.ipynb
 
     """
     global current_providers  # pylint: disable=global-statement, invalid-name
@@ -572,7 +665,12 @@ def _get_or_create_config() -> bool:
             _pr_output("Please report this to msticpy@microsoft.com")
         # pylint: enable=broad-except
 
+    _pr_output("Could not find msticpyconfig.yaml in standard search.")
     if is_in_aml():
+        _pr_output(
+            "AML environment detected.",
+            "Attempting to import settings from config.json to msticpyconfig.yaml.",
+        )
         status = populate_config_to_mp_config(mp_path)
         if status:
             _pr_output(status)
