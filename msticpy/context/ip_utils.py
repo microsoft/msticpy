@@ -55,22 +55,35 @@ _REGISTRIES = {
 _POTAROO_ASNS_URL = "https://bgp.potaroo.net/cidr/autnums.html"
 
 
+# Closure to cache ASN dictionary from Potaroo
 def _fetch_asns():
     """Create closure for ASN fetching."""
-    asns_soup: Optional[BeautifulSoup] = None
+    asns_dict: Dict[str, str] = {}
 
-    def _get_asns_soup() -> BeautifulSoup:
+    def _get_asns_dict() -> Dict[str, str]:
         """Return or fetch and return ASN Soup."""
-        nonlocal asns_soup  # noqa
-        if asns_soup is None:
-            asns = httpx.get(_POTAROO_ASNS_URL)
-            asns_soup = BeautifulSoup(asns.content, features="lxml")
-        return asns_soup
+        nonlocal asns_dict  # noqa
+        if not asns_dict:
+            try:
+                asns_resp = httpx.get(_POTAROO_ASNS_URL)
+            except httpx.ConnectError as err:
+                raise MsticpyConnectionError(
+                    "Unable to get ASN details from potaroo.net"
+                ) from err
+            asns_soup = BeautifulSoup(asns_resp.content, features="lxml")
+            asns_dict = {
+                str(asn.next_element)
+                .strip(): str(asn.next_element.next_element)
+                .strip()
+                for asn in asns_soup.find_all("a")
+            }
+        return asns_dict
 
-    return _get_asns_soup
+    return _get_asns_dict
 
 
-_ASNS_SOUP = _fetch_asns()
+# Create the dictionary accessor from the fetch_asns wrapper
+_ASNS_DICT = _fetch_asns()
 
 
 @export  # noqa: MC0001
@@ -291,7 +304,7 @@ def get_whois_info(
             if show_progress:
                 print(".", end="")
             return whois_result  # type: ignore
-        except (MsticpyException) as err:
+        except MsticpyException as err:
             return f"Error during lookup of {ip_str} {type(err)}", {}
     return f"No ASN Information for IP type: {ip_type}", {}
 
@@ -504,15 +517,7 @@ def get_asn_from_name(name: str) -> Dict:
 
     """
     name = name.casefold()
-    asns_dict = {}
-    asns_soup = _ASNS_SOUP()
-    try:
-        for asn in asns_soup.find_all("a"):
-            asns_dict[str(asn.next_element).strip()] = str(
-                asn.next_element.next_element
-            ).strip()
-    except httpx.ConnectError as err:
-        raise MsticpyConnectionError("Unable to get ASN details") from err
+    asns_dict = _ASNS_DICT()
     matches = {
         key: value for key, value in asns_dict.items() if name in value.casefold()
     }

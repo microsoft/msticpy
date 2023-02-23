@@ -16,7 +16,6 @@ from ..unit_test_lib import TEST_DATA_PATH
 
 
 class TestVTLookup(unittest.TestCase):
-
     _TEST_COLS = [
         "Observable",
         "IoCType",

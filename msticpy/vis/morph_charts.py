@@ -155,7 +155,7 @@ def _get_charts(path: str = "morph_charts") -> dict:
                 }
             )
         except KeyError as key_err:
-            raise Exception(
+            raise LookupError(
                 f"{chart} description does not appear to be in the correct format."
             ) from key_err
 

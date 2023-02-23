@@ -44,7 +44,6 @@ def test_custom_config():
     """Test load queries from custom path."""
     test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
     with custom_mp_config(test_config1):
-
         check.is_true(hasattr(pkg_config, "settings"))
         check.is_true(hasattr(pkg_config, "default_settings"))
         check.is_true(hasattr(pkg_config, "custom_settings"))
@@ -64,7 +63,6 @@ def test_custom_config():
         check.greater_equal(len(settings["TIProviders"]), 4)
         check.is_instance(settings["TIProviders"], dict)
         for _, prov in settings["TIProviders"].items():
-
             check.is_in("Primary", prov)
             check.is_in("Provider", prov)
             if "Args" in prov:
@@ -86,7 +84,6 @@ def test_geo_ip_settings():
         os.environ["MAXMIND_AUTH"] = "Testkey"
     test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
     with custom_mp_config(test_config1):
-
         with open(test_config1, encoding="utf-8") as f_handle:
             config_settings = yaml.safe_load(f_handle)
         conf_dbpath = (

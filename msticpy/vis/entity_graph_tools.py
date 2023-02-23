@@ -403,7 +403,6 @@ def _dedupe_entities(alerts, ents) -> list:
     alert_entities = []
     for alert in alerts:
         if alert["Entities"]:
-
             alert_entities += [hash(ent) for ent in alert["Entities"]]
     for ent in ents:
         if hash(ent) in alert_entities:

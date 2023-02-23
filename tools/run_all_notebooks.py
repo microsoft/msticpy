@@ -337,7 +337,6 @@ if __name__ == "__main__":
                 ignore_urls=ignore_uris,
             )
     elif Path(script_args.nbpath).is_file():
-
         test_notebook(
             notebook_file=script_args.nbpath,
             out_path=script_args.outdir,

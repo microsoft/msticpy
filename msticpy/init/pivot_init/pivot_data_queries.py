@@ -420,7 +420,6 @@ def add_queries_to_entities(
 
     # For each parameter in the parameter map
     for param_name, entity_list in PARAM_ENTITY_MAP.items():
-
         param_funcs = list(prov_qry_funcs.get_queries_for_param(param_name))
         if not (entity_list and param_funcs):
             continue

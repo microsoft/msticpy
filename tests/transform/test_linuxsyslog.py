@@ -14,7 +14,7 @@ from pytest import raises
 from msticpy.analysis import syslog_utils as ls
 from msticpy.common.exceptions import MsticpyException
 from msticpy.common.provider_settings import get_provider_settings
-from msticpy.context.geoip import GeoIPDatabaseException
+from msticpy.context.geoip import GeoIPDatabaseError
 from msticpy.datamodel.entities import Host
 from msticpy.transform import cmd_line as cl
 
@@ -56,7 +56,7 @@ def test_host_data():
                 assert type(host_record) == Host  # nosec
                 assert host_record.OSType == "Linux"  # nosec
 
-            except GeoIPDatabaseException:
+            except GeoIPDatabaseError:
                 # test will fail if no GeoIP database exists or can be downloaded
                 other_provider_settings = get_provider_settings(
                     config_section="OtherProviders"

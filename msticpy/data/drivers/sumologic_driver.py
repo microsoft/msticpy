@@ -391,7 +391,7 @@ class SumologicDriver(DriverBase):
     def _get_time_params(self, **kwargs):
         if "days" in kwargs:
             end = datetime.now()
-            start = end - timedelta(days=(kwargs["days"]))
+            start = end - timedelta(days=kwargs["days"])
             return self._format_datetime(start), self._format_datetime(end)
 
         start = kwargs.pop("start", kwargs.pop("start_time", None))
