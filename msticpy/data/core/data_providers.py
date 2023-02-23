@@ -4,11 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data provider loader."""
+import re
+from collections import abc
 from datetime import datetime
 from functools import partial
 from itertools import tee
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Pattern, Union
 
 import pandas as pd
 from tqdm.auto import tqdm
@@ -34,6 +36,21 @@ _DEBUG_FLAGS = ("print", "debug_query", "print_query")
 _COMPATIBLE_DRIVER_MAPPINGS = {"mssentinel": ["m365d"], "mde": ["m365d"]}
 
 
+class QueryParam(NamedTuple):
+    """
+    Named tuple for custom query parameters.
+
+    name and data_type are mandatory.
+    description and default are optional.
+
+    """
+
+    name: str
+    data_type: str
+    description: Optional[str] = None
+    default: Optional[str] = None
+
+
 @export
 class QueryProvider:
     """
@@ -43,6 +60,8 @@ class QueryProvider:
     methods for a specific data environment.
 
     """
+
+    create_param = QueryParam
 
     def __init__(  # noqa: MC0001
         self,
@@ -310,6 +329,70 @@ class QueryProvider:
             )
         return list(self.query_store.query_names)
 
+    def search(
+        self,
+        search: Union[str, Iterable[str]] = None,
+        table: Union[str, Iterable[str]] = None,
+        param: Union[str, Iterable[str]] = None,
+        ignore_case: bool = True,
+    ) -> List[str]:
+        """
+        Search queries for match properties.
+
+        Parameters
+        ----------
+        search : Union[str, Iterable[str]], optional
+            String or iterable of search terms to match on
+            any property of the query, by default None.
+            The properties include: name, description, table,
+            parameter names and query_text.
+        table : Union[str, Iterable[str]], optional
+            String or iterable of search terms to match on
+            the query table name, by default None
+        param : Union[str, Iterable[str]], optional
+            String or iterable of search terms to match on
+            the query parameter names, by default None
+        ignore_case : bool
+            Use case-insensitive search, default is True.
+
+        Returns
+        -------
+        List[str]
+            A list of matched queries
+
+        Notes
+        -----
+        Search terms are treated as regular expressions.
+        Supplying multiple parameters returns the intersection
+        of matches for each category. For example:
+        `qry_prov.search(search="account", table="syslog")` will
+        match queries that have a table parameter of "syslog" AND
+        have the term "Account" somewhere in the query properties.
+
+        """
+        if not (search or table or param):
+            return []
+
+        glob_searches = _normalize_to_regex(search, ignore_case)
+        table_searches = _normalize_to_regex(table, ignore_case)
+        param_searches = _normalize_to_regex(param, ignore_case)
+        search_hits: List[str] = []
+        for query, search_data in self.query_store.search_items.items():
+            glob_match = (not glob_searches) or any(
+                re.search(term, prop)
+                for term in glob_searches
+                for prop in search_data.values()
+            )
+            table_match = (not table_searches) or any(
+                re.search(term, search_data["table"]) for term in table_searches
+            )
+            param_match = (not param_searches) or any(
+                re.search(term, search_data["params"]) for term in param_searches
+            )
+            if glob_match and table_match and param_match:
+                search_hits.append(query)
+        return sorted(search_hits)
+
     def list_connections(self) -> List[str]:
         """
         Return a list of current connections or the default connection.
@@ -421,6 +504,82 @@ class QueryProvider:
     def query_time(self):
         """Return the default QueryTime control for queries."""
         return self._query_time
+
+    def add_custom_query(
+        self,
+        name: str,
+        query: str,
+        family: Union[str, Iterable[str]],
+        description: Optional[str] = None,
+        parameters: Optional[Iterable[QueryParam]] = None,
+    ):
+        """
+        Add a custom function to the provider.
+
+        Parameters
+        ----------
+        name : str
+            The name of the query.
+        query : str
+            The query text (optionally parameterized).
+        family : Union[str, Iterable[str]]
+            The query group/family or list of families. The query will
+            be added to attributes of the query provider with these
+            names.
+        description : Optional[str], optional
+            Optional description (for query help), by default None
+        parameters : Optional[Iterable[QueryParam]], optional
+            Optional list of parameter definitions, by default None.
+            If the query is parameterized you must supply definitions
+            for the parameters here - at least name and type.
+            Parameters can be the named tuple QueryParam (also
+            exposed as QueryProvider.Param) or a 4-value
+
+        Examples
+        --------
+        >>> qp = QueryProvider("MSSentinel")
+        >>> qp_host = qp.create_paramramram("host_name", "str", "Name of Host")
+        >>> qp_start = qp.create_param("start", "datetime")
+        >>> qp_end = qp.create_param("end", "datetime")
+        >>> qp_evt = qp.create_param("event_id", "int", None, 4688)
+        >>>
+        >>> query = '''
+        >>> SecurityEvent
+        >>> | where EventID == {event_id}
+        >>> | where TimeGenerated between (datetime({start}) .. datetime({end}))
+        >>> | where Computer has "{host_name}"
+        >>> '''
+        >>>
+        >>> qp.add_custom_query(
+        >>>     name="test_host_proc",
+        >>>     query=query,
+        >>>     family="Custom",
+        >>>     parameters=[qp_host, qp_start, qp_end, qp_evt]
+        >>> )
+
+        """
+        if parameters:
+            param_dict = {
+                param[0]: {
+                    "type": param[1],
+                    "default": param[2],
+                    "description": param[3],
+                }
+                for param in parameters
+            }
+        else:
+            param_dict = {}
+        source = {
+            "args": {"query": query},
+            "description": description,
+            "parameters": param_dict,
+        }
+        metadata = {"data_families": [family] if isinstance(family, str) else family}
+        query_source = QuerySource(
+            name=name, source=source, defaults={}, metadata=metadata
+        )
+        self.query_store.add_data_source(query_source)
+        self._add_query_functions()
 
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:
@@ -686,3 +845,17 @@ def _get_query_options(
         # Any kwargs left over we send to the query provider driver
         query_options = {key: val for key, val in kwargs.items() if key not in params}
     return query_options
+
+
+def _normalize_to_regex(
+    search_term: Union[str, Iterable[str], None], ignore_case: bool
+) -> List[Pattern[str]]:
+    """Return iterable or str search term as list of compiled reg expressions."""
+    if not search_term:
+        return []
+    regex_opts = [re.IGNORECASE] if ignore_case else []
+    if isinstance(search_term, str):
+        return [re.compile(search_term, *regex_opts)]
+    if isinstance(search_term, abc.Iterable):
+        return [re.compile(term, *regex_opts) for term in set(search_term)]
+    return []

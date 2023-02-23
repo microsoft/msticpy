@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """QueryStore class - holds a collection of QuerySources."""
 from collections import defaultdict
+from functools import cached_property
 from os import path
 from typing import Any, Dict, Iterable, List, Optional, Set, Union
 
@@ -103,6 +104,21 @@ class QueryStore:
                 f"{family}.{query}"
                 for query in sorted(self.data_families[family].keys())
             ]
+
+    @cached_property
+    def search_items(self) -> Dict[str, Dict[str, str]]:
+        """Return searchable metadata and query for all queries."""
+        search_props: Dict[str, Dict[str, str]] = {}
+        for family, sources in self.data_families.items():
+            for query_name, query_source in sources.items():
+                search_props[f"{family}.{query_name}"] = {
+                    "name": query_source.name,
+                    "description": query_source.description,
+                    "params": " ".join(query_source.params.keys()),
+                    "table": query_source.params.get("table", {}).get("default", ""),
+                    "query": query_source.query,
+                }
+        return search_props
 
     def add_data_source(self, source: QuerySource):
         """

@@ -203,9 +203,8 @@ def test_kql_connect_no_cs(get_ipython):
     get_ipython.return_value = _MockIPython()
     kql_driver = KqlDriver()
     check.is_true(kql_driver.loaded)
-    with pytest.raises(MsticpyKqlConnectionError) as mp_ex:
-        kql_driver.connect()
-    check.is_in("no connection string", mp_ex.value.args)
+    kql_driver.connect()
+    check.is_in("loganalytics://code()", kql_driver.current_connection)
 
 
 @patch(GET_IPYTHON_PATCH)

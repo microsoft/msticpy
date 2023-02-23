@@ -198,9 +198,12 @@ def display_timeline_duration(
     )
 
     # Plot the duration rectangles
-    rect_plot_params = dict(
-        height=0.3, source=col_src, fill_alpha=0.4, color=param.color
-    )
+    rect_plot_params = {
+        "height": 0.3,
+        "source": col_src,
+        "fill_alpha": 0.4,
+        "color": param.color,
+    }
     plot.rect(x="Center", y=dodge("Row", 0.5), width="Width", **rect_plot_params)
 
     # Plot the individual events as diamonds
