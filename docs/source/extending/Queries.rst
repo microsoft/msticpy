@@ -6,7 +6,7 @@ of data queries.
 
 *msticpy* provides a number of
 pre-defined queries to call with using the data package. You can also
-add in additional queries to be imported and used by your Query
+add additional queries to be imported and used by your Query
 Provider, these are defined in YAML format files and examples of these
 files can be found at the msticpy GitHub site
 https://github.com/microsoft/msticpy/tree/master/msticpy/data/queries.
@@ -183,8 +183,9 @@ Each query key has the following structure:
   optional default value for each parameter that will be substituted into
   the query before being passed to the data provider. Each parameter
   must have a unique name (for each query, not globally). All parameters
-  specified in the query text must have an entry here or in the file
-  defaults section. The parameter subsection has the following sub-keys:
+  specified in the query text must have an entry here or in the
+  **defaults** section.
+  Each parameter entry has the following sub-keys:
 
   - **description**: A description of what the parameter is (used for generating
     documentation strings).
@@ -211,6 +212,32 @@ Some common parameters used in the queries are:
 - **add_query_items**: This is a useful way of extending queries by adding
   ad hoc statements to the end of the query (e.g. additional filtering order
   summarization).
+
+Using known parameter names
+---------------------------
+
+Try to use standard names for common entities and other parameter values.
+This makes things easier for users of the queries and, in some cases,
+enables functionality such as automatic insertion of times.
+
+Always use these names for common parameters
+
+=================  =================================  ============= ===============
+Query Parameter    Description                        type          default
+=================  =================================  ============= ===============
+start              The start datetime for the query   datetime      N/A
+end                The end datetime for the query     datetime      N/A
+table              The name of the main table (opt)   str           the table name
+add_query_items    Placeholder for additional query   str           ""
+=================  =================================  ============= ===============
+
+Entity names
+For entities such as IP address, host name, account name, process, domain, etc.,
+always use one of the standard names - these are used by pivot functions to
+map queries to the correct entity.
+
+For the current set of names see the following section in the Pivot Functions
+documentation - :ref:`data_analysis/PivotFunctions:How are queries assigned to specific entities?`
 
 How parameter substitution works
 --------------------------------
