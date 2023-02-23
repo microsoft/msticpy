@@ -23,6 +23,8 @@ from bokeh.palettes import Palette, viridis
 
 # pylint: enable=no-name-in-module
 from bokeh.plotting import figure
+from pandas.api.types import is_datetime64_any_dtype
+from pandas.errors import OutOfBoundsDatetime
 
 from .figure_dimension import set_figure_size
 
@@ -31,8 +33,6 @@ try:
 except ImportError:
     Figure = LayoutDOM
 
-from pandas.api.types import is_datetime64_any_dtype
-from pandas.errors import OutOfBoundsDatetime
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyParameterError

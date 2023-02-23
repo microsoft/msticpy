@@ -156,8 +156,7 @@ class Process(Entity):
                 return f"{self.ImageFile}[pid:{self.ProcessId}]"
             if isinstance(self.ImageFile, File):
                 return f"{self.ImageFile.name_str}[pid:{self.ProcessId}]"
-            else:
-                return super().name_str
+            return super().name_str
         return self.ImageFile.name_str if self.ImageFile else super().name_str
 
     _entity_schema = {
