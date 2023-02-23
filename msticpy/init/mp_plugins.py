@@ -30,6 +30,7 @@ from inspect import getmembers, isabstract, isclass
 from pathlib import Path
 from types import ModuleType
 from typing import Iterable, NamedTuple, Optional, Union
+from warnings import warn
 
 from .._version import VERSION
 from ..common.pkg_config import get_config
@@ -82,7 +83,10 @@ def load_plugins_from_path(plugin_path: Union[str, Path]):
     """Load all compatible plugins found in plugin_path."""
     sys.path.append(str(plugin_path))
     for module_file in Path(plugin_path).glob("*.py"):
-        module = import_module(module_file.stem)
+        try:
+            module = import_module(module_file.stem)
+        except ImportError:
+            warn(f"Unable to import plugin {module_file} from {plugin_path}")
         for name, obj in getmembers(module, isclass):
             if not isinstance(obj, type):
                 continue

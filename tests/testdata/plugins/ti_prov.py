@@ -58,7 +58,7 @@ class TIProviderTest(TIProvider):
     PROVIDER_NAME = "Provider1"
     _BASE_URL = "https://api.service.com"
     _QUERIES = _QUERIES
-    _REQUIRED_PARAMS = ["API_KEY"]
+    _REQUIRED_PARAMS = ["AuthKey"]
 
     def lookup_ioc(
         self,
@@ -81,7 +81,7 @@ class TIProviderHttpTest(HttpTIProvider):
     PROVIDER_NAME = "Provider2"
     _BASE_URL = "https://api.service.com"
     _QUERIES = _QUERIES
-    _REQUIRED_PARAMS = ["API_KEY"]
+    _REQUIRED_PARAMS = ["AuthKey"]
 
     def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """Return the details of the response."""
@@ -95,7 +95,7 @@ class ContextProviderTest(ContextProvider):
 
     _BASE_URL = "https://api.service.com"
     _QUERIES = _QUERIES
-    _REQUIRED_PARAMS = ["API_KEY"]
+    _REQUIRED_PARAMS = ["AuthKey"]
 
     def lookup_observable(  # type: ignore
         self,

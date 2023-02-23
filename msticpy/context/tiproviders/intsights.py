@@ -34,7 +34,7 @@ _DEF_HEADERS = {"Content-Type": "application/json", "Accept": "application/json"
 class _IntSightsParams(APILookupParams):
     # override APILookupParams to set common defaults
     def __attrs_post_init__(self):
-        self.auth_str = ["{API_ID}", "{API_KEY}"]
+        self.auth_str = ["{ApiID}", "{AuthKey}"]
         self.auth_type = "HTTPBasic"
 
 
@@ -87,7 +87,7 @@ class IntSights(HttpTIProvider):
         ),
     }
 
-    _REQUIRED_PARAMS = ["API_ID", "API_KEY"]
+    _REQUIRED_PARAMS = ["ApiID", "AuthKey"]
 
     def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """

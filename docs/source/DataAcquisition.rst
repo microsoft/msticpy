@@ -53,4 +53,4 @@ Contributing a Data Provider
 .. toctree::
    :maxdepth: 2
 
-   data_acquisition/WritingADataProvider
+   extending/WritingDataProviders
