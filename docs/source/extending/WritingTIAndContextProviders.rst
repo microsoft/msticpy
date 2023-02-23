@@ -4,12 +4,19 @@ Writing Threat Intelligence and Context Providers
 See :doc:`../data_acquisition/TIProviders` for more details on use
 of Threat Intelligence providers.
 
-You can write your own provider by extending some
-of the MSTICPy classes:
+You can write your own provider by extending one
+of the MSTICPy base classes:
 
 - :py:class:`TIProvider <msticpy.context.tiproviders.ti_provider_base.TIProvider>`
 - :py:class:`HttpTIProvider <msticpy.context.tiproviders.ti_http_provider.HttpTIProvider>`
 - :py:class:`ContextProvider <msticpy.context.contextproviders.context_provider_base.ContextProvider>`
+
+The first two classes are for creating Threat Intelligence providers,
+the third is for a Context provider. Most of the content of this
+document is applicable to both so you should read the entire
+thing. A short section on the differences for Context providers
+follows this first section.
+
 
 Threat Intelligence Providers
 -----------------------------

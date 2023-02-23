@@ -545,3 +545,9 @@ get_host_events
 
     # query is now available as
     qry_prov.Custom.get_host_events(host_name="MyPC"....)
+
+Adding queries to the MSTICPy query library
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also add permanent parameterized queries to your data providers.
+Read :doc:`../extending/Queries` for information on how to do this.
