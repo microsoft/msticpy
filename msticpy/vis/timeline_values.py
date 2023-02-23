@@ -11,7 +11,12 @@ import attr
 import pandas as pd
 from bokeh.io import output_notebook, show
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM, Legend
+from bokeh.models import (  # type: ignore[attr-defined]
+    ColumnDataSource,
+    HoverTool,
+    LayoutDOM,
+    Legend,
+)
 from bokeh.plotting import figure, reset_output
 
 from .._version import VERSION

@@ -11,7 +11,7 @@ import attr
 import pandas as pd
 from bokeh.io import output_notebook, show
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM, Legend
+from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM, Legend  # type: ignore
 from bokeh.models.annotations import LegendItem
 from bokeh.plotting import figure, reset_output
 
@@ -226,7 +226,10 @@ def display_timeline(
 
     if isinstance(data, dict):
         return _display_timeline_dict(data, param=param)
-    return None
+    raise TypeError(
+        "`data` parameter must be a DataFrame or a Python dict.",
+        f"The type supplied was {type(data)}",
+    )
 
 
 def _display_timeline_dict(

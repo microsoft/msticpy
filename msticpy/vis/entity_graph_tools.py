@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from bokeh.io import output_notebook, show
 from bokeh.layouts import column
-from bokeh.models import Circle, HoverTool, Label, LayoutDOM
+from bokeh.models import Circle, HoverTool, Label, LayoutDOM  # type: ignore
 from bokeh.plotting import figure, from_networkx
 
 from .._version import VERSION

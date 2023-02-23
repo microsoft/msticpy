@@ -10,7 +10,7 @@ from typing import Any, Dict
 import pandas as pd
 from bokeh.io import output_notebook, show
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter
+from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM, NumeralTickFormatter
 
 # pylint: disable=no-name-in-module
 from bokeh.plotting import figure, reset_output
@@ -65,7 +65,7 @@ def display_timeseries_anomalies(
     anomalies_column: str = "anomalies",
     period: int = 30,
     **kwargs,
-) -> figure:
+) -> LayoutDOM:
     """
     Display time series anomalies visualization.
 
@@ -121,8 +121,8 @@ def display_timeseries_anomalies(
 
     Returns
     -------
-    figure
-        The bokeh plot figure.
+    LayoutDOM
+        The bokeh plot layout.
 
     """
     check_kwargs(kwargs, _DEFAULT_KWARGS + _TL_VALUE_KWARGS + _TS_KWARGS)

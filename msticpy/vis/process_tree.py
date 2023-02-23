@@ -12,8 +12,12 @@ import pandas as pd
 from bokeh.io import output_notebook, reset_output, show
 
 # pylint: enable=no-name-in-module
+try:
+    from bokeh.core.property.vectorization import Field
+except ImportError:
+    Field = dict  # type: ignore
 from bokeh.layouts import column, row
-from bokeh.models import (
+from bokeh.models import (  # type: ignore[attr-defined]
     BoxSelectTool,
     ColorBar,
     ColumnDataSource,
@@ -315,11 +319,11 @@ def plot_process_tree(  # noqa: MC0001
         y_col="Row",
         fill_map=fill_map,
     )
-    plot_elems = row(b_plot, range_tool)
+    plot_elems: LayoutDOM = row(b_plot, range_tool)  # type: ignore
     if show_table:
         data_table = _create_data_table(source, schema, legend_col)
         plot_elems = column(plot_elems, data_table)
-    show(plot_elems)
+    show(plot_elems)  # type: ignore
     return b_plot, plot_elems
 
 
@@ -467,13 +471,13 @@ def _create_js_callback(source: ColumnDataSource, result_var: str) -> CustomJS:
 
 def _create_fill_map(
     source: ColumnDataSource, source_column: str = None
-) -> Tuple[Union[factor_cmap, linear_cmap], Optional[ColorBar]]:
+) -> Tuple[Union[Field, str], Optional[ColorBar]]:
     """Create factor map or linear map based on `source_column`."""
-    fill_map = "navy"
+    fill_map: Union[str, Field] = "navy"
     color_bar = None
     key_column = source_column or "Level"
 
-    col_kind = source.data[key_column].dtype.kind
+    col_kind = source.data[key_column].dtype.kind  # type: ignore[union-attr]
     if col_kind in ["b", "O"]:
         s_values = set(source.data[key_column])
         if np.nan in s_values:

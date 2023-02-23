@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import pandas as pd
-from bokeh.models import (
+from bokeh.models import (  # type: ignore[attr-defined]
     ColumnDataSource,
     DatetimeTickFormatter,
     Label,
@@ -23,20 +23,18 @@ from bokeh.palettes import Palette, viridis
 
 # pylint: enable=no-name-in-module
 from bokeh.plotting import figure
-from pandas.api.types import is_datetime64_any_dtype
-from pandas.errors import OutOfBoundsDatetime
-
-from .figure_dimension import set_figure_size
 
 try:
-    from bokeh.plotting import Figure
+    from bokeh.plotting import Figure  # type: ignore
 except ImportError:
     Figure = LayoutDOM
-
+from pandas.api.types import is_datetime64_any_dtype
+from pandas.errors import OutOfBoundsDatetime
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyParameterError
 from ..common.utility import export
+from .figure_dimension import set_figure_size
 
 # pylint: enable=unused-import
 
@@ -161,7 +159,7 @@ def get_def_source_cols(data: pd.DataFrame, source_columns: Iterable[str]) -> Se
     return set(source_columns)
 
 
-def get_color_palette(series_count: int) -> Palette:
+def get_color_palette(series_count: int) -> Tuple[Palette, int]:
     """Return palette based on series size."""
     palette_size = min(256, series_count + series_count // 5)
     return viridis(palette_size), palette_size
@@ -305,8 +303,8 @@ def create_range_tool(
         )
 
     range_tool = RangeTool(x_range=plot_range)
-    range_tool.overlay.fill_color = "navy"
-    range_tool.overlay.fill_alpha = 0.2
+    range_tool.overlay.fill_color = "navy"  # type: ignore
+    range_tool.overlay.fill_alpha = 0.2  # type: ignore
     rng_select.ygrid.grid_line_color = None
     rng_select.add_tools(range_tool)
     rng_select.toolbar.active_multi = range_tool
@@ -414,9 +412,9 @@ def get_tick_formatter() -> DatetimeTickFormatter:
     """Return tick formatting for different zoom levels."""
     # '%H:%M:%S.%3Nms
     tick_format = DatetimeTickFormatter()
-    tick_format.days = ["%m-%d %H:%M"]
-    tick_format.hours = ["%H:%M:%S"]
-    tick_format.minutes = ["%H:%M:%S"]
-    tick_format.seconds = ["%H:%M:%S"]
-    tick_format.milliseconds = ["%H:%M:%S.%3N"]
+    tick_format.days = ["%m-%d %H:%M"]  # type: ignore
+    tick_format.hours = ["%H:%M:%S"]  # type: ignore
+    tick_format.minutes = ["%H:%M:%S"]  # type: ignore
+    tick_format.seconds = ["%H:%M:%S"]  # type: ignore
+    tick_format.milliseconds = ["%H:%M:%S.%3N"]  # type: ignore
     return tick_format

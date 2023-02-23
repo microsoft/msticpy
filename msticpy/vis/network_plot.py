@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import networkx as nx
 from bokeh.io import output_notebook
-from bokeh.models import (
+from bokeh.models import (  # type: ignore[attr-defined]
     BoxSelectTool,
     Circle,
     EdgesAndLinkedNodes,
