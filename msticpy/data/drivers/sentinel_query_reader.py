@@ -79,7 +79,7 @@ def get_sentinel_queries_from_github(
                 unit="iB",
                 unit_scale=True,
             )
-            repo_zip = Path.joinpath(Path(outputdir), "Azure-Sentinel.zip")
+            repo_zip = Path.joinpath(Path(outputdir), "Azure-Sentinel.zip")  # type: ignore
             with open(repo_zip, "wb") as file:
                 for data in response.iter_bytes(chunk_size=10000):
                     progress_bar.update(len(data))
@@ -207,7 +207,7 @@ def _import_sentinel_query(
         return new_query
 
     except Exception as error:
-        print("failed")
+        print("failed") # more specific
         print(error)
         print("path:", yaml_path)
         print("text:", yaml_text)
@@ -252,11 +252,11 @@ def _organize_query_list_by_folder(query_list: list) -> dict:
         with it
 
     """
-    queries_by_folder = {}
+    queries_by_folder = {} #:Dict = {} #import
     for query in query_list:
         if query.folder_name == "":
             print(query)
-        if query.folder_name not in queries_by_folder.keys():
+        if query.folder_name not in queries_by_folder:
             queries_by_folder[query.folder_name] = [query]
         else:
             queries_by_folder[query.folder_name].append(query)
