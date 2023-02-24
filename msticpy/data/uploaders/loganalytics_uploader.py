@@ -154,23 +154,19 @@ class LAUploader(UploaderBase):
             Pandas DataFrame to upload.
         table_name : str
             Custom table name to upload the data to.
-
+        batch_size : int
+            Custom number of rows to batch.
         """
+        batch_size = kwargs.get("batch_size", 10000)  # Set a default batch size
         events = []
-        for row in data.iterrows():
+        for i, row in enumerate(data.iterrows()):
             events.append(row[1].astype(str).to_dict())
-            # Due to 30MB limit if data is larger than 25Mb upload that chunk then continue
-            if sys.getsizeof(json.dumps(events)) > 26214400:
-                if self._debug is True:
-                    print("Data larger than 25MB spliting data requests.")
+            if (i + 1) % batch_size == 0 or i == len(data) - 1:
                 body = json.dumps(events)
                 self._post_data(body, table_name)
                 events = []
-
-        if events:
-            body = json.dumps(events)
-            self._post_data(body, table_name)
-
+                if self._debug:
+                    print(f"Uploaded batch {i // batch_size + 1}")
         if self._debug:
             print(f"Upload to {table_name} complete")
 
