@@ -29,7 +29,7 @@ def _combine_extras(extras: list) -> list:
 EXTRAS = {
     "dev": INSTALL_DEV_REQUIRES,
     "vt3": ["vt-py>=0.6.1", "vt-graph-api>=2.0", "nest_asyncio>=1.4.0"],
-    "splunk": ["splunk-sdk>=1.6.0"],
+    "splunk": ["splunk-sdk>=1.7.2"],
     "sumologic": ["sumologic-sdk>=0.1.11", "openpyxl>=3.0"],
     "kql": ["KqlmagicCustom[jupyter-extended]>=0.1.114.post22"],
     "_azure_core": [
