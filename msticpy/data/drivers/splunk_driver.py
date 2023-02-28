@@ -9,12 +9,7 @@ from time import sleep
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
-
-from alive_progress import alive_bar
-
-import urllib, ssl
-import json
-import io
+from tqdm import tqdm
 
 from ..._version import VERSION
 from ...common.exceptions import (
@@ -38,7 +33,8 @@ except ImportError as imp_err:
     ) from imp_err
 
 __version__ = VERSION
-__author__ = "Ashwin Patil, Alex Muratov"
+__author__ = "Ashwin Patil"
+
 
 SPLUNK_CONNECT_ARGS = {
     "host": "(string) The host name (the default is 'localhost').",
@@ -59,63 +55,15 @@ SPLUNK_CONNECT_ARGS = {
     + " the session terminates.",
     "username": "(string) The Splunk account username, which is used to "
     + "authenticate the Splunk instance.",
-    "password": "(string) The password for the Splunk account."
+    "password": "(string) The password for the Splunk account.",
 }
-
-PROXY_CONNECT_ARGS = {
-    "proxy_host": "(string) The Web Proxy host name (optional)",
-    "proxy_port": "(string) The Web Proxy host name (optional)",
-    "proxy_username": "(string) The Web Proxy account username, which is used to "
-                      + "authenticate the user instance. (optional)",
-    "proxy_password": "(string) The password for the Web Proxy account. (optional)",
-
-}
-
-# proxy SSL handler - added for SSL throgh a Web proxy
-def request_handler(url, message, **kwargs):
-
-    method = message['method'].lower()
-    data = message.get('body', "") if method == 'post' else None
-    headers = dict(message.get('headers', []))
-    req = urllib.request.Request(url, data, headers)
-
-    try:
-        response = urllib.request.urlopen(req)
-
-        return {
-            'status': response.code,
-            'reason': response.msg,
-            'headers': dict(response.info()),
-            'body': io.BytesIO(response.read())
-        }
-
-    except urllib.error.URLError as response:
-            response = urllib.request.urlopen(req, context=ssl._create_unverified_context())
-            return {
-            'status': response.code,
-            'reason': response.msg,
-            'headers': dict(response.info()),
-            'body': io.BytesIO(response.read())
-        }
-
-    except urllib.error.HTTPError as response:
-        pass # Propagate HTTP errors via the returned response message
-
-# the Proxy Handler proc to intercept urrlib requests
-def handler(proxy):
-    urllib.request.HTTPHandler(debuglevel=1)
-    proxy_handler = urllib.request.ProxyHandler({'http': proxy, 'https': proxy})
-
-    opener = urllib.request.build_opener(proxy_handler)
-    urllib.request.install_opener(opener)
-    return request_handler
 
 
 @export
 class SplunkDriver(DriverBase):
     """Driver to connect and query from Splunk."""
 
-    _SPLUNK_REQD_ARGS = ["host"] #, "username", "password"], since token may replace username & password
+    _SPLUNK_REQD_ARGS = ["host", "username", "password"]
     _CONNECT_DEFAULTS: Dict[str, Any] = {"port": 8089}
     _TIME_FORMAT = '"%Y-%m-%d %H:%M:%S.%6N"'
 
@@ -161,21 +109,6 @@ class SplunkDriver(DriverBase):
         arg_dict = {
             key: val for key, val in cs_dict.items() if key in SPLUNK_CONNECT_ARGS
         }
-
-        #add proxy handler if required
-        proxy_dict = {
-            key: val for key, val in cs_dict.items() if key in PROXY_CONNECT_ARGS
-        }
-
-        #check is there are proxy args and hook the proxy handler proc
-        if len(proxy_dict) > 0:
-
-            proxy_target = 'http://{0}:{1}@{2}:{3}'.format(proxy_dict['proxy_username'], proxy_dict['proxy_password'], proxy_dict['proxy_host'],
-                                                           proxy_dict['proxy_port'])
-
-            #add a new proxy handler object
-            arg_dict['handler'] = handler(proxy_target)
-
         try:
             self.service = sp_client.connect(**arg_dict)
         except AuthenticationError as err:
@@ -256,6 +189,8 @@ class SplunkDriver(DriverBase):
         ----------------
         count : int, optional
             Passed to Splunk oneshot method if `oneshot` is True, by default, 0
+        oneshot : bool, optional
+            Set to True for oneshot (blocking) mode, by default False
 
         Returns
         -------
@@ -271,55 +206,38 @@ class SplunkDriver(DriverBase):
         # default to unlimited query unless count is specified
         count = kwargs.pop("count", 0)
 
-        # create progress bar
-        with alive_bar(total=100, title='Searching...', force_tty=True, manual=True) as pbar:
+        # Normal, oneshot or blocking searches. Defaults to non-blocking
+        # Oneshot is blocking a blocking HTTP call which may cause time-outs
+        # https://dev.splunk.com/enterprise/docs/python/sdk-python/howtousesplunkpython/howtorunsearchespython
+        is_oneshot = kwargs.get("oneshot", False)
 
-            # prepare to run a search query
-            kwargs_normalsearch = {"exec_mode": "normal", **kwargs}
-            splunk_search_job = self.service.jobs.create(query, **kwargs_normalsearch)
+        if is_oneshot is True:
+            query_results = self.service.jobs.oneshot(query, count=count, **kwargs)
+            reader = sp_results.ResultsReader(query_results)
 
-            nProgressPrev = 0
+        else:
+            # Set mode and initialize async job
+            kwargs_normalsearch = {"exec_mode": "normal"}
+            query_job = self.service.jobs.create(query, **kwargs_normalsearch)
 
-            # A normal search returns the job's SID right away, so we need to poll for completion
-            while True:
-                while not splunk_search_job.is_ready():
-                    sleep(1)
-                    continue
-
-                nProgress = int(float(splunk_search_job["doneProgress"]) * 100)
-                if nProgress != 100:
-                    # if nProgress != nProgressPrev:
-                    pbar(nProgress / 100)
-
-                if splunk_search_job['isDone'] == "1":
-                    pbar(1)
-                    break
+            # Initiate progress bar and start while loop, waiting for async query to complete
+            progress_bar = tqdm(total=100, desc="Waiting Splunk job to complete")
+            while not query_job.is_done():
+                current_state = query_job.state
+                progress = float(current_state["content"]["doneProgress"]) * 100
+                progress_bar.update(progress)
                 sleep(1)
 
-            # ----------------------
-            search_results_json = []
-            get_offset = 0
-            max_get = 49000
+            # Update progress bar indicating completion and fetch results
+            progress_bar.update(100)
+            progress_bar.close()
+            reader = sp_results.ResultsReader(query_job.results())
 
-            result_count = int(splunk_search_job['resultCount'])
-
-            remainder = result_count % max_get
-            nrounds = result_count // max_get
-            if remainder > 0:
-                nrounds += 1
-
-            pbar.total = 0
-            pbar.manual = False
-            pbar.title = 'Retrieving data...'
-
-            for i in range(nrounds):  # (get_offset < result_count):
-                r = splunk_search_job.results(**{"count": max_get, "offset": get_offset, "output_mode": "json"})
-                obj = json.loads(r.read())
-                search_results_json.extend(obj['results'])
-                get_offset += max_get
-                pbar((i + 1) / nrounds)
-
-        return pd.DataFrame(search_results_json)
+        resp_rows = [row for row in reader if isinstance(row, dict)]
+        if not resp_rows:
+            print("Warning - query did not return any results.")
+            return [row for row in reader if isinstance(row, sp_results.Message)]
+        return pd.DataFrame(resp_rows)
 
     def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
         """
