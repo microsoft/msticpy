@@ -51,6 +51,8 @@ def test_get_sentinel_queries_from_github():
 def test_read_yaml_files():
     yaml_files = read_yaml_files(parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections")
     print(yaml_files)
+    print(BASE_DIR_TEST_FOLDER)
+    print(DEF_PATH)
     assert yaml_files[str(BASE_DIR_TEST_FOLDER) + "/Detections\\Anomalies\\UnusualAnomaly.yaml"]
 
 
