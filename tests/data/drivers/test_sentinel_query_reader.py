@@ -29,8 +29,8 @@ from ...unit_test_lib import get_test_data_path
 
 # variables used throughout tests
 DEF_PATH = Path.joinpath(Path(os.getcwd()))
-BASE_DIR = str(DEF_PATH) + "/Azure-Sentinel-master"
-BASE_DIR_TEST_FOLDER = str(DEF_PATH) + "../../../testdata/sentinel_query_import_data"
+BASE_DIR = Path.joinpath(DEF_PATH, Path("Azure-Sentinel-master"))
+BASE_DIR_TEST_FOLDER = Path.joinpath(Path(DEF_PATH).parent.parent.parent, Path("tests/testdata/sentinel_query_import_data"))
 
 _SENTINEL_QUERY_READER = "msticpy.data.drivers.sentinel_query_reader"
 
@@ -50,13 +50,13 @@ def test_get_sentinel_queries_from_github():
 
 def test_read_yaml_files():
     yaml_files = read_yaml_files(parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections")
-    assert yaml_files[BASE_DIR_TEST_FOLDER + "/Detections\\Anomalies\\UnusualAnomaly.yaml"]
+    assert yaml_files[str(BASE_DIR_TEST_FOLDER) + "/Detections\\Anomalies\\UnusualAnomaly.yaml"]
 
 
 def test__import_sentinel_query():
     yaml_files = read_yaml_files(parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections")
     query_type = "Detections"
-    yaml_path = BASE_DIR_TEST_FOLDER + "/Detections\\Anomalies\\UnusualAnomaly.yaml"
+    yaml_path = str(BASE_DIR_TEST_FOLDER) + "/Detections\\Anomalies\\UnusualAnomaly.yaml"
     yaml_text = yaml_files[yaml_path]
     sample_query = SentinelQuery(
         id="d0255b5f-2a3c-4112-8744-e6757af3283a",
@@ -86,7 +86,7 @@ def test__import_sentinel_query():
 
 def test_import_sentinel_query():
     yaml_files = read_yaml_files(parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections")
-    yaml_path = BASE_DIR_TEST_FOLDER + "/Detections\\Anomalies\\UnusualAnomaly.yaml"
+    yaml_path = str(BASE_DIR_TEST_FOLDER) + "/Detections\\Anomalies\\UnusualAnomaly.yaml"
     sample_query = SentinelQuery(
         id="d0255b5f-2a3c-4112-8744-e6757af3283a",
         name="Unusual Anomaly",
@@ -166,7 +166,7 @@ def test__format_query_name(initial_str, expected_result):
                     version="1.0.1",
                     kind="Scheduled",
                     folder_name="Anomalies",
-                    source_file_name=BASE_DIR_TEST_FOLDER + "/Detections\\Anomalies\\UnusualAnomaly.yaml",
+                    source_file_name=str(BASE_DIR_TEST_FOLDER) + "/Detections\\Anomalies\\UnusualAnomaly.yaml",
                     query_type="Detections",
                 )
             ],
@@ -182,11 +182,11 @@ def test__organize_query_list_by_folder(dict_section, expected_result):
             == expected_result
         )
     else:
-        print(_organize_query_list_by_folder(query_list=query_list)[dict_section])
         assert (
             _organize_query_list_by_folder(query_list=query_list)[dict_section]
             == expected_result
         )
+
 
 
 def test__create_queryfile_metadata():
