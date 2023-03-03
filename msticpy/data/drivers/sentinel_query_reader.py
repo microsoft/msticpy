@@ -125,7 +125,7 @@ def read_yaml_files(parent_dir: str, child_dir: str) -> dict:
     """
     # enumerate the files and read the yaml
     yaml_queries = glob.glob(f"{parent_dir}/{child_dir}/**/*.yaml", recursive=True)
-
+    yaml_queries = [str(Path(q)) for q in yaml_queries]
     parsed_query_dict = {}
 
     for query in yaml_queries:

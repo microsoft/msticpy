@@ -53,13 +53,14 @@ def test_read_yaml_files():
     print(yaml_files)
     print(BASE_DIR_TEST_FOLDER)
     print(DEF_PATH)
-    assert yaml_files[str(BASE_DIR_TEST_FOLDER) + "/Detections\\Anomalies\\UnusualAnomaly.yaml"]
+    print(str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml")))
+    assert yaml_files[str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml"))]
 
 
 def test__import_sentinel_query():
     yaml_files = read_yaml_files(parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections")
     query_type = "Detections"
-    yaml_path = str(BASE_DIR_TEST_FOLDER) + "/Detections\\Anomalies\\UnusualAnomaly.yaml"
+    yaml_path = str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml"))
     yaml_text = yaml_files[yaml_path]
     sample_query = SentinelQuery(
         id="d0255b5f-2a3c-4112-8744-e6757af3283a",
@@ -89,7 +90,7 @@ def test__import_sentinel_query():
 
 def test_import_sentinel_query():
     yaml_files = read_yaml_files(parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections")
-    yaml_path = str(BASE_DIR_TEST_FOLDER) + "/Detections\\Anomalies\\UnusualAnomaly.yaml"
+    yaml_path = str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml"))
     sample_query = SentinelQuery(
         id="d0255b5f-2a3c-4112-8744-e6757af3283a",
         name="Unusual Anomaly",
@@ -169,7 +170,7 @@ def test__format_query_name(initial_str, expected_result):
                     version="1.0.1",
                     kind="Scheduled",
                     folder_name="Anomalies",
-                    source_file_name=str(BASE_DIR_TEST_FOLDER) + "/Detections\\Anomalies\\UnusualAnomaly.yaml",
+                    source_file_name=str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml")),
                     query_type="Detections",
                 )
             ],
