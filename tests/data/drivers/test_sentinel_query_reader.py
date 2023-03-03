@@ -53,6 +53,7 @@ def test_read_yaml_files():
     print(yaml_files)
     print(BASE_DIR_TEST_FOLDER)
     print(DEF_PATH)
+    print(os.listdir(BASE_DIR_TEST_FOLDER))
     print(str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml")))
     assert yaml_files[str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml"))]
 
