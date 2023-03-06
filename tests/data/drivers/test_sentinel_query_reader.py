@@ -53,9 +53,10 @@ def test_read_yaml_files():
     print(yaml_files)
     print(BASE_DIR_TEST_FOLDER)
     print(DEF_PATH)
-    print(Path.joinpath(DEF_PATH, "tests", "testdata"))
-    print(os.listdir(Path.joinpath(DEF_PATH, "tests", "testdata")))
+    print(Path.joinpath(DEF_PATH, "tests", "testdata", "sentinel_query_inport_data"))
+    print(os.listdir(Path.joinpath(DEF_PATH, "tests", "testdata", "sentinel_query_input_data")))
     print(str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml")))
+    print(Path(DEF_PATH).parent.parent.parent)
     assert yaml_files[str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml"))]
 
 
