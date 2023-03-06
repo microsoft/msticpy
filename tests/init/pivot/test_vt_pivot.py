@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot VT import test."""
+import pytest
 import pytest_check as check
 
 from msticpy.datamodel import entities
@@ -12,6 +13,7 @@ from msticpy.datamodel import entities
 from .pivot_fixtures import create_data_providers, create_pivot, data_providers
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_import_vt_funcs(create_pivot):
     """Test VT Pivot functions loaded correctly."""
     print([x for x in dir(entities.Url) if not x.startswith("_")])
