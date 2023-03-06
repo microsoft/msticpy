@@ -148,7 +148,7 @@ def _read_reg_file(file_path: str):
 
     for entry_name, settings in pivot_regs.get("pivot_providers").items():
         try:
-            yield PivotRegistration(
+            yield PivotRegistration(  # type: ignore[call-arg]
                 src_config_path=file_path, src_config_entry=entry_name, **settings
             )
         except TypeError as err:
