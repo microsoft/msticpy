@@ -123,7 +123,7 @@ def test_import_sentinel_query():
     )
     print(import_sentinel_queries(yaml_files, query_type="Detections"))
     assert (
-        sample_query in import_sentinel_queries(yaml_files, query_type="Detections")[0]
+        sample_query in import_sentinel_queries(yaml_files, query_type="Detections")
     )
 
 
