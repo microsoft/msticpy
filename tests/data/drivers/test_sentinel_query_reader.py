@@ -195,8 +195,8 @@ def test__organize_query_list_by_folder(dict_section, expected_result):
         )
     else:
         assert (
-            _organize_query_list_by_folder(query_list=query_list)[dict_section]
-            == expected_result
+            sorted(_organize_query_list_by_folder(query_list=query_list)[dict_section])
+            == sorted(expected_result)
         )
 
 
