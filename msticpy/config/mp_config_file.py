@@ -44,6 +44,7 @@ _CONFIG_MAP = {
     "subscription_id": "SubscriptionId",
     "tenant_id": "TenantId",
     "workspace_id": "WorkspaceId",
+    "workspace_name": "WorkspaceName",
 }
 
 _TXT_STYLE = {
