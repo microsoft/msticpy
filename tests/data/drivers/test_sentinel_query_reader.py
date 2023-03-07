@@ -63,6 +63,7 @@ def test_read_yaml_files():
 
 def test__import_sentinel_query():
     yaml_files = read_yaml_files(parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections")
+    print(yaml_files)
     query_type = "Detections"
     yaml_path = str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml"))
     yaml_text = yaml_files[yaml_path]
