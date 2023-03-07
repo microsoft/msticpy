@@ -260,17 +260,18 @@ class SentinelIncidentsMixin:
         if response.status_code not in (200, 201):
             raise CloudError(response=response)
         print("Incident updated.")
+        return response.json().get("name")
 
     def create_incident(  # pylint: disable=too-many-arguments, too-many-locals
         self,
         title: str,
         severity: str,
         status: str = "New",
-        description: str = None,
-        first_activity_time: datetime = None,
-        last_activity_time: datetime = None,
-        labels: List = None,
-        bookmarks: List = None,
+        description: Optional[str] = None,
+        first_activity_time: Optional[datetime] = None,
+        last_activity_time: Optional[datetime] = None,
+        labels: Optional[List] = None,
+        bookmarks: Optional[List] = None,
     ) -> Optional[str]:
         """
         Create a Sentinel Incident.
@@ -433,6 +434,7 @@ class SentinelIncidentsMixin:
         if response.status_code not in (200, 201):
             raise CloudError(response=response)
         print("Comment posted.")
+        return response.json().get("name")
 
     def add_bookmark_to_incident(self, incident: str, bookmark: str):
         """
@@ -473,10 +475,16 @@ class SentinelIncidentsMixin:
         if response.status_code not in (200, 201):
             raise CloudError(response=response)
         print("Bookmark added to incident.")
+        return response.json().get("name")
 
-    def list_incidents(self) -> pd.DataFrame:
+    def list_incidents(self, params: Optional[dict] = None) -> pd.DataFrame:
         """
         Get a list of incident for a Sentinel workspace.
+
+        Parameters
+        ----------
+        params : Optional[dict], optional
+            Additional parameters to pass to the API call, by default None
 
         Returns
         -------
@@ -489,6 +497,8 @@ class SentinelIncidentsMixin:
             If incidents could not be retrieved.
 
         """
-        return self._list_items(item_type="incidents")  # type: ignore
+        if params is None:
+            params = {"$top": 50}
+        return self._list_items(item_type="incidents", params=params)  # type: ignore
 
     get_incidents = list_incidents
