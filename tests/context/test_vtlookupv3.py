@@ -374,6 +374,7 @@ def test_file_behavior(vt_client: VTLookupV3, name, sandbox, keys):
     check.is_instance(vt_file_behavior.process_tree_df, pd.DataFrame)
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_get_object_browser(vt_client: VTLookupV3):
     """Test object browser."""
     del vt_client

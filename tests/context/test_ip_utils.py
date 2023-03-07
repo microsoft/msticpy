@@ -6,6 +6,7 @@
 """IP Utils test class."""
 import os
 import re
+from pathlib import Path
 from unittest.mock import patch
 
 import pandas as pd
@@ -22,7 +23,7 @@ from msticpy.context.ip_utils import (
     get_whois_info,
 )
 
-from ..unit_test_lib import TEST_DATA_PATH
+from ..unit_test_lib import TEST_DATA_PATH, get_test_data_path
 
 
 # pylint: disable=redefined-outer-name
@@ -501,10 +502,18 @@ def test_whois_pdext(net_df, mock_asn_whois_query):
     check.equal(len(results2[~results2["whois"].isna()]), len(net_df))
 
 
+@respx.mock
 @patch("msticpy.context.ip_utils._asn_whois_query")
 def test_asn_query_features(mock_asn_whois_query):
     """Test ASN query features"""
+    # mock the potaroo request
+    html_resp = get_test_data_path().joinpath("potaroo.html").read_bytes()
+    respx.get("https://bgp.potaroo.net/cidr/autnums.html").respond(
+        200, content=html_resp
+    )
+    # mock the whois response
     mock_asn_whois_query.return_value = ASN_RESPONSE_2
+    # run tests
     asn_ip_details = get_asn_from_ip("65.55.44.109")
     check.is_in("AS", asn_ip_details.keys())
     check.equal(asn_ip_details["AS"], "8075")
