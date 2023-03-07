@@ -90,6 +90,7 @@ def test__import_sentinel_query():
         source_file_name=yaml_path,
         query_type="Detections",
     )
+    print(_import_sentinel_query(yaml_path, yaml_text, query_type))
     assert _import_sentinel_query(yaml_path, yaml_text, query_type) == sample_query
 
 
