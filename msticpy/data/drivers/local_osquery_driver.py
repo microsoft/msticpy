@@ -4,29 +4,40 @@
 # license information.
 # --------------------------------------------------------------------------
 """Local Osquery Data Driver class - osquery.{results,snapshots}.log."""
-from pathlib import Path
-from typing import Union, Any, Dict, Optional, List
-
-import os
 import json
-import pandas as pd
+import pickle
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
-from .driver_base import DriverBase, QuerySource
-from ...common.pkg_config import settings
-from ...common.utility import export
+import pandas as pd
+from pandas import to_datetime
+from tqdm.auto import tqdm
+
 from ..._version import VERSION
+from ...common.exceptions import MsticpyDataQueryError, MsticpyNoDataSourceError
+from ...common.provider_settings import get_provider_settings
+from ...common.utility import export
+from .driver_base import DriverBase, QuerySource
 
 __version__ = VERSION
 __author__ = "juju4"
 
 
 @export
-class LocalOsqueryDriver(DriverBase):
-    """LocalOsqueryDriver class to execute kql queries."""
+class OSQueryLogDriver(DriverBase):
+    """OSQueryLogDriver class to execute kql queries."""
+
+    OS_QUERY_DATEIME_COLS = {
+        "unixTime",
+        "columns_time",
+        "columns_atime",
+        "columns_ctime",
+        "columns_mtime",
+    }
 
     def __init__(self, connection_str: str = None, **kwargs):
         """
-        Instantiaite LocalOsqueryDriver and optionally connect.
+        Instantiate OSQueryLogDriver and optionally connect.
 
         Parameters
         ----------
@@ -34,24 +45,36 @@ class LocalOsqueryDriver(DriverBase):
             Connection string (not used)
         data_paths : List[str], optional
             Paths from which to load data files
+        cache_file : str, optional
+            Store extracted data to `cache_file` path, or
+            read from this file, if it exists.
+        progress : bool, optional
+            Show progress with tqdm, by default, True
 
         """
         del connection_str
         self._debug = kwargs.get("debug", False)
         super().__init__()
 
-        # If data paths specified, use these
-        data_paths = kwargs.get("data_paths")
         self._paths: List[str] = ["."]
-        if data_paths:
+        # If data paths specified, use these
+        # from kwargs or settings
+        if data_paths := kwargs.get("data_paths"):
             self._paths = [path.strip() for path in data_paths]
-        elif "LocalOsquery" in settings:
-            self._paths = settings.get("LocalOsquery", {}).get("data_paths")
+        else:
+            prov_settings = get_provider_settings(config_section="DataProviders").get(
+                "OSQueryLogs"
+            )
+            if prov_settings:
+                self._paths = prov_settings.args.get("data_paths", []) or self._paths
+                self._cache_file = prov_settings.args.get("cache_file")
 
+        self._progress = kwargs.pop("progress", True)
         self.data_files: Dict[str, str] = self._get_data_paths()
         self._schema: Dict[str, Any] = {}
+        self._data_cache: Dict[str, pd.DataFrame] = {}
+        self._cache_file = kwargs.pop("cache_file", self._cache_file)
         self._loaded = True
-        self._connected = True
 
     def _get_data_paths(self) -> Dict[str, str]:
         """Read files in data paths."""
@@ -79,8 +102,9 @@ class LocalOsqueryDriver(DriverBase):
 
         """
         del connection_str
+        self._read_data_files()
         self._connected = True
-        print("Connected.")
+        print("Data loaded.")
 
     # pylint: disable=too-many-branches
     @property
@@ -94,62 +118,12 @@ class LocalOsqueryDriver(DriverBase):
             Data schema of current connection.
 
         """
-        if self._schema:
-            return self._schema
-        schema_backup = self.data_files
-        for df_fname in self.data_files.copy():
-
-            test_df = self.query(df_fname)
-
-            # save entries which are for a different file else losing them
-            for key in schema_backup.copy().keys():
-                if key == df_fname:
-                    del schema_backup[key]
-
-            if ".log" in df_fname:
-                # split the many queries in file
-                new_schema = {}
-                for df_fname2 in test_df["name"].unique().tolist():
-                    test_df2 = test_df[test_df["name"] == df_fname2]
-                    test_df3 = test_df2.dropna(axis=1, how="all").copy()
-
-                    # fix columns type
-                    # https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.to_datetime.html
-                    if "unixTime" in test_df3.columns:
-                        test_df3["unixTime"] = pd.to_datetime(
-                            test_df3["unixTime"], unit="s", origin="unix"
-                        )
-                    if "columns_time" in test_df3.columns:
-                        test_df3["columns_time"] = pd.to_datetime(
-                            test_df3["columns_time"], unit="s", origin="unix"
-                        )
-                    if "columns_atime" in test_df3.columns:
-                        test_df3["columns_atime"] = pd.to_datetime(
-                            test_df3["columns_atime"], unit="s", origin="unix"
-                        )
-                    if "columns_ctime" in test_df3.columns:
-                        test_df3["columns_ctime"] = pd.to_datetime(
-                            test_df3["columns_ctime"], unit="s", origin="unix"
-                        )
-                    if "columns_mtime" in test_df3.columns:
-                        test_df3["columns_mtime"] = pd.to_datetime(
-                            test_df3["columns_mtime"], unit="s", origin="unix"
-                        )
-
-                    if not isinstance(test_df3, pd.DataFrame):
-                        continue
-                    df_schema = test_df3.dtypes
-                    new_schema[df_fname2] = {
-                        key: dtype.name for key, dtype in df_schema.to_dict().items()
-                    }
-                self._schema = new_schema | schema_backup
-            else:
-                if not isinstance(test_df, pd.DataFrame):
-                    continue
-                df_schema = test_df.dtypes
-                self._schema[df_fname] = {
-                    key: dtype.name for key, dtype in df_schema.to_dict().items()
-                }
+        if not self._schema:
+            self.connect()
+            self._schema = {
+                table: {col: dtype.name for col, dtype in df.dtypes.to_dict().items()}
+                for table, df in self._data_cache.items()
+            }
 
         return self._schema
 
@@ -169,67 +143,121 @@ class LocalOsqueryDriver(DriverBase):
         Returns
         -------
         Union[pd.DataFrame, results.ResultSet]
-            A DataFrame (if successfull) or
+            A DataFrame (if successful) or
             the underlying provider result if an error.
 
         """
         del kwargs
+        if not self._data_cache:
+            self.connect()
         query_name = query_source.name if query_source else query
-        file_path = self.data_files.get(query.casefold())
-        # print(f"Data file path {file_path} (data_files: {self.data_files}).")
-        if not file_path:
-            raise FileNotFoundError(
-                f"Data file ({query}) for query {query_name} not found."
+        if query_name in self._data_cache:
+            query_df = self._data_cache[query_name]
+            for date_column in self.OS_QUERY_DATEIME_COLS | set(query_df.columns):
+                query_df[date_column] = to_datetime(
+                    query_df[date_column], unit="s", origin="unix"
+                )
+            return query_df
+        raise MsticpyDataQueryError(
+            f"No data loaded for query {query_name}.",
+            "Please check that the data loaded from the log paths",
+            "has this data type.",
+        )
+
+    def query_with_results(self, query, **kwargs):
+        """Return query with fake results."""
+        return self.query(query, **kwargs), "OK"
+
+    def _read_data_files(self):
+        """Read data files into memory."""
+        if self._data_cache():
+            return
+        # If a cache file is specified and is a valid file,
+        # try to use that.
+        if self._cache_file and Path(self._cache_file).is_file():
+            with open(self._cache_file, "rb") as cache_handle:
+                try:
+                    self._data_cache = pickle.load(cache_handle)
+                except pickle.PickleError:
+                    print(f"Invalid cache file {self._data_cache}")
+            if self._data_cache:
+                return
+
+        # Otherwise read in the data files.
+        data_files = (
+            tqdm(self.data_files.values())
+            if self._progress
+            else self.data_files.values()
+        )
+        for path in data_files:
+            self._read_log_file(path)
+
+        # if a cache file name was specified, write data cache to that file.
+        if self._cache_file:
+            if not Path(self._cache_file).is_file():
+                print("Overwriting exist cache file.")
+            with open(self._cache_file, "wb") as cache_handle:
+                try:
+                    pickle.dump(cache_handle)
+                except pickle.PickleError:
+                    print(f"Could not write to cache file {self._data_cache}")
+
+    def _extract_event_type(self, df_all_queries: pd.DataFrame, event_name: str):
+        """Extract tidied DF from all queries."""
+        query_df = df_all_queries[df_all_queries["name"] == event_name].dropna(
+            axis=1, how="all"
+        )
+        for date_column in self.OS_QUERY_DATEIME_COLS & set(query_df.columns):
+            query_df[date_column] = pd.to_datetime(
+                query_df[date_column],
+                unit="s",
+                origin="unix",
+                utc=True,
             )
-        if file_path.endswith("log") or file_path.endswith("json"):
+        return query_df
+
+    def _read_log_file(self, log_path: str):
+        """Read log file into cache."""
+        if Path(log_path).suffix.casefold() in (".log", ".json"):
             # We can't use directly read_json as we need to extract nested json
             # Split log files in multiple queries table here
             # Likely resource intensive and better way to do.
             # Likely issue, multiple log files can contain same query mostly
             # because of log rotation
+            list_lines: List[Dict[str, Any]] = []
             try:
-                with open(file_path, mode="r", encoding="utf-8") as logfile:
-                    json_out: Dict[Dict[Any]]
-                    json_out = {"lines": []}
-                    while True:
-                        next_line = logfile.readline()
+                with open(log_path, mode="r", encoding="utf-8") as logfile:
+                    # json_out: Dict[str, Dict[Any]]
+                    # json_out = {"lines": []}
+                    # while True:
+                    #     next_line = logfile.readline()
 
-                        if not next_line:
-                            break
-                        json_out["lines"].append(json.loads(next_line.strip()))
-                        df_all_queries = pd.json_normalize(
-                            json_out["lines"], max_level=3
-                        )
-            except ValueError as exc:
-                raise ValueError(f"Read error on file {file_path}: {exc}.") from exc
+                    #     if not next_line:
+                    #         break
+                    #     json_out["lines"].append(json.loads(next_line.strip()))
+                    #     df_all_queries = pd.json_normalize(
+                    #         json_out["lines"], max_level=3
+                    #     )
+                    json_lines = logfile.readlines()
+                    list_lines = [json.loads(line) for line in json_lines]
 
-            try:
-                # Don't want dot in columns name
-                df_all_queries.columns = df_all_queries.columns.str.replace(
-                    ".", "_", regex=False
+            except (IOError, json.JSONDecodeError, ValueError) as exc:
+                raise MsticpyDataQueryError(
+                    f"Read error on file {log_path}: {exc}."
+                ) from exc
+            if not list_lines:
+                raise MsticpyNoDataSourceError(
+                    f"No log data retrieved from {log_path}",
+                    "Please check the format of the log file.",
                 )
-                # fill available queries and preserve other files
-                self.data_files = self.data_files | {
-                    k: file_path for k in df_all_queries["name"].unique().tolist()
-                }
-                if os.path.basename(file_path) in self.data_files:
-                    del self.data_files[os.path.basename(file_path)]
+            df_all_queries = pd.json_normalize(list_lines, max_level=3)
+            # Don't want dot in columns name
+            df_all_queries.columns = df_all_queries.columns.str.replace(
+                ".", "_", regex=False
+            )
 
-                if query in self.data_files and ".log" not in query:
-                    df_query = df_all_queries[df_all_queries["name"] == query].dropna(
-                        axis=1, how="all"
-                    )
-                    return df_query
-
-                return df_all_queries
-            except ValueError as exc:
-                raise ValueError(f"Error when processing data from file {file_path}: {exc}.") from exc
-
-        data_df = pd.read_pickle(file_path)
-        if isinstance(data_df, pd.DataFrame):
-            return data_df
-        return f"{query} is not a DataFrame ({file_path})."
-
-    def query_with_results(self, query, **kwargs):
-        """Return query with fake results."""
-        return self.query(query, **kwargs), "OK"
+            event_types = df_all_queries["name"].unique().tolist()
+            self._data_cache = {
+                event_name: self._extract_event_type(df_all_queries, event_name)
+                for event_name in event_types
+            }

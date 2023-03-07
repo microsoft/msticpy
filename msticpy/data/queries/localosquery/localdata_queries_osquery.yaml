@@ -1,7 +1,7 @@
 metadata:
   version: 1
   description: Local Data Queries for Osquery Linux log - osqueryd.{results,snapshots}.{log,json}
-  data_environments: [LocalOsquery]
+  data_environments: [OSQueryLogs]
   data_families: [linux, network, process, file]
   tags: ['process', 'account', 'network', 'file']
 defaults:
