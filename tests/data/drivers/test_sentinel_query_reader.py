@@ -30,7 +30,8 @@ from ...unit_test_lib import get_test_data_path
 # variables used throughout tests
 DEF_PATH = Path.joinpath(Path(os.getcwd()))
 BASE_DIR = Path.joinpath(DEF_PATH, Path("Azure-Sentinel-master"))
-BASE_DIR_TEST_FOLDER = Path.joinpath(Path(DEF_PATH).parent.parent.parent, Path("tests/testdata/sentinel_query_import_data"))
+# BASE_DIR_TEST_FOLDER = Path.joinpath(Path(DEF_PATH).parent.parent.parent, Path("tests/testdata/sentinel_query_import_data"))
+BASE_DIR_TEST_FOLDER = Path.joinpath(DEF_PATH, "tests", "testdata", "sentinel_query_import_data")
 
 _SENTINEL_QUERY_READER = "msticpy.data.drivers.sentinel_query_reader"
 
