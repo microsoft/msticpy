@@ -196,7 +196,7 @@ def _import_sentinel_query(
             query=parsed_yaml_dict.get("query", ""),
             version=parsed_yaml_dict.get("version", ""),
             kind=parsed_yaml_dict.get("kind", ""),
-            folder_name=yaml_path.split("\\")[-2],
+            folder_name=yaml_path.split("/")[-2],
             source_file_name=yaml_path,
             query_type=query_type,
         )
