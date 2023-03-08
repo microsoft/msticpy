@@ -203,7 +203,7 @@ def test__organize_query_list_by_folder(dict_section, expected_result):
 
 def test__create_queryfile_metadata():
     ignore_keys = set('last_updated') #timing may differ but doesn't matter for test purposes
-    generated_dict = {k:v for k,v in _create_queryfile_metadata(folder_name="Detections")["metadata"] if k not in ignore_keys} 
+    generated_dict = {k:v for k,v in _create_queryfile_metadata(folder_name="Detections")["metadata"].items() if k not in ignore_keys} 
     test_dict = {
         "version": 1,
         "description": "Sentinel Alert Queries - Detections",
