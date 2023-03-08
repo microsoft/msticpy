@@ -15,6 +15,8 @@ import respx
 from msticpy.context.tilookup import TILookup
 from msticpy.context.tiproviders.pulsedive import PDlookup
 
+from ...unit_test_lib import custom_mp_config, get_test_data_path
+
 __author__ = "Ian Hellen"
 
 # pylint: disable=redefined-outer-name
@@ -227,8 +229,10 @@ def test_pulsedive_tiprov(ioc, expected):
         200, json=_INDICATOR_RESP
     )
 
-    ti_lookup = TILookup()
-    result = ti_lookup.lookup_ioc(ioc, providers=["Pulsedive"])
+    mp_conf_path = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
+    with custom_mp_config(mp_conf_path):
+        ti_lookup = TILookup()
+        result = ti_lookup.lookup_ioc(ioc, providers=["Pulsedive"])
 
     check.is_instance(result, pd.DataFrame)
 
