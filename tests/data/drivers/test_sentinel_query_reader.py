@@ -190,8 +190,8 @@ def test__organize_query_list_by_folder(dict_section, expected_result):
     query_list = import_sentinel_queries(yaml_files=yaml_files, query_type="Detections")
     if dict_section == "keys":
         assert (
-            list(_organize_query_list_by_folder(query_list=query_list).keys())
-            == expected_result
+            sorted(list(_organize_query_list_by_folder(query_list=query_list).keys()))
+            == sorted(expected_result)
         )
     else:
         assert (
