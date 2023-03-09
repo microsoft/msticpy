@@ -14,11 +14,10 @@ import httpx
 import pandas as pd
 from pandas import json_normalize
 
-from msticpy.common.pkg_config import get_http_timeout
-from msticpy.common.provider_settings import get_provider_settings
-from msticpy.common.utility import mp_ua_header
-
 from ..._version import VERSION
+from ...common.pkg_config import get_http_timeout
+from ...common.provider_settings import get_provider_settings
+from ...common.utility import mp_ua_header
 from ..http_provider import APILookupParams
 from .result_severity import LookupResult, ResultSeverity
 from .ti_http_provider import HttpTIProvider
