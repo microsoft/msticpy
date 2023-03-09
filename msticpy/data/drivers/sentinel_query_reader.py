@@ -22,7 +22,7 @@ from tqdm.notebook import tqdm
 
 
 @attrs
-class SentinelQuery:
+class SentinelQuery:  # type: ignore
     """Attrs class that represents a Sentinel Query yaml file."""
 
     query_id: str = attrib(factory=str)
@@ -86,7 +86,7 @@ def get_sentinel_queries_from_github(
                     file.write(data)
             progress_bar.close()
 
-            archive = zipfile.ZipFile(repo_zip, mode="r")
+            archive = zipfile.ZipFile(repo_zip, mode="r")  # type: ignore
 
         # Only extract Detections and Hunting Queries Folder
         for file in archive.namelist():
@@ -129,7 +129,8 @@ def read_yaml_files(parent_dir: str, child_dir: str) -> dict:
     parsed_query_dict = {}
 
     for query in yaml_queries:
-        parsed_query_dict[query] = open(query, encoding="utf8", errors="ignore").read()
+        with open(query, encoding="utf8", errors="ignore") as opened_query_file:
+            parsed_query_dict[query] = opened_query_file.read()
 
     return parsed_query_dict
 
@@ -196,18 +197,20 @@ def _import_sentinel_query(
             query=parsed_yaml_dict.get("query", ""),
             version=parsed_yaml_dict.get("version", ""),
             kind=parsed_yaml_dict.get("kind", ""),
-            folder_name=yaml_path.split("/")[-2],
+            folder_name=yaml_path.replace("\\", "/").split("/")[-2],
             source_file_name=yaml_path,
             query_type=query_type,
         )
         if new_query is None:
-            print("found a none")
+            print("No info for query - query is None")
             print(yaml_path)
             print(yaml_text)
         return new_query
 
-    except Exception as error:
-        print("failed")  # more specific
+    except Exception as error:  # type: ignore
+        print(
+            "Failed - either YAML error or issue with creating attrs class. See error, path to the file, and text below."
+        )
         print(error)
         print("path:", yaml_path)
         print("text:", yaml_text)
@@ -290,7 +293,9 @@ def _create_queryfile_metadata(folder_name: str) -> dict:
     return dict_to_write
 
 
-def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool:
+def write_to_yaml(
+    query_list: list, query_type: str, output_folder: str
+) -> bool:  #  type: ignore
     """
     Write out generated YAML files of the given query_list into the given output_folder.
 
@@ -331,50 +336,52 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
             # skipping instances where there is no name but should probably have a better solution
             try:
                 formatted_qname = _format_query_name(cur_query.name)
-            except Exception as format_error:
+                dict_to_write["sources"][formatted_qname] = {}
+                dict_to_write["sources"][formatted_qname][
+                    "description"
+                ] = cur_query.description
+                dict_to_write["sources"][formatted_qname]["metadata"] = {}
+                dict_to_write["sources"][formatted_qname]["metadata"]["sentinel"] = {
+                    "query_id": cur_query.query_id
+                }
+                metadata_sections = [
+                    "name",
+                    "severity",
+                    "tags",
+                    "required_data_connectors",
+                    "query_frequency",
+                    "query_period",
+                    "trigger_operator",
+                    "trigger_threshold",
+                    "tactics",
+                    "relevant_techniques",
+                    "entity_mappings",
+                    "custom_details",
+                    "alert_details_override",
+                    "version",
+                    "kind",
+                    "folder_name",
+                    "source_file_name",
+                    "query_type",
+                ]
+                cur_query_dict = attr.asdict(cur_query)
+                for section in metadata_sections:
+                    dict_to_write["sources"][formatted_qname]["metadata"][
+                        section
+                    ] = cur_query_dict[section]
+                dict_to_write["sources"][formatted_qname]["metadata"]["args"] = {}
+                dict_to_write["sources"][formatted_qname]["metadata"]["args"][
+                    "query"
+                ] = cur_query.query
+                dict_to_write["sources"][formatted_qname]["metadata"]["parameters"] = {}
+            except Exception as format_error:  # type: ignore
+                print(
+                    "Failed to format query name - see error and source folder as well as current_query below"
+                )
                 print(format_error)
                 print("source_folder", source_folder)
                 print(cur_query)
                 print()
-                pass
-            dict_to_write["sources"][formatted_qname] = {}
-            dict_to_write["sources"][formatted_qname][
-                "description"
-            ] = cur_query.description
-            dict_to_write["sources"][formatted_qname]["metadata"] = {}
-            dict_to_write["sources"][formatted_qname]["metadata"]["sentinel"] = {
-                "query_id": cur_query.query_id
-            }
-            metadata_sections = [
-                "name",
-                "severity",
-                "tags",
-                "required_data_connectors",
-                "query_frequency",
-                "query_period",
-                "trigger_operator",
-                "trigger_threshold",
-                "tactics",
-                "relevant_techniques",
-                "entity_mappings",
-                "custom_details",
-                "alert_details_override",
-                "version",
-                "kind",
-                "folder_name",
-                "source_file_name",
-                "query_type",
-            ]
-            cur_query_dict = attr.asdict(cur_query)
-            for section in metadata_sections:
-                dict_to_write["sources"][formatted_qname]["metadata"][
-                    section
-                ] = cur_query_dict[section]
-            dict_to_write["sources"][formatted_qname]["metadata"]["args"] = {}
-            dict_to_write["sources"][formatted_qname]["metadata"]["args"][
-                "query"
-            ] = cur_query.query
-            dict_to_write["sources"][formatted_qname]["metadata"]["parameters"] = {}
 
         try:
             query_text = yaml.safe_dump(

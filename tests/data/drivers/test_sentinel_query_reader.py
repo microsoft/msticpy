@@ -30,7 +30,6 @@ from ...unit_test_lib import get_test_data_path
 # variables used throughout tests
 DEF_PATH = Path.joinpath(Path(os.getcwd()))
 BASE_DIR = Path.joinpath(DEF_PATH, Path("Azure-Sentinel-master"))
-# BASE_DIR_TEST_FOLDER = Path.joinpath(Path(DEF_PATH).parent.parent.parent, Path("tests/testdata/sentinel_query_import_data"))
 BASE_DIR_TEST_FOLDER = Path.joinpath(get_test_data_path(), "sentinel_query_import_data")
 _SENTINEL_QUERY_READER = "msticpy.data.drivers.sentinel_query_reader"
 
@@ -50,19 +49,11 @@ def test_get_sentinel_queries_from_github():
 
 def test_read_yaml_files():
     yaml_files = read_yaml_files(parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections")
-    print(yaml_files)
-    print(BASE_DIR_TEST_FOLDER)
-    print(DEF_PATH)
-    print(Path.joinpath(DEF_PATH, "tests", "testdata", "sentinel_query_import_data"))
-    print(os.listdir(Path.joinpath(DEF_PATH, "tests", "testdata", "sentinel_query_import_data")))
-    print(str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml")))
-    print(Path(DEF_PATH).parent.parent.parent)
     assert yaml_files[str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml"))]
 
 
 def test__import_sentinel_query():
     yaml_files = read_yaml_files(parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections")
-    print(yaml_files)
     query_type = "Detections"
     yaml_path = str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml"))
     yaml_text = yaml_files[yaml_path]
@@ -89,13 +80,11 @@ def test__import_sentinel_query():
         source_file_name=yaml_path,
         query_type="Detections",
     )
-    print(_import_sentinel_query(yaml_path, yaml_text, query_type))
     assert _import_sentinel_query(yaml_path, yaml_text, query_type) == sample_query
 
 
 def test_import_sentinel_query():
     yaml_files = read_yaml_files(parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections")
-    print(yaml_files)
     yaml_path = str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml"))
     sample_query = SentinelQuery(
         query_id="d0255b5f-2a3c-4112-8744-e6757af3283a",
@@ -120,7 +109,6 @@ def test_import_sentinel_query():
         source_file_name=yaml_path,
         query_type="Detections",
     )
-    print(import_sentinel_queries(yaml_files, query_type="Detections"))
     assert (
         sample_query in import_sentinel_queries(yaml_files, query_type="Detections")
     )
