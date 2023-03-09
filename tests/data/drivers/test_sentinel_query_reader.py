@@ -31,8 +31,7 @@ from ...unit_test_lib import get_test_data_path
 DEF_PATH = Path.joinpath(Path(os.getcwd()))
 BASE_DIR = Path.joinpath(DEF_PATH, Path("Azure-Sentinel-master"))
 # BASE_DIR_TEST_FOLDER = Path.joinpath(Path(DEF_PATH).parent.parent.parent, Path("tests/testdata/sentinel_query_import_data"))
-BASE_DIR_TEST_FOLDER = Path.joinpath(DEF_PATH, "tests", "testdata", "sentinel_query_import_data")
-
+BASE_DIR_TEST_FOLDER = Path.joinpath(get_test_data_path(), "sentinel_query_import_data")
 _SENTINEL_QUERY_READER = "msticpy.data.drivers.sentinel_query_reader"
 
 
@@ -68,7 +67,7 @@ def test__import_sentinel_query():
     yaml_path = str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml"))
     yaml_text = yaml_files[yaml_path]
     sample_query = SentinelQuery(
-        id="d0255b5f-2a3c-4112-8744-e6757af3283a",
+        query_id="d0255b5f-2a3c-4112-8744-e6757af3283a",
         name="Unusual Anomaly",
         description="'Anomaly Rules generate events in the Anomalies table. This scheduled rule tries to detect Anomalies that are not usual, they could be a type of Anomaly that has recently been activated, or an infrequent type. The detected Anomaly should be reviewed, if it is relevant enough, eventually a separate scheduled Analytics Rule could be created specifically for that Anomaly Type, so an alert and/or incident is generated everytime that type of Anomaly happens.'\n",
         severity="Medium",
@@ -99,7 +98,7 @@ def test_import_sentinel_query():
     print(yaml_files)
     yaml_path = str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml"))
     sample_query = SentinelQuery(
-        id="d0255b5f-2a3c-4112-8744-e6757af3283a",
+        query_id="d0255b5f-2a3c-4112-8744-e6757af3283a",
         name="Unusual Anomaly",
         description="'Anomaly Rules generate events in the Anomalies table. This scheduled rule tries to detect Anomalies that are not usual, they could be a type of Anomaly that has recently been activated, or an infrequent type. The detected Anomaly should be reviewed, if it is relevant enough, eventually a separate scheduled Analytics Rule could be created specifically for that Anomaly Type, so an alert and/or incident is generated everytime that type of Anomaly happens.'\n",
         severity="Medium",
@@ -159,7 +158,7 @@ def test__format_query_name(initial_str, expected_result):
             "Anomalies",
             [
                 SentinelQuery(
-                    id="d0255b5f-2a3c-4112-8744-e6757af3283a",
+                    query_id="d0255b5f-2a3c-4112-8744-e6757af3283a",
                     name="Unusual Anomaly",
                     description="'Anomaly Rules generate events in the Anomalies table. This scheduled rule tries to detect Anomalies that are not usual, they could be a type of Anomaly that has recently been activated, or an infrequent type. The detected Anomaly should be reviewed, if it is relevant enough, eventually a separate scheduled Analytics Rule could be created specifically for that Anomaly Type, so an alert and/or incident is generated everytime that type of Anomaly happens.'\n",
                     severity="Medium",

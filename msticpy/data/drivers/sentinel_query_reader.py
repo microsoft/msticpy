@@ -25,7 +25,7 @@ from tqdm.notebook import tqdm
 class SentinelQuery:
     """Attrs class that represents a Sentinel Query yaml file."""
 
-    id: str = attrib(factory=str)
+    query_id: str = attrib(factory=str)
     name: str = attrib(factory=str)
     description: str = attrib(factory=str)
     severity: str = attrib(factory=str)
@@ -182,7 +182,7 @@ def _import_sentinel_query(
         parsed_yaml_dict = yaml.load(yaml_text, Loader=yaml.SafeLoader)
         new_query = SentinelQuery(
             name=parsed_yaml_dict.get("name"),
-            id=parsed_yaml_dict.get("id", ""),
+            query_id=parsed_yaml_dict.get("id", ""),
             description=parsed_yaml_dict.get("description", ""),
             severity=parsed_yaml_dict.get("severity", ""),
             tags=parsed_yaml_dict.get("tags_entry", []),
@@ -207,7 +207,7 @@ def _import_sentinel_query(
         return new_query
 
     except Exception as error:
-        print("failed") # more specific
+        print("failed")  # more specific
         print(error)
         print("path:", yaml_path)
         print("text:", yaml_text)
@@ -252,7 +252,7 @@ def _organize_query_list_by_folder(query_list: list) -> dict:
         with it
 
     """
-    queries_by_folder = {} #:Dict = {} #import
+    queries_by_folder = {}  #:Dict = {} #import
     for query in query_list:
         if query.folder_name == "":
             print(query)
@@ -343,7 +343,7 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
             ] = cur_query.description
             dict_to_write["sources"][formatted_qname]["metadata"] = {}
             dict_to_write["sources"][formatted_qname]["metadata"]["sentinel"] = {
-                "id": cur_query.id
+                "query_id": cur_query.query_id
             }
             metadata_sections = [
                 "name",
