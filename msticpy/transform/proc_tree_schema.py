@@ -256,6 +256,20 @@ OSQUERY_EVENT_SCH = ProcSchema(
     user_name="columns_username",
     path_separator="/",
     user_id="columns_uid",
+
+# FireEye HX processEvent from 'stateagentinspector' or 'eventbuffer' audits
+HX_PROCESSEVENT_SCH = ProcSchema(
+    time_stamp="starttime",
+    process_name="process",
+    process_id="pid",
+    parent_name="parentprocess",
+    parent_id="parentpid",
+    cmd_line="processcmdline",
+    user_name="username",
+    path_separator="\\",
+    event_id_column="eventtype",
+    event_id_identifier="start",
+    host_name_column="hostname",
 )
 
 SUPPORTED_SCHEMAS = (
@@ -265,6 +279,7 @@ SUPPORTED_SCHEMAS = (
     MDE_EVENT_SCH,
     SYSMON_PROCESS_CREATE_EVENT_SCH,
     OSQUERY_EVENT_SCH,
+    HX_PROCESSEVENT_SCH,
 )
 
 

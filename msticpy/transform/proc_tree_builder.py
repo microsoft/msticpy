@@ -15,6 +15,7 @@ from . import proc_tree_build_winlx as winlx
 # pylint: disable=unused-import
 from .proc_tree_schema import ProcSchema  # noqa: F401
 from .proc_tree_schema import (  # noqa: F401
+    HX_PROCESSEVENT_SCH,
     LX_EVENT_SCH,
     MDE_EVENT_SCH,
     MDE_INT_EVENT_SCH,
