@@ -23,4 +23,5 @@ TI_PROVIDERS: Dict[str, Tuple[str, str]] = {
     "Tor": ("tor_exit_nodes", "Tor"),
     "VirusTotal": ("virustotal", "VirusTotal"),
     "RiskIQ": ("riskiq", "RiskIQ"),
+    "Pulsedive": ("pulsedive", "Pulsedive"),
 }
