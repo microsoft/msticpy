@@ -6,6 +6,7 @@
 """Result Severity enumeration."""
 from enum import Enum
 from functools import total_ordering
+from typing import Any, Dict, NamedTuple
 
 from ..._version import VERSION
 
@@ -88,3 +89,11 @@ class ResultSeverity(Enum):
         """
         other_sev = ResultSeverity.parse(other)
         return self.value > other_sev.value
+
+
+class LookupResult(NamedTuple):
+    """Return value from TI Provider parse_results."""
+
+    status: bool
+    severity: ResultSeverity
+    details: Dict[str, Any]
