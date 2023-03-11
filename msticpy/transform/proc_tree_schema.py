@@ -242,12 +242,28 @@ SYSMON_PROCESS_CREATE_EVENT_SCH = ProcSchema(
     host_name_column="Computer",
 )
 
+# FireEye HX processEvent from 'stateagentinspector' or 'eventbuffer' audits
+HX_PROCESSEVENT_SCH = ProcSchema(
+    time_stamp="starttime",
+    process_name="process",
+    process_id="pid",
+    parent_name="parentprocess",
+    parent_id="parentpid",
+    cmd_line="processcmdline",
+    user_name="username",
+    path_separator="\\",
+    event_id_column="eventtype",
+    event_id_identifier="start",
+    host_name_column="hostname",
+)
+
 SUPPORTED_SCHEMAS = (
     WIN_EVENT_SCH,
     LX_EVENT_SCH,
     MDE_INT_EVENT_SCH,
     MDE_EVENT_SCH,
     SYSMON_PROCESS_CREATE_EVENT_SCH,
+    HX_PROCESSEVENT_SCH,
 )
 
 
