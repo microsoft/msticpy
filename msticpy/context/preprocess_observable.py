@@ -267,7 +267,7 @@ class PreProcessor:
                Otherwise, it has an error message.
 
         """
-        proc_value = value.strip()
+        proc_value: Optional[str] = value.strip()
         result = SanitizedObservable(proc_value, "ok")
         for processor in self._processors.get(value_type, []):
             if processor == self._TYPE_CHECK:
