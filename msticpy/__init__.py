@@ -99,6 +99,7 @@ that allow you start working in a notebook more quickly:
 >>> mp.init_notebook()
 
 This module performs several steps to initialize MSTICPy:
+
 - imports a number of standard packages (e.g. pandas) into the notebook
 - imports a number of modules and functions from msticpy
 - checks the version of MSTICPy
