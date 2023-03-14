@@ -139,7 +139,7 @@ class LocalDataDriver(DriverBase):
                 )
             except ValueError:
                 return pd.read_csv(file_path)
-        data_df = pd.read_pickle(file_path)
+        data_df = pd.read_pickle(file_path)  # nosec
         if isinstance(data_df, pd.DataFrame):
             return data_df
         return f"{query} is not a DataFrame ({file_path})."
