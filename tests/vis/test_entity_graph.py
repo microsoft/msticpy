@@ -6,7 +6,13 @@
 """Test module for EntityGraph."""
 import pandas as pd
 from bokeh.models.layouts import Column
-from bokeh.plotting.figure import Figure
+
+try:
+    from bokeh.plotting import Figure
+except ImportError:
+    from bokeh.models import LayoutDOM
+
+    Figure = LayoutDOM
 
 from msticpy.datamodel.entities import Alert, Entity, Incident
 from msticpy.nbtools.security_alert import SecurityAlert
@@ -205,3 +211,60 @@ def test_df_plot():
     assert isinstance(plot, Figure)
     plot = sent_incidents.mp_plot.incident_graph(timeline=True)
     assert isinstance(plot, Column)
+
+
+def test_alert_plot():
+    sample_alert = {
+        "StartTimeUtc": "2018-09-27 16:59:16",
+        "EndTimeUtc": "2018-09-27 16:59:16",
+        "ProviderAlertId": "b6329e79-0a94-4035-beee-c2e2657b71e3",
+        "SystemAlertId": "2518642332435550951_b6329e79-0a94-4035-beee-c2",
+        "ProviderName": "Detection",
+        "VendorName": "Microsoft",
+        "AlertType": "RegistryPersistence",
+        "AlertDisplayName": "Windows registry persistence method detected",
+        "Severity": "Low",
+        "IsIncident": False,
+        "ExtendedProperties": {"resourceType": "Non-Azure Resource"},
+        "CompromisedEntity": "TESTHOST",
+        "Entities": [
+            {
+                "Type": "host",
+                "$id": "1",
+                "HostName": "TESTHOST",
+                "DnsDomain": "DOM.CONTOSO.COM",
+                "IsDomainJoined": True,
+                "NTDomain": "DOM",
+                "NetBiosName": "TESTHOST",
+                "OsVersion": None,
+                "OSFamily": "Windows",
+            },
+            {
+                "Type": "process",
+                "$id": "3",
+                "CommandLine": "",
+                "Host": {"$ref": "1"},
+                "ProcessId": "0x940",
+                "ImageFile": "test.exe",
+            },
+        ],
+        "ConfidenceLevel": "Unknown",
+        "ConfidenceScore": None,
+        "ConfidenceReasons": None,
+        "Intent": "Persistence",
+        "ExtendedLinks": None,
+        "AzureResourceId": None,
+        "AzureResourceSubscriptionId": None,
+        "TenantId": "b6329e79-0a94-4035-beee-c2e2657b71e3",
+        "WorkspaceId": "b6329e79-0a94-4035-beee-c2e2657b71e3",
+        "AgentId": "b6329e79-0a94-4035-beee-c2e2657b71e3",
+        "SourceComputerId": "b6329e79-0a94-4035-beee-c2e2657b71e3",
+        "SystemSource": "Non-Azure",
+        "WorkspaceSubscriptionId": "b6329e79-0a94-4035-beee-c2e2657b71e3",
+        "WorkspaceResourceGroup": "test-east-us",
+        "TimeGeneratedUtc": "2018-09-27 16:59:47",
+    }
+    alert = Alert(sample_alert)
+
+    graph = EntityGraph(alert)
+    graph.plot()
