@@ -22,8 +22,10 @@ from tqdm.notebook import tqdm
 
 
 @attrs
-class SentinelQuery:  # type: ignore
+class SentinelQuery:
     """Attrs class that represents a Sentinel Query yaml file."""
+
+    # pylint: disable=too-many-instance-attributes
 
     query_id: str = attrib(factory=str)
     name: str = attrib(factory=str)
@@ -86,7 +88,7 @@ def get_sentinel_queries_from_github(
                     file.write(data)
             progress_bar.close()
 
-            archive = zipfile.ZipFile(repo_zip, mode="r")  # type: ignore
+            archive = zipfile.ZipFile(repo_zip, mode="r")
 
         # Only extract Detections and Hunting Queries Folder
         for file in archive.namelist():
@@ -207,9 +209,10 @@ def _import_sentinel_query(
             print(yaml_text)
         return new_query
 
-    except Exception as error:  # type: ignore
+    except Exception as error:
         print(
-            "Failed - either YAML error or issue with creating attrs class. See error, path to the file, and text below."
+            """Failed - either YAML error or issue with creating attrs class. See error, path to the file, 
+            and text below."""
         )
         print(error)
         print("path:", yaml_path)
@@ -293,9 +296,7 @@ def _create_queryfile_metadata(folder_name: str) -> dict:
     return dict_to_write
 
 
-def write_to_yaml(
-    query_list: list, query_type: str, output_folder: str
-) -> bool:  #  type: ignore
+def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool:
     """
     Write out generated YAML files of the given query_list into the given output_folder.
 
@@ -374,9 +375,10 @@ def write_to_yaml(
                     "query"
                 ] = cur_query.query
                 dict_to_write["sources"][formatted_qname]["metadata"]["parameters"] = {}
-            except Exception as format_error:  # type: ignore
+            except Exception as format_error:
                 print(
-                    "Failed to format query name - see error and source folder as well as current_query below"
+                    """Failed to format query name - see error and source folder as well as 
+                    current_query below"""
                 )
                 print(format_error)
                 print("source_folder", source_folder)
