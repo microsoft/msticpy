@@ -44,6 +44,7 @@ https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/ConfiguringNoteboo
 """
 import importlib
 import io
+import logging
 import os
 import sys
 import traceback
@@ -87,6 +88,8 @@ from .user_config import load_user_defaults
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+
+logger = logging.getLogger(__name__)
 
 _IMPORT_ERR_MSSG = """
 <h2><font color='red'>One or more missing packages detected</h2>
@@ -410,6 +413,7 @@ def init_notebook(
     _set_verbosity(**kwargs)
 
     _pr_output("<hr><h4>Starting Notebook initialization...</h4>")
+    logger.info("Starting Notebook initialization")
     # Check Azure ML environment
     if is_in_aml():
         check_versions_aml(*_get_aml_globals(namespace))
@@ -418,7 +422,9 @@ def init_notebook(
         stdout_cap = io.StringIO()
         with redirect_stdout(stdout_cap):
             check_version()
-            _pr_output(stdout_cap.getvalue())
+            output = stdout_cap.getvalue()
+            _pr_output(output)
+            logger.info(output)
 
     if is_in_synapse():
         synapse_params = {
@@ -433,7 +439,9 @@ def init_notebook(
         imp_ok = _global_imports(
             namespace, additional_packages, user_install, extra_imports, def_imports
         )
-        _pr_output(stdout_cap.getvalue())
+        output = stdout_cap.getvalue()
+        _pr_output(output)
+        logger.info(output)
 
     # Configuration check
     if no_config_check:
@@ -449,7 +457,7 @@ def init_notebook(
 
     # Set friendly exceptions
     if friendly_exceptions is None:
-        friendly_exceptions = get_config("msticpy.FriendlyExceptions")
+        friendly_exceptions = get_config("msticpy.FriendlyExceptions", None)
     if friendly_exceptions:
         if _VERBOSITY() == 2:  # type: ignore
             _pr_output("Friendly exceptions enabled.")
@@ -462,14 +470,18 @@ def init_notebook(
     with redirect_stdout(stdout_cap):
         _pr_output("Loading pivots.")
         _load_pivots(namespace=namespace)
-        _pr_output(stdout_cap.getvalue())
+        output = stdout_cap.getvalue()
+        _pr_output(output)
+        logger.info(output)
 
     # User defaults
     stdout_cap = io.StringIO()
     with redirect_stdout(stdout_cap):
         _pr_output("Loading user defaults.")
         prov_dict = load_user_defaults()
-        _pr_output(stdout_cap.getvalue())
+        output = stdout_cap.getvalue()
+        _pr_output(output)
+        logger.info(output)
 
     if prov_dict:
         namespace.update(prov_dict)
@@ -479,6 +491,7 @@ def init_notebook(
     # show any warnings
     _show_init_warnings(imp_ok, conf_ok)
     _pr_output("<h4>Notebook initialization complete</h4>")
+    logger.info("Notebook initialization complete")
 
 
 def _show_init_warnings(imp_ok, conf_ok):
@@ -522,6 +535,7 @@ def list_default_imports():
             _pr_output(import_line)
     for imp_item in _MP_IMPORT_ALL:
         _pr_output(f"from {imp_item['module_name']} import *")
+        logger.info("from %s import *", imp_item["module_name"])
 
 
 def _extract_pkg_name(
@@ -590,10 +604,13 @@ def _global_imports(
                 _import_extras(nm_spc=namespace, extra_imports=extra_imports)
             )
 
-        _pr_output("Imported:", ", ".join(imp for imp in import_list if imp))
+        imported_items = f"Imported:{', '.join(imp for imp in import_list if imp)}"
+        _pr_output(imported_items)
+        logger.info(imported_items)
         return True
     except ImportError as imp_err:
         display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
+        logger.error("Import failure", exc_info=True)
         return False
 
 
@@ -643,10 +660,12 @@ def _get_or_create_config() -> bool:
     mp_path = os.environ.get("MSTICPYCONFIG")
     if mp_path and not Path(mp_path).is_file():
         _err_output(_MISSING_MPCONFIG_ENV_ERR)
+        logger.warning("MSTICPYCONFIG set to %s but no file found", mp_path)
     if not mp_path or not Path(mp_path).is_file():
         mp_path = search_for_file("msticpyconfig.yaml", paths=[".", _HOME_PATH])
 
     if mp_path:
+        logger.info("msticpyconfig found %s", mp_path)
         errs: List[str] = []
         try:
             std_out_cap = io.StringIO()
@@ -654,6 +673,8 @@ def _get_or_create_config() -> bool:
                 errs, _ = validate_config(config_file=mp_path)
             if errs:
                 _pr_output(std_out_cap.getvalue())
+                for err in errs:
+                    logger.warning("config validation error %s", err)
             if _verify_no_azs_errors(errs):
                 # If the mpconfig has a Microsoft Sentinel config, return here
                 return True
@@ -666,6 +687,7 @@ def _get_or_create_config() -> bool:
         # pylint: enable=broad-except
 
     _pr_output("Could not find msticpyconfig.yaml in standard search.")
+    logger.warning("Could not find msticpyconfig.yaml in standard search.")
     if is_in_aml():
         _pr_output(
             "AML environment detected.",
