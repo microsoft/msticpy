@@ -903,8 +903,9 @@ def _get_mitre_categories(
         tactics_cache = Path(cache_folder).joinpath(_MITRE_TACTICS_CACHE)
         if _valid_cache(tech_cache) and _valid_cache(tactics_cache):
             try:
-                tech_df = pd.read_pickle(tech_cache)
-                tactics_df = pd.read_pickle(tactics_cache)
+                # caching location only used if sepcified.
+                tech_df = pd.read_pickle(tech_cache)  # nosec
+                tactics_df = pd.read_pickle(tactics_cache)  # nosec
                 return tech_df, tactics_df
             except pickle.PickleError:
                 pass
