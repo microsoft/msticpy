@@ -40,6 +40,7 @@ class MDATPDriver(OData):
 
         """
         super().__init__(**kwargs)
+        self._support_async = True
         cs_dict = _get_driver_settings(
             self.CONFIG_NAME, self._ALT_CONFIG_NAMES, instance
         )

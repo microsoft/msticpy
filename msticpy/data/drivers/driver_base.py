@@ -39,6 +39,8 @@ class DriverBase(ABC):
         self.data_environment = kwargs.get("data_environment")
         self._query_filter: Dict[str, Set[str]] = defaultdict(set)
         self._instance: Optional[str] = None
+        self._support_async = False
+        self.max_threads = kwargs.get("max_threads", 4)
 
     @property
     def loaded(self) -> bool:

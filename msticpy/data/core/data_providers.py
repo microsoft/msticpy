@@ -5,11 +5,13 @@
 # --------------------------------------------------------------------------
 """Data provider loader."""
 import re
+import concurrent.futures
 from collections import abc
 from datetime import datetime
 from functools import partial
 from itertools import tee
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Pattern, Union
 
 import pandas as pd
@@ -122,6 +124,7 @@ class QueryProvider:
 
         # Add any query files
         data_env_queries: Dict[str, QueryStore] = {}
+        self._query_paths = query_paths
         if driver.use_query_paths:
             data_env_queries.update(
                 self._read_queries_from_paths(query_paths=query_paths)
@@ -193,12 +196,13 @@ class QueryProvider:
 
         """
         # create a new instance of the driver class
-        new_driver = self.driver_class(**(self._driver_kwargs))
-        # connect
+        new_driver = QueryProvider(self.environment,
+                                   self._query_provider,
+                                   self._query_paths,
+                                   **kwargs)
         new_driver.connect(connection_str=connection_str, **kwargs)
-        # add to collection
         driver_key = alias or str(len(self._additional_connections))
-        self._additional_connections[driver_key] = new_driver
+        self._additional_connections[driver_key] = new_driver._query_provider
 
     @property
     def connected(self) -> bool:
@@ -449,22 +453,39 @@ class QueryProvider:
         """
         query_options = kwargs.pop("query_options", {}) or kwargs
         query_source = kwargs.pop("query_source", None)
-        result = self._query_provider.query(
-            query, query_source=query_source, **query_options
-        )
+
         if not self._additional_connections:
+            result = self._query_provider.query(
+               query, query_source=query_source, **query_options
+            )
             return result
+
         # run query against all connections
-        results = [result]
+        results = []
         print(f"Running query for {len(self._additional_connections)} connections.")
-        for con_name, connection in self._additional_connections.items():
-            print(f"{con_name}...")
-            try:
-                results.append(
-                    connection.query(query, query_source=query_source, **query_options)
-                )
-            except MsticpyDataQueryError:
-                print(f"Query {con_name} failed.")
+        if self._query_provider._support_async:
+            with ThreadPoolExecutor(max_workers=self._query_provider.max_threads) as executor:
+                all_tasks = {}
+                for con_name, connection in self._additional_connections.items():
+                    try:
+                        task = executor.submit(connection.query, query, query_source=query_source, **query_options)
+                        all_tasks[task] = con_name
+                    except MsticpyDataQueryError:
+                        print(f"Query {con_name} failed.")
+                        pass
+
+                for future in concurrent.futures.as_completed(all_tasks):
+                    result = future.result()
+                    result['MsticpyInstance'] = all_tasks[future]
+                    results.append(result)
+        else:
+            for con_name, connection in self._additional_connections.items():
+                try:
+                    query_res = connection.query(query, query_source=query_source, **query_options)
+                    query_res['MsticpyInstance'] = con_name
+                    results.append(query_res)
+                except MsticpyDataQueryError:
+                    print(f"Query {con_name} failed.")
         return pd.concat(results)
 
     def browse_queries(self, **kwargs):
