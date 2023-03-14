@@ -84,7 +84,7 @@ You can also browse through the sample notebooks referenced at the end of this d
 to see some of the functionality used in context. You can play with some of the package
 functions in this interactive demo on mybinder.org.
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Azure/Azure-Sentinel-Notebooks/master?filepath=%2Fnbdemo%2Fmsticpy%20demo.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Azure/Azure-Sentinel-Notebooks/master?filepath=A%20Tour%20of%20Cybersec%20notebook%20features.ipynb)
 
 ---
 
@@ -125,7 +125,7 @@ using either:
 - GeoLiteLookup - Maxmind Geolite (see <https://www.maxmind.com>)
 - IPStackLookup  - IPStack (see <https://ipstack.com>)
 
-<img src="./docs/source/visualization/_static/FoliumMap-01.png"
+<img src="./docs/source/visualization/_static/folium_sf_zoom.png"
   alt="Folium map"
   title="Plotting Geo IP Location" height="200" />
 
