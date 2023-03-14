@@ -101,7 +101,9 @@ def has_config(setting_path: str) -> bool:
 _DEFAULT_SENTINEL = "@@@NO-DEFAULT-VALUE@@@"
 
 
-def get_config(setting_path: str, default: Any = _DEFAULT_SENTINEL) -> Any:
+def get_config(
+    setting_path: Optional[str] = None, default: Any = _DEFAULT_SENTINEL
+) -> Any:
     """
     Return setting item for path.
 
@@ -123,6 +125,8 @@ def get_config(setting_path: str, default: Any = _DEFAULT_SENTINEL) -> Any:
     KeyError : if path not found and no default provided.
 
     """
+    if setting_path is None:
+        return _settings
     try:
         return _get_config(setting_path, _settings)
     except KeyError:

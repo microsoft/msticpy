@@ -578,40 +578,43 @@ def _global_imports(
     import_list = []
     imports, imports_all = _build_import_list(def_imports)
 
-    try:
-        for imp_pkg in imports:
+    for imp_pkg in imports:
+        try:
             _imp_from_package(nm_spc=namespace, **imp_pkg)
             import_list.append(_extract_pkg_name(imp_pkg))
-        for imp_pkg in imports_all:
+        except ImportError as imp_err:
+            display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
+            logger.exception("Import failure")
+    for imp_pkg in imports_all:
+        try:
             _imp_module_all(nm_spc=namespace, **imp_pkg)
             import_list.append(_extract_pkg_name(imp_pkg))
-        _check_and_reload_pkg(namespace, pd, _PANDAS_REQ_VERSION, "pd")
+        except ImportError as imp_err:
+            display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
+            logger.exception("Import failure")
+    _check_and_reload_pkg(namespace, pd, _PANDAS_REQ_VERSION, "pd")
 
-        if additional_packages:
-            pkg_success = check_and_install_missing_packages(
-                additional_packages, user=user_install
+    if additional_packages:
+        pkg_success = check_and_install_missing_packages(
+            additional_packages, user=user_install
+        )
+        if not pkg_success:
+            _err_output("One or more packages failed to install.")
+            _err_output(
+                "Please re-run init_notebook() with the parameter user_install=True."
             )
-            if not pkg_success:
-                _err_output("One or more packages failed to install.")
-                _err_output(
-                    "Please re-run init_notebook() with the parameter user_install=True."
-                )
-            # We want to force import lib to see anything that we've
-            # just installed.
-            importlib.invalidate_caches()
-        if extra_imports:
-            import_list.extend(
-                _import_extras(nm_spc=namespace, extra_imports=extra_imports)
-            )
+        # We want to force import lib to see anything that we've
+        # just installed.
+        importlib.invalidate_caches()
+    if extra_imports:
+        import_list.extend(
+            _import_extras(nm_spc=namespace, extra_imports=extra_imports)
+        )
 
-        imported_items = f"Imported:{', '.join(imp for imp in import_list if imp)}"
-        _pr_output(imported_items)
-        logger.info(imported_items)
-        return True
-    except ImportError as imp_err:
-        display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
-        logger.error("Import failure", exc_info=True)
-        return False
+    imported_items = f"Imported:{', '.join(imp for imp in import_list if imp)}"
+    _pr_output(imported_items)
+    logger.info(imported_items)
+    return True
 
 
 def _build_import_list(
@@ -742,8 +745,9 @@ def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
     added_imports = []
     if isinstance(extra_imports, str):
         extra_imports = [extra_imports]
+    params: List[Optional[str]]
     for imp_spec in extra_imports:
-        params: List[Optional[str]] = [None, None, None]
+        params = [None, None, None]
         for idx, param in enumerate(imp_spec.split(",")):
             params[idx] = param.strip() or None
 
@@ -751,10 +755,16 @@ def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
             raise MsticpyException(
                 f"First parameter in extra_imports is mandatory: {imp_spec}"
             )
-        _imp_from_package(nm_spc=nm_spc, pkg=params[0], tgt=params[1], alias=params[2])
-        added_imports.append(
-            _extract_pkg_name(pkg=params[0], tgt=params[1], alias=params[2])
-        )
+        try:
+            _imp_from_package(
+                nm_spc=nm_spc, pkg=params[0], tgt=params[1], alias=params[2]
+            )
+            added_imports.append(
+                _extract_pkg_name(pkg=params[0], tgt=params[1], alias=params[2])
+            )
+        except ImportError as imp_err:
+            display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
+            logger.exception("Import failure")
     return added_imports
 
 

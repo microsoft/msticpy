@@ -6,7 +6,7 @@
 """Logging global config."""
 import logging
 import os
-from typing import NamedTuple, Optional
+from typing import NamedTuple, Optional, Union
 
 from .._version import VERSION
 from ..common.pkg_config import get_config
@@ -23,6 +23,33 @@ class LoggingConfig(NamedTuple):
 
     log_file: Optional[str] = None
     log_level: int = logging.WARNING
+
+
+def set_logging_level(log_level: Union[int, str]):
+    """
+    Set global logging level.
+
+    Parameters
+    ----------
+    log_level : Union[int, str]
+        Either an integer - one of logging.INFO, logging.WARNING,
+        etc. or the name of a valid logging level.
+
+    Raises
+    ------
+    ValueError
+        If an invalid logging level is passed.
+
+    See Also
+    --------
+    logging
+
+    """
+    logger = logging.getLogger("msticpy")
+    log_level_int = logging.getLevelName(log_level or "WARNING")
+    if not isinstance(log_level_int, int):
+        raise ValueError(f"Invalid log level specified: {log_level}")
+    logger.setLevel(log_level_int)
 
 
 def setup_logging():
