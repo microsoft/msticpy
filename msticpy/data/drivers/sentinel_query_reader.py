@@ -71,10 +71,10 @@ def get_sentinel_queries_from_github(
 
     """
     if outputdir is None:
-        outputdir = Path.joinpath(Path("~").expanduser(), ".msticpy", "Azure-Sentinel")
+        outputdir = str(Path.joinpath(Path("~").expanduser(), ".msticpy", "Azure-Sentinel"))
 
     try:
-        with httpx.stream("GET", git_url, follow_redirects=True) as response:
+        with httpx.stream("GET", git_url, follow_redirects=True) as response:  # type: ignore
             progress_bar = tqdm(
                 desc="Downloading from Microsoft Sentinel Github",
                 initial=0,
@@ -93,14 +93,14 @@ def get_sentinel_queries_from_github(
             archive = zipfile.ZipFile(repo_zip, mode="r")
 
         # Only extract Detections and Hunting Queries Folder
-        for file in archive.namelist():
+        for file in archive.namelist():  # type: ignore
             if file.startswith(
                 (
                     "Azure-Sentinel-master/Detections/",
                     "Azure-Sentinel-master/Hunting Queries/",
                 )
             ):
-                archive.extract(file, path=outputdir)
+                archive.extract(file, path=outputdir)  # type: ignore
         print("Downloaded and Extracted Files successfully")
         return True
 
@@ -220,7 +220,7 @@ def _import_sentinel_query(
         print(error)
         print("path:", yaml_path)
         print("text:", yaml_text)
-        return None  # better alternative for this?
+        return SentinelQuery()
 
 
 def _format_query_name(qname: str) -> str:
@@ -261,7 +261,7 @@ def _organize_query_list_by_folder(query_list: list) -> dict:
         with it
 
     """
-    queries_by_folder = {}  #:Dict = {} #import
+    queries_by_folder = {}
     for query in query_list:
         if query.folder_name == "":
             print(query)
@@ -273,7 +273,7 @@ def _organize_query_list_by_folder(query_list: list) -> dict:
     return queries_by_folder
 
 
-def _create_queryfile_metadata(folder_name: str) -> dict:
+def _create_queryfile_metadata(folder_name: str) -> dict:  # type: ignore
     """
     Generate metadata section of the YAML file for the given folder_name.
 
@@ -379,6 +379,7 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
                     "query"
                 ] = cur_query.query
                 dict_to_write["sources"][formatted_qname]["metadata"]["parameters"] = {}
+            # pylint: disable=broad-exception-caught
             except Exception as format_error:
                 print(
                     """Failed to format query name - see error and source folder as well as 
@@ -421,8 +422,8 @@ def import_and_write_sentinel_queries(
     base_dir: str, query_type: str, output_folder: str
 ):
     """
-    Call appropriate functions to write YAML files for the given query_type within
-    the base_dir directory into the given output_folder.
+    Write YAML files for the given query_type within the base_dir directory.
+    YAML files output into the given output_folder.
 
     Parameters
     ----------
@@ -440,7 +441,7 @@ def import_and_write_sentinel_queries(
     print("get query_list")
     query_list = import_sentinel_queries(yaml_files, query_type=query_type)
     query_list = [
-        query for query in query_list if query is not None
+        query for query in query_list if query.query_id != ""
     ]  # may need better solution for failed query definitions
     print("write out")
     write_to_yaml(query_list, query_type, output_folder)
