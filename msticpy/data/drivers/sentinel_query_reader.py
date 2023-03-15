@@ -71,7 +71,9 @@ def get_sentinel_queries_from_github(
 
     """
     if outputdir is None:
-        outputdir = str(Path.joinpath(Path("~").expanduser(), ".msticpy", "Azure-Sentinel"))
+        outputdir = str(
+            Path.joinpath(Path("~").expanduser(), ".msticpy", "Azure-Sentinel")
+        )
 
     try:
         with httpx.stream("GET", git_url, follow_redirects=True) as response:  # type: ignore
@@ -94,7 +96,7 @@ def get_sentinel_queries_from_github(
 
         # Only extract Detections and Hunting Queries Folder
         for file in archive.namelist():  # type: ignore
-            if file.startswith(
+            if file.startswith(  # type: ignore
                 (
                     "Azure-Sentinel-master/Detections/",
                     "Azure-Sentinel-master/Hunting Queries/",
@@ -210,7 +212,6 @@ def _import_sentinel_query(
             print(yaml_path)
             print(yaml_text)
         return new_query
-
     # pylint: disable=broad-exception-caught
     except Exception as error:
         print(
@@ -288,7 +289,7 @@ def _create_queryfile_metadata(folder_name: str) -> dict:  # type: ignore
         Returns a generated metadata section for the YAML files in the given folder_name
 
     """
-    dict_to_write = {"metadata": {}, "defaults": {}, "sources": {}}
+    dict_to_write = {"metadata": {}, "defaults": {}, "sources": {}}  # type: ignore
     dict_to_write["metadata"]["version"] = 1  # write update version functionality
     dict_to_write["metadata"]["description"] = "Sentinel Alert Queries - " + folder_name
     dict_to_write["metadata"]["data_environments"] = [
@@ -382,7 +383,7 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
             # pylint: disable=broad-exception-caught
             except Exception as format_error:
                 print(
-                    """Failed to format query name - see error and source folder as well as 
+                    """Failed to format query name - see error and source folder as well as
                     current_query below"""
                 )
                 print(format_error)
@@ -422,8 +423,7 @@ def import_and_write_sentinel_queries(
     base_dir: str, query_type: str, output_folder: str
 ):
     """
-    Write YAML files for the given query_type within the base_dir directory.
-    YAML files output into the given output_folder.
+    Write out YAML files for the given query_type.
 
     Parameters
     ----------
