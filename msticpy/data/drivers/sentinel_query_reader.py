@@ -215,7 +215,7 @@ def _import_sentinel_query(
     # pylint: disable=broad-exception-caught
     except Exception as error:
         print(
-            """Failed - either YAML error or issue with creating attrs class. See error, 
+            """Failed - either YAML error or issue with creating attrs class. See error,
             path to the file, and text below."""
         )
         print(error)
