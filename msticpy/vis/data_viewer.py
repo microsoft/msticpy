@@ -10,7 +10,7 @@ from typing import Dict, List, Union
 import ipywidgets as widgets
 import pandas as pd
 from bokeh.io import output_notebook, push_notebook, show
-from bokeh.models import (
+from bokeh.models import (  # type: ignore[attr-defined]
     BooleanFilter,
     CDSView,
     ColumnDataSource,
