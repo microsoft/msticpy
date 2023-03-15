@@ -88,6 +88,8 @@ def get_sentinel_queries_from_github(
                     file.write(data)
             progress_bar.close()
 
+            # pylint: disable=consider-using-with
+
             archive = zipfile.ZipFile(repo_zip, mode="r")
 
         # Only extract Detections and Hunting Queries Folder
@@ -209,10 +211,11 @@ def _import_sentinel_query(
             print(yaml_text)
         return new_query
 
+    # pylint: disable=broad-exception-caught
     except Exception as error:
         print(
-            """Failed - either YAML error or issue with creating attrs class. See error, path to the file, 
-            and text below."""
+            """Failed - either YAML error or issue with creating attrs class. See error, 
+            path to the file, and text below."""
         )
         print(error)
         print("path:", yaml_path)
@@ -297,6 +300,7 @@ def _create_queryfile_metadata(folder_name: str) -> dict:
 
 
 def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool:
+    # pylint: disable=too-many-locals
     """
     Write out generated YAML files of the given query_list into the given output_folder.
 
@@ -392,9 +396,8 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
         except yaml.YAMLError as error:
             print(error)
             return False
-
-        try:  # Path(def_path).joinpath("save_queries")
-            #             Path(path).mkdir(parents=True, errors=False)
+        # pylint: disable=unspecified-encoding
+        try:
             def_path = Path.joinpath(Path(os.getcwd()))
             path_main = os.path.join(def_path, output_folder + "/")
             path_type = os.path.join(output_folder + "/" + query_type)
