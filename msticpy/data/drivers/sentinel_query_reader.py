@@ -19,13 +19,21 @@ import httpx
 import yaml
 from attr import attrib, attrs
 from tqdm.notebook import tqdm
+from ..._version import VERSION
+
+__version__ = VERSION
+__author__ = "Jannie Li"
+
+# pylint: disable=too-many-instance-attributes
+# pylint: disable=consider-using-with
+# pylint: disable=broad-exception-caught
+# pylint: disable=too-many-locals
+# pylint: disable=unspecified-encoding
 
 
 @attrs
 class SentinelQuery:
     """Attrs class that represents a Sentinel Query yaml file."""
-
-    # pylint: disable=too-many-instance-attributes
 
     query_id: str = attrib(factory=str)
     name: str = attrib(factory=str)
@@ -89,8 +97,6 @@ def get_sentinel_queries_from_github(
                     progress_bar.update(len(data))
                     file.write(data)
             progress_bar.close()
-
-            # pylint: disable=consider-using-with
 
             archive = zipfile.ZipFile(repo_zip, mode="r")
 
@@ -212,7 +218,7 @@ def _import_sentinel_query(
             print(yaml_path)
             print(yaml_text)
         return new_query
-    # pylint: disable=broad-exception-caught
+
     except Exception as error:
         print(
             """Failed - either YAML error or issue with creating attrs class. See error,
@@ -301,7 +307,6 @@ def _create_queryfile_metadata(folder_name: str) -> dict:  # type: ignore
 
 
 def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool:
-    # pylint: disable=too-many-locals
     """
     Write out generated YAML files of the given query_list into the given output_folder.
 
@@ -380,7 +385,7 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
                     "query"
                 ] = cur_query.query
                 dict_to_write["sources"][formatted_qname]["metadata"]["parameters"] = {}
-            # pylint: disable=broad-exception-caught
+
             except Exception as format_error:
                 print(
                     """Failed to format query name - see error and source folder as well as
@@ -398,7 +403,7 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
         except yaml.YAMLError as error:
             print(error)
             return False
-        # pylint: disable=unspecified-encoding
+
         try:
             def_path = Path.joinpath(Path(os.getcwd()))
             path_main = os.path.join(def_path, output_folder + "/")
