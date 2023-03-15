@@ -15,6 +15,7 @@ from bokeh.models import (  # type: ignore[attr-defined]
     LayoutDOM,
     Range,
     RangeTool,
+    GestureTool,
     Title,
 )
 
@@ -308,7 +309,8 @@ def create_range_tool(
     range_tool.overlay.fill_alpha = 0.2  # type: ignore
     rng_select.ygrid.grid_line_color = None
     rng_select.add_tools(range_tool)
-    rng_select.toolbar.active_multi = range_tool  # type: ignore
+    if isinstance(range_tool, GestureTool):
+        rng_select.toolbar.active_multi = range_tool  # type: ignore
     return rng_select
 
 

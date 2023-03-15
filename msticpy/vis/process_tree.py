@@ -25,6 +25,7 @@ from bokeh.models import (  # type: ignore[attr-defined]
     HoverTool,
     LayoutDOM,
     RangeTool,
+    GestureTool,
 )
 from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
 
@@ -534,7 +535,8 @@ def _create_vert_range_tool(
     rng_select.ygrid.grid_line_color = None
     rng_select.xgrid.grid_line_color = None
     rng_select.add_tools(range_tool)
-    rng_select.toolbar.active_multi = range_tool
+    if isinstance(range_tool, GestureTool):
+        rng_select.toolbar.active_multi = range_tool
     return rng_select
 
 
