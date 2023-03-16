@@ -13,7 +13,7 @@ from IPython.display import HTML, display
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyException
-from ..common.pkg_config import settings
+from ..common.pkg_config import get_config
 from ..data.drivers.mordor_driver import (
     MordorDriver,
     MordorEntry,
@@ -42,7 +42,7 @@ class MordorBrowser:
             download and are used as a local cache, by default True
 
         """
-        mdr_settings = settings.get("DataProviders", {}).get("Mordor", {})
+        mdr_settings = get_config("DataProviders.Mordor", {})
         self._save_folder = save_folder or mdr_settings.get("save_folder", ".")
 
         self._use_cached = use_cached

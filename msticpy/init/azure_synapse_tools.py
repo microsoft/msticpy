@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Help functions for Synapse pipelines notebooks."""
+import logging
 import os
 import re
 from pathlib import Path
@@ -14,10 +15,11 @@ import jwt
 
 from .._version import VERSION
 from ..auth.azure_auth import AzureCredEnvNames, az_connect
-from ..common import pkg_config as config
-from ..common.pkg_config import get_http_timeout
+from ..common.pkg_config import get_config, get_http_timeout, refresh_config, set_config
 from ..common.provider_settings import get_provider_settings
 from ..common.utility import mp_ua_header
+
+logger = logging.getLogger(__name__)
 
 
 class SparkUtilsPlaceHolder:
@@ -89,13 +91,15 @@ def init_synapse(
     """
     if not is_in_synapse():
         print("Not running in Azure Synapse environment.")
+        logger.info("Not running in Azure Synapse environment.")
         return
     mp_spark = MPSparkUtils()
     storage_svc = mp_spark.get_storage_service(storage_svc_name)
     if not storage_svc:
+        logger.error("No suitable linked storage service found.")
         raise RuntimeError("No suitable linked storage service found.")
     print(f"Using linked storage service {storage_svc.name}")
-
+    logger.info("Using linked storage service %s", storage_svc.name)
     print("Mounting storage...", end=" ")
     stor_acct_match = re.match(_AZ_NAME_PATTERN, storage_svc.url)
     mount_success = mount_container(
@@ -107,10 +111,14 @@ def init_synapse(
     if not mount_success:
         raise RuntimeError("Could not mount configuration data container.")
     print(f"Mounted {storage_svc.url}/{mp_spark.container} at {mp_spark.config_path}")
+    logger.info(
+        "Mounted %s/%s at %s", storage_svc.url, mp_spark.container, mp_spark.config_path
+    )
 
     # Set msticpy settings
     print("Configuring msticpy...", end=" ")
     _configure_mp_settings(mp_spark)
+    logger.info("msticpyconfig settings updated")
     print("settings,", end=" ")
 
     # Set up authentication parameters
@@ -118,24 +126,29 @@ def init_synapse(
         _set_mp_azure_settings(auth_method="msi", cloud=cloud)
         _set_msi_client_id(mp_spark=mp_spark, tenant_id=tenant_id)
         print("using managed identity,", end=" ")
+        logger.info("Using managed identity")
     else:
         # Publish SP creds from KeyVault
         _set_mp_azure_settings(auth_method="env", cloud=cloud)
         _set_azure_env_creds(mp_spark=mp_spark, tenant_id=tenant_id)
         print("using service principal,", end=" ")
+        logger.info("Using service principal")
     print()
 
     # authenticate with MSI or SP to linked KV
     creds = az_connect()
     if not creds:
+        logger.error("Could not authenticate to Azure.")
         raise RuntimeError("Could not authenticate to Azure.")
     print("Testing authentication...", end=" ")
 
     # check key retrieval
     if not _check_kv_key_retrieval():
+        logger.error("Could not retrieve secret from Key Vault.")
         raise RuntimeError("Could not retrieve secret from Key Vault.")
     print("Key Vault success.")
     print("Synapse initialization successful")
+    logger.info("Synapse initialization successful")
 
 
 def current_mounts() -> Dict[str, str]:
@@ -192,6 +205,7 @@ def mount_container(
     folder = f"{folder}/" if folder else ""
 
     storage_url = f"abfss://{container}@{store_acct_name}.{storage_root}{folder}"
+    logger.info("Mounting %s as %s", storage_url, mount_path)
     if mount_path in existing_mounts:
         print(f"path '{mount_path}' already mounted to {existing_mounts[mount_path]}")
         return existing_mounts[mount_path] == storage_url
@@ -339,16 +353,14 @@ class MPSparkUtils:
             LinkedService instance for the `svc_type`.
 
         """
-        try:
-            return next(
-                iter(
-                    lnk_svc
-                    for lnk_svc in self.linked_services
-                    if lnk_svc.svc_type == svc_type
-                )
-            )
-        except StopIteration:
-            return None
+        return next(
+            iter(
+                lnk_svc
+                for lnk_svc in self.linked_services
+                if lnk_svc.svc_type == svc_type
+            ),
+            None,
+        )
 
     def get_all_services_of_type(self, svc_type) -> List[LinkedService]:
         """
@@ -450,6 +462,13 @@ class MPSparkUtils:
         self.tenant_id = decoded_token["tid"]
         self.object_id = decoded_token["oid"]
         self.resource_id = decoded_token.get("xms_mirid")
+        logger.info(
+            "Workspace IDs retrieved: app_id: %s, tenant_id: %s, obj_id: %s, res_id: %s",
+            self.application_id,
+            self.tenant_id,
+            self.object_id,
+            self.resource_id,
+        )
 
 
 def _fetch_linked_services(ws_name: str):
@@ -468,11 +487,28 @@ def _fetch_linked_services(ws_name: str):
 def _set_azure_env_creds(mp_spark: MPSparkUtils, tenant_id: Optional[str] = None):
     """Publish Service Principal credentials to environment variables."""
     os.environ[AzureCredEnvNames.AZURE_TENANT_ID] = tenant_id or mp_spark.tenant_id
-    os.environ[AzureCredEnvNames.AZURE_CLIENT_ID] = mp_spark.get_kv_secret(
-        SynapseName.sp_client_id_name
+    client_id = mp_spark.get_kv_secret(SynapseName.sp_client_id_name)
+    if not client_id:
+        raise LookupError("Could not obtain client_id from Key Vault.")
+    os.environ[AzureCredEnvNames.AZURE_CLIENT_ID] = client_id
+    client_secret = mp_spark.get_kv_secret(SynapseName.sp_client_sec_name)
+    if not client_secret:
+        raise LookupError("Could not obtain client_secret from Key Vault.")
+    os.environ[AzureCredEnvNames.AZURE_CLIENT_SECRET] = client_secret
+    logger.info(
+        "Setting authentication env var %s=%s",
+        AzureCredEnvNames.AZURE_TENANT_ID,
+        tenant_id or mp_spark.tenant_id,
     )
-    os.environ[AzureCredEnvNames.AZURE_CLIENT_SECRET] = mp_spark.get_kv_secret(
-        SynapseName.sp_client_sec_name
+    logger.info(
+        "Setting authentication env var %s=%s",
+        AzureCredEnvNames.AZURE_CLIENT_ID,
+        client_id,
+    )
+    logger.info(
+        "Setting authentication env var %s=%s",
+        AzureCredEnvNames.AZURE_CLIENT_SECRET,
+        "*" * len(client_secret),
     )
 
 
@@ -480,21 +516,36 @@ def _set_msi_client_id(mp_spark: MPSparkUtils, tenant_id: Optional[str] = None):
     """Publish Service Principal credentials to environment variables."""
     os.environ[AzureCredEnvNames.AZURE_TENANT_ID] = tenant_id or mp_spark.tenant_id
     os.environ[AzureCredEnvNames.AZURE_CLIENT_ID] = mp_spark.application_id
+    logger.info(
+        "Setting authentication env var %s=%s",
+        AzureCredEnvNames.AZURE_TENANT_ID,
+        tenant_id or mp_spark.tenant_id,
+    )
+    logger.info(
+        "Setting authentication env var %s=%s",
+        AzureCredEnvNames.AZURE_CLIENT_ID,
+        mp_spark.application_id,
+    )
 
 
 def _set_mp_azure_settings(auth_method: str, cloud: str = "global"):
     """Configure in-memory settings for MP Azure authn_methods."""
-    az_settings = config.settings.get("Azure")
+    az_settings = get_config("Azure", {})
     if not az_settings:
-        config.settings["Azure"] = {
-            "auth_methods": [auth_method],
-            "cloud": cloud,
-        }
+        set_config(
+            "Azure",
+            {
+                "auth_methods": [auth_method],
+                "cloud": cloud,
+            },
+        )
+        logger.info("Added Azure configuration to config.")
     else:
         curr_methods = az_settings.get("auth_methods", [])
         if auth_method in curr_methods:
             curr_methods.remove(auth_method)
         az_settings["auth_methods"] = [auth_method, *curr_methods]
+        logger.info("Added Azure configuration authentication methods.")
 
 
 def _check_kv_key_retrieval() -> bool:
@@ -505,22 +556,31 @@ def _check_kv_key_retrieval() -> bool:
             settings
             for settings in ti_settings.values()
             if settings.args and "AuthKey" in settings.args
-        )
+        ),
+        None,
     )
+    if prov_settings is None:
+        logger.warning("No provider settings to test Key Vault connection.")
+        return False
     value = prov_settings.args.get("AuthKey")
     return value is not None
 
 
 def _configure_mp_settings(mp_spark: MPSparkUtils):
     """Set msticpyconfig and GeoIPLite dbfolder paths."""
-    os.environ["MSTICPYCONFIG"] = str(
-        mp_spark.config_path.joinpath("msticpyconfig.yaml")
-    )
+    mp_path = mp_spark.config_path.joinpath("msticpyconfig.yaml")
+    if not mp_path.is_file():
+        raise RuntimeError("No msticpyconfig.yaml found at", str(mp_spark.config_path))
+    os.environ["MSTICPYCONFIG"] = str(mp_path)
     os.environ["MSTICPYHOME"] = str(mp_spark.config_path)
-    config.refresh_config()
-
-    geolite_settings = (
-        config.settings.get("OtherProviders", {}).get("GeoIPLite", {}).get("Args")
-    )
+    before_config_keys = len(get_config())
+    refresh_config()
+    if len(get_config()) > before_config_keys:
+        sections = ", ".join(get_config().keys())
+        logger.warning(
+            "Possible problem loading msticpyconfig. Sections loaded: %s",
+            sections,
+        )
+    geolite_settings = get_config("OtherProviders.GeoIPLite.Args", None)
     if geolite_settings:
-        geolite_settings["DBFolder"] = str(mp_spark.config_path)
+        set_config("OtherProviders.GeoIPLite.Args.DBFolder", str(mp_spark.config_path))
