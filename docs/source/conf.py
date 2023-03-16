@@ -62,8 +62,8 @@ extensions = [
     # "sphinx.ext.githubpages",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosectionlabel",
-    "sphinx.ext.intersphinx",
-    "seed_intersphinx_mapping",
+    # "sphinx.ext.intersphinx",
+    # "seed_intersphinx_mapping",
 ]
 
 autosectionlabel_prefix_document = True
@@ -238,6 +238,7 @@ autodoc_mock_imports = [
     "azure.storage.blob",
     "azure.storage",
     "bokeh",
+    "bs4",
     "dnspython",
     "dns",
     "folium",
