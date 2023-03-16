@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data query definition reader."""
+from itertools import chain
 from pathlib import Path
 from typing import Any, Dict, Iterable, Tuple
 
@@ -31,11 +32,14 @@ def find_yaml_files(source_path: str, recursive: bool = True) -> Iterable[Path]:
     Returns
     -------
     Iterable[str]
-        File paths of yanl files found.
+        File paths of yaml files found.
 
     """
     recurse_pfx = "**/" if recursive else ""
-    file_glob = Path(source_path).glob(f"{recurse_pfx}*.yaml")
+    file_glob = chain(
+        Path(source_path).glob(f"{recurse_pfx}*.yaml"),
+        Path(source_path).glob(f"{recurse_pfx}*.yml"),
+    )
     for file_path in file_glob:
         if not file_path.is_file():
             continue
@@ -49,7 +53,7 @@ def read_query_def_file(query_file: str) -> Tuple[Dict, Dict, Dict]:
     Parameters
     ----------
     query_file : str
-        Path to yaml query defintion file
+        Path to yaml query definition file
 
     Returns
     -------
