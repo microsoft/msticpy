@@ -562,15 +562,15 @@ def test_query_paths(mode):
         check.is_true(hasattr(qry_prov, data_family))
 
     # Custom paths in settings
-    current_settings = deepcopy(pkg_config.settings.get("QueryDefinitions"))
+    current_settings = deepcopy(pkg_config._settings.get("QueryDefinitions"))
     if not current_settings:
-        pkg_config.settings["QueryDefinitions"] = {"Custom": query_paths}
+        pkg_config._settings["QueryDefinitions"] = {"Custom": query_paths}
     elif not current_settings.get("Custom"):
-        pkg_config.settings["QueryDefinitions"]["Custom"] = query_paths
+        pkg_config._settings["QueryDefinitions"]["Custom"] = query_paths
     else:
-        pkg_config.settings["QueryDefinitions"]["Custom"].extend(query_paths)
+        pkg_config._settings["QueryDefinitions"]["Custom"].extend(query_paths)
 
-    check.greater_equal(len(pkg_config.settings["QueryDefinitions"]["Custom"]), 1)
+    check.greater_equal(len(pkg_config._settings["QueryDefinitions"]["Custom"]), 1)
 
     qry_prov = QueryProvider("Kusto")
     check.greater_equal(len(qry_prov.list_queries()), 13)
@@ -581,4 +581,4 @@ def test_query_paths(mode):
         "IntegAuthCluster2",
     ):
         check.is_true(hasattr(qry_prov, data_family))
-    pkg_config.settings.update(current_settings)
+    pkg_config._settings["QueryDefinitions"] = current_settings
