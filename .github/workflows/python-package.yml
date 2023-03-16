@@ -156,7 +156,7 @@ jobs:
             ${{ runner.os }}-build-mypy
       - name: mypy
         run: |
-          mypy --ignore-missing-imports --follow-imports=silent --show-column-numbers --junit-xml junit/mypy-test-${{ matrix.python-version }}-results.xml msticpy
+          mypy --ignore-missing-imports --follow-imports=silent --show-column-numbers --show-error-end --show-error-context --disable-error-code annotation-unchecked --junit-xml junit/mypy-test-${{ matrix.python-version }}-results.xml msticpy
         if: ${{ always() }}
       - name: Upload mypy test results
         uses: actions/upload-artifact@v2

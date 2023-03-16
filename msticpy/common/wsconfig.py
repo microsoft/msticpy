@@ -16,8 +16,8 @@ import ipywidgets as widgets
 from IPython.display import display
 
 from .._version import VERSION
-from . import pkg_config
 from .exceptions import MsticpyUserConfigError
+from .pkg_config import get_config, refresh_config
 from .utility import export, is_valid_uuid, md, md_warn
 
 __version__ = VERSION
@@ -242,7 +242,7 @@ class WorkspaceConfig:
             Dictionary of workspaces with workspace and tenantIds.
 
         """
-        ws_settings = pkg_config.settings.get("AzureSentinel", {}).get("Workspaces")
+        ws_settings = get_config("AzureSentinel", {}).get("Workspaces")
         return (
             {
                 ws_name: {
@@ -312,7 +312,7 @@ class WorkspaceConfig:
             self._config_file = self._search_for_file("**/msticpyconfig.yaml")
         if self._config_file:
             os.environ["MSTICPYCONFIG"] = self._config_file
-            pkg_config.refresh_config()
+            refresh_config()
             self._read_pkg_config_values(workspace_name=workspace)
             return
         # Finally, throw an exception (unless non-interactive)
@@ -328,7 +328,7 @@ class WorkspaceConfig:
             )
 
     def _read_pkg_config_values(self, workspace_name: str = None):
-        as_settings = pkg_config.settings.get("AzureSentinel")
+        as_settings = get_config("AzureSentinel", {})
         if not as_settings:
             return {}
         ws_settings = as_settings.get("Workspaces")  # type: ignore

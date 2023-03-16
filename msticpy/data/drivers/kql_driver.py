@@ -420,15 +420,13 @@ class KqlDriver(DriverBase):
     def _set_kql_env_option(option, value):
         """Set an item in the KqlMagic main config environment variable."""
         kql_config = os.environ.get(_KQL_ENV_OPTS, "")
-        print(kql_config)
         current_opts = {
             opt.split("=")[0].strip(): opt.split("=")[1]
             for opt in kql_config.split(";")
         }
-        print(current_opts)
         current_opts[option] = value
         kql_config = ";".join(f"{opt}={val}" for opt, val in current_opts.items())
-        print(kql_config)
+        # print(kql_config) - replace with logger
         os.environ[_KQL_ENV_OPTS] = kql_config
 
     @staticmethod
