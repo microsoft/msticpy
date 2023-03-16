@@ -118,7 +118,10 @@ def _build_client_secret_client(
     client_id = kwargs.pop("client_id", None)
     client_secret = kwargs.pop("client_secret", None)
     if not client_secret or not client_id:
-        raise MsticpyAzureConfigError("Client secret and client id are required.")
+        print(
+            "'client_id' and 'client_secret' parameters are required",
+            "for clientsecret authentication type.",
+        )
     return ClientSecretCredential(
         authority=aad_uri,
         tenant_id=tenant_id,  # type: ignore
