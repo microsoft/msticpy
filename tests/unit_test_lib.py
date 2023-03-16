@@ -65,7 +65,7 @@ def custom_mp_config(
         with FileLock(_lock_file_path):
             os.environ[pkg_config._CONFIG_ENV_VAR] = str(mp_path)
             pkg_config.refresh_config()
-            yield pkg_config.settings
+            yield pkg_config._settings
     finally:
         if not current_path:
             del os.environ[pkg_config._CONFIG_ENV_VAR]

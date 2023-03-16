@@ -426,6 +426,30 @@ def test_build_mde_win_tree_dict_schema():
     }
 
 
+def test_text_process_tree():
+    schema = dict(
+        time_stamp="TimeGenerated",
+        process_name="NewProcessName",
+        process_id="NewProcessId",
+        parent_name="ParentProcessName",
+        parent_id="ProcessId",
+        logon_id="SubjectLogonId",
+        target_logon_id="TargetLogonId",
+        cmd_line="CommandLine",
+        user_name="SubjectUserName",
+        path_separator="\\",
+        user_id="SubjectUserSid",
+        event_id_column="EventID",
+        event_id_identifier=4688,
+        host_name_column="Computer",
+    )
+    p_tree = pt_build.build_process_tree(
+        testdf_win, schema=schema, show_summary=True, debug=True
+    )
+    tree_txt = pt_util.tree_to_text(p_tree, schema=schema)
+    assert len(tree_txt.split("\n")) == 5028
+
+
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "ProcessTree.ipynb"
 _MP_CONFIG_PATH = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
