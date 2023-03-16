@@ -252,7 +252,7 @@ def test_set_mp_azure_settings():
 
     with custom_mp_config(mp_config):
         prev_auth_methods = pkg_config.get_config("Azure").get("auth_methods").copy()
-        del pkg_config.settings["Azure"]
+        del pkg_config._settings["Azure"]
         synapse._set_mp_azure_settings("env")
         auth_methods = pkg_config.get_config("Azure").get("auth_methods")
         check.equal(auth_methods[0], "env")

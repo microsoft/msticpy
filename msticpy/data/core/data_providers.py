@@ -16,8 +16,8 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 from ..._version import VERSION
-from ...common import pkg_config as config
 from ...common.exceptions import MsticpyDataQueryError
+from ...common.pkg_config import get_config
 from ...common.utility import export, valid_pyname
 from ...nbwidgets import QueryTime
 from ..drivers import DriverBase, import_driver
@@ -643,9 +643,7 @@ class QueryProvider:
 
     def _read_queries_from_paths(self, query_paths) -> Dict[str, QueryStore]:
         """Fetch queries from YAML files in specified paths."""
-        settings: Dict[str, Any] = config.settings.get(  # type: ignore
-            "QueryDefinitions"
-        )  # type: ignore
+        settings: Dict[str, Any] = get_config("QueryDefinitions", {})
         all_query_paths: List[Union[Path, str]] = []
         for def_qry_path in settings.get("Default"):  # type: ignore
             # only read queries from environment folder

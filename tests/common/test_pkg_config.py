@@ -25,10 +25,7 @@ _TEST_DATA = get_test_data_path()
 
 def test_load_default():
     """Test load default settings."""
-    check.is_true(hasattr(pkg_config, "settings"))
-    check.is_true(hasattr(pkg_config, "default_settings"))
-    check.is_true(hasattr(pkg_config, "custom_settings"))
-    settings = pkg_config.settings
+    settings = pkg_config._settings
     check.is_in("QueryDefinitions", settings)
     check.is_in("Default", settings["QueryDefinitions"])
     check.equal(1, len(settings["QueryDefinitions"]["Default"]))
@@ -44,10 +41,7 @@ def test_custom_config():
     """Test load queries from custom path."""
     test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
     with custom_mp_config(test_config1):
-        check.is_true(hasattr(pkg_config, "settings"))
-        check.is_true(hasattr(pkg_config, "default_settings"))
-        check.is_true(hasattr(pkg_config, "custom_settings"))
-        settings = pkg_config.settings
+        settings = pkg_config._settings
 
         # Query Definitions
         check.is_in("QueryDefinitions", settings)
@@ -140,12 +134,12 @@ def test_validate_config():
         os.environ["MAXMIND_AUTH"] = xf_auth_save
 
 
-_HTTP_TEST_METHOD = [
+_HTTP_TEST_METHOD = (
     "timeout-kwarg",
     "def_timeout-kwarg",
     "settings",
-]
-_TEST_HTTP_TIMEOUT = [
+)
+_TEST_HTTP_TIMEOUT = (
     (1, httpx.Timeout(1), "int-1"),
     (httpx.Timeout(30), httpx.Timeout(30), "httpxTO30"),
     ({"connect": 30, "timeout": 20}, httpx.Timeout(20, connect=30), "dict"),
@@ -153,14 +147,13 @@ _TEST_HTTP_TIMEOUT = [
     ((20, 30), httpx.Timeout(20, connect=30), "tuple"),
     ("something_else", httpx.Timeout(None), "other"),
     (None, httpx.Timeout(None), "none"),
-]
-
+)
 _TO_IDS = [item[2] for item in _TEST_HTTP_TIMEOUT]
 
 
 @pytest.mark.parametrize("method", _HTTP_TEST_METHOD, ids=_HTTP_TEST_METHOD)
 @pytest.mark.parametrize("value, expected, test_id", _TEST_HTTP_TIMEOUT, ids=_TO_IDS)
-def test_get_http_timeout(method, value, expected, test_id, monkeypatch):
+def test_get_http_timeout(method, value, expected, test_id):
     """Test get_http_timeout function with combo of parameters."""
     del test_id
     if method == "timeout-kwarg":
@@ -168,9 +161,70 @@ def test_get_http_timeout(method, value, expected, test_id, monkeypatch):
     if method == "def_timeout-kwarg":
         check.equal(expected, pkg_config.get_http_timeout(**{"def_timeout": value}))
     if method == "settings":
-        if value is None:
-            # also test with no settings
-            monkeypatch.setattr(pkg_config, "settings", {"http_timeout": value})
-            check.equal(expected, pkg_config.get_http_timeout(**{"def_timeout": value}))
-        monkeypatch.setattr(pkg_config, "settings", {"http_timeout": value})
+        pkg_config.set_config("http_timeout", value)
         check.equal(expected, pkg_config.get_http_timeout(**{"def_timeout": value}))
+
+
+_TEST_GET_SETTINGS = (
+    (("AzureSentinel", None), dict),
+    (
+        ("AzureSentinel.Workspaces.Default.WorkspaceId", None),
+        "52b1ab41-869e-4138-9e40-2a4457f09bf3",
+    ),
+    (("AzureSentinel.Workspaces.NotExist.WorkspaceId", None), KeyError),
+    (("AzureSentinel.Workspaces.NotExist.WorkspaceId", "testval"), "testval"),
+)
+
+
+@pytest.mark.parametrize("test, expected", _TEST_GET_SETTINGS)
+def test_get_config(test, expected):
+    """Test pkg_config.get_config."""
+    key, default = test
+    test_config = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
+    result = None
+    with custom_mp_config(test_config):
+        if default:
+            result = pkg_config.get_config(key, default)
+        elif isinstance(expected, type) and issubclass(expected, Exception):
+            with pytest.raises(expected):
+                pkg_config.get_config(key)
+        else:
+            result = pkg_config.get_config(key)
+
+    if result:
+        if isinstance(expected, type):
+            check.is_instance(result, expected)
+        else:
+            check.equal(result, expected)
+
+
+_TEST_SET_SETTINGS = (
+    (
+        "AzureSentinel.Workspaces.Default.WorkspaceId",
+        "{TEST-GUID}",
+        False,
+        "{TEST-GUID}",
+    ),
+    ("AzureSentinel.Workspaces.NotExist.WorkspaceId", "{TEST-GUID}", False, KeyError),
+    (
+        "AzureSentinel.Workspaces.NotExist.WorkspaceId",
+        "{TEST-GUID}",
+        True,
+        "{TEST-GUID}",
+    ),
+)
+
+
+@pytest.mark.parametrize("key, value, create, expected", _TEST_SET_SETTINGS)
+def test_set_config(key, value, create, expected):
+    """Test pkg_config.set_config."""
+    test_config = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
+    result = None
+    with custom_mp_config(test_config):
+        if isinstance(expected, type) and issubclass(expected, Exception):
+            with pytest.raises(expected):
+                pkg_config.set_config(key, value, create_path=create)
+        else:
+            result = pkg_config.set_config(key, value, create)
+    if result:
+        check.equal(result, expected)

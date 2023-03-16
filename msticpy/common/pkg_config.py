@@ -11,11 +11,8 @@ Optionally reads custom configuration from file specified in environment
 variable `MSTICPYCONFIG`. If this is not defined the package will look for
 a file `msticpyconfig.yaml` in the current directory.
 
-Default settings are accessible as an attribute `default_settings`.
-Custom settings are accessible as an attribute `custom_settings`.
-Consolidated settings are accessible as an attribute `settings`.
-
 """
+import contextlib
 import numbers
 import os
 from importlib.util import find_spec
@@ -43,9 +40,9 @@ _AZ_CLI = "AzureCLI"
 _HOME_PATH = "~/.msticpy/"
 
 # pylint: disable=invalid-name
-default_settings: Dict[str, Any] = {}
-custom_settings: Dict[str, Any] = {}
-settings: Dict[str, Any] = {}
+_default_settings: Dict[str, Any] = {}
+_custom_settings: Dict[str, Any] = {}
+_settings: Dict[str, Any] = {}
 
 
 def _get_current_config() -> Callable[[Any], Optional[str]]:
@@ -77,17 +74,36 @@ def current_config_path() -> Optional[str]:
     return _CURRENT_CONF_FILE(None)
 
 
+def get_settings():
+    """Return the current settings."""
+    return _settings
+
+
 def refresh_config():
     """Re-read the config settings."""
     # pylint: disable=global-statement
-    global default_settings, custom_settings, settings
-    default_settings = _get_default_config()
-    custom_settings = _get_custom_config()
-    custom_settings = _create_data_providers(custom_settings)
-    settings = _consolidate_configs(default_settings, custom_settings)
+    global _default_settings, _custom_settings, _settings
+    _default_settings = _get_default_config()
+    _custom_settings = _get_custom_config()
+    _custom_settings = _create_data_providers(_custom_settings)
+    _settings = _consolidate_configs(_default_settings, _custom_settings)
 
 
-def get_config(setting_path: str) -> Any:
+def has_config(setting_path: str) -> bool:
+    """Return True if a settings path exists."""
+    try:
+        _get_config(setting_path=setting_path, settings_dict=_settings)
+        return True
+    except KeyError:
+        return False
+
+
+_DEFAULT_SENTINEL = "@@@NO-DEFAULT-VALUE@@@"
+
+
+def get_config(
+    setting_path: Optional[str] = None, default: Any = _DEFAULT_SENTINEL
+) -> Any:
     """
     Return setting item for path.
 
@@ -96,14 +112,27 @@ def get_config(setting_path: str) -> Any:
     setting_path : str
         Path to setting item expressed as dot-separated
         string
+    default : Any
+        Default value to return if setting does not exist.
 
     Returns
     -------
     Any
         The item at the path location.
 
+    Exceptions
+    ----------
+    KeyError : if path not found and no default provided.
+
     """
-    return _get_config(setting_path, settings)
+    if setting_path is None:
+        return _settings
+    try:
+        return _get_config(setting_path, _settings)
+    except KeyError:
+        if default != _DEFAULT_SENTINEL:
+            return default
+        raise
 
 
 def _get_config(setting_path: str, settings_dict: Dict[str, Any]) -> Any:
@@ -117,7 +146,7 @@ def _get_config(setting_path: str, settings_dict: Dict[str, Any]) -> Any:
     return cur_node
 
 
-def set_config(setting_path: str, value: Any):
+def set_config(setting_path: str, value: Any, create_path: bool = False):
     """
     Set setting value for path.
 
@@ -128,23 +157,49 @@ def set_config(setting_path: str, value: Any):
         string
     value : Any
         The value to set.
+    create_path : bool
+        If True create any missing elements in the settings
+        path.
+
+    Returns
+    -------
+    Any :
+        The current settings node with new value.
+
+    Exceptions
+    ----------
+    KeyError : if not found and no default provided.
 
     """
-    return _set_config(setting_path, settings, value)
+    return _set_config(setting_path, _settings, value, create_path)
 
 
-def _set_config(setting_path: str, settings_dict, value: Any) -> Any:
+def _set_config(
+    setting_path: str, settings_dict: Dict[str, Any], value: Any, create_path: bool
+) -> Any:
     """Set `setting_path` in `settings_dict` to `value`."""
     path_elems = setting_path.split(".")
+    parent_path = ".".join(path_elems[:-1])
+    key_name = path_elems[-1]
+    with contextlib.suppress(KeyError):
+        parent_node = _get_config(parent_path, settings_dict)
+        parent_node[key_name] = value
+        return parent_node[key_name]
     cur_node = settings_dict
-    for elem in path_elems:
-        if elem in cur_node:
-            cur_node[elem] = value
-            break
-        cur_node = cur_node.get(elem, None)
-        if cur_node is None:
+    # if there are any intermediate missing paths
+    # and create_path is true, add these.
+    for elem in path_elems[:-1]:
+        next_node = cur_node.get(elem)
+        if next_node is None:
+            if create_path:
+                cur_node[elem] = {}
+                cur_node = cur_node[elem]
+                continue
             raise KeyError(f"{elem} value of {setting_path} is not a valid path")
-    return cur_node
+        cur_node = next_node
+    # set the current node's value
+    cur_node[key_name] = value
+    return cur_node[key_name]
 
 
 def _del_config(setting_path: str, settings_dict) -> Any:
@@ -152,8 +207,8 @@ def _del_config(setting_path: str, settings_dict) -> Any:
     path_elems = setting_path.split(".")
     cur_node = settings_dict
     current_value = None
-    for elem in path_elems:
-        if elem in cur_node:
+    for idx, elem in enumerate(path_elems):
+        if idx == len(path_elems) - 1:
             current_value = cur_node[elem]
             del cur_node[elem]
             break
@@ -285,7 +340,7 @@ def _translate_legacy_settings(
     """Map legacy settings to new location."""
     for src, target in translate.items():
         src_value = _get_config(src, mp_config)
-        _set_config(target, mp_config, src_value)
+        _set_config(target, mp_config, src_value, True)
         _del_config(src, mp_config)
     return mp_config
 
@@ -295,7 +350,7 @@ def get_http_timeout(
 ) -> httpx.Timeout:
     """Return timeout from settings or overridden in `kwargs`."""
     timeout_params = kwargs.get(
-        "timeout", kwargs.get("def_timeout", settings.get("http_timeout", None))  # type: ignore
+        "timeout", kwargs.get("def_timeout", get_config("http_timeout", None))  # type: ignore
     )  # type: ignore
     if isinstance(timeout_params, dict):
         timeout_params = {
@@ -342,7 +397,7 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
     if config_file:
         mp_config = _read_config_file(config_file)
     if not (mp_config or config_file):
-        mp_config = settings
+        mp_config = _settings
 
     if not isinstance(mp_config, dict):
         raise TypeError("Unknown format for configuration settings.")

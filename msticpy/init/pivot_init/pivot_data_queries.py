@@ -13,7 +13,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 import pandas as pd
 
 from ..._version import VERSION
-from ...common.pkg_config import settings
+from ...common.pkg_config import get_config
 from ...common.timespan import TimeSpan
 from ...datamodel import entities
 from ..pivot_core.pivot_container import PivotContainer
@@ -36,16 +36,16 @@ _DEF_IGNORE_PARAM = {"start", "end"}
 
 # Settings retrieval
 def _use_v1_query_naming() -> bool:
-    return settings.get("Pivots", {}).get("UseV1QueryNames", False)
+    return get_config("Pivots.UseV1QueryNames", False)
 
 
 def _use_query_family_prefix() -> bool:
-    return settings.get("Pivots", {}).get("UseQueryFamily", False)
+    return get_config("Pivots.UseQueryFamily", False)
 
 
 def _use_pivot_time() -> bool:
     """If user setting specifies use QP time setting."""
-    return not settings.get("Pivots", {}).get("UseQueryProviderTimeSpans", False)
+    return not get_config("Pivots.UseQueryProviderTimeSpans", False)
 
 
 _V1_TABLE_SHORT_NAMES = {
