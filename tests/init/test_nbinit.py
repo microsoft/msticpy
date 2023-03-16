@@ -21,6 +21,7 @@ from msticpy.init.nbinit import _get_or_create_config, _imp_module_all, init_not
 from ..unit_test_lib import TEST_DATA_PATH, custom_mp_config
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_nbinit_no_params():
     """Test init_notebook defaults."""
     ns_dict = {}
