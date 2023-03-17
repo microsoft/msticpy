@@ -77,6 +77,11 @@ TIProviders:
     Args:
     Primary: True
     Provider: "AzSTI"
+  Pulsedive:
+    Args:
+      AuthKey: "[PLACEHOLDER]"
+    Primary: True
+    Provider: Pulsedive
 ContextProviders:
   ServiceNow:
     Primary: True

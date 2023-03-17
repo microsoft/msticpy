@@ -13,8 +13,8 @@ import attr
 from attr import Factory
 
 from .._version import VERSION
-from . import pkg_config as config
 from .exceptions import MsticpyImportExtraError
+from .pkg_config import get_config, refresh_config
 
 try:
     from ..auth.secret_settings import SecretsClient
@@ -109,7 +109,7 @@ _SET_SECRETS_CLIENT: Callable[
 ] = get_secrets_client_func()
 # Create secrets client instance if SecretsClient can be imported
 # and config has KeyVault settings.
-if "KeyVault" in config.settings and config.settings["KeyVault"] and _SECRETS_ENABLED:
+if get_config("KeyVault", None) and _SECRETS_ENABLED:
     _SECRETS_CLIENT = _SET_SECRETS_CLIENT()
 
 
@@ -131,7 +131,7 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
     # pylint: disable=global-statement
     global _SECRETS_CLIENT
     # pylint: enable=global-statement
-    if "KeyVault" in config.settings and config.settings["KeyVault"]:
+    if get_config("KeyVault", None):
         if _SECRETS_CLIENT is None and _SECRETS_ENABLED:
             print(
                 "KeyVault enabled. Secrets access may require additional authentication."
@@ -139,14 +139,14 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
             _SECRETS_CLIENT = _SET_SECRETS_CLIENT()
     else:
         _SECRETS_CLIENT = None
-    section_settings = config.settings.get(config_section)
+    section_settings = get_config(config_section, None)
     if not section_settings:
         return {}
 
     settings = {}
     for provider, item_settings in section_settings.items():
         prov_args = item_settings.get("Args")
-        prov_settings = ProviderSettings(
+        prov_settings = ProviderSettings(  # type: ignore[call-arg]
             name=provider,
             description=item_settings.get("Description"),
             args=_get_setting_args(
@@ -164,7 +164,7 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
 
 def reload_settings():
     """Reload settings from config files."""
-    config.refresh_config()
+    refresh_config()
 
 
 def refresh_keyring():
@@ -334,7 +334,7 @@ def _fetch_setting(
                 + f" (provider {provider_name})"
             )
             return None
-        config_path = [config_section, provider_name, "Args", arg_name]
+        config_path = (config_section, provider_name, "Args", arg_name)
         return _SECRETS_CLIENT.get_secret_accessor(  # type:ignore
             ".".join(config_path)
         )

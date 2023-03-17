@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Lookup Status class."""
-from collections import namedtuple
 from enum import Enum
+from typing import NamedTuple, Optional
 
 from .._version import VERSION
 
@@ -13,7 +13,11 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-SanitizedObservable = namedtuple("SanitizedObservable", ["observable", "status"])
+class SanitizedObservable(NamedTuple):
+    """Encoded version of observable."""
+
+    observable: Optional[str]
+    status: Optional[str]
 
 
 class LookupStatus(Enum):

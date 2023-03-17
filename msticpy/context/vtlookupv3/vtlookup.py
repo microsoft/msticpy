@@ -302,8 +302,8 @@ class VTLookup:
         ):
             raise SyntaxError("Invalid value for observable or ioc_type")
 
-        observable, status = preprocess_observable(observable, ioc_type)
-        if observable is None:
+        pp_observable, status = preprocess_observable(observable, ioc_type)
+        if pp_observable is None:
             raise SyntaxError(f"{status} for observable value {observable}")
 
         if ioc_type not in self._VT_TYPE_MAP:
@@ -325,8 +325,8 @@ class VTLookup:
         # do the submission
         vt_api_type = self._VT_TYPE_MAP[ioc_type]
         vt_param = self._VT_API_TYPES[vt_api_type]
-        results, _ = self._vt_submit_request(observable, vt_param)
-        self._parse_vt_results(results, observable, ioc_type)
+        results, _ = self._vt_submit_request(pp_observable, vt_param)
+        self._parse_vt_results(results, pp_observable, ioc_type)
 
         # return as a list of dictionaries or a DataFrame
         if output == "dict":
@@ -653,7 +653,10 @@ class VTLookup:
         pp_observable = preprocess_observable(observable, ioc_type)
         if pp_observable.observable is None:
             self._add_invalid_input_result(
-                observable, ioc_type, pp_observable.status, idx
+                observable,
+                ioc_type,
+                pp_observable.status or "Unknown status from preprocess_observable",
+                idx,
             )
             self._print_status(
                 (
