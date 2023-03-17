@@ -5,14 +5,14 @@
 # --------------------------------------------------------------------------
 """Local Data Driver class - for testing and demos."""
 from pathlib import Path
-from typing import Union, Any, Dict, Optional, List
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 
-from .driver_base import DriverBase, QuerySource
-from ...common.pkg_config import settings
-from ...common.utility import export
 from ..._version import VERSION
+from ...common.pkg_config import get_config, has_config
+from ...common.utility import export
+from .driver_base import DriverBase, QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -38,13 +38,11 @@ class LocalDataDriver(DriverBase):
         self._debug = kwargs.get("debug", False)
         super().__init__(**kwargs)
 
-        # If data paths specified, use these
-        data_paths = kwargs.get("data_paths")
         self._paths: List[str] = ["."]
-        if data_paths:
+        if data_paths := kwargs.get("data_paths"):
             self._paths = [path.strip() for path in data_paths]
-        elif "LocalData" in settings:
-            self._paths = settings.get("LocalData", {}).get("data_paths")
+        elif has_config("DataProviders.LocalData"):
+            self._paths = get_config("LocalData.data_paths", self._paths)
 
         self.data_files: Dict[str, str] = self._get_data_paths()
         self._schema: Dict[str, Any] = {}
@@ -133,10 +131,13 @@ class LocalDataDriver(DriverBase):
                 f"Data file ({query}) for query {query_name} not found."
             )
         if file_path.endswith("csv"):
-            return pd.read_csv(
-                file_path, infer_datetime_format=True, parse_dates=["TimeGenerated"]
-            )
-        data_df = pd.read_pickle(file_path)
+            try:
+                return pd.read_csv(
+                    file_path, infer_datetime_format=True, parse_dates=["TimeGenerated"]
+                )
+            except ValueError:
+                return pd.read_csv(file_path)
+        data_df = pd.read_pickle(file_path)  # nosec
         if isinstance(data_df, pd.DataFrame):
             return data_df
         return f"{query} is not a DataFrame ({file_path})."

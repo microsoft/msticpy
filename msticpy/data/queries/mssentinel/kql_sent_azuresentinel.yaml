@@ -1,0 +1,229 @@
+metadata:
+  version: 1
+  description: Kql Sentinel Azure Sentinel and Bookmark Queries
+  data_environments: [LogAnalytics]
+  data_families: [AzureSentinel, MSSentinel]
+  tags: ["investigation", "bookmark", "dynamicsummary"]
+defaults:
+  metadata:
+    data_source: "bookmark"
+  parameters:
+    table:
+      description: Table name
+      type: str
+      default: "HuntingBookmark"
+    query_project:
+      description: Column project statement
+      type: str
+      default: ""
+    start:
+      description: Query start time
+      type: datetime
+    end:
+      description: Query end time
+      type: datetime
+    add_query_items:
+      description: Additional query clauses
+      type: str
+      default: ""
+sources:
+  list_bookmarks:
+    description: Retrieves list of bookmarks
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | extend QryResults = todynamic(QueryResultRow)
+        | extend Computer = QryResults["Computer"]
+        | extend Account = QryResults["Account"]
+        | extend Entities = QryResults.__entityMapping
+        | project-away QryResults
+        | where SoftDeleted == false
+        {add_query_items}'
+    parameters:
+  list_bookmarks_for_entity:
+    description: Retrieves bookmarks for entity string
+    metadata:
+      pivot:
+        short_name: bookmarks
+        direct_func_entities:
+          - Host
+          - Account
+          - IpAddress
+          - Url
+          - Dns
+    args:
+      query: '
+        let entity_str = case(
+        "{host_name}" != "na", "{host_name}",
+        "{account_name}" != "na", "{account_name}",
+        "{ip_address}" != "na", "{ip_address}",
+        "{domain}" != "na", "{domain}",
+        "{url}" != "na", "{url}",
+        "{entity_id}" != "na", "{entity_id}",
+        "no_entity_id"
+        );
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where QueryResultRow has entity_str
+        | extend QryResults = todynamic(QueryResultRow)
+        | extend Computer = QryResults["Computer"]
+        | extend Account = QryResults["Account"]
+        | extend Entities = QryResults.__entityMapping
+        | project-away QryResults
+        | where SoftDeleted == false
+        {add_query_items}'
+    parameters:
+      entity_id:
+        description: Identifier of entity
+        type: str
+        default: na
+      host_name:
+        description: Host name
+        type: str
+        default: na
+      account_name:
+        description: Account name
+        type: str
+        default: na
+      ip_address:
+        description: IP address
+        type: str
+        default: na
+      domain:
+        description: Domain name
+        type: str
+        default: na
+      url:
+        description: Url name
+        type: str
+        default: na
+  get_bookmark_by_id:
+    description: Retrieves a single Bookmark by BookmarkId
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        HuntingBookmark
+        | where BookmarkId =~ "{bookmark_id}"
+        | extend QryResults = todynamic(QueryResultRow)
+        | extend Computer = QryResults["Computer"]
+        | extend Account = QryResults["Account"]
+        | extend Entities = QryResults.__entityMapping
+        | project-away QryResults
+        | where SoftDeleted == false
+        {add_query_items}'
+    parameters:
+      bookmark_id:
+        description: Identifier of bookmark
+        type: str
+  get_bookmark_by_name:
+    description: Retrieves one or more Bookmarks by Bookmark Name
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where BookmarkName has "{bookmark_name}"
+        | extend QryResults = todynamic(QueryResultRow)
+        | extend Computer = QryResults["Computer"]
+        | extend Account = QryResults["Account"]
+        | extend Entities = QryResults.__entityMapping
+        | project-away QryResults
+        | where SoftDeleted == false
+        {add_query_items}'
+    parameters:
+      bookmark_name:
+        description: Name or part name of Bookmark
+        type: str
+  list_bookmarks_for_tags:
+    description: Retrieves Bookmark by one or mare Tags
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | mvexpand Tag=todynamic(Tags)
+        | where SoftDeleted == false
+        | where Tag in~ in ({bookmark_tags})
+        | extend QryResults = todynamic(QueryResultRow)
+        | extend Computer = QryResults["Computer"]
+        | extend Account = QryResults["Account"]
+        | extend Entities = QryResults.__entityMapping
+        | project-away QryResults, Tag
+        | distinct *
+        {add_query_items}'
+    parameters:
+      bookmark_tags:
+        description: Bookmark tags
+        type: list
+  get_dynamic_summary_by_id:
+    description: Retrieves Dynamic Summary by SummaryId
+    metadata:
+    args:
+      query: '
+        {table}
+        | where SummaryId == "{summary_id}"
+        | where SummaryStatus == "Active"
+        | summarize arg_max(TimeGenerated, *) by SummaryId
+        | union ( {table}
+        | where SummaryId == "{summary_id}" and SummaryDataType == "SummaryItem"
+        )
+        {add_query_items}'
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: DynamicSummary
+      summary_id:
+        description: Dynamic Summary ID
+        type: str
+  get_dynamic_summary_by_name:
+    description: Retrieves Dynamic Summary by Name
+    metadata:
+    args:
+      query: '
+        let summary_header = {table}
+        | where SummaryName == "{summary_name}" and SummaryStatus == "Active"
+        | summarize arg_max(TimeGenerated, *) by SummaryId;
+        summary_header
+        | union (
+        summary_header
+        | project SummaryId
+        | join (
+        {table}
+        | where SummaryDataType == "SummaryItem"
+        ) on $left.SummaryId == $right.SummaryId
+        )
+        | project-away SummaryId1
+        {add_query_items}'
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: DynamicSummary
+      summary_name:
+        description: Dynamic Summary Name
+        type: str
+  list_dynamic_summaries:
+    description: Retrieves Dynamic Summaries by date range
+    metadata:
+    args:
+      query: '
+        {table}
+        | where TimeGenerated between(datetime({start}) .. datetime({end}))
+        | where SummaryStatus == "Active" or SummaryDataType == "SummaryItem"
+        {add_query_items}'
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: DynamicSummary

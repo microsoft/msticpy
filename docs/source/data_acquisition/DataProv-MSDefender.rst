@@ -41,6 +41,8 @@ The settings in the file should look like the following:
             ClientId: "CLIENT ID"
             ClientSecret: "CLIENT SECRET"
             TenantId: "TENANT ID"
+            UserName: "User Name"
+            Cloud: "global"
 
 
 We strongly recommend storing the client secret value
@@ -73,8 +75,7 @@ an instance string to the "MicrosoftDefender" section name.
       MicrosoftDefender-Tenant2:
           Args:
             ClientId: "CLIENT ID"
-            ClientSecret:
-                KeyVault:
+            UserName: "USER NAME"
             TenantId: "TENANT ID"
 
 
@@ -86,6 +87,44 @@ Loading a QueryProvider for M365 Defender
         mdatp_prov = QueryProvider("M365D")
 
 You can also use the aliases "MDE" and "MDATP".
+
+Specifying the Defender Cloud Instance to Connect to
+----------------------------------------------------
+
+If connecting to the Defender API to run queries there are a number of
+different endpoints you can connect to.
+Which one is most applicable will depend on your location and which
+cloud you are using.
+
+By default 'https://api.securitycenter.microsoft.com/' or
+'https://api.security.microsoft.com/' is used, but others can be
+specified either in your MSTICPy config file, or by passing
+in the name with the cloud keyword:
+
+.. code:: ipython3
+
+        mdatp_prov = QueryProvider("MDE", cloud="gcc")
+
+
+If using an MDE-specific API endpoint, the "name" (the first parameter to QueryProvider in the example above) must be "MDE".
+
++----------+----------------------------------------------+----------------------------------------+
+| Cloud    | MDE                                          | M365D                                  |
++==========+==============================================+========================================+
+| global   | https://api.securitycenter.microsoft.com/    | https://api.security.microsoft.com/    |
++----------+----------------------------------------------+----------------------------------------+
+| uk       | https://api-uk.securitycenter.microsoft.com/ | https://api-uk.security.microsoft.com/ |
++----------+----------------------------------------------+----------------------------------------+
+| us       | https://api-us.securitycenter.microsoft.com/ | https://api-us.security.microsoft.com/ |
++----------+----------------------------------------------+----------------------------------------+
+| eu       | https://api-eu.securitycenter.microsoft.com/ | https://api-eu.security.microsoft.com/ |
++----------+----------------------------------------------+----------------------------------------+
+| gcc      | https://api-gcc.securitycenter.microsoft.us/ | NA                                     |
++----------+----------------------------------------------+----------------------------------------+
+| gcc-high | https://api-gov.securitycenter.microsoft.us/ | NA                                     |
++----------+----------------------------------------------+----------------------------------------+
+| dod      | https://api-gov.securitycenter.microsoft.us/ | NA                                     |
++----------+----------------------------------------------+----------------------------------------+
 
 Connecting to M365 Defender
 ---------------------------
@@ -106,6 +145,15 @@ an instance name when you call connect.
 
         mdatp_prov.connect(instance="Tenant2")
 
+If you want to use delegated authentication for your application
+you can specify this when you call connect. By default, this will
+attempt to use browser-based authentication, however you can also
+use device code authentication (needed if using Azure ML) by setting
+auth_type to "device".
+
+.. code:: ipython3
+
+        mdatp_prov.connect(delegated_auth=True, auth_type="device")
 
 You can also pass connection parameters as
 keyword arguments or a connection string.
@@ -116,6 +164,7 @@ the required parameters are:
 * tenant_id -- The tenant ID of the Defender workspace to connect to.
 * client_id -- The ID of the application registered for MS Defender.
 * client_secret -- The secret used for by the application.
+* username -- If using delegated auth for your application.
 
 
 .. code:: ipython3

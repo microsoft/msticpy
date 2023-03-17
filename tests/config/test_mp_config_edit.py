@@ -3,21 +3,19 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Module docstring."""
+"""MpConfigEdit tests."""
+import os
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 
+import ipywidgets as widgets
 import pytest
 import pytest_check as check
 import yaml
-import ipywidgets as widgets
-from msticpy.config.comp_edit import (
-    CEItemsBase,
-    CompEditItems,
-    CompEditStatusMixin,
-)
+
 from msticpy.config.ce_simple_settings import CESimpleSettings
+from msticpy.config.comp_edit import CEItemsBase, CompEditItems, CompEditStatusMixin
 from msticpy.config.mp_config_edit import MpConfigEdit
 from msticpy.config.mp_config_file import MpConfigFile
 
@@ -58,7 +56,6 @@ def test_mp_edit_load(mp_edit):
     _check_tab_state(mp_edit, enabled=len(mp_edit.controls), dummy=0)
 
     for idx, (title, tab) in enumerate(mp_edit.controls.items()):
-
         check.equal(mp_edit.tab_ctrl.tab.get_title(idx), title)
 
         check.is_instance(tab, (CEItemsBase, CESimpleSettings))
@@ -129,6 +126,7 @@ def test_mp_edit_load_params():
     for key in orig_settings.keys():
         check.equal(orig_settings[key], mp_conf.mp_controls.mp_config[key])
 
+    # Use default - existing file
     with custom_mp_config(str(config_path)):
         mp_conf = MpConfigEdit()
         check.equal(mp_conf.mp_controls.get_value(test_path), orig_resgroup, "Default")
@@ -137,3 +135,11 @@ def test_mp_edit_load_params():
         )
         for key in orig_settings.keys():
             check.equal(orig_settings[key], mp_conf.mp_controls.mp_config[key])
+
+    # Test invalid file in MPConfig env and with file parameter.
+    # should load without exception
+    with custom_mp_config(str(config_path)):
+        os.environ["MSTICPYCONFIG"] = "./invalid_file.yaml"
+        mp_conf = MpConfigEdit()
+
+        mp_conf = MpConfigEdit(settings="./invalid_file.yaml")

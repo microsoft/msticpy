@@ -6,8 +6,12 @@ Microsoft Sentinel APIs
 
    SentinelAnalytics
    SentinelBookmarks
+   SentinelDynamicSummaries
    SentinelIncidents
    SentinelWatchlists
+   SentinelSearch
+   SentinelWorkspaces
+   SentinelTI
 
 Description
 -----------
@@ -16,13 +20,13 @@ This package contains functionality making calls to Microsoft Sentinel directly.
 These can be used to get data from Microsoft Sentinel, as well as perform
 configuration and other actions on the Microsoft Sentinel Workspace
 
-:py:mod:`Microsoft Sentinel API documentation<msticpy.data.azure.sentinel_core.MicrosoftSentinel>`
+:py:mod:`Microsoft Sentinel API documentation<msticpy.context.azure.sentinel_core.MicrosoftSentinel>`
 
 
 Instantiating and Connecting the Microsoft Sentinel API Connector
 -----------------------------------------------------------------
 
-See :py:class:`Microsoft Sentinel <msticpy.data.azure.sentinel_core.MicrosoftSentinel>`
+See :py:class:`Microsoft Sentinel <msticpy.context.azure.sentinel_core.MicrosoftSentinel>`
 
 When instantiating the class you need to pass it details of the Sentinel workspace
 you want to interact with. This can be provided as a complete resource ID,
@@ -52,19 +56,22 @@ In order to connect to the Microsoft Sentinel API and retrieve the required data
 we need to instantiate the MicrosoftSentinel class and authenticate to Azure.
 Authentication to the Microsoft Sentinel API is handled via an the azure_auth package.
 
-By default `['env', 'cli', 'msi', 'interactive']` is used but you can provide an alternative
-list to `.connect` via the auth_methods parameter.
+By default ``['cli', 'msi', 'devicecode']`` is used but you can provide an alternative
+list to ``.connect`` via the auth_methods parameter.
 
 .. code:: ipython3
 
-        azs = MicrosoftSentinel()
-        azs.connect(auth_methods=['cli','interactive'])
+        sentinel = MicrosoftSentinel()
+        sentinel.connect(auth_methods=['cli','interactive'])
 
+
+For more details see :doc:`../getting_started/AzureAuthentication`
+and :ref:`getting_started/SettingsEditor:Azure Cloud and Authentication Settings`.
 
 Get Microsoft Sentinel Workspaces
 ---------------------------------
 
-See :py:meth:`list_sentinel_workspaces <msticpy.data.azure.sentinel_core.MicrosoftSentinel.get_sentinel_workspaces>`
+See :py:meth:`list_sentinel_workspaces <msticpy.context.azure.sentinel_core.MicrosoftSentinel.get_sentinel_workspaces>`
 
 If you want to see Sentinel workspace in a subscription you can call `list_sentinel_workspaces`.
 
@@ -76,7 +83,7 @@ a specified subscription.
 
 .. code:: ipython3
 
-    azs.get_sentinel_workspaces(sub_id="3b701f84-d04b-4479-89b1-fa8827eb537e")
+    sentinel.get_sentinel_workspaces(sub_id="3b701f84-d04b-4479-89b1-fa8827eb537e")
 
 Incidents
 ---------
@@ -91,11 +98,11 @@ You can return a dataframe detailing all hunting queries configured in the works
 analysis and configuration of hunting queries, as well as the ability to take a
 hunting query and run it with a QueryProvider.
 
-See :py:meth:`list_hunting_queries <msticpy.data.azure.sentinel_core.MicrosoftSentinel.list_hunting_queries>`
+See :py:meth:`list_hunting_queries <msticpy.context.azure.sentinel_core.MicrosoftSentinel.list_hunting_queries>`
 
 .. code:: ipython3
 
-    azs.list_hunting_queries()
+    sentinel.list_hunting_queries()
 
 Analytics
 ---------
@@ -115,3 +122,8 @@ Watchlists
 
 You can interact with Watchlists, including creating new watchlists and adding items to a watchlist via this feature.
 More details can be found in :doc:`Sentinel Watchlists <SentinelWatchlists>`
+
+Search
+------
+
+You can create and delete Microsoft Sentinel Search jobs via MSTICPy :doc:`Sentinel Search <SentinelSearch>`

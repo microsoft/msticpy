@@ -10,14 +10,13 @@ from datetime import datetime, timedelta
 from timeit import default_timer as timer
 from typing import Any, Dict, Optional, Tuple, Union
 
-import pandas as pd
 import httpx
+import pandas as pd
 from sumologic.sumologic import SumoLogic
 
 from ..._version import VERSION
 from ...common.exceptions import (
     MsticpyConnectionError,
-    MsticpyNotConnectedError,
     MsticpyUserConfigError,
     MsticpyUserError,
 )
@@ -132,7 +131,7 @@ class SumologicDriver(DriverBase):
         """Check and consolidate connection parameters."""
         cs_dict: Dict[str, Any] = self._CONNECT_DEFAULTS
         # Fetch any config settings
-        settings, cs_is_instance_name = self._get_config_settings(connection_str)
+        settings, cs_is_instance_name = self._get_sumologic_settings(connection_str)
         cs_dict.update(settings)
         # If a connection string - parse this and add to config
         if connection_str and not cs_is_instance_name:
@@ -211,7 +210,7 @@ class SumologicDriver(DriverBase):
         """
         del query_source
         if not self._connected:
-            raise self._create_not_connected_err()
+            raise self._create_not_connected_err("SumoLogic")
 
         verbosity = kwargs.pop("verbosity", 0)
         timezone = kwargs.pop("timezone", "UTC")
@@ -222,9 +221,12 @@ class SumologicDriver(DriverBase):
         start_time, end_time = self._get_time_params(**kwargs)
 
         # default to unlimited query unless count is specified
-        if "limit" in kwargs:
-            query = f"{query} | limit {kwargs['limit']}"
-        limit = kwargs.pop("limit", 10000)
+        # https://help.sumologic.com/05Search/Search-Query-Language/Search-Operators/limit
+        if "limit" in kwargs and kwargs["limit"] <= 10000:
+            limit = kwargs["limit"]
+            query = f"{query} | limit {limit}"
+        else:
+            limit = None
 
         if verbosity >= 1:
             print(f"INFO: from {start_time} to {end_time}, TZ {timezone}")
@@ -258,6 +260,7 @@ class SumologicDriver(DriverBase):
             qry_count=qry_count,
             force_mssg_rstls=kwargs.pop("forcemessagesresults", False),
             limit=limit,
+            verbosity=verbosity,
         )
 
     def _poll_job_status(self, searchjob, verbosity):
@@ -287,36 +290,84 @@ class SumologicDriver(DriverBase):
         return status
 
     # pylint: disable=inconsistent-return-statements
+    def _get_job_results_messages(self, searchjob, status, limit):
+        # Non-aggregated results, Messages only
+        count = status["messageCount"]
+        limit2 = None
+        if limit is not None:
+            limit2 = (
+                count if count < limit and count != 0 else limit
+            )  # compensate bad limit check
+        try:
+            result = self.service.search_job_messages(searchjob, limit=limit2)
+            return result["messages"]
+        except Exception as err:
+            self._raise_qry_except(err, "search_job_messages", "to get job messages")
+
+    def _get_job_results_records(  # noqa: MC0001
+        self, searchjob, status, limit, verbosity
+    ):
+        # Aggregated results, limit
+        count = status["recordCount"]
+        limit2 = None
+        if limit is not None:
+            limit2 = (
+                count if count < limit and count != 0 else limit
+            )  # compensate bad limit check
+
+            if count < limit:
+                if verbosity >= 2:
+                    print(f"DEBUG: No Paging, total count {count}, limit {limit}")
+                try:
+                    result = self.service.search_job_records(searchjob, limit=limit2)
+                    return result["records"]
+                except Exception as err:
+                    self._raise_qry_except(
+                        err, "search_job_records", "to get search records"
+                    )
+        else:
+            # paging results
+            # https://help.sumologic.com/APIs/Search-Job-API/About-the-Search-Job-API#query-parameters-2
+            if verbosity >= 2:
+                print(f"DEBUG: Paging, total count {count}, limit {limit}")
+            try:
+                job_limit = 10000
+                iterations = int(count / job_limit) + (count % job_limit > 0)
+                total_results = []
+                for i in range(0, iterations):
+                    if i == iterations:
+                        job_limit2 = count - (iterations - 1) * job_limit
+                    else:
+                        job_limit2 = job_limit
+                    if verbosity >= 2:
+                        print(
+                            f"DEBUG: Paging {i * job_limit} / {count}, limit {job_limit2}"
+                        )
+                    result = self.service.search_job_records(
+                        searchjob, offset=(i * job_limit), limit=job_limit2
+                    )
+                    total_results.extend(result["records"])
+                return total_results
+            except Exception as err:
+                self._raise_qry_except(
+                    err,
+                    "search_job_records",
+                    f"to get search records (paging i {i*job_limit} / {count})",
+                )
+
+    # pylint: disable=inconsistent-return-statements
     # I don't think there are any - everything returns a list
-    def _get_job_results(self, searchjob, status, qry_count, force_mssg_rstls, limit):
+    def _get_job_results(
+        self, searchjob, status, qry_count, force_mssg_rstls, limit, verbosity
+    ):
         if status["state"] != "DONE GATHERING RESULTS":
             return []
         if not qry_count or force_mssg_rstls:
             # Non-aggregated results, Messages only
-            count = status["messageCount"]
-            limit2 = (
-                count if count < limit and count != 0 else limit
-            )  # compensate bad limit check
-            try:
-                result = self.service.search_job_messages(searchjob, limit=limit2)
-                return result["messages"]
-            except Exception as err:
-                self._raise_qry_except(
-                    err, "search_job_messages", "to get job messages"
-                )
-        else:
-            # Aggregated results
-            count = status["recordCount"]
-            limit2 = (
-                count if count < limit and count != 0 else limit
-            )  # compensate bad limit check
-            try:
-                result = self.service.search_job_records(searchjob, limit=limit2)
-                return result["records"]
-            except Exception as err:
-                self._raise_qry_except(
-                    err, "search_job_records", "to get search records"
-                )
+            return self._get_job_results_messages(searchjob, status, limit)
+
+        # Aggregated results, limit
+        return self._get_job_results_records(searchjob, status, limit, verbosity)
 
     # pylint: enable=inconsistent-return-statements
 
@@ -340,7 +391,7 @@ class SumologicDriver(DriverBase):
     def _get_time_params(self, **kwargs):
         if "days" in kwargs:
             end = datetime.now()
-            start = end - timedelta(days=int(kwargs["days"]))
+            start = end - timedelta(days=kwargs["days"])
             return self._format_datetime(start), self._format_datetime(end)
 
         start = kwargs.pop("start", kwargs.pop("start_time", None))
@@ -356,7 +407,8 @@ class SumologicDriver(DriverBase):
             )
         return self._format_datetime(start), self._format_datetime(end)
 
-    def query(
+    # pylint: disable=too-many-branches
+    def query(  # noqa: MC0001
         self, query: str, query_source: QuerySource = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
         """
@@ -405,6 +457,10 @@ class SumologicDriver(DriverBase):
             Export result to file.
         export_path : str
             file path for exporte results.
+        time_columns: array[string]
+            returning columns which format should be dataframe timestamp
+        numeric_columns: array[string]
+            returning columns which format should be dataframe numeric
 
         Returns
         -------
@@ -413,10 +469,13 @@ class SumologicDriver(DriverBase):
             or query response if an error.
 
         """
+        limit = kwargs.get("limit", None)
         verbosity = kwargs.get("verbosity", 0)
         normalize = kwargs.pop("normalize", True)
         exporting = kwargs.pop("exporting", False)
         export_path = kwargs.pop("export_path", "")
+        time_columns = kwargs.pop("time_columns", [])
+        numeric_columns = kwargs.pop("numeric_columns", [])
 
         results = self._query(query, **kwargs)
         if verbosity >= 3:
@@ -426,9 +485,31 @@ class SumologicDriver(DriverBase):
         else:
             dataframe_res = pd.DataFrame(results)
 
+        if limit is not None and dataframe_res.shape[0] > limit:
+            dataframe_res = dataframe_res.head(limit)
+
         for col in dataframe_res.columns:
-            if col in ("map._count", "map._timeslice"):
-                dataframe_res[col] = pd.to_numeric(dataframe_res[col])
+            try:
+                if (
+                    col
+                    in ["map._count", "map._collectorid", "map._messageid", "map._size"]
+                    + numeric_columns
+                ):
+                    dataframe_res[col] = pd.to_numeric(dataframe_res[col])
+                # ensure timestamp format
+                # https://help.sumologic.com/05Search/Get-Started-with-Search/Search-Basics/Built-in-Metadata
+                # https://help.sumologic.com/05Search/Search-Query-Language/Search-Operators/timeslice
+                if col in ("map._receipttime", "map._messagetime", "map._timeslice"):
+                    dataframe_res[col] = pd.to_datetime(dataframe_res[col], unit="ms")
+                if col in time_columns:
+                    dataframe_res[col] = pd.to_datetime(dataframe_res[col])
+
+            except Exception as err:
+                self._raise_qry_except(
+                    err,
+                    "query",
+                    f"query column type conversion: {col} -> {dataframe_res[col]}",
+                )
 
         if exporting:
             if export_path.endswith(".xlsx"):
@@ -440,7 +521,7 @@ class SumologicDriver(DriverBase):
                     print("DEBUG: Exporting results to csv file {export_path}")
                 dataframe_res.to_csv(export_path, index=False)
 
-        return dataframe_res
+        return dataframe_res.copy()
 
     def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
         """
@@ -458,6 +539,7 @@ class SumologicDriver(DriverBase):
             the underlying provider result if an error occurs.
 
         """
+        raise NotImplementedError(f"Not supported for {self.__class__.__name__}")
 
     # Parameter Formatting methods
     @staticmethod
@@ -467,7 +549,9 @@ class SumologicDriver(DriverBase):
 
     # Read values from configuration
     @staticmethod
-    def _get_config_settings(instance_name: str = None) -> Tuple[Dict[str, Any], bool]:
+    def _get_sumologic_settings(
+        instance_name: str = None,
+    ) -> Tuple[Dict[str, Any], bool]:
         """Get config from msticpyconfig."""
         data_provs = get_provider_settings(config_section="DataProviders")
         sl_settings = {
@@ -485,12 +569,3 @@ class SumologicDriver(DriverBase):
             sumologic_settings = sl_settings.get("Sumologic")
             is_instance_name = False
         return getattr(sumologic_settings, "args", {}), is_instance_name
-
-    @staticmethod
-    def _create_not_connected_err():
-        return MsticpyNotConnectedError(
-            "Please run the connect() method before running this method.",
-            title="not connected to Sumologic.",
-            help_uri=_HELP_URI,
-            notebook_uri=_SL_NB_URI,
-        )

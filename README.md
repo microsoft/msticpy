@@ -1,7 +1,9 @@
 # MSTIC Jupyter and Python Security Tools
 
-[![Build Status](https://dev.azure.com/mstic-detections/mstic-jupyter/_apis/build/status/microsoft.msticpy?branchName=main)](https://dev.azure.com/mstic-detections/mstic-jupyter/_build/latest?definitionId=14&branchName=main)
+![GitHub Actions build](https://github.com/microsoft/msticpy/actions/workflows/python-package.yml/badge.svg)
+[![Azure Pipelines build](https://dev.azure.com/mstic-detections/mstic-jupyter/_apis/build/status/microsoft.msticpy?branchName=main)](https://dev.azure.com/mstic-detections/mstic-jupyter/_build/latest?definitionId=14&branchName=main)
 [![Downloads](https://pepy.tech/badge/msticpy)](https://pepy.tech/project/msticpy)
+[![BlackHat Arsenal 2020](https://raw.githubusercontent.com/toolswatch/badges/master/arsenal/usa/2020.svg)](https://www.blackhat.com/us-20/arsenal/schedule/#msticpy-the-security-analysis-swiss-army-knife-19872)
 
 Microsoft Threat Intelligence Python Security Tools.
 
@@ -82,7 +84,7 @@ You can also browse through the sample notebooks referenced at the end of this d
 to see some of the functionality used in context. You can play with some of the package
 functions in this interactive demo on mybinder.org.
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Azure/Azure-Sentinel-Notebooks/master?filepath=%2Fnbdemo%2Fmsticpy%20demo.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Azure/Azure-Sentinel-Notebooks/master?filepath=A%20Tour%20of%20Cybersec%20notebook%20features.ipynb)
 
 ---
 
@@ -123,7 +125,7 @@ using either:
 - GeoLiteLookup - Maxmind Geolite (see <https://www.maxmind.com>)
 - IPStackLookup  - IPStack (see <https://ipstack.com>)
 
-<img src="./docs/source/visualization/_static/FoliumMap-01.png"
+<img src="./docs/source/visualization/_static/folium_sf_zoom.png"
   alt="Folium map"
   title="Plotting Geo IP Location" height="200" />
 
@@ -133,7 +135,6 @@ and
 
 ### Azure Resource Data, Storage and Azure Sentinel API
 
-
 The AzureData module contains functionality for enriching data regarding Azure host
 details with additional host details exposed via the Azure API. The AzureSentinel
 module allows you to query incidents, retrieve detector and hunting
@@ -142,6 +143,7 @@ queries. AzureBlogStorage lets you read and write data from blob storage.
 [Azure Resource APIs](https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureData.html),
 [Azure Sentinel APIs](https://msticpy.readthedocs.io/en/latest/data_acquisition/Sentinel.html),
 [Azure Storage](https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureBlobStorage.html)
+
 ## Security Analysis
 
 This subpackage contains several modules helpful for working on security investigations and hunting:
@@ -217,6 +219,7 @@ the IpAddress entity and browse its methods.
 [Pivot Functions](https://msticpy.readthedocs.io/en/latest/data_analysis/PivotFunctions.html)
 and
 [Pivot Functions Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/PivotFunctions.ipynb)
+
 ### base64unpack
 
 Base64 and archive (gz, zip, tar) extractor. It will try to identify any base64 encoded
@@ -293,17 +296,23 @@ query time boundary settings and event display into an easy-to-use format.
 
 ---
 
+## Example MSTICPy notebooks
+
+[MSTICPy Notebooks](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/)
+
 ## More Notebooks on Azure Sentinel Notebooks GitHub
 
 [Azure Sentinel Notebooks](https://github.com/Azure/Azure-Sentinel-Notebooks)
 
 Example notebooks:
 
+- [Tour of MSTICPy Features](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/A%20Tour%20of%20Cybersec%20notebook%20features.ipynb)
 - [Account Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Account.ipynb)
 - [Domain and URL Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Domain%20and%20URL.ipynb)
 - [IP Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20IP%20Address.ipynb)
 - [Linux Host Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Linux%20Host.ipynb)
 - [Windows Host Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Windows%20Host.ipynb)
+- [Getting started in Azure Sentinel notebooks](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/A%20Getting%20Started%20Guide%20For%20Azure%20Sentinel%20ML%20Notebooks.ipynb)
 
 View directly on GitHub or copy and paste the link into [nbviewer.org](https://nbviewer.jupyter.org/)
 
@@ -311,21 +320,12 @@ View directly on GitHub or copy and paste the link into [nbviewer.org](https://n
 
 See the following notebooks for more examples of the use of this package in practice:
 
-- Windows Alert Investigation in
-  [GitHub](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb)
-  or
-  [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb)
-- Office 365 Exploration in
-  [GitHub](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb)
-  or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb)
-- Cross-Network Hunting in
-  [GitHub](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb)or
-  [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb)
+- [Simple Machine Learning](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Machine%20Learning%20in%20Notebooks%20Examples.ipynb)
 
 ## Supported Platforms and Packages
 
 - msticpy is OS-independent
-- Requires [Python 3.6 or later](https://www.python.org/dev/peps/pep-0494/)
+- Requires [Python 3.8 or later](https://www.python.org/dev/peps/pep-0494/)
 - See [requirements.txt](requirements.txt) for more details and version requirements.
 
 ---

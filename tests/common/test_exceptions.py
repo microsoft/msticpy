@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Msticpy Exception test class."""
-from typing import List, Any, Tuple
+from typing import Any, List, Tuple
 
 import pytest
 import pytest_check as check
@@ -12,32 +12,42 @@ from pytest import raises
 
 # pylint: disable=relative-beyond-top-level, redefined-outer-name
 from msticpy.common.exceptions import (
-    MsticpyException,
     MsticpyAzureConfigError,
-    MsticpyConfigException,
+    MsticpyConfigError,
+    MsticpyConnectionError,
+    MsticpyDataQueryError,
+    MsticpyException,
+    MsticpyImportExtraError,
     MsticpyKeyVaultConfigError,
     MsticpyKeyVaultMissingSecretError,
+    MsticpyKqlConnectionError,
+    MsticpyMissingDependencyError,
     MsticpyNoDataSourceError,
     MsticpyNotConnectedError,
-    MsticpyResourceException,
+    MsticpyResourceError,
     MsticpyUserConfigError,
     MsticpyUserError,
 )
 
 BASE_EX_CASES: List[Any] = [
     MsticpyException,
-    MsticpyConfigException,
-    MsticpyResourceException,
+    MsticpyConfigError,
+    MsticpyResourceError,
 ]
 
 USER_EX_CASES: List[Any] = [
-    MsticpyAzureConfigError,
-    MsticpyKeyVaultConfigError,
-    MsticpyKeyVaultMissingSecretError,
-    MsticpyNoDataSourceError,
-    MsticpyNotConnectedError,
-    MsticpyUserConfigError,
-    MsticpyUserError,
+    (MsticpyKeyVaultConfigError, {}),
+    (MsticpyAzureConfigError, {}),
+    (MsticpyKeyVaultMissingSecretError, {}),
+    (MsticpyNoDataSourceError, {}),
+    (MsticpyNotConnectedError, {}),
+    (MsticpyUserConfigError, {}),
+    (MsticpyUserError, {}),
+    (MsticpyConnectionError, {}),
+    (MsticpyDataQueryError, {}),
+    (MsticpyKqlConnectionError, {}),
+    (MsticpyImportExtraError, {"extra": "ml"}),
+    (MsticpyMissingDependencyError, {"packages": ["vt_py", "folium"]}),
 ]
 
 _TEST_ARG = "test arg"
@@ -47,8 +57,9 @@ _TEST_TITLE = "test error"
 
 _TEST_EX_CASES: List[Tuple] = []
 tst_kwargs = dict(help_uri=_TEST_URI, title=_TEST_TITLE, other_uri=_OTHER_URI)
-for case in USER_EX_CASES:
-    _TEST_EX_CASES.append((case, [_TEST_ARG], tst_kwargs))
+for case, case_kwargs in USER_EX_CASES:
+    test_case_kwargs = {**tst_kwargs, **case_kwargs}
+    _TEST_EX_CASES.append((case, [_TEST_ARG], test_case_kwargs))
 
 
 # pylint: disable=protected-access

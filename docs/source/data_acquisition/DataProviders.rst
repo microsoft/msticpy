@@ -96,7 +96,7 @@ details) with:
     )
 
 
-For more details see :py:class:`QueryProvider API<class:msticpy.data.data_providers.QueryProvider>`.
+For more details see :py:class:`QueryProvider API<msticpy.data.data_providers.QueryProvider>`.
 
 
 Connecting to a Data Environment
@@ -133,7 +133,7 @@ Example
 The format of the parameters supplied to the ``connect`` function varies
 by the environment/driver you are trying to use. Please check
 the details for the environment you are using in the
-`Individual Data Environments/Drivers`__ section.
+:ref:`DataAcquisition:Individual Data Environments` section.
 
 List of current built-in queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -210,9 +210,9 @@ Getting Help for a query
 
 To get further details on a specific query call:
 
-qry_prov.{*query_group*}.{*query_name*}(‘?’) or
+qry_prov.{*query_group*}.{*query_name*}("?") or
 
-qry_prov.{*query_group*}.{*query_name*}(‘help’)
+qry_prov.{*query_group*}.{*query_name*}("help")
 
 or you can use the builtin Python help:
 
@@ -271,6 +271,65 @@ This will display:
      | project-away extendedProps {add_query_items}
 
 
+Searching for a query
+---------------------
+
+The data providers have a simple search capability letting you search
+over the names or properties of queries. It takes four parameters:
+
+- search - search terms to look for in the
+  query name, description, parameter names, table and query text.
+- table - search terms to match on the target table of the query.
+  (note: not all queries have the table parameter defined in their
+  metadata)
+- param - search terms to match on a parameter name
+- case - boolean to force case-sensitive matching (default is case-sensitive).
+
+The first three parameters can be a simple string or an iterable (e.g. list, tuple)
+of search terms. The search terms are treated as regular expressions. This
+means that a the search terms are treated as substrings (if no other
+regular expression syntax is included).
+
+Find all queries that have the term "syslog" in their properties
+
+.. code:: ipython3
+
+    qry_prov.search("syslog")
+    # equivalent to qry_prov.search(search="syslog")
+
+.. parsed-literal::
+
+    ['LinuxSyslog.all_syslog',
+    'LinuxSyslog.cron_activity',
+    'LinuxSyslog.list_account_logon_failures',
+    'LinuxSyslog.list_host_logon_failures',
+    'LinuxSyslog.list_ip_logon_failures',
+    'LinuxSyslog.list_logon_failures',
+    ...
+
+Other examples:
+
+.. code:: ipython3
+
+    # Find queries that target the "syslog" table and have the term "logon"
+    qry_prov.search("logon", table="Syslog")
+
+.. parsed-literal::
+
+    ['LinuxSyslog.list_account_logon_failures',
+    'LinuxSyslog.list_host_logon_failures',
+    'LinuxSyslog.list_ip_logon_failures',
+    'LinuxSyslog.list_logon_failures',
+    'LinuxSyslog.list_logons_for_account',
+    ...
+
+.. code:: ipython3
+
+    # Queries with the term "Azure" and a parameter beginning with "ip"
+    qry_prov.search("Azure", param="ip.*")
+
+    # Table name contains "sign" and has a parameter matching "ip..."
+    qry_prov.search(table="sign", param="ip.*")
 
 
 Running a pre-defined query
@@ -400,16 +459,16 @@ split a query into time ranges. Each sub-range is run as an independent
 query and the results are combined before being returned as a
 DataFrame.
 
-To use this feature you must specify the keyword parameter ``split_queries_by``
+To use this feature you must specify the keyword parameter ``split_query_by``
 when executing the query function. The value to this parameter is a
 string that specifies a time period. The time range specified by the
 ``start`` and ``end`` parameters to the query is split into sub-ranges
 each of which are the length of the split time period. For example, if you
-specify ``split_queries_by="1H"`` the query will be split into one hour
+specify ``split_query_by="1H"`` the query will be split into one hour
 chunks.
 
 .. note:: The final chunk may cover a time period larger or smaller
-   than the split period that you specified in the *split_queries_by*
+   than the split period that you specified in the *split_query_by*
    parameter. This can happen if *start* and *end* are not aligned
    exactly on time boundaries (e.g. if you used a one hour split period
    and *end* is 10 hours 15 min after *start*. The query split logic
@@ -421,7 +480,7 @@ The sub-ranges are used to generate a query for each time range. The
 queries are then executed in sequence and the results concatenated into
 a single DataFrame before being returned.
 
-The values acceptable for the *split_queries_by* parameter have the format:
+The values acceptable for the *split_query_by* parameter have the format:
 
 ::
 
@@ -430,7 +489,7 @@ The values acceptable for the *split_queries_by* parameter have the format:
 where N is the number of units and TimeUnit is a mnemonic of the unit, e.g.
 H = hour, D = day, etc. For the full list of these see the documentation
 for Timedelta in the
-`pandas documentation <https://pandas.pydata.org/pandas-docs>`__
+`pandas documentation <https://pandas.pydata.org/docs>`__
 
 .. warning:: There are some important caveats to this feature.
 
@@ -447,12 +506,53 @@ for Timedelta in the
       exactly on the time boundaries but some data sources may not use
       granular enough time stamps to avoid this.
 
+Dynamically adding new queries
+------------------------------
+
+You can use the :py:meth:`msticpy.data.core.data_providers.QueryProvider.add_query`
+to add parameterized queries from a notebook or script. This
+let you use temporary parameterized queries without having to
+add them to a YAML file (as described in `Creating new queries`_).
+
+get_host_events
+
+.. code:: python
+
+    # initialize a query provider
+    qry_prov = mp.QueryProvider("MSSentinel")
+
+    # define a query
+    query = """
+    SecurityEvent
+    | where EventID == {event_id}
+    | where TimeGenerated between (datetime({start}) .. datetime({end}))
+    | where Computer has "{host_name}"
+    """
+    # define the query parameters
+    # (these can also be passed as a list of raw tuples)
+    qp_host = qry_prov.create_param("host_name", "str", "Name of Host")
+    qp_start = qry_prov.create_param("start", "datetime")
+    qp_end = qry_prov.create_param("end", "datetime")
+    qp_evt = qry_prov.create_param("event_id", "int", None, 4688)
+
+    # add the query
+    qry_prov.add_custom_query(
+        name="get_host_events",
+        query=query,
+        family="Custom",
+        parameters=[qp_host, qp_start, qp_end, qp_evt]
+    )
+
+    # query is now available as
+    qry_prov.Custom.get_host_events(host_name="MyPC"....)
+
+
 Creating new queries
 --------------------
 
 *msticpy* provides a number of
 pre-defined queries to call with using the data package. You can also
-add in additional queries to be imported and used by your Query
+add additional queries to be imported and used by your Query
 Provider, these are defined in YAML format files and examples of these
 files can be found at the msticpy GitHub site
 https://github.com/microsoft/msticpy/tree/master/msticpy/data/queries.
@@ -521,7 +621,7 @@ Each query key has the following structure:
   the query before being passed to the data provider. Each parameter
   must have a unique name (for each query, not globally). All parameters
   specified in the query text must have an entry here or in the file
-  defauls section. The parameter subsection has the following sub-keys:
+  defaults section. The parameter subsection has the following sub-keys:
 
   - **description**: A description of what the parameter is (used for generating
     documentation strings.
@@ -540,14 +640,42 @@ Some common parameters used in the queries are:
 
 .. code:: yaml
 
-    table:
-        description: The table name
-        type: str
-        default: SecurityEvent | where EventID == 4624
+    parameters:
+        table:
+            description: The table name
+            type: str
+            default: SecurityEvent | where EventID == 4624
 
 - **add_query_items**: This is a useful way of extending queries by adding
   ad hoc statements to the end of the query (e.g. additional filtering order
   summarization).
+
+Using known parameter names
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Try to use standard names for common entities and other parameter values.
+This makes things easier for users of the queries and, in some cases,
+enables functionality such as automatic insertion of times.
+
+Always use these names for common parameters
+
+=================  =================================  ============= ===============
+Query Parameter    Description                        type          default
+=================  =================================  ============= ===============
+start              The start datetime for the query   datetime      N/A
+end                The end datetime for the query     datetime      N/A
+table              The name of the main table (opt)   str           the table name
+add_query_items    Placeholder for additional query   str           ""
+=================  =================================  ============= ===============
+
+Entity names
+For entities such as IP address, host name, account name, process, domain, etc.,
+always use one of the standard names - these are used by pivot functions to
+map queries to the correct entity.
+
+For the current set of names see the following section in the Pivot Functions
+documentation - :ref:`data_analysis/PivotFunctions:How are queries assigned to specific entities?`
+
 
 Using yaml aliases and macros in your queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -760,19 +888,19 @@ a query definition file then you import it with
 
     *query_provider*.import_query_file(query_file= *path_to_query_file*)
 
-This will load the query file into the Query Provider’s Query Store from
+This will load the query file into the Query Provider's Query Store from
 where it can be called.
 
 .. code:: ipython3
 
     qry_prov.import_query_file(query_file='C:\\queries\\example.yaml')
 
-Once imported the queries in the files appear in the Query Provider’s
+Once imported the queries in the files appear in the Query Provider's
 Query Store alongside the others and can be called in the same manner as
 pre-defined queries.
 
 If you have created a large number of query definition files and you
-want to have the automatically imported into a Query Provider’s query
+want to have the automatically imported into a Query Provider's query
 store at initialization you can specify a directory containing these
 queries in the msticpyconfig.yaml file under QueryDefinitions: Custom:
 
@@ -1007,7 +1135,7 @@ same name as default queries will overwrite default queries.
 If you are having difficulties with a defined query and it is not
 producing the expected results it can be useful to see the raw query
 exactly as it is passed to the Data Environment. If you call a query
-with ‘print’ and the parameters required by that query it will construct
+with "print" and the parameters required by that query it will construct
 and print out the query string to be run.
 
 .. code:: ipython3

@@ -6,6 +6,7 @@
 """Module docstring."""
 
 import pytest_check as check
+
 from msticpy.config.file_browser import FileBrowser
 
 __author__ = "Ian Hellen"

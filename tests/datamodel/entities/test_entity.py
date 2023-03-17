@@ -11,21 +11,17 @@ from pathlib import Path
 import pandas as pd
 import pytest
 import pytest_check as check
+
 from msticpy.datamodel import entities
 from msticpy.datamodel.entities import Alert, Host, IpAddress, OSFamily, Url
-from msticpy.datamodel.pivot import Pivot
 from msticpy.datamodel.soc.sentinel_alert import SentinelAlert
+from msticpy.init.pivot import Pivot
 
 from ...unit_test_lib import get_test_data_path
 
 __author__ = "Ian Hellen"
 
 # pylint: disable=redefined-outer-name, broad-except
-
-
-@pytest.fixture(scope="module")
-def fixture_name():
-    """Fixture_docstring."""
 
 
 def test_entity_merge():
@@ -78,9 +74,11 @@ def test_url():
     check.equal(url.fragment, "frag2?query=xxx")
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_pivot_shortcuts():
     """Test pivot function shortcut creation and deletion."""
-    Pivot()
+    pivot = Pivot()
+    pivot.reload_pivots()
 
     check.is_true(hasattr(IpAddress, "util"))
     util_ctnr = getattr(IpAddress, "util")
@@ -182,6 +180,7 @@ def test_alert_entity_creation():
     assert alert_entity.SystemAlertIds == "f1ce87ca-8863-4a66-a0bd-a4d3776a7c64"
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_sentinel_entity_creation():
     """Test creation of Sentinel Alert entity."""
     data_path = Path(get_test_data_path()) / "localdata"

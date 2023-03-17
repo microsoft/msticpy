@@ -7,9 +7,9 @@
 import json
 import pprint
 import typing
-from datetime import datetime
 from abc import ABC
 from copy import deepcopy
+from datetime import datetime
 from typing import Any, Dict, List, Mapping, Optional, Type, Union
 
 import networkx as nx
@@ -38,7 +38,6 @@ class _EntityJSONEncoder(json.JSONEncoder):
     """Encode entity to JSON."""
 
     def default(self, o):
-
         if isinstance(o, Entity):
             return {
                 name: value
@@ -242,7 +241,7 @@ class Entity(ABC, Node):
             params = f"{params}, edges={'. '.join(str(edge) for edge in self.edges)}"
 
         if len(params) > 80:
-            params = params[:80] + "..."
+            params = f"{params[:80]}..."
         return f"{self.__class__.__name__}({params})"
 
     def _to_dict(self) -> dict:
@@ -588,7 +587,7 @@ class Entity(ABC, Node):
         return graph
 
     @classmethod
-    def get_pivot_list(cls) -> List[str]:
+    def get_pivot_list(cls, search_str: Optional[str] = None) -> List[str]:
         """
         Return list of current pivot functions.
 
@@ -604,12 +603,19 @@ class Entity(ABC, Node):
             if hasattr(attr, "pivot_properties"):
                 pivots.append(prop)
                 continue
-            if attr.__class__.__name__ != "QueryContainer":
+            if attr.__class__.__name__ != "PivotContainer":
                 continue
-            for name, qt_attr in attr:
-                if hasattr(qt_attr, "pivot_properties"):
-                    pivots.append(f"{prop}.{name}")
-        return sorted(pivots)
+            pivots.extend(
+                f"{prop}.{name}"
+                for name, qt_attr in attr
+                if hasattr(qt_attr, "pivot_properties")
+            )
+
+        return sorted(
+            pivot
+            for pivot in pivots
+            if search_str is None or search_str.casefold() in pivot.casefold()
+        )
 
     # alias for get_pivot_list
     pivots = get_pivot_list

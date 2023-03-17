@@ -8,13 +8,12 @@ from typing import Any, Dict, Optional, Union
 
 import pandas as pd
 
-from ...common.exceptions import MsticpyParameterError, MsticpyUserConfigError
-from ...common.provider_settings import get_provider_settings, ProviderArgs
-from ...common.utility import export
-from ..query_defns import DataEnvironment
-from .kql_driver import KqlDriver, QuerySource
-
 from ..._version import VERSION
+from ...common.exceptions import MsticpyParameterError, MsticpyUserConfigError
+from ...common.provider_settings import ProviderArgs, get_provider_settings
+from ...common.utility import export
+from ..core.query_defns import DataEnvironment
+from .kql_driver import KqlDriver, QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -72,9 +71,10 @@ class KustoDriver(KqlDriver):
             Optional parameter directing KqlMagic to use MSTICPy Azure authentication.
             Values can be:
             True or "default": use the settings in msticpyconfig.yaml 'Azure' section
-            str: single auth method name ('msi', 'cli', 'env' or 'interactive')
-            List[str]: list of acceptable auth methods from ('msi', 'cli',
-            'env' or 'interactive')
+            str: single auth method name
+            ('msi', 'cli', 'env', 'vscode', 'powershell', 'cache' or 'interactive')
+            List[str]: list of acceptable auth methods from
+            ('msi', 'cli', 'env', 'vscode', 'powershell', 'cache' or 'interactive')
         mp_az_tenant_id: str, optional
             Optional parameter specifying a Tenant ID for use by MSTICPy Azure
             authentication.
@@ -149,12 +149,12 @@ class KustoDriver(KqlDriver):
     def _get_connection_string(self, query_source: QuerySource = None, **kwargs):
         """Create a connection string from arguments and configuration."""
         # If the connection string is supplied as a parameter, use that
-        cluster = database = None
+        cluster = None
         new_connection = kwargs.get("connection_str")
+        database = kwargs.get("database")
         if not new_connection:
             # try to get cluster and db from kwargs or query_source metadata
-            cluster = self._lookup_cluster(kwargs.get("cluster", ""))
-            database = kwargs.get("database")
+            cluster = self._lookup_cluster(kwargs.get("cluster", "Kusto"))
             if cluster and database:
                 new_connection = self._create_connection(
                     cluster=cluster, database=database
@@ -163,21 +163,28 @@ class KustoDriver(KqlDriver):
         if not new_connection and query_source:
             # try to get cluster and db from query_source metadata
             cluster = cluster or query_source.metadata.get("cluster")
-            data_families = query_source.metadata.get("data_families")
-            if (
-                not isinstance(data_families, list) or len(data_families) == 0
-            ) and not self.current_connection:
-                # call create connection so that we throw an informative error
-                self._create_connection(cluster=cluster, database=database)
-            if "." in data_families[0]:  # type: ignore
-                _, qry_db = data_families[0].split(".", maxsplit=1)  # type: ignore
-            else:
-                # Not expected but we can still use a DB value with no dot
-                qry_db = data_families[0]  # type: ignore
-            database = database or qry_db
+            database = (
+                database
+                or query_source.metadata.get("database")
+                or self._get_db_from_datafamily(query_source, cluster, database)
+            )
             new_connection = self._create_connection(cluster=cluster, database=database)
             self._cluster_uri = cluster
         return new_connection
+
+    def _get_db_from_datafamily(self, query_source, cluster, database):
+        data_families = query_source.metadata.get("data_families")
+        if (
+            not isinstance(data_families, list) or len(data_families) == 0
+        ) and not self.current_connection:
+            # call create connection so that we throw an informative error
+            self._create_connection(cluster=cluster, database=database)
+        if "." in data_families[0]:  # type: ignore
+            _, qry_db = data_families[0].split(".", maxsplit=1)  # type: ignore
+        else:
+            # Not expected but we can still use a DB value with no dot
+            qry_db = data_families[0]  # type: ignore
+        return qry_db
 
     def _create_connection(self, cluster, database):
         """Create the connection string, checking parameters."""
@@ -240,10 +247,20 @@ class KustoDriver(KqlDriver):
         """Return cluster URI from config if cluster name is passed."""
         if cluster.strip().casefold().startswith("https://"):
             return cluster
-        for cluster_key, kusto_config in self._kusto_settings.items():
-            if cluster_key.startswith(f"https://{cluster.casefold()}."):
-                return kusto_config["cluster"]
-        return None
+        return next(
+            (
+                kusto_config["cluster"]
+                for cluster_key, kusto_config in self._kusto_settings.items()
+                if (
+                    cluster_key.startswith(f"https://{cluster.casefold()}.")
+                    or (
+                        kusto_config.get("alias", "").casefold()  # type: ignore
+                        == cluster.casefold()
+                    )
+                )
+            ),
+            None,
+        )
 
     def _get_endpoint_uri(self):
         if not self._cluster_uri.endswith("/"):

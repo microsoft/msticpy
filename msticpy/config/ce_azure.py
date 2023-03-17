@@ -7,7 +7,6 @@
 from .._version import VERSION
 from .ce_simple_settings import CESimpleSettings
 
-
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
@@ -37,6 +36,9 @@ class CEAzure(CESimpleSettings):
     <li>msi - use Managed Service Identity credentials, if available</li>
     <li>cli - use Azure CLI credentials, if available</li>
     <li>interactive - use interactive browser authentication</li>
+    <li>vscode" - to use VSCode credentials</li>
+    <li>powershell" - to use PowerShell credentials</li>
+    <li>cache" - to use shared token cache credentials</li>
     </ul>
     """
     _HELP_URI = {

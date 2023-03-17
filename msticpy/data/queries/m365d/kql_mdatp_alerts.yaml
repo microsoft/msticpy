@@ -1,0 +1,255 @@
+metadata:
+  version: 1
+  description: MDATP Queries
+  data_environments: [MDATP, MDE, M365D]
+  data_families: [M365D]
+  tags: ["alert"]
+defaults:
+  metadata:
+    data_source: "security_alert"
+  parameters:
+    table:
+      description: Table name
+      type: str
+      default: "AlertInfo"
+    start:
+      description: Query start time
+      type: datetime
+    end:
+      description: Query end time
+      type: datetime
+    add_query_items:
+      description: Additional query clauses
+      type: str
+      default: ""
+sources:
+  list_alerts:
+    description: Retrieves list of alerts
+    metadata:
+    args:
+      query: "
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        {add_query_items}"
+      uri: None
+    parameters:
+  list_alerts_with_evidence:
+    description: Retrieves list of alerts with their evidence
+    metadata:
+    args:
+      query: "
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | join kind=inner (AlertEvidence
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})) on AlertId
+        )
+        {add_query_items}"
+      uri: None
+    parameters:
+  host_alerts:
+    description: Lists alerts by for a specified hostname
+    metadata:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | join kind=inner (AlertEvidence
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})) on AlertId
+        | where EntityType =~ "Machine"
+        | where DeviceName has "{host_name}"
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
+  ip_alerts:
+    description: Lists alerts associated with a specified remote IP
+    metadata:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | join kind=inner (AlertEvidence
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})) on AlertId
+        | where EntityType =~ "Ip"
+        | where RemoteIP has "{ip_address}"
+        {add_query_items}'
+    parameters:
+      ip_address:
+        description: Remote IP Address
+        type: str
+  url_alerts:
+    description: Lists alerts associated with a specified URL
+    metadata:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | join kind=inner (AlertEvidence
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})) on AlertId
+        | where EntityType =~ "Url"
+        | where RemoteUrl has "{url}"
+        {add_query_items}'
+    parameters:
+      url:
+        description: Remote URL
+        type: str
+  sha1_alerts:
+    description: Lists alerts associated with a specified SHA1 hash
+    metadata:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | join kind=inner (AlertEvidence
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})) on AlertId
+        | where EntityType in~ ("File", "Process")
+        | where SHA1 has "{file_hash}"
+        {add_query_items}'
+    parameters:
+      file_hash:
+        description: SHA1 hash
+        type: str
+        aliases:
+          - sha1
+  sha256_alerts:
+    description: Lists alerts associated with a specified SHA256 hash
+    metadata:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | join kind=inner (AlertEvidence
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})) on AlertId
+        | where EntityType in~ ("File", "Process")
+        | where SHA256 has "{file_hash}"
+        {add_query_items}'
+    parameters:
+      file_hash:
+        description: SHA256 hash
+        type: str
+        aliases:
+          - sha256
+  process_alerts:
+    description: Lists alerts associated with a specified process
+    metadata:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | join kind=inner (AlertEvidence
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})) on AlertId
+        | where EntityType =~ "Process"
+        | where FileName =~ "{file_name}"
+        {add_query_items}'
+    parameters:
+      file_name:
+        description: The process name
+        type: str
+        aliases:
+          - process
+  user_alerts:
+    description: Lists alerts associated with a specified user
+    metadata:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | join kind=inner (AlertEvidence
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})) on AlertId
+        | where EntityType =~ "User"
+        | where AccountName =~ "{account_name}"
+        {add_query_items}'
+    parameters:
+      account_name:
+        description: The user name
+        type: str
+  registry_key_alerts:
+    description: Lists alerts associated with a specified registry key
+    metadata:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | join kind=inner (AlertEvidence
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})) on AlertId
+        | where EntityType =~ "RegistryValue"
+        | where RegistryKey =~ "{key_name}"
+        {add_query_items}'
+    parameters:
+      key_name:
+        description: The Registry key name
+        type: str
+  mail_message_alerts:
+    description: Lists alerts associated with a specified mail message
+    metadata:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | join kind=inner (AlertEvidence
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})) on AlertId
+        | where EntityType =~ "MailMessage"
+        | where NetworkMessageId =~ "{message_id}"
+        {add_query_items}'
+    parameters:
+      message_id:
+        description: The network message ID
+        type: str
+  mailbox_alerts:
+    description: Lists alerts associated with a specified mailbox
+    metadata:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | join kind=inner (AlertEvidence
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})) on AlertId
+        | where EntityType =~ "Mailbox"
+        | where AccountUpn =~ "{mailbox}"
+        {add_query_items}'
+    parameters:
+      mailbox:
+        description: The mailbox
+        type: str
+  application_alerts:
+    description: Lists alerts associated with a cloud app or OAuth app
+    metadata:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | join kind=inner (AlertEvidence
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})) on AlertId
+        | where EntityType in~ ("CloudApplication", "OAuthApplication")
+        | where Application =~ "{app_name}"
+        {add_query_items}'
+    parameters:
+      app_name:
+        description: The name of the application
+        type: str

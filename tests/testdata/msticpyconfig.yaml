@@ -45,7 +45,7 @@ TIProviders:
       WorkspaceID: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
       TenantID: "69d28fd7-42a5-48bc-a619-af56397b9f28"
     Primary: True
-    Provider: "NoLoad-AzSTI"
+    Provider: "--no-load--"
   OpenPageRank:
     Args:
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
@@ -79,6 +79,16 @@ OtherProviders:
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       AuthKey: "987654321-222"
     Provider: "IPStackLookup"
+ContextProviders:
+  ServiceNow:
+    Primary: True
+    Args:
+      Instance: test
+      ApiID:
+        EnvironmentVar: "SERVICENOW_ID"
+      AuthKey:
+        EnvironmentVar: "SERVICENOW_KEY"
+    Provider: "ServiceNow"
 DataProviders:
   Kusto-MSTIC1:
     Args:

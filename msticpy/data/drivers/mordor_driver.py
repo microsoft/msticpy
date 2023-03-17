@@ -14,15 +14,16 @@ from typing import Any, Dict, Generator, Iterable, List, Optional, Set, Tuple, U
 from zipfile import BadZipFile, ZipFile
 
 import attr
-import pandas as pd
 import httpx
+import pandas as pd
 import yaml
 from tqdm.auto import tqdm
 
 from ..._version import VERSION
-from ...common.exceptions import MsticpyNotConnectedError, MsticpyUserError
-from ...common.pkg_config import settings
-from ..query_source import QuerySource
+from ...common.exceptions import MsticpyUserError
+from ...common.pkg_config import get_config
+from ...common.utility import mp_ua_header
+from ..core.query_source import QuerySource
 from .driver_base import DriverBase
 
 __version__ = VERSION
@@ -47,13 +48,15 @@ _MITRE_TECH_CACHE = "mitre_tech_cache.pkl"
 _MITRE_TACTICS_CACHE = "mitre_tact_cache.pkl"
 _MORDOR_CACHE = "mordor_cache.json"
 
+_HTTP_TIMEOUT = DriverBase.get_http_timeout()
+
 
 # pylint: disable=too-many-instance-attributes
 class MordorDriver(DriverBase):
     """Mordor data driver."""
 
     def __init__(self, **kwargs):
-        """Initialize the Morder driver."""
+        """Initialize the Mordor driver."""
         super().__init__(**kwargs)
         self.use_query_paths = False
         self.has_driver_queries = True
@@ -64,7 +67,7 @@ class MordorDriver(DriverBase):
         self.mdr_idx_tact: Dict[str, Set[str]]
         self._driver_queries: List[Dict[str, Any]] = []
 
-        mdr_settings = settings.get("DataProviders", {}).get("Mordor", {})
+        mdr_settings = get_config("DataProviders.Mordor", {})
         self.use_cached = kwargs.pop(
             "used_cached", mdr_settings.get("used_cached", True)
         )
@@ -142,7 +145,7 @@ class MordorDriver(DriverBase):
         """
         del query_source
         if not self._connected:
-            raise self._create_not_connected_err()
+            raise self._create_not_connected_err("OTRF Datasets")
         use_cached = kwargs.pop("used_cached", self.use_cached)
         save_folder = kwargs.pop("save_folder", self.save_folder)
         save_folder = _resolve_cache_folder(save_folder)
@@ -189,7 +192,7 @@ class MordorDriver(DriverBase):
 
         """
         if not self._connected:
-            raise self._create_not_connected_err()
+            raise self._create_not_connected_err("OTRF Datasets")
         if not self._driver_queries:
             self._driver_queries = list(self._get_driver_queries())
         return self._driver_queries
@@ -251,7 +254,7 @@ class MordorDriver(DriverBase):
 
         """
         if not self._connected:
-            raise self._create_not_connected_err()
+            raise self._create_not_connected_err("OTRF Datasets")
         matches = []
         for mdr_id in search_mdr_data(self.mordor_data, terms=search):
             for file_path in self.mordor_data[mdr_id].get_file_paths():
@@ -259,14 +262,6 @@ class MordorDriver(DriverBase):
                     f"{file_path['qry_path']} ({self.mordor_data[mdr_id].title})"
                 )
         return matches
-
-    @staticmethod
-    def _create_not_connected_err():
-        return MsticpyNotConnectedError(
-            "Please run the connect() method before running this method.",
-            title="not connected to Mordor.",
-            help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-        )
 
 
 def _resolve_cache_folder(cache_path: str):
@@ -556,7 +551,7 @@ def _get_mdr_github_tree():
     def _get_mdr_tree(uri):
         nonlocal mordor_tree
         if mordor_tree is None:
-            resp = httpx.get(uri)
+            resp = httpx.get(uri, timeout=_HTTP_TIMEOUT, headers=mp_ua_header())
             mordor_tree = resp.json()
         return mordor_tree
 
@@ -572,7 +567,7 @@ def _get_mdr_file(gh_file):
     file_blob_uri = (
         f"https://raw.githubusercontent.com/OTRF/Security-Datasets/master/{gh_file}"
     )
-    file_resp = httpx.get(file_blob_uri)
+    file_resp = httpx.get(file_blob_uri, timeout=_HTTP_TIMEOUT, headers=mp_ua_header())
     return file_resp.content
 
 
@@ -735,7 +730,9 @@ def download_mdr_file(
     if not use_cached or not save_file.is_file():
         # streamed download
         with open(str(save_file), "wb") as fdesc:
-            with httpx.stream("GET", file_uri) as resp:
+            with httpx.stream(
+                "GET", file_uri, timeout=_HTTP_TIMEOUT, headers=mp_ua_header()
+            ) as resp:
                 for chunk in resp.iter_bytes(chunk_size=1024):
                     fdesc.write(chunk)
 
@@ -906,12 +903,13 @@ def _get_mitre_categories(
         tactics_cache = Path(cache_folder).joinpath(_MITRE_TACTICS_CACHE)
         if _valid_cache(tech_cache) and _valid_cache(tactics_cache):
             try:
-                tech_df = pd.read_pickle(tech_cache)
-                tactics_df = pd.read_pickle(tactics_cache)
+                # caching location only used if sepcified.
+                tech_df = pd.read_pickle(tech_cache)  # nosec
+                tactics_df = pd.read_pickle(tactics_cache)  # nosec
                 return tech_df, tactics_df
             except pickle.PickleError:
                 pass
-    resp = httpx.get(_MITRE_JSON_URL)
+    resp = httpx.get(_MITRE_JSON_URL, timeout=_HTTP_TIMEOUT, headers=mp_ua_header())
     mitre = pd.json_normalize(resp.json()["objects"])
 
     # remove deprecated items

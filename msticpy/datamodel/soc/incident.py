@@ -4,13 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Incident Entity class."""
-from typing import Any, List, Mapping, Optional, Dict
+from typing import Any, Dict, List, Mapping, Optional
+
 import pandas as pd
 
 from ..._version import VERSION
 from ...common.utility import export
-from ..entities.entity import Entity, camelcase_property_names
 from ..entities.alert import Alert
+from ..entities.entity import Entity, camelcase_property_names
 
 __version__ = VERSION
 __author__ = "Pete Bryan"

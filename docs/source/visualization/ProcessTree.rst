@@ -35,7 +35,8 @@ The process tree functionality has two main components:
          ``EXECVE``, ``CWD``, etc.) - the combined ``SYSCALL_EXECVE``
          created by ``auditextract`` is the only type currently supported.
 
-Support for other formats such as Sysmon is planned but not yet included.
+Support for other formats such as Microsoft Defender for Endpoint and Sysmon
+is also included.
 
 Plotting process trees
 ----------------------
@@ -47,9 +48,9 @@ Plotting process trees from process event data involves two stages:
 - Plotting the visualization
 
 In most cases you don't need to worry about these two processes - the
-standard :py:func:`plot_process_tree<msticpy.nbtools.process_tree.plot_process_tree>`
+standard :py:func:`plot_process_tree<msticpy.vis.process_tree.plot_process_tree>`
 function and the pandas accessor function
-:py:meth:`mp_process_tree.plot<msticpy.nbtools.process_tree.ProcessTreeAccessor.plot>`
+:py:meth:`mp_process_tree.plot<msticpy.vis.mp_pandas_plot.MsticpyPlotAccessor.process_tree>`
 will try to detect if the input data is in the correct format. If it is
 not, the process tree builder is automatically applied to the data.
 
@@ -60,9 +61,9 @@ The easiest way to plot process data as a process tree is to use the pandas
 
 .. code:: IPython
 
-   from msticpy.nbtools import process_tree
+   from msticpy.vis import process_tree
 
-   my_proc_df.mp_process_tree.plot()
+   my_proc_df.mp_plot.process_tree()
 
 .. figure:: _static/process_tree1.png
    :alt: Process tree plot
@@ -73,9 +74,9 @@ Here is the same thing using the ``plot_process_tree`` function.
 
 .. code:: IPython
 
-   from msticpy.nbtools import process_tree as ptree
+   from msticpy.vis import process_tree
 
-   ptree.plot_process_tree(procs_df)
+   process_tree.plot_process_tree(procs_df)
 
 For full usage, see the later section `Process tree plotting parameters`_
 
@@ -93,12 +94,12 @@ use on the built process trees.
 
 build_process_tree syntax
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-See :py:func:`build_process_tree<msticpy.sectools.proc_tree_builder.build_process_tree>`
+See :py:func:`build_process_tree<msticpy.transform.proc_tree_builder.build_process_tree>`
 
 .. code:: python
 
-   from msticpy.sectools import process_tree as ptree
-   ptree.build_process_tree(procs)
+   from msticpy.transform import process_tree
+   process_tree.build_process_tree(procs)
 
 Parameters
 ^^^^^^^^^^
@@ -127,10 +128,10 @@ between processes.
 
       from IPython.display import display
       import pandas as pd
-      from msticpy.sectools import process_tree as ptree
+      from msticpy.vis import process_tree
 
       win_procs = pd.read_pickle("../demos/data/win_proc_test.pkl")
-      p_tree_win = ptree.build_process_tree(win_procs, show_summary=True)
+      p_tree_win = process_tree.build_process_tree(win_procs, show_summary=True)
 
 
 The tree builder process, tries to infer the schema (you can override this
@@ -168,8 +169,8 @@ root process rows and then display the subtree.
 
 .. code:: ipython
 
-   proc_tree = ptree.get_descendents(p_tree_win, ptree.get_roots(p_tree_win).iloc[2])
-   ptree.plot_process_tree(data=proc_tree, legend_col="SubjectUserName", show_table=True)
+   proc_tree = process_tree.get_descendents(p_tree_win, process_tree.get_roots(p_tree_win).iloc[2])
+   process_tree.plot_process_tree(data=proc_tree, legend_col="SubjectUserName", show_table=True)
 
 
 .. figure:: _static/process_tree1.png
@@ -182,13 +183,13 @@ Process Tree Plotting Syntax
 ----------------------------
 
 See
-:py:func:`plot_process_tree<msticpy.nbtools.process_tree.plot_process_tree>`
+:py:func:`plot_process_tree<msticpy.vis.process_tree.plot_process_tree>`
 and
-:py:func:`build_and_show_process_tree<msticpy.nbtools.process_tree.build_and_show_process_tree>`
+:py:func:`build_and_show_process_tree<msticpy.vis.process_tree.build_and_show_process_tree>`
 
 .. code:: python
 
-   ptree.plot_process_tree(
+   process_tree.plot_process_tree(
        data, schema=None, output_var=None,
        legend_colNone, show_table=False,
    )
@@ -200,13 +201,15 @@ data (pd.DataFrame)
    DataFrame containing one or more Process Trees. This should be the
    output of ``build_process_tree`` described above.
 
-schema (ProcSchema, optional)
+schema (Dict | ProcSchema, optional)
    The data schema to use for the data set, by default None. If None
    the schema is inferred. A schema object maps generic field names
    (e.g. ``process_name``) on to a data-specific name (e.g. ``exe``
    in the case of Linux audit data). This is usually not required
    since the function will try to infer the schema from fields in the
    input DataFrame.
+   This can be supplied as a ProcSchema instance or a dictionary
+   with required schema mappings.
 
 output_var (str, optional)
    Output variable for selected items in the tree, by default None.
@@ -215,6 +218,9 @@ output_var (str, optional)
    then select one or more processes in the tree, the Python variable
    ``my_results`` will be populated with a list of keys (index items)
    of the corresponding rows in the input DataFrame.
+
+.. note:: Due to restrictions on javascript execution in many notebook
+   environments, this only works in Jupyter classic.
 
 legend_col (str, optional)
    The column used to color the tree items, by default None. If this
@@ -247,7 +253,7 @@ pid_fmt (str, optional)
    default is 'hex'.
 
 
-.. warning:: **Large data sets** (more than a few hundred processses)
+.. warning:: **Large data sets** (more than a few hundred processes)
 
    These will normally be handled well by the Bokeh plot (up to multiple
    tens of thousands or more) but it will make navigation of the tree
@@ -272,10 +278,10 @@ visualizing Windows processes.
 
 .. note:: This assumes that the Linux audit log has been read from a
    file using
-   :py:func:`read_from_file<msticpy.sectools.auditdextract.read_from_file>`
+   :py:func:`read_from_file<msticpy.transform.auditdextract.read_from_file>`
    or read from Azure Sentinel/Log Analytics using the
    LinuxAudit.auditd_all query and processed using
-   :py:func:`extract_events_to_df<msticpy.sectools.auditdextract.extract_events_to_df>`
+   :py:func:`extract_events_to_df<msticpy.transform.auditdextract.extract_events_to_df>`
    function. Using either of these, the audit messages events related to a single
    process start are merged into a single row.
 
@@ -291,7 +297,7 @@ visualizing Windows processes.
 
       # Process Linux audit events. Show verbose output.
 
-      p_tree_lx = ptree.build_process_tree(linux_proc, show_progress=True, debug=True)
+      p_tree_lx = process_tree.build_process_tree(linux_proc, show_progress=True, debug=True)
 
    .. container:: output stream stdout
 
@@ -320,8 +326,8 @@ visualizing Windows processes.
    .. code:: python
 
       # Take one of the roots from the process set and get the full tree beneath it
-      t_root = ptree.get_roots(p_tree_lx).iloc[7]
-      full_tree = ptree.get_descendents(p_tree_lx, t_root)
+      t_root = process_tree.get_roots(p_tree_lx).iloc[7]
+      full_tree = process_tree.get_descendents(p_tree_lx, t_root)
       print("Full tree size:", len(full_tree))
 
    .. container:: output stream stdout
@@ -335,7 +341,7 @@ visualizing Windows processes.
 
    .. code:: python
 
-      ptree.plot_process_tree(data=full_tree[:1000], legend_col="cwd")
+      process_tree.plot_process_tree(data=full_tree[:1000], legend_col="cwd")
 
 .. figure:: _static/process_tree2.png
    :alt: Process tree plot
@@ -353,7 +359,7 @@ Plotting Using a color gradient
       # Read in and process some data - this contains a Rarity column indicating
       # how common the process is in analyzed data set.
       proc_rarity = pd.read_pickle("../demos/data/procs_with_cluster.pkl")
-      proc_rarity_tree = ptree.build_process_tree(proc_rarity, show_progress=True)
+      proc_rarity_tree = process_tree.build_process_tree(proc_rarity, show_progress=True)
 
    .. container:: output stream stdout
 
@@ -366,7 +372,7 @@ Plotting Using a color gradient
    .. code:: python
 
       # Get the root processes from the process tree data
-      prar_roots = ptree.get_roots(proc_rarity_tree)
+      prar_roots = process_tree.get_roots(proc_rarity_tree)
 
       # Find the tree with the highest Rarity Score and
       # calculate the AverageRarity for proceses in that tree.
@@ -374,7 +380,7 @@ Plotting Using a color gradient
       # it is not needed for the plotting.
       tree_rarity = []
       for row_num, (ix, row) in enumerate(prar_roots.iterrows()):
-          rarity_tree = ptree.get_descendents(proc_rarity_tree, row)
+          rarity_tree = process_tree.get_descendents(proc_rarity_tree, row)
           tree_rarity.append({
               "Row": row_num,
               "RootProcess": prar_roots.loc[ix].NewProcessName,
@@ -403,8 +409,8 @@ Plotting Using a color gradient
    .. code:: python
 
       # Plot the tree using the Rarity column as the legend_col parameter.
-      svcs_tree = ptree.get_descendents(proc_rarity_tree, prar_roots.iloc[22])
-      ptree.plot_process_tree(svcs_tree, legend_col="Rarity", show_table=True)
+      svcs_tree = process_tree.get_descendents(proc_rarity_tree, prar_roots.iloc[22])
+      process_tree.plot_process_tree(svcs_tree, legend_col="Rarity", show_table=True)
 
 .. figure:: _static/process_tree3.png
    :alt: Process tree plot
@@ -417,7 +423,7 @@ Process Tree utility Functions
 ------------------------------
 
 
-The :py:mod:`process_tree_utils<msticpy.sectools.process_tree_utils>`
+The :py:mod:`process_tree_utils<msticpy.transform.process_tree_utils>`
 module has a number of functions that may
 be useful in extracting or manipulating process trees or tree
 relationships.
@@ -433,25 +439,25 @@ This controls whether the function will include the source process in the result
 
 Functions:
 
--  :py:func:`build_process_key<msticpy.sectools.process_tree_utils.build_process_key>`
--  :py:func:`build_process_tree<msticpy.sectools.process_tree_utils.build_process_tree>`
--  :py:func:`get_ancestors<msticpy.sectools.process_tree_utils.get_ancestors>`
--  :py:func:`get_children<msticpy.sectools.process_tree_utils.get_children>`
--  :py:func:`get_descendents<msticpy.sectools.process_tree_utils.get_descendents>`
--  :py:func:`get_parent<msticpy.sectools.process_tree_utils.get_parent>`
--  :py:func:`get_process<msticpy.sectools.process_tree_utils.get_process>`
--  :py:func:`get_process_key<msticpy.sectools.process_tree_utils.get_process_key>`
--  :py:func:`get_root<msticpy.sectools.process_tree_utils.get_root>`
--  :py:func:`get_root_tree<msticpy.sectools.process_tree_utils.get_root_tree>`
--  :py:func:`get_roots<msticpy.sectools.process_tree_utils.get_roots>`
--  :py:func:`get_siblings<msticpy.sectools.process_tree_utils.get_siblings>`
--  :py:func:`get_summary_info<msticpy.sectools.process_tree_utils.get_summary_info>`
--  :py:func:`get_tree_depth<msticpy.sectools.process_tree_utils.get_tree_depth>`
--  :py:func:`infer_schema<msticpy.sectools.process_tree_utils.infer_schema>`
+-  :py:func:`build_process_key<msticpy.transform.process_tree_utils.build_process_key>`
+-  :py:func:`build_process_tree<msticpy.transform.process_tree_utils.build_process_tree>`
+-  :py:func:`get_ancestors<msticpy.transform.process_tree_utils.get_ancestors>`
+-  :py:func:`get_children<msticpy.transform.process_tree_utils.get_children>`
+-  :py:func:`get_descendents<msticpy.transform.process_tree_utils.get_descendents>`
+-  :py:func:`get_parent<msticpy.transform.process_tree_utils.get_parent>`
+-  :py:func:`get_process<msticpy.transform.process_tree_utils.get_process>`
+-  :py:func:`get_process_key<msticpy.transform.process_tree_utils.get_process_key>`
+-  :py:func:`get_root<msticpy.transform.process_tree_utils.get_root>`
+-  :py:func:`get_root_tree<msticpy.transform.process_tree_utils.get_root_tree>`
+-  :py:func:`get_roots<msticpy.transform.process_tree_utils.get_roots>`
+-  :py:func:`get_siblings<msticpy.transform.process_tree_utils.get_siblings>`
+-  :py:func:`get_summary_info<msticpy.transform.process_tree_utils.get_summary_info>`
+-  :py:func:`get_tree_depth<msticpy.transform.process_tree_utils.get_tree_depth>`
+-  :py:func:`infer_schema<msticpy.transform.process_tree_utils.infer_schema>`
 
 
-:py:func:`~msticpy.sectools.process_tree_utils.get_summary_info`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:py:func:`~msticpy.transform.process_tree_utils.get_summary_info`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get summary information.
 
@@ -459,7 +465,7 @@ Get summary information.
 
    .. code:: python
 
-      ptree.get_summary_info(p_tree_win)
+      process_tree.get_summary_info(p_tree_win)
 
    .. container:: output execute_result
 
@@ -472,8 +478,8 @@ Get summary information.
           'IsolatedProcesses': 0,
           'LargestTreeDepth': 7}
 
-:py:func:`~msticpy.sectools.process_tree_utils.get_roots`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:py:func:`~msticpy.transform.process_tree_utils.get_roots`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get roots of all trees in the data set.
 
@@ -482,10 +488,10 @@ Get roots of all trees in the data set.
    .. code:: python
 
       # Get roots of all trees in the set
-      ptree.get_roots(p_tree_win).head()
+      process_tree.get_roots(p_tree_win).head()
 
-:py:func:`~msticpy.sectools.process_tree_utils.get_descendents`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:py:func:`~msticpy.transform.process_tree_utils.get_descendents`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get the full tree beneath a process.
 
@@ -497,12 +503,12 @@ True returns the source process with the result set.
    .. code:: python
 
       # Take one of those roots and get the full tree beneath it
-      t_root = ptree.get_roots(p_tree_win).loc["c:\windowsazure\guestagent_2.7.41491.901_2019-01-14_202614\waappagent.exe0x19941970-01-01 00:00:00.000000"]
-      full_tree = ptree.get_descendents(p_tree_win, t_root)
+      t_root = process_tree.get_roots(p_tree_win).loc["c:\windowsazure\guestagent_2.7.41491.901_2019-01-14_202614\waappagent.exe0x19941970-01-01 00:00:00.000000"]
+      full_tree = process_tree.get_descendents(p_tree_win, t_root)
       full_tree.head()
 
-:py:func:`~msticpy.sectools.process_tree_utils.get_children`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:py:func:`~msticpy.transform.process_tree_utils.get_children`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get the immediate children of a process
 
@@ -514,12 +520,12 @@ True returns the source process with the result set.
    .. code:: python
 
       # Just get the immediate children of the root process
-      children = ptree.get_children(p_tree_win, t_root)
+      children = process_tree.get_children(p_tree_win, t_root)
       children.head()
 
 
-:py:func:`~msticpy.sectools.process_tree_utils.get_tree_depth`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:py:func:`~msticpy.transform.process_tree_utils.get_tree_depth`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get the depth of a tree.
 
@@ -528,7 +534,7 @@ Get the depth of a tree.
    .. code:: python
 
       # Get the depth of the full tree
-      depth = ptree.get_tree_depth(full_tree)
+      depth = process_tree.get_tree_depth(full_tree)
       print(f"depth of tree is {depth}")
 
    .. container:: output stream stdout
@@ -537,11 +543,11 @@ Get the depth of a tree.
 
          depth of tree is 4
 
-:py:func:`~msticpy.sectools.process_tree_utils.get_parent`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:py:func:`~msticpy.transform.process_tree_utils.get_parent`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:py:func:`~msticpy.sectools.process_tree_utils.get_ancestors`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:py:func:`~msticpy.transform.process_tree_utils.get_ancestors`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Get the parent process or all ancestors.
@@ -558,9 +564,9 @@ True returns the source process with the result set.
       btm_descnt = full_tree[full_tree["path"].str.count("/") == depth - 1].iloc[0]
 
       print("parent")
-      display(ptree.get_parent(p_tree_win, btm_descnt)[:20])
+      display(process_tree.get_parent(p_tree_win, btm_descnt)[:20])
       print("ancestors")
-      ptree.get_ancestors(p_tree_win, btm_descnt).head()
+      process_tree.get_ancestors(p_tree_win, btm_descnt).head()
 
    .. container:: output stream stdout
 
@@ -608,8 +614,8 @@ True returns the source process with the result set.
 
          [4 rows x 35 columns]
 
-:py:func:`~msticpy.sectools.process_tree_utils.get_process`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:py:func:`~msticpy.transform.process_tree_utils.get_process`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 get_process retrieves a process record by its key. The process returned
 is a single row - a pandas Series.
@@ -620,7 +626,7 @@ is a single row - a pandas Series.
 
       proc_key = btm_descnt.name
       print(proc_key)
-      ptree.get_process(p_tree_win, proc_key)
+      process_tree.get_process(p_tree_win, proc_key)
 
    .. container:: output stream stdout
 
@@ -631,7 +637,7 @@ is a single row - a pandas Series.
    .. code:: python
 
       process2 = full_tree[full_tree["path"].str.count("/") == depth - 1].iloc[-1]
-      ptree.build_process_key(process2)
+      process_tree.build_process_key(process2)
 
    .. container:: output execute_result
 
@@ -639,8 +645,8 @@ is a single row - a pandas Series.
 
          'c:\\windows\\system32\\conhost.exe0x15842019-02-10 15:24:56.050000'
 
-:py:func:`~msticpy.sectools.process_tree_utils.get_siblings`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:py:func:`~msticpy.transform.process_tree_utils.get_siblings`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get the siblings of a process.
 
@@ -651,8 +657,8 @@ True returns the source process with the result set.
 
    .. code:: python
 
-      src_proc = ptree.get_children(p_tree_win, t_root, include_source=False).iloc[0]
-      ptree.get_siblings(p_tree_win, src_proc, include_source=True).head()
+      src_proc = process_tree.get_children(p_tree_win, t_root, include_source=False).iloc[0]
+      process_tree.get_siblings(p_tree_win, src_proc, include_source=True).head()
 
    .. container:: output execute_result
 
@@ -666,6 +672,50 @@ True returns the source process with the result set.
          ...
 
          [5 rows x 35 columns]
+
+
+:py:func:`~msticpy.transform.process_tree_utils.tree_to_text`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Return text rendering of the process tree.
+
+This function returns a text rendering of the process tree.
+
+.. code:: ipython3
+
+   from msticpy.transform.proc_tree_schema import WIN_EVENT_SCHEMA
+   print(process_tree.tree_to_text(p_tree_win, schema=WIN_EVENT_SCHEMA))
+
+
+.. parsed-literal::
+
+   +--  Process: C:\Program Files\Microsoft Monitoring Agent\Agent\MonitoringHost.exe
+      PID: 0x888
+      Time: 1970-01-01 00:00:00+00:00
+      Cmdline: nan
+      Account: nan  LoginID: 0x3e7
+      +--  Process: C:\Windows\System32\cscript.exe  PID: 0x364
+         Time: 2019-01-15 04:15:26+00:00
+         Cmdline: "C:\Windows\system32\cscript.exe" /nologo
+            "MonitorKnowledgeDiscovery.vbs"
+         Account: WORKGROUP\MSTICAlertsWin1$  LoginID: 0x3e7
+      +--  Process: C:\Program Files\Microsoft Monitoring Agent\Agent\Health Service
+         State\CT_602681692\NativeDSC\DesiredStateConfiguration\ASMHost.exe  PID:
+         0x1c4
+         Time: 2019-01-15 04:16:24.007000+00:00
+         Cmdline: "C:\Program Files\Microsoft Monitoring Agent\Agent\Health
+            Service
+            State\CT_602681692\NativeDSC\DesiredStateConfiguration\ASMHost.exe"
+            GetInventory "C:\Program Files\Microsoft Monitoring
+            Agent\Agent\Health Service
+            State\CT_602681692\work\ServiceState\ServiceState.mof" "C:\Program
+            Files\Microsoft Monitoring Agent\Agent\Health Service
+            State\CT_602681692\work\ServiceState"
+         Account: WORKGROUP\MSTICAlertsWin1$  LoginID: 0x3e7
+         +--  Process: C:\Windows\System32\conhost.exe  PID: 0x99c
+            Time: 2019-01-15 04:16:24.027000+00:00
+            Cmdline: \??\C:\Windows\system32\conhost.exe 0xffffffff -ForceV1
+            Account: WORKGROUP\MSTICAlertsWin1$  LoginID: 0x3e7
 
 
 Create a network from a Tree using Networkx
@@ -715,11 +765,11 @@ are shown below.
 ===================  =====================  =====================  ===========================
 Generic name         Win 4688 schema        Linux auditd schema    MDE schema
 ===================  =====================  =====================  ===========================
-time_stamp           TimeGenerated          TimeGenerated          CreatedProcessCreationTime
-process_name         NewProcessName         exe                    CreatedProcessName
-process_id           NewProcessId           pid                    CreatedProcessId
+\*time_stamp         TimeGenerated          TimeGenerated          CreatedProcessCreationTime
+\*process_name       NewProcessName         exe                    CreatedProcessName
+\*process_id         NewProcessId           pid                    CreatedProcessId
 parent_name          ParentProcessName      *(not used)*           ParentProcessName
-parent_id            ProcessId              ppid                   CreatedProcessParentId
+\*parent_id          ProcessId              ppid                   CreatedProcessParentId
 logon_id             SubjectLogonId         ses                    InitiatingProcessLogonId
 target_logon_id      TargetLogonId          *(not used)*           LogonId
 cmd_line             CommandLine            cmdline                CreatedProcessCommandLine
@@ -729,6 +779,9 @@ host_name_column     Computer               Computer               ComputerDnsNa
 event_id_column      EventID                EventType              *(not used)*
 ===================  =====================  =====================  ===========================
 
+\* indicates a mandatory field. You must supply mappings from your
+source data for these items. Others are optional but will provide more
+information to the user in the plotted tree.
 
 If your schema differs from, but is similar to one of the built-in
 schema mappings you can adapt one of these or supply a custom schema
@@ -760,7 +813,7 @@ names in the source schema.
 
 .. code:: ipython
 
-   from msticpy.sectools.proc_tree_builder import LX_EVENT_SCH
+   from msticpy.transform.proc_tree_builder import LX_EVENT_SCH
    # also WIN_EVENT_SCH and MDE_EVENT_SCH are available
    from copy import copy
    cust_lx_schema = copy(LX_EVENT_SCH)
@@ -773,17 +826,45 @@ names in the source schema.
    cust_lx_schema.event_id_identifier = None
 
    # now supply the schema as the schema parameter
-   ptree.build_process_tree(auditd_df, schema=cust_lx_schema)
+   process_tree.build_process_tree(auditd_df, schema=cust_lx_schema)
 
 You can also supply a schema as a Python ``dict``, with the keys
 being the generic internal name and the values, the names of the columns
 in the input data. Both keys and values are strings except where
 otherwise indicated above.
+Use :py:meth:`~msticpy.transform.process_tree_schema.ProcSchema.blank_schema_dict`
+to get a blank schema dictionary.
 
-The ``time_stamp`` column **must** be a pandas Timestamp (Python datetime)
-type. If your data is in another format (e.g. Unix timestamp or date string)
-you should
-convert this before trying to use the process tree tools. The example
+.. code:: python3
+
+   from msticpy.transform.proc_tree_schema import ProcSchema
+   ProcSchema.blank_schema_dict()
+
+.. parsed-literal::
+
+   {'process_name': 'required',
+   'process_id': 'required',
+   'parent_id': 'required',
+   'time_stamp': 'required',
+   'cmd_line': None,
+   'path_separator': None,
+   'user_name': None,
+   'logon_id': None,
+   'host_name_column': None,
+   'parent_name': None,
+   'target_logon_id': None,
+   'user_id': None,
+   'event_id_column': None,
+   'event_id_identifier': None}
+
+
+The ``time_stamp`` column **should** be a pandas ``Timestamp`` (Python ``datetime``)
+type. If your data is in another format (e.g. Unix timestamp or date string),
+the process tree module will try to convert it before building the process tree
+plot. This uses ``pandas`` to convert to native ``Timestamp``
+
+If the auto-conversion does not work, convert the timestamp field before
+trying to use the process tree tools. The example
 below shows extracting the timestamp from the auditd ``mssg_id`` field.
 
 

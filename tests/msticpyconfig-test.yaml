@@ -1,3 +1,7 @@
+Plugins:
+  TIProviders: []
+  DataProviders: []
+
 AzureSentinel:
   Workspaces:
     Default:
@@ -9,6 +13,15 @@ AzureSentinel:
     MyTestWS:
       WorkspaceId: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
       TenantId: "69d28fd7-42a5-48bc-a619-af56397b9f28"
+      SubscriptionId: "cd928da3-dcde-42a3-aad7-d2a1268c2f48"
+      ResourceGroup: ABC
+      WorkspaceName: Workspace1
+    WSName:
+      WorkspaceId: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
+      TenantId: "69d28fd7-42a5-48bc-a619-af56397b9f28"
+      SubscriptionId: "cd928da3-dcde-42a3-aad7-d2a1268c2f48"
+      ResourceGroup: RG
+      WorkspaceName: WSName
 QueryDefinitions:
   Default:
     - "queries"
@@ -42,7 +55,7 @@ TIProviders:
     Args:
       AuthKey: ""
     Primary: True
-    Provider: "Greynoise"
+    Provider: "GreyNoise"
   OpenPageRank:
     Args:
       AuthKey:
@@ -60,6 +73,23 @@ TIProviders:
         EnvironmentVar: "INTSIGHTS_AUTH"
     Primary: True
     Provider: IntSights
+  AzureSentinel:
+    Args:
+    Primary: True
+    Provider: "AzSTI"
+  Pulsedive:
+    Args:
+      AuthKey: "[PLACEHOLDER]"
+    Primary: True
+    Provider: Pulsedive
+ContextProviders:
+  ServiceNow:
+    Primary: True
+    Args:
+      TenantId: 8360dd21-0294-4240-9128-89611f415c53
+      AuthKey: "authkey"
+      AuthId: "authid"
+    Provider: "ServiceNow"
 OtherProviders:
   GeoIPLite:
     Args:

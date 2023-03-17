@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 
 import pytest
 import pytest_check as check
+
 from msticpy.common.timespan import TimeSpan
 
 __author__ = "Ian Hellen"

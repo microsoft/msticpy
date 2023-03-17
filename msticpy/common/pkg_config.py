@@ -11,24 +11,23 @@ Optionally reads custom configuration from file specified in environment
 variable `MSTICPYCONFIG`. If this is not defined the package will look for
 a file `msticpyconfig.yaml` in the current directory.
 
-Default settings are accessible as an attribute `default_settings`.
-Custom settings are accessible as an attribute `custom_settings`.
-Consolidated settings are accessible as an attribute `settings`.
-
 """
-from importlib.util import find_spec
+import contextlib
+import numbers
 import os
+from importlib.util import find_spec
 from pathlib import Path
-from typing import Any, Dict, Optional, Callable
+from typing import Any, Callable, Dict, Optional, Union
 
+import httpx
 import pkg_resources
 import yaml
 from yaml.error import YAMLError
 
+from .._version import VERSION
 from . import exceptions
 from .exceptions import MsticpyUserConfigError
 from .utility import is_valid_uuid
-from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -38,11 +37,12 @@ _CONFIG_ENV_VAR: str = "MSTICPYCONFIG"
 _DP_KEY = "DataProviders"
 _AZ_SENTINEL = "AzureSentinel"
 _AZ_CLI = "AzureCLI"
+_HOME_PATH = "~/.msticpy/"
 
 # pylint: disable=invalid-name
-default_settings: Dict[str, Any] = {}
-custom_settings: Dict[str, Any] = {}
-settings: Dict[str, Any] = {}
+_default_settings: Dict[str, Any] = {}
+_custom_settings: Dict[str, Any] = {}
+_settings: Dict[str, Any] = {}
 
 
 def _get_current_config() -> Callable[[Any], Optional[str]]:
@@ -74,17 +74,36 @@ def current_config_path() -> Optional[str]:
     return _CURRENT_CONF_FILE(None)
 
 
+def get_settings():
+    """Return the current settings."""
+    return _settings
+
+
 def refresh_config():
     """Re-read the config settings."""
     # pylint: disable=global-statement
-    global default_settings, custom_settings, settings
-    default_settings = _get_default_config()
-    custom_settings = _get_custom_config()
-    custom_settings = _create_data_providers(custom_settings)
-    settings = _consolidate_configs(default_settings, custom_settings)
+    global _default_settings, _custom_settings, _settings
+    _default_settings = _get_default_config()
+    _custom_settings = _get_custom_config()
+    _custom_settings = _create_data_providers(_custom_settings)
+    _settings = _consolidate_configs(_default_settings, _custom_settings)
 
 
-def get_config(setting_path: str) -> Any:
+def has_config(setting_path: str) -> bool:
+    """Return True if a settings path exists."""
+    try:
+        _get_config(setting_path=setting_path, settings_dict=_settings)
+        return True
+    except KeyError:
+        return False
+
+
+_DEFAULT_SENTINEL = "@@@NO-DEFAULT-VALUE@@@"
+
+
+def get_config(
+    setting_path: Optional[str] = None, default: Any = _DEFAULT_SENTINEL
+) -> Any:
     """
     Return setting item for path.
 
@@ -93,15 +112,33 @@ def get_config(setting_path: str) -> Any:
     setting_path : str
         Path to setting item expressed as dot-separated
         string
+    default : Any
+        Default value to return if setting does not exist.
 
     Returns
     -------
     Any
         The item at the path location.
 
+    Exceptions
+    ----------
+    KeyError : if path not found and no default provided.
+
     """
+    if setting_path is None:
+        return _settings
+    try:
+        return _get_config(setting_path, _settings)
+    except KeyError:
+        if default != _DEFAULT_SENTINEL:
+            return default
+        raise
+
+
+def _get_config(setting_path: str, settings_dict: Dict[str, Any]) -> Any:
+    """Return value from setting_path."""
     path_elems = setting_path.split(".")
-    cur_node = settings
+    cur_node = settings_dict
     for elem in path_elems:
         cur_node = cur_node.get(elem, None)
         if cur_node is None:
@@ -109,7 +146,7 @@ def get_config(setting_path: str) -> Any:
     return cur_node
 
 
-def set_config(setting_path: str, value: Any):
+def set_config(setting_path: str, value: Any, create_path: bool = False):
     """
     Set setting value for path.
 
@@ -120,18 +157,65 @@ def set_config(setting_path: str, value: Any):
         string
     value : Any
         The value to set.
+    create_path : bool
+        If True create any missing elements in the settings
+        path.
+
+    Returns
+    -------
+    Any :
+        The current settings node with new value.
+
+    Exceptions
+    ----------
+    KeyError : if not found and no default provided.
 
     """
+    return _set_config(setting_path, _settings, value, create_path)
+
+
+def _set_config(
+    setting_path: str, settings_dict: Dict[str, Any], value: Any, create_path: bool
+) -> Any:
+    """Set `setting_path` in `settings_dict` to `value`."""
     path_elems = setting_path.split(".")
-    cur_node = settings
-    for elem in path_elems:
-        if elem in cur_node:
-            cur_node[elem] = value
+    parent_path = ".".join(path_elems[:-1])
+    key_name = path_elems[-1]
+    with contextlib.suppress(KeyError):
+        parent_node = _get_config(parent_path, settings_dict)
+        parent_node[key_name] = value
+        return parent_node[key_name]
+    cur_node = settings_dict
+    # if there are any intermediate missing paths
+    # and create_path is true, add these.
+    for elem in path_elems[:-1]:
+        next_node = cur_node.get(elem)
+        if next_node is None:
+            if create_path:
+                cur_node[elem] = {}
+                cur_node = cur_node[elem]
+                continue
+            raise KeyError(f"{elem} value of {setting_path} is not a valid path")
+        cur_node = next_node
+    # set the current node's value
+    cur_node[key_name] = value
+    return cur_node[key_name]
+
+
+def _del_config(setting_path: str, settings_dict) -> Any:
+    """Delete `setting_path` from `settings_dict`."""
+    path_elems = setting_path.split(".")
+    cur_node = settings_dict
+    current_value = None
+    for idx, elem in enumerate(path_elems):
+        if idx == len(path_elems) - 1:
+            current_value = cur_node[elem]
+            del cur_node[elem]
             break
         cur_node = cur_node.get(elem, None)
         if cur_node is None:
             raise KeyError(f"{elem} value of {setting_path} is not a valid path")
-    return cur_node
+    return current_value
 
 
 def _read_config_file(config_file: str) -> Dict[str, Any]:
@@ -200,7 +284,7 @@ def _get_default_config():
                 "msticpy package may be corrupted.",
                 title=f"Package {_CONFIG_FILE} missing.",
             ) from mod_err
-        conf_file = next(iter(pkg_root.glob("**/" + _CONFIG_FILE)))
+        conf_file = next(iter(pkg_root.glob(f"**/{_CONFIG_FILE}")))
     if conf_file:
         return _read_config_file(conf_file)
     return {}
@@ -210,11 +294,16 @@ def _get_custom_config():
     config_path = os.environ.get(_CONFIG_ENV_VAR, None)
     if config_path and Path(config_path).is_file():
         _CURRENT_CONF_FILE(str(Path(config_path).resolve()))
-        return _read_config_file(config_path)
+        return _read_config_file(current_config_path())
 
     if Path(_CONFIG_FILE).is_file():
         _CURRENT_CONF_FILE(str(Path(".").joinpath(_CONFIG_FILE).resolve()))
-        return _read_config_file(_CONFIG_FILE)
+        return _read_config_file(current_config_path())
+
+    home_config = Path(os.path.join(_HOME_PATH, _CONFIG_FILE)).expanduser().resolve()
+    if home_config.is_file():
+        _CURRENT_CONF_FILE(str(home_config))
+        return _read_config_file(current_config_path())
     return {}
 
 
@@ -245,6 +334,49 @@ def _create_data_providers(mp_config: Dict[str, Any]) -> Dict[str, Any]:
     return mp_config
 
 
+def _translate_legacy_settings(
+    mp_config: Dict[str, Any], translate: Dict[str, str]
+) -> Dict[str, Any]:
+    """Map legacy settings to new location."""
+    for src, target in translate.items():
+        src_value = _get_config(src, mp_config)
+        _set_config(target, mp_config, src_value, True)
+        _del_config(src, mp_config)
+    return mp_config
+
+
+def get_http_timeout(
+    **kwargs,
+) -> httpx.Timeout:
+    """Return timeout from settings or overridden in `kwargs`."""
+    timeout_params = kwargs.get(
+        "timeout", kwargs.get("def_timeout", get_config("http_timeout", None))  # type: ignore
+    )  # type: ignore
+    if isinstance(timeout_params, dict):
+        timeout_params = {
+            name: _valid_timeout(val) for name, val in timeout_params.items()
+        }
+        return httpx.Timeout(**timeout_params)
+    if isinstance(timeout_params, httpx.Timeout):
+        return timeout_params
+    if isinstance(timeout_params, numbers.Real):
+        return httpx.Timeout(_valid_timeout(timeout_params))
+    if isinstance(timeout_params, (list, tuple)):
+        timeout_params = [_valid_timeout(val) for val in timeout_params]
+        if len(timeout_params) >= 2:
+            return httpx.Timeout(timeout=timeout_params[0], connect=timeout_params[1])
+        if timeout_params:
+            return httpx.Timeout(timeout_params[0])
+    return httpx.Timeout(None)
+
+
+def _valid_timeout(timeout_val) -> Union[float, None]:
+    """Return float in valid range or None."""
+    if isinstance(timeout_val, numbers.Real) and float(timeout_val) >= 0.0:
+        return float(timeout_val)
+    return None
+
+
 # read initial config when first imported.
 refresh_config()
 
@@ -265,7 +397,7 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
     if config_file:
         mp_config = _read_config_file(config_file)
     if not (mp_config or config_file):
-        mp_config = settings
+        mp_config = _settings
 
     if not isinstance(mp_config, dict):
         raise TypeError("Unknown format for configuration settings.")
@@ -385,23 +517,42 @@ def _check_required_provider_settings(sec_args, sec_path, p_name, key_provs):
     if p_name == "XForce":
         errs.append(_check_required_key(sec_args, "ApiID", sec_path))
     if p_name == _AZ_SENTINEL:
-        errs.append(_check_is_uuid(sec_args, "WorkspaceID", sec_path))
-        errs.append(_check_is_uuid(sec_args, "TenantID", sec_path))
+        errs.extend(
+            (
+                _check_is_uuid(sec_args, "WorkspaceID", sec_path),
+                _check_is_uuid(sec_args, "TenantID", sec_path),
+            )
+        )
+
     if p_name.startswith("AzureSentinel_"):
-        errs.append(_check_is_uuid(sec_args, "WorkspaceId", sec_path))
-        errs.append(_check_is_uuid(sec_args, "TenantId", sec_path))
+        errs.extend(
+            (
+                _check_is_uuid(sec_args, "WorkspaceId", sec_path),
+                _check_is_uuid(sec_args, "TenantId", sec_path),
+            )
+        )
+
     if (
         p_name == _AZ_CLI
         and "clientId" in sec_args
         and sec_args["clientId"] is not None
     ):
         # only warn if partially filled - since these are optional
-        errs.append(_check_required_key(sec_args, "clientId", sec_path))
-        errs.append(_check_required_key(sec_args, "tenantId", sec_path))
-        errs.append(_check_required_key(sec_args, "clientSecret", sec_path))
+        errs.extend(
+            (
+                _check_required_key(sec_args, "clientId", sec_path),
+                _check_required_key(sec_args, "tenantId", sec_path),
+                _check_required_key(sec_args, "clientSecret", sec_path),
+            )
+        )
     if p_name == "RiskIQ":
-        errs.append(_check_required_key(sec_args, "ApiID", sec_path))
-        errs.append(_check_required_package("passivetotal", sec_path))
+        errs.extend(
+            (
+                _check_required_key(sec_args, "ApiID", sec_path),
+                _check_required_package("passivetotal", sec_path),
+            )
+        )
+
     return [err for err in errs if err]
 
 

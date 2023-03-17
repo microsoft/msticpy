@@ -8,14 +8,14 @@ import os
 import unittest
 import warnings
 from datetime import datetime, timedelta
-from typing import Any, Tuple, Union, Optional
+from typing import Any, Optional, Tuple, Union
 
 import pandas as pd
 import pytest
 import pytest_check as check
 
-from msticpy.data.data_providers import DriverBase, QueryProvider
-from msticpy.data.query_source import QuerySource
+from msticpy.data.core.data_providers import DriverBase, QueryProvider
+from msticpy.data.core.query_source import QuerySource
 from msticpy.data.drivers import kql_driver
 
 _SPLUNK_IMP_OK = False
@@ -169,7 +169,7 @@ class TestQuerySource(unittest.TestCase):
             ip_address_list=ip_address_list, start=test_start, end=test_end
         )
 
-        check_list = ",".join([f"'{ip}'" for ip in ip_address_list])
+        check_list = ", ".join([f"'{ip}'" for ip in ip_address_list])
         self.assertIn(check_list, query)
 
         ip_address_list = "192.168.0.1, 192.168.0.2, 192.168.0.3"
@@ -182,7 +182,7 @@ class TestQuerySource(unittest.TestCase):
         query = q_src.create_query(
             ip_address_list=int_list, start=test_start, end=test_end
         )
-        check_list = ",".join([str(i) for i in int_list])
+        check_list = ", ".join([str(i) for i in int_list])
         self.assertIn(check_list, query)
 
     def test_cust_formatters_kql(self):
@@ -212,7 +212,7 @@ class TestQuerySource(unittest.TestCase):
             start=test_start,
             end=test_end,
         )
-        check_list = ",".join([f"'{ip.strip()}'" for ip in ip_address_list.split(",")])
+        check_list = ", ".join([f"'{ip.strip()}'" for ip in ip_address_list.split(",")])
         self.assertIn(check_list, query)
 
         int_list = [1, 2, 3, 4]
@@ -222,7 +222,7 @@ class TestQuerySource(unittest.TestCase):
             start=test_start,
             end=test_end,
         )
-        check_list = ",".join([str(i) for i in int_list])
+        check_list = ", ".join([str(i) for i in int_list])
         self.assertIn(check_list, query)
 
 

@@ -4,17 +4,17 @@
 # license information.
 # --------------------------------------------------------------------------
 """Demo QueryProvider."""
+import pickle  # nosec
 from functools import partial
 from pathlib import Path
-import pickle  # nosec
-from typing import List, Dict, Union, Any, Iterable
 from time import sleep
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 import pandas as pd
 import yaml
 
-from msticpy.data.data_providers import QueryContainer
 from msticpy.data import QueryProvider
+from msticpy.data.data_providers import QueryContainer
 
 
 # pylint: disable=too-few-public-methods
@@ -66,7 +66,7 @@ class QueryProviderDemo(QueryProvider):
             data_srcs = self._DATA_DEFS
             # raise ValueError("no query definition file name")
         else:
-            with open(data_src_file, "r") as src_file:
+            with open(data_src_file, "r", encoding="utf-8") as src_file:
                 data_srcs = yaml.safe_load(src_file)
         self.query_store = {}
         self._query_provider = _DataDriver()
@@ -80,7 +80,6 @@ class QueryProviderDemo(QueryProvider):
             query_family = getattr(self, family)
 
             for query_name, file_name in queries.items():
-
                 # Create the partial function
                 query_func = partial(
                     self._execute_query,
@@ -143,9 +142,15 @@ class QueryProviderDemo(QueryProvider):
         """
         raise NotImplementedError()
 
-    def list_queries(self) -> List[str]:
+    def list_queries(self, substring: Optional[str] = None) -> List[str]:
         """
         Return list of family.query in the store.
+
+        Parameters
+        ----------
+        substring : Optional[str]
+            Optional pattern - will return only queries matching the pattern,
+            default None.
 
         Returns
         -------
@@ -153,6 +158,7 @@ class QueryProviderDemo(QueryProvider):
             List of queries
 
         """
+        del substring
         return list(self.query_store.items())
 
     def query_help(self, query_name):

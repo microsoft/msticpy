@@ -4,3 +4,10 @@ requires = [
     "wheel"
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.isort]
+profile = "black"
+src_paths = ["msticpy", "tests"]
+
+[tool.pydocstyle]
+convention = "numpy"

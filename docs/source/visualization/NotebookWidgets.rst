@@ -10,23 +10,15 @@ picking items from a list or tracking progress of a long-running event.
 .. code:: ipython3
 
     # Imports
-    import sys
-    MIN_REQ_PYTHON = (3,6)
-    if sys.version_info < MIN_REQ_PYTHON:
-        print('Check the Kernel->Change Kernel menu and ensure that Python 3.6')
-        print('or later is selected as the active kernel.')
-        sys.exit("Python %s.%s or later is required.\n" % MIN_REQ_PYTHON)
 
-    from IPython.display import display, Markdown
-    import pandas as pd
-    # Import nbtools package
-    from msticpy.nbtools import *
+    import msticpy
+    msticpy.init_notebook(globals(), verbosity=0)
 
 
 QueryTime
 ---------
 
-See :py:class:`QueryTime<msticpy.nbtools.nbwidgets.QueryTime>`
+See :py:class:`QueryTime<msticpy.nbwidgets.QueryTime>`
 
 This widget is used to specify time boundaries - designed to be used
 with the built-in msticpy queries and custom queries. The ``start`` and
@@ -109,7 +101,7 @@ Use the QueryTime properties in a query.
 Lookback
 --------
 
-See :py:class:`Lookback<msticpy.nbtools.nbwidgets.Lookback>`
+See :py:class:`Lookback<msticpy.nbwidgets.Lookback>`
 
 This is simpler version of QueryTime with single slider value
 
@@ -138,7 +130,7 @@ This is simpler version of QueryTime with single slider value
 SelectAlert
 -----------
 
-See :py:class:`SelectAlert<msticpy.nbtools.nbwidgets.SelectAlert>`
+See :py:class:`SelectAlert<msticpy.nbwidgets.SelectAlert>`
 
 This lets you view list of alerts and select one for investigation.
 You can optionally provide an action (a Python function) to call
@@ -182,7 +174,7 @@ SelectItem
 ----------
 
 
-See :py:class:`SelectItem<msticpy.nbtools.nbwidgets.SelectItem>`
+See :py:class:`SelectItem<msticpy.nbwidgets.SelectItem>`
 
 Similar to AlertSelector but simpler and allows you to use any list or
 dictionary of items.
@@ -211,7 +203,7 @@ dictionary of items.
 GetText
 -------
 
-See :py:class:`GetEnvironmentKey<msticpy.nbtools.nbwidgets.GetText>`
+See :py:class:`GetEnvironmentKey<msticpy.nbwidgets.GetText>`
 
 Get editable string value.
 
@@ -228,7 +220,7 @@ See :ref:`widgets-registered-widgets`
 GetEnvironmentKey
 -----------------
 
-See :py:class:`GetEnvironmentKey<msticpy.nbtools.nbwidgets.GetEnvironmentKey>`
+See :py:class:`GetEnvironmentKey<msticpy.nbwidgets.GetEnvironmentKey>`
 
 Get editable value of an environment variable.
 
@@ -259,7 +251,7 @@ See :ref:`widgets-registered-widgets`
 SelectSubset
 ------------
 
-See :py:class:`SelectSubset<msticpy.nbtools.nbwidgets.SelectSubset>`
+See :py:class:`SelectSubset<msticpy.nbwidgets.SelectSubset>`
 
 Allows you to select one or
 multiple items from a list to populate an output set.
@@ -326,7 +318,7 @@ Progress Indicator
 ------------------
 
 
-See :py:class:`Progress<msticpy.nbtools.nbwidgets.Progress>`
+See :py:class:`Progress<msticpy.nbwidgets.Progress>`
 
 This is thin wrapper around the IPyWidgets ``IntProgess`` control.
 It adds some convenience functions for updating progress and
@@ -443,7 +435,7 @@ are for internal use by widgets but three are usable by users:
         Do not register the widget or retrieve values from previously-
         registered instance.
 
-See :py:class:`RegisteredWidget<msticpy.nbtools.nbwidgets.RegisteredWidget>`
+See :py:class:`RegisteredWidget<msticpy.nbwidgets.RegisteredWidget>`
 
 .. code:: ipython3
 

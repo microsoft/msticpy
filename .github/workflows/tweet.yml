@@ -1,0 +1,23 @@
+name: Tweet about PR
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+
+jobs:
+  tweet:
+    if: ${{ github.event.pull_request.merged }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ethomson/send-tweet-action@v1
+        with:
+          status: "🚨 #MSTICPy has just merged a new PR to main!\n\r
+            ${{ github.event.pull_request.user.login }} added the PR - ${{ github.event.pull_request.title }}\n\r
+            https://github.com/microsoft/msticpy/pull/${{ github.event.pull_request.number }}\n\r
+            #python #MSTIC #infosec"
+          consumer-key: ${{ secrets.TWITTER_CONSUMER_API_KEY }}
+          consumer-secret: ${{ secrets.TWITTER_CONSUMER_API_SECRET }}
+          access-token: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          access-token-secret: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}

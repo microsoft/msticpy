@@ -8,23 +8,32 @@ import contextlib
 import io
 import unittest
 import warnings
+from copy import deepcopy
 from datetime import datetime
 from functools import partial
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
+import pytest
 import pytest_check as check
+
+from msticpy.common import pkg_config
 from msticpy.common.exceptions import MsticpyException
-from msticpy.data.data_providers import DriverBase, QueryContainer, QueryProvider
-from msticpy.data.query_source import QuerySource
+from msticpy.data.core.data_providers import (
+    DriverBase,
+    QueryContainer,
+    QueryProvider,
+    _calc_split_ranges,
+)
+from msticpy.data.core.query_source import QuerySource
 
 from ..unit_test_lib import get_test_data_path
 
 _TEST_DATA = get_test_data_path()
 
 
-# pylint: disable=protected-access, invalid-name
+# pylint: disable=protected-access, invalid-name, redefined-outer-name
 class UTDataDriver(DriverBase):
     """Test class."""
 
@@ -350,7 +359,7 @@ class TestDataQuery(unittest.TestCase):
         end = datetime.utcnow() + pd.Timedelta("5min")
         delta = pd.Timedelta("1H")
 
-        ranges = QueryProvider._calc_split_ranges(start, end, delta)
+        ranges = _calc_split_ranges(start, end, delta)
         self.assertEqual(len(ranges), 5)
         self.assertEqual(ranges[0][0], start)
         self.assertEqual(ranges[-1][1], end)
@@ -360,7 +369,7 @@ class TestDataQuery(unittest.TestCase):
             self.assertNotIn(end_time, st_times)
 
         end = end + pd.Timedelta("20min")
-        ranges = QueryProvider._calc_split_ranges(start, end, delta)
+        ranges = _calc_split_ranges(start, end, delta)
         self.assertEqual(len(ranges), 5)
         self.assertEqual(ranges[0][0], start)
         self.assertEqual(ranges[-1][1], end)
@@ -373,7 +382,7 @@ class TestDataQuery(unittest.TestCase):
         end = datetime.utcnow() + pd.Timedelta("5min")
         delta = pd.Timedelta("1H")
 
-        ranges = QueryProvider._calc_split_ranges(start, end, delta)
+        ranges = _calc_split_ranges(start, end, delta)
         result_queries = la_provider.all_queries.list_alerts(
             "print", start=start, end=end, split_query_by="1H"
         )
@@ -459,3 +468,117 @@ def test_query_prov_properties():
     check.is_in("M365D", data_envs)
     check.is_in("LocalData", data_envs)
     check.is_in("ResourceGraph", data_envs)
+
+
+def test_add_query():
+    """Test adding a query dynamically."""
+    qry_prov = QueryProvider("MSSentinel")
+
+    # define a query
+    query = """
+    SecurityEvent
+    | where EventID == {event_id}
+    | where TimeGenerated between (datetime({start}) .. datetime({end}))
+    | where Computer has "{host_name}"
+    """
+    # define the query parameters
+    # (these can also be passed as a list of raw tuples)
+    qp_host = qry_prov.create_param("host_name", "str", "Name of Host")
+    qp_start = qry_prov.create_param("start", "datetime")
+    qp_end = qry_prov.create_param("end", "datetime")
+    qp_evt = qry_prov.create_param("event_id", "int", None, 4688)
+
+    # add the query
+    qry_prov.add_custom_query(
+        name="get_host_events",
+        query=query,
+        description="Get events of type from host",
+        family="Custom",
+        parameters=[qp_host, qp_start, qp_end, qp_evt],
+    )
+
+    check.is_true(hasattr(qry_prov, "Custom"))
+    check.is_true(hasattr(qry_prov.Custom, "get_host_events"))
+    check.is_true(callable(qry_prov.Custom.get_host_events))
+    check.is_in("Get events of type", qry_prov.Custom.get_host_events.__doc__)
+
+
+_SEARCH_TESTS = [
+    ((None, None, None), 0),
+    (("syslog", None, None), 15),
+    (("syslog", "syslog", None), 15),
+    ((None, "syslog", None), 15),
+    ((None, "sys", None), 15),
+    ((None, "sys.*", None), 15),
+    ((None, None, "ip_address"), 25),
+    ((None, "syslog", "ip_address"), 2),
+    ((None, ["syslog", "signinlogs"], None), 15),
+    ((None, ["syslog", "signinlogs"], ["(ip.*)|(host.*)", "account.*"]), 15),
+    ((None, "syslog", None, False), 0),
+]
+
+
+@pytest.fixture(scope="module")
+def sentinel_qry_prov():
+    """Return initialized query provider."""
+    driver = UTDataDriver()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        qry_prov = QueryProvider(data_environment="MSSentinel", driver=driver)
+    qry_prov.connect()
+    check.greater_equal(len(qry_prov.list_queries()), 30)
+    return qry_prov
+
+
+_SEARCH_IDS = [", ".join([str(i) for i in item[0]]) for item in _SEARCH_TESTS]
+
+
+@pytest.mark.parametrize("search, expected", _SEARCH_TESTS, ids=_SEARCH_IDS)
+def test_query_search(search, expected, sentinel_qry_prov):
+    """Test query search."""
+    results = sentinel_qry_prov.search(*search)
+    print(search, len(results))
+    print(results[:5])
+    check.greater_equal(len(results), expected)
+
+
+@pytest.mark.parametrize("mode", ["abs", "rel"])
+def test_query_paths(mode):
+    """Test correctly loading queries from custom paths."""
+
+    if mode == "abs":
+        query_paths = [str(get_test_data_path().joinpath("kusto"))]
+    else:
+        query_paths = ["tests/testdata/kusto"]
+
+    qry_prov = QueryProvider("Kusto", query_paths=query_paths)
+    check.greater_equal(len(qry_prov.list_queries()), 13)
+    for data_family in (
+        "AppAuthCluster",
+        "AppAuthClustera",
+        "IntegAuthCluster",
+        "IntegAuthCluster2",
+    ):
+        check.is_true(hasattr(qry_prov, data_family))
+
+    # Custom paths in settings
+    current_settings = deepcopy(pkg_config._settings.get("QueryDefinitions"))
+    if not current_settings:
+        pkg_config._settings["QueryDefinitions"] = {"Custom": query_paths}
+    elif not current_settings.get("Custom"):
+        pkg_config._settings["QueryDefinitions"]["Custom"] = query_paths
+    else:
+        pkg_config._settings["QueryDefinitions"]["Custom"].extend(query_paths)
+
+    check.greater_equal(len(pkg_config._settings["QueryDefinitions"]["Custom"]), 1)
+
+    qry_prov = QueryProvider("Kusto")
+    check.greater_equal(len(qry_prov.list_queries()), 13)
+    for data_family in (
+        "AppAuthCluster",
+        "AppAuthClustera",
+        "IntegAuthCluster",
+        "IntegAuthCluster2",
+    ):
+        check.is_true(hasattr(qry_prov, data_family))
+    pkg_config._settings["QueryDefinitions"] = current_settings

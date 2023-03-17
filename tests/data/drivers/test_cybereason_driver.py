@@ -4,17 +4,19 @@
 # license information.
 # --------------------------------------------------------------------------
 """Miscellaneous data provider driver tests."""
+import json
 import re
+from hashlib import sha256
 
-import respx
 import pandas as pd
 import pytest
 import pytest_check as check
+import respx
 
+from msticpy.data.core.query_defns import Formatters
 from msticpy.data.drivers.cybereason_driver import CybereasonDriver
 
-from ...unit_test_lib import get_test_data_path, custom_mp_config
-
+from ...unit_test_lib import custom_mp_config, get_test_data_path
 
 MP_PATH = str(get_test_data_path().parent.joinpath("msticpyconfig-test.yaml"))
 # pylint: disable=protected-access
@@ -54,6 +56,60 @@ _CR_RESULT = {
     "message": "",
     "expectedResults": 0,
     "failures": 0,
+}
+
+_CR_QUERY = {
+    "query": """
+    {
+        "queryPath" : [
+            {
+                "requestedType": "File",
+                "filters":[
+                    {
+                        "facetName": "elementDisplayName",
+                        "values": [ "{fileName}" ],
+                        "filterType":"MatchesWildcard"
+                    },
+                    {
+                        "facetName": "{timefield}",
+                        "values": [ "{start}", "{end}" ],
+                        "filterType":"Between"
+                    }
+                ],
+                "isResult": true
+            }
+        ],
+        "customFields": ["{customFields}"]
+    }
+    """,
+    "params": {
+        "fileName": ["file1", "file2"],
+        "timefield": "creationTime",
+        "start": 1667471841766,
+        "end": 1667471841767,
+        "customFields": ["elementDisplayName"],
+    },
+    "result": {
+        "queryPath": [
+            {
+                "requestedType": "File",
+                "filters": [
+                    {
+                        "facetName": "elementDisplayName",
+                        "values": ["file1", "file2"],
+                        "filterType": "MatchesWildcard",
+                    },
+                    {
+                        "facetName": "creationTime",
+                        "values": [1667471841766, 1667471841767],
+                        "filterType": "Between",
+                    },
+                ],
+                "isResult": True,
+            }
+        ],
+        "customFields": ["elementDisplayName"],
+    },
 }
 
 
@@ -99,3 +155,24 @@ def test_query(driver):
         check.is_true(connect.called or driver.connected)
         check.is_true(query.called)
         check.is_instance(data, pd.DataFrame)
+
+
+def test_custom_param_handler(driver):
+    """Test query formatter returns data in expected format."""
+    query = _CR_QUERY.get("query", "")
+    parameters = _CR_QUERY.get("params", {})
+    updated_query = driver.formatters[Formatters.PARAM_HANDLER](
+        query,
+        parameters,
+    )
+    check.is_instance(updated_query, str)
+    for parameter in parameters:
+        check.is_not_in(f"{{{parameter}}}", updated_query)
+    parsed_updated_query = json.loads(updated_query)
+    hash_orig = sha256(
+        json.dumps(parsed_updated_query, sort_keys=True).encode()
+    ).hexdigest()
+    hash_expected = sha256(
+        json.dumps(_CR_QUERY["result"], sort_keys=True).encode()
+    ).hexdigest()
+    check.equal(hash_orig, hash_expected)

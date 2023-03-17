@@ -6,11 +6,11 @@
 """Module for Model class for modelling sessions data."""
 
 from collections import defaultdict
-from typing import List, Union, Dict
+from typing import Dict, List, Union
 
-from .utils.data_structures import Cmd
-from .utils import cmds_only, cmds_params_only, cmds_params_values, probabilities
 from ...common.exceptions import MsticpyException
+from .utils import cmds_only, cmds_params_only, cmds_params_values, probabilities
+from .utils.data_structures import Cmd
 
 
 # pylint: disable=too-many-instance-attributes
@@ -105,16 +105,16 @@ class Model:
         self.value_probs = None
         self.value_cond_param_probs = None
 
-        self.set_params_cond_cmd_probs = {}  # type: Dict[str, Dict[str, float]]
+        self.set_params_cond_cmd_probs: Dict[str, Dict[str, float]] = {}
 
         self.session_likelihoods = None
         self.session_geomean_likelihoods = None
 
-        self.rare_windows = {}  # type: Dict[int, list]
-        self.rare_window_likelihoods = {}  # type: Dict[int, list]
+        self.rare_windows: Dict[int, list] = {}
+        self.rare_window_likelihoods: Dict[int, list] = {}
 
-        self.rare_windows_geo = {}  # type: Dict[int, list]
-        self.rare_window_likelihoods_geo = {}  # type: Dict[int, list]
+        self.rare_windows_geo: Dict[int, list] = {}
+        self.rare_window_likelihoods_geo: Dict[int, list] = {}
 
     def train(self):
         """

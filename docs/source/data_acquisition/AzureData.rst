@@ -13,7 +13,7 @@ with any Azure Resource type.
 This feature is currently a work in progress and additional data
 enrichment capabilities will be added over time.
 
-:py:mod:`Azure Data API documentation<msticpy.data.azure_data>`
+:py:mod:`Azure Data API documentation<msticpy.context.azure_data>`
 
 
 
@@ -21,7 +21,7 @@ enrichment capabilities will be added over time.
 Instantiating and Connecting with an Azure Data Connector
 ---------------------------------------------------------
 
-See :py:class:`Azure Data <msticpy.data.azure_data.AzureData>`
+See :py:class:`Azure Data <msticpy.context.azure_data.AzureData>`
 
 In order to connect to the Azure API and retrieve the required data
 we need to instantiate an Azure Data Connector and connect to the API.
@@ -37,8 +37,8 @@ options. Available options are:
       `Azure Managed Identity. <https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview>`__
     * 'interactive' - This prompts the browser to interactively login using the device's browser.
 
-By default `['env', 'cli', 'msi', 'interactive']` is used but you can provide an alternative
-list to `.connect` via the auth_methods parameter.
+By default ``['cli', 'msi', 'devicecode']`` is used but you can provide an alternative
+list to ``.connect`` via the auth_methods parameter.
 
 .. code:: ipython3
 
@@ -46,10 +46,13 @@ list to `.connect` via the auth_methods parameter.
         az.connect(auth_methods=['cli','interactive'])
 
 
+For more details on Azure authentication see :doc:`../getting_started/AzureAuthentication`.
+
+
 Get Azure Subscription Details
 ------------------------------
 
-See :py:meth:`get_subscriptions <msticpy.data.azure_data.AzureData.get_subscriptions>`
+See :py:meth:`get_subscriptions <msticpy.context.azure_data.AzureData.get_subscriptions>`
 
 Details about the subscription a resource is a member of can provide
 vital context to a security analyst when conducting an investigation.
@@ -101,7 +104,7 @@ with details of all the subscriptions within the tenant.
 
 |
 
-See :py:meth:`get_subscription_info <msticpy.data.azure_data.AzureData.get_subscription_info>`
+See :py:meth:`get_subscription_info <msticpy.context.azure_data.AzureData.get_subscription_info>`
 
 AZURE_DATA_CONNECTOR.get_subscription_info() gets information on a
 specific subscription ID.
@@ -124,7 +127,7 @@ specific subscription ID.
 Get Azure Resource Details
 --------------------------
 
-See :py:meth:`get_resources <msticpy.data.azure_data.AzureData.get_resources>`
+See :py:meth:`get_resources <msticpy.context.azure_data.AzureData.get_resources>`
 
 As well as subscriptions we can return details on a specific Azure
 resource.
@@ -155,7 +158,7 @@ results.
 +---+----------------------------------------------------+----------------------------------------------------+------------------------------------+-------------+---------------------------------------------+-------+-------------+----------+----------------------------------------------------+----------------------------------------------------+-----------+
 
 
-See :py:meth:`get_resource_details<msticpy.data.azure_data.AzureData.get_resource_details>`
+See :py:meth:`get_resource_details<msticpy.context.azure_data.AzureData.get_resource_details>`
 
 You can return full details on a single resource with AZURE_DATA_CONNECTOR.get_resource_details() and passing a Resource ID.
 
@@ -277,7 +280,7 @@ You can return full details on a single resource with AZURE_DATA_CONNECTOR.get_r
 Get Azure Network Details
 -------------------------
 
-See :py:meth:`get_network_details <msticpy.data.azure_data.AzureData.get_network_details>`
+See :py:meth:`get_network_details <msticpy.context.azure_data.AzureData.get_network_details>`
 
 If your Azure resources has a network interface associated with it (for example a VM) you can return details on the
 interface as associated Network Security Group (NSG). Calling this function is very similar to getting resource details
@@ -297,7 +300,7 @@ This will return a DataFrame containing details of all IP addresses and subnets 
 Get Azure Metrics
 -----------------
 
-See :py:meth:`get_metrics <msticpy.data.azure_data.AzureData.get_metrics>`
+See :py:meth:`get_metrics <msticpy.context.azure_data.AzureData.get_metrics>`
 
 Azure provides a range of metrics for resources. The types of metrics available depends on the Azure resource in question,
 a full list of metrics can be found `here <https://docs.microsoft.com/azure/azure-monitor/platform/metrics-supported>`__.

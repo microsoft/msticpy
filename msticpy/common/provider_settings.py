@@ -4,20 +4,20 @@
 # license information.
 # --------------------------------------------------------------------------
 """Helper functions for configuration settings."""
-from collections import UserDict
 import os
-from typing import Any, Dict, Optional, Union, Callable
 import warnings
+from collections import UserDict
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import attr
 from attr import Factory
 
 from .._version import VERSION
 from .exceptions import MsticpyImportExtraError
-from . import pkg_config as config
+from .pkg_config import get_config, refresh_config
 
 try:
-    from .secret_settings import SecretsClient
+    from ..auth.secret_settings import SecretsClient
 
     _SECRETS_ENABLED = True
 except ImportError:
@@ -55,9 +55,62 @@ class ProviderSettings:
 # pylint: enable=too-few-public-methods, too-many-ancestors
 
 
+def _secrets_enabled() -> bool:
+    return _SECRETS_ENABLED and _SECRETS_CLIENT
+
+
+def get_secrets_client_func() -> Callable[..., Optional["SecretsClient"]]:
+    """
+    Return function to get or create secrets client.
+
+    Returns
+    -------
+    Callable
+        Function to get, replace or create a SecretsClient
+
+    Notes
+    -----
+    This function creates closure that persists the secrets client
+    instance.
+    The inner function works as follows:
+
+    - if called with no parameters and SecretsClient is not
+      instantiated, it will try to instantiate a SecretsClient,
+      assign it to the nonlocal `_secrets_client` and return this instance.
+    - if called subsequently it will just return the secrets client.
+    - if called with a SecretsClient instance as a parameter, it will
+      replace the SecretsClient instance and return that.
+
+    """
+    _secrets_client: Optional["SecretsClient"] = None
+
+    def _return_secrets_client(
+        secrets_client: Optional["SecretsClient"] = None, **kwargs
+    ) -> Optional["SecretsClient"]:
+        """Return (optionally setting or creating) a SecretsClient."""
+        nonlocal _secrets_client
+        if not _SECRETS_ENABLED:
+            return None
+        if isinstance(secrets_client, SecretsClient):
+            _secrets_client = secrets_client
+        if _secrets_client is None:
+            _secrets_client = SecretsClient(**kwargs)
+        return _secrets_client
+
+    return _return_secrets_client
+
+
+# Create a SecretsClient instance if it can be imported when
+# the module is imported.
 _SECRETS_CLIENT: Any = None
-if "KeyVault" in config.settings and config.settings["KeyVault"] and _SECRETS_ENABLED:
-    _SECRETS_CLIENT = SecretsClient()
+# Create the secrets client closure
+_SET_SECRETS_CLIENT: Callable[
+    ..., Optional["SecretsClient"]
+] = get_secrets_client_func()
+# Create secrets client instance if SecretsClient can be imported
+# and config has KeyVault settings.
+if get_config("KeyVault", None) and _SECRETS_ENABLED:
+    _SECRETS_CLIENT = _SET_SECRETS_CLIENT()
 
 
 def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSettings]:
@@ -78,22 +131,22 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
     # pylint: disable=global-statement
     global _SECRETS_CLIENT
     # pylint: enable=global-statement
-    if "KeyVault" in config.settings and config.settings["KeyVault"]:
+    if get_config("KeyVault", None):
         if _SECRETS_CLIENT is None and _SECRETS_ENABLED:
             print(
                 "KeyVault enabled. Secrets access may require additional authentication."
             )
-            _SECRETS_CLIENT = SecretsClient()
+            _SECRETS_CLIENT = _SET_SECRETS_CLIENT()
     else:
         _SECRETS_CLIENT = None
-    section_settings = config.settings.get(config_section)
+    section_settings = get_config(config_section, None)
     if not section_settings:
         return {}
 
     settings = {}
     for provider, item_settings in section_settings.items():
         prov_args = item_settings.get("Args")
-        prov_settings = ProviderSettings(
+        prov_settings = ProviderSettings(  # type: ignore[call-arg]
             name=provider,
             description=item_settings.get("Description"),
             args=_get_setting_args(
@@ -110,28 +163,71 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
 
 
 def reload_settings():
-    """
-    Reload settings from config files.
-
-    Parameters
-    ----------
-    clear_keyring : bool, optional
-        Clears any secrets cached in keyring, by default False
-
-    """
-    config.refresh_config()
+    """Reload settings from config files."""
+    refresh_config()
 
 
 def refresh_keyring():
     """Refresh local keyring secrets cache from Key Vault."""
-    if _SECRETS_ENABLED and _SECRETS_CLIENT:
+    if _secrets_enabled():
         _SECRETS_CLIENT.refresh_keyring()
 
 
 def clear_keyring():
     """Delete local keyring secrets cache."""
-    if _SECRETS_ENABLED and _SECRETS_CLIENT:
+    if _secrets_enabled():
         _SECRETS_CLIENT.clear_keyring_secrets()
+
+
+def auth_secrets_client(
+    tenant_id: Optional[str] = None,
+    auth_methods: List[str] = None,
+    credential: Any = None,
+    **kwargs,
+):
+    """
+    Authenticate the Secrets/Key Vault client.
+
+    Parameters
+    ----------
+    auth_methods : List[str], optional
+        List of authentication methods to try
+        Possible options are:
+        - "env" - to get authentication details from environment variables
+        - "cli" - to use Azure CLI authentication details
+        - "msi" - to user Managed Service Identity details
+        - "interactive" - to prompt for interactive login
+        - "vscode" - to use VSCode credentials
+        - "powershell" - to use PowerShell credentials
+        - "interactive" - to prompt for interactive login
+        - "cache" - to use shared token cache credentials
+        - "devicecode" - to use device code with web login
+        - "clientsecret" - to use client id/secret login.
+        Default is ["env", "msi", "vscode", "cli", "powershell", "interactive"]
+    tenant_id : str, optional
+        The tenant to authenticate against. If not supplied, the default
+        tenant for the identity will be used.
+    silent : bool, optional
+        Set True to hide all output during connection, by default False
+    credential : Azure Credential, optional
+        Use an existing Azure credential to authenticate.
+
+    Other Parameters
+    ----------------
+    client_id : str
+        Required when using "clientsecret" auth method
+    client_secret : str
+        Required when using "clientsecret" auth method
+
+    """
+    if _secrets_enabled():
+        secrets_client = SecretsClient(
+            tenant_id=tenant_id,
+            auth_methods=auth_methods,
+            credential=credential,
+            **kwargs,
+        )
+        _SET_SECRETS_CLIENT(secrets_client=secrets_client)
 
 
 def _get_setting_args(
@@ -238,7 +334,7 @@ def _fetch_setting(
                 + f" (provider {provider_name})"
             )
             return None
-        config_path = [config_section, provider_name, "Args", arg_name]
+        config_path = (config_section, provider_name, "Args", arg_name)
         return _SECRETS_CLIENT.get_secret_accessor(  # type:ignore
             ".".join(config_path)
         )

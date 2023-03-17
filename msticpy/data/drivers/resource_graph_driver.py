@@ -4,32 +4,29 @@
 # license information.
 # --------------------------------------------------------------------------
 """Azure Resource Graph Driver class."""
-from typing import Any, Tuple, Union
 import warnings
+from typing import Any, Tuple, Union
 
 import pandas as pd
+
+# pylint: disable=wrong-import-order, ungrouped-imports
+from azure.mgmt.subscription import SubscriptionClient
 from pandas.core.frame import DataFrame
 
-from .driver_base import DriverBase, QuerySource
 from ..._version import VERSION
+from ...auth.azure_auth import AzureCloudConfig, az_connect, only_interactive_cred
+from ...common.exceptions import MsticpyImportExtraError, MsticpyNotConnectedError
 from ...common.utility import export
-from ...common.exceptions import (
-    MsticpyNotConnectedError,
-    MsticpyImportExtraError,
-)
-from ...common.azure_auth import az_connect, AzureCloudConfig, only_interactive_cred
-
-# pylint: disable=wrong-import-order
-from azure.mgmt.subscription import SubscriptionClient
+from .driver_base import DriverBase, QuerySource
 
 try:
     from azure.mgmt.resourcegraph import ResourceGraphClient
     from azure.mgmt.resourcegraph.models import (
-        ResultTruncated,
         QueryRequest,
         QueryRequestOptions,
         QueryResponse,
         ResultFormat,
+        ResultTruncated,
     )
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
@@ -95,8 +92,7 @@ class ResourceGraphDriver(DriverBase):
             credential_scopes=[self.az_cloud_config.token_uri],
         )
         self.subscription_ids = [
-            sub.subscription_id
-            for sub in self.sub_client.subscriptions.list()  # type: ignore
+            sub.subscription_id for sub in self.sub_client.subscriptions.list()
         ]
 
         self._connected = True
@@ -174,7 +170,7 @@ class ResourceGraphDriver(DriverBase):
             options=request_options,
         )
 
-        response = self.client.resources(request)  # type: QueryResponse
+        response: QueryResponse = self.client.resources(request)
 
         # Pagination logic adapted from azure-cli-extensions
         # https://github.com/Azure/azure-cli-extensions/blob/8dade2f6fe28803d0fbdb1700c3ab4e4d71e5318/src/resource-graph/azext_resourcegraph/custom.py#L75

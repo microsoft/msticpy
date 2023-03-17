@@ -7,23 +7,24 @@
 from datetime import datetime
 from typing import List, Optional, Union
 
-import numpy as np
 import networkx as nx
+import numpy as np
 import pandas as pd
 from bokeh.io import output_notebook, show
 from bokeh.layouts import column
-from bokeh.models import LayoutDOM
+from bokeh.models import Circle, HoverTool, Label, LayoutDOM  # type: ignore
 from bokeh.plotting import figure, from_networkx
-from bokeh.models import Circle, HoverTool, Label
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
+from ..common.utility import export
 from ..datamodel.entities import Entity
 from ..datamodel.entities.alert import Alert
 from ..datamodel.soc.incident import Incident
 from ..nbtools.security_alert import SecurityAlert
-from ..nbtools.timeline import display_timeline
-from ..nbtools.timeline_duration import display_timeline_duration
+from ..vis.timeline import display_timeline
+from ..vis.timeline_duration import display_timeline_duration
+from .figure_dimension import bokeh_figure
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -31,7 +32,11 @@ __author__ = "Pete Bryan"
 req_alert_cols = ["DisplayName", "Severity", "AlertType"]
 req_inc_cols = ["id", "name", "properties.severity"]
 
+# wrap figure function to handle v2/v3 parameter renaming
+figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
+
+@export
 class EntityGraph:
     """Create a graph for visualizing and tracking links between entities."""
 
@@ -346,7 +351,7 @@ class EntityGraph:
         return tl_df
 
     def _add_incident_or_alert_node(self, incident: Union[Incident, Alert, None]):
-        """Check what type of entity is passed in and creates relevent graph."""
+        """Check what type of entity is passed in and creates relevant graph."""
         if isinstance(incident, Incident):
             self._add_incident_node(incident)
         elif isinstance(incident, Alert):
@@ -399,17 +404,17 @@ class EntityGraph:
 
 def _dedupe_entities(alerts, ents) -> list:
     """Deduplicate incident and alert entities."""
-    alrt_ents = []
-    for alrt in alerts:
-        if alrt["Entities"]:
-
-            alrt_ents += [ent.__hash__() for ent in alrt["Entities"]]
+    alert_entities = []
+    for alert in alerts:
+        if alert["Entities"]:
+            alert_entities += [hash(ent) for ent in alert["Entities"]]
     for ent in ents:
-        if ent.__hash__() in alrt_ents:
+        if hash(ent) in alert_entities:
             ents.remove(ent)
     return ents
 
 
+@export
 def plot_entitygraph(  # pylint: disable=too-many-locals
     entity_graph: nx.Graph,
     node_size: int = 25,
@@ -484,24 +489,43 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
         )
     )
 
+    entity_graph_for_plotting = nx.Graph()
+    index_node = 0
+    rev_index = {}
+    fwd_index = {}
+    node_attributes = {}
+    for node_key in entity_graph.nodes:
+        entity_graph_for_plotting.add_node(index_node)
+        rev_index[node_key] = index_node
+        fwd_index[index_node] = node_key
+        node_attributes[index_node] = entity_graph.nodes[node_key]
+        index_node += 1
+
+    nx.set_node_attributes(entity_graph_for_plotting, node_attributes)
+
+    for source_node, target_node in entity_graph.edges:
+        entity_graph_for_plotting.add_edge(
+            rev_index[source_node], rev_index[target_node]
+        )
+
     graph_renderer = from_networkx(
-        entity_graph, nx.spring_layout, scale=scale, center=(0, 0)
+        entity_graph_for_plotting, nx.spring_layout, scale=scale, center=(0, 0)
     )
 
     graph_renderer.node_renderer.glyph = Circle(
         size=node_size, fill_color="node_color", fill_alpha=0.5
     )
     # pylint: disable=no-member
-    plot.renderers.append(graph_renderer)
+    plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
 
     # Create labels
-    for name, pos in graph_renderer.layout_provider.graph_layout.items():
+    for index, pos in graph_renderer.layout_provider.graph_layout.items():
         label = Label(
             x=pos[0],
             y=pos[1],
             x_offset=5,
             y_offset=5,
-            text=name,
+            text=fwd_index[int(index)],
             text_font_size=font_pnt,
         )
         plot.add_layout(label)

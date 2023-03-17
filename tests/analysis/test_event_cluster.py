@@ -8,6 +8,7 @@ import os
 import unittest
 
 import pandas as pd
+
 from msticpy.analysis.eventcluster import (
     add_process_features,
     char_ord_score,
@@ -55,7 +56,6 @@ class TestEventCluster(unittest.TestCase):
         self.assertIn("pathHash", out_df.columns)
 
     def test_custom_features(self):
-
         input_str = (
             "The quick & sly (as all foxes might be/or not) fox, jumped over a frog."
         )

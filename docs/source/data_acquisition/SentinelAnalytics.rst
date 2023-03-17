@@ -8,19 +8,19 @@ To return a dataframe detailing all configured alert/analytics rules configured 
 call `list_alert_rules`. The returned dataframe includes scheduled queries, as well as Fusion based detections.
 The returned dataframe include details of the rule configuration as well as the query run (where applicable).
 
-See :py:meth:`list_alert_rules <msticpy.data.azure.sentinel_core.MicrosoftSentinel.list_alert_rules>`
+See :py:meth:`list_alert_rules <msticpy.context.azure.sentinel_core.MicrosoftSentinel.list_alert_rules>`
 
 .. code:: ipython3
 
-    azs.list_alert_rules()
+    sentinel.list_alert_rules()
 
 You can also return details of avaliable Analytic templates with `list_analytic_templates`.
 
-See :py:meth:`list_analytic_templates <msticpy.data.azure.sentinel_core.MicrosoftSentinel.list_analytic_templates>`
+See :py:meth:`list_analytic_templates <msticpy.context.azure.sentinel_core.MicrosoftSentinel.list_analytic_templates>`
 
 .. code:: ipython3
 
-    azs.list_analytic_templates()
+    sentinel.list_analytic_templates()
 
 Create Analytics
 ----------------
@@ -28,13 +28,13 @@ Create Analytics
 To create a new analytic rule you can use `create_analytic_rule`. With this function you can create
 a new analytic rule either from an analytic template or with a set of custom details.
 
-See :py:meth:`create_analytic_rule <msticpy.data.azure.sentinel_core.MicrosoftSentinel.create_analytic_rule>`
+See :py:meth:`create_analytic_rule <msticpy.context.azure.sentinel_core.MicrosoftSentinel.create_analytic_rule>`
 
 When creating an analytic if a template name or ID is provided details from that template will be used.
 
 .. code:: ipython3
 
-    azs.create_analytic_rule(template="f817f062-320c-4c18-891c-7c5cc64da6ee")
+    sentinel.create_analytic_rule(template="f817f062-320c-4c18-891c-7c5cc64da6ee")
 
 Otherwise you can specify details manually. Request elements include:
 -name: The name to give the analytic.
@@ -52,16 +52,16 @@ Otherwise you can specify details manually. Request elements include:
 
 .. code:: ipython3
 
-    azs.create_analytic_rule(name="Custom Analytic", query="SecurityAlert | take 10")
+    sentinel.create_analytic_rule(name="Custom Analytic", query="SecurityAlert | take 10")
 
 Delete Analytics
 ----------------
 
 You can also delete analytic rules by passing the name or ID of the analytic rules to `delete_analytic_rule`.
 
-See :py:meth:`delete_analytic_rule <msticpy.data.azure.sentinel_core.MicrosoftSentinel.delete_analytic_rule>`
+See :py:meth:`delete_analytic_rule <msticpy.context.azure.sentinel_core.MicrosoftSentinel.delete_analytic_rule>`
 
 .. code:: ipython3
 
-    azs.delete_analytic_rule(analytic_rule="a91d4cfa-1854-431b-a432-8742f9aa0d59")
+    sentinel.delete_analytic_rule(analytic_rule="a91d4cfa-1854-431b-a432-8742f9aa0d59")
 

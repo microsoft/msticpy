@@ -198,7 +198,7 @@ def hash_ip(input_item: Union[List[str], str]) -> Union[List[str], str]:
     return _hash_ip_item(input_item)
 
 
-def hash_list(item_list: List[str]) -> List[str]:
+def hash_list(item_list: List[str]) -> List[Any]:
     """
     Hash list of strings.
 
@@ -209,11 +209,12 @@ def hash_list(item_list: List[str]) -> List[str]:
 
     Returns
     -------
-    List[str]
+    List[Any]
         Hashed list
 
     """
-    out_list = []
+    out_list: List[Union[Dict[str, Any], List[Any], str]] = []
+    hash_val: Union[str, Dict[str, Any], List[str]]
     for val in item_list:
         if isinstance(val, dict):
             hash_val = hash_dict(val)
@@ -452,7 +453,7 @@ def mask_df(  # noqa: MC0001
                     axis=1,
                 )
         except Exception as err:
-            print(col_name, str(err))
+            print(col_name, err)
             raise
 
     if not silent:
@@ -544,4 +545,10 @@ class ObfuscationAccessor:
             Obfuscated dataframe
 
         """
+        warn_message = (
+            "This accessor method has been deprecated.\n"
+            "Please use df.mp.mask() method instead."
+            "This will be removed in MSTICPy v2.2.0"
+        )
+        warnings.warn(warn_message, category=DeprecationWarning)
         return mask_df(data=self._df, column_map=column_map, use_default=use_default)

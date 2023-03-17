@@ -4,19 +4,17 @@
 # license information.
 # --------------------------------------------------------------------------
 """Miscellaneous data provider driver tests."""
-from unittest.mock import patch
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 import pytest_check as check
 
 from msticpy.data import DataEnvironment, QueryProvider
 from msticpy.data.drivers import import_driver
-
 from msticpy.data.drivers.mdatp_driver import MDATPDriver
 from msticpy.data.drivers.security_graph_driver import SecurityGraphDriver
 
-from ...unit_test_lib import get_test_data_path, custom_mp_config
+from ...unit_test_lib import custom_mp_config, get_test_data_path
 
 _RGE_IMP_OK = False
 try:
@@ -42,19 +40,28 @@ _JSON_RESP = {
 }
 
 _MDEF_TESTS = [
-    ("MDE", "https://api.securitycenter.microsoft.com/"),
-    ("MDATP", "https://api.securitycenter.microsoft.com/"),
-    ("M365D", "https://api.security.microsoft.com/"),
+    ("MDE", "https://api.securitycenter.microsoft.com/", ""),
+    ("MDATP", "https://api.securitycenter.microsoft.com/", None),
+    ("M365D", "https://api.security.microsoft.com/", None),
+    ("M365D", "https://api-us.security.microsoft.com/", "us"),
+    ("M365D", "https://api-eu.security.microsoft.com/", "eu"),
+    ("M365D", "https://api-uk.security.microsoft.com/", "uk"),
+    ("MDE", "https://api-gov.securitycenter.microsoft.us/", "dod"),
+    ("MDE", "https://api-uk.securitycenter.microsoft.com/", "uk"),
+    ("MDE", "https://api-us.securitycenter.microsoft.com/", "us"),
+    ("MDE", "https://api-eu.securitycenter.microsoft.com/", "eu"),
+    ("MDE", "https://api-gcc.securitycenter.microsoft.us/", "gcc"),
+    ("MDE", "https://api-gov.securitycenter.microsoft.us/", "gcc-high"),
 ]
 
 
-@pytest.mark.parametrize("env, api", _MDEF_TESTS)
-def test_MDE_driver(env, api):
+@pytest.mark.parametrize("env, api, cloud", _MDEF_TESTS)
+def test_MDE_driver(env, api, cloud: None):
     """Test class MDE driver."""
     env_enum = DataEnvironment.parse(env)
     driver_cls = import_driver(env_enum)
     with custom_mp_config(MP_PATH):
-        driver = driver_cls(data_environment=env_enum)
+        driver = driver_cls(data_environment=env_enum, cloud=cloud)
     check.is_instance(driver, MDATPDriver)
     check.equal(driver.api_root, api)
 
@@ -94,7 +101,12 @@ def _mde_create_mock(httpx):
 
 @pytest.mark.parametrize(
     "env, api",
-    [("MDATP", "securitycenter"), ("MDE", "securitycenter"), ("M365D", "security")],
+    [
+        ("MDATP", "securitycenter"),
+        ("MDE", "securitycenter"),
+        ("MDE", "securitycenter"),
+        ("M365D", "security"),
+    ],
 )
 @patch("msticpy.data.drivers.odata_driver.httpx")
 def test_mde_connect(httpx, env, api):
