@@ -52,7 +52,7 @@ import warnings
 from contextlib import redirect_stdout
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple
 
 import ipywidgets as widgets
 import pandas as pd
@@ -328,13 +328,22 @@ def init_notebook(
         0 = No output
         1 or False = Brief output (default)
         2 or True = Detailed output
+    verbosity : int, optional
+        alias for `verbose`
     config : Optional[str]
         Use this path to load a msticpyconfig.yaml.
         Defaults are MSTICPYCONFIG env variable, home folder (~/.msticpy),
         current working directory.
     no_config_check : bool, optional
         Skip the check for valid configuration. Default is False.
-    verbosity : int, optional
+    detect_env : Union[bool, List[str]], optional
+        By default init_notebook tries to detect environments and makes
+        additional configuration changes if it finds one of the supported
+        notebook environments.
+        Passing `False` for this parameter disables environment detection.
+        Alternatively, you can pass a list of environments that you
+        want to detect. Current supported environments are 'aml' (Azure
+        Machine Learning) and 'synapse' (Azure Synapse).
 
     Raises
     ------
@@ -415,7 +424,7 @@ def init_notebook(
     _pr_output("<hr><h4>Starting Notebook initialization...</h4>")
     logger.info("Starting Notebook initialization")
     # Check Azure ML environment
-    if is_in_aml():
+    if _detect_env("aml", **kwargs) and is_in_aml():
         check_versions_aml(*_get_aml_globals(namespace))
     else:
         # If not in AML check and print version status
@@ -426,7 +435,7 @@ def init_notebook(
             _pr_output(output)
             logger.info(output)
 
-    if is_in_synapse():
+    if _detect_env("synapse", **kwargs) and is_in_synapse():
         synapse_params = {
             key: val for key, val in kwargs.items() if key in _SYNAPSE_KWARGS
         }
@@ -520,6 +529,14 @@ def _set_verbosity(**kwargs):
     elif isinstance(verb_param, int):
         verbosity = min(2, max(0, verb_param))
     _VERBOSITY(verbosity)
+
+
+def _detect_env(env_name: Literal["aml", "synapse"], **kwargs):
+    """Return true if an environment should be detected."""
+    detect_opt = kwargs.get("detect_env", True)
+    if isinstance(detect_opt, bool):
+        return detect_opt
+    return env_name in detect_opt if isinstance(detect_opt, list) else True
 
 
 def list_default_imports():
