@@ -829,7 +829,9 @@ def _get_geoip_provider_settings(provider_name: str) -> ProviderSettings:
     settings = get_provider_settings(config_section="OtherProviders")
     if provider_name in settings:
         return settings[provider_name]
-    return ProviderSettings(name=provider_name, description="Not found.")
+    return ProviderSettings(  # type: ignore[call-arg]
+        name=provider_name, description="Not found."
+    )
 
 
 @export

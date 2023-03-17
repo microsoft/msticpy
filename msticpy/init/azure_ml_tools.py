@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Checker functions for Azure ML notebooks."""
+import logging
 import os
 import sys
 from pathlib import Path
@@ -25,6 +26,8 @@ from ..common.utility import search_for_file
 from ..config import MpConfigFile
 
 __version__ = VERSION
+
+logger = logging.getLogger(__name__)
 
 AZ_GET_STARTED = (
     "https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/A%20Getting"
@@ -234,10 +237,7 @@ def populate_config_to_mp_config(mp_path):
         mp_config_convert.settings["AzureSentinel"]["Workspaces"][
             "Default"
         ] = def_azs_settings.copy()
-    mssg = (
-        f"Created '{mp_path}' with Microsoft Sentinel settings"
-        f" imported from {config_json}."
-    )
+
     if Path(mp_path).exists():
         # If there is an existing file read it in
         mp_config_text = Path(mp_path).read_text(encoding="utf-8")
@@ -250,8 +250,14 @@ def populate_config_to_mp_config(mp_path):
             f"Updated '{mp_path}' with Microsoft Sentinel settings"
             f" imported from {config_json}."
         )
+    else:
+        mssg = (
+            f"Created '{mp_path}' with Microsoft Sentinel settings"
+            f" imported from {config_json}."
+        )
     # Save the file
     mp_config_convert.save_to_file(mp_path, backup=True)
+    logger.info(mssg)
     return mssg
 
 
@@ -334,7 +340,7 @@ def _set_mpconfig_var():
     if (
         # If a valid MSTICPYCONFIG value is found - return
         (mp_path_val and Path(mp_path_val).is_file())
-        # Or if there is a msticpconfig in the current folder.
+        # Or if there is a msticpyconfig in the current folder.
         or Path(".").joinpath(MP_FILE).is_file()
     ):
         return

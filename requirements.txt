@@ -4,7 +4,7 @@ azure-core>=1.24.0
 azure-identity>=1.10.0
 azure-mgmt-subscription>=3.0.0
 beautifulsoup4>=4.0.0
-bokeh>=1.4.0, <3.0.0
+bokeh>=1.4.0, <=3.1.0
 cryptography>=3.1
 deprecated>=1.2.4
 dnspython>=2.0.0, <3.0.0

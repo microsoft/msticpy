@@ -14,8 +14,8 @@ import pandas as pd
 
 from ..._version import VERSION
 from ...auth.msal_auth import MSALDelegatedAuth
-from ...common import pkg_config as config
 from ...common.exceptions import MsticpyConnectionError, MsticpyUserConfigError
+from ...common.pkg_config import get_config
 from ...common.provider_settings import get_provider_settings
 from ...common.utility import mp_ua_header
 from .driver_base import DriverBase, QuerySource
@@ -32,7 +32,7 @@ _HELP_URI = (
 
 
 class OData(DriverBase):
-    """Parent class to retreive date from an oauth based API."""
+    """Parent class to retrieve date from an oauth based API."""
 
     CONFIG_NAME = ""
     _ALT_CONFIG_NAMES: Iterable[str] = []
@@ -364,7 +364,7 @@ def _get_driver_settings(
         # Otherwise fall back on legacy settings location
         for alt_name in alt_names:
             alt_key = f"{alt_name}-{instance}" if instance else alt_name
-            app_config = config.settings.get(alt_key, {}).get("Args")
+            app_config = get_config(f"{alt_key}.Args", {})
             if app_config:
                 break
 

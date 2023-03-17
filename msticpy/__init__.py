@@ -99,6 +99,7 @@ that allow you start working in a notebook more quickly:
 >>> mp.init_notebook()
 
 This module performs several steps to initialize MSTICPy:
+
 - imports a number of standard packages (e.g. pandas) into the notebook
 - imports a number of modules and functions from msticpy
 - checks the version of MSTICPy
@@ -124,11 +125,13 @@ from ._version import VERSION
 from .common import pkg_config as settings
 from .common.check_version import check_version
 from .common.utility import search_name as search
+from .init.logging import set_logging_level, setup_logging
 
 __version__ = VERSION
 __author__ = "Ian Hellen, Pete Bryan, Ashwin Patil"
 
 refresh_config = settings.refresh_config
+setup_logging()
 
 if not os.environ.get("KQLMAGIC_EXTRAS_REQUIRES"):
     os.environ["KQLMAGIC_EXTRAS_REQUIRES"] = "jupyter-basic"
