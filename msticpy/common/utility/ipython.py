@@ -4,7 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Notebook utility functions."""
-import pickle
+# pickle only used here for storing data.
+import pickle  # nosec
 from base64 import b64encode
 from typing import Any, Iterable, Optional, Union
 
