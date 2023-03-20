@@ -249,7 +249,8 @@ def _az_connect_core(
     aad_uri = az_config.endpoints.active_directory
     logger.info("az_connect_core - using %s cloud and endpoint: %s", cloud, aad_uri)
 
-    tenant_id = tenant_id or AzureCloudConfig().tenant_id
+    tenant_id = tenant_id or az_config.tenant_id
+    auth_methods = auth_methods or az_config.auth_methods
     logger.info(
         "TenantId:  %s, requested auth methods: %s",
         tenant_id,
@@ -289,6 +290,9 @@ def _az_connect_core(
     return AzCredentials(legacy_creds, creds)
 
 
+az_connect_core = _az_connect_core
+
+
 def _build_chained_creds(
     aad_uri,
     requested_clients: Union[List[str], None] = None,
@@ -314,7 +318,7 @@ def _build_chained_creds(
 
     Raises
     ------
-    CloudError
+    MsticpyAzureConfigError
         If the chained credential creation fails.
 
     """
@@ -322,72 +326,49 @@ def _build_chained_creds(
     if not requested_clients:
         requested_clients = ["env", "cli", "msi", "interactive"]
         logger.info("No auth methods requested defaulting to: %s", requested_clients)
-    clients = [
-        _CLIENTS[client](tenant_id=tenant_id, aad_uri=aad_uri, **kwargs)  # type: ignore
-        for client in requested_clients
-    ]
+    cred_list = []
+    invalid_cred_types: List[str] = []
+    unusable_cred_type: List[str] = []
+    for cred_type in requested_clients:  # type: ignore[union-attr]
+        if cred_type not in _CLIENTS:
+            invalid_cred_types.append(cred_type)
+            logger.info("Unknown authentication type requested: %s", cred_type)
+            continue
+        cred_client = _CLIENTS[cred_type](  # type: ignore[operator]
+            tenant_id=tenant_id, aad_uri=aad_uri, **kwargs
+        )
+        if cred_client is not None:
+            cred_list.append(cred_client)
+        else:
+            unusable_cred_type.append(cred_type)
     logger.info(
         "Cred types added to chained credential: %s",
-        ", ".join(cred.__class__.__name__ for cred in clients if cred is not None),
+        ", ".join(cred.__class__.__name__ for cred in cred_list if cred is not None),
     )
-    if not clients:
-        raise MsticpyAzureConfigError(
+    if not cred_list:
+        exception_args = [
             "Cannot authenticate - no valid credential types.",
             "At least one valid authentication method required.",
+            f"Configured auth_types: {','.join(requested_clients)}",
+        ]
+        if invalid_cred_types:
+            exception_args.append(
+                f"Unrecognized auth_types: {','.join(invalid_cred_types)}",
+            )
+        if unusable_cred_type:
+            exception_args.extend(
+                [
+                    "The following auth types could not be used due to",
+                    "missing parameters or environment variables:",
+                    ",".join(invalid_cred_types),
+                ]
+            )
+        raise MsticpyAzureConfigError(
+            *exception_args,
             help_uri=_HELP_URI,
             title="Authentication failure",
         )
-    return ChainedTokenCredential(*clients)  # type: ignore
-
-
-class _AzCachedConnect:
-    """Singleton class caching Azure credentials."""
-
-    _instance = None
-
-    def __new__(cls):
-        """Override new to check and return existing instance."""
-        if cls._instance is None:
-            cls._instance = super(_AzCachedConnect, cls).__new__(cls)
-            cls.connect.__doc__ = _az_connect_core.__doc__
-        return cls._instance
-
-    def __init__(self):
-        """Initialize the class."""
-        self.az_credentials: Optional[AzCredentials] = None
-        self.cred_cloud: str = self.current_cloud
-
-    @property
-    def current_cloud(self) -> str:
-        """Return current cloud."""
-        return AzureCloudConfig().cloud
-
-    def connect(self, *args, **kwargs):
-        """Call az_connect_core if token is not present or expired."""
-        if self.az_credentials is None:
-            self.az_credentials = _az_connect_core(*args, **kwargs)
-            return self.az_credentials
-        # Check expiry
-        if (
-            datetime.utcfromtimestamp(
-                self.az_credentials.modern.get_token(
-                    AzureCloudConfig().token_uri
-                ).expires_on
-            )
-            <= datetime.utcnow()
-        ):
-            self.az_credentials = _az_connect_core(*args, **kwargs)
-        # Check changed cloud
-        if self.cred_cloud != kwargs.get(
-            "cloud", kwargs.get("region", self.current_cloud)
-        ):
-            self.az_credentials = _az_connect_core(*args, **kwargs)
-        return self.az_credentials
-
-
-# externally callable function using the class above
-# _AZ_CACHED_CONNECT = _AzCachedConnect()
-az_connect_core = _az_connect_core
+    return ChainedTokenCredential(*cred_list)
 
 
 def only_interactive_cred(chained_cred: ChainedTokenCredential):
@@ -456,7 +437,7 @@ def check_cli_credentials() -> Tuple[AzureCliStatus, Optional[str]]:
     except ImportError:
         # Azure CLI not installed
         return AzureCliStatus.CLI_NOT_INSTALLED, None
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:  # pylint: disable=broad-except, broad-exception-caught
         if "AADSTS70043: The refresh token has expired" in str(ex):
             message = (
                 "Azure CLI was detected but the token has expired. "
