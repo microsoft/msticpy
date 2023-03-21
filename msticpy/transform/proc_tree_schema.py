@@ -256,6 +256,7 @@ OSQUERY_EVENT_SCH = ProcSchema(
     user_name="columns_username",
     path_separator="/",
     user_id="columns_uid",
+)
 
 # FireEye HX processEvent from 'stateagentinspector' or 'eventbuffer' audits
 HX_PROCESSEVENT_SCH = ProcSchema(

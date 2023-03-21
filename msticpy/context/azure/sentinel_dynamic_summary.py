@@ -389,7 +389,7 @@ class SentinelQueryProvider:
 
     def __init__(self, workspace: str):
         """Initialize Sentinel Provider."""
-        workspaces = get_config("AzureSentinel.Workspaces")
+        workspaces = get_config("AzureSentinel.Workspaces", {})
         self.workspace_config = ""
         self.workspace_alias = ""
         for ws_name, workspace_conf in workspaces.items():

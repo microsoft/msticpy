@@ -11,7 +11,7 @@ import pytest_check as check
 import yaml
 
 import msticpy
-from msticpy.common.pkg_config import settings
+from msticpy.common.pkg_config import set_config
 from msticpy.data import QueryProvider
 from msticpy.init import user_config
 
@@ -88,7 +88,7 @@ def test_user_config(mp_settings):
     """Test user config."""
     mpcfg_path = os.environ.get("MSTICPYCONFIG")
     with custom_mp_config(mp_path=mpcfg_path):
-        settings["UserDefaults"] = mp_settings.get("UserDefaults")
+        set_config("UserDefaults", mp_settings.get("UserDefaults"))
         prov_dict = user_config.load_user_defaults()
 
     check.is_in("qry_asi", prov_dict)
