@@ -455,9 +455,7 @@ class QueryProvider:
         query_source = kwargs.pop("query_source", None)
 
         if not self._additional_connections:
-            result = self._query_provider.query(
-               query, query_source=query_source, **query_options
-            )
+            result = self._query_provider.query(query, query_source=query_source, **query_options)
             return result
 
         # run query against all connections
