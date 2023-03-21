@@ -11,12 +11,18 @@ import attr
 import pandas as pd
 from bokeh.io import output_notebook, show
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM, Legend
+from bokeh.models import (  # type: ignore[attr-defined]
+    ColumnDataSource,
+    HoverTool,
+    LayoutDOM,
+    Legend,
+)
 from bokeh.plotting import figure, reset_output
 
 from .._version import VERSION
 from ..common.data_utils import ensure_df_datetimes
 from ..common.utility import check_kwargs, export
+from .figure_dimension import bokeh_figure
 from .timeline_common import (
     TIMELINE_HELP,
     calc_auto_plot_height,
@@ -32,6 +38,9 @@ from .timeline_common import (
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+# wrap figure function to handle v2/v3 parameter renaming
+figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
 
 @attr.s(auto_attribs=True)
@@ -198,8 +207,6 @@ def display_timeline_values(  # noqa: C901, MC0001
     plot = figure(
         x_range=(start_range, end_range),
         min_border_left=50,
-        plot_height=height,
-        plot_width=param.width,
         x_axis_label="Event Time",
         x_axis_type="datetime",
         x_minor_ticks=10,
@@ -207,7 +214,10 @@ def display_timeline_values(  # noqa: C901, MC0001
         tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
         toolbar_location="above",
         title=param.title or "Timeline",
+        height=height,
+        width=param.width,
     )
+
     plot.yaxis.visible = param.yaxis
     _set_grid_lines(plot)
 
@@ -238,7 +248,7 @@ def display_timeline_values(  # noqa: C901, MC0001
                 click_policy="hide",
                 label_text_font_size="8pt",
             )
-            plot.add_layout(ext_legend, param.legend)
+            plot.add_layout(ext_legend, param.legend)  # type: ignore[arg-type]
     else:
         plot_args = {
             "x": time_column,
@@ -266,12 +276,13 @@ def display_timeline_values(  # noqa: C901, MC0001
             ref_times=param.ref_times,
         )
 
+    plot_layout: LayoutDOM
     if param.range_tool:
         rng_select = create_range_tool(
             data=graph_df,
             min_time=min_time,
             max_time=max_time,
-            plot_range=plot.x_range,
+            plot_range=plot.x_range,  # type: ignore[arg-type]
             width=param.width,
             height=height,
             time_column=time_column,

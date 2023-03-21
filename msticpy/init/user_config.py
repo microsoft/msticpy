@@ -50,7 +50,7 @@ from io import StringIO
 from typing import Any, Dict, Tuple
 
 from .._version import VERSION
-from ..common.pkg_config import settings
+from ..common.pkg_config import get_config
 from ..common.wsconfig import WorkspaceConfig
 from ..data.core.data_providers import QueryProvider
 
@@ -68,7 +68,7 @@ def load_user_defaults() -> Dict[str, object]:
         Dict of object name and provider instances.
 
     """
-    user_defaults = settings.get("UserDefaults")
+    user_defaults = get_config("UserDefaults", {})
     if not user_defaults:
         return {}
     prov_dict = _load_query_providers(user_defaults)

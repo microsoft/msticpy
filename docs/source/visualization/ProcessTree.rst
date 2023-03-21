@@ -674,6 +674,50 @@ True returns the source process with the result set.
          [5 rows x 35 columns]
 
 
+:py:func:`~msticpy.transform.process_tree_utils.tree_to_text`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Return text rendering of the process tree.
+
+This function returns a text rendering of the process tree.
+
+.. code:: ipython3
+
+   from msticpy.transform.proc_tree_schema import WIN_EVENT_SCHEMA
+   print(process_tree.tree_to_text(p_tree_win, schema=WIN_EVENT_SCHEMA))
+
+
+.. parsed-literal::
+
+   +--  Process: C:\Program Files\Microsoft Monitoring Agent\Agent\MonitoringHost.exe
+      PID: 0x888
+      Time: 1970-01-01 00:00:00+00:00
+      Cmdline: nan
+      Account: nan  LoginID: 0x3e7
+      +--  Process: C:\Windows\System32\cscript.exe  PID: 0x364
+         Time: 2019-01-15 04:15:26+00:00
+         Cmdline: "C:\Windows\system32\cscript.exe" /nologo
+            "MonitorKnowledgeDiscovery.vbs"
+         Account: WORKGROUP\MSTICAlertsWin1$  LoginID: 0x3e7
+      +--  Process: C:\Program Files\Microsoft Monitoring Agent\Agent\Health Service
+         State\CT_602681692\NativeDSC\DesiredStateConfiguration\ASMHost.exe  PID:
+         0x1c4
+         Time: 2019-01-15 04:16:24.007000+00:00
+         Cmdline: "C:\Program Files\Microsoft Monitoring Agent\Agent\Health
+            Service
+            State\CT_602681692\NativeDSC\DesiredStateConfiguration\ASMHost.exe"
+            GetInventory "C:\Program Files\Microsoft Monitoring
+            Agent\Agent\Health Service
+            State\CT_602681692\work\ServiceState\ServiceState.mof" "C:\Program
+            Files\Microsoft Monitoring Agent\Agent\Health Service
+            State\CT_602681692\work\ServiceState"
+         Account: WORKGROUP\MSTICAlertsWin1$  LoginID: 0x3e7
+         +--  Process: C:\Windows\System32\conhost.exe  PID: 0x99c
+            Time: 2019-01-15 04:16:24.027000+00:00
+            Cmdline: \??\C:\Windows\system32\conhost.exe 0xffffffff -ForceV1
+            Account: WORKGROUP\MSTICAlertsWin1$  LoginID: 0x3e7
+
+
 Create a network from a Tree using Networkx
 -------------------------------------------
 
