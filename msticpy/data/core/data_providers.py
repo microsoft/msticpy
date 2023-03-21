@@ -476,13 +476,13 @@ class QueryProvider:
 
                 for future in concurrent.futures.as_completed(all_tasks):
                     result = future.result()
-                    result['MsticpyInstance'] = all_tasks[future]
+                    result['DataProviderInstance'] = all_tasks[future]
                     results.append(result)
         else:
             for con_name, connection in self._additional_connections.items():
                 try:
                     query_res = connection.query(query, query_source=query_source, **query_options)
-                    query_res['MsticpyInstance'] = con_name
+                    query_res['DataProviderInstance'] = con_name
                     results.append(query_res)
                 except MsticpyDataQueryError:
                     print(f"Query {con_name} failed.")
