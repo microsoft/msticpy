@@ -20,6 +20,7 @@ from IPython.core.magic import (
     magics_class,
     needs_local_scope,
     register_line_cell_magic,
+    register_line_magic,
 )
 
 from ..init.pivot_core.pivot_magic_core import run_txt2df
@@ -33,6 +34,7 @@ except ImportError:
 
 from .._version import VERSION
 from ..common.utility import is_ipython
+from ..common.utility.ipython import save_obj_to_cell
 from ..transform import base64unpack as base64
 from ..transform.iocextract import IoCExtract
 
@@ -196,3 +198,34 @@ if is_ipython():
 
         """
         return run_txt2df(line, cell, local_ns)
+
+    @register_line_magic
+    @magic_arguments.magic_arguments()
+    @magic_arguments.argument(
+        "--var_name",
+        "-v",
+        help="The variable to return the results in.",
+    )
+    @magic_arguments.argument(
+        "--object",
+        "-o",
+        help="The object name to store.",
+    )
+    @needs_local_scope
+    def save_to_cell(line: str, local_ns: dict):
+        """
+        Msticpy SaveToCell IPython magic extension.
+
+        Parameters
+        ----------
+        line : str, optional
+            Line contents, by default ""
+
+        """
+        args = magic_arguments.parse_argstring(save_to_cell, line)
+        print(args)
+        print(type(args.object))
+        obj = local_ns.get(args.object)
+        if obj is None:
+            raise ValueError(f"Variable '{args.object}' not found.")
+        save_obj_to_cell(obj, args.var_name)

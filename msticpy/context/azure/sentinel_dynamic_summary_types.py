@@ -6,11 +6,13 @@
 """Sentinel Dynamic Summary classes."""
 import dataclasses
 import json
+import logging
 import uuid
 from datetime import datetime
 from functools import singledispatchmethod
-from typing import Any, ClassVar, Dict, Iterable, List, Optional, Union, cast
+from typing import Any, Callable, ClassVar, Dict, Iterable, List, Optional, Union, cast
 
+import numpy as np
 import pandas as pd
 
 from ..._version import VERSION
@@ -18,6 +20,24 @@ from ...common.exceptions import MsticpyUserError
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+_TACTICS = (
+    "Reconnaissance",
+    "ResourceDevelopment",
+    "InitialAccess",
+    "Execution",
+    "Persistence",
+    "PrivilegeEscalation",
+    "DefenseEvasion",
+    "CredentialAccess",
+    "Discovery",
+    "LateralMovement",
+    "Collection",
+    "Exfiltration",
+    "CommandAndControl",
+    "Impact",
+)
+_TACTICS_DICT = {tactic.casefold(): tactic for tactic in _TACTICS}
 
 _CLS_TO_API_MAP = {
     "summary_id": "summaryId",
@@ -39,6 +59,8 @@ _CLS_TO_API_MAP = {
     "summary_item_id": "summaryItemId",
 }
 _API_TO_CLS_MAP = {val: key for key, val in _CLS_TO_API_MAP.items()}
+
+logger = logging.getLogger(__name__)
 
 
 class FieldList:
@@ -106,17 +128,14 @@ class DynamicSummaryItem:
         self.summary_item_id = self.summary_item_id or str(uuid.uuid4())
         if isinstance(self.tactics, str):
             self.tactics = [self.tactics]
+        self.tactics = _match_tactics(self.tactics)
         if isinstance(self.techniques, str):
             self.techniques = [self.techniques]
 
     def to_api_dict(self):
         """Return attributes as a JSON-serializable dictionary."""
         return {
-            _CLS_TO_API_MAP.get(name, name): _to_datetime_utc_str(value)
-            if isinstance(value, datetime)
-            else _dict_dates_to_str(value)
-            if isinstance(value, dict)
-            else value
+            _CLS_TO_API_MAP.get(name, name): _convert_data_types(value)
             for name, value in dataclasses.asdict(self).items()
             if value is not None
         }
@@ -126,20 +145,6 @@ class DynamicSummaryItem:
 DynamicSummaryItem.fields = FieldList(
     [field.name for field in dataclasses.fields(DynamicSummaryItem)]
 )
-
-
-def _to_datetime_utc_str(date_time):
-    if not isinstance(date_time, datetime):
-        return date_time
-    dt_str = date_time.isoformat()
-    return dt_str.replace("+00:00", "Z") if "+00:00" in dt_str else f"{dt_str}Z"
-
-
-def _dict_dates_to_str(input_dict: Dict[Any, Any]) -> Dict[Any, Any]:
-    return {
-        name: value.isoformat() if isinstance(value, datetime) else value
-        for name, value in input_dict.items()
-    }
 
 
 class DynamicSummary:
@@ -171,13 +176,13 @@ class DynamicSummary:
         relation_id : str, optional
             The relation ID, by default None
         search_key : str, optional
-            Search key for the entire summary, by default None
+            Search key column for the summarized data, by default None
         tactics : Union[str, List[str], None], optional
             Relevant MITRE tactics, by default None
         techniques : Union[str, List[str], None], optional
             Relevant MITRE techniques, by default None
-        source_info : str, optional
-            Summary source info, by default None
+        source_info : Dict[str, Any], optional
+            Summary source info dictionary, by default None
         summary_items : Union[pd, DataFrame, Iterable[DynamicSummaryItem],
         List[Dict[str, Any]]], optional
             Collection of summary items, by default None
@@ -189,16 +194,31 @@ class DynamicSummary:
         self.tenant_id: str = kwargs.pop(
             "azure_tenant_id", kwargs.pop("tenant_id", None)
         )
+
+        self.search_key = kwargs.pop("search_key", None)
         tactics = kwargs.pop("tactics", [])
-        self.tactics = [tactics] if isinstance(tactics, str) else tactics
+        self.tactics = _match_tactics(
+            [tactics] if isinstance(tactics, str) else tactics
+        )
         techniques = kwargs.pop("techniques", [])
         self.techniques = [techniques] if isinstance(techniques, str) else techniques
         self.summary_items: List[DynamicSummaryItem] = []
         summary_items = kwargs.pop("summary_items", None)
         if summary_items is not None:
             self.add_summary_items(summary_items)
+        source_info = kwargs.pop("source_info", {})
+        self.source_info = (
+            source_info
+            if isinstance(source_info, dict)
+            else {"user_source": source_info}
+        )
+        self.source_info["source_pkg"] = f"MSTICPy {VERSION}"
+
         # Add other kwargs as instance attributes
         self.__dict__.update(kwargs)
+        logger.info(
+            "Dynamic summary created %s", summary_id or f"auto({self.summary_id})"
+        )
 
     def __repr__(self) -> str:
         """Return simple representation of instance."""
@@ -386,6 +406,10 @@ class DynamicSummary:
         """
         del kwargs
         if isinstance(next(iter(data)), DynamicSummaryItem):
+            logger.info(
+                "_add_summary_items (list(DynamicSummaryItem)) items %d",
+                len(data) if data else 0,
+            )
             self.summary_items = list(data)
         else:
             self._add_summary_items_dict(data)
@@ -415,6 +439,7 @@ class DynamicSummary:
 
         """
         summary_fields = kwargs.pop("summary_fields", None)
+        logger.info("_add_summary_items (df) rows %d", len(data))
         for row in data.to_dict(orient="records"):
             summary_params = {}
             if summary_fields:
@@ -430,10 +455,15 @@ class DynamicSummary:
                 summary_params["event_time_utc"] = kwargs.pop(
                     "event_time_utc", row.get("TimeGenerated")
                 )
+            search_key_value = row.get(self.search_key) if self.search_key else None
+            if search_key_value and "search_key" not in kwargs:
+                kwargs["search_key"] = search_key_value
             # Create DynamicSummaryItem instance for each row
             self.summary_items.append(
                 DynamicSummaryItem(
-                    packed_content=row,  # type: ignore
+                    packed_content={
+                        key: _convert_data_types(value) for key, value in row.items()
+                    },
                     **summary_params,
                     **kwargs,  # pass remaining kwargs as summary item properties
                 )
@@ -450,7 +480,24 @@ class DynamicSummary:
             properties.
 
         """
-        self.summary_items = [DynamicSummaryItem(**properties) for properties in data]
+        logger.info(
+            "_add_summary_items (list(dict)) rows %d", len(list(data)) if data else 0
+        )
+        summary_items = []
+        for properties in data:
+            # if search key specified, try to extract from packed_content field
+            if (
+                self.search_key
+                and "search_key" not in properties
+                and self.search_key in properties.get("packed_content", {})
+            ):
+                search_key_value = properties.get("packed_content", {}).get(
+                    self.search_key
+                )
+                if search_key_value:
+                    properties["search_key"] = search_key_value
+            summary_items.append(DynamicSummaryItem(**properties))
+        self.summary_items = summary_items
 
     def append_summary_items(
         self,
@@ -482,6 +529,7 @@ class DynamicSummary:
         self.add_summary_items(data, **kwargs)
         new_items = self.summary_items
         self.summary_items = current_items + new_items
+        logger.info("append_summary_items %s", type(data))
 
     def to_json(self):
         """Return JSON representation of DynamicSummary."""
@@ -680,3 +728,41 @@ def df_to_dynamic_summary(data: pd.DataFrame) -> DynamicSummary:
         items.append(ds_item)
     dyn_summary.add_summary_items(items)
     return dyn_summary
+
+
+def _to_datetime_utc_str(date_time):
+    """Convert datetime to ISO date string."""
+    if not isinstance(date_time, datetime):
+        return date_time
+    dt_str = date_time.isoformat()
+    return dt_str.replace("+00:00", "Z") if "+00:00" in dt_str else f"{dt_str}Z"
+
+
+def _convert_dict_types(input_dict: Dict[Any, Any]) -> Dict[Any, Any]:
+    """Convert data types in dictionary members."""
+    return {name: _convert_data_types(value) for name, value in input_dict.items()}
+
+
+_TYPE_CONVERTER = {
+    np.ndarray: list,
+    datetime: _to_datetime_utc_str,
+    pd.Timestamp: _to_datetime_utc_str,
+    dict: _convert_dict_types,
+}
+
+
+def _convert_data_types(value: Any, type_convert: Dict[type, Callable] = None) -> Any:
+    """Convert a type based on dictionary of converters."""
+    type_convert = type_convert or {}
+    type_convert.update(_TYPE_CONVERTER)
+    converter = type_convert.get(type(value))
+    return converter(value) if converter else value
+
+
+def _match_tactics(tactics: Iterable[str]) -> List[str]:
+    """Return case-insensitive matches for tactics list."""
+    return [
+        _TACTICS_DICT[tactic.casefold()]
+        for tactic in tactics
+        if tactic in _TACTICS_DICT
+    ]
