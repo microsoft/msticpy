@@ -307,12 +307,10 @@ class BHKeyVaultClient:
         return self.kv_client.set_secret(name=secret_name, value=value)
 
 
-# pylint: disable=too-many-instance-attributes
 @export
 class BHKeyVaultMgmtClient:
     """Core KeyVault Management client."""
 
-    # pylint: disable=too-many-arguments
     def __init__(
         self,
         tenant_id: str = None,
@@ -377,8 +375,6 @@ class BHKeyVaultMgmtClient:
         self.resource_group = resource_group or self.settings.get("resourcegroup")
         self.azure_region = azure_region or self.settings.get("azureregion")
 
-    # pylint: enable=too-many-arguments
-
     def list_vaults(self) -> List[str]:
         """
         Return a list of vaults for the subscription.
@@ -389,7 +385,9 @@ class BHKeyVaultMgmtClient:
             Vault names
 
         """
-        mgmt = KeyVaultManagementClient(self.auth_client.legacy, self.subscription_id)
+        mgmt = KeyVaultManagementClient(self.auth_client.modern, self.subscription_id)
+        # vaults.list does not require api_version or filter parameters
+        # pylint: disable=no-value-for-parameter
         return [v.name for v in mgmt.vaults.list()]
 
     def get_vault_uri(self, vault_name: str) -> str:
@@ -407,7 +405,7 @@ class BHKeyVaultMgmtClient:
             Vault URI.
 
         """
-        mgmt = KeyVaultManagementClient(self.auth_client.legacy, self.subscription_id)
+        mgmt = KeyVaultManagementClient(self.auth_client.modern, self.subscription_id)
         try:
             vault = mgmt.vaults.get(self.resource_group, vault_name)
         except (CloudError, ResourceNotFoundError) as cloud_err:
@@ -447,7 +445,7 @@ class BHKeyVaultMgmtClient:
                 "Please add ResourceGroup to the KeyVault section of msticpyconfig.yaml",
                 title="missing ResourceGroup value.",
             )
-        mgmt = KeyVaultManagementClient(self.auth_client.legacy, self.subscription_id)
+        mgmt = KeyVaultManagementClient(self.auth_client.modern, self.subscription_id)
         return mgmt.vaults.create_or_update(
             self.resource_group, vault_name, parameters
         ).result()
@@ -479,9 +477,6 @@ class BHKeyVaultMgmtClient:
         parameters.properties.enabled_for_disk_encryption = True
         parameters.properties.enabled_for_template_deployment = True
         return parameters
-
-
-# pylint: enable=too-many-instance-attributes
 
 
 def _user_oid(token) -> str:

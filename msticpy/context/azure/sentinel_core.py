@@ -87,7 +87,7 @@ class MicrosoftSentinel(
 
         """
         self.user_cloud = cloud
-        super().__init__(connect=connect or False, cloud=self.user_cloud)
+        super().__init__(connect=False, cloud=self.user_cloud)
         self.base_url = self.endpoints.resource_manager
         self.default_subscription: Optional[str] = None
         self._resource_id = res_id
