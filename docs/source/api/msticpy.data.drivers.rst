@@ -18,6 +18,7 @@ Submodules
    msticpy.data.drivers.kql_driver
    msticpy.data.drivers.kusto_driver
    msticpy.data.drivers.local_data_driver
+   msticpy.data.drivers.local_osquery_driver
    msticpy.data.drivers.mdatp_driver
    msticpy.data.drivers.mordor_driver
    msticpy.data.drivers.odata_driver
