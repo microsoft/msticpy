@@ -22,10 +22,10 @@ from bokeh.models import (  # type: ignore[attr-defined]
     ColorBar,
     ColumnDataSource,
     CustomJS,
+    GestureTool,
     HoverTool,
     LayoutDOM,
     RangeTool,
-    GestureTool,
 )
 from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
 
