@@ -21,7 +21,7 @@ from tqdm.auto import tqdm
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
-from ...common.pkg_config import settings
+from ...common.pkg_config import get_config
 from ...common.utility import mp_ua_header
 from ..core.query_source import QuerySource
 from .driver_base import DriverBase
@@ -67,7 +67,7 @@ class MordorDriver(DriverBase):
         self.mdr_idx_tact: Dict[str, Set[str]]
         self._driver_queries: List[Dict[str, Any]] = []
 
-        mdr_settings = settings.get("DataProviders", {}).get("Mordor", {})
+        mdr_settings = get_config("DataProviders.Mordor", {})
         self.use_cached = kwargs.pop(
             "used_cached", mdr_settings.get("used_cached", True)
         )
@@ -903,8 +903,9 @@ def _get_mitre_categories(
         tactics_cache = Path(cache_folder).joinpath(_MITRE_TACTICS_CACHE)
         if _valid_cache(tech_cache) and _valid_cache(tactics_cache):
             try:
-                tech_df = pd.read_pickle(tech_cache)
-                tactics_df = pd.read_pickle(tactics_cache)
+                # caching location only used if sepcified.
+                tech_df = pd.read_pickle(tech_cache)  # nosec
+                tactics_df = pd.read_pickle(tactics_cache)  # nosec
                 return tech_df, tactics_df
             except pickle.PickleError:
                 pass

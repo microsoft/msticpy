@@ -71,7 +71,7 @@ class SentinelTIMixin:
         if orderby:
             appendix += f"&$orderby={orderby}"
         return self._list_items(  # type: ignore
-            item_type="ti_path", api_version="2021-10-01", appendix=appendix
+            item_type="ti", api_version="2021-10-01", appendix=appendix
         )  # type: ignore
 
     def get_ti_metrics(self) -> pd.DataFrame:
@@ -85,7 +85,7 @@ class SentinelTIMixin:
 
         """
         return self._list_items(  # type: ignore
-            item_type="ti_path", api_version="2021-10-01", appendix="/metrics"
+            item_type="ti", api_version="2021-10-01", appendix="/metrics"
         )  # type: ignore
 
     def create_indicator(

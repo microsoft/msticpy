@@ -17,10 +17,10 @@ from typing import Any, Dict, Tuple
 
 import attr
 
+from ..._version import VERSION
+from ...common.utility import export
 from ..http_provider import APILookupParams
 from .http_context_provider import HttpContextProvider
-from ...common.utility import export
-from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Florian Bracq"

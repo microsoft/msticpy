@@ -211,7 +211,6 @@ class MpConfigControls:
         """Create a blank control dictionary from settings."""
         ctrl_dict = config_dict.copy()
         for name, val in ctrl_dict.items():
-
             if (
                 isinstance(val, dict)
                 and STORE_KEYVAULT not in val
@@ -468,7 +467,8 @@ def _validate_string(value, path, val_type, val_opts):
         return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
     if not isinstance(value, str):
         return ValidationResult(
-            False, f"Value type {type(value)} should be type {val_type} - {mssg}"
+            False,
+            f"Value '{value}' of type {type(value)} should be type {val_type} - {mssg}",
         )
     if "options" in val_opts and value not in val_opts["options"]:
         return ValidationResult(
@@ -489,7 +489,8 @@ def _validate_bool(value, path, val_type, val_opts):
         return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
     if not isinstance(value, bool):
         return ValidationResult(
-            False, f"Value type {type(value)} should be type {val_type} - {mssg}"
+            False,
+            f"Value '{value}' of type {type(value)} should be type {val_type} - {mssg}",
         )
     return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
 
@@ -500,7 +501,8 @@ def _validate_m_enum(value, path, val_type, val_opts):
         return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
     if not isinstance(value, (str, list)):
         return ValidationResult(
-            False, f"Value type {type(value)} should be type {val_type} - {mssg}"
+            False,
+            f"Value '{value}' of type {type(value)} should be type {val_type} - {mssg}",
         )
     if "options" in val_opts:
         if isinstance(value, str) and value not in val_opts["options"]:

@@ -150,7 +150,7 @@ def get_all_suffixes(cloud: str) -> azure_cloud.CloudSuffixes:
 def get_azure_config_value(key, default):
     """Get a config value from Azure section."""
     with contextlib.suppress(KeyError):
-        az_settings = config.get_config("Azure")
+        az_settings = config.get_config("Azure", {})
         if az_settings and key in az_settings:
             return az_settings[key]
     return default
@@ -166,7 +166,7 @@ def default_auth_methods() -> List[str]:
 class AzureCloudConfig:
     """Azure Cloud configuration."""
 
-    def __init__(self, cloud: str = None, tenant_id: Optional[str] = None):
+    def __init__(self, cloud: Optional[str] = None, tenant_id: Optional[str] = None):
         """
         Initialize AzureCloudConfig from `cloud` or configuration.
 
@@ -270,7 +270,7 @@ class AzureCloudConfig:
             If the cloud name is not valid.
 
         """
-        return vars(get_all_suffixes(self.cloud))
+        return vars(get_all_suffixes(self.cloud))  # type: ignore
 
     @property
     def token_uri(self) -> str:

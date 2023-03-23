@@ -464,7 +464,7 @@ class IoCExtract:
         col_set = set(columns)
         if col_set > set(data.columns):
             missing_cols = [elem for elem in col_set if elem not in data.columns]
-            raise Exception(
+            raise LookupError(
                 f"Source column(s) {', '.join(missing_cols)} not found",
                 " in supplied DataFrame",
             )
@@ -608,7 +608,7 @@ class IoCExtract:
         iocs_found: Dict[str, Tuple[str, int]] = {}
 
         # pylint: disable=too-many-nested-blocks
-        for (ioc_type, rgx_def) in self._content_regex.items():
+        for ioc_type, rgx_def in self._content_regex.items():
             if ioc_types and ioc_type not in ioc_types:
                 continue
 

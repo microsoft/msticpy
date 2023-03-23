@@ -96,7 +96,6 @@ def _get_supported_ioc_types(ti_lookup: TILookup) -> Dict[str, Set[str]]:
 def _create_lookup_func(
     ti_lookup: TILookup, ioc, ioc_name, providers
 ) -> Tuple[str, str, Callable[..., pd.DataFrame]]:
-
     suffix = f"_{ioc_name}"
     short_func_name = f"lookup{suffix}"
     func_name = f"{short_func_name}_{ioc_name}"
@@ -105,7 +104,7 @@ def _create_lookup_func(
     # use IoC name if ioc_type is None
     entity_cls, entity_attr = TI_ENTITY_ATTRIBS[ioc or ioc_name]
 
-    pivot_reg = PivotRegistration(
+    pivot_reg = PivotRegistration(  # type: ignore[call-arg]
         src_func_name=ti_lookup.lookup_iocs.__name__,
         input_type="dataframe",
         entity_map={entity_cls.__name__: entity_attr},

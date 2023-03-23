@@ -10,6 +10,9 @@ Jupyter and Python Tools for InfoSec.
 
 Requires Python 3.8 or later.
 
+Getting Started
+---------------
+
 To quickly import common modules into a notebook run:
 
 >>> import msticpy as mp
@@ -32,8 +35,14 @@ https://msticpy.readthedocs.io
 GitHub repo:
 https://github.com/microsoft/msticpy
 
+Getting started with msticpy
+https://msticpy.readthedocs.io/en/latest/getting_started/QuickStart.html
 
-Package structure:
+Configuration
+https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html
+
+Package structure
+-----------------
 
 - analysis - analysis functions
 - auth - authentication and secrets management
@@ -48,10 +57,61 @@ Package structure:
 - transform - data transforms and decoding
 - vis - visualizations
 
-Configuration:
+Configuration
+-------------
 
-- set MSTICPYCONFIG environment variable to point to the path
-  of your `msticpyconfig.yaml` file.
+Set MSTICPYCONFIG environment variable to point to the path
+of your `msticpyconfig.yaml` file.
+
+One frequent problem in bootstrapping MSTICPy is obtaining or
+creating a valid `msticpyconfig.yaml`. This is needed for many
+configuration settings such as Data providers,
+MS Sentinel workspaces, Threat Intelligence (TI) providers,
+Azure authentication, Key Vault settings and more.
+
+If you are having trouble with this, you should check out the
+following resources:
+
+The basic structure of msticpyconfig.yaml
+
+https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html
+
+Using the msticpy settings editor to create or modify
+msticpyconfig.yaml
+
+https://msticpy.readthedocs.io/en/latest/getting_started/SettingsEditor.html
+
+MS Sentinel and Azure ML resources:
+
+Getting started notebook
+https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/A%20Getting%20Started%20Guide%20For%20Azure%20Sentinel%20ML%20Notebooks.ipynb
+
+Configuring your environment notebook
+https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/ConfiguringNotebookEnvironment.ipynb
+
+Initialization
+--------------
+
+Running the nbinit function performs a number of functions
+that allow you start working in a notebook more quickly:
+
+>>> import msticpy as mp
+>>> mp.init_notebook()
+
+This module performs several steps to initialize MSTICPy:
+
+- imports a number of standard packages (e.g. pandas) into the notebook
+- imports a number of modules and functions from msticpy
+- checks the version of MSTICPy
+- checks for presence and validates msticpyconfig.yaml
+- imports entities and initialized pivot functions
+- initializes pandas with the .mp and .mp_plot accessors that
+  give you quick access to many MSTICPy functions from a pandas
+  DataFrame
+- creates some MSTICPy notebook magics.
+
+In the Azure ML and Azure Synapse environments, some additional
+initialization and checks are performed.
 
 """
 import importlib
@@ -65,11 +125,13 @@ from ._version import VERSION
 from .common import pkg_config as settings
 from .common.check_version import check_version
 from .common.utility import search_name as search
+from .init.logging import set_logging_level, setup_logging
 
 __version__ = VERSION
 __author__ = "Ian Hellen, Pete Bryan, Ashwin Patil"
 
 refresh_config = settings.refresh_config
+setup_logging()
 
 if not os.environ.get("KQLMAGIC_EXTRAS_REQUIRES"):
     os.environ["KQLMAGIC_EXTRAS_REQUIRES"] = "jupyter-basic"

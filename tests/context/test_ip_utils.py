@@ -5,13 +5,14 @@
 # --------------------------------------------------------------------------
 """IP Utils test class."""
 import os
+import re
+from pathlib import Path
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
 import pytest_check as check
-from unittest.mock import patch
 import respx
-import re
 
 from msticpy.context.ip_utils import (
     get_asn_details,
@@ -21,9 +22,8 @@ from msticpy.context.ip_utils import (
     get_whois_df,
     get_whois_info,
 )
-from msticpy.init import mp_pandas_accessors
 
-from ..unit_test_lib import TEST_DATA_PATH
+from ..unit_test_lib import TEST_DATA_PATH, get_test_data_path
 
 
 # pylint: disable=redefined-outer-name
@@ -53,11 +53,19 @@ IPV6 = {
     "Link Local": ("FE80::C001:1DFF:FEE0:0", None),
 }
 
-_ASN_RESPONSE = "AS      | IP               | BGP Prefix          | CC | Registry | Allocated  | AS Name\n8068    | 13.107.4.50      | 13.107.4.0/24       | US | arin     | 2015-03-26 | MICROSOFT-CORP-MSN-AS-BLOCK, US\n"
+ASN_RESPONSE = (
+    "AS      | IP               | BGP Prefix          | CC | Registry | Allocated  "
+    "| AS Name\n8068    | 13.107.4.50      | 13.107.4.0/24       | US | arin     "
+    "| 2015-03-26 | MICROSOFT-CORP-MSN-AS-BLOCK, US\n"
+)
 
-_ASN_RESPONSE_2 = "AS      | IP               | BGP Prefix          | CC | Registry | Allocated  | AS Name\n8075    | 65.55.44.109     | 65.52.0.0/14        | US | arin     | 2001-02-14 | MICROSOFT-CORP-MSN-AS-BLOCK, US\n"
+ASN_RESPONSE_2 = (
+    "AS      | IP               | BGP Prefix          | CC | Registry | Allocated  "
+    "| AS Name\n8075    | 65.55.44.109     | 65.52.0.0/14        | US | arin     "
+    "| 2001-02-14 | MICROSOFT-CORP-MSN-AS-BLOCK, US\n"
+)
 
-_RDAP_RESPONSE = {
+RDAP_RESPONSE = {
     "rdapConformance": [
         "nro_rdap_profile_0",
         "rdap_level_0",
@@ -439,10 +447,8 @@ def test_get_ip_type():
 @patch("msticpy.context.ip_utils._asn_whois_query")
 def test_get_whois(mock_asn_whois_query):
     """Test IP Whois."""
-    mock_asn_whois_query.return_value = _ASN_RESPONSE
-    respx.get(re.compile(r"http://rdap\.arin\.net/.*")).respond(
-        200, json=_RDAP_RESPONSE
-    )
+    mock_asn_whois_query.return_value = ASN_RESPONSE
+    respx.get(re.compile(r"http://rdap\.arin\.net/.*")).respond(200, json=RDAP_RESPONSE)
     ms_ip = "13.107.4.50"
     ms_asn = "MICROSOFT-CORP"
     asn, _ = get_whois_info(ms_ip)
@@ -459,10 +465,8 @@ def test_get_whois(mock_asn_whois_query):
 def test_get_whois_df(mock_asn_whois_query, net_df):
     """Test IP Whois."""
     net_df = net_df.head(25)
-    mock_asn_whois_query.return_value = _ASN_RESPONSE
-    respx.get(re.compile(r"http://rdap\.arin\.net/.*")).respond(
-        200, json=_RDAP_RESPONSE
-    )
+    mock_asn_whois_query.return_value = ASN_RESPONSE
+    respx.get(re.compile(r"http://rdap\.arin\.net/.*")).respond(200, json=RDAP_RESPONSE)
     results = get_whois_df(data=net_df, ip_column="AllExtIPs")
     check.equal(len(results), len(net_df))
     check.is_in("AsnDescription", results.columns)
@@ -484,10 +488,8 @@ def test_get_whois_df(mock_asn_whois_query, net_df):
 def test_whois_pdext(net_df, mock_asn_whois_query):
     """Test IP Whois."""
     net_df = net_df.head(25)
-    mock_asn_whois_query.return_value = _ASN_RESPONSE
-    respx.get(re.compile(r"http://rdap\.arin\.net/.*")).respond(
-        200, json=_RDAP_RESPONSE
-    )
+    mock_asn_whois_query.return_value = ASN_RESPONSE
+    respx.get(re.compile(r"http://rdap\.arin\.net/.*")).respond(200, json=RDAP_RESPONSE)
     results = net_df.mp_whois.lookup(ip_column="AllExtIPs")
     check.equal(len(results), len(net_df))
     check.is_in("AsnDescription", results.columns)
@@ -500,10 +502,18 @@ def test_whois_pdext(net_df, mock_asn_whois_query):
     check.equal(len(results2[~results2["whois"].isna()]), len(net_df))
 
 
+@respx.mock
 @patch("msticpy.context.ip_utils._asn_whois_query")
 def test_asn_query_features(mock_asn_whois_query):
     """Test ASN query features"""
-    mock_asn_whois_query.return_value = _ASN_RESPONSE_2
+    # mock the potaroo request
+    html_resp = get_test_data_path().joinpath("potaroo.html").read_bytes()
+    respx.get("https://bgp.potaroo.net/cidr/autnums.html").respond(
+        200, content=html_resp
+    )
+    # mock the whois response
+    mock_asn_whois_query.return_value = ASN_RESPONSE_2
+    # run tests
     asn_ip_details = get_asn_from_ip("65.55.44.109")
     check.is_in("AS", asn_ip_details.keys())
     check.equal(asn_ip_details["AS"], "8075")

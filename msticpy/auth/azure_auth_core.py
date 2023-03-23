@@ -14,7 +14,6 @@ from enum import Enum
 from typing import List, Optional, Tuple, Union
 
 from azure.common.credentials import get_cli_profile
-from azure.common.exceptions import CloudError
 from azure.identity import (
     AzureCliCredential,
     AzurePowerShellCredential,
@@ -39,8 +38,14 @@ from .cred_wrapper import CredentialWrapper
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
+logger = logging.getLogger(__name__)
 
 AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
+
+_HELP_URI = (
+    "https://msticpy.readthedocs.io/en/latest/"
+    "getting_started/AzureAuthentication.html"
+)
 
 
 # pylint: disable=too-few-public-methods
@@ -54,7 +59,9 @@ class AzureCredEnvNames:
     AZURE_CLIENT_SECRET = "AZURE_CLIENT_SECRET"  # nosec  # noqa
 
 
-def _build_env_client(aad_uri: str = None, **kwargs) -> Optional[EnvironmentCredential]:
+def _build_env_client(
+    aad_uri: Optional[str] = None, **kwargs
+) -> Optional[EnvironmentCredential]:
     """Build a credential from environment variables."""
     del kwargs
     if (
@@ -62,6 +69,7 @@ def _build_env_client(aad_uri: str = None, **kwargs) -> Optional[EnvironmentCred
         and AzureCredEnvNames.AZURE_CLIENT_SECRET not in os.environ
     ):
         # avoid creating env credential if require envs not set.
+        logger.info("'env' credential requested but required env vars not set")
         return None
     return EnvironmentCredential(authority=aad_uri)  # type: ignore
 
@@ -73,7 +81,7 @@ def _build_cli_client(**kwargs) -> AzureCliCredential:
 
 
 def _build_msi_client(
-    tenant_id: str = None, aad_uri: str = None, **kwargs
+    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
 ) -> ManagedIdentityCredential:
     """Build a credential from Managed Identity."""
     msi_kwargs = kwargs.copy()
@@ -86,7 +94,7 @@ def _build_msi_client(
 
 
 def _build_vscode_client(
-    tenant_id: str = None, aad_uri: str = None, **kwargs
+    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
 ) -> VisualStudioCodeCredential:
     """Build a credential from Visual Studio Code."""
     del kwargs
@@ -94,7 +102,7 @@ def _build_vscode_client(
 
 
 def _build_interactive_client(
-    tenant_id: str = None, aad_uri: str = None, **kwargs
+    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
 ) -> InteractiveBrowserCredential:
     """Build a credential from Interactive Browser logon."""
     return InteractiveBrowserCredential(
@@ -103,20 +111,21 @@ def _build_interactive_client(
 
 
 def _build_device_code_client(
-    tenant_id: str = None, aad_uri: str = None, **kwargs
+    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
 ) -> DeviceCodeCredential:
     """Build a credential from Device Code."""
     return DeviceCodeCredential(authority=aad_uri, tenant_id=tenant_id, **kwargs)
 
 
 def _build_client_secret_client(
-    tenant_id: str = None, aad_uri: str = None, **kwargs
-) -> ClientSecretCredential:
+    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
+) -> Optional[ClientSecretCredential]:
     """Build a credential from Client Secret."""
     client_id = kwargs.pop("client_id", None)
     client_secret = kwargs.pop("client_secret", None)
     if not client_secret or not client_id:
-        raise MsticpyAzureConfigError("Client secret and client id are required.")
+        logger.info("'clientsecret' credential requested but no params supplied")
+        return None
     return ClientSecretCredential(
         authority=aad_uri,
         tenant_id=tenant_id,  # type: ignore
@@ -127,12 +136,15 @@ def _build_client_secret_client(
 
 
 def _build_certificate_client(
-    tenant_id: str = None, aad_uri: str = None, **kwargs
-) -> CertificateCredential:
+    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
+) -> Optional[CertificateCredential]:
     """Build a credential from Certificate."""
     client_id = kwargs.pop("client_id", None)
     if not client_id:
-        raise MsticpyAzureConfigError("Client id required.")
+        logger.info(
+            "'certificate' credential requested but client_id param not supplied"
+        )
+        return None
     return CertificateCredential(
         authority=aad_uri, tenant_id=tenant_id, client_id=client_id, **kwargs  # type: ignore
     )
@@ -173,9 +185,9 @@ def list_auth_methods() -> List[str]:
 
 
 def _az_connect_core(
-    auth_methods: List[str] = None,
-    cloud: str = None,
-    tenant_id: str = None,
+    auth_methods: Optional[List[str]] = None,
+    cloud: Optional[str] = None,
+    tenant_id: Optional[str] = None,
     silent: bool = False,
     **kwargs,
 ) -> AzCredentials:
@@ -211,7 +223,7 @@ def _az_connect_core(
 
     Raises
     ------
-    CloudError
+    MsticpyAzureConfigError
         If chained token credential creation fails.
 
     See Also
@@ -226,6 +238,7 @@ def _az_connect_core(
     - Azure CLI (if an active session is logged on)
     - Managed Service Identity
     - Interactive browser logon
+    - and others - see list_auth_methods for full list.
     If the authentication is successful both ADAL (legacy) and
     MSAL (modern) credential types are returned.
 
@@ -234,7 +247,15 @@ def _az_connect_core(
     cloud = cloud or kwargs.pop("region", AzureCloudConfig().cloud)
     az_config = AzureCloudConfig(cloud)
     aad_uri = az_config.endpoints.active_directory
-    tenant_id = tenant_id or AzureCloudConfig().tenant_id
+    logger.info("az_connect_core - using %s cloud and endpoint: %s", cloud, aad_uri)
+
+    tenant_id = tenant_id or az_config.tenant_id
+    auth_methods = auth_methods or az_config.auth_methods
+    logger.info(
+        "TenantId:  %s, requested auth methods: %s",
+        tenant_id,
+        ", ".join(auth_methods or ["none"]),
+    )
     creds = kwargs.pop("credential", None)
     if not creds:
         creds = _build_chained_creds(
@@ -245,27 +266,37 @@ def _az_connect_core(
         )
 
     # Filter and replace error message when credentials not found
+    azure_identity_logger = logging.getLogger("azure.identity")
     handler = logging.StreamHandler(sys.stdout)
     if silent:
         handler.addFilter(_filter_all_warnings)
     else:
         handler.addFilter(_filter_credential_warning)
-    logging.basicConfig(level=logging.WARNING, handlers=[handler])
+    azure_identity_logger.setLevel(logging.WARNING)
+    azure_identity_logger.handlers = [handler]
 
     # Connect to the subscription client to validate
     legacy_creds = CredentialWrapper(
         creds, resource_id=AzureCloudConfig(cloud).token_uri
     )
     if not creds:
-        raise CloudError("Could not obtain credentials.")
+        raise MsticpyAzureConfigError(
+            "Cannot authenticate with specified credential types.",
+            "At least one valid authentication method required.",
+            help_uri=_HELP_URI,
+            title="Authentication failure",
+        )
 
     return AzCredentials(legacy_creds, creds)
+
+
+az_connect_core = _az_connect_core
 
 
 def _build_chained_creds(
     aad_uri,
     requested_clients: Union[List[str], None] = None,
-    tenant_id: str = None,
+    tenant_id: Optional[str] = None,
     **kwargs,
 ) -> ChainedTokenCredential:
     """
@@ -287,76 +318,61 @@ def _build_chained_creds(
 
     Raises
     ------
-    CloudError
+    MsticpyAzureConfigError
         If the chained credential creation fails.
 
     """
     # Create the chained credential
     if not requested_clients:
         requested_clients = ["env", "cli", "msi", "interactive"]
-    clients = [
-        _CLIENTS[client](tenant_id=tenant_id, aad_uri=aad_uri, **kwargs)  # type: ignore
-        for client in requested_clients
-    ]
-    if not clients:
-        raise MsticpyAzureConfigError(
-            "At least one valid authentication method required."
+        logger.info("No auth methods requested defaulting to: %s", requested_clients)
+    cred_list = []
+    invalid_cred_types: List[str] = []
+    unusable_cred_type: List[str] = []
+    for cred_type in requested_clients:  # type: ignore[union-attr]
+        if cred_type not in _CLIENTS:
+            invalid_cred_types.append(cred_type)
+            logger.info("Unknown authentication type requested: %s", cred_type)
+            continue
+        cred_client = _CLIENTS[cred_type](  # type: ignore[operator]
+            tenant_id=tenant_id, aad_uri=aad_uri, **kwargs
         )
-    return ChainedTokenCredential(*clients)  # type: ignore
-
-
-class _AzCachedConnect:
-    """Singleton class caching Azure credentials."""
-
-    _instance = None
-
-    def __new__(cls):
-        """Override new to check and return existing instance."""
-        if cls._instance is None:
-            cls._instance = super(_AzCachedConnect, cls).__new__(cls)
-            cls.connect.__doc__ = _az_connect_core.__doc__
-        return cls._instance
-
-    def __init__(self):
-        """Initialize the class."""
-        self.az_credentials: Optional[AzCredentials] = None
-        self.cred_cloud: str = self.current_cloud
-
-    @property
-    def current_cloud(self) -> str:
-        """Return current cloud."""
-        return AzureCloudConfig().cloud
-
-    def connect(self, *args, **kwargs):
-        """Call az_connect_core if token is not present or expired."""
-        if self.az_credentials is None:
-            self.az_credentials = _az_connect_core(*args, **kwargs)
-            return self.az_credentials
-        # Check expiry
-        if (
-            datetime.utcfromtimestamp(
-                self.az_credentials.modern.get_token(
-                    AzureCloudConfig().token_uri
-                ).expires_on
+        if cred_client is not None:
+            cred_list.append(cred_client)
+        else:
+            unusable_cred_type.append(cred_type)
+    logger.info(
+        "Cred types added to chained credential: %s",
+        ", ".join(cred.__class__.__name__ for cred in cred_list if cred is not None),
+    )
+    if not cred_list:
+        exception_args = [
+            "Cannot authenticate - no valid credential types.",
+            "At least one valid authentication method required.",
+            f"Configured auth_types: {','.join(requested_clients)}",
+        ]
+        if invalid_cred_types:
+            exception_args.append(
+                f"Unrecognized auth_types: {','.join(invalid_cred_types)}",
             )
-            <= datetime.utcnow()
-        ):
-            self.az_credentials = _az_connect_core(*args, **kwargs)
-        # Check changed cloud
-        if self.cred_cloud != kwargs.get(
-            "cloud", kwargs.get("region", self.current_cloud)
-        ):
-            self.az_credentials = _az_connect_core(*args, **kwargs)
-        return self.az_credentials
-
-
-# externally callable function using the class above
-# _AZ_CACHED_CONNECT = _AzCachedConnect()
-az_connect_core = _az_connect_core
+        if unusable_cred_type:
+            exception_args.extend(
+                [
+                    "The following auth types could not be used due to",
+                    "missing parameters or environment variables:",
+                    ",".join(invalid_cred_types),
+                ]
+            )
+        raise MsticpyAzureConfigError(
+            *exception_args,
+            help_uri=_HELP_URI,
+            title="Authentication failure",
+        )
+    return ChainedTokenCredential(*cred_list)
 
 
 def only_interactive_cred(chained_cred: ChainedTokenCredential):
-    """Return True if only interactivebrowser credentials available."""
+    """Return True if only interactive browser credentials available."""
     return len(chained_cred.credentials) == 1 and isinstance(
         chained_cred.credentials[0], InteractiveBrowserCredential
     )
@@ -421,7 +437,7 @@ def check_cli_credentials() -> Tuple[AzureCliStatus, Optional[str]]:
     except ImportError:
         # Azure CLI not installed
         return AzureCliStatus.CLI_NOT_INSTALLED, None
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:  # pylint: disable=broad-except, broad-exception-caught
         if "AADSTS70043: The refresh token has expired" in str(ex):
             message = (
                 "Azure CLI was detected but the token has expired. "

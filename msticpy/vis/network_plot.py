@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import networkx as nx
 from bokeh.io import output_notebook
-from bokeh.models import (
+from bokeh.models import (  # type: ignore[attr-defined]
     BoxSelectTool,
     Circle,
     EdgesAndLinkedNodes,
@@ -25,9 +25,13 @@ from bokeh.plotting import figure, from_networkx, show
 from typing_extensions import Literal
 
 from .._version import VERSION
+from .figure_dimension import bokeh_figure
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+# wrap figure function to handle v2/v3 parameter renaming
+figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
 
 GraphLayout = Union[
@@ -142,14 +146,35 @@ def plot_nx_graph(
         height=height,
     )
 
-    graph_layout = _get_graph_layout(nx_graph, layout, **kwargs)
-    graph_renderer = from_networkx(nx_graph, graph_layout, scale=scale, center=(0, 0))
+    nx_graph_for_plotting = nx.Graph()
+    index_node = 0
+    rev_index = {}
+    fwd_index = {}
+    node_attributes = {}
+    for node_key in nx_graph.nodes:
+        nx_graph_for_plotting.add_node(index_node)
+        rev_index[node_key] = index_node
+        fwd_index[index_node] = node_key
+        node_attributes[index_node] = nx_graph.nodes[node_key]
+        index_node += 1
+
+    nx.set_node_attributes(nx_graph_for_plotting, node_attributes)
+
+    for source_node, target_node in nx_graph.edges:
+        nx_graph_for_plotting.add_edge(rev_index[source_node], rev_index[target_node])
+
+    graph_layout = _get_graph_layout(nx_graph_for_plotting, layout, **kwargs)
+
+    graph_renderer = from_networkx(
+        nx_graph_for_plotting, graph_layout, scale=scale, center=(0, 0)
+    )
     _create_edge_renderer(graph_renderer, edge_color=edge_color)
     _create_node_renderer(graph_renderer, node_size, "node_color")
 
     graph_renderer.selection_policy = NodesAndLinkedEdges()
     graph_renderer.inspection_policy = EdgesAndLinkedNodes()
-    plot.renderers.append(graph_renderer)  # pylint: disable=no-member
+    # pylint: disable=no-member
+    plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
 
     hover_tools = [
         _create_node_hover(source_attrs, target_attrs, [graph_renderer.node_renderer])
@@ -162,13 +187,13 @@ def plot_nx_graph(
 
     # Create labels
     # pylint: disable=no-member
-    for name, pos in graph_renderer.layout_provider.graph_layout.items():
+    for index, pos in graph_renderer.layout_provider.graph_layout.items():
         label = Label(
             x=pos[0],
             y=pos[1],
             x_offset=5,
             y_offset=5,
-            text=name,
+            text=fwd_index[int(index)],
             text_font_size=font_pnt,
         )
         plot.add_layout(label)
@@ -307,7 +332,7 @@ def plot_entity_graph(
         size=node_size, fill_color="node_color", fill_alpha=0.5
     )
     # pylint: disable=no-member
-    plot.renderers.append(graph_renderer)
+    plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
 
     # Create labels
     for name, pos in graph_renderer.layout_provider.graph_layout.items():
@@ -316,7 +341,7 @@ def plot_entity_graph(
             y=pos[1],
             x_offset=5,
             y_offset=5,
-            text=name,
+            text=str(name),
             text_font_size=font_pnt,
         )
         plot.add_layout(label)

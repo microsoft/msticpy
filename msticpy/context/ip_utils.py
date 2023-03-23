@@ -55,22 +55,35 @@ _REGISTRIES = {
 _POTAROO_ASNS_URL = "https://bgp.potaroo.net/cidr/autnums.html"
 
 
+# Closure to cache ASN dictionary from Potaroo
 def _fetch_asns():
     """Create closure for ASN fetching."""
-    asns_soup: Optional[BeautifulSoup] = None
+    asns_dict: Dict[str, str] = {}
 
-    def _get_asns_soup() -> BeautifulSoup:
+    def _get_asns_dict() -> Dict[str, str]:
         """Return or fetch and return ASN Soup."""
-        nonlocal asns_soup  # noqa
-        if asns_soup is None:
-            asns = httpx.get(_POTAROO_ASNS_URL)
-            asns_soup = BeautifulSoup(asns.content, features="lxml")
-        return asns_soup
+        nonlocal asns_dict  # noqa
+        if not asns_dict:
+            try:
+                asns_resp = httpx.get(_POTAROO_ASNS_URL)
+            except httpx.ConnectError as err:
+                raise MsticpyConnectionError(
+                    "Unable to get ASN details from potaroo.net"
+                ) from err
+            asns_soup = BeautifulSoup(asns_resp.content, features="lxml")
+            asns_dict = {
+                str(asn.next_element)
+                .strip(): str(asn.next_element.next_element)
+                .strip()
+                for asn in asns_soup.find_all("a")
+            }
+        return asns_dict
 
-    return _get_asns_soup
+    return _get_asns_dict
 
 
-_ASNS_SOUP = _fetch_asns()
+# Create the dictionary accessor from the fetch_asns wrapper
+_ASNS_DICT = _fetch_asns()
 
 
 @export  # noqa: MC0001
@@ -291,7 +304,7 @@ def get_whois_info(
             if show_progress:
                 print(".", end="")
             return whois_result  # type: ignore
-        except (MsticpyException) as err:
+        except MsticpyException as err:
             return f"Error during lookup of {ip_str} {type(err)}", {}
     return f"No ASN Information for IP type: {ip_type}", {}
 
@@ -504,15 +517,7 @@ def get_asn_from_name(name: str) -> Dict:
 
     """
     name = name.casefold()
-    asns_dict = {}
-    asns_soup = _ASNS_SOUP()
-    try:
-        for asn in asns_soup.find_all("a"):
-            asns_dict[str(asn.next_element).strip()] = str(
-                asn.next_element.next_element
-            ).strip()
-    except httpx.ConnectError as err:
-        raise MsticpyConnectionError("Unable to get ASN details") from err
+    asns_dict = _ASNS_DICT()
     matches = {
         key: value for key, value in asns_dict.items() if name in value.casefold()
     }
@@ -566,12 +571,13 @@ class _IpWhoIsResult(NamedTuple):
 
 @lru_cache(maxsize=1024)
 def _whois_lookup(
-    ip_addr: Union[str, IpAddress], raw: bool = False, retry_count: int = 5
+    ip_addr: Union[str, IpAddress], raw: bool = False, retry_count: int = 5  # type: ignore
 ) -> _IpWhoIsResult:
     """Conduct lookup of IP Whois information."""
-    if isinstance(ip_addr, IpAddress):
+    if isinstance(ip_addr, IpAddress):  # type: ignore
         ip_addr = ip_addr.Address
     asn_items = get_asn_from_ip(ip_addr.strip())
+    registry_url: Optional[str] = None
     if asn_items and "Error: no ASN or IP match on line 1." not in asn_items:
         ipwhois_result = _IpWhoIsResult(asn_items["AS Name"], {})  # type: ignore
         ipwhois_result.properties["asn"] = asn_items["AS"]
@@ -585,7 +591,7 @@ def _whois_lookup(
     if not asn_items or not registry_url:
         return _IpWhoIsResult(None)
     return _add_rdap_data(
-        ipwhois_result=ipwhois_result,
+        ipwhois_result=ipwhois_result,  # type: ignore
         rdap_reg_url=f"{registry_url}{ip_addr}",
         retry_count=retry_count,
         raw=raw,
@@ -671,6 +677,7 @@ def _create_net(data: Dict) -> Dict:
             for net_prefix in net_prefixes
         )
     address = ""
+    created = updated = None
     for item in data["events"]:
         created = item["eventDate"] if item["eventAction"] == "last changed" else None
         updated = item["eventDate"] if item["eventAction"] == "registration" else None

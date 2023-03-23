@@ -19,69 +19,79 @@ from ..unit_test_lib import get_test_data_path
 
 _TEST_DATA = get_test_data_path()
 
-test_morph = MorphCharts()
+
+@pytest.fixture
+def test_morph():
+    """Create MorphCharts objcet."""
+    return MorphCharts()
 
 
-class TestMorph:
-    """Pytest test class."""
-
-    @patch("builtins.print")
-    def test_chart_details(self, mocked_print):
-        with pytest.raises(KeyError):
-            assert test_morph.get_chart_details("xxx")
-        test_morph.get_chart_details("SigninsChart")
-        assert mocked_print.mock_calls == [
-            call(
-                "SigninsChart",
-                ":",
-                "\n",
-                "Charts for visualizing Azure AD Signin Logs.",
-                "\n",
-                "Query: ",
-                "Azure.list_all_signins_geo",
-            )
-        ]
-
-    @patch("builtins.print")
-    def test_list_charts(self, mocked_print):
-        test_morph.list_charts()
-        assert mocked_print.mock_calls == [call("SigninsChart")]
-
-    @patch("builtins.print")
-    def test_search_charts_f(self, mocked_print):
-        test_morph.search_charts("testing")
-        assert mocked_print.mock_calls == [call("No matching charts found")]
-
-    @patch("builtins.print")
-    def test_search_charts_s(self, mocked_print):
-        test_morph.search_charts("signinLogs")
-        assert mocked_print.mock_calls == [
-            call(
-                "SigninsChart",
-                ":",
-                "\n",
-                "Charts for visualizing Azure AD Signin Logs.",
-            )
-        ]
-
-    def test_display(self):
-        test_file = Path(_TEST_DATA).joinpath("morph_test.csv")
-        test_data = pd.read_csv(test_file, index_col=0)
-        output = test_morph.display(data=test_data, chart_name="SigninsChart")
-        assert isinstance(output, IPython.lib.display.IFrame)
-        assert os.path.isdir(Path.cwd().joinpath("morphchart_package")) is True
-        assert (
-            os.path.isfile(
-                Path.cwd().joinpath(*["morphchart_package", "description.json"])
-            )
-            is True
+@patch("builtins.print")
+def test_chart_details(mocked_print, test_morph):
+    """Test case."""
+    with pytest.raises(KeyError):
+        assert test_morph.get_chart_details("xxx")
+    test_morph.get_chart_details("SigninsChart")
+    assert mocked_print.mock_calls == [
+        call(
+            "SigninsChart",
+            ":",
+            "\n",
+            "Charts for visualizing Azure AD Signin Logs.",
+            "\n",
+            "Query: ",
+            "Azure.list_all_signins_geo",
         )
-        assert (
-            os.path.isfile(
-                Path.cwd().joinpath(*["morphchart_package", "query_data.csv"])
-            )
-            is True
+    ]
+
+
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+@patch("builtins.print")
+def test_list_charts(mocked_print, test_morph):
+    """Test case."""
+    test_morph.list_charts()
+    assert mocked_print.mock_calls == [call("SigninsChart")]
+
+
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+@patch("builtins.print")
+def test_search_charts_f(mocked_print, test_morph):
+    """Test case."""
+    test_morph.search_charts("testing")
+    assert mocked_print.mock_calls == [call("No matching charts found")]
+
+
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+@patch("builtins.print")
+def test_search_charts_s(mocked_print, test_morph):
+    """Test case."""
+    test_morph.search_charts("signinLogs")
+    assert mocked_print.mock_calls == [
+        call(
+            "SigninsChart",
+            ":",
+            "\n",
+            "Charts for visualizing Azure AD Signin Logs.",
         )
-        with pytest.raises(MsticpyException):
-            assert test_morph.display(data=test_data, chart_name="test")
-            assert test_morph.display(data="test_data", chart_name="SigninsChart")
+    ]
+
+
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+def test_display(test_morph):
+    """Test case."""
+    test_file = Path(_TEST_DATA).joinpath("morph_test.csv")
+    test_data = pd.read_csv(test_file, index_col=0)
+    output = test_morph.display(data=test_data, chart_name="SigninsChart")
+    assert isinstance(output, IPython.lib.display.IFrame)
+    assert os.path.isdir(Path.cwd().joinpath("morphchart_package")) is True
+    assert (
+        os.path.isfile(Path.cwd().joinpath(*["morphchart_package", "description.json"]))
+        is True
+    )
+    assert (
+        os.path.isfile(Path.cwd().joinpath(*["morphchart_package", "query_data.csv"]))
+        is True
+    )
+    with pytest.raises(MsticpyException):
+        assert test_morph.display(data=test_data, chart_name="test")
+        assert test_morph.display(data="test_data", chart_name="SigninsChart")
