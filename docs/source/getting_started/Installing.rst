@@ -222,11 +222,11 @@ Then, select Browse, and choose the conda file saved earlier with the Spark sess
 
 .. code-block:: yaml
 
-name: msticpy
-channels:
-- defaults
-dependencies:
-- bokeh
-- numpy
-- pip:
-  - msticpy[azure]>=2.3.1
+    name: msticpy
+    channels:
+    - defaults
+    dependencies:
+    - bokeh
+    - numpy
+    - pip:
+        - msticpy[azure]>=2.3.1
