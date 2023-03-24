@@ -221,6 +221,7 @@ Please save below file as conda.yml , check the Upload conda file checkbox. You 
 Then, select Browse, and choose the conda file saved earlier with the Spark session configuration you want.
 
 .. code-block:: yaml
+
 name: msticpy
 channels:
 - defaults
