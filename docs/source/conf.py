@@ -238,6 +238,7 @@ autodoc_mock_imports = [
     "azure.storage.blob",
     "azure.storage",
     "bokeh",
+    "bs4",
     "dnspython",
     "dns",
     "folium",
