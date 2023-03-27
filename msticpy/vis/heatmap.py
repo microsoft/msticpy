@@ -33,7 +33,7 @@ class PlotParams:
     y_col: Optional[str] = None
     height: int = 400
     width: int = 800
-    color_pallette: Optional[List] = [
+    color_pallette: List[str] = [
         "#75968f",
         "#a5bab7",
         "#c9d9d3",
@@ -54,14 +54,20 @@ class PlotParams:
     major_label_text_font_size: str = "7px"
 
     @property
-    def x_column(self) -> Optional[str]:
+    def x_column(self) -> str:
         """Return the current x column value."""
-        return self.x or self.x_col
+        x_column = self.x or self.x_col
+        if x_column is None:
+            raise TypeError("Please supply value for x_column")
+        return x_column
 
     @property
-    def y_column(self) -> Optional[str]:
+    def y_column(self) -> str:
         """Return the current y column value."""
-        return self.y or self.y_col
+        y_column = self.y or self.y_col
+        if y_column is None:
+            raise TypeError("Please supply value for y_column")
+        return y_column
 
     @classmethod
     def field_list(cls) -> List[str]:
@@ -213,11 +219,11 @@ def _sort_days_hours(data: pd.DataFrame, day_column: str, hour_column: str):
         "Saturday",
         "Sunday",
     ]
-    correct_hours = hours = [f"{hr}" for hr in range(0, 24)]
+    correct_hours = [f"{hr}" for hr in range(0, 24)]
     days = {name: val for val, name in enumerate(correct_days)}
     hours = {name: val for val, name in enumerate(correct_hours)}
-    sorted_days = sorted(dayofweek, key=days.get, reverse=True)
-    sorted_hours = sorted(hourofday, key=hours.get)
+    sorted_days = sorted(dayofweek, key=days.get, reverse=True)  # type: ignore[arg-type]
+    sorted_hours = sorted(hourofday, key=hours.get)  # type: ignore[arg-type]
     return sorted_hours, sorted_days
 
 
