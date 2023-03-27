@@ -13,8 +13,8 @@ from bokeh.plotting import figure
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
 from ..transform.network import GraphType, df_to_networkx
-from ..vis.network_plot import plot_nx_graph
 from ..vis.heatmap import plot_heatmap
+from ..vis.network_plot import plot_nx_graph
 from .entity_graph_tools import EntityGraph, req_alert_cols, req_inc_cols
 from .foliummap import plot_map
 from .matrix_plot import plot_matrix
@@ -642,7 +642,9 @@ class MsticpyPlotAccessor:
         width : int
             The plot width. Default is 900
         color_pallette : List, optional
-            The color pallette of the heatmap, default is custom list  ["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#550b1d"]
+            The color pallette of the heatmap, default is custom list
+            ["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce",
+            "#ddb7b1", "#cc7878", "#933b41", "#550b1d"]
         sort : Union[str, bool], optional
             Sorts the labels of both axes, default is None.
             Acceptable values are:
@@ -683,5 +685,4 @@ class MsticpyPlotAccessor:
             The Bokeh plot
 
         """
-
         return plot_heatmap(data=self._df, **kwargs)

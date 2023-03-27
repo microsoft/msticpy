@@ -3,11 +3,16 @@ from math import pi
 from typing import List, Optional, Union
 
 import attr
-import numpy as np
 import pandas as pd
 from bokeh.io import output_notebook, reset_output, show
-from bokeh.layouts import row
-from bokeh.models import HoverTool, LayoutDOM, BasicTicker, ColorBar, LinearColorMapper, PrintfTickFormatter
+from bokeh.models import (
+    BasicTicker,
+    ColorBar,
+    HoverTool,
+    LayoutDOM,
+    LinearColorMapper,
+    PrintfTickFormatter,
+)
 from bokeh.plotting import figure
 
 from .._version import VERSION
@@ -15,6 +20,7 @@ from ..common.utility import check_kwargs
 
 __version__ = VERSION
 __author__ = "Ashwin Patil"
+
 
 @attr.s(auto_attribs=True)
 class PlotParams:
@@ -25,10 +31,20 @@ class PlotParams:
     x_col: Optional[str] = None
     y: Optional[str] = None
     y_col: Optional[str] = None
-    height: int =400
+    height: int = 400
     width: int = 800
-    color_pallette: Optional[List]= ["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#550b1d"]
-    value_col: Optional[str] = 'Total'
+    color_pallette: Optional[List] = [
+        "#75968f",
+        "#a5bab7",
+        "#c9d9d3",
+        "#e2e2e2",
+        "#dfccce",
+        "#ddb7b1",
+        "#cc7878",
+        "#933b41",
+        "#550b1d",
+    ]
+    value_col: Optional[str] = "Total"
     sort: Optional[Union[str, bool]] = None
     sort_x: Optional[Union[str, bool]] = None
     sort_y: Optional[Union[str, bool]] = None
@@ -51,6 +67,7 @@ class PlotParams:
     def field_list(cls) -> List[str]:
         """Return field names as a list."""
         return list(attr.fields_dict(cls).keys())
+
 
 def plot_heatmap(data: pd.DataFrame, **kwargs) -> LayoutDOM:
     """
@@ -77,7 +94,9 @@ def plot_heatmap(data: pd.DataFrame, **kwargs) -> LayoutDOM:
     width : int
         The plot width. Default is 900
     color_pallette : List, optional
-        The color pallette of the heatmap, default is custom list  ["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#550b1d"]
+        The color pallette of the heatmap, default is custom list
+        ["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1",
+        "#cc7878", "#933b41", "#550b1d"]
     sort : Union[str, bool], optional
         Sorts the labels of both axes, default is None.
         Acceptable values are:
@@ -128,7 +147,7 @@ def plot_heatmap(data: pd.DataFrame, **kwargs) -> LayoutDOM:
     reset_output()
     output_notebook()
 
-    x_range,  y_range = _sort_days_hours(data, param.x_column, param.y_column)
+    x_range, y_range = _sort_days_hours(data, param.x_column, param.y_column)
 
     plot = figure(
         title=param.title,
@@ -143,18 +162,23 @@ def plot_heatmap(data: pd.DataFrame, **kwargs) -> LayoutDOM:
 
     tool_tips = [
         (param.x_column, f"@{param.x_column} @{param.y_column}:00"),
-        (param.value_col, f"@{param.value_col}")
+        (param.value_col, f"@{param.value_col}"),
     ]
     plot.add_tools(HoverTool(tooltips=tool_tips))
 
     mapper, color_bar = _create_colorbar(data, param)
 
-    plot.rect(x=param.y_column, y=param.x_column, width=1, height=1,
+    plot.rect(
+        x=param.y_column,
+        y=param.x_column,
+        width=1,
+        height=1,
         source=data,
-        fill_color={'field':param.value_col, 'transform': mapper},
-        line_color=None)
-    
-    plot.add_layout(color_bar, 'right')
+        fill_color={"field": param.value_col, "transform": mapper},
+        line_color=None,
+    )
+
+    plot.add_layout(color_bar, "right")
 
     _set_plot_params(plot)
 
@@ -175,22 +199,40 @@ def _set_plot_params(plot):
     plot.axis.major_label_standoff = 0
     plot.xaxis.major_label_orientation = pi / 3
 
-def _sort_days_hours(data: pd.DataFrame, week_column: str, hour_column: str):
+
+def _sort_days_hours(data: pd.DataFrame, day_column: str, hour_column: str):
     """Sort the Week days and hour of day if required."""
-    dayofweek = list(data[week_column].unique())
+    dayofweek = list(data[day_column].unique())
     hourofday = list(data[hour_column].astype(str).unique())
-    correct_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    correct_days = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    ]
     correct_hours = hours = [f"{hr}" for hr in range(0, 24)]
-    days = {name:val for val, name in enumerate(correct_days)}
-    hours = {name:val for val, name in enumerate(correct_hours)}
+    days = {name: val for val, name in enumerate(correct_days)}
+    hours = {name: val for val, name in enumerate(correct_hours)}
     sorted_days = sorted(dayofweek, key=days.get, reverse=True)
     sorted_hours = sorted(hourofday, key=hours.get)
-    return  sorted_hours, sorted_days
+    return sorted_hours, sorted_days
 
-def _create_colorbar(data: pd.DataFrame, param: PlotParams): 
-    mapper = LinearColorMapper(palette=param.color_pallette, low=data[param.value_col].min(), high=data[param.value_col].max())   
-    color_bar = ColorBar(color_mapper=mapper, major_label_text_font_size=param.major_label_text_font_size,
-                         ticker=BasicTicker(desired_num_ticks=len(param.color_pallette)),
-                         formatter=PrintfTickFormatter(format="%d"),
-                         label_standoff=6, border_line_color=None)
+
+def _create_colorbar(data: pd.DataFrame, param: PlotParams):
+    mapper = LinearColorMapper(
+        palette=param.color_pallette,
+        low=data[param.value_col].min(),
+        high=data[param.value_col].max(),
+    )
+    color_bar = ColorBar(
+        color_mapper=mapper,
+        major_label_text_font_size=param.major_label_text_font_size,
+        ticker=BasicTicker(desired_num_ticks=len(param.color_pallette)),
+        formatter=PrintfTickFormatter(format="%d"),
+        label_standoff=6,
+        border_line_color=None,
+    )
     return mapper, color_bar
