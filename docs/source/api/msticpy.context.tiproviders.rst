@@ -20,6 +20,7 @@ Submodules
    msticpy.context.tiproviders.kql_base
    msticpy.context.tiproviders.mblookup
    msticpy.context.tiproviders.open_page_rank
+   msticpy.context.tiproviders.pulsedive
    msticpy.context.tiproviders.result_severity
    msticpy.context.tiproviders.riskiq
    msticpy.context.tiproviders.ti_http_provider

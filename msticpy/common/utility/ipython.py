@@ -4,8 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """Notebook utility functions."""
-
-from typing import Iterable, Optional, Union
+# pickle only used here for storing data.
+import pickle  # nosec
+from base64 import b64encode
+from typing import Any, Iterable, Optional, Union
 
 from IPython import get_ipython
 from IPython.display import HTML, DisplayHandle, display
@@ -152,3 +154,58 @@ def is_ipython(notebook: bool = False) -> bool:
         if notebook
         else bool(get_ipython())
     )
+
+
+_CODE_CELL_TEMPLATE = """#########################################
+# Run this cell to restore cached data to
+# the object "{var_name}"
+#########################################
+
+from base64 import b64decode
+import pickle
+
+## Store dynamic summaries as base64 byte string
+summary_data = {encoded_bytes}
+
+# decode and unpickle the summaries
+{var_name} = pickle.loads(b64decode(summary_data))
+{var_name}
+"""
+
+
+@export
+def save_obj_to_cell(obj: Any, var_name: str):
+    """
+    Save a pickle-able object to a new cell.
+
+    Parameters
+    ----------
+    obj : Any
+        The object to be stored. Must be pickle-able.
+    var_name : str
+        The variable name use to restore the object
+        in the new cell.
+
+    Raises
+    ------
+    TypeError
+        If the object does not support pickling.
+
+    Notes
+    -----
+    Saves `obj` as picked, base64-encoded blob to
+    a new notebook cell.
+
+    """
+    try:
+        picked_obj = pickle.dumps(obj)
+    except pickle.PickleError as err:
+        raise TypeError(f"Object of type {type(obj)} cannot be picked.") from err
+    encoded_bytes = b64encode(picked_obj)
+    cell_text = _CODE_CELL_TEMPLATE.format(
+        encoded_bytes=encoded_bytes,
+        var_name=var_name,
+    )
+    shell = get_ipython()
+    # create a new cell using `cell_code` as the code contents.
+    shell.set_next_input(cell_text)

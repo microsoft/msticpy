@@ -48,7 +48,7 @@ class TILookup(Lookup):
     # pylint: disable=too-many-arguments
     def lookup_ioc(
         self,
-        ioc: str,
+        ioc: Optional[str] = None,
         ioc_type: Optional[str] = None,
         ioc_query_type: Optional[str] = None,
         providers: Optional[List[str]] = None,
@@ -63,7 +63,8 @@ class TILookup(Lookup):
         ----------
         ioc : str
             IoC observable
-            (`ioc` is also an alias for observable)
+        observable : str
+            alias for `ioc`
         ioc_type : str, optional
             One of IoCExtract.IoCType, by default None
             If none, the IoC type will be inferred

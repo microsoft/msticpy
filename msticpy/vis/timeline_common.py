@@ -11,11 +11,11 @@ import pandas as pd
 from bokeh.models import (  # type: ignore[attr-defined]
     ColumnDataSource,
     DatetimeTickFormatter,
+    GestureTool,
     Label,
     LayoutDOM,
     Range,
     RangeTool,
-    GestureTool,
     Title,
 )
 
