@@ -212,8 +212,6 @@ _MP_IMPORTS = [
 
 _MP_IMPORT_ALL: List[Dict[str, str]] = [
     dict(module_name="msticpy.datamodel.entities"),
-    dict(module_name="msticpy.nbtools"),
-    dict(module_name="msticpy.sectools"),
 ]
 # pylint: enable=use-dict-literal
 

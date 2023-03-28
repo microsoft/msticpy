@@ -131,6 +131,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen, Pete Bryan, Ashwin Patil"
 
 refresh_config = settings.refresh_config
+get_config = settings.get_config
 setup_logging()
 
 if not os.environ.get("KQLMAGIC_EXTRAS_REQUIRES"):

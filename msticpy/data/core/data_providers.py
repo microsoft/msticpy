@@ -594,7 +594,9 @@ class QueryProvider:
             return None
 
         params, missing = extract_query_params(query_source, *args, **kwargs)
-        self._check_for_time_params(params, missing)
+        query_options = {
+            "default_time_params": self._check_for_time_params(params, missing)
+        }
         if missing:
             query_source.help()
             raise ValueError(f"No values found for these parameters: {missing}")
@@ -618,18 +620,22 @@ class QueryProvider:
         if _debug_flag(*args, **kwargs):
             return query_str
 
-        # Handle any query options passed
-        query_options = _get_query_options(params, kwargs)
+        # Handle any query options passed and run the query
+        query_options.update(_get_query_options(params, kwargs))
         return self.exec_query(query_str, query_source=query_source, **query_options)
 
-    def _check_for_time_params(self, params, missing):
+    def _check_for_time_params(self, params, missing) -> bool:
         """Fall back on builtin query time if no time parameters were supplied."""
+        defaults_added = False
         if "start" in missing:
             missing.remove("start")
             params["start"] = self._query_time.start
+            defaults_added = True
         if "end" in missing:
             missing.remove("end")
             params["end"] = self._query_time.end
+            defaults_added = True
+        return defaults_added
 
     def _get_query_folder_for_env(self, root_path: str, environment: str) -> List[Path]:
         """Return query folder for current environment."""
@@ -832,6 +838,7 @@ def _get_query_options(
     if not query_options:
         # Any kwargs left over we send to the query provider driver
         query_options = {key: val for key, val in kwargs.items() if key not in params}
+    query_options["time_span"] = {"start": params["start"], "end": params["end"]}
     return query_options
 
 

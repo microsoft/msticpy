@@ -9,6 +9,7 @@
 import contextlib
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -95,11 +96,23 @@ class WorkspaceConfig:
     CONF_RES_GROUP_KEY = "resource_group"
     CONF_WS_NAME_KEY = "workspace_name"
 
+    _SETTINGS_TO_CONFIG_NAME_MAP = {
+        PKG_CONF_TENANT_KEY: CONF_WS_ID_KEY,
+        PKG_CONF_WS_KEY: CONF_TENANT_ID_KEY,
+        PKG_CONF_SUB_KEY: CONF_SUB_ID_KEY,
+        PKG_CONF_RES_GROUP_KEY: CONF_RES_GROUP_KEY,
+        PKG_CONF_NAME_KEY: CONF_WS_NAME_KEY,
+    }
+    _CONFIG_TO_SETTINGS_NAME_MAP = {
+        val: key for key, val in _SETTINGS_TO_CONFIG_NAME_MAP.items()
+    }
+
     def __init__(
         self,
         workspace: Optional[str] = None,
         config_file: Optional[str] = None,
         interactive: bool = True,
+        config: Optional[Dict[str, str]] = None,
     ):
         """
         Load current Azure Notebooks configuration for Log Analytics.
@@ -112,12 +125,14 @@ class WorkspaceConfig:
             If this isn't configured, it will search for (first) a config.json
             and (second) a msticpyconfig.yaml in (first) the current directory
             and (second) the parent directory and subfolders.
-        workspace : str, Optional[str]
+        workspace : Optional[str]
             Workspace name (where multiple workspaces are configured),
             by default the Default workspace will be used.
         interactive : bool, optional
             If this is False, initializing the class will not raise an
             exception if no configuration is found. By default, True.
+        config : Optional[Dict[str, str]],
+            Workspace configuration as dictionary.
 
         """
         self._config: Dict[str, str] = {}
@@ -125,16 +140,28 @@ class WorkspaceConfig:
         self._config_file = config_file
         self.workspace_key = workspace or "Default"
         # If config file specified, use that
+        if config:
+            self._config.update(config)
         if config_file:
             self._config.update(self._read_config_values(config_file))
         else:
             self._determine_config_source(workspace)
 
+    def __getattr__(self, attribute: str):
+        """Return attribute from configuration."""
+        with contextlib.suppress(KeyError):
+            return self[attribute]
+        raise AttributeError(
+            f"{self.__class__.__name__} has no attribute '{attribute}'"
+        )
+
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
-        if key in self._config:
-            return self._config[key]
-        raise KeyError
+        if key in self._SETTINGS_TO_CONFIG_NAME_MAP:
+            return self._config.get(self._SETTINGS_TO_CONFIG_NAME_MAP[key])
+        if key in self._CONFIG_TO_SETTINGS_NAME_MAP:
+            return self._config.get(key)
+        raise KeyError(f"{self.__class__.__name__} has no attribute '{key}'")
 
     def __setitem__(self, key: str, value: Any):
         """Allow property set using dictionary key syntax."""
@@ -208,17 +235,34 @@ class WorkspaceConfig:
         }
 
     @classmethod
-    def from_settings(cls, settings: Dict[str, Any]):
+    def from_settings(cls, settings: Dict[str, Any]) -> "WorkspaceConfig":
         """Create a WorkstationConfig from MSTICPY Workspace settings."""
-        ws_config = cls(workspace="**DUMMY_WORKSPACE**")  # type: ignore
-        ws_config._config = {  # type: ignore
-            cls.CONF_WS_NAME_KEY: settings.get(cls.PKG_CONF_NAME_KEY),  # type: ignore
-            cls.CONF_SUB_ID_KEY: settings.get(cls.PKG_CONF_SUB_KEY),  # type: ignore
-            cls.CONF_WS_ID_KEY: settings.get(cls.PKG_CONF_WS_KEY),  # type: ignore
-            cls.CONF_TENANT_ID_KEY: settings.get(cls.PKG_CONF_TENANT_KEY),  # type: ignore
-            cls.CONF_RES_GROUP_KEY: settings.get(cls.PKG_CONF_RES_GROUP_KEY),  # type: ignore
-        }
-        return ws_config
+        return cls(
+            config={  # type: ignore
+                cls.CONF_WS_NAME_KEY: settings.get(cls.PKG_CONF_NAME_KEY),  # type: ignore
+                cls.CONF_SUB_ID_KEY: settings.get(cls.PKG_CONF_SUB_KEY),  # type: ignore
+                cls.CONF_WS_ID_KEY: settings.get(cls.PKG_CONF_WS_KEY),  # type: ignore
+                cls.CONF_TENANT_ID_KEY: settings.get(cls.PKG_CONF_TENANT_KEY),  # type: ignore
+                cls.CONF_RES_GROUP_KEY: settings.get(cls.PKG_CONF_RES_GROUP_KEY),  # type: ignore
+            }
+        )
+
+    @classmethod
+    def from_connection_string(cls, connection_str: str) -> "WorkspaceConfig":
+        """Create a WorkstationConfig from a connection string."""
+        tenant_regex = r".*tenant\(\s?['\"](?P<tenant_id[\w]+)['\"].*"
+        workspace_regex = r".*workspace\(\s?['\"](?P<workspace_id[\w]+)['\"].*"
+        tenant_id = workspace_id = None
+        if match := re.match(tenant_regex, connection_str):
+            tenant_id = match.groupdict()["tenant_id"]
+        if match := re.match(workspace_regex, connection_str):
+            workspace_id = match.groupdict()["workspace_id"]
+        return cls(
+            config={
+                cls.CONF_WS_ID_KEY: workspace_id,  # type: ignore[dict-item]
+                cls.CONF_TENANT_ID_KEY: tenant_id,  # type: ignore[dict-item]
+            }
+        )
 
     @staticmethod
     def _read_config_values(file_path: str) -> Dict[str, str]:
