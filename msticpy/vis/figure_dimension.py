@@ -67,6 +67,7 @@ def bokeh_figure(func) -> Callable[[Any], Any]:
     @wraps(func)
     def set_figure_size_params(*args, **kwargs):
         """Re-write parameters names for Bokeh version."""
+        # pylint: disable=comparison-with-callable
         if func == figure:
             param_mapper = (
                 _BOKEH_3_FIG_PARAMS

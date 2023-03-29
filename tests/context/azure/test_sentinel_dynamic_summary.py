@@ -268,7 +268,7 @@ def sentinel_loader(mock_creds, get_token, monkeypatch):
     sent._default_workspace = ws_key
     sent.connect(workspace=ws_key)
     sent.connected = True
-    sent.token = "fd09863b-5cec-4833-ab9c-330ad07b0c1a"
+    sent.token = "fd09863b-5cec-4833-ab9c-330ad07b0c1a"  # nosec
     return sent
 
 
@@ -311,7 +311,7 @@ def test_sent_dynamic_summary_create_params(sentinel_loader, ti_data):
         tactics=["discovery", "exploitation"],
         techniques=["T1000"],
         search_key="TI stuff",
-        source_info="Source",
+        source_info={"Source": "unit_test"},
     )
     check.equal(sum_id, "test_id")
 
@@ -353,7 +353,7 @@ def test_sent_dynamic_summary_update_param(sentinel_loader, ti_data):
         tactics=["discovery", "exploitation"],
         techniques=["T1000"],
         search_key="TI stuff",
-        source_info="Source",
+        source_info={"Source": "unit_test"},
     )
     check.equal(sum_id, "test_id")
 
@@ -412,7 +412,7 @@ def test_new_dynamic_summary(sentinel_loader):
         tactics=["discovery", "exploitation"],
         techniques=["T1000"],
         search_key="TI stuff",
-        source_info="Source",
+        source_info={"Source": "unit_test"},
     )
     check.is_instance(new_ds, DynamicSummary)
     check.equal(new_ds.summary_id, "test_id")
