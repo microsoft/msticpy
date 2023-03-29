@@ -14,10 +14,9 @@ Azure SDK docs: https://learn.microsoft.com/python/api/overview/
 azure/monitor-query-readme?view=azure-python
 
 """
-
 import logging
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
 from azure.core.exceptions import HttpResponseError
@@ -111,7 +110,6 @@ class KqlDriverAZMon(DriverBase):
         self._query_client: Optional[LogsQueryClient]
         self._az_tenant_id: Optional[str] = None
         self._workspace_id: Optional[str] = None
-        self._workspace_ids: List[str] = []
         self._def_connection_str: Optional[str] = connection_str
 
     @property
@@ -164,8 +162,7 @@ class KqlDriverAZMon(DriverBase):
         if isinstance(az_auth_types, str):
             az_auth_types = [az_auth_types]
 
-        self.get_workspaces(connection_str, **kwargs)
-
+        self._az_tenant_id = kwargs.get("tenant_id", kwargs.get("mp_az_tenant_id"))
         self._connected = False
         credentials = az_connect(
             auth_methods=az_auth_types, tenant_id=self._az_tenant_id
@@ -179,41 +176,8 @@ class KqlDriverAZMon(DriverBase):
         print("connected")
         return self._connected
 
-    def get_workspaces(self, connection_str: Optional[str] = None, **kwargs):
-        """Get workspace or workspaces to connect to."""
-        self._az_tenant_id = kwargs.get("tenant_id", kwargs.get("mp_az_tenant_id"))
-        # multiple workspace IDs
-        if workspaces := kwargs.pop("workspaces, None"):
-            workspace_configs = {
-                WorkspaceConfig(workspace)[
-                    WorkspaceConfig.CONF_WS_ID_KEY
-                ]: WorkspaceConfig(workspace)[WorkspaceConfig.CONF_TENANT_ID_KEY]
-                for workspace in workspaces
-            }
-            if len(set(workspace_configs.values()) > 1):
-                raise ValueError("All workspaces must have the same tenant ID.")
-            self._az_tenant_id = next(iter(workspace_configs.values()))
-            self._workspace_ids = list(set(workspace_configs))
-            logger.info(
-                "%d configured workspaces: %s",
-                len(self._workspace_ids),
-                ", ".join(self._workspace_ids),
-            )
-            return
-        if workspace_ids := kwargs.pop("workspace_ids, None"):
-            if not self._az_tenant_id:
-                raise ValueError(
-                    "You must supply a tenant_id with a list of `workspace_ids`"
-                )
-            self._workspace_ids = workspace_ids
-            logger.info(
-                "%d configured workspaces: %s",
-                len(self._workspace_ids),
-                ", ".join(self._workspace_ids),
-            )
-            return
-
-        # standard - single-workspace configuration
+    def get_workspace(self, connection_str: Optional[str] = None, **kwargs):
+        """Get workspace to connect to."""
         workspace_name = kwargs.get("workspace")
         ws_config: Optional[WorkspaceConfig] = None
         connection_str = connection_str or self._def_connection_str
@@ -312,15 +276,12 @@ class KqlDriverAZMon(DriverBase):
         server_timeout = kwargs.pop(
             "server_timeout", kwargs.pop("timeout", self._DEFAULT_TIMEOUT)
         )
-        workspace_id = next(iter(self._workspace_ids), None) or self._workspace_id
-        additional_workspaces = self._workspace_ids[1:] if self._workspace_ids else None
         try:
             result = self._query_client.query_workspace(
-                workspace_id=workspace_id,  # type: ignore[arg-type]
+                workspace_id=self._workspace_id,  # type: ignore[arg-type]
                 query=query,
                 timespan=time_span_value,  # type: ignore[arg-type]
                 server_timeout=server_timeout,
-                additional_workspaces=additional_workspaces,
             )
         except HttpResponseError as http_err:
             self._raise_query_failure(query, http_err)
@@ -340,6 +301,7 @@ class KqlDriverAZMon(DriverBase):
         return data_frame, status
 
     def _get_time_span_value(self, query_options):
+        """Return the timespan for the query API call."""
         default_time_params = query_options.get("default_time_params", False)
         time_params = query_options.get("time_span", {})
         if (

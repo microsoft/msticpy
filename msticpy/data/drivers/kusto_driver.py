@@ -134,7 +134,7 @@ class KustoDriver(KqlDriver):
         Returns
         -------
         Union[pd.DataFrame, results.ResultSet]
-            A DataFrame (if successfull) or
+            A DataFrame (if successful) or
             the underlying provider result if an error.
 
         """
@@ -214,12 +214,12 @@ class KustoDriver(KqlDriver):
                 "of your msticyconfig.yaml",
                 "Expected format:",
                 "Kusto[-instance_name]:",
-                "  args:",
+                "  Args:",
                 "    Cluster: cluster_uri",
                 "    Integrated: True",
                 "or",
                 "Kusto[-instance_name]:",
-                "  args:",
+                "  Args:",
                 "    Cluster: cluster_uri",
                 "    TenantId: tenant_uuid",
                 "    ClientId: tenant_uuid",
