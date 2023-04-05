@@ -16,8 +16,9 @@ azure/monitor-query-readme?view=azure-python
 """
 import logging
 from datetime import datetime
-from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
+import httpx
 import pandas as pd
 from azure.core.exceptions import HttpResponseError
 from azure.core.pipeline.policies import UserAgentPolicy
@@ -31,7 +32,7 @@ from ...common.exceptions import (
     MsticpyNoDataSourceError,
     MsticpyNotConnectedError,
 )
-from ...common.settings import get_http_proxies
+from ...common.settings import get_http_proxies, get_http_timeout
 from ...common.timespan import TimeSpan
 from ...common.utility import export, mp_ua_header
 from ...common.wsconfig import WorkspaceConfig
@@ -60,11 +61,6 @@ _KQL_CLOUD_MAP = {
     "de": "germany",
 }
 
-_KQL_OPTIONS = ["timeout"]
-_KQL_ENV_OPTS = "KQLMAGIC_CONFIGURATION"
-
-_AZ_CLOUD_MAP = {kql_cloud: az_cloud for az_cloud, kql_cloud in _KQL_CLOUD_MAP.items()}
-
 _LOGANALYTICS_URL_BY_CLOUD = {
     "global": "https://api.loganalytics.io/",
     "cn": "https://api.loganalytics.azure.cn/",
@@ -73,11 +69,14 @@ _LOGANALYTICS_URL_BY_CLOUD = {
 }
 
 
+_HELP_URL = (
+    "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProv-MSSentinel.html"
+)
 # pylint: disable=too-many-instance-attributes
 
 
 @export
-class KqlDriverAZMon(DriverBase):
+class AzureMonitorDriver(DriverBase):
     """KqlDriver class to execute kql queries."""
 
     _DEFAULT_TIMEOUT = 300
@@ -105,12 +104,17 @@ class KqlDriverAZMon(DriverBase):
         self._loaded = True
         self._ua_policy = UserAgentPolicy(user_agent=mp_ua_header()["UserAgent"])
 
-        self.environment = kwargs.pop("data_environment", DataEnvironment.MSSentinel)
+        self.environment = kwargs.pop(
+            "data_environment", DataEnvironment.MSSentinel_New
+        )
 
-        self._query_client: Optional[LogsQueryClient]
+        self._query_client: Optional[LogsQueryClient] = None
         self._az_tenant_id: Optional[str] = None
+        self._ws_config: Optional[WorkspaceConfig] = None
         self._workspace_id: Optional[str] = None
+        self._workspace_ids: List[str] = []
         self._def_connection_str: Optional[str] = connection_str
+        self._connect_auth_types: Optional[List[str]] = None
 
     @property
     def url_endpoint(self) -> str:
@@ -155,48 +159,23 @@ class KqlDriverAZMon(DriverBase):
             List of workspace IDs to run the queries against. Must be supplied
             along with a `tenant_id`.
 
-        """
-        az_auth_types = kwargs.get("auth_types", kwargs.get("mp_az_auth", None))
-        if isinstance(az_auth_types, bool):
-            az_auth_types = None
-        if isinstance(az_auth_types, str):
-            az_auth_types = [az_auth_types]
+        Notes
+        -----
+        When using the `workspaces` or `workspace_ids` parameters, some
+        functionality will be reduced - e.g. no schema will be available for
+        the workspaces. As an alternative to using multiple workspaces here
+        you can create multiple workspace connections
 
-        self._az_tenant_id = kwargs.get("tenant_id", kwargs.get("mp_az_tenant_id"))
+        """
         self._connected = False
-        credentials = az_connect(
-            auth_methods=az_auth_types, tenant_id=self._az_tenant_id
-        )
-        self._query_client = LogsQueryClient(
-            credential=credentials.modern,
-            endpoint=self.url_endpoint,
-            proxies=kwargs.get("proxies", get_http_proxies()),
-        )
+        self._query_client = self._create_query_client(connection_str, **kwargs)
+
+        # get the schema
+        self._schema = self._get_schema()
         self._connected = True
         print("connected")
+
         return self._connected
-
-    def get_workspace(self, connection_str: Optional[str] = None, **kwargs):
-        """Get workspace to connect to."""
-        workspace_name = kwargs.get("workspace")
-        ws_config: Optional[WorkspaceConfig] = None
-        connection_str = connection_str or self._def_connection_str
-        if workspace_name or connection_str is None:
-            ws_config = WorkspaceConfig(workspace=workspace_name)  # type: ignore
-        elif isinstance(connection_str, str):
-            ws_config = WorkspaceConfig.from_connection_string(connection_str)
-        elif isinstance(connection_str, WorkspaceConfig):
-            ws_config = connection_str
-
-        if not ws_config:
-            raise MsticpyKqlConnectionError(
-                "A workspace name, config or connection string is needed"
-                "to connect to a workspace.",
-                title="No connection details",
-            )
-        if not self._az_tenant_id and WorkspaceConfig.CONF_TENANT_ID_KEY in ws_config:
-            self._az_tenant_id = ws_config[WorkspaceConfig.CONF_TENANT_ID_KEY]
-        self._workspace_id = ws_config[WorkspaceConfig.CONF_WS_ID_KEY]
 
     # pylint: disable=too-many-branches
 
@@ -238,6 +217,7 @@ class KqlDriverAZMon(DriverBase):
                 "Please run connect() to connect to the workspace",
                 "before running a query.",
                 title="Workspace not connected.",
+                help_uri=_HELP_URL,
             )
         if query_source:
             self._check_table_exists(query_source)
@@ -268,6 +248,7 @@ class KqlDriverAZMon(DriverBase):
                 "Please run connect() to connect to the workspace",
                 "before running a query.",
                 title="Workspace not connected.",
+                help_uri=_HELP_URL,
             )
         logger.info("Query to run %s", query)
         query_options = kwargs.pop("query_options", {})
@@ -276,12 +257,15 @@ class KqlDriverAZMon(DriverBase):
         server_timeout = kwargs.pop(
             "server_timeout", kwargs.pop("timeout", self._DEFAULT_TIMEOUT)
         )
+        workspace_id = next(iter(self._workspace_ids), None) or self._workspace_id
+        additional_workspaces = self._workspace_ids[1:] if self._workspace_ids else None
         try:
             result = self._query_client.query_workspace(
-                workspace_id=self._workspace_id,  # type: ignore[arg-type]
+                workspace_id=workspace_id,  # type: ignore[arg-type]
                 query=query,
                 timespan=time_span_value,  # type: ignore[arg-type]
                 server_timeout=server_timeout,
+                additional_workspaces=additional_workspaces,
             )
         except HttpResponseError as http_err:
             self._raise_query_failure(query, http_err)
@@ -299,6 +283,100 @@ class KqlDriverAZMon(DriverBase):
         data_frame = pd.DataFrame(table.rows, columns=table.columns)
 
         return data_frame, status
+
+    def _create_query_client(self, connection_str, **kwargs):
+        """Create the query client."""
+        az_auth_types = kwargs.get("auth_types", kwargs.get("mp_az_auth"))
+        if isinstance(az_auth_types, bool):
+            az_auth_types = None
+        if isinstance(az_auth_types, str):
+            az_auth_types = [az_auth_types]
+        self._connect_auth_types = az_auth_types
+
+        self._get_workspaces(connection_str, **kwargs)
+
+        credentials = az_connect(
+            auth_methods=az_auth_types, tenant_id=self._az_tenant_id
+        )
+        return LogsQueryClient(
+            credential=credentials.modern,
+            endpoint=self.url_endpoint,
+            proxies=kwargs.get("proxies", get_http_proxies()),
+        )
+
+    def _get_workspaces(self, connection_str: Optional[str] = None, **kwargs):
+        """Get workspace or workspaces to connect to."""
+        self._az_tenant_id = kwargs.get("tenant_id", kwargs.get("mp_az_tenant_id"))
+        # multiple workspace IDs
+        if workspaces := kwargs.pop("workspaces", None):
+            self._get_workspaces_by_name(workspaces)
+            return
+        if workspace_ids := kwargs.pop("workspace_ids", None):
+            self._get_workspaces_by_id(workspace_ids)
+            return
+
+        # standard - single-workspace configuration
+        workspace_name = kwargs.get("workspace")
+        ws_config: Optional[WorkspaceConfig] = None
+        connection_str = connection_str or self._def_connection_str
+        if workspace_name or connection_str is None:
+            ws_config = WorkspaceConfig(workspace=workspace_name)  # type: ignore
+        elif isinstance(connection_str, str):
+            self._def_connection_str = connection_str
+            ws_config = WorkspaceConfig.from_connection_string(connection_str)
+        elif isinstance(connection_str, WorkspaceConfig):
+            ws_config = connection_str
+
+        if not ws_config:
+            raise MsticpyKqlConnectionError(
+                "A workspace name, config or connection string is needed"
+                " to connect to a workspace.",
+                title="No connection details",
+                help_uri=_HELP_URL,
+            )
+        if ws_config.workspace_id is None or ws_config.tenant_id is None:
+            raise MsticpyKqlConnectionError(
+                "The workspace config or connection string did not have"
+                "the required parameters to connect to a workspace.",
+                "At least a workspace ID and tenant ID are required.",
+                title="No connection details",
+                help_uri=_HELP_URL,
+            )
+        self._ws_config = ws_config
+        if not self._az_tenant_id and WorkspaceConfig.CONF_TENANT_ID_KEY in ws_config:
+            self._az_tenant_id = ws_config[WorkspaceConfig.CONF_TENANT_ID_KEY]
+        self._workspace_id = ws_config[WorkspaceConfig.CONF_WS_ID_KEY]
+
+    def _get_workspaces_by_id(self, workspace_ids):
+        if not self._az_tenant_id:
+            raise MsticpyKqlConnectionError(
+                "You must supply a tenant_id with the workspace_ids parameter",
+                title="No tenant_id supplied.",
+                help_uri=_HELP_URL,
+            )
+        self._workspace_ids = workspace_ids
+        logger.info(
+            "%d configured workspaces: %s",
+            len(self._workspace_ids),
+            ", ".join(self._workspace_ids),
+        )
+
+    def _get_workspaces_by_name(self, workspaces):
+        workspace_configs = {
+            WorkspaceConfig(workspace)[WorkspaceConfig.CONF_WS_ID_KEY]: WorkspaceConfig(
+                workspace
+            )[WorkspaceConfig.CONF_TENANT_ID_KEY]
+            for workspace in workspaces
+        }
+        if len(set(workspace_configs.values())) > 1:
+            raise ValueError("All workspaces must have the same tenant ID.")
+        self._az_tenant_id = next(iter(workspace_configs.values()))
+        self._workspace_ids = list(set(workspace_configs))
+        logger.info(
+            "%d configured workspaces: %s",
+            len(self._workspace_ids),
+            ", ".join(self._workspace_ids),
+        )
 
     def _get_time_span_value(self, query_options):
         """Return the timespan for the query API call."""
@@ -325,7 +403,7 @@ class KqlDriverAZMon(DriverBase):
         if not self.schema:
             return
         try:
-            table = query_source["args.table"]
+            table = query_source.params.get("table", {}).get("default")
         except KeyError:
             table = None
         if table:
@@ -334,8 +412,9 @@ class KqlDriverAZMon(DriverBase):
             if table not in self.schema:
                 raise MsticpyNoDataSourceError(
                     f"The table {table} for this query is not in your workspace",
-                    " or database schema. Please check your this",
+                    "or database schema. Please check your query.",
                     title=f"{table} not found.",
+                    help_uri=_HELP_URL,
                 )
 
     @staticmethod
@@ -350,9 +429,48 @@ class KqlDriverAZMon(DriverBase):
             status["tables"] = (len(result.partial_data) if result.partial_data else 0,)
         return status
 
-    @staticmethod
-    def _get_schema() -> Dict[str, Dict]:
-        raise NotImplementedError("Schema not implemented.")
+    def _get_schema(self) -> Dict[str, Dict]:
+        """Return the workspace schema."""
+        if not self._ws_config:
+            logger.info("No workspace config - cannot get schema")
+            return {}
+        mgmt_endpoint = AzureCloudConfig().endpoints.resource_manager
+
+        url_tables = (
+            "{endpoint}/subscriptions/{sub_id}/resourcegroups/"
+            "{res_group}/providers/Microsoft.OperationalInsights/workspaces/"
+            "{ws_name}/tables?api-version=2021-12-01-preview"
+        )
+        try:
+            ws_name = self._ws_config.workspace_name
+        except AttributeError:
+            ws_name = self._ws_config.workspace_key
+
+        if not ws_name or ws_name == "Default":
+            logger.info("No workspace name - cannot get schema")
+            return {}
+        try:
+            fmt_url = url_tables.format(
+                endpoint=mgmt_endpoint,
+                sub_id=self._ws_config.subscription_id,
+                res_group=self._ws_config.resource_group,
+                ws_name=self._ws_config.workspace_name,
+            )
+        except AttributeError:
+            logger.info("Not all workspace config available - cannot get schema")
+            return {}
+
+        credentials = az_connect(
+            auth_methods=self._connect_auth_types, tenant_id=self._az_tenant_id
+        )
+        token = credentials.modern.get_token(f"{mgmt_endpoint}/.default")
+        headers = {"Authorization": f"Bearer {token.token}", **mp_ua_header()}
+        response = httpx.get(fmt_url, headers=headers, timeout=get_http_timeout())
+        if response.status_code != 200:
+            return {}
+        tables = response.json()
+        logger.info("Schema retrieved from workspace.")
+        return _schema_format_tables(tables)
 
     @staticmethod
     def _format_datetime(date_time: datetime) -> str:
@@ -380,7 +498,9 @@ class KqlDriverAZMon(DriverBase):
             err_contents = ["Unknown query error"]
 
         err_contents.append(f"Query:\n{query}")
-        raise MsticpyDataQueryError(*err_contents, title="Query Failure") from http_err
+        raise MsticpyDataQueryError(
+            *err_contents, title="Query Failure", help_uri=_HELP_URL
+        ) from http_err
 
     @staticmethod
     def _raise_unknown_error(exception):
@@ -390,4 +510,26 @@ class KqlDriverAZMon(DriverBase):
             *exception.args,
             f"Full exception:\n{exception}",
             title="connection failed",
+            help_uri=_HELP_URL,
         )
+
+
+def _schema_format_tables(
+    ws_tables: Dict[str, Iterable[Dict[str, Any]]]
+) -> Dict[str, Dict[str, str]]:
+    """Return a sorted dictionary of table names and column names/types."""
+    table_schema = {
+        table["name"]: _schema_format_columns(table["properties"]["schema"])
+        for table in ws_tables["value"]
+    }
+    return dict(sorted(table_schema.items()))
+
+
+def _schema_format_columns(table_schema: Dict[str, Any]) -> Dict[str, str]:
+    """Return a sorted dictionary of column names and types."""
+    columns = {
+        col["name"]: col["type"] for col in table_schema.get("standardColumns", {})
+    }
+    for col in table_schema.get("customColumns", []):
+        columns[col["name"]] = col["type"]
+    return dict(sorted(columns.items()))

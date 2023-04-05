@@ -4,8 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for Log Analytics-related configuration."""
-
-
 import contextlib
 import json
 import os
@@ -142,7 +140,7 @@ class WorkspaceConfig:
         # If config file specified, use that
         if config:
             self._config.update(config)
-        if config_file:
+        elif config_file:
             self._config.update(self._read_config_values(config_file))
         else:
             self._determine_config_source(workspace)
@@ -250,8 +248,8 @@ class WorkspaceConfig:
     @classmethod
     def from_connection_string(cls, connection_str: str) -> "WorkspaceConfig":
         """Create a WorkstationConfig from a connection string."""
-        tenant_regex = r".*tenant\(\s?['\"](?P<tenant_id[\w]+)['\"].*"
-        workspace_regex = r".*workspace\(\s?['\"](?P<workspace_id[\w]+)['\"].*"
+        tenant_regex = r".*tenant\(\s?['\"](?P<tenant_id>[\w]+)['\"].*"
+        workspace_regex = r".*workspace\(\s?['\"](?P<workspace_id>[\w]+)['\"].*"
         tenant_id = workspace_id = None
         if match := re.match(tenant_regex, connection_str):
             tenant_id = match.groupdict()["tenant_id"]
@@ -371,7 +369,7 @@ class WorkspaceConfig:
                 )
             )
 
-    def _read_pkg_config_values(self, workspace_name: str = None):
+    def _read_pkg_config_values(self, workspace_name: Optional[str] = None):
         as_settings = get_config("AzureSentinel", {})
         if not as_settings:
             return {}
