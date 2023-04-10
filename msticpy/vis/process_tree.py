@@ -361,6 +361,9 @@ def _pre_process_tree(
 
     _validate_plot_schema(proc_tree, schema)
 
+    # kludgy fix to prevent NaNs making it into the data - Bokeh 3.0
+    # is very sensitive to this in some places.
+    proc_tree = proc_tree.fillna("NA")
     proc_tree = proc_tree.sort_values(
         by=["path", schema.time_stamp], ascending=True
     ).reset_index()
@@ -400,12 +403,25 @@ def _pre_process_tree(
 
 
 def _pid_fmt(pid, pid_fmt):
+    """Format process ID in required string format."""
+    if pid == np.nan:
+        pid = ""
     if pid_fmt == "hex":
-        return f"PID: {pid}" if str(pid).startswith("0x") else f"PID: 0x{int(pid):x}"
+        return (
+            f"PID: {pid}"
+            if str(pid).startswith("0x")
+            else f"PID: 0x{int(pid):x}"
+            if isinstance(pid, int)
+            else "NA"
+        )
     if pid_fmt == "guid":
         return f"GUID: {pid}"
     return (
-        f"PID: {pid}" if not str(pid).startswith("0x") else f"PID: {int(pid, base=16)}"
+        f"PID: {pid}"
+        if not str(pid).startswith("0x")
+        else f"PID: {int(pid, base=16)}"
+        if isinstance(pid, int)
+        else "NA"
     )
 
 
