@@ -62,10 +62,8 @@ class SumologicDriver(DriverBase):
         self._loaded = True
         self._connected = False
         self._debug = kwargs.get("debug", False)
-        self.public_attribs = {
-            "client": self.service,
-        }
-        self.formatters = {"datetime": self._format_datetime}
+        self.set_driver_property("public_attribs", {"client": self.service})
+        self.set_driver_property("formatters", {"datetime": self._format_datetime})
         self.checkinterval = self._DEF_CHECKINTERVAL
         self.timeout = self._DEF_TIMEOUT
 

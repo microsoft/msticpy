@@ -45,7 +45,7 @@ class UTDataDriver(DriverBase):
         self._kwargs = kwargs
         self._loaded = True
         self._connected = False
-        self.public_attribs = {"test": self._TEST_ATTRIB}
+        self.set_driver_property("public_attribs", {"test": self._TEST_ATTRIB})
         self.svc_queries = {}
         self.has_driver_queries = True
 

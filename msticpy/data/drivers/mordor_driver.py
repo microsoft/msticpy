@@ -108,12 +108,15 @@ class MordorDriver(DriverBase):
         self.mdr_idx_tech, self.mdr_idx_tact = _build_mdr_indexes(self.mordor_data)
 
         self._connected = True
-        self.public_attribs = {
-            "mitre_techniques": self.mitre_techniques,
-            "mitre_tactics": self.mitre_tactics,
-            "driver_queries": self.driver_queries,
-            "search_queries": self.search_queries,
-        }
+        self.set_driver_property(
+            "public_attribs",
+            {
+                "mitre_techniques": self.mitre_techniques,
+                "mitre_tactics": self.mitre_tactics,
+                "driver_queries": self.driver_queries,
+                "search_queries": self.search_queries,
+            },
+        )
 
     # pylint: enable=global-statement
 

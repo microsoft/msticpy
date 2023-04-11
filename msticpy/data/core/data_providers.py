@@ -32,7 +32,12 @@ __author__ = "Ian Hellen"
 
 _HELP_FLAGS = ("help", "?")
 _DEBUG_FLAGS = ("print", "debug_query", "print_query")
-_COMPATIBLE_DRIVER_MAPPINGS = {"mssentinel": ["m365d"], "mde": ["m365d"]}
+_COMPATIBLE_DRIVER_MAPPINGS = {
+    "mssentinel": ["m365d"],
+    "mde": ["m365d"],
+    "mssentinel_new": ["mssentinel"],
+    "kusto_new": ["kusto"],
+}
 
 
 class QueryParam(NamedTuple):
@@ -838,7 +843,10 @@ def _get_query_options(
     if not query_options:
         # Any kwargs left over we send to the query provider driver
         query_options = {key: val for key, val in kwargs.items() if key not in params}
-    query_options["time_span"] = {"start": params["start"], "end": params["end"]}
+    query_options["time_span"] = {
+        "start": params.get("start"),
+        "end": params.get("end"),
+    }
     return query_options
 
 

@@ -118,7 +118,9 @@ class KqlDriver(DriverBase):
         self._debug = kwargs.get("debug", False)
         super().__init__(**kwargs)
 
-        self.formatters = {"datetime": self._format_datetime, "list": self._format_list}
+        self.set_driver_property(
+            "formatters", {"datetime": self._format_datetime, "list": self._format_list}
+        )
         self._loaded = self._is_kqlmagic_loaded()
 
         os.environ["KQLMAGIC_LOAD_MODE"] = "silent"

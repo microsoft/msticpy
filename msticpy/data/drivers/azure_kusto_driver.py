@@ -17,7 +17,7 @@ from azure.kusto.data import (
     KustoClient,
     KustoConnectionStringBuilder,
 )
-from azure.kusto.data.exceptions import KustoApiError
+from azure.kusto.data.exceptions import KustoApiError, KustoServiceError
 from azure.kusto.data.helpers import dataframe_from_result_table
 from azure.kusto.data.response import KustoResponseDataSet
 
@@ -143,6 +143,8 @@ class AzureKustoDriver(DriverBase):
             ClientRequestProperties.request_timeout_option_name,
             timedelta(seconds=timeout),
         )
+        self.add_query_filter("data_environments", "Kusto")
+        self.set_driver_property("public_attribs", self._set_public_attribs())
 
     @property
     def current_cluster(self) -> str:
@@ -152,6 +154,30 @@ class AzureKustoDriver(DriverBase):
         if isinstance(self._current_config, str):
             return self._current_config
         return self._current_config.cluster
+
+    @property
+    def schema(self) -> Dict[str, Dict]:
+        """Return schema for current database."""
+        try:
+            return self.get_database_schema()
+        except ValueError:
+            print("Default database not set - unable to retrieve schema")
+        except MsticpyNotConnectedError:
+            print("Not connected to a cluster - unable to retrieve schema")
+        return {}
+
+    @property
+    def configured_clusters(self) -> Dict[str, KustoConfig]:
+        """Return current Kusto config settings."""
+        return self._kusto_settings["id"]
+
+    def set_cluster(self, cluster: str):
+        """Set the current cluster to `cluster` and connect."""
+        self.connect(cluster=cluster)
+
+    def set_database(self, database: str):
+        """Set the default database to `database`."""
+        self._default_database = database
 
     def connect(self, connection_str: Optional[str] = None, **kwargs):
         """
@@ -211,7 +237,8 @@ class AzureKustoDriver(DriverBase):
         cluster = kwargs.pop("cluster", None)
         if not connection_str and not cluster:
             raise MsticpyParameterError(
-                "Must specify either a connection string or a cluster name"
+                "Must specify either a connection string or a cluster name",
+                parameters=["connection_str", "cluster"],
             )
 
         if cluster:
@@ -290,18 +317,17 @@ class AzureKustoDriver(DriverBase):
         if not self._connected:
             _raise_not_connected_error()
         query_source = kwargs.pop("query_source", None)
-        cluster = kwargs.pop(
-            "cluster", query_source.metadata.get("cluster") if query_source else None
-        )
+        cluster = kwargs.pop("cluster", None)
         if not cluster:
-            cluster = self.current_cluster
+            # if no cluster in params, try to get it from query_source
+            cluster = self._get_cluster_from_query_source(query_source=query_source)
         if connection_str := kwargs.pop("connection_str", None):
             # if user has explicitly specified a connection string
             # try to connect with that
             logger.info("Query - connecting with connection string")
             self.connect(connection_str=connection_str)
         elif cluster != self.current_cluster:
-            # if user has specified a different cluster name
+            # if user or query_source specifies a different cluster name
             logger.info(
                 "Query - switching cluster from %s to %s", self.current_cluster, cluster
             )
@@ -322,10 +348,125 @@ class AzureKustoDriver(DriverBase):
         except KustoApiError as err:
             logger.exception("Query failed: %s", err)
             _raise_kusto_error(err)
-        except Exception as err:  # pylint: disable=broad-exception-caught
+        except KustoServiceError as err:
             logger.exception("Query failed: %s", err)
             _raise_unknown_query_error(err)
         return data, status
+
+    def get_database_names(self) -> List[str]:
+        """Get a list of database names from the connected cluster."""
+        if self.client is None:
+            _raise_not_connected_error()
+        try:
+            response = self.client.execute_mgmt("NetDefaultDB", ".show databases")
+
+            # Convert the result to a DataFrame
+            databases_df = dataframe_from_result_table(response.primary_results[0])
+            return databases_df["DatabaseName"].tolist()
+        except KustoServiceError as err:
+            raise MsticpyDataQueryError(
+                "Error getting database names",
+                err,
+                title="Kusto error",
+                help_uri=_HELP_URL,
+            ) from err
+
+    def get_database_schema(
+        self, database: Optional[str] = None
+    ) -> Dict[str, Dict[str, str]]:
+        """
+        Get table names and schema from the connected cluster/database.
+
+        Parameters
+        ----------
+        database : Optional[str]
+            Name of the database to get schema for.
+            The default is the last connected database.
+
+        Returns
+        -------
+        Dict[str, Dict[str, str]]
+            Dictionary of table names, each with a dictionary of
+            column names and types.
+
+        Raises
+        ------
+        ValueError :
+            No database name specified or set as the default.
+        MsticpyNotConnectedError :
+            Not connected to a cluster.
+        MsticpyDataQueryError :
+            Error querying the cluster.
+
+        """
+        db_name = database or self._default_database
+        if self.client is None:
+            _raise_not_connected_error()
+        if not db_name:
+            raise ValueError("No database name specified")
+
+        query = f".show database {db_name} schema"
+        try:
+            # Execute the query
+            response = self.client.execute_mgmt(db_name, query)
+            # Convert the result to a DataFrame
+            schema_dataframe = dataframe_from_result_table(response.primary_results[0])
+        except KustoServiceError as err:
+            raise MsticpyDataQueryError(
+                "Error getting database schema",
+                err,
+                title="Kusto error",
+                help_uri=_HELP_URL,
+            ) from err
+
+        return {
+            str(table): {
+                col_name: col_type.replace("System.", "")
+                for col_name, col_type in cols[["ColumnName", "ColumnType"]].values
+                if col_name is not None
+            }
+            for table, cols in schema_dataframe.groupby("TableName")
+        }
+
+    def _set_public_attribs(self):
+        """Expose subset of attributes via query_provider."""
+        return {
+            "get_database_names": self.get_database_names,
+            "get_database_schema": self.get_database_schema,
+            "configured_clusters": self.configured_clusters,
+            "current_cluster": self.current_cluster,
+            "set_cluster": self.set_cluster,
+            "set_database": self.set_database,
+        }
+
+    def _get_cluster_from_query_source(
+        self, query_source: Optional[QuerySource]
+    ) -> str:
+        """Return cluster name from query source."""
+        if not query_source:
+            return self.current_cluster
+        if "cluster" in query_source.metadata:
+            return query_source.metadata["cluster"]
+        if "clusters" in query_source.metadata:
+            return query_source.metadata["clusters"][0]
+        return self.current_cluster
+
+    def _cluster_in_query_source(
+        self, cluster: str, query_source: Optional[QuerySource]
+    ) -> bool:
+        """Return True if cluster is specified in query source."""
+        if not query_source:
+            return False
+        cluster_config = self._lookup_cluster_settings(cluster)
+        if isinstance(cluster_config, KustoConfig):
+            cluster = cluster_config.cluster
+        if "clusters" in query_source.metadata:
+            return cluster.casefold() in [
+                clust.casefold() for clust in query_source.metadata["clusters"]
+            ]
+        if "cluster" in query_source.metadata:
+            return query_source.metadata["cluster"].casefold() == cluster.casefold()
+        return False
 
     def _get_connection_string_for_cluster(
         self, cluster_config: Union[KustoConfig, str]
@@ -471,8 +612,8 @@ def _get_kusto_settings() -> Dict[str, Dict[str, KustoConfig]]:
     )
     return {
         "url": cluster_by_url,
-        "id": {conf.alias: conf for conf in cluster_by_url.values()},
-        "name": {conf.name: conf for conf in cluster_by_url.values()},
+        "id": {conf.alias.casefold(): conf for conf in cluster_by_url.values()},
+        "name": {conf.name.casefold(): conf for conf in cluster_by_url.values()},
     }
 
 

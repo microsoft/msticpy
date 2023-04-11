@@ -87,11 +87,14 @@ class CybereasonDriver(DriverBase):
             timeout=self.get_http_timeout(timeout=timeout, def_timeout=120),
             headers=mp_ua_header(),
         )
-        self.formatters = {
-            Formatters.PARAM_HANDLER: self._custom_param_handler,
-            Formatters.DATETIME: self._format_datetime,
-            Formatters.LIST: self._format_list,
-        }
+        self.set_driver_property(
+            "formatters",
+            {
+                Formatters.PARAM_HANDLER: self._custom_param_handler,
+                Formatters.DATETIME: self._format_datetime,
+                Formatters.LIST: self._format_list,
+            },
+        )
 
         self._debug = kwargs.get("debug", False)
 

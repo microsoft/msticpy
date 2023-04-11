@@ -6,12 +6,15 @@
 """Unit test common utilities."""
 
 import os
+import sys
 from contextlib import contextmanager, suppress
 from os import chdir, getcwd
 from pathlib import Path
-from typing import Any, Dict, Generator, Union
+from typing import Any, Dict, Generator, Optional, Union
+from unittest.mock import patch
 
 import nbformat
+import yaml
 from filelock import FileLock
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
@@ -145,3 +148,79 @@ def exec_notebook(
         with open(nb_err, mode="w", encoding="utf-8") as file_handle:  # type: ignore
             nbformat.write(nb_content, file_handle)
         raise
+
+
+_DEFAULT_SENTINEL = object()
+
+
+def create_get_config(settings: Dict[str, Any]):
+    """Return a get_config function with settings set to settings."""
+
+    def get_config(
+        setting_path: Optional[str] = None, default: Any = _DEFAULT_SENTINEL
+    ) -> Any:
+        """Get mocked setting item for path."""
+        if setting_path is None:
+            return settings
+        try:
+            return _get_config(setting_path, settings)
+        except KeyError:
+            if default != _DEFAULT_SENTINEL:
+                return default
+            raise
+
+    return get_config
+
+
+def _get_config(setting_path: str, settings_dict: Dict[str, Any]) -> Any:
+    """Return value from setting_path."""
+    path_elems = setting_path.split(".")
+    cur_node = settings_dict
+    for elem in path_elems:
+        cur_node = cur_node.get(elem, None)
+        if cur_node is None:
+            raise KeyError(f"{elem} value of {setting_path} is not a valid path")
+    return cur_node
+
+
+@contextmanager
+@patch("msticpy.common.pkg_config.get_config")
+def custom_get_config(
+    module_name: str,
+    mp_path: Union[str, Path],
+    path_check: bool = True,
+) -> Generator[Dict[str, Any], None, None]:
+    """
+    Context manager to temporarily set MSTICPYCONFIG path.
+
+    Parameters
+    ----------
+    module_name : str
+        The module to patch the get_config function for.
+    mp_path : Union[str, Path]
+        Path to msticpy config yaml
+    path_check : bool
+        If False, skip check for existing file
+
+    Yields
+    ------
+    Dict[str, Any]
+        Custom settings.
+
+    Raises
+    ------
+    FileNotFoundError
+        If mp_path does not exist.
+
+    """
+    if path_check and not Path(mp_path).is_file():
+        raise FileNotFoundError(f"Setting MSTICPYCONFIG to non-existent file {mp_path}")
+    mp_text = Path(mp_path).read_text(encoding="utf-8")
+    mp_settings = yaml.safe_load(mp_text)
+
+    patched_module = sys.modules[module_name]
+    prev_get_config = patched_module.get_config
+    setattr(patched_module, "get_config", create_get_config(settings=mp_settings))
+    print("using patched get_config")
+    yield mp_settings
+    setattr(patched_module, "get_config", prev_get_config)

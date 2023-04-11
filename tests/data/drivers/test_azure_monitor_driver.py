@@ -35,9 +35,18 @@ from ...unit_test_lib import custom_mp_config
 def read_schema():
     """Read schema file."""
     with open(
-        "tests/testdata/az_mon_schema.json", "r", encoding="utf-8"
+        "tests/testdata/azmon/az_mon_schema.json", "r", encoding="utf-8"
     ) as schema_file:
         return json.loads(schema_file.read())
+
+
+@pytest.fixture(scope="session")
+def read_query():
+    """Read query file."""
+    with open(
+        "tests/testdata/azmon/az_mon_query.json", "r", encoding="utf-8"
+    ) as query_file:
+        return json.loads(query_file.read())
 
 
 def get_test_ids(test_params):

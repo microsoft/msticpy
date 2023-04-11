@@ -74,17 +74,23 @@ class SplunkDriver(DriverBase):
         self._loaded = True
         self._connected = False
         self._debug = kwargs.get("debug", False)
-        self.public_attribs = {
-            "client": self.service,
-            "saved_searches": self._saved_searches,
-            "fired_alerts": self._fired_alerts,
-        }
-        self.formatters = {
-            Formatters.DATETIME: self._format_datetime,
-            Formatters.LIST: self._format_list,
-        }
+        self.set_driver_property(
+            "public_attribs",
+            {
+                "client": self.service,
+                "saved_searches": self._saved_searches,
+                "fired_alerts": self._fired_alerts,
+            },
+        )
+        self.set_driver_property(
+            "formatters",
+            {
+                Formatters.DATETIME: self._format_datetime,
+                Formatters.LIST: self._format_list,
+            },
+        )
 
-    def connect(self, connection_str: str = None, **kwargs):
+    def connect(self, connection_str: Optional[str] = None, **kwargs):
         """
         Connect to Splunk via splunk-sdk.
 
@@ -173,7 +179,7 @@ class SplunkDriver(DriverBase):
         return cs_dict
 
     def query(
-        self, query: str, query_source: QuerySource = None, **kwargs
+        self, query: str, query_source: Optional[QuerySource] = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
         """
         Execute splunk query and retrieve results via OneShot or async search mode.

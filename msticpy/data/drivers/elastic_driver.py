@@ -42,11 +42,14 @@ class ElasticDriver(DriverBase):
         self._connected = False
         self._debug = kwargs.get("debug", False)
 
-        self.formatters = {
-            Formatters.PARAM_HANDLER: self._custom_param_handler,
-            Formatters.DATETIME: self._format_datetime,
-            Formatters.LIST: self._format_list,
-        }
+        self.set_driver_property(
+            "formatters",
+            {
+                Formatters.PARAM_HANDLER: self._custom_param_handler,
+                Formatters.DATETIME: self._format_datetime,
+                Formatters.LIST: self._format_list,
+            },
+        )
 
     def connect(self, connection_str: str = None, **kwargs):
         """

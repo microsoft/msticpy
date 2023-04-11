@@ -7,7 +7,7 @@
 import abc
 from abc import ABC
 from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterable, Optional, Set, Tuple, Union
 
 import pandas as pd
 
@@ -31,14 +31,30 @@ class DriverBase(ABC):
         self._loaded = False
         self._connected = False
         self.current_connection = None
-        self.public_attribs: Dict[str, Any] = {}
-        self.formatters: Dict[str, Callable] = {}
-        self.use_query_paths = True
-        self.has_driver_queries = False
+        # self.public_attribs: Dict[str, Any] = {}
+        # self.formatters: Dict[str, Callable] = {}
+        # self.use_query_paths = True
+        # self.has_driver_queries = False
         self._previous_connection = False
         self.data_environment = kwargs.get("data_environment")
         self._query_filter: Dict[str, Set[str]] = defaultdict(set)
         self._instance: Optional[str] = None
+        self.properties = self._set_default_properties()
+
+    def _set_default_properties(self):
+        return {
+            "public_attribs": {},
+            "formatters": {},
+            "use_query_paths": True,
+            "has_driver_queries": False,
+            "effective_environment": self.data_environment,
+        }
+
+    def __getattr__(self, attrib):
+        """Return item from the properties dictionary as an attribute."""
+        if attrib in self.properties:
+            return self.properties[attrib]
+        raise AttributeError(f"{self.__class__.__name__} has no attribute '{attrib}'")
 
     @property
     def loaded(self) -> bool:
@@ -119,7 +135,7 @@ class DriverBase(ABC):
 
     @abc.abstractmethod
     def query(
-        self, query: str, query_source: QuerySource = None, **kwargs
+        self, query: str, query_source: Optional[QuerySource] = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
@@ -140,7 +156,7 @@ class DriverBase(ABC):
         Returns
         -------
         Union[pd.DataFrame, Any]
-            A DataFrame (if successfull) or
+            A DataFrame (if successful) or
             the underlying provider result if an error.
 
         """
@@ -195,7 +211,7 @@ class DriverBase(ABC):
         """Parameters that determine whether a query is relevant for the driver."""
         return self._query_filter
 
-    def add_query_filter(self, name, query_filter):
+    def add_query_filter(self, name: str, query_filter: Union[str, Iterable]):
         """Add an expression to the query attach filter."""
         allowed_names = {"data_environments", "data_families", "data_sources"}
         if name not in allowed_names:
@@ -203,7 +219,18 @@ class DriverBase(ABC):
                 f"'name' {name} must be one of:",
                 ", ".join(f"'{name}'" for name in allowed_names),
             )
-        self._query_filter[name].add(query_filter)
+        if isinstance(query_filter, str):
+            self._query_filter[name].add(query_filter)
+        else:
+            self._query_filter[name].update(query_filter)
+
+    def set_driver_property(self, name: str, value: Any):
+        """Set an item in driver properties."""
+        self.properties[name] = value
+
+    def get_driver_property(self, name: str) -> Any:
+        """Return value or KeyError from driver properties."""
+        return self.properties[name]
 
     # Read values from configuration
     @staticmethod

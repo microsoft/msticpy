@@ -100,7 +100,9 @@ class AzureMonitorDriver(DriverBase):
         super().__init__(**kwargs)
 
         self._schema: Dict[str, Any] = {}
-        self.formatters = {"datetime": self._format_datetime, "list": self._format_list}
+        self.set_driver_property(
+            "formatters", {"datetime": self._format_datetime, "list": self._format_list}
+        )
         self._loaded = True
         self._ua_policy = UserAgentPolicy(user_agent=mp_ua_header()["UserAgent"])
 
@@ -115,6 +117,9 @@ class AzureMonitorDriver(DriverBase):
         self._workspace_ids: List[str] = []
         self._def_connection_str: Optional[str] = connection_str
         self._connect_auth_types: Optional[List[str]] = None
+        self.add_query_filter(
+            "data_environments", ("MSSentinel", "LogAnalytics", "AzureSentinel")
+        )
 
     @property
     def url_endpoint(self) -> str:

@@ -91,11 +91,7 @@ def test_init():
 
     # Test that __init__ sets the _connection_props property correctly
     driver = AzureKustoDriver(timeout=300)
-    assert driver._connection_props.request_timeout == timedelta(seconds=300)
-
-    # Test that __init__ raises a TypeError when connection_str is not a string
-    with pytest.raises(TypeError):
-        driver = AzureKustoDriver(connection_str=None)
+    assert driver._connection_props._options["servertimeout"] == timedelta(seconds=300)
 
     # Test that __init__ raises a TypeError when timeout is not an integer
     with pytest.raises(TypeError):
@@ -471,3 +467,6 @@ def test_kusto_query(query_config, monkeypatch):
         for test in query_config.tests:
             check.is_true(test(result))
         check.is_instance(result, pd.DataFrame)
+
+
+# def test_kusto_get_table_names(monkeypatch):
