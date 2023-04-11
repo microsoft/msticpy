@@ -6,6 +6,7 @@
 """Logging global config."""
 import logging
 import os
+import sys
 from typing import NamedTuple, Optional, Union
 
 from .._version import VERSION
@@ -55,11 +56,13 @@ def set_logging_level(log_level: Union[int, str]):
 def setup_logging():
     """Initiate logging."""
     logging_config = _get_logging_config()
+    # encoding param only supported in 3.9+
+    params_39 = {"encoding": "utf-8"} if sys.version_info >= (3, 9) else {}
     logging.basicConfig(
         filename=logging_config.log_file,
-        encoding="utf-8",
         level=logging_config.log_level,
         format="%(asctime)s: %(levelname)s - %(message)s (%(module)s#%(lineno)d)",
+        **params_39,
     )
 
 
