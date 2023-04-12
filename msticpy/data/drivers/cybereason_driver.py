@@ -18,7 +18,7 @@ from ...common.exceptions import MsticpyUserConfigError
 from ...common.provider_settings import ProviderArgs, get_provider_settings
 from ...common.utility import mp_ua_header
 from ..core.query_defns import Formatters
-from .driver_base import DriverBase, QuerySource
+from .driver_base import DriverBase, DriverProps, QuerySource
 
 __version__ = VERSION
 __author__ = "Florian Bracq"
@@ -88,7 +88,7 @@ class CybereasonDriver(DriverBase):
             headers=mp_ua_header(),
         )
         self.set_driver_property(
-            "formatters",
+            DriverProps.FORMATTERS,
             {
                 Formatters.PARAM_HANDLER: self._custom_param_handler,
                 Formatters.DATETIME: self._format_datetime,

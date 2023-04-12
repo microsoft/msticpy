@@ -34,7 +34,7 @@ from ...common.settings import get_config, get_http_proxies
 from ...common.utility import export
 from ..core.query_defns import DataEnvironment
 from ..core.query_source import QuerySource
-from . import DriverBase
+from .driver_base import DriverBase, DriverProps
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -144,7 +144,7 @@ class AzureKustoDriver(DriverBase):
             timedelta(seconds=timeout),
         )
         self.add_query_filter("data_environments", "Kusto")
-        self.set_driver_property("public_attribs", self._set_public_attribs())
+        self.set_driver_property(DriverProps.PUBLIC_ATTRS, self._set_public_attribs())
 
     @property
     def current_cluster(self) -> str:
@@ -358,7 +358,9 @@ class AzureKustoDriver(DriverBase):
         if self.client is None:
             _raise_not_connected_error()
         try:
-            response = self.client.execute_mgmt("NetDefaultDB", ".show databases")
+            response = self.client.execute_mgmt(  # type: ignore[union-attr]
+                "NetDefaultDB", ".show databases"
+            )
 
             # Convert the result to a DataFrame
             databases_df = dataframe_from_result_table(response.primary_results[0])
@@ -408,7 +410,7 @@ class AzureKustoDriver(DriverBase):
         query = f".show database {db_name} schema"
         try:
             # Execute the query
-            response = self.client.execute_mgmt(db_name, query)
+            response = self.client.execute_mgmt(db_name, query)  # type: ignore[union-attr]
             # Convert the result to a DataFrame
             schema_dataframe = dataframe_from_result_table(response.primary_results[0])
         except KustoServiceError as err:
@@ -603,7 +605,7 @@ def _get_kusto_settings() -> Dict[str, Dict[str, KustoConfig]]:
         for config_id, cluster_conf in get_config("KustoClusters", {}).items()
     }
     defaults: Dict[str, Any] = kusto_new_conf.pop(KFields.DEFAULTS, {}).get(
-        KFields.ARGS, {}
+        KFields.ARGS, {}  # type: ignore[assignment]
     )
     kusto_clusters.update(kusto_new_conf)
 

@@ -19,7 +19,7 @@ from ...common.exceptions import (
 )
 from ...common.utility import check_kwargs, export
 from ..core.query_defns import Formatters
-from .driver_base import DriverBase, QuerySource
+from .driver_base import DriverBase, DriverProps, QuerySource
 
 try:
     import splunklib.client as sp_client
@@ -75,7 +75,7 @@ class SplunkDriver(DriverBase):
         self._connected = False
         self._debug = kwargs.get("debug", False)
         self.set_driver_property(
-            "public_attribs",
+            DriverProps.PUBLIC_ATTRS,
             {
                 "client": self.service,
                 "saved_searches": self._saved_searches,
@@ -83,7 +83,7 @@ class SplunkDriver(DriverBase):
             },
         )
         self.set_driver_property(
-            "formatters",
+            DriverProps.FORMATTERS,
             {
                 Formatters.DATETIME: self._format_datetime,
                 Formatters.LIST: self._format_list,

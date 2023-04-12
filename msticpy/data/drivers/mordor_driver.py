@@ -24,7 +24,7 @@ from ...common.exceptions import MsticpyUserError
 from ...common.pkg_config import get_config
 from ...common.utility import mp_ua_header
 from ..core.query_source import QuerySource
-from .driver_base import DriverBase
+from .driver_base import DriverBase, DriverProps
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -41,8 +41,8 @@ _MITRE_JSON_URL = (
 _MTR_TAC_CAT_URI = "https://attack.mitre.org/tactics/{cat}/"
 _MTR_TECH_CAT_URI = "https://attack.mitre.org/techniques/{cat}/"
 
-MITRE_TECHNIQUES: pd.DataFrame = None
-MITRE_TACTICS: pd.DataFrame = None
+MITRE_TECHNIQUES: Optional[pd.DataFrame] = None
+MITRE_TACTICS: Optional[pd.DataFrame] = None
 
 _MITRE_TECH_CACHE = "mitre_tech_cache.pkl"
 _MITRE_TACTICS_CACHE = "mitre_tact_cache.pkl"
@@ -109,7 +109,7 @@ class MordorDriver(DriverBase):
 
         self._connected = True
         self.set_driver_property(
-            "public_attribs",
+            DriverProps.PUBLIC_ATTRS,
             {
                 "mitre_techniques": self.mitre_techniques,
                 "mitre_tactics": self.mitre_tactics,
@@ -348,8 +348,13 @@ class MitreAttack:
             Name of the Mitre technique
 
         """
-        if not self._technique_name and self.technique in MITRE_TECHNIQUES.index:
-            self._technique_name = MITRE_TECHNIQUES.loc[self.technique].Name
+        if (
+            not self._technique_name
+            and self.technique in MITRE_TECHNIQUES.index  # type: ignore[union-attr]
+        ):
+            self._technique_name = MITRE_TECHNIQUES.loc[
+                self.technique
+            ].Name  # type: ignore[union-attr]
         return self._technique_name
 
     @property
@@ -363,8 +368,13 @@ class MitreAttack:
             Technique description
 
         """
-        if not self._technique_desc and self.technique in MITRE_TECHNIQUES.index:
-            self._technique_desc = MITRE_TECHNIQUES.loc[self.technique].Description
+        if (
+            not self._technique_desc
+            and self.technique in MITRE_TECHNIQUES.index  # type: ignore[union-attr]
+        ):
+            self._technique_desc = MITRE_TECHNIQUES.loc[
+                self.technique
+            ].Description  # type: ignore
         return self._technique_desc
 
     @property
@@ -395,9 +405,9 @@ class MitreAttack:
         if not self._tactics_full and self.tactics:
             for tactic in self.tactics:
                 tactic_name = tactic_desc = "unknown"
-                if tactic in MITRE_TACTICS.index:
-                    tactic_name = MITRE_TACTICS.loc[tactic].Name
-                    tactic_desc = MITRE_TACTICS.loc[tactic].Description
+                if tactic in MITRE_TACTICS.index:  # type: ignore[union-attr]
+                    tactic_name = MITRE_TACTICS.loc[tactic].Name  # type: ignore[union-attr]
+                    tactic_desc = MITRE_TACTICS.loc[tactic].Description  # type: ignore[union-attr]
                 tactic_uri = self.MTR_TAC_URI.format(tactic_id=tactic)
                 self._tactics_full.append(
                     (tactic, tactic_name, tactic_desc, tactic_uri)

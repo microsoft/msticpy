@@ -15,10 +15,56 @@ from ..._version import VERSION
 from ...common.exceptions import MsticpyNotConnectedError
 from ...common.pkg_config import get_http_timeout
 from ...common.provider_settings import ProviderSettings, get_provider_settings
+from ..core.query_defns import DataEnvironment
 from ..core.query_source import QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+
+class DriverProps:
+    """Defined driver properties."""
+
+    PUBLIC_ATTRS = "public_attribs"
+    FORMATTERS = "formatters"
+    USE_QUERY_PATHS = "use_query_paths"
+    HAS_DRIVER_QUERIES = "has_driver_queries"
+    EFFECTIVE_ENV = "effective_environment"
+    SUPPORTS_THREADING = "supports_threading"
+    SUPPORTS_ASYNC = "supports_async"
+    MAX_PARALLEL = "max_parallel"
+
+    PROPERTY_TYPES: Dict[str, Any] = {
+        PUBLIC_ATTRS: dict,
+        FORMATTERS: dict,
+        USE_QUERY_PATHS: bool,
+        HAS_DRIVER_QUERIES: bool,
+        EFFECTIVE_ENV: (str, DataEnvironment),
+        SUPPORTS_THREADING: bool,
+        SUPPORTS_ASYNC: bool,
+        MAX_PARALLEL: int,
+    }
+
+    @classmethod
+    def defaults(cls):
+        """Return default values for driver properties."""
+        return {
+            cls.PUBLIC_ATTRS: {},
+            cls.FORMATTERS: {},
+            cls.USE_QUERY_PATHS: True,
+            cls.HAS_DRIVER_QUERIES: False,
+            cls.EFFECTIVE_ENV: None,
+            cls.SUPPORTS_THREADING: False,
+            cls.SUPPORTS_ASYNC: False,
+            cls.MAX_PARALLEL: 4,
+        }
+
+    @classmethod
+    def valid_type(cls, property_name: str, value: Any) -> bool:
+        """Return expected property type."""
+        if property_name not in cls.PROPERTY_TYPES:
+            return True
+        return isinstance(value, cls.PROPERTY_TYPES[property_name])
 
 
 # pylint: disable=too-many-instance-attributes
@@ -39,16 +85,15 @@ class DriverBase(ABC):
         self.data_environment = kwargs.get("data_environment")
         self._query_filter: Dict[str, Set[str]] = defaultdict(set)
         self._instance: Optional[str] = None
-        self.properties = self._set_default_properties()
-
-    def _set_default_properties(self):
-        return {
-            "public_attribs": {},
-            "formatters": {},
-            "use_query_paths": True,
-            "has_driver_queries": False,
-            "effective_environment": self.data_environment,
-        }
+        self.properties = DriverProps.defaults()
+        self.set_driver_property(
+            name=DriverProps.EFFECTIVE_ENV,
+            value=(
+                self.data_environment.name
+                if isinstance(self.data_environment, DataEnvironment)
+                else self.data_environment or ""
+            ),
+        )
 
     def __getattr__(self, attrib):
         """Return item from the properties dictionary as an attribute."""
@@ -226,6 +271,11 @@ class DriverBase(ABC):
 
     def set_driver_property(self, name: str, value: Any):
         """Set an item in driver properties."""
+        if not DriverProps.valid_type(name, value):
+            raise TypeError(
+                f"Property '{name}' is not the correct type.",
+                f"Expected: '{DriverProps.PROPERTY_TYPES[name]}'.",
+            )
         self.properties[name] = value
 
     def get_driver_property(self, name: str) -> Any:

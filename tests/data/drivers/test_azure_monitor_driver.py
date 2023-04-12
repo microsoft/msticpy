@@ -5,7 +5,9 @@
 # --------------------------------------------------------------------------
 """KQL driver query test class."""
 import json
+import pickle
 import re
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -13,6 +15,7 @@ import pandas as pd
 import pytest
 import pytest_check as check
 import respx
+from azure.core.exceptions import HttpResponseError
 
 from msticpy.auth.azure_auth_core import AzCredentials
 from msticpy.common.exceptions import (
@@ -24,9 +27,10 @@ from msticpy.common.exceptions import (
 from msticpy.data.core.data_providers import QueryProvider
 from msticpy.data.core.query_defns import DataEnvironment
 from msticpy.data.core.query_source import QuerySource
+from msticpy.data.drivers import azure_monitor_driver
 from msticpy.data.drivers.azure_monitor_driver import AzureMonitorDriver
 
-from ...unit_test_lib import custom_mp_config
+from ...unit_test_lib import custom_get_config, custom_mp_config
 
 # pylint: disable=protected-access, unused-argument, redefined-outer-name
 
@@ -41,12 +45,10 @@ def read_schema():
 
 
 @pytest.fixture(scope="session")
-def read_query():
+def read_query_response():
     """Read query file."""
-    with open(
-        "tests/testdata/azmon/az_mon_query.json", "r", encoding="utf-8"
-    ) as query_file:
-        return json.loads(query_file.read())
+    with open("tests/testdata/azmon/query_response.pkl", "rb") as query_file:
+        return pickle.loads(query_file.read())
 
 
 def get_test_ids(test_params):
@@ -57,8 +59,8 @@ def get_test_ids(test_params):
 _TEST_INIT_PARAMS = (
     ({"connection_str": "test"}, ("_def_connection_str", "test")),
     (
-        {"data_environment": DataEnvironment.MSSentinel},
-        ("environment", DataEnvironment.MSSentinel),
+        {"data_environment": DataEnvironment.MSSentinel_New},
+        ("effective_environment", DataEnvironment.MSSentinel.name),
     ),
 )
 
@@ -255,9 +257,127 @@ def test_load_provider(az_connect, read_schema):
     """Test KqlDriverAZMon query when not connected."""
     az_connect.return_value = AzCredentials(legacy=None, modern=Credentials())
 
-    respx.get(re.compile(r"https://management\.azure\.com/")).respond(
+    respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         status_code=200, json=read_schema
     )
 
     query_prov = QueryProvider("MSSentinel_New")
     query_prov.connect()
+
+    check.greater(len(query_prov.list_queries()), 100)
+    check.equal(len(query_prov.schema), 17)
+
+
+class LogsQueryClient:
+    """Mock LogsQueryClient class."""
+
+    with open("tests/testdata/azmon/query_response.pkl", "rb") as query_file:
+        _data = pickle.loads(query_file.read())
+
+    def __init__(self, *args, **kwargs):
+        """Mock LogsQueryClient class."""
+        self.args = args
+        self.kwargs = kwargs
+        self.query_workspace_args = {}
+
+    def query_workspace(self, query, timespan=None, **kwargs):
+        """Mock query_workspace method."""
+        self.query_workspace_args = {"query": query, "timespan": timespan, **kwargs}
+
+        if query == "HttpResponseError":
+            raise HttpResponseError(
+                message="LA response error",
+            )
+        if query == "Exception":
+            raise ValueError("Unknown exception")
+        return self._data
+
+
+@respx.mock
+@patch("msticpy.data.drivers.azure_monitor_driver.az_connect")
+def test_queries(az_connect, read_schema, monkeypatch):
+    """Test KqlDriverAZMon queries."""
+    az_connect.return_value = AzCredentials(legacy=None, modern=Credentials())
+    respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
+        status_code=200, json=read_schema
+    )
+    monkeypatch.setattr(azure_monitor_driver, "LogsQueryClient", LogsQueryClient)
+
+    query_prov = QueryProvider("MSSentinel_New")
+    query_prov.connect()
+    query = "Testtable | take 10"
+    results = query_prov.exec_query(query)
+
+    check.is_in("credential", query_prov._query_provider._query_client.kwargs)
+    check.is_in("endpoint", query_prov._query_provider._query_client.kwargs)
+    check.is_in("proxies", query_prov._query_provider._query_client.kwargs)
+
+    query_ws_args = query_prov._query_provider._query_client.query_workspace_args
+    check.equal(query_ws_args["query"], query)
+    check.is_not_none(query_ws_args["workspace_id"])
+    check.equal(query_ws_args["server_timeout"], 300)
+    check.is_none(query_ws_args["additional_workspaces"])
+    check.is_instance(results, pd.DataFrame)
+    check.equal(len(results), 3)
+
+    # fail because not in schema
+    with pytest.raises(MsticpyNoDataSourceError):
+        query_prov.Azure.get_vmcomputer_for_ip(
+            ip_address="192.1.2.3",
+            start=datetime.now(tz=timezone.utc) - timedelta(1),
+            end=datetime.now(tz=timezone.utc),
+        )
+    # should succeed
+    results = query_prov.Azure.list_azure_activity_for_ip(
+        ip_address_list=["192.1.2.3"],
+        start=datetime.now(tz=timezone.utc) - timedelta(1),
+        end=datetime.now(tz=timezone.utc),
+    )
+    check.is_instance(results, pd.DataFrame)
+    check.equal(len(results), 3)
+
+    # Fail due to service errors
+    with pytest.raises(MsticpyDataQueryError):
+        query_prov.exec_query("HttpResponseError")
+
+    with pytest.raises(MsticpyDataQueryError):
+        query_prov.exec_query("Exception")
+
+
+@patch("msticpy.data.drivers.azure_monitor_driver.az_connect")
+def test_query_multiple_workspaces(az_connect, monkeypatch):
+    """Test KqlDriverAZMon query when not connected."""
+    az_connect.return_value = AzCredentials(legacy=None, modern=Credentials())
+
+    monkeypatch.setattr(azure_monitor_driver, "LogsQueryClient", LogsQueryClient)
+
+    query_prov = QueryProvider("MSSentinel_New")
+    with pytest.raises(MsticpyKqlConnectionError):
+        query_prov.connect(
+            workspace_ids=[
+                "a927809c-8142-43e1-96b3-4ad87cfe95a3",
+                "a927809c-8142-43e1-96b3-4ad87cfe95a4",
+            ]
+        )
+
+    query_prov.connect(
+        tenant_id="72f988bf-86f1-41af-91ab-2d7cd011db49",
+        workspace_ids=[
+            "a927809c-8142-43e1-96b3-4ad87cfe95a3",
+            "a927809c-8142-43e1-96b3-4ad87cfe95a4",
+        ],
+    )
+    query = "Testtable | take 10"
+    results = query_prov.exec_query(query)
+    check.is_instance(results, pd.DataFrame)
+    check.equal(len(results), 3)
+
+    with custom_mp_config(mp_path=Path("tests/msticpyconfig-test.yaml")):
+        query_prov.connect(
+            tenant_id="72f988bf-86f1-41af-91ab-2d7cd011db49",
+            workspaces=["MyTestWS", "MyTestWS2"],
+        )
+    query = "Testtable | take 10"
+    results = query_prov.exec_query(query)
+    check.is_instance(results, pd.DataFrame)
+    check.equal(len(results), 3)

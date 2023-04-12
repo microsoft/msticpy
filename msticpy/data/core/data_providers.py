@@ -17,7 +17,8 @@ from ..._version import VERSION
 from ...common.pkg_config import get_config
 from ...common.utility import export, valid_pyname
 from ...nbwidgets import QueryTime
-from ..drivers import DriverBase, import_driver
+from ..drivers import import_driver
+from ..drivers.driver_base import DriverBase, DriverProps
 from .param_extractor import extract_query_params
 from .query_container import QueryContainer
 from .query_defns import DataEnvironment
@@ -52,8 +53,8 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
     def __init__(  # noqa: MC0001
         self,
         data_environment: Union[str, DataEnvironment],
-        driver: DriverBase = None,
-        query_paths: List[str] = None,
+        driver: Optional[DriverBase] = None,
+        query_paths: Optional[List[str]] = None,
         **kwargs,
     ):
         """
@@ -97,7 +98,6 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
                 data_environment = data_env
             else:
                 raise TypeError(f"Unknown data environment {data_environment}")
-        self.environment = data_environment.name
 
         self._driver_kwargs = kwargs.copy()
         if driver is None:
@@ -106,10 +106,17 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
                 driver = self.driver_class(data_environment=data_environment, **kwargs)
             else:
                 raise LookupError(
-                    "Could not find suitable data provider for", f" {self.environment}"
+                    "Could not find suitable data provider for", f" {data_environment}"
                 )
         else:
             self.driver_class = driver.__class__
+        # allow the driver to override the data environment used
+        # for selecting queries
+        self.environment = (
+            driver.get_driver_property(DriverProps.EFFECTIVE_ENV)
+            or data_environment.name
+        )
+
         self._additional_connections: Dict[str, DriverBase] = {}
         self._query_provider = driver
         # replace the connect method docstring with that from
@@ -138,7 +145,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
                 return getattr(parent, child_name)
         raise AttributeError(f"{name} is not a valid attribute.")
 
-    def connect(self, connection_str: str = None, **kwargs):
+    def connect(self, connection_str: Optional[str] = None, **kwargs):
         """
         Connect to data source.
 

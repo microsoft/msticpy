@@ -37,7 +37,7 @@ from ...common.timespan import TimeSpan
 from ...common.utility import export, mp_ua_header
 from ...common.wsconfig import WorkspaceConfig
 from ..core.query_defns import DataEnvironment
-from .driver_base import DriverBase, QuerySource
+from .driver_base import DriverBase, DriverProps, QuerySource
 
 logger = logging.getLogger(__name__)
 
@@ -101,14 +101,11 @@ class AzureMonitorDriver(DriverBase):
 
         self._schema: Dict[str, Any] = {}
         self.set_driver_property(
-            "formatters", {"datetime": self._format_datetime, "list": self._format_list}
+            DriverProps.FORMATTERS,
+            {"datetime": self._format_datetime, "list": self._format_list},
         )
         self._loaded = True
         self._ua_policy = UserAgentPolicy(user_agent=mp_ua_header()["UserAgent"])
-
-        self.environment = kwargs.pop(
-            "data_environment", DataEnvironment.MSSentinel_New
-        )
 
         self._query_client: Optional[LogsQueryClient] = None
         self._az_tenant_id: Optional[str] = None
@@ -119,6 +116,9 @@ class AzureMonitorDriver(DriverBase):
         self._connect_auth_types: Optional[List[str]] = None
         self.add_query_filter(
             "data_environments", ("MSSentinel", "LogAnalytics", "AzureSentinel")
+        )
+        self.set_driver_property(
+            DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinel.name
         )
 
     @property
@@ -256,8 +256,7 @@ class AzureMonitorDriver(DriverBase):
                 help_uri=_HELP_URL,
             )
         logger.info("Query to run %s", query)
-        query_options = kwargs.pop("query_options", {})
-        time_span_value = self._get_time_span_value(query_options)
+        time_span_value = self._get_time_span_value(**kwargs)
 
         server_timeout = kwargs.pop(
             "server_timeout", kwargs.pop("timeout", self._DEFAULT_TIMEOUT)
@@ -383,10 +382,10 @@ class AzureMonitorDriver(DriverBase):
             ", ".join(self._workspace_ids),
         )
 
-    def _get_time_span_value(self, query_options):
+    def _get_time_span_value(self, **kwargs):
         """Return the timespan for the query API call."""
-        default_time_params = query_options.get("default_time_params", False)
-        time_params = query_options.get("time_span", {})
+        default_time_params = kwargs.get("default_time_params", False)
+        time_params = kwargs.get("time_span", {})
         if (
             default_time_params
             or "start" not in time_params
@@ -396,8 +395,8 @@ class AzureMonitorDriver(DriverBase):
             logger.info("No time parameters supplied.")
         else:
             time_span = TimeSpan(
-                start=self.formatters["datetime"](time_params["start"]),
-                end=self.formatters["datetime"](time_params["end"]),
+                start=time_params["start"],
+                end=time_params["end"],
             )
             time_span_value = time_span.start, time_span.end
             logger.info("Time parameters set %s", str(time_span))
@@ -510,13 +509,13 @@ class AzureMonitorDriver(DriverBase):
     @staticmethod
     def _raise_unknown_error(exception):
         """Raise an unknown exception."""
-        raise MsticpyKqlConnectionError(
+        raise MsticpyDataQueryError(
             "An unknown exception was returned by the service",
             *exception.args,
             f"Full exception:\n{exception}",
             title="connection failed",
             help_uri=_HELP_URL,
-        )
+        ) from exception
 
 
 def _schema_format_tables(

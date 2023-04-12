@@ -30,7 +30,7 @@ from ...common.exceptions import (
 from ...common.utility import MSTICPY_USER_AGENT, export
 from ...common.wsconfig import WorkspaceConfig
 from ..core.query_defns import DataEnvironment
-from .driver_base import DriverBase, QuerySource
+from .driver_base import DriverBase, DriverProps, QuerySource
 
 _KQL_ENV_OPTS = "KQLMAGIC_CONFIGURATION"
 
@@ -119,7 +119,8 @@ class KqlDriver(DriverBase):
         super().__init__(**kwargs)
 
         self.set_driver_property(
-            "formatters", {"datetime": self._format_datetime, "list": self._format_list}
+            DriverProps.FORMATTERS,
+            {"datetime": self._format_datetime, "list": self._format_list},
         )
         self._loaded = self._is_kqlmagic_loaded()
 
