@@ -17,5 +17,8 @@ Submodules
    msticpy.data.core.param_extractor
    msticpy.data.core.query_container
    msticpy.data.core.query_defns
+   msticpy.data.core.query_provider_connections_mixin
+   msticpy.data.core.query_provider_utils_mixin
    msticpy.data.core.query_source
    msticpy.data.core.query_store
+   msticpy.data.core.query_template

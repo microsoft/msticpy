@@ -33,6 +33,7 @@ class DriverProps:
     SUPPORTS_THREADING = "supports_threading"
     SUPPORTS_ASYNC = "supports_async"
     MAX_PARALLEL = "max_parallel"
+    FILTER_ON_CONNECT = "filter_queries_on_connect"
 
     PROPERTY_TYPES: Dict[str, Any] = {
         PUBLIC_ATTRS: dict,
@@ -43,6 +44,7 @@ class DriverProps:
         SUPPORTS_THREADING: bool,
         SUPPORTS_ASYNC: bool,
         MAX_PARALLEL: int,
+        FILTER_ON_CONNECT: bool,
     }
 
     @classmethod
@@ -57,6 +59,7 @@ class DriverProps:
             cls.SUPPORTS_THREADING: False,
             cls.SUPPORTS_ASYNC: False,
             cls.MAX_PARALLEL: 4,
+            cls.FILTER_ON_CONNECT: False,
         }
 
     @classmethod
@@ -281,6 +284,11 @@ class DriverBase(ABC):
     def get_driver_property(self, name: str) -> Any:
         """Return value or KeyError from driver properties."""
         return self.properties[name]
+
+    def query_usable(self, query_source: QuerySource) -> bool:
+        """Return True if query should be exposed for this driver."""
+        del query_source
+        return True
 
     # Read values from configuration
     @staticmethod

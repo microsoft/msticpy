@@ -3,6 +3,7 @@ azure-common>=1.1.18
 azure-core>=1.24.0
 azure-identity>=1.10.0
 azure-keyvault-secrets>=4.0.0
+azure-kusto-data>=4.0.0
 azure-mgmt-compute>=4.6.2
 azure-mgmt-core>=1.2.1
 azure-mgmt-keyvault>=2.0.0
@@ -11,6 +12,7 @@ azure-mgmt-network>=2.7.0
 azure-mgmt-resource>=16.1.0
 azure-mgmt-resourcegraph>=8.0.0
 azure-mgmt-subscription>=3.0.0
+azure-monitor-query>=1.0.0
 azure-storage-blob>=12.5.0
 beautifulsoup4>=4.0.0
 bokeh>=1.4.0, <=2.4.3

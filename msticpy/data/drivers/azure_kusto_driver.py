@@ -17,17 +17,15 @@ from azure.kusto.data import (
     KustoClient,
     KustoConnectionStringBuilder,
 )
-from azure.kusto.data.exceptions import KustoApiError, KustoServiceError
-from azure.kusto.data.helpers import dataframe_from_result_table
-from azure.kusto.data.response import KustoResponseDataSet
 
 from ..._version import VERSION
 from ...auth.azure_auth import az_connect, get_default_resource_name
+from ...auth.cloud_mappings import AzureCloudConfig
 from ...common.exceptions import (
     MsticpyDataQueryError,
+    MsticpyMissingDependencyError,
     MsticpyNotConnectedError,
     MsticpyParameterError,
-    MsticpyUserError,
 )
 from ...common.provider_settings import ProviderArgs, get_protected_setting
 from ...common.settings import get_config, get_http_proxies
@@ -36,16 +34,21 @@ from ..core.query_defns import DataEnvironment
 from ..core.query_source import QuerySource
 from .driver_base import DriverBase, DriverProps
 
+try:
+    from azure.kusto.data.exceptions import KustoApiError, KustoServiceError
+    from azure.kusto.data.helpers import dataframe_from_result_table
+    from azure.kusto.data.response import KustoResponseDataSet
+except ImportError as imp_err:
+    raise MsticpyMissingDependencyError(
+        "Cannot use this feature without Azure Kusto client installed",
+        title="Error importing azure.kusto.data",
+        packages="azure-kusto-data",
+    ) from imp_err
+
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 _HELP_URL = "https://msticpy.readthedocs.io/en/latest/DataProviders/DataProv-Kusto.html"
-
-# _KCS_CODE = "code;"
-# _KCS_APP = "tenant='{tenant_id}';clientid='{client_id}';clientsecret='{clientsecret}';"
-# _KCS_TEMPLATE = "azure_data-Explorer://{auth}cluster='{cluster}';database='{database}'"
-
-# KustoClusterSettings = Dict[str, Dict[str, Union[str, ProviderArgs]]]
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +64,7 @@ class KustoConfig:
     args: ProviderArgs = dataclasses.field(default_factory=ProviderArgs)
     tenant_id: Optional[str] = None
     integrated_auth: bool = False
+    cluster_groups: List[str] = dataclasses.field(default_factory=list)
 
     @dataclasses.dataclass
     class ConfigFields:
@@ -73,12 +77,13 @@ class KustoConfig:
         CLIENT_ID = "ClientId"
         CLIENT_SEC = "ClientSecret"
         ARGS = "Args"
+        CLUSTER_GROUPS = "ClusterGroups"
 
     # pylint: disable=no-member
     @property
     def default_db(self):
         """Return default database for this cluster."""
-        return self.args.get("database", self.args.get("default_database"))
+        return self.args.get("Database", self.args.get("DefaultDatabase"))
 
     # pylint: disable=unsubscriptable-object, unsupported-membership-test
     def __getattr__(self, attrib):
@@ -90,6 +95,17 @@ class KustoConfig:
     def __contains__(self, attrib):
         """Return True if attribute in self or args."""
         return attrib in self.__dict__ or attrib in self.args
+
+
+@dataclasses.dataclass
+class QuerySourceFields:
+    """Kusto query source/yaml query fields."""
+
+    CLUSTER = "cluster"
+    CLUSTERS = "clusters"
+    CLUSTER_GROUPS = "cluster_groups"
+    DATA_ENVS = "data_environments"
+    DATA_FAMILIES = "data_families"
 
 
 class AuthParams(NamedTuple):
@@ -106,6 +122,7 @@ _DEFAULT_TIMEOUT = 60 * 4
 _MAX_TIMEOUT = 60 * 60
 
 
+# pylint: disable=too-many-instance-attributes
 @export
 class AzureKustoDriver(DriverBase):
     """Kusto Driver class to execute kql queries for Azure Data Explorer."""
@@ -126,34 +143,69 @@ class AzureKustoDriver(DriverBase):
         timeout : int
             Query timeout in seconds, default is 240 seconds (4 minutes)
             Maximum is 3600 seconds (1 hour).
+            (can be set here or in connect and overridden in query methods)
+        proxies : Dict[str, str]
+            Proxy settings for log analytics queries.
+            Dictionary format is {protocol: proxy_url}
+            Where protocol is https, http, etc. and proxy_url can contain
+            optional authentication information in the format
+            "https://username:password@proxy_host:port"
+            If you have a proxy configuration in msticpyconfig.yaml and
+            you do not want to use it, set this to an empty dictionary.
+            (can be overridden in connect method)
 
         """
         super().__init__(**kwargs)
         self.environment = kwargs.get("data_environment", DataEnvironment.Kusto)
+        self._strict_query_match = kwargs.get("strict_query_match", False)
         self._kusto_settings: Dict[str, Dict[str, KustoConfig]] = _get_kusto_settings()
         self._default_database: Optional[str] = None
         self.current_connection: Optional[str] = connection_str
-        self._current_config: Union[KustoConfig, str, None] = None
+        self._current_config: Optional[KustoConfig] = None
         self.client: Optional[KustoClient] = None
         self._az_auth_types: Optional[List[str]] = None
         self._az_tenant_id: Optional[str] = None
-        self._connection_props = ClientRequestProperties()
-        timeout = min(kwargs.pop("timeout", _DEFAULT_TIMEOUT), _MAX_TIMEOUT)
-        self._connection_props.set_option(
-            ClientRequestProperties.request_timeout_option_name,
-            timedelta(seconds=timeout),
-        )
+        self._def_timeout = min(kwargs.pop("timeout", _DEFAULT_TIMEOUT), _MAX_TIMEOUT)
+        self._def_proxies = kwargs.get("proxies", get_http_proxies())
+
         self.add_query_filter("data_environments", "Kusto")
         self.set_driver_property(DriverProps.PUBLIC_ATTRS, self._set_public_attribs())
+        self.set_driver_property(DriverProps.FILTER_ON_CONNECT, True)
+        self.set_driver_property(DriverProps.EFFECTIVE_ENV, DataEnvironment.Kusto.name)
+
+    def _set_public_attribs(self):
+        """Expose subset of attributes via query_provider."""
+        return {
+            "get_database_names": self.get_database_names,
+            "get_database_schema": self.get_database_schema,
+            "configured_clusters": self.configured_clusters,
+            "cluster_uri": self.cluster_uri,
+            "cluster_name": self.cluster_name,
+            "cluster_config_name": self.cluster_config_name,
+            "set_cluster": self.set_cluster,
+            "set_database": self.set_database,
+        }
 
     @property
-    def current_cluster(self) -> str:
-        """Return current cluster name."""
+    def cluster_uri(self) -> str:
+        """Return current cluster URI."""
         if not self._current_config:
             return ""
-        if isinstance(self._current_config, str):
-            return self._current_config
         return self._current_config.cluster
+
+    @property
+    def cluster_name(self) -> str:
+        """Return current cluster URI."""
+        if not self._current_config:
+            return ""
+        return self._current_config.name
+
+    @property
+    def cluster_config_name(self) -> str:
+        """Return current cluster URI."""
+        if isinstance(self._current_config, KustoConfig):
+            return self._current_config.alias
+        return "not defined"
 
     @property
     def schema(self) -> Dict[str, Dict]:
@@ -161,9 +213,11 @@ class AzureKustoDriver(DriverBase):
         try:
             return self.get_database_schema()
         except ValueError:
-            print("Default database not set - unable to retrieve schema")
+            print("Default database not set - unable to retrieve schema.")
         except MsticpyNotConnectedError:
-            print("Not connected to a cluster - unable to retrieve schema")
+            print("Not connected to a cluster - unable to retrieve schema.")
+        except MsticpyDataQueryError:
+            print("Kusto Error retrieving the schema.")
         return {}
 
     @property
@@ -193,11 +247,11 @@ class AzureKustoDriver(DriverBase):
         ----------
         connection_str : str
             Connect to a data source
+        cluster : str, optional
+            Short name or URI of cluster to connect to.
 
         Other Parameters
         ----------------
-        cluster : str, optional
-            Short name or URI of cluster to connect to.
         database : str, optional
             Name to set the default database to.
         tenant_id : str, optional
@@ -216,6 +270,10 @@ class AzureKustoDriver(DriverBase):
             List[str]: list of acceptable auth methods
         mp_az_tenant_id: str, optional
             alias for `tenant_id`.
+        timeout : int
+            Query timeout in seconds, default is 240 seconds (4 minutes)
+            Maximum is 3600 seconds (1 hour).
+            (can be overridden in query methods)
 
         See Also
         --------
@@ -223,6 +281,7 @@ class AzureKustoDriver(DriverBase):
 
         """
         self._default_database = kwargs.pop("database", None)
+        self._def_timeout = min(kwargs.pop("timeout", self._def_timeout), _MAX_TIMEOUT)
         az_auth_types = kwargs.pop("auth_types", kwargs.pop("mp_az_auth", None))
         if isinstance(az_auth_types, bool):
             self._az_auth_types = None
@@ -238,7 +297,7 @@ class AzureKustoDriver(DriverBase):
         if not connection_str and not cluster:
             raise MsticpyParameterError(
                 "Must specify either a connection string or a cluster name",
-                parameters=["connection_str", "cluster"],
+                parameter=["connection_str", "cluster"],
             )
 
         if cluster:
@@ -248,7 +307,7 @@ class AzureKustoDriver(DriverBase):
             kusto_cs = connection_str
 
         self.client = KustoClient(kusto_cs)
-        proxies = get_http_proxies()
+        proxies = kwargs.get("proxies", self._def_proxies)
         if proxies and proxies.get("https"):
             self.client.set_proxy(proxies["https"])
         self._connected = True
@@ -268,14 +327,11 @@ class AzureKustoDriver(DriverBase):
 
         Other Parameters
         ----------------
-        cluster : str, Optional
-            Supply or override the Kusto cluster name
         database : str, Optional
             Supply or override the Kusto database name
-        data_source : str, Optional
-            alias for `db`
-        connection_str : str, Optional
-
+        timeout : int
+            Query timeout in seconds, default is 240 seconds (4 minutes)
+            Maximum is 3600 seconds (1 hour).
 
         Returns
         -------
@@ -309,7 +365,7 @@ class AzureKustoDriver(DriverBase):
         ------
         MsticpyNotConnectedError
             If there is no connection to the data source.
-        MsticpyUserConfigError
+        MsticpyDataQueryError
             If no database is specified in the query or parameters
             and there is no default database.
 
@@ -317,30 +373,30 @@ class AzureKustoDriver(DriverBase):
         if not self._connected:
             _raise_not_connected_error()
         query_source = kwargs.pop("query_source", None)
-        cluster = kwargs.pop("cluster", None)
-        if not cluster:
-            # if no cluster in params, try to get it from query_source
-            cluster = self._get_cluster_from_query_source(query_source=query_source)
-        if connection_str := kwargs.pop("connection_str", None):
-            # if user has explicitly specified a connection string
-            # try to connect with that
-            logger.info("Query - connecting with connection string")
-            self.connect(connection_str=connection_str)
-        elif cluster != self.current_cluster:
-            # if user or query_source specifies a different cluster name
-            logger.info(
-                "Query - switching cluster from %s to %s", self.current_cluster, cluster
+
+        if query_source and not self.query_usable(query_source):
+            query_spec = self._get_cluster_spec_from_query_source(query_source)
+            raise MsticpyDataQueryError(
+                "Invalid query source - for this connection.",
+                f"Connected cluster is: {self.cluster_uri} ({self.cluster_config_name})",
+                "The cluster in the query definition is:",
+                *[f"{name}: {value}" for name, value in query_spec.items()],
+                title="Mismatched cluster for query.",
+                help_uri=_HELP_URL,
             )
-            self.connect(cluster=cluster)
 
         database = self._get_query_database_name(query_source=query_source, **kwargs)
         data: Optional[pd.DataFrame] = None
         status = {"success": False}
-        if not database:
-            _raise_no_db_error(query_source)
+        connection_props = ClientRequestProperties()
+        connection_props.set_option(
+            ClientRequestProperties.request_timeout_option_name,
+            timedelta(seconds=kwargs.get("timeout", self._def_timeout)),
+        )
+
         try:
             response = self.client.execute(  # type: ignore[union-attr]
-                database=database, query=query
+                database=database, query=query, properties=connection_props
             )
             data = dataframe_from_result_table(response.primary_results[0])
             status = _parse_query_status(response)
@@ -358,8 +414,15 @@ class AzureKustoDriver(DriverBase):
         if self.client is None:
             _raise_not_connected_error()
         try:
+            connection_props = ClientRequestProperties()
+            connection_props.set_option(
+                ClientRequestProperties.request_timeout_option_name,
+                timedelta(seconds=self._def_timeout),
+            )
             response = self.client.execute_mgmt(  # type: ignore[union-attr]
-                "NetDefaultDB", ".show databases"
+                database="NetDefaultDB",
+                query=".show databases",
+                properties=connection_props,
             )
 
             # Convert the result to a DataFrame
@@ -430,53 +493,34 @@ class AzureKustoDriver(DriverBase):
             for table, cols in schema_dataframe.groupby("TableName")
         }
 
-    def _set_public_attribs(self):
-        """Expose subset of attributes via query_provider."""
+    def _get_cluster_spec_from_query_source(
+        self, query_source: QuerySource
+    ) -> Dict[str, str]:
+        """Return cluster details from query source."""
         return {
-            "get_database_names": self.get_database_names,
-            "get_database_schema": self.get_database_schema,
-            "configured_clusters": self.configured_clusters,
-            "current_cluster": self.current_cluster,
-            "set_cluster": self.set_cluster,
-            "set_database": self.set_database,
+            QuerySourceFields.CLUSTER: query_source.metadata.get(
+                QuerySourceFields.CLUSTER, "NA"
+            ),
+            QuerySourceFields.CLUSTERS: query_source.metadata.get(
+                QuerySourceFields.CLUSTERS, "NA"
+            ),
+            QuerySourceFields.CLUSTER_GROUPS: query_source.metadata.get(
+                QuerySourceFields.CLUSTER_GROUPS, "NA"
+            ),
         }
 
-    def _get_cluster_from_query_source(
-        self, query_source: Optional[QuerySource]
-    ) -> str:
-        """Return cluster name from query source."""
-        if not query_source:
-            return self.current_cluster
-        if "cluster" in query_source.metadata:
-            return query_source.metadata["cluster"]
-        if "clusters" in query_source.metadata:
-            return query_source.metadata["clusters"][0]
-        return self.current_cluster
-
-    def _cluster_in_query_source(
-        self, cluster: str, query_source: Optional[QuerySource]
-    ) -> bool:
-        """Return True if cluster is specified in query source."""
-        if not query_source:
-            return False
-        cluster_config = self._lookup_cluster_settings(cluster)
-        if isinstance(cluster_config, KustoConfig):
-            cluster = cluster_config.cluster
-        if "clusters" in query_source.metadata:
-            return cluster.casefold() in [
-                clust.casefold() for clust in query_source.metadata["clusters"]
-            ]
-        if "cluster" in query_source.metadata:
-            return query_source.metadata["cluster"].casefold() == cluster.casefold()
-        return False
-
     def _get_connection_string_for_cluster(
-        self, cluster_config: Union[KustoConfig, str]
+        self, cluster_config: KustoConfig
     ) -> KustoConnectionStringBuilder:
         """Return full cluster URI and credential for cluster name or URI."""
-        auth_params = self._get_auth_params(cluster_config)
-        if auth_params.method == "client_secret":
-            credential = az_connect(auth_types=["clientsecret"], **(auth_params.params))
+        auth_params = self._get_auth_params_from_config(cluster_config)
+        if auth_params.method == "clientsecret":
+            connect_auth_types = self._az_auth_types or AzureCloudConfig().auth_methods
+            if "clientsecret" not in connect_auth_types:
+                connect_auth_types.append("clientsecret")
+            credential = az_connect(
+                auth_types=connect_auth_types, **(auth_params.params)
+            )
         else:
             credential = az_connect(
                 auth_types=self._az_auth_types, **(auth_params.params)
@@ -488,22 +532,6 @@ class AzureKustoDriver(DriverBase):
             connection_string=auth_params.uri,
             user_token=token.token,
         )
-
-    def _get_auth_params(self, cluster_config) -> AuthParams:
-        """Return auth parameters for cluster name or URI."""
-        if isinstance(cluster_config, str):
-            # cluster is already a full URI but we don't have config for it
-            # try integrated auth and use the cluster URI as the cluster name
-            logger.info("Cluster config is string %s", cluster_config)
-            return AuthParams(
-                method="integrated",
-                params={"tenant_id": self._az_tenant_id},
-                uri=cluster_config,
-            )
-
-        # if we do have config, use the parameters from the config
-        logger.info("Cluster config is KustoConfig")
-        return self._get_auth_params_from_config(cluster_config)
 
     def _get_auth_params_from_config(self, cluster_config: KustoConfig) -> AuthParams:
         """Get authentication parameters for cluster from KustoConfig values."""
@@ -521,7 +549,7 @@ class AzureKustoDriver(DriverBase):
         auth_params_dict["tenant_id"] = cluster_config.tenant_id
         return AuthParams(method, auth_params_dict, cluster_config.cluster)
 
-    def _lookup_cluster_settings(self, cluster: str) -> Union[KustoConfig, str]:
+    def _lookup_cluster_settings(self, cluster: str) -> KustoConfig:
         """Return cluster URI from config if cluster name is passed."""
         cluster_key = cluster.casefold().strip()
         if cluster_key in self._kusto_settings["url"]:
@@ -531,7 +559,13 @@ class AzureKustoDriver(DriverBase):
         if cluster_key in self._kusto_settings["id"]:
             return self._kusto_settings["id"][cluster_key]
         if cluster_key.startswith("https://"):
-            return cluster
+            return KustoConfig(
+                cluster=cluster,
+                name=cluster.replace("https://", "").split(".")[0],
+                alias="no_config_found",
+                path="",
+                tenant_id=self._az_tenant_id,
+            )
 
         raise MsticpyDataQueryError(
             f"Cluster '{cluster}' not found in msticpyconfig.yaml",
@@ -561,9 +595,80 @@ class AzureKustoDriver(DriverBase):
         if self._default_database:
             logger.info("Using database %s from _default_database.", database)
             return self._default_database
-        raise ValueError(
-            "No database name found in query definition or query parameters"
+        _raise_no_db_error()
+        return ""  # pragma: no cover
+
+    def query_usable(self, query_source) -> bool:
+        """Return True if query source is valid for current cluster."""
+        if not query_source or not isinstance(query_source, QuerySource):
+            return False
+        if not self._current_config:
+            # This probably won't work but we can just try the query
+            # and see if it works
+            return True
+        # Check if query source has cluster information
+        if not (
+            query_source.metadata.keys()
+            & {
+                QuerySourceFields.CLUSTER_GROUPS,
+                QuerySourceFields.CLUSTERS,
+                QuerySourceFields.CLUSTER,
+            }
+        ):
+            if self._strict_query_match:
+                return False
+            logger.info(
+                (
+                    "Query source %s has no cluster information. "
+                    "The query may fail on the current cluster."
+                ),
+                query_source.name,
+            )
+            return True
+        # Check for matches on cluster groups or cluster id
+        result = False
+        result |= self._cluster_groups_match(query_source)
+        if result:
+            return result
+        result |= self._cluster_id_matches(query_source)
+        return result
+
+    def _cluster_groups_match(self, query_source: QuerySource) -> bool:
+        """Return True if query source cluster group is valid for current cluster."""
+        source_cluster_groups = query_source.metadata.get(
+            QuerySourceFields.CLUSTER_GROUPS, []
         )
+        if (
+            source_cluster_groups
+            and self._current_config.cluster_groups  # type: ignore[union-attr]
+        ):
+            driver_groups = {
+                group.casefold()
+                for group in self._current_config.cluster_groups  # type: ignore[union-attr]
+            }
+            query_groups = {group.casefold() for group in source_cluster_groups}
+            return bool(driver_groups.intersection(query_groups))
+        return False
+
+    def _cluster_id_matches(self, query_source: QuerySource) -> bool:
+        """Return True if query source cluster is valid for current cluster."""
+        # Get different representations of the cluster name
+        result = False
+        cluster_ids = {
+            self.cluster_uri.casefold(),
+            self.cluster_name.casefold(),
+            self.cluster_config_name.casefold(),
+        }
+        source_clusters = query_source.metadata.get(QuerySourceFields.CLUSTERS, [])
+        if source_clusters:
+            query_source_clusters = {cluster.casefold() for cluster in source_clusters}
+            result |= bool(cluster_ids.intersection(query_source_clusters))
+            if result:
+                return result
+        source_cluster = query_source.metadata.get(QuerySourceFields.CLUSTER)
+        if source_cluster:
+            result |= source_cluster.casefold() in cluster_ids
+        return result
 
     @staticmethod
     def _get_db_from_query_source(query_source: QuerySource) -> str:
@@ -573,9 +678,7 @@ class AzureKustoDriver(DriverBase):
         data_families = query_source.metadata.get("data_families")
         if not data_families:
             logger.info("Could not find database name in query source metadata.")
-            raise ValueError(
-                "Query yaml has no data families element specifying the database name."
-            )
+            _raise_no_db_error(query_source)
 
         if "." in data_families[0]:  # type: ignore
             _, database = data_families[0].split(".", maxsplit=1)  # type: ignore
@@ -641,6 +744,7 @@ def _create_cluster_config(
             alias=name,
             name=get_cluster_name(config[KFields.ARGS].get(KFields.CLUSTER)),
             path=config["path"],
+            cluster_groups=config.get(KFields.CLUSTER_GROUPS),
         )
         for name, config in kusto_clusters.items()
     }
@@ -709,7 +813,7 @@ def _raise_kusto_error(error):
         ) from error
 
 
-def _raise_no_db_error(query_source):
+def _raise_no_db_error(query_source=None):
     """Raise an error if no database is specified."""
     if query_source:
         messages = (
@@ -726,7 +830,7 @@ def _raise_no_db_error(query_source):
                 "default database when connecting to the cluster."
             ),
         )
-    raise MsticpyUserError(
+    raise MsticpyDataQueryError(
         *messages,
         title="No database specified",
         help_uri=_HELP_URL,
@@ -750,4 +854,4 @@ def _raise_unknown_query_error(err):
         *err.args,
         title="Unknown exception during query execution",
         help_uri=_HELP_URL,
-    )
+    ) from err

@@ -7,23 +7,26 @@
 Get proxy settings from config.
 
 Settings format
-http:
-    proxies:
-        http:
-            Url: proxy_url
-            UserName: user
-            Password: [PLACEHOLDER]
-        https:
-            Url: proxy_url
-            UserName: user
-            Password: [PLACEHOLDER]
+
+.. code-block:: yaml
+
+    msticpy:
+        Proxies:
+            http:
+                Url: proxy_url
+                UserName: user
+                Password: [PLACEHOLDER]
+            https:
+                Url: proxy_url
+                UserName: user
+                Password: [PLACEHOLDER]
 
 The entries for the username and password can be specified
 as a string, an dictionary of EnvironmentVar: ENV_VAR_NAME
-or a dictionary of one of the following
-KeyVault: None
-KeyVault: secret_name
-KeyVault: vault_name/secret_name
+or a dictionary of one of the following:
+- KeyVault: None
+- KeyVault: secret_name
+- KeyVault: vault_name/secret_name
 
 """
 from typing import Dict, Optional
@@ -34,7 +37,7 @@ from .provider_settings import get_protected_setting
 
 def get_http_proxies() -> Optional[Dict[str, str]]:
     """Return proxy settings from config."""
-    proxy_config = get_config("http.proxies", None)
+    proxy_config = get_config("mstipcy.Proxies", None)
     if not proxy_config:
         return None
     proxy_dict = {}

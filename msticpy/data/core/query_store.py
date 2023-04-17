@@ -7,7 +7,7 @@
 from collections import defaultdict
 from functools import cached_property
 from os import path
-from typing import Any, Dict, Iterable, List, Optional, Set, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Union
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserConfigError
@@ -79,6 +79,7 @@ class QueryStore:
         self.environment: str = environment
         self.data_families: Dict[str, Dict[str, QuerySource]] = defaultdict(dict)
         self.data_family_defaults: Dict[str, Dict[str, Any]] = defaultdict(dict)
+        self._all_sources: List[QuerySource] = []
 
     def __getattr__(self, name: str):
         """Return the item in dot-separated path `name`."""
@@ -102,7 +103,8 @@ class QueryStore:
         for family in sorted(self.data_families):
             yield from [
                 f"{family}.{query}"
-                for query in sorted(self.data_families[family].keys())
+                for query, query_source in sorted(self.data_families[family].items())
+                if query_source.show
             ]
 
     @cached_property
@@ -132,6 +134,7 @@ class QueryStore:
 
         """
         source.query_store = self
+        self._all_sources.append(source)
         for family in source.data_families:
             self.data_families[family][source.name] = source
             # we want to update any new defaults for the data family
@@ -217,6 +220,20 @@ class QueryStore:
         for source_name, source in sources.items():
             new_source = QuerySource(source_name, source, defaults, metadata)
             self.add_data_source(new_source)
+
+    def apply_query_filter(self, query_filter: Callable[[QuerySource], bool]):
+        """
+        Apply a filter to the query sources.
+
+        Parameters
+        ----------
+        query_filter : Callable[[bool], QuerySource]
+            A function that takes a QuerySource and returns True
+            if the query should be displayed.
+
+        """
+        for source in self._all_sources:
+            source.show = query_filter(source)
 
     @classmethod  # noqa: MC0001
     def import_files(  # noqa: MC0001

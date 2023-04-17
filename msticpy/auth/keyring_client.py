@@ -116,4 +116,4 @@ class KeyringClient:
             True if Keyring has a usable backend, False if not.
 
         """
-        return not isinstance(keyring.get_keyring(), keyring.backends.fail.Keyring)
+        return keyring.get_keyring() != keyring.backends.fail.Keyring

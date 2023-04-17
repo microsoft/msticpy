@@ -16,7 +16,7 @@ azure/monitor-query-readme?view=azure-python
 """
 import logging
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import httpx
 import pandas as pd
@@ -42,7 +42,11 @@ from .driver_base import DriverBase, DriverProps, QuerySource
 logger = logging.getLogger(__name__)
 
 try:
-    from azure.monitor.query import LogsQueryClient, LogsQueryPartialResult
+    from azure.monitor.query import (
+        LogsQueryClient,
+        LogsQueryPartialResult,
+        LogsQueryResult,
+    )
 except ImportError as imp_err:
     raise MsticpyMissingDependencyError(
         "Cannot use this feature without Azure monitor client installed",
@@ -81,7 +85,7 @@ class AzureMonitorDriver(DriverBase):
 
     _DEFAULT_TIMEOUT = 300
 
-    def __init__(self, connection_str: str = None, **kwargs):
+    def __init__(self, connection_str: Optional[str] = None, **kwargs):
         """
         Instantiate KqlDriver and optionally connect.
 
@@ -94,6 +98,18 @@ class AzureMonitorDriver(DriverBase):
         ----------------
         debug : bool
             print out additional diagnostic information.
+        timeout : int (seconds)
+            Specify a timeout for queries. Default is 300 seconds.
+            (can be set here or in connect and overridden in query methods)
+        proxies : Dict[str, str]
+            Proxy settings for log analytics queries.
+            Dictionary format is {protocol: proxy_url}
+            Where protocol is https, http, etc. and proxy_url can contain
+            optional authentication information in the format
+            "https://username:password@proxy_host:port"
+            If you have a proxy configuration in msticpyconfig.yaml and
+            you do not want to use it, set this to an empty dictionary.
+            (can be overridden in connect method)
 
         """
         self._debug = kwargs.get("debug", False)
@@ -106,7 +122,10 @@ class AzureMonitorDriver(DriverBase):
         )
         self._loaded = True
         self._ua_policy = UserAgentPolicy(user_agent=mp_ua_header()["UserAgent"])
-
+        self._def_timeout = kwargs.get(
+            "timeout", kwargs.get("server_timeout", self._DEFAULT_TIMEOUT)
+        )
+        self._def_proxies = kwargs.get("proxies", get_http_proxies())
         self._query_client: Optional[LogsQueryClient] = None
         self._az_tenant_id: Optional[str] = None
         self._ws_config: Optional[WorkspaceConfig] = None
@@ -163,6 +182,17 @@ class AzureMonitorDriver(DriverBase):
         workspace_ids: Iterable[str], optional
             List of workspace IDs to run the queries against. Must be supplied
             along with a `tenant_id`.
+        timeout : int (seconds)
+            Specify a timeout for queries. Default is 300 seconds.
+            (can be overridden query method)
+        proxies : Dict[str, str]
+            Proxy settings for log analytics queries.
+            Dictionary format is {protocol: proxy_url}
+            Where protocol is https, http, etc. and proxy_url can contain
+            optional authentication information in the format
+            "https://username:password@proxy_host:port"
+            If you have a proxy configuration in msticpyconfig.yaml and
+            you do not want to use it, set this to an empty dictionary.
 
         Notes
         -----
@@ -198,7 +228,7 @@ class AzureMonitorDriver(DriverBase):
         return self._schema
 
     def query(
-        self, query: str, query_source: QuerySource = None, **kwargs
+        self, query: str, query_source: Optional[QuerySource] = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
@@ -207,8 +237,13 @@ class AzureMonitorDriver(DriverBase):
         ----------
         query : str
             The query to execute
-        query_source : QuerySource
+        query_source : Optional[QuerySource]
             The query definition object
+
+        Other Parameters
+        ----------------
+        timeout : int (seconds)
+            Specify a timeout for the query. Default is 300 seconds.
 
         Returns
         -------
@@ -258,9 +293,8 @@ class AzureMonitorDriver(DriverBase):
         logger.info("Query to run %s", query)
         time_span_value = self._get_time_span_value(**kwargs)
 
-        server_timeout = kwargs.pop(
-            "server_timeout", kwargs.pop("timeout", self._DEFAULT_TIMEOUT)
-        )
+        server_timeout = kwargs.pop("timeout", self._def_timeout)
+
         workspace_id = next(iter(self._workspace_ids), None) or self._workspace_id
         additional_workspaces = self._workspace_ids[1:] if self._workspace_ids else None
         try:
@@ -272,18 +306,20 @@ class AzureMonitorDriver(DriverBase):
                 additional_workspaces=additional_workspaces,
             )
         except HttpResponseError as http_err:
+            result = None
             self._raise_query_failure(query, http_err)
         # We might get an unknown exception type from azure.monitor.query
         except Exception as unknown_err:  # pylint: disable=broad-exception-caught
+            result = None
             self._raise_unknown_error(unknown_err)
-
+        result = cast(LogsQueryResult, result)
         status = self._get_query_status(result)
         logger.info("query status %s", repr(status))
 
         if isinstance(result, LogsQueryPartialResult):
-            table = result.partial_data[0]
+            table = result.partial_data[0]  # type: ignore[attr-defined]
         else:
-            table = result.tables[0]
+            table = result.tables[0]  # type: ignore[attr-defined]
         data_frame = pd.DataFrame(table.rows, columns=table.columns)
 
         return data_frame, status
@@ -297,6 +333,8 @@ class AzureMonitorDriver(DriverBase):
             az_auth_types = [az_auth_types]
         self._connect_auth_types = az_auth_types
 
+        self._def_timeout = kwargs.get("timeout", self._DEFAULT_TIMEOUT)
+        self._def_proxies = kwargs.get("proxies", self._def_proxies)
         self._get_workspaces(connection_str, **kwargs)
 
         credentials = az_connect(
@@ -305,7 +343,7 @@ class AzureMonitorDriver(DriverBase):
         return LogsQueryClient(
             credential=credentials.modern,
             endpoint=self.url_endpoint,
-            proxies=kwargs.get("proxies", get_http_proxies()),
+            proxies=kwargs.get("proxies", self._def_proxies),
         )
 
     def _get_workspaces(self, connection_str: Optional[str] = None, **kwargs):
@@ -469,7 +507,12 @@ class AzureMonitorDriver(DriverBase):
         )
         token = credentials.modern.get_token(f"{mgmt_endpoint}/.default")
         headers = {"Authorization": f"Bearer {token.token}", **mp_ua_header()}
-        response = httpx.get(fmt_url, headers=headers, timeout=get_http_timeout())
+        response = httpx.get(
+            fmt_url,
+            headers=headers,
+            timeout=get_http_timeout(),
+            proxies=self._def_proxies or {},
+        )
         if response.status_code != 200:
             return {}
         tables = response.json()

@@ -351,8 +351,11 @@ def get_http_timeout(
     **kwargs,
 ) -> httpx.Timeout:
     """Return timeout from settings or overridden in `kwargs`."""
+    config_timeout = get_config(
+        "msticpy.http_timeout", get_config("http_timeout", None)
+    )
     timeout_params = kwargs.get(
-        "timeout", kwargs.get("def_timeout", get_config("http_timeout", None))  # type: ignore
+        "timeout", kwargs.get("def_timeout", config_timeout)  # type: ignore
     )  # type: ignore
     if isinstance(timeout_params, dict):
         timeout_params = {

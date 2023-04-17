@@ -30,7 +30,7 @@ from msticpy.data.core.query_source import QuerySource
 from msticpy.data.drivers import azure_monitor_driver
 from msticpy.data.drivers.azure_monitor_driver import AzureMonitorDriver
 
-from ...unit_test_lib import custom_get_config, custom_mp_config
+from ...unit_test_lib import custom_mp_config, get_test_data_path
 
 # pylint: disable=protected-access, unused-argument, redefined-outer-name
 
@@ -39,15 +39,19 @@ from ...unit_test_lib import custom_get_config, custom_mp_config
 def read_schema():
     """Read schema file."""
     with open(
-        "tests/testdata/azmon/az_mon_schema.json", "r", encoding="utf-8"
+        get_test_data_path().joinpath("azmon/az_mon_schema.json"), "r", encoding="utf-8"
     ) as schema_file:
-        return json.loads(schema_file.read())
+        file_text = schema_file.read()
+        print("read test schema length", len(file_text))
+        return json.loads(file_text)
 
 
 @pytest.fixture(scope="session")
 def read_query_response():
     """Read query file."""
-    with open("tests/testdata/azmon/query_response.pkl", "rb") as query_file:
+    with open(
+        get_test_data_path().joinpath("/azmon/query_response.pkl"), "rb"
+    ) as query_file:
         return pickle.loads(query_file.read())
 
 
@@ -146,6 +150,9 @@ def test_azmon_driver_connect(az_connect, params, expected, read_schema):
     respx.get(re.compile(r"https://management\.azure\.com/")).respond(
         status_code=200, json=read_schema
     )
+    respx.get(re.compile(r"https://api\.loganalytics\.io")).respond(
+        status_code=200, json=read_schema
+    )
 
     with custom_mp_config(Path("tests/msticpyconfig-test.yaml")):
         azmon_driver = AzureMonitorDriver()
@@ -173,15 +180,20 @@ def test_azmon_driver_connect(az_connect, params, expected, read_schema):
 
 @respx.mock
 @patch("msticpy.data.drivers.azure_monitor_driver.az_connect")
-def test_get_schema(az_connect, read_schema):
+def test_get_schema(az_connect, read_schema, monkeypatch):
     """Test KqlDriverAZMon get_schema."""
     az_connect.return_value = AzCredentials(legacy=None, modern=Credentials())
 
     respx.get(re.compile(r"https://management\.azure\.com/")).respond(
         status_code=200, json=read_schema
     )
+    respx.get(re.compile(r"https://api\.loganalytics\.io")).respond(
+        status_code=200, json=read_schema
+    )
+    monkeypatch.setattr(azure_monitor_driver, "LogsQueryClient", LogsQueryClient)
     azmon_driver = AzureMonitorDriver()
     azmon_driver.connect()
+    assert isinstance(azmon_driver._query_client, LogsQueryClient)
     check.is_not_none(azmon_driver.schema)
     check.equal(len(azmon_driver.schema), 17)
     check.is_in("AppServiceAntivirusScanAuditLogs", azmon_driver.schema)
@@ -235,16 +247,22 @@ QUERY_SOURCE = {
 
 @respx.mock
 @patch("msticpy.data.drivers.azure_monitor_driver.az_connect")
-def test_query_unknown_table(az_connect, read_schema):
+def test_query_unknown_table(az_connect, read_schema, monkeypatch):
     """Test KqlDriverAZMon query when not connected."""
     az_connect.return_value = AzCredentials(legacy=None, modern=Credentials())
 
     respx.get(re.compile(r"https://management\.azure\.com/")).respond(
         status_code=200, json=read_schema
     )
+    respx.get(re.compile(r"https://api\.loganalytics\.io")).respond(
+        status_code=200, json=read_schema
+    )
+    monkeypatch.setattr(azure_monitor_driver, "LogsQueryClient", LogsQueryClient)
     with pytest.raises(MsticpyNoDataSourceError):
         azmon_driver = AzureMonitorDriver()
         azmon_driver.connect()
+        assert azmon_driver.schema is not None
+        assert isinstance(azmon_driver._query_client, LogsQueryClient)
         query_source = QuerySource(
             name="my_test_query", source=QUERY_SOURCE, defaults={}, metadata={}
         )
@@ -253,16 +271,22 @@ def test_query_unknown_table(az_connect, read_schema):
 
 @respx.mock
 @patch("msticpy.data.drivers.azure_monitor_driver.az_connect")
-def test_load_provider(az_connect, read_schema):
+def test_load_provider(az_connect, read_schema, monkeypatch):
     """Test KqlDriverAZMon query when not connected."""
     az_connect.return_value = AzCredentials(legacy=None, modern=Credentials())
 
     respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         status_code=200, json=read_schema
     )
+    respx.get(re.compile(r"https://api\.loganalytics\.io")).respond(
+        status_code=200, json=read_schema
+    )
+
+    monkeypatch.setattr(azure_monitor_driver, "LogsQueryClient", LogsQueryClient)
 
     query_prov = QueryProvider("MSSentinel_New")
     query_prov.connect()
+    assert isinstance(query_prov._query_provider._query_client, LogsQueryClient)
 
     check.greater(len(query_prov.list_queries()), 100)
     check.equal(len(query_prov.schema), 17)
@@ -301,10 +325,14 @@ def test_queries(az_connect, read_schema, monkeypatch):
     respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         status_code=200, json=read_schema
     )
+    respx.get(re.compile(r"https://api\.loganalytics\.io")).respond(
+        status_code=200, json=read_schema
+    )
     monkeypatch.setattr(azure_monitor_driver, "LogsQueryClient", LogsQueryClient)
 
     query_prov = QueryProvider("MSSentinel_New")
     query_prov.connect()
+    assert isinstance(query_prov._query_provider._query_client, LogsQueryClient)
     query = "Testtable | take 10"
     results = query_prov.exec_query(query)
 

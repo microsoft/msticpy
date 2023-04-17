@@ -162,10 +162,21 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         for attr_name, attr in self._query_provider.public_attribs.items():
             setattr(self, attr_name, attr)
 
+        refresh_query_funcs = False
+        # if the driver supports dynamic filtering of queries,
+        # filter the query store based on connect-time parameters
+        if self._query_provider.filter_queries_on_connect:
+            self.query_store.apply_query_filter(self._query_provider.query_usable)
+            refresh_query_funcs = True
         # Add any built-in or dynamically retrieved queries from driver
         if self._query_provider.has_driver_queries:
             driver_queries = self._query_provider.driver_queries
             self._add_driver_queries(queries=driver_queries)
+            refresh_query_funcs = True
+
+        if refresh_query_funcs:
+            self._add_query_functions()
+
         # Since we're now connected, add Pivot functions
         self._add_pivots(lambda: self._query_time.timespan)
 

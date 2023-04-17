@@ -10,8 +10,7 @@ import sys
 from contextlib import contextmanager, suppress
 from os import chdir, getcwd
 from pathlib import Path
-from typing import Any, Dict, Generator, Optional, Union
-from unittest.mock import patch
+from typing import Any, Dict, Generator, Iterable, Optional, Union
 
 import nbformat
 import yaml
@@ -184,23 +183,25 @@ def _get_config(setting_path: str, settings_dict: Dict[str, Any]) -> Any:
 
 
 @contextmanager
-@patch("msticpy.common.pkg_config.get_config")
 def custom_get_config(
-    module_name: str,
-    mp_path: Union[str, Path],
-    path_check: bool = True,
+    monkeypatch: Any,
+    add_modules: Optional[Iterable[str]] = None,
+    settings: Optional[Dict[str, Any]] = None,
+    mp_path: Union[str, Path, None] = None,
 ) -> Generator[Dict[str, Any], None, None]:
     """
     Context manager to temporarily set MSTICPYCONFIG path.
 
     Parameters
     ----------
+    monkeypatch : Any
+        Pytest monkeypatch fixture
     module_name : str
         The module to patch the get_config function for.
+    settings : Dict[str, Any]
+        The mocked settings to use.
     mp_path : Union[str, Path]
-        Path to msticpy config yaml
-    path_check : bool
-        If False, skip check for existing file
+        Path to load msticpyconfig.yaml settings from.
 
     Yields
     ------
@@ -213,14 +214,21 @@ def custom_get_config(
         If mp_path does not exist.
 
     """
-    if path_check and not Path(mp_path).is_file():
-        raise FileNotFoundError(f"Setting MSTICPYCONFIG to non-existent file {mp_path}")
-    mp_text = Path(mp_path).read_text(encoding="utf-8")
-    mp_settings = yaml.safe_load(mp_text)
+    if mp_path:
+        if not Path(mp_path).is_file():
+            raise FileNotFoundError(
+                f"Setting MSTICPYCONFIG to non-existent file {mp_path}"
+            )
+        mp_text = Path(mp_path).read_text(encoding="utf-8")
+        settings = yaml.safe_load(mp_text)
 
-    patched_module = sys.modules[module_name]
-    prev_get_config = patched_module.get_config
-    setattr(patched_module, "get_config", create_get_config(settings=mp_settings))
-    print("using patched get_config")
-    yield mp_settings
-    setattr(patched_module, "get_config", prev_get_config)
+    if settings:
+        core_modules = ["msticpy.common.pkg_config", "msticpy.common.settings"]
+        patched_get_config = create_get_config(settings=settings)
+        for module_name in core_modules + (list(add_modules or [])):
+            patched_module = sys.modules[module_name]
+            monkeypatch.setattr(patched_module, "get_config", patched_get_config)
+            print(f"using patched get_config for {module_name}")
+        yield settings
+    else:
+        raise ValueError("No settings specified")

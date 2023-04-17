@@ -352,9 +352,9 @@ class MitreAttack:
             not self._technique_name
             and self.technique in MITRE_TECHNIQUES.index  # type: ignore[union-attr]
         ):
-            self._technique_name = MITRE_TECHNIQUES.loc[
+            self._technique_name = MITRE_TECHNIQUES.loc[  # type: ignore[union-attr]
                 self.technique
-            ].Name  # type: ignore[union-attr]
+            ].Name
         return self._technique_name
 
     @property
@@ -372,9 +372,9 @@ class MitreAttack:
             not self._technique_desc
             and self.technique in MITRE_TECHNIQUES.index  # type: ignore[union-attr]
         ):
-            self._technique_desc = MITRE_TECHNIQUES.loc[
+            self._technique_desc = MITRE_TECHNIQUES.loc[  # type: ignore
                 self.technique
-            ].Description  # type: ignore
+            ].Description
         return self._technique_desc
 
     @property
