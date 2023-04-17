@@ -246,16 +246,16 @@ SYSMON_PROCESS_CREATE_EVENT_SCH = ProcSchema(
 OSQUERY_EVENT_SCH = ProcSchema(
     time_stamp="calendarTime",
     # host_name_column = "hostIdentifier",
-    process_name="columns_name",
-    process_id="columns_pid",
-    parent_name="columns_pcmdline",
-    parent_id="columns_parent",
+    process_name="name",
+    process_id="pid",
+    parent_name="pcmdline",
+    parent_id="parent",
     logon_id=None,
     target_logon_id=None,
-    cmd_line="columns_cmdline",
-    user_name="columns_username",
+    cmd_line="cmdline",
+    user_name="username",
     path_separator="/",
-    user_id="columns_uid",
+    user_id="uid",
 )
 
 # FireEye HX processEvent from 'stateagentinspector' or 'eventbuffer' audits
