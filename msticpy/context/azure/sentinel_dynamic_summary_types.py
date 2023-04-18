@@ -82,7 +82,7 @@ class DynamicSummaryItem:
     """
     DynamicSummaryItem class.
 
-    Attributes
+    Parameters
     ----------
     summary_item_id: Optional[str]
         The ID of the item

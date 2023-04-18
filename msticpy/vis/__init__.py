@@ -10,6 +10,7 @@ This contains the following functionality:
 
 - entity_graph_tools - graphing and timeline support for entity visualization
 - data_viewer - Bokeh-based data browser
+- data_viewer_pane - PyVis Panel-based data browser
 - foliummap - mapping using the folium package
 - matrix_plot - matrix/interaction plots
 - morph_charts - experimental morph charts support
