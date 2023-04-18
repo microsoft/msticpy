@@ -25,12 +25,13 @@ _RESOURCES = pd.DataFrame(
         "resource_id": ["123", "456", "789"],
     }
 )
-_RESOURCE_DETAILS = {"properties": {"workspaceResourceId": "ABC"}}
 
 _RES_ID = (
     "subscriptions/123/resourceGroups/RG/providers/"
     "Microsoft.OperationalInsights/workspaces/WSNAME"
 )
+
+_RESOURCE_DETAILS = {"properties": {"workspaceResourceId": _RES_ID}}
 
 
 def test_azuresent_init():

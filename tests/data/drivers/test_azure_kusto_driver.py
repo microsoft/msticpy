@@ -99,11 +99,10 @@ def test_init():
 
     # Test that __init__ sets the _connection_props property correctly
     driver = AzureKustoDriver(timeout=300)
-    assert driver._connection_props._options["servertimeout"] == timedelta(seconds=300)
+    assert driver._def_timeout == timedelta(seconds=300)
 
-    # Test that __init__ raises a TypeError when timeout is not an integer
-    with pytest.raises(TypeError):
-        driver = AzureKustoDriver(timeout="invalid_timeout_value")
+    driver = AzureKustoDriver(proxies={"https": "https://test.proxy.com"})
+    assert driver._def_proxies == {"https": "https://test.proxy.com"}
 
 
 class MPConfig:
