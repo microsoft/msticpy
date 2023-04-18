@@ -188,9 +188,11 @@ class SplunkDriver(DriverBase):
         Other Parameters
         ----------------
         count : int, optional
-            Passed to Splunk oneshot method if `oneshot` is True, by default, 0
+            Passed to Splunk job that indicates the maximum number of entities to return. A value of "0" indicates no maximum, by default, 0
         oneshot : bool, optional
             Set to True for oneshot (blocking) mode, by default False
+        pagenate_width = int, optional
+            Pass to Splunk results reader in terms of fetch speed, which sets of result ammount will be got at a time, by default, 100 
 
         Returns
         -------
@@ -206,35 +208,79 @@ class SplunkDriver(DriverBase):
         # default to unlimited query unless count is specified
         count = kwargs.pop("count", 0)
 
-        # Normal, oneshot or blocking searches. Defaults to non-blocking
-        # Oneshot is blocking a blocking HTTP call which may cause time-outs
+        # Get sets of N results at a time, N=100 by default
+        pagenate_width = kwargs.pop("pagenate_width", 100)
+
+        # Normal (non-blocking) searches or oneshot (blocking) searches. Defaults to Normal(non-blocking)
+
+        # Oneshot is a blocking search that is scheduled to run immediately. 
+        # Instead of returning a search job, this mode returns the results of the search once completed. 
+        # Because this is a blocking search, the results are not available until the search has finished.
         # https://dev.splunk.com/enterprise/docs/python/sdk-python/howtousesplunkpython/howtorunsearchespython
         is_oneshot = kwargs.get("oneshot", False)
 
         if is_oneshot is True:
+            kwargs["output_mode"] = "json"
             query_results = self.service.jobs.oneshot(query, count=count, **kwargs)
-            reader = sp_results.ResultsReader(query_results)
-
+            reader = sp_results.JSONResultsReader(query_results) #due to DeprecationWarning of normal ResultsReader
+            resp_rows = [row for row in reader if isinstance(row, dict)]
         else:
             # Set mode and initialize async job
             kwargs_normalsearch = {"exec_mode": "normal"}
-            query_job = self.service.jobs.create(query, **kwargs_normalsearch)
+            query_job = self.service.jobs.create(query, count=count, **kwargs_normalsearch)
 
             # Initiate progress bar and start while loop, waiting for async query to complete
             progress_bar = tqdm(total=100, desc="Waiting Splunk job to complete")
-            while not query_job.is_done():
-                current_state = query_job.state
-                progress = float(current_state["content"]["doneProgress"]) * 100
+            prev_progress = 0
+            while True:
+                while not query_job.is_ready():
+                    pass                
+                stats = {"is_done": query_job["isDone"],
+                            "done_progress": float(query_job["doneProgress"])*100,
+                            "scan_count": int(query_job["scanCount"]),
+                            "event_count": int(query_job["eventCount"]),
+                            "result_count": int(query_job["resultCount"])}
+                status = ("\r%(done_progress)03.1f%%   %(scan_count)d scanned   "
+                            "%(event_count)d matched   %(result_count)d results") % stats                                   
+                if prev_progress==0: 
+                    progress = stats["done_progress"]
+                    prev_progress = stats["done_progress"]
+                else: 
+                    progress = stats["done_progress"] - prev_progress
+                    prev_progress = stats["done_progress"]
                 progress_bar.update(progress)
                 sleep(1)
-
-            # Update progress bar indicating completion and fetch results
+                if stats["is_done"] == "1":
+                    print(status) 
+                    print("Splunk job has Done!")                         
+                    break                  
+            # Update progress bar indicating job completion
             progress_bar.update(100)
             progress_bar.close()
-            reader = sp_results.ResultsReader(query_job.results())
+            sleep(2)
 
-        resp_rows = [row for row in reader if isinstance(row, dict)]
-        if not resp_rows:
+            # Retrieving all the results by pagenate
+            result_count = int(query_job["resultCount"])      # Number of results this job returned
+            offset = 0                                        # Start at result 0
+            print(f"Implicit parameter dump - 'pagenate_width': {pagenate_width} ,which means {pagenate_width} records will be retrieved per one fetch.\n  You can set pagenate_width=<integer> to this function's option.")
+            progress_bar_pagenate = tqdm(total=result_count, desc="Waiting Splunk result to retrieve")             
+            resp_rows = []
+            while (offset < result_count):
+                kwargs_paginate = {"count": pagenate_width,"offset": offset,"output_mode": 'json'}
+                # Get the search results and display them
+                search_results = query_job.results(**kwargs_paginate)
+                reader = sp_results.JSONResultsReader(search_results) #due to DeprecationWarning of normal ResultsReader
+                resp_rows.extend([row for row in reader if isinstance(row, dict)])
+                progress_bar_pagenate.update(pagenate_width)
+                offset += pagenate_width
+                #sleep(0.001)
+                             
+            # Update progress bar indicating fetch results
+            progress_bar_pagenate.update(result_count)
+            progress_bar_pagenate.close()
+            print(f"Retrieved {len(resp_rows)} results.")
+
+        if len(resp_rows)==0 or not resp_rows:
             print("Warning - query did not return any results.")
             return [row for row in reader if isinstance(row, sp_results.Message)]
         return pd.DataFrame(resp_rows)
