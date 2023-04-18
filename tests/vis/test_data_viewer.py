@@ -13,12 +13,9 @@ import pytest_check as check
 from bokeh.models import DateFormatter
 from traitlets import TraitError
 
-from msticpy.vis.data_viewer import (
-    DataTableColumnChooser,
-    DataTableFilter,
-    DataViewer,
-    _get_cols_from_df,
-)
+from msticpy.vis.data_viewer import DataTableColumnChooser, DataTableFilter
+from msticpy.vis.data_viewer import DataViewerBokeh as DataViewer
+from msticpy.vis.data_viewer import _get_cols_from_df
 
 from ..unit_test_lib import TEST_DATA_PATH
 

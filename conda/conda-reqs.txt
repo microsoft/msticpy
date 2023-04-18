@@ -10,7 +10,7 @@ azure-mgmt-network>=2.7.0
 azure-mgmt-resource>=16.1.0
 azure-storage-blob>=12.5.0
 beautifulsoup4>=4.0.0
-bokeh>=1.4.0, <=3.1.0
+bokeh>=1.4.0, <=2.4.3
 cryptography>=3.1
 deprecated>=1.2.4
 dnspython>=2.0.0, <3.0.0
@@ -30,6 +30,7 @@ msrestazure>=0.6.0
 networkx>=2.2
 numpy>=1.15.4
 pandas>=1.4.0, <2.0.0
+panel>=0.14.4
 pygments>=2.0.0
 pyjwt>=2.3.0
 python-dateutil>=2.8.1
