@@ -124,3 +124,6 @@ DataProviders:
       ClientId: 1234
       ClientSecret:
         EnvironmentVar: "IPSTACK_AUTH"
+  OSQueryLogs:
+    Args:
+      data_paths: tests/testdata/os_query_data.log
