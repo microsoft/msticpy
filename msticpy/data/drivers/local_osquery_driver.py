@@ -6,7 +6,10 @@
 """Local Osquery Data Driver class - osquery.{results,snapshots}.log."""
 import json
 import logging
-import pickle
+
+# pickle used for caching data. However, it is not the default. The
+# user would have to specify or configure a cache file to be read.
+import pickle  # nosec
 import re
 from collections import defaultdict
 from pathlib import Path
