@@ -191,7 +191,7 @@ class SplunkDriver(DriverBase):
             Passed to Splunk job that indicates the maximum number of entities to return. A value of "0" indicates no maximum, by default, 0
         oneshot : bool, optional
             Set to True for oneshot (blocking) mode, by default False
-        pagenate_width = int, optional
+        paginate_width = int, optional
             Pass to Splunk results reader in terms of fetch speed, which sets of result ammount will be got at a time, by default, 100 
 
         Returns
@@ -209,7 +209,7 @@ class SplunkDriver(DriverBase):
         count = kwargs.pop("count", 0)
 
         # Get sets of N results at a time, N=100 by default
-        pagenate_width = kwargs.pop("pagenate_width", 100)
+        paginate_width = kwargs.pop("paginate_width", 100)
 
         # Normal (non-blocking) searches or oneshot (blocking) searches. Defaults to Normal(non-blocking)
 
@@ -259,25 +259,25 @@ class SplunkDriver(DriverBase):
             progress_bar.close()
             sleep(2)
 
-            # Retrieving all the results by pagenate
+            # Retrieving all the results by paginate
             result_count = int(query_job["resultCount"])      # Number of results this job returned
             offset = 0                                        # Start at result 0
-            print(f"Implicit parameter dump - 'pagenate_width': {pagenate_width} ,which means {pagenate_width} records will be retrieved per one fetch.\n  You can set pagenate_width=<integer> to this function's option.")
-            progress_bar_pagenate = tqdm(total=result_count, desc="Waiting Splunk result to retrieve")             
+            print(f"Implicit parameter dump - 'paginate_width': {paginate_width} ,which means {paginate_width} records will be retrieved per one fetch.\n  You can set paginate_width=<integer> to this function's option.")
+            progress_bar_paginate = tqdm(total=result_count, desc="Waiting Splunk result to retrieve")             
             resp_rows = []
             while (offset < result_count):
-                kwargs_paginate = {"count": pagenate_width,"offset": offset,"output_mode": 'json'}
+                kwargs_paginate = {"count": paginate_width,"offset": offset,"output_mode": 'json'}
                 # Get the search results and display them
                 search_results = query_job.results(**kwargs_paginate)
                 reader = sp_results.JSONResultsReader(search_results) #due to DeprecationWarning of normal ResultsReader
                 resp_rows.extend([row for row in reader if isinstance(row, dict)])
-                progress_bar_pagenate.update(pagenate_width)
-                offset += pagenate_width
+                progress_bar_paginate.update(paginate_width)
+                offset += paginate_width
                 #sleep(0.001)
                              
             # Update progress bar indicating fetch results
-            progress_bar_pagenate.update(result_count)
-            progress_bar_pagenate.close()
+            progress_bar_paginate.update(result_count)
+            progress_bar_paginate.close()
             print(f"Retrieved {len(resp_rows)} results.")
 
         if len(resp_rows)==0 or not resp_rows:
