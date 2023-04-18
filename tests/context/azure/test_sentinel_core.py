@@ -102,4 +102,4 @@ def test_azuresent_workspaces(mock_res_dets, mock_res, sentinel_inst_loader):
     mock_res_dets.return_value = _RESOURCE_DETAILS
     workspaces = sentinel_inst_loader.get_sentinel_workspaces(sub_id="123")
     assert isinstance(workspaces, dict)
-    assert workspaces["ABC"] == "ABC"
+    assert workspaces["WSNAME"] == _RES_ID

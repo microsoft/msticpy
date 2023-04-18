@@ -35,7 +35,7 @@ from ...unit_test_lib import custom_mp_config, get_test_data_path
 # pylint: disable=protected-access, unused-argument, redefined-outer-name
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def read_schema():
     """Read schema file."""
     with open(
@@ -46,7 +46,7 @@ def read_schema():
         return json.loads(file_text)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def read_query_response():
     """Read query file."""
     with open(
@@ -154,7 +154,9 @@ def test_azmon_driver_connect(az_connect, params, expected, read_schema):
         status_code=200, json=read_schema
     )
 
-    with custom_mp_config(Path("tests/msticpyconfig-test.yaml")):
+    with custom_mp_config(
+        get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
+    ):
         azmon_driver = AzureMonitorDriver()
         exception_expected = next(iter(expected))[1]
         if isinstance(exception_expected, type) and issubclass(
@@ -295,7 +297,9 @@ def test_load_provider(az_connect, read_schema, monkeypatch):
 class LogsQueryClient:
     """Mock LogsQueryClient class."""
 
-    with open("tests/testdata/azmon/query_response.pkl", "rb") as query_file:
+    with open(
+        get_test_data_path().joinpath("azmon/query_response.pkl"), "rb"
+    ) as query_file:
         _data = pickle.loads(query_file.read())
 
     def __init__(self, *args, **kwargs):
@@ -400,7 +404,9 @@ def test_query_multiple_workspaces(az_connect, monkeypatch):
     check.is_instance(results, pd.DataFrame)
     check.equal(len(results), 3)
 
-    with custom_mp_config(mp_path=Path("tests/msticpyconfig-test.yaml")):
+    with custom_mp_config(
+        get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
+    ):
         query_prov.connect(
             tenant_id="72f988bf-86f1-41af-91ab-2d7cd011db49",
             workspaces=["MyTestWS", "MyTestWS2"],

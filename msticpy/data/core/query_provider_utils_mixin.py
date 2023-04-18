@@ -47,6 +47,7 @@ class QueryParam(NamedTuple):
     default: Optional[str] = None
 
 
+# pylint: disable=super-init-not-called
 class QueryProviderUtilsMixin(QueryProviderProtocol):
     """Mixin utility methods for QueryProvider class."""
 

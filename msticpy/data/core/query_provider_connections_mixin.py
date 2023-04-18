@@ -26,6 +26,7 @@ class QueryProviderProtocol(Protocol):
     _query_provider: DriverBase
 
 
+# pylint: disable=super-init-not-called
 class QueryProviderConnectionsMixin(QueryProviderProtocol):
     """Mixin additional connection handling QueryProvider class."""
 

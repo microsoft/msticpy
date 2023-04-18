@@ -99,7 +99,7 @@ def test_init():
 
     # Test that __init__ sets the _connection_props property correctly
     driver = AzureKustoDriver(timeout=300)
-    assert driver._def_timeout == timedelta(seconds=300)
+    assert driver._def_timeout == 300
 
     driver = AzureKustoDriver(proxies={"https": "https://test.proxy.com"})
     assert driver._def_proxies == {"https": "https://test.proxy.com"}
@@ -328,7 +328,9 @@ _TEST_CONNECT_ARGS = (
             == "https://test.kusto.windows.net",
             lambda driver: driver.client._proxy_url == "https://test.com",
         ],
-        additional_config={"http": {"proxies": {"https": {"Url": "https://test.com"}}}},
+        additional_config={
+            "msticpy": {"Proxies": {"https": {"Url": "https://test.com"}}}
+        },
     ),
     ConnectTest(
         name="cluster-not-in-config",

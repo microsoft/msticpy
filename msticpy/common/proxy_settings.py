@@ -37,7 +37,7 @@ from .provider_settings import get_protected_setting
 
 def get_http_proxies() -> Optional[Dict[str, str]]:
     """Return proxy settings from config."""
-    proxy_config = get_config("mstipcy.Proxies", None)
+    proxy_config = get_config("msticpy.Proxies", None)
     if not proxy_config:
         return None
     proxy_dict = {}
