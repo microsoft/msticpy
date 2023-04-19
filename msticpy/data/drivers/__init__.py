@@ -23,6 +23,7 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.MDATP: ("mdatp_driver", "MDATPDriver"),
     DataEnvironment.MDE: ("mdatp_driver", "MDATPDriver"),
     DataEnvironment.LocalData: ("local_data_driver", "LocalDataDriver"),
+    DataEnvironment.OSQueryLogs: ("local_osquery_driver", "OSQueryLogDriver"),
     DataEnvironment.Splunk: ("splunk_driver", "SplunkDriver"),
     DataEnvironment.Mordor: ("mordor_driver", "MordorDriver"),
     DataEnvironment.Sumologic: ("sumologic_driver", "SumologicDriver"),
