@@ -39,7 +39,9 @@ from ...unit_test_lib import custom_mp_config, get_test_data_path
 def read_schema():
     """Read schema file."""
     with open(
-        get_test_data_path().joinpath("azmon/az_mon_schema.json"), "r", encoding="utf-8"
+        get_test_data_path().joinpath("azmondata/az_mon_schema.json"),
+        "r",
+        encoding="utf-8",
     ) as schema_file:
         file_text = schema_file.read()
         print("read test schema length", len(file_text))
@@ -50,7 +52,7 @@ def read_schema():
 def read_query_response():
     """Read query file."""
     with open(
-        get_test_data_path().joinpath("/azmon/query_response.pkl"), "rb"
+        get_test_data_path().joinpath("/azmondata/query_response.pkl"), "rb"
     ) as query_file:
         return pickle.loads(query_file.read())
 
@@ -298,7 +300,7 @@ class LogsQueryClient:
     """Mock LogsQueryClient class."""
 
     with open(
-        get_test_data_path().joinpath("azmon/query_response.pkl"), "rb"
+        get_test_data_path().joinpath("azmondata/query_response.pkl"), "rb"
     ) as query_file:
         _data = pickle.loads(query_file.read())
 

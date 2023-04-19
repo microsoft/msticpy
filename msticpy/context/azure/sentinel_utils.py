@@ -129,6 +129,8 @@ class SentinelUtilsMixin:
 
         """
         config_items = {}
+        print("_check_config", items, workspace_name)
+        print("_check_config", self.workspace_config)
         if not self.workspace_config:  # type: ignore
             self.workspace_config = WorkspaceConfig(workspace_name)  # type: ignore
         for item in items:
@@ -165,6 +167,7 @@ class SentinelUtilsMixin:
             The formatted resource ID.
 
         """
+        print("_build_sent_res_id", sub_id, res_grp, ws_name)
         if not sub_id or not res_grp or not ws_name:
             config = self._check_config(
                 workspace_name=ws_name,
