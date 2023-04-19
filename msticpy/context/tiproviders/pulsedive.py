@@ -69,20 +69,6 @@ class PDlookup:
     This class allows you to look up indicators of compromise (IOCs) and
     explore different types of data available in the Pulsedive API.
 
-    Attributes
-    ----------
-    pd_key (str): An API key for the Pulsedive API.
-
-    Methods
-    -------
-    _make_pd_request(data): Makes a request to the Pulsedive API with the provided data.
-    lookup_ioc(observable: str, pd_type: str) -> pd.DataFrame: Lookup an indicator of
-    compromise in the Pulsedive API.
-    explore(query: str, pd_type: str) -> pd.DataFrame: Explore different types of data
-    available in the Pulsedive API.
-    scan(observable: str, pd_type: str) -> pd.DataFrame: Submits an indicator of compromise
-    to the Pulsedive API for scanning.
-
     """
 
     _SUPPORTED_PD_TYPES: Set[PDEntityType] = {
@@ -93,7 +79,14 @@ class PDlookup:
     }
 
     def __init__(self, pd_key=None):
-        """Init function to get the API key if necessary."""
+        """
+        Init function to get the API key if necessary.
+
+        Parameters
+        ----------
+        pd_key (str): An API key for the Pulsedive API.
+
+        """
         self.pd_key = pd_key or self._get_pd_api_key()
 
     def lookup_ioc(self, observable: str, pd_type: str = "indicator") -> pd.DataFrame:
@@ -283,7 +276,8 @@ class PDlookup:
 
 
 def _build_query_string(data, pd_type) -> PDQuery:
-    """Build query string for the API request based on the provided data and pd_type.
+    """
+    Build query string for the API request based on the provided data and pd_type.
 
     Parameters
     ----------
