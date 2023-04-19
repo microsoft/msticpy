@@ -95,8 +95,8 @@ class WorkspaceConfig:
     CONF_WS_NAME_KEY = "workspace_name"
 
     _SETTINGS_TO_CONFIG_NAME_MAP = {
-        PKG_CONF_TENANT_KEY: CONF_WS_ID_KEY,
-        PKG_CONF_WS_KEY: CONF_TENANT_ID_KEY,
+        PKG_CONF_TENANT_KEY: CONF_TENANT_ID_KEY,
+        PKG_CONF_WS_KEY: CONF_WS_ID_KEY,
         PKG_CONF_SUB_KEY: CONF_SUB_ID_KEY,
         PKG_CONF_RES_GROUP_KEY: CONF_RES_GROUP_KEY,
         PKG_CONF_NAME_KEY: CONF_WS_NAME_KEY,
@@ -333,7 +333,7 @@ class WorkspaceConfig:
         self._read_pkg_config_values(workspace_name=workspace)
         if self.config_loaded:
             return
-        # Next, search for a config.json in the current director
+        # Next, search for a config.json in the current directory
         if Path("./config.json").exists():
             self._config_file = "./config.json"
         else:
@@ -343,15 +343,7 @@ class WorkspaceConfig:
             return
 
         # Finally, search for a msticpyconfig.yaml
-        if (
-            os.environ.get("MSTICPYCONFIG")
-            and Path(os.environ.get("MSTICPYCONFIG")).exists()
-        ):
-            self._config_file = os.environ.get("MSTICPYCONFIG")
-        elif Path("./msticpyconfig.yaml").exists():
-            self._config_file = "./msticpyconfig.yaml"
-        else:
-            self._config_file = self._search_for_file("**/msticpyconfig.yaml")
+        self._config_file = self._search_for_file("**/msticpyconfig.yaml")
         if self._config_file:
             os.environ["MSTICPYCONFIG"] = self._config_file
             refresh_config()
@@ -370,43 +362,38 @@ class WorkspaceConfig:
             )
 
     def _read_pkg_config_values(self, workspace_name: Optional[str] = None):
-        as_settings = get_config("AzureSentinel", {})
-        if not as_settings:
-            return {}
-        ws_settings = as_settings.get("Workspaces")  # type: ignore
+        """Try to find a usable config from the MSTICPy config file."""
+        ws_settings = get_config("AzureSentinel", {}).get("Workspaces")  # type: ignore
         if not ws_settings:
-            return {}
-        if workspace_name and workspace_name in ws_settings:
-            selected_workspace = ws_settings[workspace_name]
+            return
+        selected_workspace: Dict[str, str] = {}
+        if workspace_name:
+            selected_workspace = self._lookup_ws_name_and_id(
+                workspace_name, ws_settings
+            )
         elif "Default" in ws_settings:
             selected_workspace = ws_settings["Default"]
         elif len(ws_settings) == 1:
             selected_workspace = next(iter(ws_settings.values()))
-        else:
-            return {}
-        if (
-            selected_workspace
-            and self.PKG_CONF_WS_KEY in selected_workspace
-            and self.PKG_CONF_TENANT_KEY in selected_workspace
-        ):
-            self._config[self.CONF_WS_ID_KEY] = selected_workspace.get(
-                self.PKG_CONF_WS_KEY
-            )
-            self._config[self.CONF_TENANT_ID_KEY] = selected_workspace.get(
-                self.PKG_CONF_TENANT_KEY
-            )
-        if self.PKG_CONF_SUB_KEY in selected_workspace:
-            self._config[self.CONF_SUB_ID_KEY] = selected_workspace.get(
-                self.PKG_CONF_SUB_KEY
-            )
-        if self.PKG_CONF_RES_GROUP_KEY in selected_workspace:
-            self._config[self.CONF_RES_GROUP_KEY] = selected_workspace.get(
-                self.PKG_CONF_RES_GROUP_KEY
-            )
-        if self.PKG_CONF_NAME_KEY in selected_workspace:
-            self._config[self.CONF_WS_NAME_KEY] = selected_workspace.get(
-                self.PKG_CONF_NAME_KEY
-            )
+
+        if selected_workspace:
+            self._config = {}
+            for name, value in selected_workspace.items():
+                tgt_name = self._SETTINGS_TO_CONFIG_NAME_MAP.get(name)
+                if tgt_name and value:
+                    self._config[tgt_name] = value
+
+    def _lookup_ws_name_and_id(self, ws_name: str, ws_configs: dict):
+        for name, ws_config in ws_configs.items():
+            if ws_name.casefold() == name.casefold():
+                return ws_config
+            if ws_config.get(self.PKG_CONF_WS_KEY, "").casefold() == ws_name.casefold():
+                return ws_config
+            if (
+                ws_config.get(self.PKG_CONF_NAME_KEY, "").casefold()
+                == ws_name.casefold()
+            ):
+                return ws_config
         return {}
 
     def _search_for_file(self, pattern: str) -> Optional[str]:

@@ -156,6 +156,8 @@ class AzureKustoDriver(DriverBase):
 
         """
         super().__init__(**kwargs)
+        if kwargs.get("debug", False):
+            logger.setLevel(logging.DEBUG)
         self.environment = kwargs.get("data_environment", DataEnvironment.Kusto)
         self._strict_query_match = kwargs.get("strict_query_match", False)
         self._kusto_settings: Dict[str, Dict[str, KustoConfig]] = _get_kusto_settings()
@@ -280,6 +282,11 @@ class AzureKustoDriver(DriverBase):
         msticpy.auth.azure_auth.list_auth_methods
 
         """
+        logger.info(
+            "Connecting to Kusto cluster: connection_str=%s, args=%s",
+            connection_str,
+            kwargs,
+        )
         self._default_database = kwargs.pop("database", None)
         self._def_timeout = min(kwargs.pop("timeout", self._def_timeout), _MAX_TIMEOUT)
         az_auth_types = kwargs.pop("auth_types", kwargs.pop("mp_az_auth", None))
@@ -302,14 +309,27 @@ class AzureKustoDriver(DriverBase):
 
         if cluster:
             self._current_config = self._lookup_cluster_settings(cluster)
+            logger.info(
+                "Using cluster id: %s, retrieved %s",
+                cluster,
+                self.cluster_uri,
+            )
             kusto_cs = self._get_connection_string_for_cluster(self._current_config)
         else:
+            logger.info("Using connection string %s", connection_str)
             kusto_cs = connection_str
 
         self.client = KustoClient(kusto_cs)
         proxies = kwargs.get("proxies", self._def_proxies)
-        if proxies and proxies.get("https"):
-            self.client.set_proxy(proxies["https"])
+        proxy_url = proxies.get("https") if proxies else None
+        if proxy_url:
+            logger.info(
+                "Using proxy: %s",
+                proxy_url
+                if "@" not in proxy_url  # don't log proxy credentials
+                else "****" + proxy_url.split("@")[-1],
+            )
+            self.client.set_proxy(proxy_url)
         self._connected = True
 
     def query(
@@ -395,6 +415,7 @@ class AzureKustoDriver(DriverBase):
         )
 
         try:
+            logger.info("Query executed query=%s, database=%s", query, database)
             response = self.client.execute(  # type: ignore[union-attr]
                 database=database, query=query, properties=connection_props
             )
@@ -419,6 +440,7 @@ class AzureKustoDriver(DriverBase):
                 ClientRequestProperties.request_timeout_option_name,
                 timedelta(seconds=self._def_timeout),
             )
+            logger.info("Get database names cluster: %s", self.cluster_uri)
             response = self.client.execute_mgmt(  # type: ignore[union-attr]
                 database="NetDefaultDB",
                 query=".show databases",
@@ -473,6 +495,7 @@ class AzureKustoDriver(DriverBase):
         query = f".show database {db_name} schema"
         try:
             # Execute the query
+            logger.info("Get database schema: %s", db_name)
             response = self.client.execute_mgmt(db_name, query)  # type: ignore[union-attr]
             # Convert the result to a DataFrame
             schema_dataframe = dataframe_from_result_table(response.primary_results[0])
@@ -525,7 +548,7 @@ class AzureKustoDriver(DriverBase):
             credential = az_connect(
                 auth_types=self._az_auth_types, **(auth_params.params)
             )
-        logger.info("Credentials obtained %s", type(credential).__name__)
+        logger.info("Credentials obtained %s", type(credential.modern).__name__)
         token = credential.modern.get_token(get_default_resource_name(auth_params.uri))
         logger.info("Token obtained for %s", auth_params.uri)
         return KustoConnectionStringBuilder.with_aad_user_token_authentication(

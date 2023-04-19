@@ -50,7 +50,7 @@ class Defaults:
 class Args:
     """Query arguments."""
 
-    query: str
+    query: str = ""
 
 
 @dataclass
@@ -59,7 +59,7 @@ class Query:
 
     description: str
     metadata: Dict[str, Any] = field(default_factory=dict)
-    args: Args = Args(query="")
+    args: Args = field(default_factory=Args)
     parameters: Dict[str, Parameter] = field(default_factory=dict)
 
 

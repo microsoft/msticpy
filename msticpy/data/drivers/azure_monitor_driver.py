@@ -112,7 +112,8 @@ class AzureMonitorDriver(DriverBase):
             (can be overridden in connect method)
 
         """
-        self._debug = kwargs.get("debug", False)
+        if kwargs.get("debug", False):
+            logger.setLevel(logging.DEBUG)
         super().__init__(**kwargs)
 
         self._schema: Dict[str, Any] = {}
@@ -138,6 +139,11 @@ class AzureMonitorDriver(DriverBase):
         )
         self.set_driver_property(
             DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinel.name
+        )
+        logger.info(
+            "AzureMonitorDriver loaded. connect_str  %s, kwargs: %s",
+            connection_str,
+            kwargs,
         )
 
     @property
@@ -309,7 +315,7 @@ class AzureMonitorDriver(DriverBase):
             result = None
             self._raise_query_failure(query, http_err)
         # We might get an unknown exception type from azure.monitor.query
-        except Exception as unknown_err:  # pylint: disable=broad-exception-caught
+        except Exception as unknown_err:  # pylint: disable=broad-except
             result = None
             self._raise_unknown_error(unknown_err)
         result = cast(LogsQueryResult, result)
@@ -321,7 +327,7 @@ class AzureMonitorDriver(DriverBase):
         else:
             table = result.tables[0]  # type: ignore[attr-defined]
         data_frame = pd.DataFrame(table.rows, columns=table.columns)
-
+        logger.info("Dataframe returned with %d rows", len(data_frame))
         return data_frame, status
 
     def _create_query_client(self, connection_str, **kwargs):
@@ -339,6 +345,12 @@ class AzureMonitorDriver(DriverBase):
 
         credentials = az_connect(
             auth_methods=az_auth_types, tenant_id=self._az_tenant_id
+        )
+        logger.info(
+            "Created query client. Auth type: %s, Url: %s, Proxies: %s",
+            type(credentials.modern) if credentials else "None",
+            self.url_endpoint,
+            kwargs.get("proxies", self._def_proxies),
         )
         return LogsQueryClient(
             credential=credentials.modern,
@@ -363,13 +375,21 @@ class AzureMonitorDriver(DriverBase):
         connection_str = connection_str or self._def_connection_str
         if workspace_name or connection_str is None:
             ws_config = WorkspaceConfig(workspace=workspace_name)  # type: ignore
+            logger.info(
+                "WorkspaceConfig created from workspace name %s", workspace_name
+            )
         elif isinstance(connection_str, str):
             self._def_connection_str = connection_str
             ws_config = WorkspaceConfig.from_connection_string(connection_str)
+            logger.info(
+                "WorkspaceConfig created from connection_str %s", connection_str
+            )
         elif isinstance(connection_str, WorkspaceConfig):
+            logger.info("WorkspaceConfig as parameter %s", connection_str.workspace_id)
             ws_config = connection_str
 
         if not ws_config:
+            logger.warning("No workspace set")
             raise MsticpyKqlConnectionError(
                 "A workspace name, config or connection string is needed"
                 " to connect to a workspace.",
@@ -377,6 +397,7 @@ class AzureMonitorDriver(DriverBase):
                 help_uri=_HELP_URL,
             )
         if ws_config.workspace_id is None or ws_config.tenant_id is None:
+            logger.warning("Unable to get workspace ID or tenant ID")
             raise MsticpyKqlConnectionError(
                 "The workspace config or connection string did not have"
                 "the required parameters to connect to a workspace.",
@@ -479,7 +500,7 @@ class AzureMonitorDriver(DriverBase):
         mgmt_endpoint = AzureCloudConfig().endpoints.resource_manager
 
         url_tables = (
-            "{endpoint}/subscriptions/{sub_id}/resourcegroups/"
+            "{endpoint}subscriptions/{sub_id}/resourcegroups/"
             "{res_group}/providers/Microsoft.OperationalInsights/workspaces/"
             "{ws_name}/tables?api-version=2021-12-01-preview"
         )
@@ -507,6 +528,7 @@ class AzureMonitorDriver(DriverBase):
         )
         token = credentials.modern.get_token(f"{mgmt_endpoint}/.default")
         headers = {"Authorization": f"Bearer {token.token}", **mp_ua_header()}
+        logger.info("Schema request to %s", fmt_url)
         response = httpx.get(
             fmt_url,
             headers=headers,
@@ -514,9 +536,13 @@ class AzureMonitorDriver(DriverBase):
             proxies=self._def_proxies or {},
         )
         if response.status_code != 200:
+            logger.info("Schema request failed. Status code: %d", response.status_code)
             return {}
         tables = response.json()
-        logger.info("Schema retrieved from workspace.")
+        logger.info(
+            "Schema retrieved from workspace. %d tables found.",
+            len(tables.get("value", 0)),
+        )
         return _schema_format_tables(tables)
 
     @staticmethod

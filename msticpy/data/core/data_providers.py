@@ -40,6 +40,8 @@ _COMPATIBLE_DRIVER_MAPPINGS = {
 }
 
 
+# These are mixin classes that do not have an __init__ method
+# pylint: disable=super-init-not-called
 @export
 class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
     """

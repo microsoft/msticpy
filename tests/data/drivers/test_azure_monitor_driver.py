@@ -8,7 +8,6 @@ import json
 import pickle
 import re
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from unittest.mock import patch
 
 import pandas as pd
@@ -149,10 +148,10 @@ def test_azmon_driver_connect(az_connect, params, expected, read_schema):
     """Test KqlDriverAZMon connect."""
     az_connect.return_value = AzCredentials(legacy=None, modern=Credentials())
 
-    respx.get(re.compile(r"https://management\.azure\.com/")).respond(
+    respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         status_code=200, json=read_schema
     )
-    respx.get(re.compile(r"https://api\.loganalytics\.io")).respond(
+    respx.get(re.compile(r"https://api\.loganalytics\.io.*")).respond(
         status_code=200, json=read_schema
     )
 
@@ -188,15 +187,18 @@ def test_get_schema(az_connect, read_schema, monkeypatch):
     """Test KqlDriverAZMon get_schema."""
     az_connect.return_value = AzCredentials(legacy=None, modern=Credentials())
 
-    respx.get(re.compile(r"https://management\.azure\.com/")).respond(
+    respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         status_code=200, json=read_schema
     )
-    respx.get(re.compile(r"https://api\.loganalytics\.io")).respond(
+    respx.get(re.compile(r"https://api\.loganalytics\.io.*")).respond(
         status_code=200, json=read_schema
     )
     monkeypatch.setattr(azure_monitor_driver, "LogsQueryClient", LogsQueryClient)
-    azmon_driver = AzureMonitorDriver()
-    azmon_driver.connect()
+    with custom_mp_config(
+        get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
+    ):
+        azmon_driver = AzureMonitorDriver(debug=True)
+        azmon_driver.connect(workspace="MyTestWS")
     assert isinstance(azmon_driver._query_client, LogsQueryClient)
     check.is_not_none(azmon_driver.schema)
     check.equal(len(azmon_driver.schema), 17)
@@ -206,11 +208,14 @@ def test_get_schema(az_connect, read_schema, monkeypatch):
         check.is_in(col, azmon_driver.schema["AzureActivity"])
         check.is_in(azmon_driver.schema["AzureActivity"][col], ("string", "guid"))
 
-    respx.get(re.compile(r"https://management\.azure\.com/")).respond(
+    respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         status_code=404, content=b"not found"
     )
-    azmon_driver = AzureMonitorDriver()
-    azmon_driver.connect()
+    with custom_mp_config(
+        get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
+    ):
+        azmon_driver = AzureMonitorDriver(debug=True)
+        azmon_driver.connect(workspace="MyTestWS")
     check.is_false(azmon_driver.schema)
 
 
@@ -255,16 +260,19 @@ def test_query_unknown_table(az_connect, read_schema, monkeypatch):
     """Test KqlDriverAZMon query when not connected."""
     az_connect.return_value = AzCredentials(legacy=None, modern=Credentials())
 
-    respx.get(re.compile(r"https://management\.azure\.com/")).respond(
+    respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         status_code=200, json=read_schema
     )
-    respx.get(re.compile(r"https://api\.loganalytics\.io")).respond(
+    respx.get(re.compile(r"https://api\.loganalytics\.io.*")).respond(
         status_code=200, json=read_schema
     )
     monkeypatch.setattr(azure_monitor_driver, "LogsQueryClient", LogsQueryClient)
     with pytest.raises(MsticpyNoDataSourceError):
-        azmon_driver = AzureMonitorDriver()
-        azmon_driver.connect()
+        with custom_mp_config(
+            get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
+        ):
+            azmon_driver = AzureMonitorDriver(debug=True)
+            azmon_driver.connect(workspace="MyTestWS")
         assert azmon_driver.schema is not None
         assert isinstance(azmon_driver._query_client, LogsQueryClient)
         query_source = QuerySource(
@@ -282,14 +290,17 @@ def test_load_provider(az_connect, read_schema, monkeypatch):
     respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         status_code=200, json=read_schema
     )
-    respx.get(re.compile(r"https://api\.loganalytics\.io")).respond(
+    respx.get(re.compile(r"https://api\.loganalytics\.io.*")).respond(
         status_code=200, json=read_schema
     )
 
     monkeypatch.setattr(azure_monitor_driver, "LogsQueryClient", LogsQueryClient)
 
-    query_prov = QueryProvider("MSSentinel_New")
-    query_prov.connect()
+    with custom_mp_config(
+        get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
+    ):
+        query_prov = QueryProvider("MSSentinel_New", debug=True)
+        query_prov.connect(workspace="MyTestWS")
     assert isinstance(query_prov._query_provider._query_client, LogsQueryClient)
 
     check.greater(len(query_prov.list_queries()), 100)
@@ -331,13 +342,16 @@ def test_queries(az_connect, read_schema, monkeypatch):
     respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         status_code=200, json=read_schema
     )
-    respx.get(re.compile(r"https://api\.loganalytics\.io")).respond(
+    respx.get(re.compile(r"https://api\.loganalytics\.io.*")).respond(
         status_code=200, json=read_schema
     )
     monkeypatch.setattr(azure_monitor_driver, "LogsQueryClient", LogsQueryClient)
 
-    query_prov = QueryProvider("MSSentinel_New")
-    query_prov.connect()
+    with custom_mp_config(
+        get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
+    ):
+        query_prov = QueryProvider("MSSentinel_New", debug=True)
+        query_prov.connect(workspace="MyTestWS")
     assert isinstance(query_prov._query_provider._query_client, LogsQueryClient)
     query = "Testtable | take 10"
     results = query_prov.exec_query(query)
@@ -385,7 +399,7 @@ def test_query_multiple_workspaces(az_connect, monkeypatch):
 
     monkeypatch.setattr(azure_monitor_driver, "LogsQueryClient", LogsQueryClient)
 
-    query_prov = QueryProvider("MSSentinel_New")
+    query_prov = QueryProvider("MSSentinel_New", debug=True)
     with pytest.raises(MsticpyKqlConnectionError):
         query_prov.connect(
             workspace_ids=[

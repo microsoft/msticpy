@@ -50,7 +50,12 @@ EXTRAS = {
         "azure-mgmt-keyvault>=2.0.0",
         "keyring>=13.2.1",  # needed by Key Vault package
     ],
-    "ml": ["scikit-learn>=1.0.0", "scipy>=1.1.0", "statsmodels>=0.11.1"],
+    "ml": [
+        "scikit-learn>=1.0.0",
+        "scipy>=1.1.0",
+        "statsmodels>=0.11.1",
+        "matplotlib>=3.0.0",
+    ],
     "sql2kql": ["mo-sql-parsing>=8, <9.0.0"],
     "riskiq": ["passivetotal>=2.5.3"],
     "panel": ["panel>=0.14.4"],

@@ -15,6 +15,7 @@ from .pkg_config import (  # noqa: F401
     get_settings,
     refresh_config,
     set_config,
+    validate_config,
 )
 from .provider_settings import (  # noqa: F401
     clear_keyring,

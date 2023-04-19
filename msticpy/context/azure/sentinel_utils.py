@@ -129,8 +129,6 @@ class SentinelUtilsMixin:
 
         """
         config_items = {}
-        print("_check_config", items, workspace_name)
-        print("_check_config", self.workspace_config)
         if not self.workspace_config:  # type: ignore
             self.workspace_config = WorkspaceConfig(workspace_name)  # type: ignore
         for item in items:
