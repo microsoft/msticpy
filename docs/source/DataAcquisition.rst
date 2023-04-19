@@ -28,6 +28,7 @@ Individual Data Environments
    data_acquisition/DataProv-Kusto
    data_acquisition/DataProv-Kusto-New
    data_acquisition/DataProv-Cybereason
+   data_acquisition/DataProv-OSQuery
 
 
 Built-in Data Queries

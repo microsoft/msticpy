@@ -345,7 +345,7 @@ def init_notebook(
 
     Raises
     ------
-    MsticpyException
+    MsticpyException :
         If extra_imports data format is incorrect.
         If package with required version check has no version
         information.
