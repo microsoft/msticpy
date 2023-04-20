@@ -13,6 +13,7 @@ import pytest_check as check
 
 from msticpy.common.exceptions import (
     MsticpyConnectionError,
+    MsticpyDataQueryError,
     MsticpyNotConnectedError,
     MsticpyUserConfigError,
 )
@@ -69,14 +70,34 @@ class _MockAlert:
 
 
 class _MockAsyncResponse:
+    stats = {
+        "isDone": "0",
+        "doneProgress": 0.0,
+        "scanCount": 1,
+        "eventCount": 100,
+        "resultCount": 100,
+    }
+
     def __init__(self, query):
         self.query = query
 
-    def results(self):
+    def __getitem__(self, key):
+        """Mock method."""
+        return self.stats[key]
+
+    def results(self, **kwargs):
         return self.query
 
     def is_done(self):
         return True
+
+    def is_ready(self):
+        return True
+
+    @classmethod
+    def set_done(cls):
+        cls.stats["isDone"] = "1"
+        cls.stats["doneProgress"] = 1
 
 
 class _MockSplunkCall:
@@ -260,6 +281,7 @@ def test_splunk_query_success(splunk_client, splunk_results):
     splunk_client.connect = cli_connect
     sp_driver = SplunkDriver()
     splunk_results.ResultsReader = _results_reader
+    splunk_results.JSONResultsReader = _results_reader
 
     # trying to get these before connecting should throw
     with pytest.raises(MsticpyNotConnectedError) as mp_ex:
@@ -279,6 +301,10 @@ def test_splunk_query_success(splunk_client, splunk_results):
     check.is_not_instance(response, pd.DataFrame)
     check.equal(len(response), 0)
 
+    with pytest.raises(MsticpyDataQueryError):
+        df_result = sp_driver.query("some query", timeout=1)
+
+    _MockAsyncResponse.set_done()
     df_result = sp_driver.query("some query")
     check.is_instance(df_result, pd.DataFrame)
     check.equal(len(df_result), 10)
