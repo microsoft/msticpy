@@ -13,6 +13,7 @@ from typing import Any, Dict, Generator, Union
 
 import nbformat
 from filelock import FileLock
+import yaml
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 from msticpy.common import pkg_config
@@ -23,6 +24,13 @@ __author__ = "Ian Hellen"
 def get_test_data_path():
     """Get path to testdata folder."""
     return Path(__file__).parent.joinpath("testdata")
+
+
+def get_queries_schema():
+    """Get queries schema."""
+    queries_schema_path = Path(__file__).parent.parent.joinpath(".schemas").joinpath("queries.json")
+    with queries_schema_path.open(mode="r", encoding="utf-8") as queries_schema:
+        return yaml.safe_load(queries_schema)
 
 
 TEST_DATA_PATH = str(get_test_data_path())

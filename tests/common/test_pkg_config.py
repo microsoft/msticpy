@@ -9,6 +9,7 @@ import warnings
 from pathlib import Path
 
 import httpx
+from jsonschema import Draft7Validator
 import pytest
 import pytest_check as check
 import yaml
@@ -16,11 +17,22 @@ import yaml
 from msticpy.common import pkg_config
 from msticpy.context.geoip import GeoLiteLookup, IPStackLookup
 
-from ..unit_test_lib import custom_mp_config, get_test_data_path
+from ..unit_test_lib import custom_mp_config, get_test_data_path, get_queries_schema
 
 _TEST_DATA = get_test_data_path()
+_QUERIES_SCHEMA = get_queries_schema()
 
 # pylint: disable=protected-access
+
+
+def validate_queries_file_structure(query_file: Path):
+    """Test if query files have a valid structure."""
+    with query_file.open(mode="r", encoding="utf-8") as queries:
+        queries_yaml = yaml.safe_load(queries)
+        check.is_true(
+            Draft7Validator(_QUERIES_SCHEMA).is_valid(queries_yaml),
+            msg=f"File {query_file} is not a valid query file",
+        )
 
 
 def test_load_default():
@@ -31,10 +43,16 @@ def test_load_default():
     check.equal(1, len(settings["QueryDefinitions"]["Default"]))
     for path in settings["QueryDefinitions"]["Default"]:
         check.is_true(type(path), str)
-        path = f"data/{path}"
-        check.is_true(
-            Path(pkg_config.__file__).resolve().parent.parent.joinpath(path).is_dir()
+        path = (
+            Path(pkg_config.__file__).resolve().parent.parent.joinpath(f"data/{path}")
         )
+        check.is_true(path.is_dir())
+        for query_file in path.rglob("*.yaml"):
+            validate_queries_file_structure(query_file)
+    for path in settings["QueryDefinitions"].get("Custom", []):
+        check.is_true(type(path), str)
+        for query_file in path.rglob("*.yaml"):
+            validate_queries_file_structure(query_file)
 
 
 def test_custom_config():
