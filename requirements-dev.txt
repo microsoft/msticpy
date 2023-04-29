@@ -8,6 +8,7 @@ docutils<0.20.0
 filelock>=3.0.0
 flake8>=3.8.4
 isort>=5.10.1
+jsonschema>=4.17.3
 markdown>=3.3.4
 mccabe>=0.6.1
 mypy>=0.812
