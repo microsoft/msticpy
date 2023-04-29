@@ -170,7 +170,7 @@ sources:
         type: str
         default: SigninLogs
   list_storage_ops_for_ip:
-    description:
+    description: List storage operations for IP
     metadata:
       pivot:
         short_name: storage_ops
@@ -203,7 +203,7 @@ sources:
         description: Client IP Address
         type: str
   list_storage_ops_for_hash:
-    description:
+    description: List storage operations for Hash
     args:
       query: '
         union
