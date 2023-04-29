@@ -51,7 +51,9 @@ def test_load_default():
             validate_queries_file_structure(query_file)
     for path in settings["QueryDefinitions"].get("Custom", []):
         check.is_true(type(path), str)
-        for query_file in path.rglob("*.yaml"):
+        path = Path(path)
+        check.is_true(path.is_dir())
+        for query_file in Path(path).resolve().rglob("*.yaml"):
             validate_queries_file_structure(query_file)
 
 
