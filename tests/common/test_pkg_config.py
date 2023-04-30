@@ -59,10 +59,12 @@ def test_load_default():
         check.is_true(type(path), str)
         path = Path(path)
         if not path.is_absolute():
-            path = Path(pkg_config.__file__).resolve().joinpath(path)
+            path = Path(__file__).resolve().parent.parent.joinpath(path)
         check.is_true(path.is_dir())
         for query_file in Path(path).resolve().rglob("*.yaml"):
-            validate_queries_file_structure(query_file)
+            validate_queries_file_structure(
+                query_file, expected=not ("fail" in query_file.name)
+            )
 
 
 def test_custom_config():
