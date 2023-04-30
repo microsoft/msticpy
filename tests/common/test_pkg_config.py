@@ -25,14 +25,20 @@ _QUERIES_SCHEMA = get_queries_schema()
 # pylint: disable=protected-access
 
 
-def validate_queries_file_structure(query_file: Path):
+def validate_queries_file_structure(query_file: Path, expected: bool = True):
     """Test if query files have a valid structure."""
     with query_file.open(mode="r", encoding="utf-8") as queries:
         queries_yaml = yaml.safe_load(queries)
-        check.is_true(
-            Draft7Validator(_QUERIES_SCHEMA).is_valid(queries_yaml),
-            msg=f"File {query_file} is not a valid query file",
-        )
+        if expected:
+            check.is_true(
+                Draft7Validator(_QUERIES_SCHEMA).is_valid(queries_yaml),
+                msg=f"File {query_file} is not a valid query file",
+            )
+        else:
+            check.is_false(
+                Draft7Validator(_QUERIES_SCHEMA).is_valid(queries_yaml),
+                msg=f"File {query_file} was expected to be invalid but is a valid query file",
+            )
 
 
 def test_load_default():
