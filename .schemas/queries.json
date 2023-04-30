@@ -14,6 +14,12 @@
                         "data_source": {
                             "type": "string"
                         },
+                        "data_families": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
                         "pivot": {
                             "type": "object",
                             "patternProperties": {
@@ -31,17 +37,7 @@
                     }
                 },
                 "parameters": {
-                    "anyOf": [
-                        {
-                            "type": "object",
-                            "patternProperties": {
-                                ".*": {
-                                    "$ref": "#/$defs/parameter"
-                                }
-                            }
-                        },
-                        true
-                    ]
+                    "$ref": "#/$defs/parameter"
                 }
             }
         },
@@ -57,7 +53,7 @@
     "$defs": {
         "description": {
             "type": "string",
-            "minLength": 10,
+            "minLength": 5,
             "maxLength": 256
         },
         "metadata": {
@@ -120,6 +116,9 @@
                             "type": "string"
                         }
                     ]
+                },
+                "cluster": {
+                    "type": "string"
                 }
             },
             "additionalProperties": false,
@@ -132,38 +131,56 @@
         },
         "parameter": {
             "type": "object",
-            "properties": {
-                "description": {
-                    "$ref": "#/$defs/description"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "str",
-                        "datetime",
-                        "int",
-                        "float",
-                        "list"
-                    ]
-                },
-                "default": {
-                    "oneOf": [
-                        {
-                            "type": "string"
+            "patternProperties": {
+                ".*": {
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "$ref": "#/$defs/description"
                         },
-                        {
-                            "type": "array"
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "str",
+                                "datetime",
+                                "int",
+                                "float",
+                                "list"
+                            ]
                         },
-                        {
-                            "type": "integer"
+                        "default": {
+                            "oneOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "array"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "aliases": {
+                            "oneOf": [
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "type": "string"
+                                }
+                            ]
                         }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                        "description",
+                        "type"
                     ]
-                },
-                "additionalProperties": false,
-                "required": [
-                    "description",
-                    "type"
-                ]
+                }
             }
         },
         "query": {
@@ -181,12 +198,7 @@
                     ]
                 },
                 "parameters": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/parameter"
-                        },
-                        true
-                    ]
+                    "$ref": "#/$defs/parameter"
                 },
                 "args": {
                     "type": "object",
