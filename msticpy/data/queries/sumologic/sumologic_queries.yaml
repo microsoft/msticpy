@@ -46,4 +46,3 @@ sources:
       | count _sourceCategory
       | sort -_count
       '
-    parameters:

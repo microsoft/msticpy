@@ -33,7 +33,6 @@ sources:
         | where Timestamp <= datetime({end})
         {add_query_items}"
       uri: None
-    parameters:
   list_alerts_with_evidence:
     description: Retrieves list of alerts with their evidence
     metadata:
@@ -48,7 +47,6 @@ sources:
         )
         {add_query_items}"
       uri: None
-    parameters:
   host_alerts:
     description: Lists alerts by for a specified hostname
     metadata:
