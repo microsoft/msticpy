@@ -13,13 +13,13 @@ azure-mgmt-resourcegraph>=8.0.0
 azure-mgmt-subscription>=3.0.0
 azure-storage-blob>=12.5.0
 beautifulsoup4>=4.0.0
-bokeh>=1.4.0, <=3.1.0
+bokeh>=1.4.0, <=2.4.3
 cryptography>=3.1
 deprecated>=1.2.4
 dnspython>=2.0.0, <3.0.0
 folium>=0.9.0
 geoip2>=2.9.0
-httpx==0.23.3
+httpx==0.24.0
 html5lib
 ipython >= 7.1.1; python_version < "3.8"
 ipython >= 7.23.1; python_version >= "3.8"
@@ -39,6 +39,7 @@ networkx>=2.2
 numpy>=1.15.4  # pandas
 openpyxl>=3.0
 pandas>=1.4.0, <2.0.0
+panel>=0.14.4
 passivetotal>=2.5.3
 pygments>=2.0.0
 pyjwt>=2.3.0

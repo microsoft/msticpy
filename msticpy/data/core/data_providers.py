@@ -727,7 +727,9 @@ class QueryProvider:
             self.query_store.add_query(
                 name=query["name"],
                 query=query["query"],
-                query_paths=query["query_container"],
+                query_paths=query.get(
+                    "query_paths", query.get("query_container", "default")
+                ),
                 description=query["description"],
             )
         # For now, just add all of the functions again (with any connect-time acquired

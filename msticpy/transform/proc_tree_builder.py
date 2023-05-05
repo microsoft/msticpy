@@ -19,6 +19,7 @@ from .proc_tree_schema import (  # noqa: F401
     LX_EVENT_SCH,
     MDE_EVENT_SCH,
     MDE_INT_EVENT_SCH,
+    OSQUERY_EVENT_SCH,
     SUPPORTED_SCHEMAS,
     SYSMON_PROCESS_CREATE_EVENT_SCH,
     WIN_EVENT_SCH,
