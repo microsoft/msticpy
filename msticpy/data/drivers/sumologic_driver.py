@@ -22,7 +22,7 @@ from ...common.exceptions import (
 )
 from ...common.provider_settings import ProviderSettings, get_provider_settings
 from ...common.utility import check_kwargs, export
-from .driver_base import DriverBase, QuerySource
+from .driver_base import DriverBase, DriverProps, QuerySource
 
 __version__ = VERSION
 __author__ = "juju4"
@@ -62,10 +62,10 @@ class SumologicDriver(DriverBase):
         self._loaded = True
         self._connected = False
         self._debug = kwargs.get("debug", False)
-        self.public_attribs = {
-            "client": self.service,
-        }
-        self.formatters = {"datetime": self._format_datetime}
+        self.set_driver_property(DriverProps.PUBLIC_ATTRS, {"client": self.service})
+        self.set_driver_property(
+            DriverProps.FORMATTERS, {"datetime": self._format_datetime}
+        )
         self.checkinterval = self._DEF_CHECKINTERVAL
         self.timeout = self._DEF_TIMEOUT
 

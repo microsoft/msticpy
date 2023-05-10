@@ -23,7 +23,7 @@ from pkg_resources import (  # type: ignore
 from .._version import VERSION
 from ..common.pkg_config import _HOME_PATH, refresh_config
 from ..common.utility import search_for_file
-from ..config import MpConfigFile
+from ..config import MpConfigFile  # pylint: disable=no-name-in-module
 
 __version__ = VERSION
 
