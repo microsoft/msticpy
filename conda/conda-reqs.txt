@@ -19,7 +19,7 @@ dnspython>=2.0.0, <3.0.0
 folium>=0.9.0
 geoip2>=2.9.0
 html5lib
-httpx==0.23.3
+httpx==0.24.0
 ipython>=7.23.1
 ipywidgets>=7.4.2, <8.0.0
 keyring>=13.2.1
