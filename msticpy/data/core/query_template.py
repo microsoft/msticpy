@@ -14,7 +14,7 @@ __author__ = "Ian Hellen"
 
 
 @dataclass
-class Metadata:
+class QueryMetadata:
     """Metadata for query definitions."""
 
     version: int
@@ -30,7 +30,7 @@ class Metadata:
 
 
 @dataclass
-class Parameter:
+class QueryParameter:
     """Query parameter."""
 
     description: str
@@ -40,15 +40,15 @@ class Parameter:
 
 
 @dataclass
-class Defaults:
+class QueryDefaults:
     """Default values for query definitions."""
 
     metadata: Optional[Dict[str, Any]] = None
-    parameters: Dict[str, Parameter] = field(default_factory=dict)
+    parameters: Dict[str, QueryParameter] = field(default_factory=dict)
 
 
 @dataclass
-class Args:
+class QueryArgs:
     """Query arguments."""
 
     query: str = ""
@@ -60,8 +60,8 @@ class Query:
 
     description: str
     metadata: Dict[str, Any] = field(default_factory=dict)
-    args: Args = field(default_factory=Args)
-    parameters: Dict[str, Parameter] = field(default_factory=dict)
+    args: QueryArgs = field(default_factory=QueryArgs)
+    parameters: Dict[str, QueryParameter] = field(default_factory=dict)
 
 
 @dataclass
@@ -69,6 +69,6 @@ class QueryCollection:
     """Query Collection class - a query template."""
 
     file_name: str
-    metadata: Metadata
-    defaults: Optional[Defaults] = None
+    metadata: QueryMetadata
+    defaults: Optional[QueryDefaults] = None
     sources: Dict[str, Query] = field(default_factory=dict)

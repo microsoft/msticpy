@@ -19,3 +19,4 @@ Submodules
    msticpy.data.core.query_defns
    msticpy.data.core.query_source
    msticpy.data.core.query_store
+   msticpy.data.core.query_template
