@@ -27,5 +27,7 @@ Submodules
    msticpy.common.exceptions
    msticpy.common.pkg_config
    msticpy.common.provider_settings
+   msticpy.common.proxy_settings
+   msticpy.common.settings
    msticpy.common.timespan
    msticpy.common.wsconfig

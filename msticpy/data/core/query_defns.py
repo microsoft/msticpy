@@ -106,6 +106,8 @@ class DataEnvironment(Enum):
     Cybereason = 12
     Elastic = 14
     OSQueryLogs = 15
+    MSSentinel_New = 16
+    Kusto_New = 17
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataEnvironment":
