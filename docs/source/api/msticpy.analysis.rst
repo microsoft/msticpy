@@ -25,5 +25,6 @@ Submodules
    msticpy.analysis.eventcluster
    msticpy.analysis.observationlist
    msticpy.analysis.outliers
+   msticpy.analysis.polling_detection
    msticpy.analysis.syslog_utils
    msticpy.analysis.timeseries
