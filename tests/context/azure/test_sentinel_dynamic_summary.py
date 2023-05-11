@@ -15,9 +15,9 @@ import pandas as pd
 import pytest
 import pytest_check as check
 import respx
+import yaml
 
 from msticpy.common.exceptions import MsticpyAzureConnectionError
-from msticpy.common.pkg_config import get_config
 from msticpy.common.wsconfig import WorkspaceConfig
 from msticpy.context.azure import MicrosoftSentinel
 from msticpy.context.azure.sentinel_dynamic_summary import SentinelQueryProvider
@@ -26,7 +26,7 @@ from msticpy.context.azure.sentinel_dynamic_summary_types import (
     DynamicSummary,
 )
 
-from ...unit_test_lib import get_test_data_path
+from ...unit_test_lib import custom_mp_config, get_test_data_path
 
 # pylint: disable=redefined-outer-name, protected-access
 
@@ -234,7 +234,10 @@ def list_responses():
 
 
 def _get_test_ws_settings():
-    az_ws_settings = get_config("AzureSentinel.Workspaces")
+    """Get test workspace settings from config file."""
+    test_config = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
+    settings = yaml.safe_load(test_config.read_text(encoding="utf-8"))
+    az_ws_settings = settings.get("AzureSentinel", {}).get("Workspaces", {})
     return next(
         iter((key, val) for key, val in az_ws_settings.items() if key != "Default")
     )
@@ -260,15 +263,20 @@ def sentinel_loader(mock_creds, get_token, monkeypatch):
     get_token.return_value = "fd09863b-5cec-4833-ab9c-330ad07b0c1a"
     mock_creds.return_value = None
     ws_key, settings = _get_test_ws_settings()
-    sent = MicrosoftSentinel(
-        sub_id=settings.get("SubscriptionId", "fd09863b-5cec-4833-ab9c-330ad07b0c1a"),
-        res_grp=settings.get("ResourceGroup", "RG"),
-        ws_name=settings.get("WorkspaceName", "Default"),
-    )
-    sent._default_workspace = ws_key
-    sent.connect(workspace=ws_key)
-    sent.connected = True
-    sent.token = "fd09863b-5cec-4833-ab9c-330ad07b0c1a"
+    with custom_mp_config(
+        get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
+    ):
+        sent = MicrosoftSentinel(
+            sub_id=settings.get(
+                "SubscriptionId", "fd09863b-5cec-4833-ab9c-330ad07b0c1a"
+            ),
+            res_grp=settings.get("ResourceGroup", "RG"),
+            ws_name=settings.get("WorkspaceName", "Default"),
+        )
+        sent._default_workspace = ws_key
+        sent.connect(workspace=ws_key)
+        sent.connected = True
+        sent.token = "fd09863b-5cec-4833-ab9c-330ad07b0c1a"  # nosec
     return sent
 
 
@@ -311,7 +319,7 @@ def test_sent_dynamic_summary_create_params(sentinel_loader, ti_data):
         tactics=["discovery", "exploitation"],
         techniques=["T1000"],
         search_key="TI stuff",
-        source_info="Source",
+        source_info={"Source": "unit_test"},
     )
     check.equal(sum_id, "test_id")
 
@@ -353,7 +361,7 @@ def test_sent_dynamic_summary_update_param(sentinel_loader, ti_data):
         tactics=["discovery", "exploitation"],
         techniques=["T1000"],
         search_key="TI stuff",
-        source_info="Source",
+        source_info={"Source": "unit_test"},
     )
     check.equal(sum_id, "test_id")
 
@@ -412,7 +420,7 @@ def test_new_dynamic_summary(sentinel_loader):
         tactics=["discovery", "exploitation"],
         techniques=["T1000"],
         search_key="TI stuff",
-        source_info="Source",
+        source_info={"Source": "unit_test"},
     )
     check.is_instance(new_ds, DynamicSummary)
     check.equal(new_ds.summary_id, "test_id")

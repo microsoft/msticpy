@@ -4,20 +4,42 @@
 
 Some elements of *MSTICPy* require configuration parameters. An
 example is the Threat Intelligence providers. Values for these
-and other parameters can be set in the `msticpyconfig.yaml` file.
+and other parameters can be set in the *msticpyconfig.yaml* file.
+This file uses a YAML format.
 
-The package has a default configuration file, which is stored in the
-package directory. You should not need to edit this file directly.
-Instead you can create a custom file with your own parameters - these
-settings will combine with or override the settings in the default file.
-
-By default, the custom `msticpyconfig.yaml` is read from the current
-directory. You can specify an explicit location using an environment
-variable ``MSTICPYCONFIG``.
+.. warning:: MSTICPy has a *msticpyconfig.yaml* included as part of
+  the package itself. This is used to supply some default settings
+  and *should not be modified*. Any settings that you include in your
+  own *msticpyconfig.yaml* will override the default settings.
 
 You should also read the :doc:`MSTICPy Settings Editor <SettingsEditor>`
 document to see how to configure settings using and interactive User
 Interface from a Jupyter notebook.
+
+.. important:: The settings in *msticpyconfig.yaml* are *case sensitive*. If you
+   specify a setting in the config file with a different case to the
+   setting name in the code, the setting will not be found.
+
+
+How MSTICPy finds the config file
+---------------------------------
+
+MSTICPy uses the following logic to discover a configuration file.
+
+1. If the environment variable ``MSTICPYCONFIG`` is set, MSTICPy will
+   use the value of this variable as the path to the config file.
+2. If the environment variable ``MSTICPYCONFIG`` is not set, MSTICPy
+   will look for a file named ``msticpyconfig.yaml`` in the current
+   directory.
+3. If neither of these is successful, MSTICPy
+   will look for a file named ``msticpyconfig.yaml`` in a folder named
+   ".mstipcy" in the user's home
+   directory. This is typically ``~/.msticpy`` on Linux and Mac and
+   ``C:\Users\username\.msticpy`` on Windows.
+
+If you are using the :py:func:`init_notebook <msticpy.init.nbinit.init_notebook>`
+function to initialize MSTICPy, you can specify the path to a config file
+as the ``config`` parameter to this function. This will override the logic above.
 
 Configuration sections
 ----------------------
@@ -27,6 +49,10 @@ AzureSentinel
 Here you can specify your default workspace IDs and tenant IDs and add additional
 workspaces if needed. If you wish to use the Microsoft Sentinel API features you
 can also specify Subscription Ids, Subscription names and Workspace names here.
+
+.. note:: Although Microsoft Sentinel is no longer called "AzureSentinel"
+  the configuration section is still called AzureSentinel to ensure
+  compatibility with existing code.
 
 Sample entry for MS Sentinel workspaces
 
@@ -214,12 +240,84 @@ For more details on Azure authentication/credential types see
 
 User Defaults
 ~~~~~~~~~~~~~
+
+.. warning:: This feature is being deprecated. Please avoid using
+  this. If you have a use case that requires this, please contact
+  the MSTICPy team - msticpy@microsoft.com. We'd love to hear
+  how you are using it and how we might be able to improve it.
+
 This section controls loading of default providers when using the
 package in a notebook. The settings here are loaded by the
 :py:func:`init_notebook <msticpy.init.nbinit.init_notebook>`
 function.
 
 See the `User Defaults Section`_ below.
+
+MSTICPy Global Settings
+~~~~~~~~~~~~~~~~~~~~~~~
+
+There are miscellaneous settings that control the behavior of
+MSTICPy and some of the underlying libraries used by MSTICPy.
+
+.. code:: yaml
+
+    msticpy:
+      FriendlyExceptions: True
+      QueryDefinitions:
+        - ./queries
+        - ~/.msticpy/queries
+      http_timeout: 30
+      Proxies:
+        https:
+          Url: https://proxy:8080
+          UserName: user
+          Password:
+            EnvironmentVar: "PROXY_PASSWORD"
+
+
+**FriendlyExceptions** controls whether MSTICPy will catch and re-raise
+exceptions with a more user-friendly message. This is mainly
+applicable to use in Jupyter notebooks. Most of the MSTICPy exceptions
+are displayable as an HTML message with details such as links
+to relevant documentation and drop-down details of the exception.
+
+If this is set to ``False`` then the exception will be raised
+as a standard Python exception with details printed as simple text.
+
+**QueryDefinitions** is a list of paths to folders containing query
+definition files. You can add any number of these and MSTICPy will
+search these for queries to add to QueryProviders.
+
+**http_timeout** controls the default timeout for the httpx library
+used by MSTICPy. This can be simple integer or float that sets the global
+timeout values for connections. You can also specify this as
+a dictionary or tuple of individual timeout components:
+
+ - ConnectTimeout: Float
+ - ReadTimeout
+ - WriteTimeout
+ - PoolTimeout
+
+You can also specify as a Tuple or of (default_timeout, connect_timeout).
+For more details on httpx timeouts see the
+`HTTPX documentation <https://www.python-httpx.org/advanced/#setting-and-disabling-timeouts>`__.
+
+**Proxies** is a dictionary of proxy settings. You can specify
+different proxies for different protocols (although only the https
+one is currently used in MSTICPy). We are gradually rolling out
+support for this setting to components in MSTICPy - not all yet
+support this setting.
+If your proxy requires authentication you can specify a username
+and password. These are combined into a single URL of the form
+``https://username:password@proxy:port``.
+
+.. note:: If you are using a proxy that requires authentication
+   you should consider using the ``KeyVault`` setting to store
+   the password (and optionally the username) rather than specifying
+   it in the config file. You can also use the ``EnvironmentVar``
+   to reference an environment variable that contains the password
+   (and username).
+
 
 Specifying secrets as Environment Variables
 -------------------------------------------
@@ -361,7 +459,7 @@ You can find it in the ``tools`` folder.
 Running ``config2kv.py --help`` shows the usage of this utility.
 
 The simplest way to use this tool is to populate your existing
-secrets as strings in your ``msticpyconfig.yaml``. (as shown in
+secrets as strings in your *msticpyconfig.yaml*. (as shown in
 some of the provider settings in the example at the end of this
 page).
 
@@ -387,7 +485,7 @@ path of the secret (as described above).
    ``ApiID`` and ``AuthKey`` values will be used.
 
 The tool will then write the
-secret values to the vault. Finally a replacement ``msticpyconfig.yaml``
+secret values to the vault. Finally a replacement *msticpyconfig.yaml*
 is written to the location specified in the ``--path`` argument.
 You can then delete or securely store your old configuration file
 and replace it with the one output by ``config2kv``.
@@ -414,7 +512,7 @@ information.
 
 The advantage of using *keyring* is that you do not need to re-authenticate
 to Key Vault for each notebook that you use in each session. If you
-have ``UseKeyring: true`` in your ``msticpyconfig.yaml`` file, the
+have ``UseKeyring: true`` in your *msticpyconfig.yaml* file, the
 first time that you access a Key Vault secret the secret value is
 stored as a keyring password with the same name as the Key Vault secret.
 
@@ -450,6 +548,11 @@ The documentation for these is available here:
 
 User Defaults Section
 ---------------------
+
+.. warning:: This feature is being deprecated. Please avoid using
+  this. If you have a use case that requires this, please contact
+  the MSTICPy team - msticpy@microsoft.com. We'd love to hear
+  how you are using it and how we might be able to improve it.
 
 This section specifies the query and other providers that you want
 to load by default. It is triggered from the
@@ -668,20 +771,22 @@ back into the notebook namespace execute the following:
    any of the items in the ``current_providers`` dictionary.
 
 
-Extending msticpyconfig.yaml
-----------------------------
+Using msticpyconfig.yaml in code
+--------------------------------
 
-You can also extend msticpyconfig to include additional sections to
-support other authentication and configuration options such as MDATP
-API connections. Refer to documentation on these features for required
-structures.
+Settings are read using ``get_config`` method of the
+:py:mod:`refresh_config<msticpy.common.settings>` module.
+You can specify a setting path in dotted notation. For example:
 
-Settings are read by the
-:py:mod:`refresh_config<msticpy.common.pkg_config>` module.
-Combined settings are available as the ``settings`` attribute of this
-module. Default settings and custom settings (the settings that you
-specify in your own msticpyconfig.yaml) also available separately in
-the ``default_settings`` and ``custom_settngs`` attributes, respectively.
+.. code:: python3
+
+    from msticpy.common.settings import get_config
+    qry_prov = get_config("QueryProviders.MicrosoftGraph")
+
+You can also set configuration settings using the ``set_config`` method.
+This also supports dotted notation for the setting path. Any
+changes made here are not persisted to the configuration file and
+only available for the current Python session.
 
 To force settings to be re-read after the package has been imported,
 call :py:func:`refresh_config<msticpy.common.pkg_config.refresh_config>`.
@@ -696,6 +801,9 @@ reflect the underlying YAML data in the configuration file.
    the actual configuration value with the secret stored in the
    environment variables.
 
+If you are building a component for MSTICPy or work alongside MSTICPy,
+you can extend msticpyconfig to include additional sections to support
+your component.
 
 Commented configuration file sample
 -----------------------------------
@@ -703,6 +811,19 @@ Commented configuration file sample
 
 .. code:: yaml
 
+    # msticpy global settings
+    msticpy:
+      FriendlyExceptions: True
+      QueryDefinitions:
+        - ./queries
+        - ~/.msticpy/queries
+      http_timeout: 30
+      Proxies:
+        https:
+          Url: https://proxy:8080
+          UserName: user
+          Password:
+            EnvironmentVar: "PROXY_PASSWORD"
     AzureSentinel:
       Workspaces:
         # Workspace used if you don't explicitly name a workspace when creating WorkspaceConfig
@@ -721,28 +842,8 @@ Commented configuration file sample
         Workspace3:
           WorkspaceId: "17e64332-19c9-472e-afd7-3629f299300c"
           TenantId: "4ea41beb-4546-4fba-890b-55553ce6003a"
-    UserDefaults:
-      # List of query providers to load
-      QueryProviders:
-        - AzureSentinel:
-          - Default: asi
-          - CyberSoc:
-            alias: soc
-            connect: false
-        - Splunk:
-            connect: false
-        - LocalData: local
-      # List of other providers/components to load
-      LoadComponents:
-        - TILookup
-        - GeoIpLookup: GeoLiteLookup
-        - Notebooklets:
-            query_provider:
-              AzureSentinel: CyberSoc
-        - Pivot
-        - AzureData:
-          auth_methods=['cli','interactive']
-        - AzureSentinelAPI
+    KustoClusters:
+
     QueryDefinitions:
       # Add paths to folders containing custom query definitions here
       Custom:
@@ -818,6 +919,29 @@ Commented configuration file sample
           clientId: "69d28fd7-42a5-48bc-a619-af56397b1111"
           tenantId: "69d28fd7-42a5-48bc-a619-af56397b2222"
           clientSecret: "69d28fd7-42a5-48bc-a619-af56397b3333"
+    # DEPRECATED
+    UserDefaults:
+      # DEPRECATED - List of query providers to load
+      QueryProviders:
+        - AzureSentinel:
+          - Default: asi
+          - CyberSoc:
+            alias: soc
+            connect: false
+        - Splunk:
+            connect: false
+        - LocalData: local
+      # DEPRECATED - List of other providers/components to load
+      LoadComponents:
+        - TILookup
+        - GeoIpLookup: GeoLiteLookup
+        - Notebooklets:
+            query_provider:
+              AzureSentinel: CyberSoc
+        - Pivot
+        - AzureData:
+          auth_methods=['cli','interactive']
+        - AzureSentinelAPI
 
 
 See also

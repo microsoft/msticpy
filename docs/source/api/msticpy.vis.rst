@@ -14,7 +14,9 @@ Submodules
 
    msticpy.vis.code_view
    msticpy.vis.data_viewer
+   msticpy.vis.data_viewer_panel
    msticpy.vis.entity_graph_tools
+   msticpy.vis.figure_dimension
    msticpy.vis.foliummap
    msticpy.vis.matrix_plot
    msticpy.vis.mordor_browser

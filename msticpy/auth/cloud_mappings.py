@@ -150,7 +150,7 @@ def get_all_suffixes(cloud: str) -> azure_cloud.CloudSuffixes:
 def get_azure_config_value(key, default):
     """Get a config value from Azure section."""
     with contextlib.suppress(KeyError):
-        az_settings = config.get_config("Azure")
+        az_settings = config.get_config("Azure", {})
         if az_settings and key in az_settings:
             return az_settings[key]
     return default

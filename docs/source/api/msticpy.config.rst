@@ -17,6 +17,7 @@ Submodules
    msticpy.config.ce_common
    msticpy.config.ce_data_providers
    msticpy.config.ce_keyvault
+   msticpy.config.ce_msticpy
    msticpy.config.ce_other_providers
    msticpy.config.ce_provider_base
    msticpy.config.ce_simple_settings
