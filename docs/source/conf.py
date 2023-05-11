@@ -59,11 +59,11 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.coverage",
-    # "sphinx.ext.githubpages",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.intersphinx",
     "seed_intersphinx_mapping",
+    "sphinxcontrib.jquery",
 ]
 
 autosectionlabel_prefix_document = True
