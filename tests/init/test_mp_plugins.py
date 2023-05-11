@@ -88,13 +88,14 @@ def test_custom_data_provider(load_plugins):
     results = qry_prov2.Custom.file_path(path="foo")
 
 
+# pylint: disable=protected-access
 @respx.mock
 def test_custom_ti_provider(load_plugins):
     """Test TI plugin."""
     config_path = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
     with custom_mp_config(config_path):
-        pkg_config.settings["TIProviders"].update(_TI_PROV_SETTINGS)
-        print("Settings", pkg_config.settings["TIProviders"])
+        pkg_config._settings["TIProviders"].update(_TI_PROV_SETTINGS)
+        print("Settings", pkg_config._settings["TIProviders"])
         ti = TILookup()
 
         check.is_in("Provider1", ti.available_providers)
