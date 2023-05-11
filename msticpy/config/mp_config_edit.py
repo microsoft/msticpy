@@ -14,9 +14,11 @@ from .ce_azure import CEAzure
 from .ce_azure_sentinel import CEAzureSentinel
 from .ce_data_providers import CEDataProviders
 from .ce_keyvault import CEKeyVault
+from .ce_msticpy import CEMsticpy
 from .ce_other_providers import CEOtherProviders
 from .ce_ti_providers import CETIProviders
-from .ce_user_defaults import CEAutoLoadComps, CEAutoLoadQProvs
+
+# from .ce_user_defaults import CEAutoLoadComps, CEAutoLoadQProvs
 from .comp_edit import CETabControlDef, CompEditDisplayMixin, CompEditTabs
 from .mp_config_control import MpConfigControls, get_mpconfig_definitions
 from .mp_config_file import MpConfigFile
@@ -30,14 +32,15 @@ class MpConfigEdit(CompEditDisplayMixin):
     """Msticpy Configuration helper class."""
 
     _TAB_DEFINITIONS = {
+        "MSTICPy": CEMsticpy,
         "MicrosoftSentinel": CEAzureSentinel,
         "TI Providers": CETIProviders,
         "Data Providers": CEDataProviders,
         "GeoIP Providers": CEOtherProviders,
         "Key Vault": CEKeyVault,
         "Azure": CEAzure,
-        "Autoload QueryProvs": CEAutoLoadQProvs,
-        "Autoload Components": CEAutoLoadComps,
+        # "Autoload QueryProvs": CEAutoLoadQProvs,
+        # "Autoload Components": CEAutoLoadComps,
     }
 
     def __init__(

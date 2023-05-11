@@ -59,7 +59,6 @@ import pandas as pd
 from IPython import get_ipython
 from IPython.core.interactiveshell import InteractiveShell
 from IPython.display import HTML, display
-from matplotlib import MatplotlibDeprecationWarning
 
 try:
     import seaborn as sns
@@ -70,7 +69,13 @@ from .._version import VERSION
 from ..auth.azure_auth_core import AzureCliStatus, check_cli_credentials
 from ..common.check_version import check_version
 from ..common.exceptions import MsticpyException, MsticpyUserError
-from ..common.pkg_config import _HOME_PATH, get_config, refresh_config, validate_config
+from ..common.pkg_config import _HOME_PATH
+from ..common.settings import (
+    current_config_path,
+    get_config,
+    refresh_config,
+    validate_config,
+)
 from ..common.utility import (
     check_and_install_missing_packages,
     check_kwargs,
@@ -182,8 +187,6 @@ _NB_IMPORTS = [
     dict(pkg="IPython.display", tgt="Markdown"),
     dict(pkg="ipywidgets", alias="widgets"),
     dict(pkg="pathlib", tgt="Path"),
-    dict(pkg="matplotlib.pyplot", alias="plt"),
-    dict(pkg="matplotlib", tgt="MatplotlibDeprecationWarning"),
     dict(pkg="numpy", alias="np"),
 ]
 if sns is not None:
@@ -212,8 +215,6 @@ _MP_IMPORTS = [
 
 _MP_IMPORT_ALL: List[Dict[str, str]] = [
     dict(module_name="msticpy.datamodel.entities"),
-    dict(module_name="msticpy.nbtools"),
-    dict(module_name="msticpy.sectools"),
 ]
 # pylint: enable=use-dict-literal
 
@@ -670,6 +671,7 @@ def _use_custom_config(config_file: str):
 
 def _get_or_create_config() -> bool:
     # Cases
+    # 0. Current config file exists -> return ok
     # 1. Env var set and mpconfig exists -> goto 4
     # 2. Env var set and mpconfig file not exists - warn and continue
     # 3. search_for_file finds mpconfig -> goto 4
@@ -677,6 +679,8 @@ def _get_or_create_config() -> bool:
     # 5. search_for_file(config.json)
     # 6. If aml user try to import config.json into mpconfig and save
     # 7. Error - no Microsoft Sentinel config
+    if current_config_path() is not None:
+        return True
     mp_path = os.environ.get("MSTICPYCONFIG")
     if mp_path and not Path(mp_path).is_file():
         _err_output(_MISSING_MPCONFIG_ENV_ERR)
@@ -727,9 +731,6 @@ def _set_nb_options(namespace):
         "style": {"description_width": "initial"},
     }
 
-    # Some of our dependencies (networkx) still use deprecated Matplotlib
-    # APIs - we can't do anything about it, so suppress them from view
-    warnings.simplefilter("ignore", category=MatplotlibDeprecationWarning)
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     if sns:
         sns.set()

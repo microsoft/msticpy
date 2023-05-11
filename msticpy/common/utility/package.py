@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Packaging utility functions."""
+import importlib
 import os
 import re
 import subprocess  # nosec
@@ -307,3 +308,33 @@ def set_unit_testing(on: bool = True):
         os.environ[_U_TEST_ENV] = "True"
     else:
         os.environ.pop(_U_TEST_ENV, None)
+
+
+def init_getattr(module_name: str, dynamic_imports: Dict[str, str], attrib: str):
+    """Import and return dynamic attribute."""
+    if attrib in dynamic_imports:
+        module = importlib.import_module(dynamic_imports[attrib])
+        return getattr(module, attrib)
+    raise AttributeError(f"{module_name} has no attribute {attrib}")
+
+
+def init_dir(static_attribs: List[str], dynamic_imports: Dict[str, str]):
+    """Return list of available attributes."""
+    return sorted(set(static_attribs + list(dynamic_imports)))
+
+
+def lazy_import(module: str, attrib: str, call: bool = False):
+    """Import attribute from module on demand."""
+    attribute = None
+
+    def import_item(*args, **kwargs):
+        """Return the attribute, importing module if needed."""
+        nonlocal attribute
+        if attribute is None:
+            imp_module = importlib.import_module(module)
+            attribute = getattr(imp_module, attrib)
+        return (
+            attribute(*args, **kwargs) if (call and callable(attribute)) else attribute
+        )
+
+    return import_item

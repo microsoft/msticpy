@@ -865,6 +865,11 @@ show here.
 Autoload Query Providers
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. warning:: This feature is being deprecated. Please avoid using
+  this. If you have a use case that requires this, please contact
+  the MSTICPy team - msticpy@microsoft.com. We'd love to hear
+  how you are using it and how we might be able to improve it.
+
 This section controls which, if any, query providers you want to load
 automatically when you run ``nbinit.init_notebook``.
 
@@ -918,6 +923,11 @@ There are two options for each of these:
 
 Autoload Component
 ~~~~~~~~~~~~~~~~~~
+
+.. warning:: This feature is being deprecated. Please avoid using
+  this. If you have a use case that requires this, please contact
+  the MSTICPy team - msticpy@microsoft.com. We'd love to hear
+  how you are using it and how we might be able to improve it.
 
 This section controls which, if other components you want to load
 automatically when you run ``nbinit.init_notebook()``.

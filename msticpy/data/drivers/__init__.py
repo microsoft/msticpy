@@ -31,6 +31,8 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.M365D: ("mdatp_driver", "MDATPDriver"),
     DataEnvironment.Cybereason: ("cybereason_driver", "CybereasonDriver"),
     DataEnvironment.Elastic: ("elastic_driver", "ElasticDriver"),
+    DataEnvironment.MSSentinel_New: ("azure_monitor_driver", "AzureMonitorDriver"),
+    DataEnvironment.Kusto_New: ("azure_kusto_driver", "AzureKustoDriver"),
 }
 
 

@@ -1,0 +1,2464 @@
+{
+  "value": [
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Classic",
+          "name": "AuditLog_CL",
+          "tableType": "CustomLog",
+          "columns": [],
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "MG",
+              "type": "guid",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "ManagementGroupName",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "Computer",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "RawData",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "LogManagement"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/AuditLog_CL",
+      "name": "AuditLog_CL"
+    },
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Any",
+          "name": "AppServiceAntivirusScanAuditLogs",
+          "tableType": "Microsoft",
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "description": "Time when event is generated",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ScanStatus",
+              "type": "string",
+              "description": "Status of the scan",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TotalFilesScanned",
+              "type": "int",
+              "description": "Total number of scanned files",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "NumberOfInfectedFiles",
+              "type": "int",
+              "description": "Total number of files infected with virus",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ListOfInfectedFiles",
+              "type": "string",
+              "description": "List of each virus file path",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ErrorMessage",
+              "type": "string",
+              "description": "Error Message",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "LogManagement"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/AppServiceAntivirusScanAuditLogs",
+      "name": "AppServiceAntivirusScanAuditLogs"
+    },
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Any",
+          "name": "AirflowDagProcessingLogs",
+          "tableType": "Microsoft",
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "description": "The timestamp (UTC) of the log.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "OperationName",
+              "type": "string",
+              "description": "The name of the operation represented by this event.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Category",
+              "type": "string",
+              "description": "The category of the log that belongs to Airflow application.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "CorrelationId",
+              "type": "string",
+              "description": "The correlation id of the event.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "DataFactoryName",
+              "type": "string",
+              "description": "The name of the Data factory.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "IntegrationRuntimeName",
+              "type": "string",
+              "description": "The name of the Integration runtime.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Message",
+              "type": "string",
+              "description": "The application log of the Airflow event.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "LogManagement"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/AirflowDagProcessingLogs",
+      "name": "AirflowDagProcessingLogs"
+    },
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Any",
+          "name": "ADFAirflowTaskLogs",
+          "tableType": "Microsoft",
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "description": "The timestamp (UTC) of the log.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "OperationName",
+              "type": "string",
+              "description": "The name of the operation represented by this event.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Category",
+              "type": "string",
+              "description": "The category of the log that belongs to Airflow application.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "CorrelationId",
+              "type": "string",
+              "description": "The correlation id of the event.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "DataFactoryName",
+              "type": "string",
+              "description": "The name of the Data factory.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "IntegrationRuntimeName",
+              "type": "string",
+              "description": "The name of the Integration runtime.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "DagId",
+              "type": "string",
+              "description": "The dag ID of the Airflow task run.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TaskId",
+              "type": "string",
+              "description": "The task ID of the Airflow task run.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Message",
+              "type": "string",
+              "description": "The application log of the Airflow event.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "LogManagement"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/ADFAirflowTaskLogs",
+      "name": "ADFAirflowTaskLogs"
+    },
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Any",
+          "name": "WVDConnectionNetworkData",
+          "tableType": "Microsoft",
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "description": "The timestamp (UTC) when the network event was generated on the VM",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "CorrelationId",
+              "type": "string",
+              "description": "The correlation ID for the activity",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "EstRoundTripTimeInMs",
+              "type": "int",
+              "description": "The average of estimated network round trip times (milliseconds) in the last evaluated connection time interval",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "EstAvailableBandwidthKBps",
+              "type": "int",
+              "description": "The average of estimated network bandwidth (kilobyte per second) in the last evaluated connection time interval",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "LogManagement"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/WVDConnectionNetworkData",
+      "name": "WVDConnectionNetworkData"
+    },
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Any",
+          "name": "AppPlatformSystemLogs",
+          "tableType": "Microsoft",
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "description": "The timestamp (UTC) when the log is collected by Azure Spring Cloud",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ServiceName",
+              "type": "string",
+              "description": "The service name that emitted the log",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "InstanceName",
+              "type": "string",
+              "description": "The instance name that emitted the log",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Level",
+              "type": "string",
+              "description": "The level of the log",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Thread",
+              "type": "string",
+              "description": "The thread of the log",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Logger",
+              "type": "string",
+              "description": "The logger of the log",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Log",
+              "type": "string",
+              "description": "The log of the log",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Stack",
+              "type": "string",
+              "description": "The stack of the log",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "LogType",
+              "type": "string",
+              "description": "The type of the log",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Category",
+              "type": "string",
+              "description": "Log Category",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "OperationName",
+              "type": "string",
+              "description": "The name of the operation represented by this event",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "LogManagement"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/AppPlatformSystemLogs",
+      "name": "AppPlatformSystemLogs"
+    },
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Classic",
+          "name": "MITREBrawlSysmon_CL",
+          "tableType": "CustomLog",
+          "columns": [
+            {
+              "name": "data_model_fields_previous_creation_utc_time_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_file_name_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_creation_utc_time_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "game_id_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "_uuid_g",
+              "type": "guid",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "_version_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "path_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "type_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_dest_ipv6_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_exe_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_dest_fqdn_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_record_number_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_pid_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_keywords_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_fqdn_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_log_name_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_transport_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_event_code_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_dest_port_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_dest_port_name_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_log_type_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_severity_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_image_path_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_hostname_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_src_port_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_src_port_name_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_utc_time_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_uuid_g",
+              "type": "guid",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_op_code_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_user_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_process_guid_g",
+              "type": "guid",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_src_ipv6_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_dest_ip_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_src_ip_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_initiated_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_src_fqdn_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_action_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_object_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "_timestamp_t",
+              "type": "datetime",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "host_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_parent_process_guid_g",
+              "type": "guid",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_parent_exe_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_current_directory_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_logon_id_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_command_line_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_logon_guid_g",
+              "type": "guid",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_parent_image_path_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_parent_command_line_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_hash_SHA256_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_hash_MD5_g",
+              "type": "guid",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_hash_SHA1_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_hash_IMPHASH_g",
+              "type": "guid",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_terminal_session_id_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_integrity_level_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "data_model_fields_ppid_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            }
+          ],
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "MG",
+              "type": "guid",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "ManagementGroupName",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "Computer",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "RawData",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "LogManagement"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/MITREBrawlSysmon_CL",
+      "name": "MITREBrawlSysmon_CL"
+    },
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Any",
+          "name": "DatabricksDeltaPipelines",
+          "tableType": "Microsoft",
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "description": "The timestamp of the action (UTC).",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "OperationName",
+              "type": "string",
+              "description": "The action, such as login, logout, read, write, etc.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "OperationVersion",
+              "type": "string",
+              "description": "The Databricks schema version of the diagnostic log format.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Category",
+              "type": "string",
+              "description": "The service that logged the request.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Identity",
+              "type": "string",
+              "description": "Information about the user that makes the requests.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SourceIPAddress",
+              "type": "string",
+              "description": "The IP address of the source request.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "LogId",
+              "type": "string",
+              "description": "The unique identifier for the log messages.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ServiceName",
+              "type": "string",
+              "description": "The service of the source request.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "UserAgent",
+              "type": "string",
+              "description": "The browser or API client used to make the request.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SessionId",
+              "type": "string",
+              "description": "Session ID of the action.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ActionName",
+              "type": "string",
+              "description": "The action of the request.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "RequestId",
+              "type": "string",
+              "description": "Unique request ID.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Response",
+              "type": "string",
+              "description": "The HTTP response to the request, including error message (if applicable), result, and statusCode.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "RequestParams",
+              "type": "string",
+              "description": "Parameter key-value pairs used in the event.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "LogManagement"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/DatabricksDeltaPipelines",
+      "name": "DatabricksDeltaPipelines"
+    },
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Any",
+          "name": "AgriFoodFarmOperationLogs",
+          "tableType": "Microsoft",
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "description": "Timestamp (in UTC) when the log was created.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Category",
+              "type": "string",
+              "description": "Logs generated as a result of operations executed using FarmBeats APIs are grouped into categories. Categories in FarmBeats are logical groupings based on either the data source the underlying APIs fetch data from or on the basis of hierarchy of entities in FarmBeats.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "OperationName",
+              "type": "string",
+              "description": "The operation name for which the log entry was created.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "RequestUri",
+              "type": "string",
+              "description": "URI of the API request.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "FarmerId",
+              "type": "string",
+              "description": "Farmer ID associated with the request, wherever applicable.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "DataPlaneResourceId",
+              "type": "string",
+              "description": "ID that uniquely identifies a FarmBeats resource such as a Farm, Farmer, Boundary etc.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "CallerIpAddress",
+              "type": "string",
+              "description": "IP address of the client that made the request.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Level",
+              "type": "string",
+              "description": "The severity level of the event, will be one of Informational, Warning, Error, or Critical.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ResultSignature",
+              "type": "int",
+              "description": "HTTP status of API request.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ResultType",
+              "type": "string",
+              "description": "Result of the REST API request.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ResultDescription",
+              "type": "string",
+              "description": "Additional details about the result, when available.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Location",
+              "type": "string",
+              "description": "The region of the resource emitting the event.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "CorrelationId",
+              "type": "string",
+              "description": "Unique identifier to be used to correlate logs, when available.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "DurationMs",
+              "type": "real",
+              "description": "Time it took to service the REST API request, in milliseconds.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ApplicationId",
+              "type": "string",
+              "description": "ApplicationId in identity claims.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ObjectId",
+              "type": "string",
+              "description": "ObjectId in identity claims.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ClientTenantId",
+              "type": "string",
+              "description": "TenantId in identity claims.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "RequestBody",
+              "type": "dynamic",
+              "description": "Request body of the API calls.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "LogManagement"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/AgriFoodFarmOperationLogs",
+      "name": "AgriFoodFarmOperationLogs"
+    },
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Any",
+          "name": "McasShadowItReporting",
+          "tableType": "Microsoft",
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "StreamName",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "MachineName",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "MachineId",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TotalEvents",
+              "type": "int",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "BlockedEvents",
+              "type": "int",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "UploadedBytes",
+              "type": "int",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TotalBytes",
+              "type": "int",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "DownloadedBytes",
+              "type": "int",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "IpAddress",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "UserName",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "EnrichedUserName",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "AppName",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "AppId",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "AppInstance",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "AppCategory",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "AppTags",
+              "type": "dynamic",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "AppScore",
+              "type": "int",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "SecurityInsights"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/McasShadowItReporting",
+      "name": "McasShadowItReporting"
+    },
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Classic",
+          "name": "uploaddemo_CL",
+          "tableType": "CustomLog",
+          "columns": [
+            {
+              "name": "Unnamed_0_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "FlowStartTime_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "FlowEndTime_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "FlowIntervalEndTime_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "FlowType_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "ResourceGroup",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "VMName_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "VMIPAddress_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "PublicIPs_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "SrcIP_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "DestIP_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "L4Protocol_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "L7Protocol_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "DestPort_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "FlowDirection_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "AllowedOutFlows_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "AllowedInFlows_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "DeniedInFlows_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "DeniedOutFlows_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "RemoteRegion_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "VMRegion_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "AllExtIPs_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "TotalAllowedFlows_s",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            }
+          ],
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "MG",
+              "type": "guid",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "ManagementGroupName",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "Computer",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            },
+            {
+              "name": "RawData",
+              "type": "string",
+              "isDefaultDisplay": false,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "LogManagement"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/uploaddemo_CL",
+      "name": "uploaddemo_CL"
+    },
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Any",
+          "name": "DynamicSummary",
+          "tableType": "Microsoft",
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "description": "The timestamp (UTC) of when the event was ingested to Azure Monitor.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "AzureTenantId",
+              "type": "string",
+              "description": "The AAD tenant ID to which this DynamicSummary table belongs.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SummaryId",
+              "type": "string",
+              "description": "Summary unique ID.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SummaryItemId",
+              "type": "string",
+              "description": "Summary item unique ID.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SummaryName",
+              "type": "string",
+              "description": "The Summary display name, unique within workspace.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "RelationName",
+              "type": "string",
+              "description": "The original data source name.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "RelationId",
+              "type": "string",
+              "description": "The original data source ID",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SearchKey",
+              "type": "string",
+              "description": "SearchKey is used to optimize query performance when using DynamicSummary for joins with other data. For example, enable a column with IP addresses to be the designated SearchKey field, then use this field to join in other event tables by IP address.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "CreatedBy",
+              "type": "dynamic",
+              "description": "The JSON object with the user who created summary, including: object ID, email and name.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "CreatedTimeUTC",
+              "type": "datetime",
+              "description": "The time (UTC) when the summary was created.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "UpdatedBy",
+              "type": "dynamic",
+              "description": "The JSON object with the user who updated summary, including: object ID, email and name.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "UpdatedTimeUTC",
+              "type": "datetime",
+              "description": "The time (UTC) when the summary was updated.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SummaryDescription",
+              "type": "string",
+              "description": "The description provided by user.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Tactics",
+              "type": "dynamic",
+              "description": "MITRE ATT&CK tactics are what attackers are trying to achieve. For example, exfiltration.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Techniques",
+              "type": "dynamic",
+              "description": "MITRE ATT&CK techniques are how those tactics are accomplished.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SummaryStatus",
+              "type": "string",
+              "description": "Active or deleted.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SourceInfo",
+              "type": "dynamic",
+              "description": "The JSON object with the data producer info, including source, name, version.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Query",
+              "type": "string",
+              "description": "This is the query that was used to generate the result.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "QueryStartDate",
+              "type": "datetime",
+              "description": "Events that occurred after this datetime will be included in the result.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "QueryEndDate",
+              "type": "datetime",
+              "description": "Events that occurred before this datetime will be included in the result.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "EventTimeUTC",
+              "type": "datetime",
+              "description": "The time (UTC) when the summary item occurred originally.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ObservableType",
+              "type": "string",
+              "description": "Observables are stateful events ot properties that are related to the operation of computing system, which are helpful in identifying indicators of compromise.  For example, login.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ObservableValue",
+              "type": "string",
+              "description": "Value for observable type, such as: anomalous RDP activity.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "PackedContent",
+              "type": "dynamic",
+              "description": "The JSON object has packed columns which can be generated by using KQL pack_all().",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SummaryDataType",
+              "type": "string",
+              "description": "This flag is used to tell if the record is either a summary level or a summary item level record.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "SecurityInsights"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/DynamicSummary",
+      "name": "DynamicSummary"
+    },
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Any",
+          "name": "ADPAudit",
+          "tableType": "Microsoft",
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "description": "The timestamp (UTC) of when the log record was generated.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "OperationName",
+              "type": "string",
+              "description": "The operation associated with the log record.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "OperationVersion",
+              "type": "string",
+              "description": "The API version against which the operation was performed.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ResultType",
+              "type": "string",
+              "description": "The result of the audit operation.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Identity",
+              "type": "dynamic",
+              "description": "Active Directory identity claims",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TraceContext",
+              "type": "dynamic",
+              "description": "W3C Trace Context information used for event correlation.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "CorrelationId",
+              "type": "string",
+              "description": "Internal ADP correlation ID used in support scenarios.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Location",
+              "type": "string",
+              "description": "The location (region) of the resource.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Properties",
+              "type": "dynamic",
+              "description": "Additional properties related to the audit event.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "LogManagement"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/ADPAudit",
+      "name": "ADPAudit"
+    },
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Any",
+          "name": "CDBPartitionKeyStatistics",
+          "tableType": "Microsoft",
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "description": "Timestamp (in\u00a0UTC)\u00a0when\u00a0statistics for this logical partition key were generated.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "AccountName",
+              "type": "string",
+              "description": "The name of the Cosmos DB account\u00a0containing the dataset for which partition key stats were generated.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "RegionName",
+              "type": "string",
+              "description": "The Azure region\u00a0from which statistics\u00a0for this partition\u00a0were\u00a0retrieved.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "PartitionKey",
+              "type": "string",
+              "description": "The logical partition key for which\u00a0storage\u00a0statistics were\u00a0retrieved.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SizeKb",
+              "type": "int",
+              "description": "The storage size (in KB) for the logical partition key within the physical partition.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "DatabaseName",
+              "type": "string",
+              "description": "The\u00a0name of the\u00a0Cosmos DB\u00a0database,\u00a0which\u00a0contains\u00a0the partition.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "CollectionName",
+              "type": "string",
+              "description": "The name of the Cosmos DB\u00a0collection,\u00a0which\u00a0contains\u00a0the partition.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "LogManagement"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/CDBPartitionKeyStatistics",
+      "name": "CDBPartitionKeyStatistics"
+    },
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Any",
+          "name": "ADXTableDetails",
+          "tableType": "Microsoft",
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "description": "The time (UTC) at which this event was generated.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "OperationName",
+              "type": "string",
+              "description": "The name of this operation.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "CorrelationId",
+              "type": "string",
+              "description": "The client request id.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "DatabaseName",
+              "type": "string",
+              "description": "The name of the database.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TableName",
+              "type": "string",
+              "description": "The name of the table.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "EntityType",
+              "type": "string",
+              "description": "The type of the table. Can be Table or MaterializedView.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TotalExtentSize",
+              "type": "real",
+              "description": "The total size of extents (compressed size + index size) in the table (in bytes).",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TotalOriginalSize",
+              "type": "real",
+              "description": "The total original size of data in the table (in bytes).",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "HotExtentSize",
+              "type": "real",
+              "description": "The total size of extents (compressed size + index size) in the table, stored in the hot cache (in bytes).",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "RetentionPolicyOrigin",
+              "type": "string",
+              "description": "Retention policy origin entity (Table/Database/Cluster).",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "RetentionPolicy",
+              "type": "dynamic",
+              "description": "The table's effective entity retention policy, serialized as JSON.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "CachingPolicyOrigin",
+              "type": "string",
+              "description": "Caching policy origin entity (Table/Database/Cluster).",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "CachingPolicy",
+              "type": "dynamic",
+              "description": "The table's effective entity caching policy, serialized as JSON.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "MaxExtentsCreationTime",
+              "type": "datetime",
+              "description": "The maximum creation time of an extent in the table (or null, if there are no extents).",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "MinExtentsCreationTime",
+              "type": "datetime",
+              "description": "The minimum creation time of an extent in the table (or null, if there are no extents).",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TotalExtentCount",
+              "type": "long",
+              "description": "The total number of extents in the table.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TotalRowCount",
+              "type": "long",
+              "description": "The total number of rows in the table.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "HotExtentCount",
+              "type": "long",
+              "description": "The total number of extents in the table, stored in the hot cache.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "HotOriginalSize",
+              "type": "long",
+              "description": "The total original size of data in the table, stored in the hot cache (in bytes).",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "HotRowCount",
+              "type": "long",
+              "description": "The total number of rows in the table, stored in the hot cache.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "LogManagement"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/ADXTableDetails",
+      "name": "ADXTableDetails"
+    },
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Any",
+          "name": "AzureActivity",
+          "tableType": "Microsoft",
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "description": "ID of the worksapce that stores this record",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "description": "Azure is used always for AzureActivity",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "CallerIpAddress",
+              "type": "string",
+              "description": "IP address of the user who has performed the operation UPN claim or SPN claim based on availability.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "CategoryValue",
+              "type": "string",
+              "description": "Category of the activity log e.g. Administrative, Policy, Security.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "CorrelationId",
+              "type": "string",
+              "description": "Usually a GUID in the string format. Events that share a correlationId belong to the same uber action.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Authorization",
+              "type": "string",
+              "description": "Blob of RBAC properties of the event. Usually includes the \u201caction\u201d, \u201crole\u201d and \u201cscope\u201d properties. Stored as string. The use of Authorization_d should be preferred going forward.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Authorization_d",
+              "type": "dynamic",
+              "description": "Blob of RBAC properties of the event. Usually includes the \u201caction\u201d, \u201crole\u201d and \u201cscope\u201d properties. Stored as dynamic column.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Claims",
+              "type": "string",
+              "description": "The JWT token used by Active Directory to authenticate the user or application to perform this operation in Resource Manager. The use of claims_d should be preferred going forward.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Claims_d",
+              "type": "dynamic",
+              "description": "The JWT token used by Active Directory to authenticate the user or application to perform this operation in Resource Manager.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Level",
+              "type": "string",
+              "description": "Level of the event. One of the following values: Critical, Error, Warning, Informational and Verbose.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "OperationNameValue",
+              "type": "string",
+              "description": "Identifier of the operation e.g. Microsoft.Storage/storageAccounts/listAccountSas/action.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Properties",
+              "type": "string",
+              "description": "Set of <Key Value> pairs (i.e. Dictionary) describing the details of the event. Stored as string. Usage of Properties_d is recommended instead.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Properties_d",
+              "type": "dynamic",
+              "description": "Set of <Key Value> pairs (i.e. Dictionary) describing the details of the event. Stored as dynamic column.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Caller",
+              "type": "string",
+              "description": "GUID of the caller.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "EventDataId",
+              "type": "string",
+              "description": "Unique identifier of an event.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "EventSubmissionTimestamp",
+              "type": "datetime",
+              "description": "Timestamp when the event became available for querying.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "HTTPRequest",
+              "type": "string",
+              "description": "Blob describing the Http Request. Usually includes the \u201cclientRequestId\u201d, \u201cclientIpAddress\u201d and \u201cmethod\u201d (HTTP method. For example, PUT).",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "OperationId",
+              "type": "string",
+              "description": "GUID of the operation",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ResourceGroup",
+              "type": "string",
+              "description": "Resource group name of the impacted resource.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ResourceProviderValue",
+              "type": "string",
+              "description": "Id of the resource provider for the impacted resource - e.g. Microsoft.Storage.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ActivityStatusValue",
+              "type": "string",
+              "description": "Status of the operation in display-friendly format. Common values include Started, In Progress, Succeeded, Failed, Active, Resolved.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ActivitySubstatusValue",
+              "type": "string",
+              "description": "Substatus of the operation  in display-friendly format. E.g. OK (HTTP Status Code: 200).",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Hierarchy",
+              "type": "string",
+              "description": "Management group hierarchy of the management group or subscription that event belongs to.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "description": "Timestamp when the event was generated by the Azure service processing the request corresponding the event.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SubscriptionId",
+              "type": "guid",
+              "description": "Subscription ID of the impacted resource.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "LogManagement"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/AzureActivity",
+      "name": "AzureActivity"
+    },
+    {
+      "properties": {
+        "totalRetentionInDays": 90,
+        "archiveRetentionInDays": 0,
+        "plan": "Analytics",
+        "retentionInDaysAsDefault": true,
+        "totalRetentionInDaysAsDefault": true,
+        "schema": {
+          "tableSubType": "Any",
+          "name": "AppServiceAppLogs",
+          "tableType": "Microsoft",
+          "standardColumns": [
+            {
+              "name": "TenantId",
+              "type": "guid",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "TimeGenerated",
+              "type": "datetime",
+              "description": "Time when event is generated",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Level",
+              "type": "string",
+              "description": "Verbosity level of log mapped to standard levels (Informational, Warning, Error, or Critical)",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Host",
+              "type": "string",
+              "description": "Host where the application is running",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ResultDescription",
+              "type": "string",
+              "description": "Log message description",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "CustomLevel",
+              "type": "string",
+              "description": "Verbosity level of log",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Source",
+              "type": "string",
+              "description": "Application source from where log message is emitted",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Method",
+              "type": "string",
+              "description": "Application Method from where log message is emitted",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Logger",
+              "type": "string",
+              "description": "Application logger used to emit log message",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "WebSiteInstanceId",
+              "type": "string",
+              "description": "Instance Id the application running",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ExceptionClass",
+              "type": "string",
+              "description": "Application class from where log message is emitted ",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "Message",
+              "type": "string",
+              "description": "Log message",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "StackTrace",
+              "type": "string",
+              "description": "Complete stack trace of the log message in case of exception",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "ContainerId",
+              "type": "string",
+              "description": "Application container id",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "OperationName",
+              "type": "string",
+              "description": "The name of the operation represented by this event.",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            },
+            {
+              "name": "SourceSystem",
+              "type": "string",
+              "isDefaultDisplay": true,
+              "isHidden": false
+            }
+          ],
+          "solutions": [
+            "LogManagement"
+          ],
+          "isTroubleshootingAllowed": false
+        },
+        "provisioningState": "Succeeded",
+        "retentionInDays": 90
+      },
+      "id": "/subscriptions/40dcc8bf-0478-4f3b-b275-ed0a94f2c013/resourceGroups/asihuntomsworkspacerg/providers/Microsoft.OperationalInsights/workspaces/ASIHuntOMSWorkspaceV4/tables/AppServiceAppLogs",
+      "name": "AppServiceAppLogs"
+    }
+  ]
+}

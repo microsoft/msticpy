@@ -51,9 +51,7 @@ class MDATPDriver(OData):
         api_uri, oauth_uri, api_suffix = _select_api_uris(
             self.data_environment, self.cloud
         )
-        self.add_query_filter("data_environments", "MDE")
-        self.add_query_filter("data_environments", "M365D")
-        self.add_query_filter("data_environments", "MDATP")
+        self.add_query_filter("data_environments", ("MDE", "M365D", "MDATP"))
 
         self.req_body = {
             "client_id": None,
