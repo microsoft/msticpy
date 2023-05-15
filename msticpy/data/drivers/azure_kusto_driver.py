@@ -174,6 +174,7 @@ class AzureKustoDriver(DriverBase):
         self.set_driver_property(DriverProps.PUBLIC_ATTRS, self._set_public_attribs())
         self.set_driver_property(DriverProps.FILTER_ON_CONNECT, True)
         self.set_driver_property(DriverProps.EFFECTIVE_ENV, DataEnvironment.Kusto.name)
+        self._loaded = True
 
     def _set_public_attribs(self):
         """Expose subset of attributes via query_provider."""
