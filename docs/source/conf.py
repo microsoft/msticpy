@@ -59,7 +59,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.coverage",
-    "sphinxcontrib.jquery"
+    "sphinxcontrib.jquery",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.intersphinx",
