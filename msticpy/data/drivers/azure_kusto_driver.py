@@ -183,6 +183,7 @@ class AzureKustoDriver(DriverBase):
         self.set_driver_property(
             DriverProps.MAX_PARALLEL, value=kwargs.get("max_threads", 4)
         )
+        self._loaded = True
 
     def _set_public_attribs(self):
         """Expose subset of attributes via query_provider."""
