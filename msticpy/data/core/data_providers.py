@@ -4,16 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data provider loader."""
-# import concurrent.futures
-# from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 from functools import partial
-from itertools import tee
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 import pandas as pd
-from tqdm.auto import tqdm
 
 from ..._version import VERSION
 from ...common.pkg_config import get_config
@@ -26,7 +21,6 @@ from .query_container import QueryContainer
 from .query_defns import DataEnvironment
 from .query_provider_connections_mixin import QueryProviderConnectionsMixin
 from .query_provider_utils_mixin import QueryProviderUtilsMixin
-from .query_source import QuerySource
 from .query_store import QueryStore
 
 __version__ = VERSION
@@ -217,7 +211,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
                 query, query_source=query_source, **query_options
             )
             return result
-        return self._exec_additional_connections(query, result, **kwargs)
+        return self._exec_additional_connections(query, **kwargs)
 
     @property
     def query_time(self):
@@ -260,6 +254,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
                 split_by=split_by,
                 query_source=query_source,
                 query_params=params,
+                debug=_debug_flag(*args, **kwargs),
                 args=args,
                 **kwargs,
             )
@@ -274,7 +269,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             return query_str
 
         # Handle any query options passed and run the query
-        query_options.update(_get_query_options(params, kwargs))
+        query_options.update(self._get_query_options(params, kwargs))
         return self.exec_query(query_str, query_source=query_source, **query_options)
 
     def _check_for_time_params(self, params, missing) -> bool:
@@ -377,80 +372,68 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         # queries it should not be noticeable.
         self._add_query_functions()
 
-    def _exec_split_query(
-        self,
-        split_by: str,
-        query_source: QuerySource,
-        query_params: Dict[str, Any],
-        args,
-        **kwargs,
-    ) -> Union[pd.DataFrame, str, None]:
-        start = query_params.pop("start", None)
-        end = query_params.pop("end", None)
-        if not (start or end):
-            print(
-                "Cannot split a query that does not have 'start' and 'end' parameters"
-            )
-            return None
-        try:
-            split_delta = pd.Timedelta(split_by)
-        except ValueError:
-            split_delta = pd.Timedelta("1D")
+    # def _exec_split_query(
+    #     self,
+    #     split_by: str,
+    #     query_source: QuerySource,
+    #     query_params: Dict[str, Any],
+    #     args,
+    #     **kwargs,
+    # ) -> Union[pd.DataFrame, str, None]:
+    #     start = query_params.pop("start", None)
+    #     end = query_params.pop("end", None)
+    #     if not (start or end):
+    #         print(
+    #             "Cannot split a query that does not have 'start' and 'end' parameters"
+    #         )
+    #         return None
+    #     try:
+    #         split_delta = pd.Timedelta(split_by)
+    #     except ValueError:
+    #         split_delta = pd.Timedelta("1D")
 
-        ranges = _calc_split_ranges(start, end, split_delta)
+    #     ranges = _calc_split_ranges(start, end, split_delta)
 
-        split_queries = [
-            query_source.create_query(
-                formatters=self._query_provider.formatters,
-                start=q_start,
-                end=q_end,
-                **query_params,
-            )
-            for q_start, q_end in ranges
-        ]
-        # This looks for any of the "print query" debug args in args or kwargs
-        if _debug_flag(*args, **kwargs):
-            return "\n\n".join(split_queries)
+    #     split_queries = [
+    #         query_source.create_query(
+    #             formatters=self._query_provider.formatters,
+    #             start=q_start,
+    #             end=q_end,
+    #             **query_params,
+    #         )
+    #         for q_start, q_end in ranges
+    #     ]
+    #     # This looks for any of the "print query" debug args in args or kwargs
+    #     if _debug_flag(*args, **kwargs):
+    #         return "\n\n".join(split_queries)
 
-        # Retrieve any query options passed (other than query params)
-        # and send to query function.
-        query_options = _get_query_options(query_params, kwargs)
-        query_dfs = [
-            self.exec_query(query_str, query_source=query_source, **query_options)
-            for query_str in tqdm(split_queries, unit="sub-queries", desc="Running")
-        ]
+    #     # Retrieve any query options passed (other than query params)
+    #     # and send to query function.
+    #     query_options = self._get_query_options(query_params, kwargs)
+    #     query_dfs = [
+    #         self.exec_query(query_str, query_source=query_source, **query_options)
+    #         for query_str in tqdm(split_queries, unit="sub-queries", desc="Running")
+    #     ]
 
-        return pd.concat(query_dfs)
+    #     return pd.concat(query_dfs)
 
-
-def _calc_split_ranges(start: datetime, end: datetime, split_delta: pd.Timedelta):
-    """Return a list of time ranges split by `split_delta`."""
-    # Use pandas date_range and split the result into 2 iterables
-    s_ranges, e_ranges = tee(pd.date_range(start, end, freq=split_delta))
-    next(e_ranges, None)  # skip to the next item in the 2nd iterable
-    # Zip them together to get a list of (start, end) tuples of ranges
-    # Note: we subtract 1 nanosecond from the 'end' value of each range so
-    # to avoid getting duplicated records at the boundaries of the ranges.
-    # Some providers don't have nanosecond granularity so we might
-    # get duplicates in these cases
-    ranges = [
-        (s_time, e_time - pd.Timedelta("1ns"))
-        for s_time, e_time in zip(s_ranges, e_ranges)
-    ]
-
-    # Since the generated time ranges are based on deltas from 'start'
-    # we need to adjust the end time on the final range.
-    # If the difference between the calculated last range end and
-    # the query 'end' that the user requested is small (< 10% of a delta),
-    # we just replace the last "end" time with our query end time.
-    if (ranges[-1][1] - end) < (split_delta / 10):
-        ranges[-1] = ranges[-1][0], end
-    else:
-        # otherwise append a new range starting after the last range
-        # in ranges and ending in 'end"
-        # note - we need to add back our subtracted 1 nanosecond
-        ranges.append((ranges[-1][0] + pd.Timedelta("1ns"), end))
-    return ranges
+    @staticmethod
+    def _get_query_options(
+        params: Dict[str, Any], kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        # sourcery skip: inline-immediately-returned-variable, use-or-for-fallback
+        """Return any kwargs not already in params."""
+        query_options = kwargs.pop("query_options", {})
+        if not query_options:
+            # Any kwargs left over we send to the query provider driver
+            query_options = {
+                key: val for key, val in kwargs.items() if key not in params
+            }
+        query_options["time_span"] = {
+            "start": params.get("start"),
+            "end": params.get("end"),
+        }
+        return query_options
 
 
 def _resolve_package_path(config_path: str) -> Path:
@@ -482,19 +465,3 @@ def _debug_flag(*args, **kwargs) -> bool:
     return any(db_arg for db_arg in _DEBUG_FLAGS if db_arg in args) or any(
         db_arg for db_arg in _DEBUG_FLAGS if kwargs.get(db_arg, False)
     )
-
-
-def _get_query_options(
-    params: Dict[str, Any], kwargs: Dict[str, Any]
-) -> Dict[str, Any]:
-    # sourcery skip: inline-immediately-returned-variable, use-or-for-fallback
-    """Return any kwargs not already in params."""
-    query_options = kwargs.pop("query_options", {})
-    if not query_options:
-        # Any kwargs left over we send to the query provider driver
-        query_options = {key: val for key, val in kwargs.items() if key not in params}
-    query_options["time_span"] = {
-        "start": params.get("start"),
-        "end": params.get("end"),
-    }
-    return query_options

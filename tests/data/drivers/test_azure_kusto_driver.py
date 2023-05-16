@@ -93,9 +93,14 @@ def get_test_df():
 
 
 def test_init():
-    # Test that __init__ sets the current_connection property correctly
-    driver = AzureKustoDriver(connection_str="https://test.kusto.windows.net")
-    assert driver.current_connection == "https://test.kusto.windows.net"
+    """Test initialization of AzureKustoDriver."""
+    driver = AzureKustoDriver(
+        connection_str="cluster='https://test.kusto.windows.net', db='Security'"
+    )
+    assert (
+        driver.current_connection
+        == "cluster='https://test.kusto.windows.net', db='Security'"
+    )
 
     # Test that __init__ sets the _connection_props property correctly
     driver = AzureKustoDriver(timeout=300)

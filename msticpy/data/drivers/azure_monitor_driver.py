@@ -130,6 +130,7 @@ class AzureMonitorDriver(DriverBase):
         self._query_client: Optional[LogsQueryClient] = None
         self._az_tenant_id: Optional[str] = None
         self._ws_config: Optional[WorkspaceConfig] = None
+        self._ws_name: Optional[str] = None
         self._workspace_id: Optional[str] = None
         self._workspace_ids: List[str] = []
         self._def_connection_str: Optional[str] = connection_str
@@ -139,6 +140,10 @@ class AzureMonitorDriver(DriverBase):
         )
         self.set_driver_property(
             DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinel.name
+        )
+        self.set_driver_property(DriverProps.SUPPORTS_THREADING, value=True)
+        self.set_driver_property(
+            DriverProps.MAX_PARALLEL, value=kwargs.get("max_threads", 4)
         )
         logger.info(
             "AzureMonitorDriver loaded. connect_str  %s, kwargs: %s",
@@ -152,6 +157,29 @@ class AzureMonitorDriver(DriverBase):
         return _LOGANALYTICS_URL_BY_CLOUD.get(
             AzureCloudConfig().cloud, _LOGANALYTICS_URL_BY_CLOUD["global"]
         )
+
+    @property
+    def current_connection(self) -> str:
+        """Return the current connection name."""
+        connection = self._ws_name
+        if (
+            not connection
+            and self._ws_config
+            and WorkspaceConfig.CONF_WS_NAME_KEY in self._ws_config
+        ):
+            connection = self._ws_config[WorkspaceConfig.CONF_WS_NAME_KEY]
+        return (
+            connection
+            or self._def_connection_str
+            or self._workspace_id
+            or next(iter(self._workspace_ids), "")
+            or "AzureMonitor"
+        )
+
+    @current_connection.setter
+    def current_connection(self, value: str):
+        """Allow attrib to be set but ignore."""
+        del value
 
     def connect(self, connection_str: Optional[str] = None, **kwargs):
         """
@@ -406,6 +434,7 @@ class AzureMonitorDriver(DriverBase):
                 help_uri=_HELP_URL,
             )
         self._ws_config = ws_config
+        self._ws_name = workspace_name or ws_config.workspace_id
         if not self._az_tenant_id and WorkspaceConfig.CONF_TENANT_ID_KEY in ws_config:
             self._az_tenant_id = ws_config[WorkspaceConfig.CONF_TENANT_ID_KEY]
         self._workspace_id = ws_config[WorkspaceConfig.CONF_WS_ID_KEY]
