@@ -8,7 +8,7 @@ from datetime import datetime
 from functools import partial
 from itertools import tee
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
 from tqdm.auto import tqdm
@@ -94,7 +94,9 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         # pylint: enable=import-outside-toplevel
         setattr(self.__class__, "_add_pivots", add_data_queries_to_entities)
 
-        data_environment = self._check_environment(data_environment)
+        data_environment, self.environment_name = self._check_environment(
+            data_environment
+        )
 
         self._driver_kwargs = kwargs.copy()
         if driver is None:
@@ -107,11 +109,10 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
                 )
         else:
             self.driver_class = driver.__class__
-        # allow the driver to override the data environment used
-        # for selecting queries
-        self.environment = (
-            driver.get_driver_property(DriverProps.EFFECTIVE_ENV)
-            or data_environment.name
+        # allow the driver to override the data environment used for selecting queries
+        self.environment_name = (
+            self.driver.get_driver_property(DriverProps.EFFECTIVE_ENV)
+            or self.environment_name
         )
 
         self._additional_connections: Dict[str, DriverBase] = {}
@@ -128,25 +129,31 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
                 self._read_queries_from_paths(query_paths=query_paths)
             )
         self.query_store = data_env_queries.get(
-            self.environment, QueryStore(self.environment)
+            self.environment_name, QueryStore(self.environment_name)
         )
         self._add_query_functions()
         self._query_time = QueryTime(units="day")
 
-    def _check_environment(self, data_environment):
+    def _check_environment(
+        self, data_environment
+    ) -> Tuple[Union[str, DataEnvironment], str]:
         """Check environment against known names."""
         if isinstance(data_environment, str):
             data_env = DataEnvironment.parse(data_environment)
             if data_env != DataEnvironment.Unknown:
                 data_environment = data_env
-                self.environment = data_environment.name
+                environment_name = data_environment.name
             elif data_environment in drivers.CUSTOM_PROVIDERS:
-                self.environment = data_environment
+                environment_name = data_environment
             else:
                 raise TypeError(f"Unknown data environment {data_environment}")
+        elif isinstance(data_environment, DataEnvironment):
+            environment_name = data_environment.name
         else:
-            data_env = data_environment
-        return data_environment
+            raise TypeError(
+                f"Unknown data environment type {data_environment} ({type(data_environment)})"
+            )
+        return data_environment, environment_name
 
     def __getattr__(self, name):
         """Return the value of the named property 'name'."""
@@ -313,7 +320,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         for def_qry_path in settings.get("Default"):  # type: ignore
             # only read queries from environment folder
             builtin_qry_paths = self._get_query_folder_for_env(
-                def_qry_path, self.environment
+                def_qry_path, self.environment_name
             )
             all_query_paths.extend(
                 str(qry_path) for qry_path in builtin_qry_paths if qry_path.is_dir()
@@ -336,7 +343,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
                 driver_query_filter=self._query_provider.query_attach_spec,
             )
         # if no queries - just return an empty store
-        return {self.environment: QueryStore(self.environment)}
+        return {self.environment_name: QueryStore(self.environment_name)}
 
     def _add_query_functions(self):
         """Add queries to the module as callable methods."""
