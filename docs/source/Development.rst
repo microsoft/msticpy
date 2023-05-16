@@ -4,7 +4,7 @@ MSTICPy Development Guidelines
 Contributions of improvements, fixes and new features are all
 welcomed. Whether this is your first time contributing to a
 project or you are a seasoned Open-Source contributor,
-we welcome you contribution. In this guide you can find a few
+we welcome your contribution. In this guide you can find a few
 pointers to help you create a great contribution.
 
 What to contribute
@@ -42,9 +42,9 @@ Whilst there is no one thing that makes a contribution good here are some guidel
 
 Scope
 ~~~~~
-Focus your contribution on a single thing per PR raised, whether it
+Focus your contribution on a single thing per PR (Pull Request) raised, whether it
 be a feature or a fix. If you have multiple things you want to contribute,
-consider splitting them into multiple PRs. Keeping as PR to a single item
+consider splitting them into multiple PRs. Keeping each PR to a single item
 makes it easier for others to see what you are contributing and how it
 fits with the rest of the project.
 
@@ -65,7 +65,7 @@ Using Git
 ---------
 To contribute you will need to fork the MSTICPy repo.
 **Create a branch** for your contribution, make the code changes
-and then raise a Pull Request (PR) to merge the changes back into
+and then raise a PR to merge the changes back into
 MSTICPy's main branch. Please *do not* make changes to `main` of your
 fork and submit this as a PR.
 You should also consider granting permission on your fork so that

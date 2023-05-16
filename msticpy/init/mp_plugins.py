@@ -69,7 +69,7 @@ _PLUGIN_TYPES = {
 
 def read_plugins(plugin_paths: Union[str, Iterable[str]]):
     """Load plugins from folders specified in msticpyconfig.yaml."""
-    plugin_config = [plugin_paths] if isinstance(plugin_paths, str) else plugin_paths
+    plugin_config = [plugin_paths] if isinstance(plugin_paths, list) else plugin_paths
     if not plugin_config:
         with contextlib.suppress(KeyError):
             plugin_config = get_config(_PLUGIN_KEY)

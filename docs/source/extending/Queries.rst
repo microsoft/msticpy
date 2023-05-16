@@ -495,8 +495,10 @@ want to have the automatically imported into a Query Provider's query
 store at initialization you can specify a directory containing these
 queries in the msticpyconfig.yaml file under QueryDefinitions: Custom:
 
-For example, if I have a folders with queries in two folders
-I would set the config file to the following:
+For example, if you have two folders with queries in each that
+you want to load, add entries for each to your msticpyconfig.yaml file.
+
+Example:
 
 .. code:: yaml
 

@@ -8,7 +8,7 @@ MSTICPy has several extensibility points. These range from adding
 parameterized queries to writing your own data provider or
 context provider.
 
-Some of these require coding, while others are can be done
+Some of these require coding, while others can be done
 by creating YAML configuration files. For Data Providers and
 Context/TI providers there is also a plugin model that allows
 you to create private providers and load them from a local

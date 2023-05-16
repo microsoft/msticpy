@@ -61,8 +61,10 @@ class. E.g.
 
 By default, the name used to load your provider will be
 name of your provider class. You can customize this by adding
-a ``DATA_PROVIDERS`` attribute to your class. This should
-be a list of strings.
+a ``DATA_ENVIRONMENTS`` (list or tuple) attribute to your class. This should
+be a list of strings. You can load your driver in the QueryProvider
+by supplying any of the names in this list or tuple.
+If you also want to use the name of the class, add it to the list.
 
 .. code:: python3
 

@@ -437,7 +437,7 @@ parse_results method
 ~~~~~~~~~~~~~~~~~~~~
 
 This method is used only to extract details - unlike the TI providers, there
-is no severity scoring. It should a tuple of (*Success*, *Details*) - where
+is no severity scoring. It should be a tuple of (*Success*, *Details*) - where
 *Success* is a boolean and *Details* is (usually) a Python dict.
 *Details* can be any Python object but will ultimately be returned to the
 user as a pandas DataFrame column, so should be something that

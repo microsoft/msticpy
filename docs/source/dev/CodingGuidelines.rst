@@ -8,8 +8,8 @@ We use pytest although some of the older tests are in
 Python `unittest` format.
 
 Avoid making any calls to internet services in your unit tests.
-If your feature does this, make sure that the unit tests mocks
-a sample response. We use httpx for all our http requests -
+If your feature connects to a live service, make sure that your unit tests mock
+the sample responses expected. We use httpx for all our http requests -
 you can use `respx <https://pypi.org/project/respx/>`__ to mock
 http responses (search for "@respx" in our tests to see examples
 of how this works).
@@ -18,6 +18,23 @@ Ensure your contribution has the highest possible of test coverage.
 You should aim for a least 80% coverage and ideally reach 100%.
 If you can't reach 80% for what ever reason let us know when you
 raise a PR and we can work with you on this.
+
+You can map your test coverage using the following command:
+
+.. code:: bash
+
+   pytest --cov=msticpy --cov-report=html
+
+This will create a folder called htmlcov in your current directory. Open
+the index.html file in this folder to see the coverage report.
+
+You can also execute a subset of tests and check the coverage for
+the areas of code that you are interesting in testing.
+
+.. code:: bash
+
+    pytest --cov=msticpy.data.drivers --cov-report=html tests/data/drivers/test_xyz_driver.py
+
 
 Type hints
 ----------

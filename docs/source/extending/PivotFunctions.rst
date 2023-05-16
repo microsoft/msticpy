@@ -11,7 +11,7 @@ either scalar values (I'm including strings in this although that isn't
 exactly correct), iterables or DataFrames with column specifications.
 
 You can create a persistent pivot function definition (that
-will can be loaded from a yaml file) or an ad hoc definition
+can be loaded from a yaml file) or an ad hoc definition
 that you can create in code. The next two sections
 describe creating a persistent function definition. Programmatically
 creating pivots follows this.
@@ -107,7 +107,7 @@ parameters.
 DataFrame. In order to *join* input data with output data this needs to be
 the column in the output that has the same value as the function input
 For example, if your function processes IP addresses and returns the IP
-in a column is named "ip_addr", put "ip_addr" as the value of ``func_out_column_name``.
+in a column named "ip_addr", put "ip_addr" as the value of ``func_out_column_name``.
 
 Adding ad hoc pivot functions in code
 -------------------------------------
