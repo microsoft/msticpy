@@ -16,6 +16,8 @@ from msticpy.context.tilookup import TILookup
 from msticpy.data import QueryProvider
 from msticpy.init.pivot import Pivot
 
+from ...unit_test_lib import custom_mp_config, get_test_data_path
+
 __author__ = "Ian Hellen"
 
 # pylint: disable=redefined-outer-name, protected-access
@@ -33,6 +35,7 @@ with contextlib.suppress(ImportError):
 
     del splunk_driver
     _SPLUNK_IMP_OK = True
+
 _IPSTACK_IMP_OK = False
 ip_stack_cls: Optional[type]
 try:
@@ -55,18 +58,21 @@ def exec_connect(provider):
 def create_data_providers():
     """Return dict of providers."""
     prov_dict = {}
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=UserWarning)
-        if _KQL_IMP_OK:
-            prov_dict["az_sent_prov"] = QueryProvider("MSSentinel")
-        prov_dict["mdatp_prov"] = QueryProvider("MDE")
-        if _SPLUNK_IMP_OK:
-            prov_dict["splunk_prov"] = QueryProvider("Splunk")
-        prov_dict["ti_lookup"] = TILookup()
-        prov_dict["geolite"] = GeoLiteLookup()
+    with custom_mp_config(
+        get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
+    ):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            if _KQL_IMP_OK:
+                prov_dict["az_sent_prov"] = QueryProvider("MSSentinel")
+            prov_dict["mdatp_prov"] = QueryProvider("MDE")
+            if _SPLUNK_IMP_OK:
+                prov_dict["splunk_prov"] = QueryProvider("Splunk")
+            prov_dict["ti_lookup"] = TILookup()
+            prov_dict["geolite"] = GeoLiteLookup()
 
-    if _IPSTACK_IMP_OK:
-        prov_dict["ip_stack"] = ip_stack_cls()
+        if _IPSTACK_IMP_OK:
+            prov_dict["ip_stack"] = ip_stack_cls()
     return prov_dict
 
 
@@ -96,3 +102,16 @@ def create_pivot(data_providers):
         if isinstance(provider, QueryProvider):
             exec_connect(provider)
     return pivot
+
+
+# @pytest.fixture
+# def create_pivot(data_providers):
+#     """Return Pivot instance with initialized data providers."""
+#     with warnings.catch_warnings():
+#         warnings.simplefilter("ignore", category=UserWarning)
+#         pivot = Pivot(namespace=data_providers)
+#         pivot.reload_pivots(namespace=data_providers, clear_existing=True)
+#     for provider in data_providers.values():
+#         if isinstance(provider, QueryProvider):
+#             exec_connect(provider)
+#     return pivot
