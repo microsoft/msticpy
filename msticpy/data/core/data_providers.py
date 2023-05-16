@@ -164,6 +164,11 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
                 return getattr(parent, child_name)
         raise AttributeError(f"{name} is not a valid attribute.")
 
+    @property
+    def environment(self) -> str:
+        """Return the environment name."""
+        return self.environment_name
+
     def connect(self, connection_str: Optional[str] = None, **kwargs):
         """
         Connect to data source.
