@@ -62,21 +62,23 @@ def custom_mp_config(
         raise FileNotFoundError(f"Setting MSTICPYCONFIG to non-existent file {mp_path}")
     _lock_file_path = "./.mp_settings.lock"
     try:
-        # We need to lock the settings since these are global
-        # Otherwise the tests interfere with each other.
         with FileLock(_lock_file_path):
-            os.environ[pkg_config._CONFIG_ENV_VAR] = str(mp_path)
-            pkg_config.refresh_config()
-            yield pkg_config._settings
+            try:
+                # We need to lock the settings since these are global
+                # Otherwise the tests interfere with each other.
+                os.environ[pkg_config._CONFIG_ENV_VAR] = str(mp_path)
+                pkg_config.refresh_config()
+                yield pkg_config._settings
+            finally:
+                if not current_path:
+                    del os.environ[pkg_config._CONFIG_ENV_VAR]
+                else:
+                    os.environ[pkg_config._CONFIG_ENV_VAR] = current_path
+                pkg_config.refresh_config()
     finally:
-        if not current_path:
-            del os.environ[pkg_config._CONFIG_ENV_VAR]
-        else:
-            os.environ[pkg_config._CONFIG_ENV_VAR] = current_path
         if Path(_lock_file_path).is_file():
             with suppress(Exception):
                 Path(_lock_file_path).unlink()
-        pkg_config.refresh_config()
 
 
 @contextmanager
