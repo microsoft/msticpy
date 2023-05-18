@@ -13,6 +13,7 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+import logging
 
 import attr
 import httpx
@@ -26,36 +27,68 @@ __author__ = "Jannie Li"
 
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=consider-using-with
-# pylint: disable=broad-exception-caught
 # pylint: disable=too-many-locals
 # pylint: disable=unspecified-encoding
 
 
-@attrs
+QUERY_METADATA_SECTION = [
+    "name",
+    "severity",
+    "tags",
+    "required_data_connectors",
+    "query_frequency",
+    "query_period",
+    "trigger_operator",
+    "trigger_threshold",
+    "tactics",
+    "relevant_techniques",
+    "entity_mappings",
+    "custom_details",
+    "alert_details_override",
+    "version",
+    "kind",
+    "folder_name",
+    "source_file_name",
+    "query_type",
+]
+
+
+QUERY_DEFAULT_PARAMETER_SECTION = {
+    "add_query_items": {
+        "description": "Additional query clauses",
+        "type": "str",
+        "default": "",
+    },
+    "start": {"description": "Query start time", "type": "datetime"},
+    "end": {"description": "Query end time", "type": "datetime"},
+}
+
+
+@attrs(auto_attribs=True)
 class SentinelQuery:
     """Attrs class that represents a Sentinel Query yaml file."""
 
-    query_id: str = attrib(factory=str)
-    name: str = attrib(factory=str)
-    description: str = attrib(factory=str)
-    severity: str = attrib(factory=str)
-    tags: dict = attrib(factory=list)
-    required_data_connectors: dict = attrib(factory=dict)
-    query_frequency: str = attrib(factory=str)
-    query_period: str = attrib(factory=str)
-    trigger_operator: str = attrib(factory=str)
-    trigger_threshold: str = attrib(factory=str)
-    tactics: list = attrib(factory=list)
-    relevant_techniques: list = attrib(factory=list)
-    query: str = attrib(factory=str)
-    entity_mappings: dict = attrib(factory=dict)
-    custom_details: dict = attrib(factory=dict)
-    alert_details_override: dict = attrib(factory=dict)
-    version: str = attrib(factory=str)
-    kind: str = attrib(factory=str)
-    folder_name: str = attrib(factory=str)
-    source_file_name: str = attrib(factory=str)
-    query_type: str = attrib(factory=str)
+    query_id: str
+    name: str
+    description: str
+    severity: str
+    query_frequency: str
+    query_period: str
+    trigger_operator: str
+    trigger_threshold: str
+    version: str
+    kind: str
+    folder_name: str
+    source_file_name: str
+    query_type: str
+    tactics: list = attr.Factory(list)
+    relevant_techniques: list = attr.Factory(list)
+    query: str = attr.Factory(str)
+    entity_mappings: dict = attr.Factory(dict)
+    custom_details: dict = attr.Factory(dict)
+    alert_details_override: dict = attr.Factory(dict)
+    tags: list = attr.Factory(list)
+    required_data_connectors: dict = attr.Factory(dict)
 
 
 def get_sentinel_queries_from_github(
@@ -136,7 +169,7 @@ def read_yaml_files(parent_dir: str, child_dir: str) -> dict:
 
     """
     # enumerate the files and read the yaml
-    yaml_queries = glob.glob(f"{parent_dir}/{child_dir}/**/*.yaml", recursive=True)
+    yaml_queries = Path(parent_dir, child_dir).rglob("*.yaml")
     yaml_queries = [str(Path(q)) for q in yaml_queries]
     parsed_query_dict = {}
 
@@ -191,43 +224,35 @@ def _import_sentinel_query(
         Returns an attrs object called SentinelQuery with all the YAML query information
 
     """
+    logger = logging.getLogger(__name__)
     try:
         parsed_yaml_dict = yaml.load(yaml_text, Loader=yaml.SafeLoader)
-        new_query = SentinelQuery(
-            name=parsed_yaml_dict.get("name"),
-            query_id=parsed_yaml_dict.get("id", ""),
-            description=parsed_yaml_dict.get("description", ""),
-            severity=parsed_yaml_dict.get("severity", ""),
-            tags=parsed_yaml_dict.get("tags_entry", []),
-            required_data_connectors=parsed_yaml_dict.get("requiredDataConnectors", {}),
-            query_frequency=parsed_yaml_dict.get("queryFrequency", ""),
-            query_period=parsed_yaml_dict.get("queryPeriod", ""),
-            trigger_operator=parsed_yaml_dict.get("triggerOperator", ""),
-            trigger_threshold=parsed_yaml_dict.get("triggerThreshold", ""),
-            tactics=parsed_yaml_dict.get("tactics", ""),
-            relevant_techniques=parsed_yaml_dict.get("relevantTechniques", []),
-            query=parsed_yaml_dict.get("query", ""),
-            version=parsed_yaml_dict.get("version", ""),
-            kind=parsed_yaml_dict.get("kind", ""),
-            folder_name=yaml_path.replace("\\", "/").split("/")[-2],
-            source_file_name=yaml_path,
-            query_type=query_type,
-        )
-        if new_query is None:
-            print("No info for query - query is None")
-            print(yaml_path)
-            print(yaml_text)
-        return new_query
-
-    except Exception as error:
-        print(
-            """Failed - either YAML error or issue with creating attrs class. See error,
-            path to the file, and text below."""
-        )
-        print(error)
-        print("path:", yaml_path)
-        print("text:", yaml_text)
+    except yaml.YAMLError as error:
+        logger.warning(f"Failed to parse yaml for {yaml_path}")
+        logger.warning(error)
         return SentinelQuery()
+
+    new_query = SentinelQuery(
+        name=parsed_yaml_dict.get("name"),
+        query_id=parsed_yaml_dict.get("id", ""),
+        description=parsed_yaml_dict.get("description", ""),
+        severity=parsed_yaml_dict.get("severity", ""),
+        tags=parsed_yaml_dict.get("tags_entry", []),
+        required_data_connectors=parsed_yaml_dict.get("requiredDataConnectors", {}),
+        query_frequency=parsed_yaml_dict.get("queryFrequency", ""),
+        query_period=parsed_yaml_dict.get("queryPeriod", ""),
+        trigger_operator=parsed_yaml_dict.get("triggerOperator", ""),
+        trigger_threshold=parsed_yaml_dict.get("triggerThreshold", ""),
+        tactics=parsed_yaml_dict.get("tactics", ""),
+        relevant_techniques=parsed_yaml_dict.get("relevantTechniques", []),
+        query=parsed_yaml_dict.get("query", ""),
+        version=parsed_yaml_dict.get("version", ""),
+        kind=parsed_yaml_dict.get("kind", ""),
+        folder_name=yaml_path.replace("\\", "/").split("/")[-2],
+        source_file_name=yaml_path,
+        query_type=query_type,
+    )
+    return new_query
 
 
 def _format_query_name(qname: str) -> str:
@@ -271,7 +296,7 @@ def _organize_query_list_by_folder(query_list: list) -> dict:
     queries_by_folder = {}
     for query in query_list:
         if query.folder_name == "":
-            print(query)
+            warnings.warn(f"query {query} has no folder_name")
         if query.folder_name not in queries_by_folder:
             queries_by_folder[query.folder_name] = [query]
         else:
@@ -306,6 +331,34 @@ def _create_queryfile_metadata(folder_name: str) -> dict:  # type: ignore
     return dict_to_write
 
 
+def _create_yaml_source_sec(cur_query: dict) -> dict:
+    """
+    Create the metadata section of the YAML for the current query.
+
+    Parameters
+    ----------
+    cur_query : dict
+        The name of the folder you want the written YAML files to be stored in
+
+    Returns
+    -------
+    dict
+        Returns generated metadata section of the YAML for the given individual query.
+
+    """
+    source_dict = {}
+    source_dict["description"] = cur_query.description
+    source_dict["metadata"] = {}
+    source_dict["metadata"]["sentinel"] = {"query_id": cur_query.query_id}
+    cur_query_dict = attr.asdict(cur_query)
+    for section in QUERY_METADATA_SECTION:
+        source_dict["metadata"][section] = cur_query_dict[section]
+    source_dict["metadata"]["args"] = {}
+    source_dict["metadata"]["args"]["query"] = cur_query.query
+    source_dict["metadata"]["parameters"] = {}
+    return source_dict
+
+
 def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool:
     """
     Write out generated YAML files of the given query_list into the given output_folder.
@@ -325,76 +378,30 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
         True if succeeded; False if an error occurred
 
     """
+    logger = logging.getLogger(__name__)
     query_dict_by_folder = _organize_query_list_by_folder(query_list)
     all_folders = query_dict_by_folder.keys()
 
     for source_folder in all_folders:
-        print("now writing files from folder " + source_folder)
+        logger.info(f"now writing files from {source_folder}")
         dict_to_write = _create_queryfile_metadata(source_folder)
 
         if query_type == "Detections":
-            dict_to_write["defaults"]["parameters"] = {
-                "add_query_items": {
-                    "description": "Additional query clauses",
-                    "type": "str",
-                    "default": "",
-                },
-                "start": {"description": "Query start time", "type": "datetime"},
-                "end": {"description": "Query end time", "type": "datetime"},
-            }  # what are these
+            dict_to_write["defaults"]["parameters"] = QUERY_DEFAULT_PARAMETER_SECTION
 
         for cur_query in query_dict_by_folder[source_folder]:
             # skipping instances where there is no name but should probably have a better solution
             try:
                 formatted_qname = _format_query_name(cur_query.name)
-                dict_to_write["sources"][formatted_qname] = {}
-                dict_to_write["sources"][formatted_qname][
-                    "description"
-                ] = cur_query.description
-                dict_to_write["sources"][formatted_qname]["metadata"] = {}
-                dict_to_write["sources"][formatted_qname]["metadata"]["sentinel"] = {
-                    "query_id": cur_query.query_id
-                }
-                metadata_sections = [
-                    "name",
-                    "severity",
-                    "tags",
-                    "required_data_connectors",
-                    "query_frequency",
-                    "query_period",
-                    "trigger_operator",
-                    "trigger_threshold",
-                    "tactics",
-                    "relevant_techniques",
-                    "entity_mappings",
-                    "custom_details",
-                    "alert_details_override",
-                    "version",
-                    "kind",
-                    "folder_name",
-                    "source_file_name",
-                    "query_type",
-                ]
-                cur_query_dict = attr.asdict(cur_query)
-                for section in metadata_sections:
-                    dict_to_write["sources"][formatted_qname]["metadata"][
-                        section
-                    ] = cur_query_dict[section]
-                dict_to_write["sources"][formatted_qname]["metadata"]["args"] = {}
-                dict_to_write["sources"][formatted_qname]["metadata"]["args"][
-                    "query"
-                ] = cur_query.query
-                dict_to_write["sources"][formatted_qname]["metadata"]["parameters"] = {}
-
-            except Exception as format_error:
-                print(
-                    """Failed to format query name - see error and source folder as well as
-                    current_query below"""
+                dict_to_write["sources"][formatted_qname] = _create_yaml_source_sec(
+                    cur_query
                 )
-                print(format_error)
-                print("source_folder", source_folder)
-                print(cur_query)
-                print()
+
+            except TypeError as err:
+                logger.warning(
+                    f"Query name is most likely None at {source_folder} for current query {cur_query}"
+                )
+                print(err)
 
         try:
             query_text = yaml.safe_dump(
@@ -406,47 +413,52 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
 
         try:
             def_path = Path.joinpath(Path(os.getcwd()))
-            path_main = os.path.join(def_path, output_folder + "/")
-            path_type = os.path.join(output_folder + "/" + query_type)
-            if not os.path.exists(path_main):
-                path = os.path.join(def_path, output_folder)
+            path_main = Path(def_path, output_folder)
+            path_type = Path(output_folder, query_type)
+            if not path_main.is_dir():
+                path = Path(def_path, output_folder)
                 os.mkdir(path)
-            if not os.path.exists(path_type):
-                path = os.path.join(output_folder, query_type)
+            if not path_type.is_dir():
+                path = Path(output_folder, query_type)
                 os.mkdir(path)
-            Path(
-                output_folder + "/" + query_type + "/" + source_folder + ".yaml"
-            ).write_text(query_text.decode("utf-8"))
+            Path(output_folder, query_type, source_folder).write_text(
+                query_text.decode("utf-8")
+            )
         except OSError as error:
             print(error)
             return False
-    print("done writing query files")
+    logger.info("done writing files")
     return True
 
 
-def import_and_write_sentinel_queries(
-    base_dir: str, query_type: str, output_folder: str
+def download_and_write_sentinel_queries(
+    query_type: str, yaml_output_folder: str, github_outputdir: Optional[str] = None
 ):
     """
-    Write out YAML files for the given query_type.
+    Download queries from GitHub and write out YAML files for the given query type.
 
     Parameters
     ----------
-    base_dir : str
-        Path to the directory storing the folders containing the original query YAML files;
-        most likely the downloaded Github repo's location
     query_type : str
         Either "Hunting Queries" or "Detections" or otherwise named query category
-    output_folder : str
+    yaml_output_folder : str
         Path to the folder you want the new generated YAML files to be stored in
-
+    github_outputdir : Optional[str]
+        Path to the directory you want the Github download to be stored in
     """
-    print("read yaml_files")
+    print("Downloading files from GitHub")
+    get_sentinel_queries_from_github(outputdir=github_outputdir)
+    print("Reading yaml_files")
+    if github_outputdir == None:
+        github_outputdir = Path.joinpath(
+            Path("~").expanduser(), ".msticpy", "Azure-Sentinel"
+        )
+    base_dir = Path(github_outputdir, "/Azure-Sentinel-master")
     yaml_files = read_yaml_files(parent_dir=base_dir, child_dir=query_type)
-    print("get query_list")
+    print("Generating a list of queries")
     query_list = import_sentinel_queries(yaml_files, query_type=query_type)
     query_list = [
         query for query in query_list if query.query_id != ""
     ]  # may need better solution for failed query definitions
-    print("write out")
-    write_to_yaml(query_list, query_type, output_folder)
+    print("Writing to YAML output folder")
+    write_to_yaml(query_list, query_type, yaml_output_folder)
