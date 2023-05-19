@@ -11,7 +11,7 @@ import warnings
 import zipfile
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict
 import logging
 
 import attr
@@ -330,7 +330,7 @@ def _create_queryfile_metadata(folder_name: str) -> dict:  # type: ignore
     return dict_to_write
 
 
-def _create_yaml_source_sec(cur_query: SentinelQuery) -> dict:
+def _create_yaml_source_sec(cur_query: SentinelQuery) -> Dict[str, str]:
     """
     Create the metadata section of the YAML for the current query.
 
