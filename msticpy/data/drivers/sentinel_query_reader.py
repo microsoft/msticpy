@@ -169,10 +169,10 @@ def read_yaml_files(parent_dir: str, child_dir: str) -> dict:
     """
     # enumerate the files and read the yaml
     yaml_queries = list(Path(parent_dir, child_dir).rglob("*.yaml"))
-    yaml_queries = [str(Path(q)) for q in yaml_queries]
+    yaml_queries_list = [str(Path(q)) for q in yaml_queries]
     parsed_query_dict = {}
 
-    for query in yaml_queries:
+    for query in yaml_queries_list:
         with open(query, encoding="utf8", errors="ignore") as opened_query_file:
             parsed_query_dict[query] = opened_query_file.read()
 
@@ -336,8 +336,8 @@ def _create_yaml_source_sec(cur_query: SentinelQuery) -> dict:
 
     Parameters
     ----------
-    cur_query : dict
-        The name of the folder you want the written YAML files to be stored in
+    cur_query : SentinelQuery
+        The current SentinelQuery attrs object that a metadata section will be generated for.
 
     Returns
     -------
@@ -346,7 +346,7 @@ def _create_yaml_source_sec(cur_query: SentinelQuery) -> dict:
 
     """
     source_dict = {}
-    source_dict["description"] = cur_query.description
+    source_dict["description"] = str(cur_query.description)
     source_dict["metadata"] = {}
     source_dict["metadata"]["sentinel"] = {"query_id": cur_query.query_id}
     cur_query_dict = attr.asdict(cur_query)
