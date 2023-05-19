@@ -5,7 +5,6 @@
 # --------------------------------------------------------------------------
 """Github Sentinel Query repo import class and helpers."""
 
-import glob
 import os
 import re
 import warnings
@@ -18,7 +17,7 @@ import logging
 import attr
 import httpx
 import yaml
-from attr import attrib, attrs
+from attr import attrs
 from tqdm.notebook import tqdm
 from ..._version import VERSION
 
@@ -228,7 +227,7 @@ def _import_sentinel_query(
     try:
         parsed_yaml_dict = yaml.load(yaml_text, Loader=yaml.SafeLoader)
     except yaml.YAMLError as error:
-        logger.warning(f"Failed to parse yaml for {yaml_path}")
+        logger.warning("Failed to parse yaml for %s", yaml_path)
         logger.warning(error)
         return SentinelQuery()
 
@@ -383,7 +382,7 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
     all_folders = query_dict_by_folder.keys()
 
     for source_folder in all_folders:
-        logger.info(f"now writing files from {source_folder}")
+        logger.info("now writing files from %s", source_folder)
         dict_to_write = _create_queryfile_metadata(source_folder)
 
         if query_type == "Detections":
@@ -399,7 +398,8 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
 
             except TypeError as err:
                 logger.warning(
-                    f"Query name is most likely None at {source_folder} for current query {cur_query}"
+                    """Query name is most likely None at %s for 
+                    current query %r""", source_folder, cur_query
                 )
                 print(err)
 
@@ -449,7 +449,7 @@ def download_and_write_sentinel_queries(
     print("Downloading files from GitHub")
     get_sentinel_queries_from_github(outputdir=github_outputdir)
     print("Reading yaml_files")
-    if github_outputdir == None:
+    if github_outputdir is None:
         github_outputdir = Path.joinpath(
             Path("~").expanduser(), ".msticpy", "Azure-Sentinel"
         )
