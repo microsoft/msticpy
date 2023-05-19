@@ -76,21 +76,21 @@ specific folders or files that you want to read.
 
     qry_prov = mp.QueryProvider("VelociraptorLogs", data_paths=["~/my_logs"])
 
-Calling the ``connect`` method triggers the provider to read the
-log files.
+Calling the ``connect`` method triggers the provider to register the paths of the
+log files to be read (although the log files are not read and parsed
+until the related query is run - see below).
 
 .. code::ipython3
 
     qry_prov.connect()
 
-.. parsed-literal::
-
-    100%|██████████| 2/2 [00:00<00:00, 25.01it/s]
-    Data loaded.
 
 
 Listing Velociraptor tables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Until you run ``connect`` no queries will be available. After running
+``connect`` you can list the available queries using the ``list_queries``
 
 .. code:: ipython3
 
@@ -116,6 +116,10 @@ Listing Velociraptor tables
 Querying Velociraptor table schema
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+The schema of the log tables is built by sampling the first record
+from each log file type, so is relatively fast to retrieve even
+if you have large numbers and sizes of logs.
+
 .. code:: ipython3
 
     vc_prov.schema["Windows_Network_InterfaceAddresses"]
@@ -133,8 +137,9 @@ Querying Velociraptor table schema
 Running a Velociraptor query
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Each query returns the table of event types retrieved
-from the logs.
+Each query returns a pandas DataFrame retrieved
+from the logs of that type (potentially containing records from
+multiple hosts depending on the ``data_paths`` you specified).
 
 .. code:: python3
 
