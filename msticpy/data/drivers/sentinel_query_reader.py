@@ -346,14 +346,13 @@ def _create_yaml_source_sec(cur_query: dict) -> dict:
 
     """
     source_dict = {}
-    source_dict["description"] = cur_query.description
+    source_dict["description"] = cur_query["description"]
     source_dict["metadata"] = {}
-    source_dict["metadata"]["sentinel"] = {"query_id": cur_query.query_id}
-    cur_query_dict = attr.asdict(cur_query)
+    source_dict["metadata"]["sentinel"] = {"query_id": cur_query["query_id"]}
     for section in QUERY_METADATA_SECTION:
-        source_dict["metadata"][section] = cur_query_dict[section]
+        source_dict["metadata"][section] = cur_query[section]
     source_dict["metadata"]["args"] = {}
-    source_dict["metadata"]["args"]["query"] = cur_query.query
+    source_dict["metadata"]["args"]["query"] = cur_query["query"]
     source_dict["metadata"]["parameters"] = {}
     return source_dict
 
