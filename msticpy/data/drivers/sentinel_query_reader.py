@@ -67,19 +67,19 @@ QUERY_DEFAULT_PARAMETER_SECTION = {
 class SentinelQuery:
     """Attrs class that represents a Sentinel Query yaml file."""
 
-    query_id: str
-    name: str
-    description: str
-    severity: str
-    query_frequency: str
-    query_period: str
-    trigger_operator: str
-    trigger_threshold: str
-    version: str
-    kind: str
-    folder_name: str
-    source_file_name: str
-    query_type: str
+    query_id: str = attr.Factory(str)
+    name: str = attr.Factory(str)
+    description: str = attr.Factory(str)
+    severity: str = attr.Factory(str)
+    query_frequency: str = attr.Factory(str)
+    query_period: str = attr.Factory(str)
+    trigger_operator: str = attr.Factory(str)
+    trigger_threshold: str = attr.Factory(str)
+    version: str = attr.Factory(str)
+    kind: str = attr.Factory(str)
+    folder_name: str = attr.Factory(str)
+    source_file_name: str = attr.Factory(str)
+    query_type: str = attr.Factory(str)
     tactics: list = attr.Factory(list)
     relevant_techniques: list = attr.Factory(list)
     query: str = attr.Factory(str)
