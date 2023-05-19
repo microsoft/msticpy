@@ -143,7 +143,7 @@ class SecretsClient:
         self, setting_path: str
     ) -> Tuple[Optional[str], Optional[str]]:
         """Return the vault and secret name for a config path."""
-        setting_item = config.get_config(setting_path)
+        setting_item = config.get_config(setting_path, None)
 
         if not isinstance(setting_item, dict):
             return None, str(setting_item)

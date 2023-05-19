@@ -4,12 +4,15 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree Visualization."""
-from typing import Any, Dict, Optional, Union
+import textwrap
+from collections import Counter
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import pandas as pd
 
 from .._version import VERSION
 from .proc_tree_schema import ColNames as Col
+from .proc_tree_schema import ProcSchema
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -365,3 +368,126 @@ def get_summary_info(procs: pd.DataFrame) -> Dict[str, int]:
     summary["IsolatedProcesses"] = len(procs[(procs["IsRoot"]) & (procs["IsLeaf"])])
     summary["LargestTreeDepth"] = procs["path"].str.count("/").max() + 1
     return summary
+
+
+class TemplateLine(NamedTuple):
+    """
+    Template definition for a line in text process tree.
+
+    Notes
+    -----
+    The items attribute must be a list of tuples, where each
+    tuple is (<display_name>, <column_name>).
+
+    """
+
+    items: List[Tuple[str, str]] = []
+    wrap: int = 80
+
+
+def tree_to_text(
+    procs: pd.DataFrame,
+    schema: Optional[Union[ProcSchema, Dict[str, str]]] = None,
+    template: Optional[List[TemplateLine]] = None,
+    sort_column: str = "path",
+    wrap_column: int = 0,
+) -> str:
+    """
+    Return text rendering of process tree.
+
+    Parameters
+    ----------
+    procs : pd.DataFrame
+        The process tree DataFrame.
+    schema : Optional[Union[ProcSchema, Dict[str, str]]], optional
+        The schema to use for mapping the DataFrame column
+        names, by default None
+    template : Optional[List[TemplateLine]], optional
+        A manually created template to use to create the node
+        formatting, by default None
+    sort_column : str, optional
+        The column to sort the DataFrame by, by default "path"
+    wrap_column : int, optional
+        Override any template-specified wrap limit, by default 0
+
+    Returns
+    -------
+    str
+        The formatted process tree string.
+
+    Raises
+    ------
+    ValueError
+        If neither of
+    """
+    if not schema and not template:
+        raise ValueError(
+            "One of 'schema' and 'template' must be supplied", "as parameters."
+        )
+    template = template or _create_proctree_template(schema)  # type: ignore
+    output: List[str] = []
+    for _, row in procs.sort_values(sort_column).iterrows():
+        depth_count = Counter(row.path).get("/", 0)
+        header = _node_header(depth_count)
+
+        # handle first row separately since it needs a header
+        tmplt_line = template[0]
+        out_line = "  ".join(
+            f"{name}: {row[col]}" if name else f"{row[col]}"
+            for name, col in tmplt_line.items
+        )
+        indent = " " * len(header) + " "
+        out_line = "\n".join(
+            textwrap.wrap(
+                out_line,
+                width=wrap_column or tmplt_line.wrap,
+                subsequent_indent=indent,
+            )
+        )
+        output.append(f"{header} {out_line}\n")
+
+        # process subsequent rows
+        for tmplt_line in template[1:]:
+            out_line = "  ".join(
+                f"{name}: {row[col]}" for name, col in tmplt_line.items
+            )
+            out_line = "\n".join(
+                textwrap.wrap(
+                    out_line,
+                    width=wrap_column or tmplt_line.wrap,
+                    initial_indent=indent,
+                    subsequent_indent=indent + "   ",
+                )
+            )
+            output.extend([out_line, "\n"])
+
+    return "".join(output)
+
+
+def _create_proctree_template(
+    schema: Union[ProcSchema, Dict[str, str]]
+) -> List[TemplateLine]:
+    """Create a template from the schema."""
+    if isinstance(schema, dict):
+        schema = ProcSchema(**schema)
+    template_lines: List[TemplateLine] = [
+        TemplateLine(
+            items=[("Process", schema.process_name), ("PID", schema.process_id)]
+        ),
+        TemplateLine(items=[("Time", schema.time_stamp)]),
+    ]
+    if schema.cmd_line:
+        template_lines.append(TemplateLine(items=[("Cmdline", schema.cmd_line)]))
+    acct_items = []
+    if schema.user_id:
+        acct_items.append(("Account", schema.user_id))
+    if schema.logon_id:
+        acct_items.append(("Account", schema.logon_id))
+    if acct_items:
+        template_lines.append(TemplateLine(items=acct_items))
+    return template_lines
+
+
+def _node_header(depth_count):
+    """Return text tree node header given tree depth."""
+    return "+ " if depth_count == 0 else "   " * depth_count + "+-- "

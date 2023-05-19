@@ -44,6 +44,7 @@ https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/ConfiguringNoteboo
 """
 import importlib
 import io
+import logging
 import os
 import sys
 import traceback
@@ -51,14 +52,13 @@ import warnings
 from contextlib import redirect_stdout
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple
 
 import ipywidgets as widgets
 import pandas as pd
 from IPython import get_ipython
 from IPython.core.interactiveshell import InteractiveShell
 from IPython.display import HTML, display
-from matplotlib import MatplotlibDeprecationWarning
 
 try:
     import seaborn as sns
@@ -69,7 +69,13 @@ from .._version import VERSION
 from ..auth.azure_auth_core import AzureCliStatus, check_cli_credentials
 from ..common.check_version import check_version
 from ..common.exceptions import MsticpyException, MsticpyUserError
-from ..common.pkg_config import _HOME_PATH, get_config, refresh_config, validate_config
+from ..common.pkg_config import _HOME_PATH
+from ..common.settings import (
+    current_config_path,
+    get_config,
+    refresh_config,
+    validate_config,
+)
 from ..common.utility import (
     check_and_install_missing_packages,
     check_kwargs,
@@ -87,6 +93,8 @@ from .user_config import load_user_defaults
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+
+logger = logging.getLogger(__name__)
 
 _IMPORT_ERR_MSSG = """
 <h2><font color='red'>One or more missing packages detected</h2>
@@ -179,8 +187,6 @@ _NB_IMPORTS = [
     dict(pkg="IPython.display", tgt="Markdown"),
     dict(pkg="ipywidgets", alias="widgets"),
     dict(pkg="pathlib", tgt="Path"),
-    dict(pkg="matplotlib.pyplot", alias="plt"),
-    dict(pkg="matplotlib", tgt="MatplotlibDeprecationWarning"),
     dict(pkg="numpy", alias="np"),
 ]
 if sns is not None:
@@ -209,8 +215,6 @@ _MP_IMPORTS = [
 
 _MP_IMPORT_ALL: List[Dict[str, str]] = [
     dict(module_name="msticpy.datamodel.entities"),
-    dict(module_name="msticpy.nbtools"),
-    dict(module_name="msticpy.sectools"),
 ]
 # pylint: enable=use-dict-literal
 
@@ -325,17 +329,26 @@ def init_notebook(
         0 = No output
         1 or False = Brief output (default)
         2 or True = Detailed output
+    verbosity : int, optional
+        alias for `verbose`
     config : Optional[str]
         Use this path to load a msticpyconfig.yaml.
         Defaults are MSTICPYCONFIG env variable, home folder (~/.msticpy),
         current working directory.
     no_config_check : bool, optional
         Skip the check for valid configuration. Default is False.
-    verbosity : int, optional
+    detect_env : Union[bool, List[str]], optional
+        By default init_notebook tries to detect environments and makes
+        additional configuration changes if it finds one of the supported
+        notebook environments.
+        Passing `False` for this parameter disables environment detection.
+        Alternatively, you can pass a list of environments that you
+        want to detect. Current supported environments are 'aml' (Azure
+        Machine Learning) and 'synapse' (Azure Synapse).
 
     Raises
     ------
-    MsticpyException
+    MsticpyException :
         If extra_imports data format is incorrect.
         If package with required version check has no version
         information.
@@ -410,17 +423,20 @@ def init_notebook(
     _set_verbosity(**kwargs)
 
     _pr_output("<hr><h4>Starting Notebook initialization...</h4>")
+    logger.info("Starting Notebook initialization")
     # Check Azure ML environment
-    if is_in_aml():
+    if _detect_env("aml", **kwargs) and is_in_aml():
         check_versions_aml(*_get_aml_globals(namespace))
     else:
         # If not in AML check and print version status
         stdout_cap = io.StringIO()
         with redirect_stdout(stdout_cap):
             check_version()
-            _pr_output(stdout_cap.getvalue())
+            output = stdout_cap.getvalue()
+            _pr_output(output)
+            logger.info(output)
 
-    if is_in_synapse():
+    if _detect_env("synapse", **kwargs) and is_in_synapse():
         synapse_params = {
             key: val for key, val in kwargs.items() if key in _SYNAPSE_KWARGS
         }
@@ -433,7 +449,9 @@ def init_notebook(
         imp_ok = _global_imports(
             namespace, additional_packages, user_install, extra_imports, def_imports
         )
-        _pr_output(stdout_cap.getvalue())
+        output = stdout_cap.getvalue()
+        _pr_output(output)
+        logger.info(output)
 
     # Configuration check
     if no_config_check:
@@ -449,7 +467,7 @@ def init_notebook(
 
     # Set friendly exceptions
     if friendly_exceptions is None:
-        friendly_exceptions = get_config("msticpy.FriendlyExceptions")
+        friendly_exceptions = get_config("msticpy.FriendlyExceptions", None)
     if friendly_exceptions:
         if _VERBOSITY() == 2:  # type: ignore
             _pr_output("Friendly exceptions enabled.")
@@ -462,14 +480,18 @@ def init_notebook(
     with redirect_stdout(stdout_cap):
         _pr_output("Loading pivots.")
         _load_pivots(namespace=namespace)
-        _pr_output(stdout_cap.getvalue())
+        output = stdout_cap.getvalue()
+        _pr_output(output)
+        logger.info(output)
 
     # User defaults
     stdout_cap = io.StringIO()
     with redirect_stdout(stdout_cap):
         _pr_output("Loading user defaults.")
         prov_dict = load_user_defaults()
-        _pr_output(stdout_cap.getvalue())
+        output = stdout_cap.getvalue()
+        _pr_output(output)
+        logger.info(output)
 
     if prov_dict:
         namespace.update(prov_dict)
@@ -479,6 +501,7 @@ def init_notebook(
     # show any warnings
     _show_init_warnings(imp_ok, conf_ok)
     _pr_output("<h4>Notebook initialization complete</h4>")
+    logger.info("Notebook initialization complete")
 
 
 def _show_init_warnings(imp_ok, conf_ok):
@@ -509,6 +532,14 @@ def _set_verbosity(**kwargs):
     _VERBOSITY(verbosity)
 
 
+def _detect_env(env_name: Literal["aml", "synapse"], **kwargs):
+    """Return true if an environment should be detected."""
+    detect_opt = kwargs.get("detect_env", True)
+    if isinstance(detect_opt, bool):
+        return detect_opt
+    return env_name in detect_opt if isinstance(detect_opt, list) else True
+
+
 def list_default_imports():
     """List the default imports for `init_notebook`."""
     for imp_group in (_NB_IMPORTS, _MP_IMPORTS):
@@ -522,6 +553,7 @@ def list_default_imports():
             _pr_output(import_line)
     for imp_item in _MP_IMPORT_ALL:
         _pr_output(f"from {imp_item['module_name']} import *")
+        logger.info("from %s import *", imp_item["module_name"])
 
 
 def _extract_pkg_name(
@@ -564,37 +596,43 @@ def _global_imports(
     import_list = []
     imports, imports_all = _build_import_list(def_imports)
 
-    try:
-        for imp_pkg in imports:
+    for imp_pkg in imports:
+        try:
             _imp_from_package(nm_spc=namespace, **imp_pkg)
             import_list.append(_extract_pkg_name(imp_pkg))
-        for imp_pkg in imports_all:
+        except ImportError as imp_err:
+            display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
+            logger.exception("Import failure")
+    for imp_pkg in imports_all:
+        try:
             _imp_module_all(nm_spc=namespace, **imp_pkg)
             import_list.append(_extract_pkg_name(imp_pkg))
-        _check_and_reload_pkg(namespace, pd, _PANDAS_REQ_VERSION, "pd")
+        except ImportError as imp_err:
+            display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
+            logger.exception("Import failure")
+    _check_and_reload_pkg(namespace, pd, _PANDAS_REQ_VERSION, "pd")
 
-        if additional_packages:
-            pkg_success = check_and_install_missing_packages(
-                additional_packages, user=user_install
+    if additional_packages:
+        pkg_success = check_and_install_missing_packages(
+            additional_packages, user=user_install
+        )
+        if not pkg_success:
+            _err_output("One or more packages failed to install.")
+            _err_output(
+                "Please re-run init_notebook() with the parameter user_install=True."
             )
-            if not pkg_success:
-                _err_output("One or more packages failed to install.")
-                _err_output(
-                    "Please re-run init_notebook() with the parameter user_install=True."
-                )
-            # We want to force import lib to see anything that we've
-            # just installed.
-            importlib.invalidate_caches()
-        if extra_imports:
-            import_list.extend(
-                _import_extras(nm_spc=namespace, extra_imports=extra_imports)
-            )
+        # We want to force import lib to see anything that we've
+        # just installed.
+        importlib.invalidate_caches()
+    if extra_imports:
+        import_list.extend(
+            _import_extras(nm_spc=namespace, extra_imports=extra_imports)
+        )
 
-        _pr_output("Imported:", ", ".join(imp for imp in import_list if imp))
-        return True
-    except ImportError as imp_err:
-        display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
-        return False
+    imported_items = f"Imported:{', '.join(imp for imp in import_list if imp)}"
+    _pr_output(imported_items)
+    logger.info(imported_items)
+    return True
 
 
 def _build_import_list(
@@ -633,6 +671,7 @@ def _use_custom_config(config_file: str):
 
 def _get_or_create_config() -> bool:
     # Cases
+    # 0. Current config file exists -> return ok
     # 1. Env var set and mpconfig exists -> goto 4
     # 2. Env var set and mpconfig file not exists - warn and continue
     # 3. search_for_file finds mpconfig -> goto 4
@@ -640,13 +679,17 @@ def _get_or_create_config() -> bool:
     # 5. search_for_file(config.json)
     # 6. If aml user try to import config.json into mpconfig and save
     # 7. Error - no Microsoft Sentinel config
+    if current_config_path() is not None:
+        return True
     mp_path = os.environ.get("MSTICPYCONFIG")
     if mp_path and not Path(mp_path).is_file():
         _err_output(_MISSING_MPCONFIG_ENV_ERR)
+        logger.warning("MSTICPYCONFIG set to %s but no file found", mp_path)
     if not mp_path or not Path(mp_path).is_file():
         mp_path = search_for_file("msticpyconfig.yaml", paths=[".", _HOME_PATH])
 
     if mp_path:
+        logger.info("msticpyconfig found %s", mp_path)
         errs: List[str] = []
         try:
             std_out_cap = io.StringIO()
@@ -654,6 +697,8 @@ def _get_or_create_config() -> bool:
                 errs, _ = validate_config(config_file=mp_path)
             if errs:
                 _pr_output(std_out_cap.getvalue())
+                for err in errs:
+                    logger.warning("config validation error %s", err)
             if _verify_no_azs_errors(errs):
                 # If the mpconfig has a Microsoft Sentinel config, return here
                 return True
@@ -666,6 +711,7 @@ def _get_or_create_config() -> bool:
         # pylint: enable=broad-except
 
     _pr_output("Could not find msticpyconfig.yaml in standard search.")
+    logger.warning("Could not find msticpyconfig.yaml in standard search.")
     if is_in_aml():
         _pr_output(
             "AML environment detected.",
@@ -685,9 +731,6 @@ def _set_nb_options(namespace):
         "style": {"description_width": "initial"},
     }
 
-    # Some of our dependencies (networkx) still use deprecated Matplotlib
-    # APIs - we can't do anything about it, so suppress them from view
-    warnings.simplefilter("ignore", category=MatplotlibDeprecationWarning)
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     if sns:
         sns.set()
@@ -720,8 +763,9 @@ def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
     added_imports = []
     if isinstance(extra_imports, str):
         extra_imports = [extra_imports]
+    params: List[Optional[str]]
     for imp_spec in extra_imports:
-        params: List[Optional[str]] = [None, None, None]
+        params = [None, None, None]
         for idx, param in enumerate(imp_spec.split(",")):
             params[idx] = param.strip() or None
 
@@ -729,10 +773,16 @@ def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
             raise MsticpyException(
                 f"First parameter in extra_imports is mandatory: {imp_spec}"
             )
-        _imp_from_package(nm_spc=nm_spc, pkg=params[0], tgt=params[1], alias=params[2])
-        added_imports.append(
-            _extract_pkg_name(pkg=params[0], tgt=params[1], alias=params[2])
-        )
+        try:
+            _imp_from_package(
+                nm_spc=nm_spc, pkg=params[0], tgt=params[1], alias=params[2]
+            )
+            added_imports.append(
+                _extract_pkg_name(pkg=params[0], tgt=params[1], alias=params[2])
+            )
+        except ImportError as imp_err:
+            display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
+            logger.exception("Import failure")
     return added_imports
 
 

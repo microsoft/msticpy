@@ -13,8 +13,8 @@ import attr
 from attr import Factory
 
 from .._version import VERSION
-from . import pkg_config as config
 from .exceptions import MsticpyImportExtraError
+from .pkg_config import get_config, refresh_config
 
 try:
     from ..auth.secret_settings import SecretsClient
@@ -109,7 +109,7 @@ _SET_SECRETS_CLIENT: Callable[
 ] = get_secrets_client_func()
 # Create secrets client instance if SecretsClient can be imported
 # and config has KeyVault settings.
-if "KeyVault" in config.settings and config.settings["KeyVault"] and _SECRETS_ENABLED:
+if get_config("KeyVault", None) and _SECRETS_ENABLED:
     _SECRETS_CLIENT = _SET_SECRETS_CLIENT()
 
 
@@ -131,7 +131,7 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
     # pylint: disable=global-statement
     global _SECRETS_CLIENT
     # pylint: enable=global-statement
-    if "KeyVault" in config.settings and config.settings["KeyVault"]:
+    if get_config("KeyVault", None):
         if _SECRETS_CLIENT is None and _SECRETS_ENABLED:
             print(
                 "KeyVault enabled. Secrets access may require additional authentication."
@@ -139,18 +139,18 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
             _SECRETS_CLIENT = _SET_SECRETS_CLIENT()
     else:
         _SECRETS_CLIENT = None
-    section_settings = config.settings.get(config_section)
+    section_settings = get_config(config_section, None)
     if not section_settings:
         return {}
 
     settings = {}
     for provider, item_settings in section_settings.items():
         prov_args = item_settings.get("Args")
-        prov_settings = ProviderSettings(
+        prov_settings = ProviderSettings(  # type: ignore[call-arg]
             name=provider,
             description=item_settings.get("Description"),
             args=_get_setting_args(
-                config_section=config_section,
+                config_path=config_section,
                 provider_name=provider,
                 prov_args=prov_args,
             ),
@@ -164,7 +164,7 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
 
 def reload_settings():
     """Reload settings from config files."""
-    config.refresh_config()
+    refresh_config()
 
 
 def refresh_keyring():
@@ -230,8 +230,15 @@ def auth_secrets_client(
         _SET_SECRETS_CLIENT(secrets_client=secrets_client)
 
 
+def get_protected_setting(config_path, setting_name) -> Any:
+    """Return a potentially protected setting value."""
+    config_settings = get_config(config_path)
+    prov_args = _get_protected_settings(config_path, config_settings)
+    return prov_args.get(setting_name)
+
+
 def _get_setting_args(
-    config_section: str, provider_name: str, prov_args: Optional[Dict[str, Any]]
+    config_path: str, provider_name: str, prov_args: Optional[Dict[str, Any]]
 ) -> ProviderArgs:
     """Extract the provider args from the settings."""
     if not prov_args:
@@ -241,18 +248,16 @@ def _get_setting_args(
         "tenantid": "tenant_id",
         "subscriptionid": "subscription_id",
     }
-    return _get_settings(
-        config_section=config_section,
-        provider_name=provider_name,
-        conf_group=prov_args,
+    return _get_protected_settings(
+        setting_path=f"{config_path}.{provider_name}.Args",
+        section_settings=prov_args,
         name_map=name_map,
     )
 
 
-def _get_settings(
-    config_section: str,
-    provider_name: str,
-    conf_group: Optional[Dict[str, Any]],
+def _get_protected_settings(
+    setting_path: str,
+    section_settings: Optional[Dict[str, Any]],
     name_map: Optional[Dict[str, str]] = None,
 ) -> ProviderArgs:
     """
@@ -260,12 +265,10 @@ def _get_settings(
 
     Parameters
     ----------
-    config_section : str
-        Configuration section
-    provider_name: str
-        The name of the provider section
-    conf_group : Optional[Dict[str, Any]]
-        The configuration dictionary
+    setting_path : str
+        Dotted path to the setting
+    section_settings : Optional[Dict[str, Any]]
+        The configuration settings for this path.
     name_map : Optional[Dict[str, str]], optional
         Optional mapping to re-write setting names,
         by default None
@@ -275,48 +278,66 @@ def _get_settings(
     ProviderArgs
         Dictionary of resolved settings
 
-    Raises
-    ------
-    NotImplementedError
-        Keyvault storage is not yet implemented
-
     """
-    if not conf_group:
+    if not section_settings:
         return ProviderArgs()
-    setting_dict: ProviderArgs = ProviderArgs(conf_group.copy())
+    setting_dict: ProviderArgs = ProviderArgs(section_settings.copy())
 
-    for arg_name, arg_value in conf_group.items():
+    for arg_name, arg_value in section_settings.items():
         target_name = arg_name
         if name_map:
             target_name = name_map.get(target_name.casefold(), target_name)
 
-        if isinstance(arg_value, str):
-            setting_dict[target_name] = arg_value
-        elif isinstance(arg_value, dict):
-            try:
-                setting_dict[target_name] = _fetch_setting(
-                    config_section, provider_name, arg_name, arg_value
-                )  # type: ignore
-            except NotImplementedError:
-                warnings.warn(
-                    f"Setting type for setting {arg_value} not yet implemented. "
-                )
+        try:
+            setting_dict[target_name] = _fetch_secret_setting(
+                f"{setting_path}.{arg_name}", arg_value
+            )
+        except NotImplementedError:
+            warnings.warn(f"Setting type for setting {arg_value} not yet implemented. ")
     return setting_dict
 
 
-def _fetch_setting(
-    config_section: str,
-    provider_name: str,
-    arg_name: str,
-    config_setting: Dict[str, Any],
+def _fetch_secret_setting(
+    setting_path: str,
+    config_setting: Union[str, Dict[str, Any]],
 ) -> Union[Optional[str], Callable[[], Any]]:
-    """Return required value for indirect settings (e.g. getting env var)."""
+    """
+    Return required value for potential secret setting.
+
+    Parameters
+    ----------
+    setting_path : str
+        Dotted path to the setting
+    config_setting : Union[str, Dict[str, Any]]
+        Setting value (str or Dict)
+
+    Returns
+    -------
+    Union[Optional[str], Callable[[], Any]]
+        Either a string or accessor function.
+
+    Raises
+    ------
+    MsticpyImportExtraError
+        _description_
+    NotImplementedError
+        _description_
+
+    """
+    if isinstance(config_setting, str):
+        return config_setting
+    if not isinstance(config_setting, dict):
+        return NotImplementedError(
+            "Configuration setting format not recognized.",
+            f"'{setting_path}' should be a string or dictionary",
+            "with either 'EnvironmentVar' or 'KeyVault' entry.",
+        )
     if "EnvironmentVar" in config_setting:
         env_value = os.environ.get(config_setting["EnvironmentVar"])
         if not env_value:
             warnings.warn(
                 f"Environment variable {config_setting['EnvironmentVar']}"
-                + f" (provider {provider_name})"
+                + f" ({setting_path})"
                 + " was not set"
             )
         return env_value
@@ -324,18 +345,19 @@ def _fetch_setting(
         if not _SECRETS_ENABLED:
             raise MsticpyImportExtraError(
                 "Cannot use this feature without Key Vault support installed",
-                title="Error importing Loading Key Vault and/or keyring libaries",
+                title="Error importing Loading Key Vault and/or keyring libraries.",
                 extra="keyvault",
             )
         if not _SECRETS_CLIENT:
             warnings.warn(
                 "Cannot use a KeyVault configuration setting without"
                 + "a KeyVault configuration section in msticpyconfig.yaml"
-                + f" (provider {provider_name})"
+                + f" ({setting_path})"
             )
             return None
-        config_path = [config_section, provider_name, "Args", arg_name]
-        return _SECRETS_CLIENT.get_secret_accessor(  # type:ignore
-            ".".join(config_path)
-        )
-    return None
+        return _SECRETS_CLIENT.get_secret_accessor(setting_path)
+    raise NotImplementedError(
+        "Configuration setting format not recognized.",
+        f"'{setting_path}' should be a string or dictionary",
+        "with either 'EnvironmentVar' or 'KeyVault' entry.",
+    )

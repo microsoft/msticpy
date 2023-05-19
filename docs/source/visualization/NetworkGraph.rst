@@ -306,4 +306,4 @@ References
 -  `Networkx
    from_pandas_edgelist <https://networkx.org/documentation/stable/reference/generated/networkx.convert_matrix.from_pandas_edgelist.html>`__
 -  `Bokeh graph
-   visualization <https://docs.bokeh.org/en/latest/docs/user_guide/graph.html>`__
+   visualization <https://docs.bokeh.org/en/latest/docs/user_guide/topics/graph.html>`__

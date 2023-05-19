@@ -31,8 +31,8 @@ from urllib3.exceptions import LocationParseError
 from urllib3.util import parse_url
 
 from .._version import VERSION
-from ..common import pkg_config as config
 from ..common.exceptions import MsticpyUserConfigError
+from ..common.settings import get_config, get_http_timeout
 from ..common.utility import export, mp_ua_header
 
 __version__ = VERSION
@@ -61,9 +61,7 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
     if api_key is not None:
         bs_api_key: Optional[str] = api_key
     else:
-        bs_conf = config.settings.get("DataProviders", {}).get(
-            "Browshot"
-        ) or config.settings.get("Browshot")
+        bs_conf = get_config("DataProviders.Browshot", {}) or get_config("Browshot", {})
         bs_api_key = None
         if bs_conf is not None:
             bs_api_key = bs_conf.get("Args", {}).get("AuthKey")  # type: ignore
@@ -85,9 +83,7 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
         f"https://api.browshot.com/api/v1/screenshot/create?url={url}/"
         f"&instance_id=26&size=screen&cache=0&key={bs_api_key}"
     )
-    id_data = httpx.get(
-        id_string, timeout=config.get_http_timeout(), headers=mp_ua_header()
-    )
+    id_data = httpx.get(id_string, timeout=get_http_timeout(), headers=mp_ua_header())
     bs_id = json.loads(id_data.content)["id"]
     status_string = (
         f"https://api.browshot.com/api/v1/screenshot/info?id={bs_id}&key={bs_api_key}"
@@ -104,7 +100,7 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
     while not ready and progress.value < 100:
         progress.value += 1
         status_data = httpx.get(
-            status_string, timeout=config.get_http_timeout(), headers=mp_ua_header()
+            status_string, timeout=get_http_timeout(), headers=mp_ua_header()
         )
         status = json.loads(status_data.content)["status"]
         if status == "finished":
@@ -114,7 +110,7 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
     progress.value = 100
 
     # Once ready or timed out get the screenshot
-    image_data = httpx.get(image_string, timeout=config.get_http_timeout())
+    image_data = httpx.get(image_string, timeout=get_http_timeout())
 
     if image_data.status_code != 200:
         print(

@@ -10,7 +10,7 @@ from typing import Any, Dict
 import pandas as pd
 from bokeh.io import output_notebook, show
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter
+from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM, NumeralTickFormatter
 
 # pylint: disable=no-name-in-module
 from bokeh.plotting import figure, reset_output
@@ -18,6 +18,7 @@ from deprecated.sphinx import deprecated
 
 from .._version import VERSION
 from ..common.utility import check_kwargs, export
+from .figure_dimension import bokeh_figure
 from .timeline_common import (
     calc_auto_plot_height,
     create_range_tool,
@@ -53,6 +54,9 @@ _DEFAULT_KWARGS = [
 _TL_VALUE_KWARGS = ["kind", "y", "x"]
 _TS_KWARGS = ["xgrid", "ygrid"]
 
+# wrap figure function to handle v2/v3 parameter renaming
+figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
+
 
 # pylint: disable=invalid-name, too-many-locals, too-many-statements
 # pylint: disable=too-many-branches, too-many-function-args, too-many-arguments
@@ -64,7 +68,7 @@ def display_timeseries_anomalies(
     anomalies_column: str = "anomalies",
     period: int = 30,
     **kwargs,
-) -> figure:
+) -> LayoutDOM:
     """
     Display time series anomalies visualization.
 
@@ -120,8 +124,8 @@ def display_timeseries_anomalies(
 
     Returns
     -------
-    figure
-        The bokeh plot figure.
+    LayoutDOM
+        The bokeh plot layout.
 
     """
     check_kwargs(kwargs, _DEFAULT_KWARGS + _TL_VALUE_KWARGS + _TS_KWARGS)
@@ -167,8 +171,6 @@ def display_timeseries_anomalies(
     plot = figure(
         x_range=(start_range, end_range),
         min_border_left=50,
-        plot_height=height,
-        plot_width=width,
         x_axis_label=time_column,
         x_axis_type="datetime",
         y_axis_label=value_column,
@@ -176,6 +178,8 @@ def display_timeseries_anomalies(
         tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
         toolbar_location="above",
         title=title,
+        height=height,
+        width=width,
     )
 
     if xgrid:
@@ -245,7 +249,7 @@ def display_timeseries_anomalies(
         y="score",
         min_time=min_time,
         max_time=max_time,
-        plot_range=plot.x_range,
+        plot_range=plot.x_range,  # type: ignore[arg-type]
         width=width,
         height=height,
         time_column=time_column,

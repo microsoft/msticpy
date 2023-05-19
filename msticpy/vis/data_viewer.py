@@ -10,7 +10,7 @@ from typing import Dict, List, Union
 import ipywidgets as widgets
 import pandas as pd
 from bokeh.io import output_notebook, push_notebook, show
-from bokeh.models import (
+from bokeh.models import (  # type: ignore[attr-defined]
     BooleanFilter,
     CDSView,
     ColumnDataSource,
@@ -23,6 +23,15 @@ from IPython.display import display
 from .. import nbwidgets
 from .._version import VERSION
 
+# pylint: disable=unused-import
+try:
+    import panel as pn  # noqa: F401
+
+    _PANEL_AVAILABLE = True
+    from .data_viewer_panel import DataViewer as DataViewerPanel
+except ImportError:
+    _PANEL_AVAILABLE = False
+
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
@@ -31,7 +40,7 @@ FilterExpr = namedtuple("FilterExpr", "column, inv, operator, expr")
 
 
 # pylint: disable=too-many-instance-attributes
-class DataViewer:
+class DataViewerBokeh:
     """Data viewer class."""
 
     _DEF_HEIGHT = 550
@@ -534,3 +543,8 @@ def _get_cols_from_df(data):
     }
     columns.update(dt_columns)
     return {col: columns[col] for col in col_order}
+
+
+# If panel is imported we want to use that version
+# else use the existing Bokeh implementation
+DataViewer = DataViewerPanel if _PANEL_AVAILABLE else DataViewerBokeh

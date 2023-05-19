@@ -4,8 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """File Browser class."""
+
+import contextlib
 from pathlib import Path
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 import ipywidgets as widgets
 
@@ -16,13 +18,16 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+StrOrPath = Union[str, Path]
+
+
 # pylint: disable=too-many-instance-attributes
 class FileBrowser(CompEditDisplayMixin):
     """File system browser control."""
 
     PARENT = ".."
 
-    def __init__(self, path: str = ".", select_cb: Callable[[str], Any] = None):
+    def __init__(self, path: StrOrPath = ".", select_cb: Callable[[str], Any] = None):
         """
         Initialize the class for path and with optional callback.
 
@@ -138,7 +143,7 @@ class FileBrowser(CompEditDisplayMixin):
             self.action(self.file)
 
     @staticmethod
-    def read_folder(folder: str) -> Tuple[List[str], List[str]]:
+    def read_folder(folder: StrOrPath) -> Tuple[List[StrOrPath], List[StrOrPath]]:
         """
         Return folder contents.
 
@@ -149,16 +154,22 @@ class FileBrowser(CompEditDisplayMixin):
 
         Returns
         -------
-        Tuple[List[str], List[str]]
+        Tuple[List[StrOrPath], List[StrOrPath]]
             List of folders and files in the folder.
 
         """
         contents = list(Path(folder).glob("*"))
-        files = [file.parts[-1] for file in contents if file.is_file()]
-        folders = [fld.parts[-1] for fld in contents if fld.is_dir()]
-        return folders, files
+        files = []
+        folders = []
+        for file in contents:
+            with contextlib.suppress(PermissionError, IOError):
+                if file.is_file():
+                    files.append(file)
+                elif file.is_dir():
+                    folders.append(file)
+        return folders, files  # type: ignore[return-value]
 
-    def get_folder_list(self, folders: List[str]) -> List[str]:
+    def get_folder_list(self, folders: List[StrOrPath]) -> List[StrOrPath]:
         """Return sorted list of folders with '..' inserted if not root."""
         if self.current_folder != Path(self.current_folder.parts[0]):
             return [self.PARENT, *(sorted(folders))]
@@ -170,10 +181,8 @@ class FileBrowser(CompEditDisplayMixin):
         if self.txt_search.value:
             found_files: Optional[List[Path]] = None
             while found_files is None:
-                try:
+                with contextlib.suppress(FileNotFoundError):
                     found_files = list(self.current_folder.rglob(self.txt_search.value))
-                except FileNotFoundError:
-                    pass
             self.select_search.options = [
                 str(file) for file in found_files if file.exists()
             ]

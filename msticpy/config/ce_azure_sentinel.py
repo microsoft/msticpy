@@ -9,7 +9,9 @@ from datetime import datetime
 import ipywidgets as widgets
 
 from .._version import VERSION
-from ..context.azure.sentinel_core import MicrosoftSentinel
+from ..common.utility.package import lazy_import
+
+# from ..context.azure.sentinel_core import MicrosoftSentinel
 from .ce_common import (
     ITEM_LIST_LAYOUT,
     get_or_create_mpc_section,
@@ -21,6 +23,8 @@ from .mp_config_control import MpConfigControls
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+ms_sentinel = lazy_import("msticpy.context.azure.sentinel_core", "MicrosoftSentinel")
 
 
 # pylint: disable=too-many-ancestors
@@ -216,7 +220,7 @@ class CEAzureSentinel(CEItemsBase):
         if not url:
             self.set_status("Please paste portal URL into ")
             return
-        self._update_settings(MicrosoftSentinel.get_workspace_details_from_url(url))
+        self._update_settings(ms_sentinel().get_workspace_details_from_url(url))
 
     def _update_settings(self, ws_settings):
         """Update current controls with workspace settings."""
@@ -246,11 +250,11 @@ class CEAzureSentinel(CEItemsBase):
             return
         if workspace_id:
             self._update_settings(
-                MicrosoftSentinel.get_workspace_settings(workspace_id=workspace_id)
+                ms_sentinel().get_workspace_settings(workspace_id=workspace_id)
             )
         else:
             self._update_settings(
-                MicrosoftSentinel.get_workspace_settings_by_name(
+                ms_sentinel().get_workspace_settings_by_name(
                     workspace_name=workspace_name,
                     subscription_id=subscription_id,
                     resource_group=resource_group,

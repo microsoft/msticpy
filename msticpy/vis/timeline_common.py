@@ -8,9 +8,10 @@ from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import pandas as pd
-from bokeh.models import (
+from bokeh.models import (  # type: ignore[attr-defined]
     ColumnDataSource,
     DatetimeTickFormatter,
+    GestureTool,
     Label,
     LayoutDOM,
     Range,
@@ -22,13 +23,19 @@ from bokeh.models import (
 from bokeh.palettes import Palette, viridis
 
 # pylint: enable=no-name-in-module
-from bokeh.plotting import Figure, figure
+from bokeh.plotting import figure
+
+try:
+    from bokeh.plotting import Figure  # type: ignore
+except ImportError:
+    Figure = LayoutDOM
 from pandas.api.types import is_datetime64_any_dtype
 from pandas.errors import OutOfBoundsDatetime
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyParameterError
 from ..common.utility import export
+from .figure_dimension import bokeh_figure
 
 # pylint: enable=unused-import
 
@@ -39,6 +46,9 @@ TIMELINE_HELP = (
     "https://msticpy.readthedocs.io/en/latest/msticpy.vis.html"
     "#msticpy.vis.timeline.{plot_type}"
 )
+
+# wrap figure function to handle v2/v3 parameter renaming
+figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
 
 @export
@@ -153,7 +163,7 @@ def get_def_source_cols(data: pd.DataFrame, source_columns: Iterable[str]) -> Se
     return set(source_columns)
 
 
-def get_color_palette(series_count: int) -> Palette:
+def get_color_palette(series_count: int) -> Tuple[Palette, int]:
     """Return palette based on series size."""
     palette_size = min(256, series_count + series_count // 5)
     return viridis(palette_size), palette_size
@@ -265,13 +275,14 @@ def create_range_tool(
     rng_select = figure(
         x_range=(ext_min, ext_max),
         title="Range Selector",
-        plot_height=plot_height,
-        plot_width=width,
         x_axis_type="datetime",
         y_axis_type=None,
         tools="",
         toolbar_location=None,
+        height=plot_height,
+        width=width,
     )
+
     help_str = (
         "Drag the middle or edges of the selection box to change "
         + "the range in the main chart"
@@ -294,11 +305,12 @@ def create_range_tool(
         )
 
     range_tool = RangeTool(x_range=plot_range)
-    range_tool.overlay.fill_color = "navy"
-    range_tool.overlay.fill_alpha = 0.2
+    range_tool.overlay.fill_color = "navy"  # type: ignore
+    range_tool.overlay.fill_alpha = 0.2  # type: ignore
     rng_select.ygrid.grid_line_color = None
     rng_select.add_tools(range_tool)
-    rng_select.toolbar.active_multi = range_tool
+    if isinstance(range_tool, GestureTool):
+        rng_select.toolbar.active_multi = range_tool  # type: ignore
     return rng_select
 
 
@@ -332,7 +344,6 @@ def plot_ref_line(
         text=f"< {ref_text}",
         text_font_size="8pt",
         text_alpha=0.5,
-        render_mode="css",
         border_line_color="red",
         border_line_alpha=0.3,
         background_fill_color="white",
@@ -404,9 +415,9 @@ def get_tick_formatter() -> DatetimeTickFormatter:
     """Return tick formatting for different zoom levels."""
     # '%H:%M:%S.%3Nms
     tick_format = DatetimeTickFormatter()
-    tick_format.days = ["%m-%d %H:%M"]
-    tick_format.hours = ["%H:%M:%S"]
-    tick_format.minutes = ["%H:%M:%S"]
-    tick_format.seconds = ["%H:%M:%S"]
-    tick_format.milliseconds = ["%H:%M:%S.%3N"]
+    tick_format.days = "%m-%d %H:%M"  # type: ignore
+    tick_format.hours = "%H:%M:%S"  # type: ignore
+    tick_format.minutes = "%H:%M:%S"  # type: ignore
+    tick_format.seconds = "%H:%M:%S"  # type: ignore
+    tick_format.milliseconds = "%H:%M:%S.%3N"  # type: ignore
     return tick_format

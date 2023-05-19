@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Sentinel Dynamic Summary Mixin class."""
-
+import logging
 from datetime import datetime
 from functools import singledispatchmethod
 from typing import Optional
@@ -29,6 +29,8 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 _DYN_SUM_API_VERSION = "2023-03-01-preview"
+
+logger = logging.getLogger(__name__)
 
 
 class SentinelDynamicSummaryMixin:
@@ -98,7 +100,11 @@ class SentinelDynamicSummaryMixin:
             if not self.sent_data_query:  # type: ignore
                 try:
                     self.sent_data_query = SentinelQueryProvider(
-                        self.default_workspace_name  # type: ignore
+                        self.default_workspace_name  # type: ignore[attr-defined]
+                    )
+                    logger.info(
+                        "Created sentinel query provider for %s",
+                        self.default_workspace_name,  # type: ignore[attr-defined]
                     )
                 except LookupError:
                     print(
@@ -107,6 +113,7 @@ class SentinelDynamicSummaryMixin:
                         "and retry.",
                     )
             if self.sent_data_query:
+                logger.info("Query dynamic summary for %s", summary_id)
                 return df_to_dynamic_summary(
                     self.sent_data_query.get_dynamic_summary(summary_id)
                 )
@@ -121,7 +128,13 @@ class SentinelDynamicSummaryMixin:
             timeout=get_http_timeout(),
         )
         if response.status_code == 200:
+            logger.info("Query API for summary id %s", summary_id)
             return DynamicSummary.from_json(response.json())
+        logger.info(
+            "API query unsuccessful - status %d, response: %s",
+            response.status_code,
+            response.content.decode("utf-8"),
+        )
         raise MsticpyAzureConnectionError(response.json())
 
     def create_dynamic_summary(
@@ -169,6 +182,7 @@ class SentinelDynamicSummaryMixin:
             raise MsticpyParameterError(
                 "DynamicSummary must have unique name", parameters="name"
             )
+        logger.info("create_dynamic_summary %s (%s)", name, description)
         return self._create_dynamic_summary(
             name, description=description, data=data, **kwargs
         )
@@ -210,9 +224,16 @@ class SentinelDynamicSummaryMixin:
             content=summary.to_json_api(),
             timeout=get_http_timeout(),
         )
+        logger.info(
+            "_create_dynamic_summary (DynamicSummary) status %d", response.status_code
+        )
         if response.status_code in (200, 201):
             print("Dynamic summary created/updated.")
             return response.json().get("name")
+        logger.warning(
+            "_create_dynamic_summary (DynamicSummary) failure %s",
+            response.content.decode("utf-8"),
+        )
         raise MsticpyAzureConnectionError(
             (
                 "Dynamic summary create/update failed with status",
@@ -274,6 +295,10 @@ class SentinelDynamicSummaryMixin:
             summary_items=data,
             **kwargs,
         )
+        logger.info(
+            "_create_dynamic_summary (DF) rows: %d",
+            len(data) if data is not None else 0,
+        )
         return self.create_dynamic_summary(summary)
 
     def delete_dynamic_summary(
@@ -304,9 +329,16 @@ class SentinelDynamicSummaryMixin:
             params=params,
             timeout=get_http_timeout(),
         )
+        logger.info(
+            "delete_dynamic_summary %s - status %d", summary_id, response.status_code
+        )
         if response.status_code == 200:
             print("Dynamic summary deleted.")
             return response.json().get("name")
+        logger.warning(
+            "delete_dynamic_summary failure %s",
+            response.content.decode("utf-8"),
+        )
         raise MsticpyAzureConnectionError(
             f"Dynamic summary deletion failed with status {response.status_code}",
             "Text response:",
@@ -373,6 +405,11 @@ class SentinelDynamicSummaryMixin:
             raise MsticpyParameterError(
                 "You must supply a summary ID to update", parameters="summary_id"
             )
+        logger.info(
+            "update_dynamic_summary summary %s, df %s",
+            summary is not None,
+            data is not None,
+        )
         return self.create_dynamic_summary(
             summary=summary, data=data, summary_id=summary_id, **kwargs
         )
@@ -389,7 +426,7 @@ class SentinelQueryProvider:
 
     def __init__(self, workspace: str):
         """Initialize Sentinel Provider."""
-        workspaces = get_config("AzureSentinel.Workspaces")
+        workspaces = get_config("AzureSentinel.Workspaces", {})
         self.workspace_config = ""
         self.workspace_alias = ""
         for ws_name, workspace_conf in workspaces.items():
@@ -399,6 +436,7 @@ class SentinelQueryProvider:
             ]:
                 self.workspace_config = workspace_conf
                 self.workspace_alias = ws_name
+                logger.info("Found workspace config %s", ws_name)
                 break
         else:
             raise LookupError(f"Cannot find workspace configuration for {workspace}")
@@ -408,8 +446,14 @@ class SentinelQueryProvider:
 
     def get_dynamic_summary(self, summary_id) -> pd.DataFrame:
         """Retrieve dynamic summary from MS Sentinel table."""
+        logger.info("Dynamic summary query for %s", summary_id)
         return self.qry_prov.MSSentinel.get_dynamic_summary_by_id(summary_id=summary_id)
 
     def get_dynamic_summaries(self, start: datetime, end: datetime) -> pd.DataFrame:
         """Return dynamic summaries for date range."""
+        logger.info(
+            "Dynamic summary query for dynamic summaries from %s to %s",
+            start.isoformat(),
+            end.isoformat(),
+        )
         return self.qry_prov.MSSentinel.list_dynamic_summaries(start=start, end=end)
