@@ -12,12 +12,17 @@ import pandas as pd
 from bokeh.io import output_notebook, reset_output, show
 
 # pylint: enable=no-name-in-module
+try:
+    from bokeh.core.property.vectorization import Field
+except ImportError:
+    Field = dict  # type: ignore
 from bokeh.layouts import column, row
-from bokeh.models import (
+from bokeh.models import (  # type: ignore[attr-defined]
     BoxSelectTool,
     ColorBar,
     ColumnDataSource,
     CustomJS,
+    GestureTool,
     HoverTool,
     LayoutDOM,
     RangeTool,
@@ -52,14 +57,17 @@ from ..transform.process_tree_utils import (
     get_summary_info,
     get_tree_depth,
 )
+from .figure_dimension import bokeh_figure
 
 # pylint: enable=unused-import
-
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 _DEFAULT_KWARGS = ["height", "title", "width", "hide_legend", "pid_fmt"]
+
+# wrap figure function to handle v2/v3 parameter renaming
+figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
 
 @export
@@ -222,13 +230,13 @@ def plot_process_tree(  # noqa: MC0001
     y_start_range = (n_rows - visible_range, n_rows + 1)
     b_plot = figure(
         title=title,
-        plot_width=plot_width,
-        plot_height=plot_height,
         x_range=(min_level, max_level),
         y_range=y_start_range,
         tools=["reset", "save", "tap", "ywheel_pan"],
         toolbar_location="above",
         active_scroll="ywheel_pan",
+        width=plot_width,
+        height=plot_height,
     )
 
     hover = HoverTool(
@@ -238,7 +246,7 @@ def plot_process_tree(  # noqa: MC0001
     b_plot.add_tools(hover)
 
     # dodge to align rectangle with grid
-    rect_x = dodge("Level", 1.75, range=b_plot.x_range)
+    rect_x = dodge("Level", 1.75, range=b_plot.x_range)  # type: ignore
     rect_plot_params = {
         "width": 3.5,
         "height": 0.95,
@@ -312,11 +320,11 @@ def plot_process_tree(  # noqa: MC0001
         y_col="Row",
         fill_map=fill_map,
     )
-    plot_elems = row(b_plot, range_tool)
+    plot_elems: LayoutDOM = row(b_plot, range_tool)  # type: ignore
     if show_table:
         data_table = _create_data_table(source, schema, legend_col)
         plot_elems = column(plot_elems, data_table)
-    show(plot_elems)
+    show(plot_elems)  # type: ignore
     return b_plot, plot_elems
 
 
@@ -353,6 +361,9 @@ def _pre_process_tree(
 
     _validate_plot_schema(proc_tree, schema)
 
+    # kludgy fix to prevent NaNs making it into the data - Bokeh 3.0
+    # is very sensitive to this in some places.
+    proc_tree = proc_tree.fillna("NA")
     proc_tree = proc_tree.sort_values(
         by=["path", schema.time_stamp], ascending=True
     ).reset_index()
@@ -392,12 +403,25 @@ def _pre_process_tree(
 
 
 def _pid_fmt(pid, pid_fmt):
+    """Format process ID in required string format."""
+    if pid == np.nan:
+        pid = ""
     if pid_fmt == "hex":
-        return f"PID: {pid}" if str(pid).startswith("0x") else f"PID: 0x{int(pid):x}"
+        return (
+            f"PID: {pid}"
+            if str(pid).startswith("0x")
+            else f"PID: 0x{int(pid):x}"
+            if isinstance(pid, int)
+            else "NA"
+        )
     if pid_fmt == "guid":
         return f"GUID: {pid}"
     return (
-        f"PID: {pid}" if not str(pid).startswith("0x") else f"PID: {int(pid, base=16)}"
+        f"PID: {pid}"
+        if not str(pid).startswith("0x")
+        else f"PID: {int(pid, base=16)}"
+        if isinstance(pid, int)
+        else "NA"
     )
 
 
@@ -464,13 +488,13 @@ def _create_js_callback(source: ColumnDataSource, result_var: str) -> CustomJS:
 
 def _create_fill_map(
     source: ColumnDataSource, source_column: str = None
-) -> Tuple[Union[factor_cmap, linear_cmap], Optional[ColorBar]]:
+) -> Tuple[Union[Field, str], Optional[ColorBar]]:
     """Create factor map or linear map based on `source_column`."""
-    fill_map = "navy"
+    fill_map: Union[str, Field] = "navy"
     color_bar = None
     key_column = source_column or "Level"
 
-    col_kind = source.data[key_column].dtype.kind
+    col_kind = source.data[key_column].dtype.kind  # type: ignore[union-attr]
     if col_kind in ["b", "O"]:
         s_values = set(source.data[key_column])
         if np.nan in s_values:
@@ -501,10 +525,10 @@ def _create_vert_range_tool(
 ):
     """Return vertical range too for plot."""
     rng_select = figure(
-        plot_width=width,
-        plot_height=height,
         y_range=(min_y - 1, max_y + 1),
         toolbar_location=None,
+        width=width,
+        height=height,
     )
 
     x_dodge = dodge(x_col, -0.5)
@@ -527,7 +551,8 @@ def _create_vert_range_tool(
     rng_select.ygrid.grid_line_color = None
     rng_select.xgrid.grid_line_color = None
     rng_select.add_tools(range_tool)
-    rng_select.toolbar.active_multi = range_tool
+    if isinstance(range_tool, GestureTool):
+        rng_select.toolbar.active_multi = range_tool
     return rng_select
 
 

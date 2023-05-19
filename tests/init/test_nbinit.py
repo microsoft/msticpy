@@ -21,6 +21,7 @@ from msticpy.init.nbinit import _get_or_create_config, _imp_module_all, init_not
 from ..unit_test_lib import TEST_DATA_PATH, custom_mp_config
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_nbinit_no_params():
     """Test init_notebook defaults."""
     ns_dict = {}
@@ -220,6 +221,7 @@ def test_check_config(conf_file, expected, tmp_path, monkeypatch):
             os.chdir(str(tmp_path))
 
         with custom_mp_config(settings_file, path_check=False):
+            monkeypatch.setattr(nbinit, "current_config_path", lambda: None)
             monkeypatch.setattr(nbinit, "is_in_aml", lambda: True)
             monkeypatch.setattr(azure_ml_tools, "get_aml_user_folder", lambda: tmp_path)
             result = _get_or_create_config()

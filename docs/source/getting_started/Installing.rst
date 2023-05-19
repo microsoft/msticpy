@@ -199,3 +199,34 @@ exception message:
    an *ImportError* exception, make sure
    that you have installed the *extra* that corresponds to the
    functionality you are trying to use.
+
+Installing in Managed Spark compute in Azure Machine Learning Notebooks
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+*MSTICPy* installation for Managed (Automatic) Spark Compute in Azure Machine Learning workspace requires 
+different instructions since library installation is different. 
+
+
+.. note:: These notebook requires Azure ML Spark Compute. If you are using it for the first time, follow the guidelines mentioned here :Attach and manage a Synapse Spark pool in Azure Machine Learning (preview):  
+.. _Attach and manage a Synapse Spark pool in Azure Machine Learning (preview):
+https://learn.microsoft.com/en-us/azure/machine-learning/how-to-manage-synapse-spark-pool?tabs=studio-ui
+
+Once you have completed the pre-requisites, you will see AzureML Spark Compute in the dropdown menu for Compute. Select it and run any cell to start Spark Session.
+Please refer the docs _Managed (Automatic) Spark compute in Azure Machine Learning Notebooks: for more detailed steps along with screenshots.
+.. _Managed (Automatic) Spark compute in Azure Machine Learning Notebooks:
+https://learn.microsoft.com/en-us/azure/machine-learning/interactive-data-wrangling-with-apache-spark-azure-ml
+
+In order to install any libraries in Spark compute, you need to use a conda file to configure a Spark session. 
+Please save below file as conda.yml , check the Upload conda file checkbox. You can modify the version number as needed.
+Then, select Browse, and choose the conda file saved earlier with the Spark session configuration you want.
+
+.. code-block:: yaml
+
+    name: msticpy
+    channels:
+    - defaults
+    dependencies:
+    - bokeh
+    - numpy
+    - pip:
+        - msticpy[azure]>=2.3.1

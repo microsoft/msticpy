@@ -19,6 +19,7 @@ from .proc_tree_schema import (  # noqa: F401
     LX_EVENT_SCH,
     MDE_EVENT_SCH,
     MDE_INT_EVENT_SCH,
+    OSQUERY_EVENT_SCH,
     SUPPORTED_SCHEMAS,
     SYSMON_PROCESS_CREATE_EVENT_SCH,
     WIN_EVENT_SCH,
@@ -136,8 +137,17 @@ def _add_tree_properties(proc_tree):
     proc_tree.loc[~has_child, "IsLeaf"] = True
     proc_tree.loc[~is_root & has_child, "IsBranch"] = True
 
-    # Save the current numeric index as "source_index" converting to string
-    proc_tree[Col.source_index] = proc_tree.index.astype(str)
+    # ensure index is numeric/unique
+    if (
+        not proc_tree.index.is_unique
+        and not proc_tree.index.is_monotonic_increasing
+        and not proc_tree.index.is_integer()
+    ):
+        proc_tree = proc_tree.reset_index()
+    # Save the numeric index as "source_index" converting to string
+    proc_tree[Col.source_index] = pd.Series(proc_tree.index.astype(str)).apply(
+        lambda x: x.zfill(5)
+    )
     # Set the index of the output frame to be the proc_key
     proc_tree = proc_tree.set_index(Col.proc_key)
 
@@ -163,7 +173,7 @@ def build_proc_tree(input_tree: pd.DataFrame, max_depth: int = -1) -> pd.DataFra
         DataFrame with ordered paths for each process.
 
     """
-    # set default path == current process ID
+    # set default path == current process row index
     input_tree["path"] = input_tree[Col.source_index]
     # input_tree["parent_index"] = np.nan
 

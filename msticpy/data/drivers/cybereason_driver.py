@@ -18,7 +18,7 @@ from ...common.exceptions import MsticpyUserConfigError
 from ...common.provider_settings import ProviderArgs, get_provider_settings
 from ...common.utility import mp_ua_header
 from ..core.query_defns import Formatters
-from .driver_base import DriverBase, QuerySource
+from .driver_base import DriverBase, DriverProps, QuerySource
 
 __version__ = VERSION
 __author__ = "Florian Bracq"
@@ -87,11 +87,14 @@ class CybereasonDriver(DriverBase):
             timeout=self.get_http_timeout(timeout=timeout, def_timeout=120),
             headers=mp_ua_header(),
         )
-        self.formatters = {
-            Formatters.PARAM_HANDLER: self._custom_param_handler,
-            Formatters.DATETIME: self._format_datetime,
-            Formatters.LIST: self._format_list,
-        }
+        self.set_driver_property(
+            DriverProps.FORMATTERS,
+            {
+                Formatters.PARAM_HANDLER: self._custom_param_handler,
+                Formatters.DATETIME: self._format_datetime,
+                Formatters.LIST: self._format_list,
+            },
+        )
 
         self._debug = kwargs.get("debug", False)
 

@@ -6,7 +6,7 @@
 """VirusTotal File Behavior functions."""
 import re
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from pprint import pformat
 from typing import Any, Dict, List, Optional, Union
@@ -418,16 +418,18 @@ def _try_match_commandlines(
 def _fill_missing_proc_tree_values(process_df: pd.DataFrame) -> pd.DataFrame:
     # Define a schema to map Df names on to internal ProcSchema
     process_df["path"] = np.nan
-    process_df.loc[process_df.IsRoot, "path"] = process_df[
-        process_df.IsRoot
-    ].index.astype("str")
+    process_df.loc[process_df.IsRoot, "path"] = pd.Series(
+        process_df[process_df.IsRoot].index.astype("str")
+    ).apply(lambda x: x.zfill(5))
 
     # Fill in some required fields with placeholder data
-    process_df["time_stamp"] = datetime.utcnow()
+    process_df["time_stamp"] = datetime.now(tz=timezone.utc)
     process_df["host"] = "sandbox"
     process_df["logon_id"] = "na"
     process_df["event_id"] = "na"
-    process_df["source_index"] = process_df.index.astype("str")
+    process_df["source_index"] = pd.Series(process_df.index.astype("str")).apply(
+        lambda x: x.zfill(5)
+    )
 
     proc_tree = process_df.set_index("proc_key")
 

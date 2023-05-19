@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """test package imports."""
-import importlib
 import re
 import sys
 from pathlib import Path

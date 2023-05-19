@@ -23,6 +23,7 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.MDATP: ("mdatp_driver", "MDATPDriver"),
     DataEnvironment.MDE: ("mdatp_driver", "MDATPDriver"),
     DataEnvironment.LocalData: ("local_data_driver", "LocalDataDriver"),
+    DataEnvironment.OSQueryLogs: ("local_osquery_driver", "OSQueryLogDriver"),
     DataEnvironment.Splunk: ("splunk_driver", "SplunkDriver"),
     DataEnvironment.Mordor: ("mordor_driver", "MordorDriver"),
     DataEnvironment.Sumologic: ("sumologic_driver", "SumologicDriver"),
@@ -30,6 +31,8 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.M365D: ("mdatp_driver", "MDATPDriver"),
     DataEnvironment.Cybereason: ("cybereason_driver", "CybereasonDriver"),
     DataEnvironment.Elastic: ("elastic_driver", "ElasticDriver"),
+    DataEnvironment.MSSentinel_New: ("azure_monitor_driver", "AzureMonitorDriver"),
+    DataEnvironment.Kusto_New: ("azure_kusto_driver", "AzureKustoDriver"),
 }
 
 

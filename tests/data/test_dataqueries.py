@@ -8,6 +8,7 @@ import contextlib
 import io
 import unittest
 import warnings
+from copy import deepcopy
 from datetime import datetime
 from functools import partial
 from pathlib import Path
@@ -17,14 +18,12 @@ import pandas as pd
 import pytest
 import pytest_check as check
 
+from msticpy.common import pkg_config
 from msticpy.common.exceptions import MsticpyException
-from msticpy.data.core.data_providers import (
-    DriverBase,
-    QueryContainer,
-    QueryProvider,
-    _calc_split_ranges,
-)
+from msticpy.data.core.data_providers import QueryProvider, _calc_split_ranges
+from msticpy.data.core.query_container import QueryContainer
 from msticpy.data.core.query_source import QuerySource
+from msticpy.data.drivers.driver_base import DriverBase, DriverProps
 
 from ..unit_test_lib import get_test_data_path
 
@@ -43,7 +42,7 @@ class UTDataDriver(DriverBase):
         self._kwargs = kwargs
         self._loaded = True
         self._connected = False
-        self.public_attribs = {"test": self._TEST_ATTRIB}
+        self.set_driver_property(DriverProps.PUBLIC_ATTRS, {"test": self._TEST_ATTRIB})
         self.svc_queries = {}
         self.has_driver_queries = True
 
@@ -538,3 +537,45 @@ def test_query_search(search, expected, sentinel_qry_prov):
     print(search, len(results))
     print(results[:5])
     check.greater_equal(len(results), expected)
+
+
+@pytest.mark.parametrize("mode", ["abs", "rel"])
+def test_query_paths(mode):
+    """Test correctly loading queries from custom paths."""
+
+    if mode == "abs":
+        query_paths = [str(get_test_data_path().joinpath("kusto"))]
+    else:
+        query_paths = ["tests/testdata/kusto"]
+
+    qry_prov = QueryProvider("Kusto", query_paths=query_paths)
+    check.greater_equal(len(qry_prov.list_queries()), 13)
+    for data_family in (
+        "AppAuthCluster",
+        "AppAuthClustera",
+        "IntegAuthCluster",
+        "IntegAuthCluster2",
+    ):
+        check.is_true(hasattr(qry_prov, data_family))
+
+    # Custom paths in settings
+    current_settings = deepcopy(pkg_config._settings.get("QueryDefinitions"))
+    if not current_settings:
+        pkg_config._settings["QueryDefinitions"] = {"Custom": query_paths}
+    elif not current_settings.get("Custom"):
+        pkg_config._settings["QueryDefinitions"]["Custom"] = query_paths
+    else:
+        pkg_config._settings["QueryDefinitions"]["Custom"].extend(query_paths)
+
+    check.greater_equal(len(pkg_config._settings["QueryDefinitions"]["Custom"]), 1)
+
+    qry_prov = QueryProvider("Kusto")
+    check.greater_equal(len(qry_prov.list_queries()), 13)
+    for data_family in (
+        "AppAuthCluster",
+        "AppAuthClustera",
+        "IntegAuthCluster",
+        "IntegAuthCluster2",
+    ):
+        check.is_true(hasattr(qry_prov, data_family))
+    pkg_config._settings["QueryDefinitions"] = current_settings

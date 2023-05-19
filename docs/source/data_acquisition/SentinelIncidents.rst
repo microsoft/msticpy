@@ -8,13 +8,25 @@ It is possible to return a list incidents within a workspace, as well as get the
 Whilst it is possible to access these incident details via the Incident table in the Workspace, you can also interact
 with them via the Microsoft Sentinel APIs which are utilized in these functions.
 
-See :py:meth:`get_incidents <msticpy.context.azure_sentinel.MicrosoftSentinel.list_incidents>`
+See :py:meth:`list_incidents <msticpy.context.azure_sentinel.MicrosoftSentinel.list_incidents>`
 
 .. code:: ipython3
 
     sentinel.list_incidents()
 
-This returns a DataFrame with details of incidents.
+This returns a DataFrame with details of incidents. By default this will return the 50 latest incidents.
+It is possible to pass a set of parameters to `.list_incidents` to adjust the incidents returned via the `params` parameter.
+These parameters follow the format of the [Microsoft Sentinel API](https://learn.microsoft.com/rest/api/securityinsights/stable/incidents/list) 
+and include the following key items:
+ - $top: this controls how many incidents are returned
+ - $filter: this accepts an OData query that filters the returned item. https://learn.microsoft.com/graph/filter-query-parameter 
+ - $orderby: this allows for sorting results by a specific column
+
+.. code:: ipython3
+
+    # Set parameters to return 500 incidents where the Tile includes 'MSTICPy' and the incidents occurred since a set time
+    params = {"$top" : 500, "$filter": "contains(properties/title, 'MSTICPy') and properties/createdTimeUtc gt 2023-03-21T12:00:00Z"}}
+    sentinel.list_incidents(params)
 
 To get details of a single incident you can call `.get_incident` and pass the ID of an incident.
 This ID can be found in the name column of the DataFrame returned by `.get_incidents` and appears in the form of a GUID.
@@ -25,7 +37,7 @@ See :py:meth:`get_incident <msticpy.context.azure.sentinel_core.MicrosoftSentine
 
 .. code:: ipython3
 
-    sentinel.get_incidents(incident = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c")
+    sentinel.get_incident(incident = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c")
 
 When calling `get_incident` there are a number of boolean flags you can set to return additional information
 related to the incident.

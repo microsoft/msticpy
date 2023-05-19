@@ -87,20 +87,16 @@ class QuerySource:
         that joins data from several sources)
 
         """
+        self.show = True
         self.name = name
         self._source: Dict[str, Any] = source or {}
         self.defaults: Dict[str, Any] = defaults or {}
         self._global_metadata: Dict[str, Any] = dict(metadata) if metadata else {}
         self.query_store: Optional["QueryStore"] = None  # type: ignore  # noqa: F821
 
-        # consolidate source metadata - source-specifc
+        # consolidate source metadata - source-specific
         # overrides global
         # add an empty dict in case neither has defined params
-        # self.metadata = ChainMap(
-        #     _value_or_default(self._source, "metadata", {}),
-        #     _value_or_default(self.defaults, "metadata", {}),
-        #     self._global_metadata,
-        # )
         self.metadata = collapse_dicts(
             self._global_metadata,
             self.defaults.get("metadata", {}),
@@ -109,12 +105,6 @@ class QuerySource:
         # make ChainMap for parameters from with source
         # higher priority than default
         # add an empty dict in case neither has defined params
-        # self.params = ChainMap(
-        #     _value_or_default(self._source, "parameters", {}),
-        #     _value_or_default(self.defaults, "parameters", {}),
-        #     # self._source.get("parameters", {}),
-        #     # self.defaults.get("parameters", {}),
-        # )
         self.params = collapse_dicts(
             self.defaults.get("parameters", {}),
             self._source.get("parameters", {}),
