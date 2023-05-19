@@ -220,26 +220,16 @@ def test_check_config(conf_file, expected, tmp_path, monkeypatch):
         else:
             os.chdir(str(tmp_path))
 
-        with custom_mp_config(settings_file, path_check=False):
-            monkeypatch.setattr(nbinit, "current_config_path", lambda: None)
-            monkeypatch.setattr(nbinit, "is_in_aml", lambda: True)
-            monkeypatch.setattr(azure_ml_tools, "get_aml_user_folder", lambda: tmp_path)
-            result = _get_or_create_config()
+        # with custom_mp_config(settings_file, path_check=False):
+        monkeypatch.setenv("MSTICPYCONFIG", str(settings_file))
+        monkeypatch.setattr(nbinit, "current_config_path", lambda: None)
+        monkeypatch.setattr(nbinit, "is_in_aml", lambda: True)
+        monkeypatch.setattr(azure_ml_tools, "get_aml_user_folder", lambda: tmp_path)
+        result = _get_or_create_config()
 
-            print("result=", result)
-            # print("errs=", "\n".join(errs) if errs else "no errors")
-            # print("warnings=", "\n".join(warns) if warns else "no warnings")
-            check.equal(result, expected, "Result")
-            # reported_errs = 0 if not errs else len(errs)
-            # reported_warns = 0 if not warns else len(warns)
-            # if isinstance(expected.errs, tuple):
-            #     check.is_in(reported_errs, expected.errs, "Num errors")
-            # else:
-            #     check.equal(reported_errs, expected.errs, "Num errors")
-            # if isinstance(expected.wrns, tuple):
-            #     check.is_in(reported_warns, expected.wrns, "Num errors")
-            # else:
-            #     check.equal(reported_warns, expected.wrns, "Num warnings")
+        print("result=", result)
+        check.equal(result, expected, "Result")
+
     finally:
         os.chdir(init_cwd)
 

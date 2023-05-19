@@ -13,16 +13,16 @@ requests per minute for the account type that you have.
 
 """
 
-from typing import Iterable, List, Mapping, Optional, Union
+from typing import Dict, Iterable, List, Mapping, Optional, Union
 
 import pandas as pd
 
 from .._version import VERSION
 from ..common.utility import export
 from .lookup import Lookup
-from .provider_base import _make_sync
 
 # used in dynamic instantiation of providers
+from .provider_base import Provider, _make_sync
 from .tiproviders import TI_PROVIDERS
 
 __version__ = VERSION
@@ -44,6 +44,7 @@ class TILookup(Lookup):
 
     PROVIDERS = TI_PROVIDERS
     PACKAGE = "tiproviders"
+    CUSTOM_PROVIDERS: Dict[str, Provider] = {}
 
     # pylint: disable=too-many-arguments
     def lookup_ioc(
