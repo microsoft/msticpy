@@ -11,7 +11,7 @@ import warnings
 import zipfile
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Optional
 import logging
 
 import attr
@@ -330,7 +330,7 @@ def _create_queryfile_metadata(folder_name: str) -> dict:  # type: ignore
     return dict_to_write
 
 
-def _create_yaml_source_sec(cur_query: SentinelQuery) -> Dict[str, str]:
+def _create_yaml_source_sec(cur_query: dict) -> dict:
     """
     Create the metadata section of the YAML for the current query.
 
@@ -346,7 +346,7 @@ def _create_yaml_source_sec(cur_query: SentinelQuery) -> Dict[str, str]:
 
     """
     source_dict = {}
-    source_dict["description"] = str(cur_query.description)
+    source_dict["description"] = cur_query.description
     source_dict["metadata"] = {}
     source_dict["metadata"]["sentinel"] = {"query_id": cur_query.query_id}
     cur_query_dict = attr.asdict(cur_query)
@@ -393,7 +393,7 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
             try:
                 formatted_qname = _format_query_name(cur_query.name)
                 dict_to_write["sources"][formatted_qname] = _create_yaml_source_sec(
-                    cur_query
+                    attr.asdict(cur_query)
                 )
 
             except TypeError as err:
