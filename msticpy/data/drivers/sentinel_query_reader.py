@@ -168,7 +168,7 @@ def read_yaml_files(parent_dir: str, child_dir: str) -> dict:
 
     """
     # enumerate the files and read the yaml
-    yaml_queries = Path(parent_dir, child_dir).rglob("*.yaml")
+    yaml_queries = list(Path(parent_dir, child_dir).rglob("*.yaml"))
     yaml_queries = [str(Path(q)) for q in yaml_queries]
     parsed_query_dict = {}
 
@@ -330,7 +330,7 @@ def _create_queryfile_metadata(folder_name: str) -> dict:  # type: ignore
     return dict_to_write
 
 
-def _create_yaml_source_sec(cur_query: dict) -> dict:
+def _create_yaml_source_sec(cur_query: SentinelQuery) -> dict:
     """
     Create the metadata section of the YAML for the current query.
 
@@ -398,8 +398,10 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
 
             except TypeError as err:
                 logger.warning(
-                    """Query name is most likely None at %s for 
-                    current query %r""", source_folder, cur_query
+                    """Query name is most likely None at %s for
+                    current query %r""",
+                    source_folder,
+                    cur_query,
                 )
                 print(err)
 
@@ -450,10 +452,10 @@ def download_and_write_sentinel_queries(
     get_sentinel_queries_from_github(outputdir=github_outputdir)
     print("Reading yaml_files")
     if github_outputdir is None:
-        github_outputdir = Path.joinpath(
-            Path("~").expanduser(), ".msticpy", "Azure-Sentinel"
+        github_outputdir = str(
+            Path.joinpath(Path("~").expanduser(), ".msticpy", "Azure-Sentinel")
         )
-    base_dir = Path(github_outputdir, "/Azure-Sentinel-master")
+    base_dir = str(Path(github_outputdir, "/Azure-Sentinel-master"))
     yaml_files = read_yaml_files(parent_dir=base_dir, child_dir=query_type)
     print("Generating a list of queries")
     query_list = import_sentinel_queries(yaml_files, query_type=query_type)
