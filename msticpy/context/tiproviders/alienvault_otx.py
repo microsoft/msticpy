@@ -32,7 +32,7 @@ class _OTXParams(APILookupParams):
     # override APILookupParams to set common defaults
     def __attrs_post_init__(self):
         # pylint: disable=
-        self.headers = {"X-OTX-API-KEY": "{API_KEY}"}
+        self.headers = {"X-OTX-API-KEY": "{AuthKey}"}
 
 
 @export
@@ -67,7 +67,7 @@ class OTX(HttpTIProvider):
     _QUERIES["sha1_hash"] = _QUERIES["file_hash"]
     _QUERIES["sha256_hash"] = _QUERIES["file_hash"]
 
-    _REQUIRED_PARAMS = ["API_KEY"]
+    _REQUIRED_PARAMS = ["AuthKey"]
 
     def __init__(self, **kwargs):
         """Set OTX specific settings."""

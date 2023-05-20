@@ -1,6 +1,9 @@
 Writing and Contributing a Data Provider
 ========================================
 
+See :doc:`../data_acquisition/DataProviders` for more details on use
+of data providers.
+
 A data provider lets you query data from a notebook in a standardized way.
 Before reading further you should familiarize yourself with how the data
 providers work from the :doc:`Querying and Importing Data <../DataAcquisition>`
@@ -32,8 +35,9 @@ To implement a data provider you need to do the following:
 2. Customize the driver (optional)
 3. Register the driver
 4. Add queries
-5. Create documentation
-6. Create unit tests
+5. Add settings definition
+6. Create documentation
+7. Create unit tests
 
 1. Write the driver class
 -------------------------
@@ -393,9 +397,9 @@ A data provider should have documentation describing its configuration and use.
 This should be in restructured text for generating document pages
 in Sphinx.
 
-See the examples :doc:`./SplunkProvider` and :doc:`./DataProv-Sumologic`
+See the examples :doc:`../data_acquisition/SplunkProvider` and :doc:`../data_acquisition/DataProv-Sumologic`
 
-6. Create driver unit tests
+7. Create driver unit tests
 ---------------------------
 
 Please add a unit test using mocks to simulate the service

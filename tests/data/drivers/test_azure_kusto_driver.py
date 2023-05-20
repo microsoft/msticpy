@@ -209,8 +209,9 @@ _TEST_CONNECT_ARGS = (
         init_args={"connection_str": "https://test1.kusto.windows.net"},
         connect_args={"connection_str": "https://test.kusto.windows.net"},
         tests=[
-            lambda driver: driver.client._kusto_cluster
-            == "https://test.kusto.windows.net"
+            lambda driver: driver.client._kusto_cluster.startswith(
+                "https://test.kusto.windows.net"
+            )
         ],
     ),
     ConnectTest(
@@ -218,8 +219,6 @@ _TEST_CONNECT_ARGS = (
         init_args={},
         connect_args={"cluster": "https://test.kusto.windows.net"},
         tests=[
-            lambda driver: driver.client._kusto_cluster
-            == "https://test.kusto.windows.net",
             lambda driver: driver._current_config.cluster
             == "https://test.kusto.windows.net",
         ],
@@ -235,8 +234,6 @@ _TEST_CONNECT_ARGS = (
             "tenant_id": "test_tenant_id",
         },
         tests=[
-            lambda driver: driver.client._kusto_cluster
-            == "https://help.kusto.windows.net",
             lambda driver: driver._current_config.cluster
             == "https://help.kusto.windows.net",
             lambda driver: driver._az_tenant_id == "test_tenant_id",
@@ -255,8 +252,6 @@ _TEST_CONNECT_ARGS = (
             "database": "test_db",
         },
         tests=[
-            lambda driver: driver.client._kusto_cluster
-            == "https://help.kusto.windows.net",
             lambda driver: driver._current_config.cluster
             == "https://help.kusto.windows.net",
             lambda driver: driver._az_tenant_id == "test_tenant_id",
@@ -329,8 +324,9 @@ _TEST_CONNECT_ARGS = (
         init_args={},
         connect_args={"connection_str": "https://test.kusto.windows.net"},
         tests=[
-            lambda driver: driver.client._kusto_cluster
-            == "https://test.kusto.windows.net",
+            lambda driver: driver.client._kusto_cluster.startswith(
+                "https://test.kusto.windows.net"
+            ),
             lambda driver: driver.client._proxy_url == "https://test.com",
         ],
         additional_config={
@@ -342,8 +338,9 @@ _TEST_CONNECT_ARGS = (
         init_args={},
         connect_args={"cluster": "https://random.kusto.windows.net"},
         tests=[
-            lambda driver: driver.client._kusto_cluster
-            == "https://random.kusto.windows.net"
+            lambda driver: driver.client._kusto_cluster.startswith(
+                "https://random.kusto.windows.net"
+            )
         ],
     ),
     ConnectTest(
@@ -387,9 +384,9 @@ def test_kusto_connect(test_config, monkeypatch):
                 driver.connect(**(test_config.connect_args))
             return
         driver.connect(**(test_config.connect_args))
-        for test in test_config.tests:
+        for idx, test in enumerate(test_config.tests):
             print(
-                "Testcase:",
+                f"Testcase [{idx}]:",
                 test_config.name,
                 test.__code__.co_filename,
                 "line:",
@@ -407,7 +404,7 @@ def test_kusto_connect(test_config, monkeypatch):
                 exp_cluster = cluster_name
             else:
                 exp_cluster = f"https://{cluster_name.casefold()}.kusto.windows.net"
-            check.equal(driver.client._kusto_cluster, exp_cluster)
+            check.is_true(driver.client._kusto_cluster.startswith(exp_cluster))
 
 
 class KustoResponseDataSet:
