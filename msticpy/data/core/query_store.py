@@ -235,6 +235,7 @@ class QueryStore:
         for source in self._all_sources:
             source.show = query_filter(source)
 
+    # pylint: disable=too-many-locals
     @classmethod  # noqa: MC0001
     def import_files(  # noqa: MC0001
         cls,
@@ -287,11 +288,14 @@ class QueryStore:
                     if "." in env_value:
                         env_value = env_value.split(".")[1]
                     environment = DataEnvironment.parse(env_value)
-                    if environment == DataEnvironment.Unknown:
-                        raise ValueError(f"Unknown environment {env_value}")
+                    environment_name = (
+                        environment.name
+                        if environment != DataEnvironment.Unknown
+                        else env_value
+                    )
 
-                    if environment.name not in env_stores:
-                        env_stores[environment.name] = cls(environment=environment.name)
+                    if environment_name not in env_stores:
+                        env_stores[environment_name] = cls(environment=environment_name)
                     for source_name, source in sources.items():
                         new_source = QuerySource(
                             source_name, source, defaults, metadata
@@ -300,7 +304,7 @@ class QueryStore:
                             driver_query_filter
                             and _matches_driver_filter(new_source, driver_query_filter)
                         ):
-                            env_stores[environment.name].add_data_source(new_source)
+                            env_stores[environment_name].add_data_source(new_source)
         return env_stores
 
     def get_query(
