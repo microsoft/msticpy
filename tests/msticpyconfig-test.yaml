@@ -33,6 +33,8 @@ QueryDefinitions:
     - "queries"
   Custom:
     - "testdata"
+PluginFolders:
+  - tests/testdata/plugins
 Azure:
   cloud: "global"
   auth_methods: ["cli", "msi", "interactive"]

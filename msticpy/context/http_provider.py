@@ -74,7 +74,7 @@ class HttpProvider(Provider):
         # Community API
         "ipv4": APILookupParams(
             path="/v3/community/{observable}",
-            headers={"key": "{API_KEY}"},
+            headers={"key": "{AuthKey}"},
         ),
         # Enterprise API Quick Lookup
         "ipv4-quick": APILookupParams(
@@ -91,7 +91,7 @@ class HttpProvider(Provider):
 
     .. code:: python
 
-        _REQUIRED_PARAMS = ["API_KEY"]
+        _REQUIRED_PARAMS = ["AuthKey"]
 
     In __init__
 
@@ -131,13 +131,13 @@ class HttpProvider(Provider):
         self._request_params = {}
         if "ApiID" in kwargs:
             api_id = kwargs.pop("ApiID")
-            self._request_params["API_ID"] = api_id.strip() if api_id else None
+            self._request_params["ApiID"] = api_id.strip() if api_id else None
         if "AuthKey" in kwargs:
             auth_key = kwargs.pop("AuthKey")
-            self._request_params["API_KEY"] = auth_key.strip() if auth_key else None
+            self._request_params["AuthKey"] = auth_key.strip() if auth_key else None
         if "Instance" in kwargs:
             auth_key = kwargs.pop("Instance")
-            self._request_params["INSTANCE"] = auth_key.strip() if auth_key else None
+            self._request_params["Instance"] = auth_key.strip() if auth_key else None
 
         missing_params = [
             param

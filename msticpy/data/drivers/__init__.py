@@ -5,7 +5,8 @@
 # --------------------------------------------------------------------------
 """Data provider sub-package."""
 import importlib
-from typing import Union
+from functools import singledispatch
+from typing import Dict, Union
 
 from ..._version import VERSION
 from ..core.query_defns import DataEnvironment
@@ -35,8 +36,20 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.Kusto_New: ("azure_kusto_driver", "AzureKustoDriver"),
 }
 
+CUSTOM_PROVIDERS: Dict[str, type] = {}
 
-def import_driver(data_environment: DataEnvironment) -> type:
+
+@singledispatch
+def import_driver(data_environment) -> type:
+    """Unsupported type for environment."""
+    raise TypeError(
+        "'data_environment' must be a str or DataEnvironment type.",
+        f"Called with type: {type(data_environment)}",
+    )
+
+
+@import_driver.register
+def _(data_environment: DataEnvironment) -> type:
     """Import driver class for a data environment."""
     mod_name, cls_name = _ENVIRONMENT_DRIVERS.get(data_environment, (None, None))
 
@@ -51,3 +64,16 @@ def import_driver(data_environment: DataEnvironment) -> type:
         f"msticpy.data.drivers.{mod_name}", package="msticpy"
     )
     return getattr(imp_module, cls_name)
+
+
+@import_driver.register
+def _(data_environment: str) -> type:
+    """Import custom driver class for a data environment."""
+    if plugin_cls := CUSTOM_PROVIDERS.get(data_environment):
+        return plugin_cls
+
+    raise ValueError(
+        f"No driver available for environment {data_environment}.",
+        "Possible values are:",
+        ", ".join(CUSTOM_PROVIDERS),
+    )
