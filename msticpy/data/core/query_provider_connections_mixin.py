@@ -151,7 +151,8 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         )
         # Run the queries threaded if supported
         if self._query_provider.get_driver_property(DriverProps.SUPPORTS_THREADING):
-            return asyncio.run(
+            event_loop = _get_event_loop()
+            return event_loop.run_until_complete(
                 self._exec_queries_threaded(query_tasks, progress, retry)
             )
         # future - add async support
@@ -261,15 +262,22 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         # Retrieve any query options passed (other than query params)
         # and send to query function.
         query_options = self._get_query_options(query_params, kwargs)
+        if "time_span" in query_options:
+            del query_options["time_span"]
         query_tasks = {
             f"{start}-{end}": partial(
-                self.exec_query, query_str, query_source=query_source, **query_options
+                self.exec_query,
+                query=query_str,
+                query_source=query_source,
+                time_span={"start": start, "end": end},
+                **query_options,
             )
             for (start, end), query_str in split_queries.items()
         }
         # Run the queries threaded if supported
         if self._query_provider.get_driver_property(DriverProps.SUPPORTS_THREADING):
-            return asyncio.run(
+            event_loop = _get_event_loop()
+            return event_loop.run_until_complete(
                 self._exec_queries_threaded(query_tasks, progress, retry)
             )
         # if self._query_provider.get_driver_property(DriverProps.SUPPORTS_ASYNC):
@@ -293,7 +301,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
             except MsticpyDataQueryError:
                 print(f"Query for {query_range} failed.")
 
-        return pd.concat(query_dfs)
+        return pd.concat(query_dfs, ignore_index=True)
 
     async def _exec_queries_threaded(
         self,
@@ -353,7 +361,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
             # Sort the results by the order of the tasks
             results = [result for _, result in sorted(zip(thread_tasks, results))]
 
-        return pd.concat(results)
+        return pd.concat(results, ignore_index=True)
 
     async def _exec_queries_async(
         self,
@@ -439,4 +447,9 @@ def _calc_split_ranges(start: datetime, end: datetime, split_delta: pd.Timedelta
         # in ranges and ending in 'end"
         # note - we need to add back our subtracted 1 nanosecond
         ranges.append((ranges[-1][0] + pd.Timedelta("1ns"), end))
-    return ranges
+
+    # convert back to Python datetime objects and return
+    return [
+        (s_time.to_pydatetime(warn=False), e_time.to_pydatetime(warn=False))
+        for s_time, e_time in ranges
+    ]

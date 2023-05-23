@@ -486,7 +486,19 @@ class AzureMonitorDriver(DriverBase):
                 start=time_params["start"],
                 end=time_params["end"],
             )
-            time_span_value = time_span.start, time_span.end
+            # Azure Monitor API expects datetime objects, so
+            # convert to datetimes if we have pd.Timestamps
+            t_start = (
+                time_span.start.to_pydatetime(warn=False)
+                if isinstance(time_span.start, pd.Timestamp)
+                else time_span.start
+            )
+            t_end = (
+                time_span.end.to_pydatetime(warn=False)
+                if isinstance(time_span.end, pd.Timestamp)
+                else time_span.end
+            )
+            time_span_value = t_start, t_end
             logger.info("Time parameters set %s", str(time_span))
         return time_span_value
 
