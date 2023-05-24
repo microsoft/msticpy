@@ -15,6 +15,7 @@ a file `msticpyconfig.yaml` in the current directory.
 import contextlib
 import numbers
 import os
+import warnings
 from importlib.util import find_spec
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Union
@@ -43,6 +44,21 @@ _HOME_PATH = "~/.msticpy/"
 _default_settings: Dict[str, Any] = {}
 _custom_settings: Dict[str, Any] = {}
 _settings: Dict[str, Any] = {}
+
+
+# for backward compatibility
+def __getattr__(name: str):
+    """Get dynamic module attribute."""
+    if name == "settings":
+        warnings.warn(
+            (
+                "Accessing settings directly is deprecated. "
+                "Please use the 'get_config' and 'set_config' functions"
+            ),
+            DeprecationWarning,
+        )
+        return _settings
+    raise AttributeError(f"pkg_config has no attribute {name}")
 
 
 def _get_current_config() -> Callable[[Any], Optional[str]]:
