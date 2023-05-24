@@ -142,6 +142,9 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                 **kwargs,
             )
         }
+        logger.info(
+            "Running queries for %s connections.", len(self._additional_connections)
+        )
         # add the additional connections
         query_tasks.update(
             {
@@ -151,6 +154,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         )
         # Run the queries threaded if supported
         if self._query_provider.get_driver_property(DriverProps.SUPPORTS_THREADING):
+            logger.info("Running threaded queries.")
             event_loop = _get_event_loop()
             return event_loop.run_until_complete(
                 self._exec_queries_threaded(query_tasks, progress, retry)
@@ -172,7 +176,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
 
         # standard synchronous execution
         print(f"Running query for {len(self._additional_connections)} connections.")
-
+        logger.info("Running queries sequentially.")
         results: List[pd.DataFrame] = []
         if progress:
             query_iter = tqdm(query_tasks.items(), unit="sub-queries", desc="Running")
@@ -241,6 +245,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
             split_delta = pd.Timedelta(split_by)
         except ValueError:
             split_delta = pd.Timedelta("1D")
+        logger.info("Using split delta %s", split_delta)
 
         ranges = _calc_split_ranges(start, end, split_delta)
 
@@ -253,6 +258,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
             )
             for q_start, q_end in ranges
         }
+        logger.info("Split query into %s chunks", len(split_queries))
         if debug:
             return "\n\n".join(
                 f"{start}-{end}\n{query}"
@@ -262,6 +268,8 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         # Retrieve any query options passed (other than query params)
         # and send to query function.
         query_options = self._get_query_options(query_params, kwargs)
+        logger.info("query_options: %s", query_options)
+        logger.info("kwargs: %s", kwargs)
         if "time_span" in query_options:
             del query_options["time_span"]
         query_tasks = {
@@ -276,6 +284,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         }
         # Run the queries threaded if supported
         if self._query_provider.get_driver_property(DriverProps.SUPPORTS_THREADING):
+            logger.info("Running threaded queries.")
             event_loop = _get_event_loop()
             return event_loop.run_until_complete(
                 self._exec_queries_threaded(query_tasks, progress, retry)
@@ -290,6 +299,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         #     return asyncio.run(self._exec_queries_async(query_tasks, progress, retry))
 
         # standard synchronous execution
+        logger.info("Running queries sequentially.")
         if progress:
             query_iter = tqdm(query_tasks.items(), unit="sub-queries", desc="Running")
         else:
@@ -448,8 +458,4 @@ def _calc_split_ranges(start: datetime, end: datetime, split_delta: pd.Timedelta
         # note - we need to add back our subtracted 1 nanosecond
         ranges.append((ranges[-1][0] + pd.Timedelta("1ns"), end))
 
-    # convert back to Python datetime objects and return
-    return [
-        (s_time.to_pydatetime(warn=False), e_time.to_pydatetime(warn=False))
-        for s_time, e_time in ranges
-    ]
+    return ranges

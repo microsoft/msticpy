@@ -324,13 +324,21 @@ class AzureMonitorDriver(DriverBase):
                 title="Workspace not connected.",
                 help_uri=_HELP_URL,
             )
-        logger.info("Query to run %s", query)
         time_span_value = self._get_time_span_value(**kwargs)
-
         server_timeout = kwargs.pop("timeout", self._def_timeout)
 
         workspace_id = next(iter(self._workspace_ids), None) or self._workspace_id
         additional_workspaces = self._workspace_ids[1:] if self._workspace_ids else None
+        logger.info("Query to run %s", query)
+        logger.info(
+            "Workspaces %s", ",".join(self._workspace_ids) or self._workspace_id
+        )
+        logger.info(
+            "Time span %s - %s",
+            str(time_span_value[0]) if time_span_value else "none",
+            str(time_span_value[1]) if time_span_value else "none",
+        )
+        logger.info("Timeout %s", server_timeout)
         try:
             result = self._query_client.query_workspace(
                 workspace_id=workspace_id,  # type: ignore[arg-type]
