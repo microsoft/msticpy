@@ -184,7 +184,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             Connection string for the data source
 
         """
-        self.logger("Calling connect on driver")
+        logger("Calling connect on driver")
         self._query_provider.connect(connection_str=connection_str, **kwargs)
 
         # If the driver has any attributes to expose via the provider
