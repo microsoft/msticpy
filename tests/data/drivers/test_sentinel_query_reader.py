@@ -48,14 +48,22 @@ def test_get_sentinel_queries_from_github():
 
 
 def test_read_yaml_files():
-    yaml_files = read_yaml_files(parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections")
-    assert yaml_files[str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml"))]
+    yaml_files = read_yaml_files(
+        parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections"
+    )
+    assert yaml_files[
+        str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml"))
+    ]
 
 
 def test__import_sentinel_query():
-    yaml_files = read_yaml_files(parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections")
+    yaml_files = read_yaml_files(
+        parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections"
+    )
     query_type = "Detections"
-    yaml_path = str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml"))
+    yaml_path = str(
+        BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml")
+    )
     yaml_text = yaml_files[yaml_path]
     sample_query = SentinelQuery(
         query_id="d0255b5f-2a3c-4112-8744-e6757af3283a",
@@ -84,8 +92,12 @@ def test__import_sentinel_query():
 
 
 def test_import_sentinel_query():
-    yaml_files = read_yaml_files(parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections")
-    yaml_path = str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml"))
+    yaml_files = read_yaml_files(
+        parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections"
+    )
+    yaml_path = str(
+        BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml")
+    )
     sample_query = SentinelQuery(
         query_id="d0255b5f-2a3c-4112-8744-e6757af3283a",
         name="Unusual Anomaly",
@@ -109,9 +121,7 @@ def test_import_sentinel_query():
         source_file_name=yaml_path,
         query_type="Detections",
     )
-    assert (
-        sample_query in import_sentinel_queries(yaml_files, query_type="Detections")
-    )
+    assert sample_query in import_sentinel_queries(yaml_files, query_type="Detections")
 
 
 @pytest.mark.parametrize(
@@ -165,7 +175,11 @@ def test__format_query_name(initial_str, expected_result):
                     version="1.0.1",
                     kind="Scheduled",
                     folder_name="Anomalies",
-                    source_file_name=str(BASE_DIR_TEST_FOLDER.joinpath("Detections/Anomalies/UnusualAnomaly.yaml")),
+                    source_file_name=str(
+                        BASE_DIR_TEST_FOLDER.joinpath(
+                            "Detections/Anomalies/UnusualAnomaly.yaml"
+                        )
+                    ),
                     query_type="Detections",
                 )
             ],
@@ -173,29 +187,36 @@ def test__format_query_name(initial_str, expected_result):
     ],
 )
 def test__organize_query_list_by_folder(dict_section, expected_result):
-    yaml_files = read_yaml_files(parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections")
+    yaml_files = read_yaml_files(
+        parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections"
+    )
     query_list = import_sentinel_queries(yaml_files=yaml_files, query_type="Detections")
     if dict_section == "keys":
-        assert (
-            sorted(list(_organize_query_list_by_folder(query_list=query_list).keys()))
-            == sorted(expected_result)
-        )
+        assert sorted(
+            list(_organize_query_list_by_folder(query_list=query_list).keys())
+        ) == sorted(expected_result)
     else:
-        assert (
-            sorted(_organize_query_list_by_folder(query_list=query_list)[dict_section])
-            == sorted(expected_result)
-        )
-
+        assert sorted(
+            _organize_query_list_by_folder(query_list=query_list)[dict_section]
+        ) == sorted(expected_result)
 
 
 def test__create_queryfile_metadata():
-    ignore_keys = ['last_updated'] #timing may differ but doesn't matter for test purposes
-    generated_dict = {k:v for k,v in _create_queryfile_metadata(folder_name="Detections")["metadata"].items() if k not in ignore_keys} 
+    ignore_keys = [
+        "last_updated"
+    ]  # timing may differ but doesn't matter for test purposes
+    generated_dict = {
+        k: v
+        for k, v in _create_queryfile_metadata(folder_name="Detections")[
+            "metadata"
+        ].items()
+        if k not in ignore_keys
+    }
     test_dict = {
         "version": 1,
         "description": "Sentinel Alert Queries - Detections",
         "data_environments": ["MSSentinel"],
-        "data_families": "Detections"
+        "data_families": "Detections",
     }
     assert generated_dict == test_dict
 
@@ -203,7 +224,9 @@ def test__create_queryfile_metadata():
 # original test case for generating new yaml files
 @pytest.mark.skip(reason="requires downloading the file directly during the test")
 def test_write_to_yaml():
-    yaml_files = read_yaml_files(parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections")
+    yaml_files = read_yaml_files(
+        parent_dir=BASE_DIR_TEST_FOLDER, child_dir="Detections"
+    )
     query_list = import_sentinel_queries(yaml_files=yaml_files, query_type="Detections")
     query_list = [l for l in query_list if l is not None]
     write_to_yaml(

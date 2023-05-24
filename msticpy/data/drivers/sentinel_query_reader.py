@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Github Sentinel Query repo import class and helpers."""
 
+import logging
 import os
 import re
 import warnings
@@ -12,13 +13,13 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
-import logging
 
 import attr
 import httpx
 import yaml
 from attr import attrs
 from tqdm.notebook import tqdm
+
 from ..._version import VERSION
 
 __version__ = VERSION
