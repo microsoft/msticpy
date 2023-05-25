@@ -205,15 +205,13 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         executed asynchronously. Otherwise, the queries are executed sequentially.
 
         """
-        start = query_params.pop("start")
-        end = query_params.pop("end")
+        start = query_params.pop("start", None)
+        end = query_params.pop("end", None)
         progress = kwargs.pop("progress", True)
         retry = kwargs.pop("retry_on_error", False)
         debug = kwargs.pop("debug", False)
         if not (start or end):
-            print(
-                "Cannot split a query that does not have 'start' and 'end' parameters"
-            )
+            print("Cannot split a query with no 'start' and 'end' parameters")
             return None
 
         split_queries = self._create_split_queries(
@@ -249,7 +247,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         query_params: Dict[str, Any],
         split_queries,
         **kwargs,
-    ) -> Dict[str, partial[Any]]:
+    ) -> Dict[str, partial]:
         """Return dictionary of partials to execute queries."""
         # Retrieve any query options passed (other than query params)
         query_options = self._get_query_options(query_params, kwargs)

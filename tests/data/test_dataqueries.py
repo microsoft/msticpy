@@ -405,7 +405,7 @@ class TestDataQuery(unittest.TestCase):
         queries = result_queries.split("\n\n")
         # if no start and end - provider prints message and returns None
         self.assertEqual(len(queries), 1)
-        self.assertIn("Cannot split a query that", mssg.getvalue())
+        self.assertIn("Cannot split a query", mssg.getvalue())
 
         # With invalid split_query_by value it will default to 1D
         start = datetime.utcnow() - pd.Timedelta("5D")
