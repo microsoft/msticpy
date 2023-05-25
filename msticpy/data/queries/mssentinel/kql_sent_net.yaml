@@ -252,7 +252,7 @@ sources:
         description: URL to search for
         type: str
   host_network_connections_csl:
-    descritpion: List network connections to and from a host using CommonSecurityLog
+    description: List network connections to and from a host using CommonSecurityLog
     metadata:
       pivot:
         short_name: host_connections_csl
@@ -277,7 +277,7 @@ sources:
         type: str
         default: ""
   ip_network_connections_csl:
-    descritpion: List network connections to and from an IP address using CommonSecurityLog
+    description: List network connections to and from an IP address using CommonSecurityLog
     metadata:
       pivot:
         short_name: ip_connections_csl
@@ -302,7 +302,7 @@ sources:
         type: str
         default: ""
   all_network_connections_csl:
-    descritpion: List network connections to and from an IP address using CommonSecurityLog
+    description: List network connections to and from an IP address using CommonSecurityLog
     args:
       query: '
         {table}
@@ -318,7 +318,7 @@ sources:
         type: str
         default: "CommonSecurityLog"
   ips_by_host_csl:
-    descritpion: All IP addresses associated with a host using CommonSecurityLog
+    description: All IP addresses associated with a host using CommonSecurityLog
     metadata:
       pivot:
         short_name: ips_csl
@@ -344,7 +344,7 @@ sources:
         type: str
         default: ""
   hosts_by_ip_csl:
-    descritpion: All hosts associated with a IP addresses using CommonSecurityLog
+    description: All hosts associated with a IP addresses using CommonSecurityLog
     metadata:
       pivot:
         short_name: hosts_csl

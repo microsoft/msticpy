@@ -4,8 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """MSTICPy query template definition."""
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from dataclasses import field
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic.dataclasses import dataclass
 
 from ..._version import VERSION
 
@@ -13,6 +15,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclass
 class QueryMetadata:
     """Metadata for query definitions."""
@@ -27,6 +30,8 @@ class QueryMetadata:
     cluster_groups: Optional[List[str]] = None
     tags: List[str] = field(default_factory=list)
     data_source: Optional[str] = None
+    aliases: Optional[Union[str, List[str]]] = None
+    query_macros: Optional[Dict[str, Any]] = None
 
 
 @dataclass
@@ -36,7 +41,7 @@ class QueryParameter:
     description: str
     datatype: str
     default: Any = None
-    required: Optional[bool] = None
+    aliases: Optional[List[str]] = None
 
 
 @dataclass
@@ -59,9 +64,9 @@ class Query:
     """A Query definition."""
 
     description: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
     args: QueryArgs = field(default_factory=QueryArgs)
-    parameters: Dict[str, QueryParameter] = field(default_factory=dict)
+    metadata: Optional[Dict[str, Any]] = field(default_factory=dict)  # type: ignore
+    parameters: Optional[Dict[str, QueryParameter]] = field(default_factory=dict)  # type: ignore
 
 
 @dataclass

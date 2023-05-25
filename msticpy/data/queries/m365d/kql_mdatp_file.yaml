@@ -71,4 +71,5 @@ sources:
       file_hash:
         description: Hash of file
         type: str
-        aliases: hash
+        aliases:
+          - hash
