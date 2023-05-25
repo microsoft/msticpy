@@ -20,13 +20,10 @@ import pytest_check as check
 
 from msticpy.common import pkg_config
 from msticpy.common.exceptions import MsticpyException
-from msticpy.data.core.data_providers import (
-    DriverBase,
-    QueryContainer,
-    QueryProvider,
-    _calc_split_ranges,
-)
+from msticpy.data.core.data_providers import QueryProvider, _calc_split_ranges
+from msticpy.data.core.query_container import QueryContainer
 from msticpy.data.core.query_source import QuerySource
+from msticpy.data.drivers.driver_base import DriverBase, DriverProps
 
 from ..unit_test_lib import get_test_data_path
 
@@ -45,7 +42,7 @@ class UTDataDriver(DriverBase):
         self._kwargs = kwargs
         self._loaded = True
         self._connected = False
-        self.public_attribs = {"test": self._TEST_ATTRIB}
+        self.set_driver_property(DriverProps.PUBLIC_ATTRS, {"test": self._TEST_ATTRIB})
         self.svc_queries = {}
         self.has_driver_queries = True
 

@@ -285,9 +285,7 @@ def _get_default_config():
                 title=f"Package {_CONFIG_FILE} missing.",
             ) from mod_err
         conf_file = next(iter(pkg_root.glob(f"**/{_CONFIG_FILE}")))
-    if conf_file:
-        return _read_config_file(conf_file)
-    return {}
+    return _read_config_file(conf_file) if conf_file else {}
 
 
 def _get_custom_config():
@@ -345,12 +343,19 @@ def _translate_legacy_settings(
     return mp_config
 
 
+#############################
+# Specialized settings
+
+
 def get_http_timeout(
     **kwargs,
 ) -> httpx.Timeout:
     """Return timeout from settings or overridden in `kwargs`."""
+    config_timeout = get_config(
+        "msticpy.http_timeout", get_config("http_timeout", None)
+    )
     timeout_params = kwargs.get(
-        "timeout", kwargs.get("def_timeout", get_config("http_timeout", None))  # type: ignore
+        "timeout", kwargs.get("def_timeout", config_timeout)  # type: ignore
     )  # type: ignore
     if isinstance(timeout_params, dict):
         timeout_params = {
@@ -377,6 +382,9 @@ def _valid_timeout(timeout_val) -> Union[float, None]:
     return None
 
 
+# End specialized settings
+############################
+
 # read initial config when first imported.
 refresh_config()
 
@@ -396,7 +404,7 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
     """
     if config_file:
         mp_config = _read_config_file(config_file)
-    if not (mp_config or config_file):
+    if not mp_config and not config_file:
         mp_config = _settings
 
     if not isinstance(mp_config, dict):
@@ -426,9 +434,7 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
         mp_warn.extend(prov_warn)
 
     _print_validation_report(mp_errors, mp_warn)
-    if mp_errors or mp_warn:
-        return mp_errors, mp_warn
-    return [], []
+    return (mp_errors, mp_warn) if mp_errors or mp_warn else ([], [])
 
 
 def _print_validation_report(mp_errors, mp_warn):

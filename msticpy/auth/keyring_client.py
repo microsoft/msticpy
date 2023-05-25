@@ -4,11 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """Settings provider for secrets."""
-import random
 from typing import Any, Set
 
 import keyring
-from keyring.errors import KeyringError, KeyringLocked, NoKeyringError
+from keyring.errors import KeyringError, KeyringLocked
 
 from .._version import VERSION
 from ..common.utility import export
@@ -117,16 +116,4 @@ class KeyringClient:
             True if Keyring has a usable backend, False if not.
 
         """
-        char_list = list("abcdefghijklm1234567890")
-        random.shuffle(char_list)
-        test_value = "".join(char_list)
-        try:
-            keyring.set_password("test", test_value, test_value)
-            # If no exception clear the test key
-            try:
-                keyring.delete_password("test", test_value)
-            except keyring.errors.PasswordDeleteError:
-                pass
-            return True
-        except NoKeyringError:
-            return False
+        return keyring.get_keyring() != keyring.backends.fail.Keyring
