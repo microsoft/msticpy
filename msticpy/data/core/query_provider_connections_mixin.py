@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from functools import partial
 from itertools import tee
-from typing import Any, Dict, List, Optional, Protocol, Union
+from typing import Any, Dict, List, Optional, Protocol, Tuple, Union
 
 import pandas as pd
 from tqdm.auto import tqdm
@@ -112,7 +112,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
             The query to execute.
         progress: bool, optional
             Show progress bar, by default True
-        retry: bool, optional
+        retry_on_error: bool, optional
             Retry failed queries, by default False
         **kwargs : Dict[str, Any]
             Additional keyword arguments to pass to the query method.
@@ -142,9 +142,6 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                 **kwargs,
             )
         }
-        logger.info(
-            "Running queries for %s connections.", len(self._additional_connections)
-        )
         # add the additional connections
         query_tasks.update(
             {
@@ -152,6 +149,8 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                 for name, connection in self._additional_connections.items()
             }
         )
+
+        logger.info("Running queries for %s connections.", len(query_tasks))
         # Run the queries threaded if supported
         if self._query_provider.get_driver_property(DriverProps.SUPPORTS_THREADING):
             logger.info("Running threaded queries.")
@@ -159,35 +158,10 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
             return event_loop.run_until_complete(
                 self._exec_queries_threaded(query_tasks, progress, retry)
             )
-        # future - add async support
-        # if self._query_provider.get_driver_property(DriverProps.SUPPORTS_ASYNC):
-        #     tasks = [
-        #         partial(
-        #             self._query_provider.query_async,
-        #             query,
-        #             **kwargs,
-        #         )
-        #     ]
-        #     tasks.extend(
-        #         partial(connection.query_async, query, **kwargs)
-        #         for connection in self._additional_connections.values()
-        #     )
-        #     return asyncio.run(self._exec_queries_async(tasks, progress, retry))
 
         # standard synchronous execution
         print(f"Running query for {len(self._additional_connections)} connections.")
-        logger.info("Running queries sequentially.")
-        results: List[pd.DataFrame] = []
-        if progress:
-            query_iter = tqdm(query_tasks.items(), unit="sub-queries", desc="Running")
-        else:
-            query_iter = query_tasks.items()
-        for con_name, query_task in query_iter:
-            try:
-                results.append(query_task())
-            except MsticpyDataQueryError:
-                print(f"Query {con_name} failed.")
-        return pd.concat(results)
+        return self._exec_synchronous_queries(progress, query_tasks)
 
     def _exec_split_query(
         self,
@@ -214,7 +188,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
             Return queries to be executed rather than execute them, by default False
         progress: bool, optional
             Show progress bar, by default True
-        retry: bool, optional
+        retry_on_error: bool, optional
             Retry failed queries, by default False
         **kwargs : Dict[str, Any]
             Additional keyword arguments to pass to the query method.
@@ -231,8 +205,8 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         executed asynchronously. Otherwise, the queries are executed sequentially.
 
         """
-        start = query_params.pop("start", None)
-        end = query_params.pop("end", None)
+        start = query_params.pop("start")
+        end = query_params.pop("end")
         progress = kwargs.pop("progress", True)
         retry = kwargs.pop("retry_on_error", False)
         debug = kwargs.pop("debug", False)
@@ -241,6 +215,85 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                 "Cannot split a query that does not have 'start' and 'end' parameters"
             )
             return None
+
+        split_queries = self._create_split_queries(
+            query_source=query_source,
+            query_params=query_params,
+            start=start,
+            end=end,
+            split_by=split_by,
+        )
+        if debug:
+            return "\n\n".join(
+                f"{start}-{end}\n{query}"
+                for (start, end), query in split_queries.items()
+            )
+
+        query_tasks = self._create_split_query_tasks(
+            query_source, query_params, split_queries, **kwargs
+        )
+        # Run the queries threaded if supported
+        if self._query_provider.get_driver_property(DriverProps.SUPPORTS_THREADING):
+            logger.info("Running threaded queries.")
+            event_loop = _get_event_loop()
+            return event_loop.run_until_complete(
+                self._exec_queries_threaded(query_tasks, progress, retry)
+            )
+
+        # or revert to standard synchronous execution
+        return self._exec_synchronous_queries(progress, query_tasks)
+
+    def _create_split_query_tasks(
+        self,
+        query_source: QuerySource,
+        query_params: Dict[str, Any],
+        split_queries,
+        **kwargs,
+    ) -> Dict[str, partial[Any]]:
+        """Return dictionary of partials to execute queries."""
+        # Retrieve any query options passed (other than query params)
+        query_options = self._get_query_options(query_params, kwargs)
+        logger.info("query_options: %s", query_options)
+        logger.info("kwargs: %s", kwargs)
+        if "time_span" in query_options:
+            del query_options["time_span"]
+        return {
+            f"{start}-{end}": partial(
+                self.exec_query,
+                query=query_str,
+                query_source=query_source,
+                time_span={"start": start, "end": end},
+                **query_options,
+            )
+            for (start, end), query_str in split_queries.items()
+        }
+
+    @staticmethod
+    def _exec_synchronous_queries(
+        progress: bool, query_tasks: Dict[str, Any]
+    ) -> pd.DataFrame:
+        logger.info("Running queries sequentially.")
+        results: List[pd.DataFrame] = []
+        if progress:
+            query_iter = tqdm(query_tasks.items(), unit="sub-queries", desc="Running")
+        else:
+            query_iter = query_tasks.items()
+        for con_name, query_task in query_iter:
+            try:
+                results.append(query_task())
+            except MsticpyDataQueryError:
+                print(f"Query {con_name} failed.")
+        return pd.concat(results)
+
+    def _create_split_queries(
+        self,
+        query_source: QuerySource,
+        query_params: Dict[str, Any],
+        start: datetime,
+        end: datetime,
+        split_by: str,
+    ) -> Dict[Tuple[datetime, datetime], str]:
+        """Return separate queries for split time ranges."""
         try:
             split_delta = pd.Timedelta(split_by)
         except ValueError:
@@ -259,59 +312,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
             for q_start, q_end in ranges
         }
         logger.info("Split query into %s chunks", len(split_queries))
-        if debug:
-            return "\n\n".join(
-                f"{start}-{end}\n{query}"
-                for (start, end), query in split_queries.items()
-            )
-
-        # Retrieve any query options passed (other than query params)
-        # and send to query function.
-        query_options = self._get_query_options(query_params, kwargs)
-        logger.info("query_options: %s", query_options)
-        logger.info("kwargs: %s", kwargs)
-        if "time_span" in query_options:
-            del query_options["time_span"]
-        query_tasks = {
-            f"{start}-{end}": partial(
-                self.exec_query,
-                query=query_str,
-                query_source=query_source,
-                time_span={"start": start, "end": end},
-                **query_options,
-            )
-            for (start, end), query_str in split_queries.items()
-        }
-        # Run the queries threaded if supported
-        if self._query_provider.get_driver_property(DriverProps.SUPPORTS_THREADING):
-            logger.info("Running threaded queries.")
-            event_loop = _get_event_loop()
-            return event_loop.run_until_complete(
-                self._exec_queries_threaded(query_tasks, progress, retry)
-            )
-        # if self._query_provider.get_driver_property(DriverProps.SUPPORTS_ASYNC):
-        #     query_tasks = [
-        #         partial(
-        #             self.exec_query_async(query_str, query_source=query_source, **query_options)
-        #         )
-        #         for query_str in split_queries
-        #     ]
-        #     return asyncio.run(self._exec_queries_async(query_tasks, progress, retry))
-
-        # standard synchronous execution
-        logger.info("Running queries sequentially.")
-        if progress:
-            query_iter = tqdm(query_tasks.items(), unit="sub-queries", desc="Running")
-        else:
-            query_iter = query_tasks.items()
-        query_dfs = []
-        for query_range, query_task in query_iter:
-            try:
-                query_dfs.append(query_task())
-            except MsticpyDataQueryError:
-                print(f"Query for {query_range} failed.")
-
-        return pd.concat(query_dfs, ignore_index=True)
+        return split_queries
 
     async def _exec_queries_threaded(
         self,
@@ -372,52 +373,6 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
             results = [result for _, result in sorted(zip(thread_tasks, results))]
 
         return pd.concat(results, ignore_index=True)
-
-    async def _exec_queries_async(
-        self,
-        tasks: Dict[str, partial],
-        progress: bool = True,
-        retry: bool = False,
-    ) -> pd.DataFrame:
-        """Return results of multiple queries run as async tasks."""
-        del tasks, progress, retry
-        logger.warning("Async queries not yet implemented.")
-        raise NotImplementedError("Async queries not yet implemented.")
-
-        # logger.info("Running async queries for %d connections.", len(tasks))
-
-        # results: List[pd.DataFrame] = []
-        # failed_tasks: List[asyncio.Future] = []
-        # event_loop = _get_event_loop()
-        # tasks = [event_loop.create_task(query_func()) for query_func in tasks]
-        # if progress:
-        #     task_iter = tqdm(
-        #         asyncio.as_completed(tasks), unit="sub-queries", desc="Running"
-        #     )
-        # else:
-        #     task_iter = asyncio.as_completed(tasks)
-        # for async_task in task_iter:
-        #     try:
-        #         result = await async_task
-        #         results.append(result)
-        #     except Exception:  # pylint: disable=broad-except
-        #         logger.warning("Query task failed with exception", query_err)
-        #         if retry:
-        #             # Retry the task
-        #             failed_tasks.append(async_task)
-        # if retry and failed_tasks:
-        #     for async_task in failed_tasks:
-        #         try:
-        #             result = await async_task
-        #             results.append(result)
-        #         except Exception:  # pylint: disable=broad-except
-        #             logger.warning(
-        #                 "Retried query task failed with exception", exc_info=True
-        #             )
-        # # Sort the results by the order of the tasks
-        # results = [result for _, result in sorted(zip(tasks, results))]
-
-        # return pd.concat(results)
 
 
 def _get_event_loop() -> asyncio.AbstractEventLoop:
