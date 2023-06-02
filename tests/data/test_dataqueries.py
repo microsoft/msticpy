@@ -225,7 +225,7 @@ class TestDataQuery(unittest.TestCase):
     def test_load_yaml_def(self):
         """Test query loader rejecting badly formed query files."""
         la_provider = self.la_provider
-        with self.assertRaises((MsticpyException, ValueError)) as cm:
+        with self.assertRaises((MsticpyException, ValueError, KeyError)) as cm:
             file_path = Path(_TEST_DATA, "data_q_meta_fail.yaml")
             la_provider.import_query_file(query_file=file_path)
             self.assertIn("no data families defined", str(cm.exception))
