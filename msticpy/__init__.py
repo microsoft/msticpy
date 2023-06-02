@@ -116,6 +116,7 @@ initialization and checks are performed.
 """
 import importlib
 import os
+import warnings
 from typing import Any, Iterable, Union
 
 from . import nbwidgets
@@ -124,6 +125,7 @@ from . import nbwidgets
 from ._version import VERSION
 from .common import pkg_config as settings
 from .common.check_version import check_version
+from .common.exceptions import MsticpyException
 from .common.utility import search_name as search
 from .init.logging import set_logging_level, setup_logging
 
@@ -146,8 +148,6 @@ _DEFAULT_IMPORTS = {
     "GeoLiteLookup": "msticpy.context.geoip",
     "init_notebook": "msticpy.init.nbinit",
     "reset_ipython_exception_handler": "msticpy.init.nbinit",
-    "IPStackLookup": "msticpy.context.geoip",
-    "MicrosoftSentinel": "msticpy.context.azure",
     "MpConfigEdit": "msticpy.config.mp_config_edit",
     "MpConfigFile": "msticpy.config.mp_config_file",
     "QueryProvider": "msticpy.data",
@@ -180,8 +180,11 @@ def __getattr__(attrib: str) -> Any:
 
     """
     if attrib in _DEFAULT_IMPORTS:
-        module = importlib.import_module(_DEFAULT_IMPORTS[attrib])
-        return getattr(module, attrib)
+        try:
+            return getattr(importlib.import_module(_DEFAULT_IMPORTS[attrib]), attrib)
+        except (ImportError, MsticpyException):
+            warnings.warn("Unable to import msticpy.{attrib}", ImportWarning)
+            return None
     raise AttributeError(f"msticpy has no attribute {attrib}")
 
 
