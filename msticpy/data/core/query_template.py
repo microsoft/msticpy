@@ -57,6 +57,7 @@ class QueryArgs:
     """Query arguments."""
 
     query: str = ""
+    uri: Optional[str] = None
 
 
 @dataclass
@@ -73,7 +74,7 @@ class Query:
 class QueryCollection:
     """Query Collection class - a query template."""
 
-    file_name: str
     metadata: QueryMetadata
     defaults: Optional[QueryDefaults] = None
     sources: Dict[str, Query] = field(default_factory=dict)
+    file_name: Optional[str] = None

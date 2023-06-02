@@ -12,7 +12,6 @@ from typing import Any, Dict, Iterable, Tuple
 import yaml
 
 from ..._version import VERSION
-from .query_template import QueryCollection
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -106,10 +105,6 @@ def validate_query_defs(query_def_dict: Dict[str, Any]) -> bool:
         exception message (arg[0])
 
     """
-    try:
-        QueryCollection(**query_def_dict)
-    except Exception as err:
-        raise ValueError(f"Validation failed: {err}") from err
     # verify that sources and metadata are in the data dict
     if "sources" not in query_def_dict or not query_def_dict["sources"]:
         raise ValueError("Imported file has no sources defined")
