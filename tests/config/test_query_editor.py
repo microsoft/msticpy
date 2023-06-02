@@ -12,10 +12,10 @@ from pydantic import ValidationError
 
 from msticpy.config.query_editor import (
     _PARAM_OPTIONS,
-    MetadataEditor,
+    MetadataEditWidget,
     QueryEditor,
-    QueryFileEditor,
-    QueryParameterEditor,
+    QueryEditWidget,
+    QueryParameterEditWidget,
     load_queries_from_yaml,
 )
 from msticpy.data import queries
@@ -79,7 +79,7 @@ def _add_test_parameter2(editor):
 
 def test_add_parameter(query):
     """Test adding a parameter."""
-    editor = QueryParameterEditor(query)
+    editor = QueryParameterEditWidget(query)
     editor.add_parameter(None)
     _add_test_param(editor)
     editor.save_parameter(None)
@@ -95,7 +95,7 @@ def test_add_parameter(query):
 
 def test_select_parameter(query):
     """Test selecting a parameter."""
-    editor = QueryParameterEditor(query)
+    editor = QueryParameterEditWidget(query)
     editor.add_parameter(None)
     _add_test_param(editor)
     editor.save_parameter(None)
@@ -115,7 +115,7 @@ def test_select_parameter(query):
 
 def test_remove_parameter(query):
     """Test removing a parameter."""
-    editor = QueryParameterEditor(query)
+    editor = QueryParameterEditWidget(query)
     editor.add_parameter(None)
     _add_test_param(editor)
     editor.save_parameter(None)
@@ -126,7 +126,7 @@ def test_remove_parameter(query):
 
 def test_edit_parameter(query):
     """Test editing a parameter."""
-    editor = QueryParameterEditor(query)
+    editor = QueryParameterEditWidget(query)
     editor.add_parameter(None)
     _add_test_param(editor)
     editor.save_parameter(None)
@@ -148,7 +148,7 @@ def test_edit_parameter(query):
 
 @pytest.fixture
 def metadata_editor():
-    return MetadataEditor()
+    return MetadataEditWidget()
 
 
 @pytest.fixture
@@ -208,7 +208,7 @@ def query_collection(query_metadata):
 @pytest.fixture
 def query_editor(query_collection):
     """Return a QueryEditor instance."""
-    return QueryEditor(query_collection)
+    return QueryEditWidget(query_collection)
 
 
 def _add_new_query(query_editor, arg1, arg2):
@@ -247,20 +247,20 @@ def test_delete_query(query_editor):
 
 def test_query_file_editor_init():
     """Test the query template editor."""
-    editor = QueryFileEditor(_TEST_FILES[0])
+    editor = QueryEditor(_TEST_FILES[0])
 
     assert editor.filename_widget.value == _TEST_FILES[0]
     assert len(editor.query_collection.sources) == 3
 
     query_collection = load_queries_from_yaml(_TEST_FILES[0])
-    editor = QueryFileEditor(query_collection)
+    editor = QueryEditor(query_collection)
     assert len(editor.query_collection.sources) == 3
 
 
 # pylint: disable=protected-access
 def test_query_file_editor_file_load_and_save(tmp_path):
     """Test the query template editor."""
-    editor = QueryFileEditor()
+    editor = QueryEditor()
     editor.filename_widget.value = _TEST_FILES[0]
     editor._open_file(None)
 
@@ -277,7 +277,7 @@ def test_query_file_editor_file_load_and_save(tmp_path):
 
 def test_query_editor_unsaved_changes(tmp_path):
     """Test the query template editor."""
-    editor = QueryFileEditor()
+    editor = QueryEditor()
     editor.filename_widget.value = _TEST_FILES[0]
     editor._open_file(None)
 
@@ -286,7 +286,7 @@ def test_query_editor_unsaved_changes(tmp_path):
     editor.metadata_editor.save_metadata(None)
     assert editor._unsaved_changes()
 
-    editor = QueryFileEditor()
+    editor = QueryEditor()
     editor.filename_widget.value = _TEST_FILES[0]
     editor._open_file(None)
 
@@ -295,7 +295,7 @@ def test_query_editor_unsaved_changes(tmp_path):
     editor.query_editor.save_query(None)
     assert editor._unsaved_changes()
 
-    editor = QueryFileEditor()
+    editor = QueryEditor()
     editor.filename_widget.value = _TEST_FILES[0]
     editor._open_file(None)
 
@@ -307,7 +307,7 @@ def test_query_editor_unsaved_changes(tmp_path):
 
 def test_query_editor_block_unsaved_changes(tmp_path):
     """Test the query template editor."""
-    editor = QueryFileEditor()
+    editor = QueryEditor()
     editor.filename_widget.value = _TEST_FILES[0]
     editor._open_file(None)
 
