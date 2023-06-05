@@ -25,16 +25,23 @@ __author__ = "Shivam Sandbhor"
 
 class CrowdSec(HttpTIProvider):
     """CrowdSec CTI Smoke Lookup."""
+
     _BASE_URL = "https://cti.api.crowdsec.net"
 
     _QUERIES = {
         "ipv4": APILookupParams(
             path="/v2/smoke/{observable}",
-            headers={"x-api-key": "{AuthKey}"},
+            headers={
+                "x-api-key": "{AuthKey}",
+                "User-Agent": "crowdsec-msticpy-tiprovider/v1.0.0",
+            },
         ),
         "ipv6": APILookupParams(
             path="/v2/smoke/{observable}",
-            headers={"x-api-key": "{AuthKey}"},
+            headers={
+                "x-api-key": "{AuthKey}",
+                "User-Agent": "crowdsec-msticpy-tiprovider/v1.0.0",
+            },
         ),
     }
 
