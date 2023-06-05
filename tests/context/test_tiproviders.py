@@ -157,7 +157,15 @@ _TEST_IOCS = {
     "www.microsoft.com": ("hostname", "whois"),
 }
 
-_TI_PROVIDER_TESTS = ["XForce", "OTX", "VirusTotal", "GreyNoise", "RiskIQ", "IntSights"]
+_TI_PROVIDER_TESTS = [
+    "XForce",
+    "OTX",
+    "VirusTotal",
+    "GreyNoise",
+    "RiskIQ",
+    "IntSights",
+    "CrowdSec",
+]
 
 
 @pytest.mark.parametrize("provider_name", _TI_PROVIDER_TESTS)
@@ -218,7 +226,15 @@ def verify_result(result, ti_lookup):
     for lu_result in result.to_dict(orient="records"):
         check.is_in(
             lu_result["Provider"],
-            ["OTX", "XForce", "VirusTotal", "GreyNoise", "RiskIQ", "IntSights"],
+            [
+                "OTX",
+                "XForce",
+                "VirusTotal",
+                "GreyNoise",
+                "RiskIQ",
+                "IntSights",
+                "CrowdSec",
+            ],
         )
         check.is_not_none(lu_result["Ioc"])
         check.is_not_none(lu_result["IocType"])
@@ -885,6 +901,121 @@ _PROVIDER_RESPONSES = {
             "RelatedCampaigns": ["Campaign A"],
             "RelatedThreatActors": ["Threat Actor 00"],
             "Tags": ["tag"],
+        },
+    },
+    "https://cti.api.crowdsec.net": {
+        "ioc_param": "params",
+        "response": {
+            {
+                "ip_range_score": 1,
+                "ip": "167.248.133.133",
+                "ip_range": "167.248.133.0/24",
+                "as_name": "CENSYS-ARIN-03",
+                "as_num": 398722,
+                "location": {
+                    "country": "US",
+                    "city": None,
+                    "latitude": 1.751,
+                    "longitude": -97.822,
+                },
+                "reverse_dns": "scanner-03.ch1.censys-scanner.com",
+                "behaviors": [
+                    {
+                        "name": "sip:bruteforce",
+                        "label": "SIP Bruteforce",
+                        "description": "IP has been reported for performing a SIP (VOIP) brute force attack.",
+                    },
+                    {
+                        "name": "tcp:scan",
+                        "label": "TCP Scan",
+                        "description": "IP has been reported for performing TCP port scanning.",
+                    },
+                ],
+                "history": {
+                    "first_seen": f"{dt.now().isoformat(timespec='seconds')}+00:00",
+                    "last_seen": f"{dt.now().isoformat(timespec='seconds')}+00:00",
+                    "full_age": 490,
+                    "days_age": 489,
+                },
+                "classifications": {
+                    "false_positives": [],
+                    "classifications": [
+                        {
+                            "name": "scanner:legit",
+                            "label": "Legit scanner",
+                            "description": "IP belongs to a company that scans the internet",
+                        },
+                        {
+                            "name": "scanner:censys",
+                            "label": "Known Security Company",
+                            "description": "IP belongs to a company that scans the internet: Censys.",
+                        },
+                        {
+                            "name": "community-blocklist",
+                            "label": "CrowdSec Community Blocklist",
+                            "description": "IP belongs to the CrowdSec Community Blocklist",
+                        },
+                    ],
+                },
+                "attack_details": [
+                    {
+                        "name": "crowdsecurity/opensips-request",
+                        "label": "SIP Bruteforce",
+                        "description": "Detect brute force on VOIP/SIP services",
+                        "references": [],
+                    },
+                    {
+                        "name": "firewallservices/pf-scan-multi_ports",
+                        "label": "Port Scanner",
+                        "description": "Detect tcp port scan",
+                        "references": [],
+                    },
+                ],
+                "target_countries": {
+                    "DE": 27,
+                    "FR": 19,
+                    "US": 16,
+                    "EE": 16,
+                    "HK": 5,
+                    "DK": 2,
+                    "GB": 2,
+                    "FI": 2,
+                    "KR": 2,
+                    "SG": 2,
+                },
+                "background_noise_score": 10,
+                "scores": {
+                    "overall": {
+                        "aggressiveness": 1,
+                        "threat": 4,
+                        "trust": 5,
+                        "anomaly": 0,
+                        "total": 3,
+                    },
+                    "last_day": {
+                        "aggressiveness": 0,
+                        "threat": 0,
+                        "trust": 0,
+                        "anomaly": 0,
+                        "total": 0,
+                    },
+                    "last_week": {
+                        "aggressiveness": 0,
+                        "threat": 4,
+                        "trust": 5,
+                        "anomaly": 0,
+                        "total": 3,
+                    },
+                    "last_month": {
+                        "aggressiveness": 0,
+                        "threat": 4,
+                        "trust": 5,
+                        "anomaly": 0,
+                        "total": 3,
+                    },
+                },
+                "references": [],
+            }
         },
     },
 }

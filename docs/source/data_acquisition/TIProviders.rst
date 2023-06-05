@@ -30,6 +30,7 @@ Features
    -  **IBM XForce**
    -  **MS Sentinel TI**
    -  **GreyNoise**
+   -  **CrowdSec**
 
 -  Other pseudo-TI providers are also included:
 
@@ -268,6 +269,11 @@ fictitious - the format of the keys may differ from what is shown
           TenantID: 228d7b5f-4920-4f8e-872f-52072b92b651
         Primary: True
         Provider: "AzSTI"
+      CrowdSec:
+        Args:
+          AuthKey: 12ffVvqTaV1fYf7eieoic21rftntHQhO2Hdsxyzabcd
+        Primary: True
+        Provider: "CrowdSec"
 
 You need to tell `TILookup` to refresh its configuration.
 
@@ -281,12 +287,13 @@ of providers loaded.
 
 .. parsed-literal::
 
+
   ['OTX - AlientVault OTX Lookup. (primary)',
   'VirusTotal - VirusTotal Lookup. (primary)',
   'XForce - IBM XForce Lookup. (primary)',
   'GreyNoise - GreyNoise Lookup. (primary)',
-  'AzSTI - Azure Sentinel TI provider class. (primary)',
-  'OPR - Open PageRank Lookup. (secondary)']
+  'AzSTI - Microsoft Sentinel TI provider class. (primary)',
+  'CrowdSec - CrowdSec CTI Smoke Lookup. (primary)']
 
 .. warning:: Depending on the type of account that you
   have with a provider, they will typically impose a limit
@@ -459,6 +466,7 @@ class method shows the current set of providers.
     VirusTotal
     XForce
     Intsights
+    CrowdSec
 
 You can view the list of supported query types for each provider
 with the ``show_query_types=True`` parameter.
@@ -649,6 +657,8 @@ TILookup syntax
 | AzSTI       | 38.75.137.9  | ipv4     | None          | False   | 0 rows returned.                                                                                     | None                                                                                                 | None                                                                   | -1      |
 +-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
 | GreyNoise   | 38.75.137.9  | ipv4     | None          | False   | Not found.                                                                                           | <Response [404]>                                                                                     | https://api.greynoise.io/v3/community/38.75.137.9                      | 404     |
++-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
+| CrowdSec    | 38.75.137.9  | ipv4     | None          | False   | {'Background Noise': 0, 'Overall Score': 0, 'First Seen': '2021-12-26T18:45:00+00:00', 'Last See...  | {'ip_range_score': 0, 'ip': '38.75.137.9', 'ip_range': '38.75.136.0/23', 'as_name': 'AS-GLOBALTE...  | https://cti.api.crowdsec.net/v2/smoke/38.75.137.9	                     | 200     |
 +-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
 
 Pivot function syntax
