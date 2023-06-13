@@ -24,23 +24,20 @@ __author__ = "ianhelle"
 
 logger = logging.getLogger(__name__)
 
+_VELOCIRATOR_DOC_URL = (
+    "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
+    "DataProv-Velociraptor.html"
+)
+
 
 # pylint: disable=too-many-instance-attributes
 @export
 class VelociraptorLogDriver(DriverBase):
-    """OSQueryLogDriver class to execute kql queries."""
-
-    OS_QUERY_DATEIME_COLS = {
-        "unixTime",
-        "columns_time",
-        "columns_atime",
-        "columns_ctime",
-        "columns_mtime",
-    }
+    """Velociraptor driver class to ingest log data."""
 
     def __init__(self, connection_str: Optional[str] = None, **kwargs):
         """
-        Instantiate OSQueryLogDriver and optionally connect.
+        Instantiate Velociraptor driver and optionally connect.
 
         Parameters
         ----------
@@ -162,7 +159,7 @@ class VelociraptorLogDriver(DriverBase):
             tqdm(self.data_files[query]) if self._progress else self.data_files[query]
         )
         dfs = [pd.read_json(file, lines=True) for file in iter_data_files]
-        query_df = pd.concat(dfs)
+        query_df = pd.concat(dfs, ignore_index=True)
 
         logger.info("Query %s, returned %d rows", query, len(query_df))
         return query_df
@@ -219,4 +216,11 @@ class VelociraptorLogDriver(DriverBase):
 
         logger.info("Found %d data file types", len(data_files))
         logger.info("Total data files: %d", sum(len(v) for v in data_files.values()))
+        if not data_files:
+            raise MsticpyDataQueryError(
+                "No usable data files found in supplied paths.",
+                f"Data paths supplied: {', '.join(self._paths)}",
+                title="No data files found",
+                help_uri=_VELOCIRATOR_DOC_URL,
+            )
         return data_files

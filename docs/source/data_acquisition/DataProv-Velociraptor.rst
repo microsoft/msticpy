@@ -3,7 +3,8 @@ The Velociraptor provider
 
 :py:mod:`Velociraptor driver documentation<msticpy.data.drivers.local_velociraptor_driver>`
 
-The ``Velociraptor`` data provider can read Velociraptor log files
+The ``Velociraptor`` data provider can read Velociraptor
+offline collection log files (see `Velociraptor Offline Collection <https://docs.velociraptor.app/docs/offline_triage/#offline-collections>`_)
 and provide convenient query functions for each data set
 in the output logs.
 
