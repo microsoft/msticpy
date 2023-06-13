@@ -137,14 +137,14 @@ def test_check_versions(monkeypatch, aml_file_sys, check_vers):
     if check_vers.excep:
         with pytest.raises(check_vers.excep):
             with change_directory(str(user_dir)):
-                aml.check_versions(
+                aml.check_aml_settings(
                     min_py_ver=check_vers.py_req,
                     min_mp_ver=check_vers.mp_req,
                     extras=check_vers.extras,
                 )
     else:
         with change_directory(str(user_dir)):
-            aml.check_versions(
+            aml.check_aml_settings(
                 min_py_ver=check_vers.py_req,
                 min_mp_ver=check_vers.mp_req,
                 extras=check_vers.extras,
@@ -189,7 +189,7 @@ def test_check_versions_mpconfig(monkeypatch, aml_file_sys, test_case):
     _os.environ["APPSETTING_WEBSITE_SITE_NAME"] = "AMLComputeInstance"
 
     with change_directory(str(target_dir)):
-        aml.check_versions(min_py_ver=_MIN_PY_VER, min_mp_ver=_MIN_MP_VER)
+        aml.check_aml_settings(min_py_ver=_MIN_PY_VER, min_mp_ver=_MIN_MP_VER)
 
     if test_case.sub_dir and test_case.mpconf_exists:
         env = "MSTICPYCONFIG"
@@ -215,7 +215,7 @@ def test_check_versions_nbuser_settings(monkeypatch, aml_file_sys):
     nb_user_settings.write_text(_NBUSER_SETTINGS, encoding="utf-8")
 
     with change_directory(str(user_dir)):
-        aml.check_versions(min_py_ver=_MIN_PY_VER, min_mp_ver=_MIN_MP_VER)
+        aml.check_aml_settings(min_py_ver=_MIN_PY_VER, min_mp_ver=_MIN_MP_VER)
 
     check.is_in("nbuser_settings", sys.modules)
     nbus_import = sys.modules["nbuser_settings"]
