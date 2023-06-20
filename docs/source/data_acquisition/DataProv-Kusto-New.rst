@@ -10,7 +10,9 @@ QueryProvider using the
 
 .. warning:: This provider currently in beta and is available for testing.
    It is available alongside the existing Kusto provider for you
-   to compare old and new.
+   to compare old and new. To use it you will need the ``azure-data-kusto``
+   package installed. You can install this with ``pip install azure-data-kusto``
+   or ``pip install msticpy[azure_query]``.
    If you are using the existing implementation, see :doc:`./DataProv-Kusto`
 
 Changes from the previous implementation
