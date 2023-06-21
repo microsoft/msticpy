@@ -3,15 +3,15 @@ Azure Data Explorer/Kusto Provider - New Implementation
 
 This is a new implementation of the Azure Data Explorer/Kusto
 QueryProvider using the
-`azure-data-kusto SDK <https://learn.microsoft.com/azure/data-explorer/python-query-data>`__
+`azure-kusto-data SDK <https://learn.microsoft.com/azure/data-explorer/python-query-data>`__
 (the earlier implementation used
 `Kqlmagic <https://github.com/microsoft/jupyter-Kqlmagic>`__).
 
 
 .. warning:: This provider currently in beta and is available for testing.
    It is available alongside the existing Kusto provider for you
-   to compare old and new. To use it you will need the ``azure-data-kusto``
-   package installed. You can install this with ``pip install azure-data-kusto``
+   to compare old and new. To use it you will need the ``azure-kusto-data``
+   package installed. You can install this with ``pip install azure-kusto-data``
    or ``pip install msticpy[azure_query]``.
    If you are using the existing implementation, see :doc:`./DataProv-Kusto`
 
