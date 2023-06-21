@@ -117,7 +117,7 @@ class KqlDriver(DriverBase):
         self._ip = get_ipython()
         self._debug = kwargs.get("debug", False)
         super().__init__(**kwargs)
-
+        self.workspace_id: Optional[str] = None
         self.set_driver_property(
             DriverProps.FORMATTERS,
             {"datetime": self._format_datetime, "list": self._format_list},
@@ -437,6 +437,8 @@ class KqlDriver(DriverBase):
         """Get the current connection Workspace ID from KQLMagic."""
         connections = kql_exec("--conn")
         current_connection = [conn for conn in connections if conn.startswith(" * ")]
+        if not current_connection:
+            return ""
         return current_connection[0].strip(" * ").split("@")[0]
 
     def _set_kql_cloud(self):
