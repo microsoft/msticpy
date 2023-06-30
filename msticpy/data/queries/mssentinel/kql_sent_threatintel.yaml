@@ -28,7 +28,7 @@ defaults:
         default: ''
 sources:
   list_indicators:
-    description: Retrieves list of all current indicators.
+    description: Returns list of all current indicators.
     metadata:
     args:
       query: '
@@ -41,7 +41,7 @@ sources:
       uri: None
     parameters:
   list_indicators_by_ip:
-    description: Retrieves list of indicators by IP Address
+    description: Returns list of indicators by IP Address
     metadata:
     args:
       query: '
@@ -71,7 +71,7 @@ sources:
         aliases:
           - observables
   list_indicators_by_hash:
-    description: Retrieves list of indicators by file hash
+    description: Returns list of indicators by file hash
     metadata:
     args:
       query: '
@@ -90,7 +90,7 @@ sources:
         aliases:
           - observables
   list_indicators_by_filepath:
-    description: Retrieves list of indicators by file path
+    description: Returns list of indicators by file path
     metadata:
     args:
       query: '
@@ -107,7 +107,7 @@ sources:
         description: List of observables
         type: list
   list_indicators_by_domain:
-    description: Retrieves list of indicators by domain
+    description: Returns list of indicators by domain
     metadata:
     args:
       query: '
@@ -131,7 +131,7 @@ sources:
         aliases:
           - observables
   list_indicators_by_email:
-    description: Retrieves list of indicators by email address
+    description: Returns list of indicators by email address
     metadata:
     args:
       query: '
@@ -153,7 +153,7 @@ sources:
         description: List of observables
         type: list
   list_indicators_by_url:
-    description: Retrieves list of indicators by URL
+    description: Returns list of indicators by URL
     metadata:
     args:
       query: '

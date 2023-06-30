@@ -1,8 +1,8 @@
 metadata:
   version: 1
-  description: MDATP Queries
+  description: MDE Alert Queries
   data_environments: [MDATP, MDE, M365D]
-  data_families: [MDATP]
+  data_families: [MDE, MDATP]
   tags: ["alert"]
 defaults:
   metadata:
@@ -24,7 +24,7 @@ defaults:
       default: ""
 sources:
   list_alerts:
-    description: Retrieves list of alerts
+    description: Returns list of alerts for a specified time range
     metadata:
     args:
       query: "
@@ -51,7 +51,7 @@ sources:
         description: Name of host
         type: str
   ip_alerts:
-    description: Lists alerts associated with a specified remote IP
+    description: Returns alerts associated with a specified remote IP
     metadata:
       pivot:
         short_name: alerts
@@ -67,7 +67,7 @@ sources:
         description: Remote IP Address
         type: str
   url_alerts:
-    description: Lists alerts associated with a specified URL
+    description: Returns alerts associated with a specified URL
     metadata:
       pivot:
         short_name: alerts
@@ -83,7 +83,7 @@ sources:
         description: Remote URL
         type: str
   sha1_alerts:
-    description: Lists alerts associated with a specified SHA1 hash
+    description: Returns alerts associated with a specified SHA1 hash
     metadata:
       pivot:
         short_name: alerts

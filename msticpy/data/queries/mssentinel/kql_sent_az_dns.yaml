@@ -24,7 +24,7 @@ defaults:
         default: ''
 sources:
   dns_lookups_for_domain:
-    description: Dns queries for a domain
+    description: Returns DNS query events for a specified domain
     metadata:
       pivot:
         short_name: queries
@@ -43,7 +43,7 @@ sources:
         description: Domain to query for
         type: str
   dns_lookups_for_ip:
-    description: Dns queries for a domain
+    description: Returns Dns query events that contain a resolved IP address
     metadata:
       pivot:
         short_name: queries
@@ -62,7 +62,7 @@ sources:
         description: IP lookup result to query for
         type: str
   dns_lookups_from_ip:
-    description: Dns queries for a domain
+    description: Returns Dns queries originating from a specified IP address
     metadata:
       pivot:
         short_name: queries_from_ip
