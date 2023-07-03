@@ -14,6 +14,7 @@ import respx
 
 from msticpy.auth.azure_auth_core import AzureCloudConfig
 from msticpy.context.azure import MicrosoftSentinel
+from msticpy.data import QueryProvider
 
 # pylint: disable=protected-access
 
@@ -380,7 +381,8 @@ def test_param_checks():
 
 
 def _patch_qry_prov(patcher):
-    qry_prov = getattr(MicrosoftSentinel, "_RES_GRAPH_PROV")
+    qry_prov = QueryProvider("ResourceGraph")
+    setattr(MicrosoftSentinel, "_RES_GRAPH_PROV", qry_prov)
     qry_prov._query_provider._loaded = True
     qry_prov._query_provider._connected = True
     patcher.setattr(qry_prov, "connect", lambda: True)

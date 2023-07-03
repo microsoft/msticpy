@@ -22,6 +22,7 @@ import httpx
 import pandas as pd
 from azure.core.exceptions import HttpResponseError
 from azure.core.pipeline.policies import UserAgentPolicy
+from pkg_resources import parse_version
 
 from ..._version import VERSION
 from ...auth.azure_auth import AzureCloudConfig, az_connect
@@ -41,12 +42,14 @@ from .driver_base import DriverBase, DriverProps, QuerySource
 
 logger = logging.getLogger(__name__)
 
+# pylint: disable=ungrouped-imports
 try:
     from azure.monitor.query import (
         LogsQueryClient,
         LogsQueryPartialResult,
         LogsQueryResult,
     )
+    from azure.monitor.query import __version__ as az_monitor_version
 except ImportError as imp_err:
     raise MsticpyMissingDependencyError(
         "Cannot use this feature without Azure monitor client installed",
@@ -154,9 +157,13 @@ class AzureMonitorDriver(DriverBase):
     @property
     def url_endpoint(self) -> str:
         """Return the current URL endpoint for Azure Monitor."""
-        return _LOGANALYTICS_URL_BY_CLOUD.get(
+        base_url = _LOGANALYTICS_URL_BY_CLOUD.get(
             AzureCloudConfig().cloud, _LOGANALYTICS_URL_BY_CLOUD["global"]
         )
+        # post v1.1.0 of azure-monitor-query, the API version requires a 'v1' suffix
+        if parse_version(az_monitor_version) > parse_version("1.1.0"):
+            return f"{base_url}v1"
+        return base_url
 
     @property
     def current_connection(self) -> str:

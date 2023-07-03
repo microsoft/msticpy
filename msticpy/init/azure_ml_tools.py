@@ -22,7 +22,7 @@ from pkg_resources import (  # type: ignore
 
 from .._version import VERSION
 from ..common.pkg_config import _HOME_PATH, refresh_config
-from ..common.utility import search_for_file
+from ..common.utility import search_for_file, unit_testing
 from ..config import MpConfigFile  # pylint: disable=no-name-in-module
 
 __version__ = VERSION
@@ -55,6 +55,17 @@ RELOAD_MP = """
     Please restart the notebook kernel and re-run this cell - it should
     run without error.
     """
+_AZ_CLI_WIKI_URI = (
+    "https://github.com/Azure/Azure-Sentinel-Notebooks/wiki/"
+    "Caching-credentials-with-Azure-CLI"
+)
+_CLI_WIKI_MSSG_GEN = (
+    f"For more information see <a href='{_AZ_CLI_WIKI_URI}'>"
+    "Caching credentials with Azure CLI</>"
+)
+_CLI_WIKI_MSSG_SHORT = (
+    f"see <a href='{_AZ_CLI_WIKI_URI}'>Caching credentials with Azure CLI</>"
+)
 
 MIN_PYTHON_VER_DEF = "3.6"
 MSTICPY_REQ_VERSION = __version__
@@ -73,7 +84,7 @@ def is_in_aml():
     return os.environ.get("APPSETTING_WEBSITE_SITE_NAME") == "AMLComputeInstance"
 
 
-def check_versions(
+def check_aml_settings(
     min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF,
     min_mp_ver: Union[str, Tuple] = MSTICPY_REQ_VERSION,
     extras: Optional[List[str]] = None,
@@ -104,7 +115,7 @@ def check_versions(
 
     """
     del kwargs
-    _disp_html("<h4>Starting notebook pre-checks...</h4>")
+    _disp_html("<h4>Starting AML notebook pre-checks...</h4>")
     if isinstance(min_py_ver, str):
         min_py_ver = _get_pkg_version(min_py_ver).release
     check_python_ver(min_py_ver=min_py_ver)
@@ -114,7 +125,12 @@ def check_versions(
     _set_kql_env_vars(extras)
     _run_user_settings()
     _set_mpconfig_var()
+    _check_azure_cli_status()
     _disp_html("<h4>Notebook pre-checks complete.</h4>")
+
+
+# retain previous name for backward compatibility
+check_versions = check_aml_settings
 
 
 def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
@@ -447,3 +463,21 @@ def _check_kql_prereqs():
                 " Please run the following command:<br>"
                 "!conda install --yes -c conda-forge pygobject<br>"
             )
+
+
+def _check_azure_cli_status():
+    """Check for Azure CLI credentials."""
+    # import these only if we need them at runtime
+    # pylint: disable=import-outside-toplevel
+    from ..auth.azure_auth_core import AzureCliStatus, check_cli_credentials
+
+    if not unit_testing():
+        status, message = check_cli_credentials()
+        if status == AzureCliStatus.CLI_OK:
+            _disp_html(message)
+        elif status == AzureCliStatus.CLI_NOT_INSTALLED:
+            _disp_html(
+                "Azure CLI credentials not detected." f" ({_CLI_WIKI_MSSG_SHORT})"
+            )
+        elif message:
+            _disp_html("\n".join([message, _CLI_WIKI_MSSG_GEN]))
