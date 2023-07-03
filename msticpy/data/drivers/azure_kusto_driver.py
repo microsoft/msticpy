@@ -162,7 +162,7 @@ class AzureKustoDriver(DriverBase):
         self._strict_query_match = kwargs.get("strict_query_match", False)
         self._kusto_settings: Dict[str, Dict[str, KustoConfig]] = _get_kusto_settings()
         self._default_database: Optional[str] = None
-        self.current_connection: Optional[str] = connection_str
+        self._current_connection: Optional[str] = connection_str
         self._current_config: Optional[KustoConfig] = None
         self.client: Optional[KustoClient] = None
         self._az_auth_types: Optional[List[str]] = None
@@ -188,6 +188,18 @@ class AzureKustoDriver(DriverBase):
             "set_cluster": self.set_cluster,
             "set_database": self.set_database,
         }
+
+    @property
+    def current_connection(self) -> Optional[str]:
+        """Return current connection string or URI."""
+        if self._current_connection:
+            return self._current_connection
+        return self.cluster_uri
+
+    @current_connection.setter
+    def current_connection(self, value: str):
+        """Set current connection string or URI."""
+        self._current_connection = value
 
     @property
     def cluster_uri(self) -> str:
@@ -318,6 +330,7 @@ class AzureKustoDriver(DriverBase):
             kusto_cs = self._get_connection_string_for_cluster(self._current_config)
         else:
             logger.info("Using connection string %s", connection_str)
+            self._current_connection = connection_str
             kusto_cs = connection_str
 
         self.client = KustoClient(kusto_cs)
