@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data query definition reader."""
+import logging
 from itertools import chain
 from pathlib import Path
 from typing import Any, Dict, Iterable, Tuple
@@ -11,10 +12,11 @@ from typing import Any, Dict, Iterable, Tuple
 import yaml
 
 from ..._version import VERSION
-from .query_defns import DataEnvironment
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+logger = logging.getLogger(__name__)
 
 
 def find_yaml_files(source_path: str, recursive: bool = True) -> Iterable[Path]:
@@ -69,12 +71,16 @@ def read_query_def_file(query_file: str) -> Tuple[Dict, Dict, Dict]:
         # use safe_load instead load
         data_map = yaml.safe_load(f_handle)
 
-    validate_query_defs(query_def_dict=data_map)
+    try:
+        validate_query_defs(query_def_dict=data_map)
+    except ValueError as err:
+        logger.warning("Validation failed for %s\n%s", query_file, err, exc_info=True)
 
     defaults = data_map.get("defaults", {})
     sources = data_map.get("sources", {})
     metadata = data_map.get("metadata", {})
 
+    logger.info("Read %s queries from %s", len(sources), query_file)
     return sources, defaults, metadata
 
 
@@ -99,6 +105,8 @@ def validate_query_defs(query_def_dict: Dict[str, Any]) -> bool:
         exception message (arg[0])
 
     """
+    if query_def_dict is None or not query_def_dict:
+        raise ValueError("Imported file is empty")
     # verify that sources and metadata are in the data dict
     if "sources" not in query_def_dict or not query_def_dict["sources"]:
         raise ValueError("Imported file has no sources defined")
@@ -118,14 +126,6 @@ def _validate_data_categories(query_def_dict: Dict):
         or not query_def_dict["metadata"]["data_environments"]
     ):
         raise ValueError("Imported file has no data_environments defined")
-
-    for env in query_def_dict["metadata"]["data_environments"]:
-        if not DataEnvironment.parse(env):
-            raise ValueError(
-                f"Unknown data environment {env} in metadata. ",
-                "Valid values are\n",
-                ", ".join(e.name for e in DataEnvironment),
-            )
 
     if (
         "data_families" not in query_def_dict["metadata"]

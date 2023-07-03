@@ -9,3 +9,4 @@ https://api.greynoise.io/v3/community/38.75.137.9
 https://management.azure.com/.default
 https://www.maxmind.com/en/accounts/current/license-key
 https://api.us2.sumologic.com/api
+https://username:password@proxy_host:port

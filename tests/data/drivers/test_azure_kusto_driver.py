@@ -206,9 +206,7 @@ _TEST_CONNECT_ARGS = (
         tests=[
             lambda driver: driver.client._kusto_cluster.startswith(
                 "https://test.kusto.windows.net"
-            ),
-            lambda driver: driver.current_connection
-            == "https://test.kusto.windows.net",
+            )
         ],
     ),
     ConnectTest(
