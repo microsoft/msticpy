@@ -1,7 +1,7 @@
-msticpy.common.utility.yaml\_loader module
+msticpy.analysis.polling\_detection module
 ==========================================
 
-.. automodule:: msticpy.common.utility.yaml_loader
+.. automodule:: msticpy.analysis.polling_detection
    :members:
    :undoc-members:
    :show-inheritance:

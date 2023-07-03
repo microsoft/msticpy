@@ -16,8 +16,8 @@ an improvement to an existing feature that you have thought
 about such as a new data connector or threat intelligence provider,
 or a completely new feature category.
 
-If you don’t have a specific idea in mind take a look at the
-Issues page on GitHub: `https://github.com/microsoft/msticpy/issues`__
+If you don't have a specific idea in mind take a look at the
+`Issues page on GitHub <https://github.com/microsoft/msticpy/issues>`__
 
 This page tracks a range of issues, enhancements, and features that
 members of the community have thought of. The MSTICPy team uses these
