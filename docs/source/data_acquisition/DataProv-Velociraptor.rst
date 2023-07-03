@@ -4,7 +4,8 @@ The Velociraptor provider
 :py:mod:`Velociraptor driver documentation<msticpy.data.drivers.local_velociraptor_driver>`
 
 The ``Velociraptor`` data provider can read Velociraptor
-offline collection log files (see `Velociraptor Offline Collection <https://docs.velociraptor.app/docs/offline_triage/#offline-collections>`_)
+offline collection log files (see
+`Velociraptor Offline Collection <https://docs.velociraptor.app/docs/offline_triage/#offline-collections>`__)
 and provide convenient query functions for each data set
 in the output logs.
 
@@ -24,6 +25,14 @@ The query provider query functions will ignore parameters and do
 no further filtering. You can use pandas to do additional filtering
 and sorting of the data, or use it directly with other MSTICPy
 functionality.
+
+.. note:: The examples used in this document were from data
+    provided by Blue Team Village at Defcon 30. You can find
+    this data at the
+    `Project-Obsidian-DC30 GitHub <https://github.com/blueteamvillage/Project-Obsidian-DC30>`__
+    and more about
+    `Project Obsidian <https://media.blueteamvillage.org/DC30/Obsidian/>`__
+    here.
 
 Velociraptor Configuration
 --------------------------
