@@ -1,0 +1,10 @@
+{"Stdout":"WinPmem64","Stderr":"","Upload":null}
+{"Stdout":"Extracting driver to C:\\Users\\ADMINI~1.MAG\\AppData\\Local\\Temp\\pmeCEC5.tmp","Stderr":"","Upload":null}
+{"Stdout":"Driver Unloaded.","Stderr":"","Upload":null}
+{"Stdout":"Loaded Driver C:\\Users\\ADMINI~1.MAG\\AppData\\Local\\Temp\\pmeCEC5.tmp.","Stderr":"","Upload":null}
+{"Stdout":"Deleting C:\\Users\\ADMINI~1.MAG\\AppData\\Local\\Temp\\pmeCEC5.tmp","Stderr":"","Upload":null}
+{"Stdout":"The system time is: 23:59:48","Stderr":"","Upload":null}
+{"Stdout":"Will generate a RAW image ","Stderr":"","Upload":null}
+{"Stdout":" - buffer_size_: 0x1000","Stderr":"","Upload":null}
+{"Stdout":"CR3: 0x00001AA002","Stderr":"","Upload":null}
+{"Stdout":" 4 memory ranges:","Stderr":"","Upload":null}

@@ -85,7 +85,7 @@ would only use this parameter if you were building your own
 data driver backend, which is not common.
 
 2. You can choose to import additional queries from a custom
-query directory (see `Creating new queries`_ for more
+query directory (see :doc:`../extending/Queries` for more
 details) with:
 
 .. code:: ipython3
@@ -568,7 +568,7 @@ for Timedelta in the
 .. warning:: There are some important caveats to this feature.
 
    1. It currently only works with pre-defined queries (including ones
-      that you may create and add yourself, see `Creating new queries`_
+      that you may create and add yourself, see :doc:`../extending/Queries`
       below). It does not work with `Running an ad hoc query`_
    2. If the query contains joins, the joins will only happen within
       the time ranges of each subquery.
@@ -586,7 +586,7 @@ Dynamically adding new queries
 You can use the :py:meth:`msticpy.data.core.data_providers.QueryProvider.add_query`
 to add parameterized queries from a notebook or script. This
 let you use temporary parameterized queries without having to
-add them to a YAML file (as described in `Creating new queries`_).
+add them to a YAML file (as described in :doc:`../extending/Queries`).
 
 get_host_events
 
