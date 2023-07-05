@@ -88,6 +88,7 @@ class DriverBase(ABC):
         self.data_environment = kwargs.get("data_environment")
         self._query_filter: Dict[str, Set[str]] = defaultdict(set)
         self._instance: Optional[str] = None
+
         self.properties = DriverProps.defaults()
         self.set_driver_property(
             name=DriverProps.EFFECTIVE_ENV,
@@ -97,6 +98,8 @@ class DriverBase(ABC):
                 else self.data_environment or ""
             ),
         )
+        self.set_driver_property(DriverProps.SUPPORTS_THREADING, False)
+        self.set_driver_property(DriverProps.MAX_PARALLEL, kwargs.get("max_threads", 4))
 
     def __getattr__(self, attrib):
         """Return item from the properties dictionary as an attribute."""

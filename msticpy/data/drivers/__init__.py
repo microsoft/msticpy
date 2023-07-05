@@ -34,6 +34,10 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.Elastic: ("elastic_driver", "ElasticDriver"),
     DataEnvironment.MSSentinel_New: ("azure_monitor_driver", "AzureMonitorDriver"),
     DataEnvironment.Kusto_New: ("azure_kusto_driver", "AzureKustoDriver"),
+    DataEnvironment.VelociraptorLogs: (
+        "local_velociraptor_driver",
+        "VelociraptorLogDriver",
+    ),
 }
 
 CUSTOM_PROVIDERS: Dict[str, type] = {}
