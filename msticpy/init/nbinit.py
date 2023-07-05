@@ -421,7 +421,7 @@ def init_notebook(
             check_version()
             output = stdout_cap.getvalue()
             _pr_output(output)
-            logger.info(output)
+            logger.info("Check version failures: %s", output)
 
     if _detect_env("synapse", **kwargs) and is_in_synapse():
         synapse_params = {
@@ -438,7 +438,7 @@ def init_notebook(
         )
         output = stdout_cap.getvalue()
         _pr_output(output)
-        logger.info(output)
+        logger.info("Import failures: %s", output)
 
     # Configuration check
     if no_config_check:
@@ -468,7 +468,7 @@ def init_notebook(
         _load_pivots(namespace=namespace)
         output = stdout_cap.getvalue()
         _pr_output(output)
-        logger.info(output)
+        logger.info("Pivot load failures: %s", output)
 
     # User defaults
     stdout_cap = io.StringIO()
@@ -478,6 +478,7 @@ def init_notebook(
         output = stdout_cap.getvalue()
         _pr_output(output)
         logger.info(output)
+        logger.info("User default load failures: %s", output)
 
     if prov_dict:
         namespace.update(prov_dict)

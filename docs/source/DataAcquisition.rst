@@ -29,6 +29,7 @@ Individual Data Environments
    data_acquisition/DataProv-Kusto-New
    data_acquisition/DataProv-Cybereason
    data_acquisition/DataProv-OSQuery
+   data_acquisition/DataProv-Velociraptor
 
 
 Built-in Data Queries

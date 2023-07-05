@@ -1,0 +1,10 @@
+{"Pid":692,"Name":"svchost.exe","Port":135,"Protocol":"TCP","Family":"IPv4","Address":"0.0.0.0"}
+{"Pid":4,"Name":"System","Port":139,"Protocol":"TCP","Family":"IPv4","Address":"172.16.50.130"}
+{"Pid":872,"Name":"svchost.exe","Port":3389,"Protocol":"TCP","Family":"IPv4","Address":"0.0.0.0"}
+{"Pid":416,"Name":"wininit.exe","Port":49664,"Protocol":"TCP","Family":"IPv4","Address":"0.0.0.0"}
+{"Pid":912,"Name":"svchost.exe","Port":49665,"Protocol":"TCP","Family":"IPv4","Address":"0.0.0.0"}
+{"Pid":1284,"Name":"svchost.exe","Port":49667,"Protocol":"TCP","Family":"IPv4","Address":"0.0.0.0"}
+{"Pid":548,"Name":"lsass.exe","Port":49669,"Protocol":"TCP","Family":"IPv4","Address":"0.0.0.0"}
+{"Pid":1664,"Name":"spoolsv.exe","Port":49697,"Protocol":"TCP","Family":"IPv4","Address":"0.0.0.0"}
+{"Pid":548,"Name":"lsass.exe","Port":49722,"Protocol":"TCP","Family":"IPv4","Address":"0.0.0.0"}
+{"Pid":540,"Name":"services.exe","Port":49728,"Protocol":"TCP","Family":"IPv4","Address":"0.0.0.0"}
