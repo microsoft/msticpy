@@ -22,6 +22,7 @@ import httpx
 import pandas as pd
 from azure.core.exceptions import HttpResponseError
 from azure.core.pipeline.policies import UserAgentPolicy
+from pkg_resources import parse_version
 
 from ..._version import VERSION
 from ...auth.azure_auth import AzureCloudConfig, az_connect
@@ -41,12 +42,14 @@ from .driver_base import DriverBase, DriverProps, QuerySource
 
 logger = logging.getLogger(__name__)
 
+# pylint: disable=ungrouped-imports
 try:
     from azure.monitor.query import (
         LogsQueryClient,
         LogsQueryPartialResult,
         LogsQueryResult,
     )
+    from azure.monitor.query import __version__ as az_monitor_version
 except ImportError as imp_err:
     raise MsticpyMissingDependencyError(
         "Cannot use this feature without Azure monitor client installed",
@@ -130,6 +133,7 @@ class AzureMonitorDriver(DriverBase):
         self._query_client: Optional[LogsQueryClient] = None
         self._az_tenant_id: Optional[str] = None
         self._ws_config: Optional[WorkspaceConfig] = None
+        self._ws_name: Optional[str] = None
         self._workspace_id: Optional[str] = None
         self._workspace_ids: List[str] = []
         self._def_connection_str: Optional[str] = connection_str
@@ -140,6 +144,10 @@ class AzureMonitorDriver(DriverBase):
         self.set_driver_property(
             DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinel.name
         )
+        self.set_driver_property(DriverProps.SUPPORTS_THREADING, value=True)
+        self.set_driver_property(
+            DriverProps.MAX_PARALLEL, value=kwargs.get("max_threads", 4)
+        )
         logger.info(
             "AzureMonitorDriver loaded. connect_str  %s, kwargs: %s",
             connection_str,
@@ -149,9 +157,36 @@ class AzureMonitorDriver(DriverBase):
     @property
     def url_endpoint(self) -> str:
         """Return the current URL endpoint for Azure Monitor."""
-        return _LOGANALYTICS_URL_BY_CLOUD.get(
+        base_url = _LOGANALYTICS_URL_BY_CLOUD.get(
             AzureCloudConfig().cloud, _LOGANALYTICS_URL_BY_CLOUD["global"]
         )
+        # post v1.1.0 of azure-monitor-query, the API version requires a 'v1' suffix
+        if parse_version(az_monitor_version) > parse_version("1.1.0"):
+            return f"{base_url}v1"
+        return base_url
+
+    @property
+    def current_connection(self) -> str:
+        """Return the current connection name."""
+        connection = self._ws_name
+        if (
+            not connection
+            and self._ws_config
+            and WorkspaceConfig.CONF_WS_NAME_KEY in self._ws_config
+        ):
+            connection = self._ws_config[WorkspaceConfig.CONF_WS_NAME_KEY]
+        return (
+            connection
+            or self._def_connection_str
+            or self._workspace_id
+            or next(iter(self._workspace_ids), "")
+            or "AzureMonitor"
+        )
+
+    @current_connection.setter
+    def current_connection(self, value: str):
+        """Allow attrib to be set but ignore."""
+        del value
 
     def connect(self, connection_str: Optional[str] = None, **kwargs):
         """
@@ -296,13 +331,21 @@ class AzureMonitorDriver(DriverBase):
                 title="Workspace not connected.",
                 help_uri=_HELP_URL,
             )
-        logger.info("Query to run %s", query)
         time_span_value = self._get_time_span_value(**kwargs)
-
         server_timeout = kwargs.pop("timeout", self._def_timeout)
 
         workspace_id = next(iter(self._workspace_ids), None) or self._workspace_id
         additional_workspaces = self._workspace_ids[1:] if self._workspace_ids else None
+        logger.info("Query to run %s", query)
+        logger.info(
+            "Workspaces %s", ",".join(self._workspace_ids) or self._workspace_id
+        )
+        logger.info(
+            "Time span %s - %s",
+            str(time_span_value[0]) if time_span_value else "none",
+            str(time_span_value[1]) if time_span_value else "none",
+        )
+        logger.info("Timeout %s", server_timeout)
         try:
             result = self._query_client.query_workspace(
                 workspace_id=workspace_id,  # type: ignore[arg-type]
@@ -406,6 +449,7 @@ class AzureMonitorDriver(DriverBase):
                 help_uri=_HELP_URL,
             )
         self._ws_config = ws_config
+        self._ws_name = workspace_name or ws_config.workspace_id
         if not self._az_tenant_id and WorkspaceConfig.CONF_TENANT_ID_KEY in ws_config:
             self._az_tenant_id = ws_config[WorkspaceConfig.CONF_TENANT_ID_KEY]
         self._workspace_id = ws_config[WorkspaceConfig.CONF_WS_ID_KEY]
@@ -457,7 +501,19 @@ class AzureMonitorDriver(DriverBase):
                 start=time_params["start"],
                 end=time_params["end"],
             )
-            time_span_value = time_span.start, time_span.end
+            # Azure Monitor API expects datetime objects, so
+            # convert to datetimes if we have pd.Timestamps
+            t_start = (
+                time_span.start.to_pydatetime(warn=False)
+                if isinstance(time_span.start, pd.Timestamp)
+                else time_span.start
+            )
+            t_end = (
+                time_span.end.to_pydatetime(warn=False)
+                if isinstance(time_span.end, pd.Timestamp)
+                else time_span.end
+            )
+            time_span_value = t_start, t_end
             logger.info("Time parameters set %s", str(time_span))
         return time_span_value
 

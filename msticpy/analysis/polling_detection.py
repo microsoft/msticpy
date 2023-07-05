@@ -35,11 +35,6 @@ class PeriodogramPollingDetector:
         Dataframe containing the data to be analysed. Must contain a
         column of edges and a column of timestamps
 
-    Methods
-    -------
-    detect_polling(timestamps, process_start, process_end, interval)
-        Detect strong periodic frequencies
-
     """
 
     def __init__(self, data: pd.DataFrame, copy: bool = False) -> None:

@@ -18,7 +18,7 @@ from ...common.exceptions import MsticpyConnectionError, MsticpyUserConfigError
 from ...common.pkg_config import get_config
 from ...common.provider_settings import get_provider_settings
 from ...common.utility import mp_ua_header
-from .driver_base import DriverBase, QuerySource
+from .driver_base import DriverBase, DriverProps, QuerySource
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -65,6 +65,11 @@ class OData(DriverBase):
         self.token_type = "AAD"  # nosec
         self.scopes = None
         self.msal_auth = None
+
+        self.set_driver_property(DriverProps.SUPPORTS_THREADING, value=True)
+        self.set_driver_property(
+            DriverProps.MAX_PARALLEL, value=kwargs.get("max_threads", 4)
+        )
 
     @abc.abstractmethod
     def query(

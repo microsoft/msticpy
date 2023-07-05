@@ -7,9 +7,11 @@ the
 (the earlier implementation used
 `Kqlmagic <https://github.com/microsoft/jupyter-Kqlmagic>`__)
 
-.. note:: This provider currently in beta and is available for testing.
+.. warning:: This provider currently in beta and is available for testing.
    It is available alongside the existing Sentinel provider for you
-   to compare old and new.
+   to compare old and new. To use it you will need the ``azure-monitor-query``
+   package installed. You can install this with ``pip install azure-monitor-query``
+   or ``pip install msticpy[azure_query]``.
    If you are using the existing implementation, see :doc:`./DataProv-MSSentinel`
 
 Changes from the previous implementation
@@ -23,6 +25,12 @@ Changes from the previous implementation
 * Supports user-specified timeout for queries.
 * Supports proxies (via MSTICPy config or the ``proxies`` parameter to
   the ``connect`` method)
+* The driver supports asynchronous execution of queries. This is used
+  when you create a Query provider with multiple connections (e.g.
+  to different clusters) and when you split queries into time chunks.
+  See :ref:`multiple_connections` and :ref:`splitting_query_execution` for
+  for more details. This is independent of the ability to specify
+  multiple workspaces in a single connection as described above.
 * Some of the previous parameters have been deprecated:
 
   * ``mp_az_auth`` is replaced by ``auth_types`` (the former still works
@@ -127,7 +135,8 @@ Connecting to a MS Sentinel Workspace
 
 Once you've created a QueryProvider you need to authenticate to Sentinel
 Workspace. This is done by calling the connect() function of the Query
-Provider. See :py:meth:`connect() <msticpy.data.drivers.azure_monitor_driver.AzureMonitorDriver.connect>`
+Provider. See
+:py:meth:`connect() <msticpy.data.drivers.azure_monitor_driver.AzureMonitorDriver.connect>`
 
 This function takes an initial parameter (called ``connection_str`` for
 historical reasons) that can be one of the following:
@@ -158,7 +167,6 @@ an instance of WorkspaceConfig to the query provider's ``connect`` method.
     qry_prov.connect(WorkspaceConfig(workspace="MyOtherWorkspace"))
 
 
-
 MS Sentinel Authentication options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -175,15 +183,26 @@ You can override several authentication parameters including:
 * tenant_id - the Azure tenant ID to use for authentication
 
 If you are using a Sovereign cloud rather than the Azure global cloud,
-you should follow the guidance in :doc:`Azure Authentication <../getting_started/AzureAuthentication>`
+you should follow the guidance in
+:doc:`Azure Authentication <../getting_started/AzureAuthentication>`
 to configure the correct cloud.
+
 
 
 Connecting to multiple Sentinel workspaces
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Sentinel data provider supports connecting to multiple workspaces.
-You can pass a list of workspace names or workspace IDs to the ``connect`` method.
+There are two mechanisms for querying multiple MS Sentinel workspaces.
+One is a generic method common to all data providers. For more
+information on this see :ref:`multiple_connections` in the main
+Data Providers documentation.
+
+The other is specific to the Sentinel data provider and is provided
+by the underlying Azure Monitor client. This latter capability is described in
+this section.
+
+The Sentinel data provider supports connecting to multiple workspaces by
+passing a list of workspace names or workspace IDs to the ``connect`` method.
 using the ``workspaces`` or ``workspace_ids`` parameters respectively.
 
 ``workspace_ids`` should be a list or tuple of workspace IDs.

@@ -21,7 +21,7 @@ geoip2>=2.9.0
 html5lib
 httpx==0.24.1
 ipython>=7.23.1
-ipywidgets>=7.4.2, <8.0.0
+ipywidgets>=7.4.2, <9.0.0
 keyring>=13.2.1
 lxml>=4.6.5
 matplotlib>=3.0.0
