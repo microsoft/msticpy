@@ -213,17 +213,7 @@ class AzureKustoDriver(DriverBase):
     @property
     def cluster_uri(self) -> str:
         """Return current cluster URI."""
-        return self._current_config.cluster if self._current_config else ""
-
-    @property
-    def current_connection(self) -> str:
-        """Return current cluster URI."""
-        return self.cluster_uri or self._connection_str or ""
-
-    @current_connection.setter
-    def current_connection(self, value: str):
-        """Allow attrib to be set but ignore."""
-        del value
+        return "" if not self._current_config else self._current_config.cluster
 
     @property
     def cluster_name(self) -> str:
@@ -329,8 +319,8 @@ class AzureKustoDriver(DriverBase):
         )
 
         cluster = kwargs.pop("cluster", None)
-        self._connection_str = connection_str or self._connection_str
-        if not self._connection_str and not cluster:
+        self.current_connection = connection_str or self.current_connection
+        if not connection_str and not cluster:
             raise MsticpyParameterError(
                 "Must specify either a connection string or a cluster name",
                 parameter=["connection_str", "cluster"],
@@ -346,9 +336,10 @@ class AzureKustoDriver(DriverBase):
                 self.cluster_uri,
             )
             kusto_cs = self._get_connection_string_for_cluster(self._current_config)
+            self.current_connection = cluster
         else:
             logger.info("Using connection string %s", connection_str)
-            self._current_connection = connection_str
+            self.current_connection = connection_str
             kusto_cs = connection_str
 
         self.client = KustoClient(kusto_cs)
