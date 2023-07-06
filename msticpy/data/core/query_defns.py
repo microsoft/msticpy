@@ -91,6 +91,7 @@ class DataEnvironment(Enum):
     AzureSentinel = 1  # alias of LogAnalytics
     LogAnalytics = 1
     Kusto = 2
+    AzureDataExplorer = 2  # alias of Kusto
     AzureSecurityCenter = 3
     MSGraph = 4
     SecurityGraph = 4
@@ -106,8 +107,11 @@ class DataEnvironment(Enum):
     Cybereason = 12
     Elastic = 14
     OSQueryLogs = 15
+    OSQuery = 15
     MSSentinel_New = 16
     Kusto_New = 17
+    VelociraptorLogs = 18
+    Velociraptor = 18
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataEnvironment":

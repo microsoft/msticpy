@@ -206,7 +206,6 @@ Installing in Managed Spark compute in Azure Machine Learning Notebooks
 *MSTICPy* installation for Managed (Automatic) Spark Compute in Azure Machine Learning workspace requires
 different instructions since library installation is different.
 
-
 .. note:: These notebook requires Azure ML Spark Compute.
    If you are using it for the first time, follow the guidelines at
    `Attach and manage a Synapse Spark pool in Azure Machine Learning (preview)
@@ -226,6 +225,7 @@ Please save below file as conda.yml , check the Upload conda file
 checkbox. You can modify the version number as needed.
 Then, select Browse, and choose the conda file saved earlier with
 the Spark session configuration you want.
+se, and choose the conda file saved earlier with the Spark session configuration you want.
 
 .. code-block:: yaml
 
