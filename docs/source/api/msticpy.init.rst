@@ -25,6 +25,7 @@ Submodules
    msticpy.init.azure_synapse_tools
    msticpy.init.logging
    msticpy.init.mp_pandas_accessors
+   msticpy.init.mp_plugins
    msticpy.init.nbinit
    msticpy.init.nbmagics
    msticpy.init.pivot

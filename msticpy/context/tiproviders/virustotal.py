@@ -35,7 +35,7 @@ class VirusTotal(HttpTIProvider):
 
     _BASE_URL = "https://www.virustotal.com/"
 
-    _PARAMS = {"apikey": "{API_KEY}"}
+    _PARAMS = {"apikey": "{AuthKey}"}
     _QUERIES = {
         "ipv4": APILookupParams(
             path="vtapi/v2/ip-address/report",
@@ -64,7 +64,7 @@ class VirusTotal(HttpTIProvider):
     _QUERIES["sha1_hash"] = _QUERIES["file_hash"]
     _QUERIES["sha256_hash"] = _QUERIES["file_hash"]
 
-    _REQUIRED_PARAMS = ["API_KEY"]
+    _REQUIRED_PARAMS = ["AuthKey"]
 
     _VT_DETECT_RESULTS = {
         "detected_urls": ("url", "scan_date"),

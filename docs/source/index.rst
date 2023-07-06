@@ -70,6 +70,8 @@ Contents
    DataAnalysis
    Visualization
    msticpyAPI
+   ExtendingMsticpy
+   Development
    notebooksamples
    blog_articles
    Releases

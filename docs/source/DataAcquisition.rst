@@ -17,6 +17,7 @@ Individual Data Environments
    :maxdepth: 2
 
    data_acquisition/DataProv-MSSentinel
+   data_acquisition/DataProv-MSSentinel-New
    data_acquisition/DataProv-MSDefender
    data_acquisition/DataProv-MSGraph
    data_acquisition/DataProv-LocalData
@@ -25,8 +26,10 @@ Individual Data Environments
    data_acquisition/MordorData
    data_acquisition/DataProv-Sumologic
    data_acquisition/DataProv-Kusto
+   data_acquisition/DataProv-Kusto-New
    data_acquisition/DataProv-Cybereason
    data_acquisition/DataProv-OSQuery
+   data_acquisition/DataProv-Velociraptor
 
 
 Built-in Data Queries
@@ -54,4 +57,4 @@ Contributing a Data Provider
 .. toctree::
    :maxdepth: 2
 
-   data_acquisition/WritingADataProvider
+   extending/WritingDataProviders

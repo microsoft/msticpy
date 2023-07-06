@@ -112,6 +112,11 @@ TIProviders:
     Args:
       ApiID: str()
       AuthKey: *cred_key
+  Pulsedive:
+    Args:
+      AuthKey: *cred_key
+    Primary: bool(default=False)
+    Provider: "Pulsedive"
 OtherProviders:
   GeoIPLite:
     Args:
@@ -193,6 +198,11 @@ DataProviders:
       ClientId: str(required=False, format=uuid)
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       ClientSecret: *cred_key_opt
+msticpy:
+  FriendlyExceptions: bool(default=True, required=False)
+  QueryDefinitions: list(required=False)
+  http_timeout: int(required=False)
+  # Proxies key not yet supported
 AzureCLI:
   # Deprecated section - use DataProviders.AzureCLI
   Args:

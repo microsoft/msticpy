@@ -59,7 +59,6 @@ import pandas as pd
 from IPython import get_ipython
 from IPython.core.interactiveshell import InteractiveShell
 from IPython.display import HTML, display
-from matplotlib import MatplotlibDeprecationWarning
 
 try:
     import seaborn as sns
@@ -67,10 +66,15 @@ except ImportError:
     sns = None
 
 from .._version import VERSION
-from ..auth.azure_auth_core import AzureCliStatus, check_cli_credentials
 from ..common.check_version import check_version
 from ..common.exceptions import MsticpyException, MsticpyUserError
-from ..common.pkg_config import _HOME_PATH, get_config, refresh_config, validate_config
+from ..common.pkg_config import _HOME_PATH
+from ..common.settings import (
+    current_config_path,
+    get_config,
+    refresh_config,
+    validate_config,
+)
 from ..common.utility import (
     check_and_install_missing_packages,
     check_kwargs,
@@ -79,8 +83,7 @@ from ..common.utility import (
     search_for_file,
     unit_testing,
 )
-from .azure_ml_tools import check_versions as check_versions_aml
-from .azure_ml_tools import is_in_aml, populate_config_to_mp_config
+from .azure_ml_tools import check_aml_settings, is_in_aml, populate_config_to_mp_config
 from .azure_synapse_tools import init_synapse, is_in_synapse
 from .pivot import Pivot
 from .user_config import load_user_defaults
@@ -182,8 +185,6 @@ _NB_IMPORTS = [
     dict(pkg="IPython.display", tgt="Markdown"),
     dict(pkg="ipywidgets", alias="widgets"),
     dict(pkg="pathlib", tgt="Path"),
-    dict(pkg="matplotlib.pyplot", alias="plt"),
-    dict(pkg="matplotlib", tgt="MatplotlibDeprecationWarning"),
     dict(pkg="numpy", alias="np"),
 ]
 if sns is not None:
@@ -212,8 +213,6 @@ _MP_IMPORTS = [
 
 _MP_IMPORT_ALL: List[Dict[str, str]] = [
     dict(module_name="msticpy.datamodel.entities"),
-    dict(module_name="msticpy.nbtools"),
-    dict(module_name="msticpy.sectools"),
 ]
 # pylint: enable=use-dict-literal
 
@@ -224,17 +223,6 @@ _CONF_URI = (
 _AZNB_GUIDE = (
     "Please run the <i>Getting Started Guide for Azure Sentinel "
     + "ML Notebooks</i> notebook."
-)
-_AZ_CLI_WIKI_URI = (
-    "https://github.com/Azure/Azure-Sentinel-Notebooks/wiki/"
-    "Caching-credentials-with-Azure-CLI"
-)
-_CLI_WIKI_MSSG_GEN = (
-    f"For more information see <a href='{_AZ_CLI_WIKI_URI}'>"
-    "Caching credentials with Azure CLI</>"
-)
-_CLI_WIKI_MSSG_SHORT = (
-    f"see <a href='{_AZ_CLI_WIKI_URI}'>Caching credentials with Azure CLI</>"
 )
 
 current_providers: Dict[str, Any] = {}  # pylint: disable=invalid-name
@@ -425,7 +413,7 @@ def init_notebook(
     logger.info("Starting Notebook initialization")
     # Check Azure ML environment
     if _detect_env("aml", **kwargs) and is_in_aml():
-        check_versions_aml(*_get_aml_globals(namespace))
+        check_aml_settings(*_get_aml_globals(namespace))
     else:
         # If not in AML check and print version status
         stdout_cap = io.StringIO()
@@ -433,7 +421,7 @@ def init_notebook(
             check_version()
             output = stdout_cap.getvalue()
             _pr_output(output)
-            logger.info(output)
+            logger.info("Check version failures: %s", output)
 
     if _detect_env("synapse", **kwargs) and is_in_synapse():
         synapse_params = {
@@ -450,7 +438,7 @@ def init_notebook(
         )
         output = stdout_cap.getvalue()
         _pr_output(output)
-        logger.info(output)
+        logger.info("Import failures: %s", output)
 
     # Configuration check
     if no_config_check:
@@ -458,7 +446,6 @@ def init_notebook(
     else:
         _pr_output("Checking configuration....")
         conf_ok = _get_or_create_config()
-        _check_azure_cli_status()
 
     # Notebook options
     _pr_output("Setting notebook options....")
@@ -481,7 +468,7 @@ def init_notebook(
         _load_pivots(namespace=namespace)
         output = stdout_cap.getvalue()
         _pr_output(output)
-        logger.info(output)
+        logger.info("Pivot load failures: %s", output)
 
     # User defaults
     stdout_cap = io.StringIO()
@@ -491,6 +478,7 @@ def init_notebook(
         output = stdout_cap.getvalue()
         _pr_output(output)
         logger.info(output)
+        logger.info("User default load failures: %s", output)
 
     if prov_dict:
         namespace.update(prov_dict)
@@ -670,6 +658,7 @@ def _use_custom_config(config_file: str):
 
 def _get_or_create_config() -> bool:
     # Cases
+    # 0. Current config file exists -> return ok
     # 1. Env var set and mpconfig exists -> goto 4
     # 2. Env var set and mpconfig file not exists - warn and continue
     # 3. search_for_file finds mpconfig -> goto 4
@@ -677,6 +666,8 @@ def _get_or_create_config() -> bool:
     # 5. search_for_file(config.json)
     # 6. If aml user try to import config.json into mpconfig and save
     # 7. Error - no Microsoft Sentinel config
+    if current_config_path() is not None:
+        return True
     mp_path = os.environ.get("MSTICPYCONFIG")
     if mp_path and not Path(mp_path).is_file():
         _err_output(_MISSING_MPCONFIG_ENV_ERR)
@@ -727,9 +718,6 @@ def _set_nb_options(namespace):
         "style": {"description_width": "initial"},
     }
 
-    # Some of our dependencies (networkx) still use deprecated Matplotlib
-    # APIs - we can't do anything about it, so suppress them from view
-    warnings.simplefilter("ignore", category=MatplotlibDeprecationWarning)
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     if sns:
         sns.set()
@@ -896,17 +884,3 @@ def reset_ipython_exception_handler():
     """Remove MSTICPy custom exception handler."""
     if hasattr(InteractiveShell.showtraceback, "__wrapped__"):
         InteractiveShell.showtraceback = InteractiveShell.showtraceback.__wrapped__
-
-
-def _check_azure_cli_status():
-    """Check for Azure CLI credentials."""
-    if not unit_testing():
-        status, message = check_cli_credentials()
-        if status == AzureCliStatus.CLI_OK:
-            _pr_output(message)
-        elif status == AzureCliStatus.CLI_NOT_INSTALLED:
-            _pr_output(
-                "Azure CLI credentials not detected." f" ({_CLI_WIKI_MSSG_SHORT})"
-            )
-        elif message:
-            _pr_output("\n".join([message, _CLI_WIKI_MSSG_GEN]))

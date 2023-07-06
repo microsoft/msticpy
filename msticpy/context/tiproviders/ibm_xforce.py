@@ -31,7 +31,7 @@ __author__ = "Ian Hellen"
 class _XForceParams(APILookupParams):
     # override APILookupParams to set common defaults
     def __attrs_post_init__(self):
-        self.auth_str = ["{API_ID}", "{API_KEY}"]
+        self.auth_str = ["{ApiID}", "{AuthKey}"]
         self.auth_type = "HTTPBasic"
 
 
@@ -68,7 +68,7 @@ class XForce(HttpTIProvider):
     _QUERIES["hostname-whois"] = _QUERIES["ipv4-whois"]
     _QUERIES["dns-whois"] = _QUERIES["ipv4-whois"]
 
-    _REQUIRED_PARAMS = ["API_ID", "API_KEY"]
+    _REQUIRED_PARAMS = ["ApiID", "AuthKey"]
 
     def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """

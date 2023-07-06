@@ -175,3 +175,9 @@ def fallback_devicecode_creds(
         raise CloudError("Could not obtain credentials.")
 
     return AzCredentials(legacy_creds, creds)
+
+
+def get_default_resource_name(resource_uri: str) -> str:
+    """Get a default resource name for a resource URI."""
+    separator = "" if resource_uri.strip().endswith("/") else "/"
+    return f"{resource_uri}{separator}.default"

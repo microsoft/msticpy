@@ -4,27 +4,24 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data provider loader."""
-import re
-from collections import abc
-from datetime import datetime
+import logging
 from functools import partial
-from itertools import tee
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Pattern, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
-from tqdm.auto import tqdm
 
 from ..._version import VERSION
-from ...common.exceptions import MsticpyDataQueryError
 from ...common.pkg_config import get_config
 from ...common.utility import export, valid_pyname
 from ...nbwidgets import QueryTime
-from ..drivers import DriverBase, import_driver
+from .. import drivers
+from ..drivers.driver_base import DriverBase, DriverProps
 from .param_extractor import extract_query_params
 from .query_container import QueryContainer
 from .query_defns import DataEnvironment
-from .query_source import QuerySource
+from .query_provider_connections_mixin import QueryProviderConnectionsMixin
+from .query_provider_utils_mixin import QueryProviderUtilsMixin
 from .query_store import QueryStore
 
 __version__ = VERSION
@@ -32,26 +29,20 @@ __author__ = "Ian Hellen"
 
 _HELP_FLAGS = ("help", "?")
 _DEBUG_FLAGS = ("print", "debug_query", "print_query")
-_COMPATIBLE_DRIVER_MAPPINGS = {"mssentinel": ["m365d"], "mde": ["m365d"]}
+_COMPATIBLE_DRIVER_MAPPINGS = {
+    "mssentinel": ["m365d"],
+    "mde": ["m365d"],
+    "mssentinel_new": ["mssentinel"],
+    "kusto_new": ["kusto"],
+}
+
+logger = logging.getLogger(__name__)
 
 
-class QueryParam(NamedTuple):
-    """
-    Named tuple for custom query parameters.
-
-    name and data_type are mandatory.
-    description and default are optional.
-
-    """
-
-    name: str
-    data_type: str
-    description: Optional[str] = None
-    default: Optional[str] = None
-
-
+# These are mixin classes that do not have an __init__ method
+# pylint: disable=super-init-not-called
 @export
-class QueryProvider:
+class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
     """
     Container for query store and query execution provider.
 
@@ -60,13 +51,11 @@ class QueryProvider:
 
     """
 
-    create_param = QueryParam
-
     def __init__(  # noqa: MC0001
         self,
         data_environment: Union[str, DataEnvironment],
-        driver: DriverBase = None,
-        query_paths: List[str] = None,
+        driver: Optional[DriverBase] = None,
+        query_paths: Optional[List[str]] = None,
         **kwargs,
     ):
         """
@@ -85,6 +74,13 @@ class QueryProvider:
         kwargs :
             Other arguments are passed to the data provider driver.
 
+        Notes
+        -----
+        Additional keyword arguments are passed to the data provider driver.
+        The driver may support additional keyword arguments, use
+        the QueryProvider.driver_help() method to get a list of these
+        parameters.
+
         See Also
         --------
         DataProviderBase : base class for data query providers.
@@ -97,40 +93,72 @@ class QueryProvider:
         # pylint: enable=import-outside-toplevel
         setattr(self.__class__, "_add_pivots", add_data_queries_to_entities)
 
-        if isinstance(data_environment, str):
-            data_env = DataEnvironment.parse(data_environment)
-            if data_env != DataEnvironment.Unknown:
-                data_environment = data_env
-            else:
-                raise TypeError(f"Unknown data environment {data_environment}")
-        self.environment = data_environment.name
+        data_environment, self.environment_name = self._check_environment(
+            data_environment
+        )
 
         self._driver_kwargs = kwargs.copy()
         if driver is None:
-            self.driver_class = import_driver(data_environment)
+            self.driver_class = drivers.import_driver(data_environment)
             if issubclass(self.driver_class, DriverBase):
                 driver = self.driver_class(data_environment=data_environment, **kwargs)
             else:
                 raise LookupError(
-                    "Could not find suitable data provider for", f" {self.environment}"
+                    "Could not find suitable data provider for", f" {data_environment}"
                 )
         else:
             self.driver_class = driver.__class__
+        # allow the driver to override the data environment used for selecting queries
+        self.environment_name = (
+            driver.get_driver_property(DriverProps.EFFECTIVE_ENV)
+            or self.environment_name
+        )
+        logger.info("Using data environment %s", self.environment_name)
+        logger.info("Driver class: %s", self.driver_class.__name__)
+
         self._additional_connections: Dict[str, DriverBase] = {}
         self._query_provider = driver
+        # replace the connect method docstring with that from
+        # the driver's connect method
+        self.__class__.connect.__doc__ = driver.connect.__doc__
         self.all_queries = QueryContainer()
 
         # Add any query files
         data_env_queries: Dict[str, QueryStore] = {}
+        self._query_paths = query_paths
         if driver.use_query_paths:
+            logger.info("Using query paths %s", query_paths)
             data_env_queries.update(
                 self._read_queries_from_paths(query_paths=query_paths)
             )
         self.query_store = data_env_queries.get(
-            self.environment, QueryStore(self.environment)
+            self.environment_name, QueryStore(self.environment_name)
         )
+        logger.info("Adding query functions to provider")
         self._add_query_functions()
         self._query_time = QueryTime(units="day")
+        logger.info("Initialization complete.")
+
+    def _check_environment(
+        self, data_environment
+    ) -> Tuple[Union[str, DataEnvironment], str]:
+        """Check environment against known names."""
+        if isinstance(data_environment, str):
+            data_env = DataEnvironment.parse(data_environment)
+            if data_env != DataEnvironment.Unknown:
+                data_environment = data_env
+                environment_name = data_environment.name
+            elif data_environment in drivers.CUSTOM_PROVIDERS:
+                environment_name = data_environment
+            else:
+                raise TypeError(f"Unknown data environment {data_environment}")
+        elif isinstance(data_environment, DataEnvironment):
+            environment_name = data_environment.name
+        else:
+            raise TypeError(
+                f"Unknown data environment type {data_environment} ({type(data_environment)})"
+            )
+        return data_environment, environment_name
 
     def __getattr__(self, name):
         """Return the value of the named property 'name'."""
@@ -141,7 +169,12 @@ class QueryProvider:
                 return getattr(parent, child_name)
         raise AttributeError(f"{name} is not a valid attribute.")
 
-    def connect(self, connection_str: str = None, **kwargs):
+    @property
+    def environment(self) -> str:
+        """Return the environment name."""
+        return self.environment_name
+
+    def connect(self, connection_str: Optional[str] = None, **kwargs):
         """
         Connect to data source.
 
@@ -151,6 +184,7 @@ class QueryProvider:
             Connection string for the data source
 
         """
+        logger.info("Calling connect on driver")
         self._query_provider.connect(connection_str=connection_str, **kwargs)
 
         # If the driver has any attributes to expose via the provider
@@ -158,270 +192,25 @@ class QueryProvider:
         for attr_name, attr in self._query_provider.public_attribs.items():
             setattr(self, attr_name, attr)
 
+        refresh_query_funcs = False
+        # if the driver supports dynamic filtering of queries,
+        # filter the query store based on connect-time parameters
+        if self._query_provider.filter_queries_on_connect:
+            self.query_store.apply_query_filter(self._query_provider.query_usable)
+            refresh_query_funcs = True
         # Add any built-in or dynamically retrieved queries from driver
         if self._query_provider.has_driver_queries:
+            logger.info("Adding driver queries to provider")
             driver_queries = self._query_provider.driver_queries
             self._add_driver_queries(queries=driver_queries)
+            refresh_query_funcs = True
+
+        if refresh_query_funcs:
+            self._add_query_functions()
+
         # Since we're now connected, add Pivot functions
+        logger.info("Adding query pivot functions")
         self._add_pivots(lambda: self._query_time.timespan)
-
-    def add_connection(
-        self,
-        connection_str: Optional[str] = None,
-        alias: Optional[str] = None,
-        **kwargs,
-    ):
-        """
-        Add an additional connection for the query provider.
-
-        Parameters
-        ----------
-        connection_str : Optional[str], optional
-            Connection string for the provider, by default None
-        alias : Optional[str], optional
-            Alias to use for the connection, by default None
-
-        Other Parameters
-        ----------------
-        kwargs : Dict[str, Any]
-            Other parameters passed to the driver constructor.
-
-        Notes
-        -----
-        Some drivers may accept types other than strings for the
-        `connection_str` parameter.
-
-        """
-        # create a new instance of the driver class
-        new_driver = self.driver_class(**(self._driver_kwargs))
-        # connect
-        new_driver.connect(connection_str=connection_str, **kwargs)
-        # add to collection
-        driver_key = alias or str(len(self._additional_connections))
-        self._additional_connections[driver_key] = new_driver
-
-    @property
-    def connected(self) -> bool:
-        """
-        Return True if the provider is connected.
-
-        Returns
-        -------
-        bool
-            True if the provider is connected.
-
-        """
-        return self._query_provider.connected
-
-    @property
-    def connection_string(self) -> str:
-        """
-        Return provider connection string.
-
-        Returns
-        -------
-        str
-            Provider connection string.
-
-        """
-        return self._query_provider.current_connection
-
-    @property
-    def schema(self) -> Dict[str, Dict]:
-        """
-        Return current data schema of connection.
-
-        Returns
-        -------
-        Dict[str, Dict]
-            Data schema of current connection.
-
-        """
-        return self._query_provider.schema
-
-    @property
-    def schema_tables(self) -> List[str]:
-        """
-        Return list of tables in the data schema of the connection.
-
-        Returns
-        -------
-        List[str]
-            Tables in the of current connection.
-
-        """
-        return list(self._query_provider.schema.keys())
-
-    @property
-    def instance(self) -> Optional[str]:
-        """
-        Return instance name, if any for provider.
-
-        Returns
-        -------
-        Optional[str]
-            The instance name or None for drivers that do not
-            support multiple instances.
-
-        """
-        return self._query_provider.instance
-
-    def import_query_file(self, query_file: str):
-        """
-        Import a yaml data source definition.
-
-        Parameters
-        ----------
-        query_file : str
-            Path to the file to import
-
-        """
-        self.query_store.import_file(query_file)
-        self._add_query_functions()
-
-    @classmethod
-    def list_data_environments(cls) -> List[str]:
-        """
-        Return list of current data environments.
-
-        Returns
-        -------
-        List[str]
-            List of current data environments
-
-        """
-        # pylint: disable=not-an-iterable
-        return [env for env in DataEnvironment.__members__ if env != "Unknown"]
-        # pylint: enable=not-an-iterable
-
-    def list_queries(self, substring: Optional[str] = None) -> List[str]:
-        """
-        Return list of family.query in the store.
-
-        Parameters
-        ----------
-        substring : Optional[str]
-            Optional pattern - will return only queries matching the pattern,
-            default None.
-
-        Returns
-        -------
-        List[str]
-            List of queries
-
-        """
-        if substring:
-            return list(
-                filter(
-                    lambda x: substring in x.lower(),  # type: ignore
-                    self.query_store.query_names,
-                )
-            )
-        return list(self.query_store.query_names)
-
-    def search(
-        self,
-        search: Union[str, Iterable[str]] = None,
-        table: Union[str, Iterable[str]] = None,
-        param: Union[str, Iterable[str]] = None,
-        ignore_case: bool = True,
-    ) -> List[str]:
-        """
-        Search queries for match properties.
-
-        Parameters
-        ----------
-        search : Union[str, Iterable[str]], optional
-            String or iterable of search terms to match on
-            any property of the query, by default None.
-            The properties include: name, description, table,
-            parameter names and query_text.
-        table : Union[str, Iterable[str]], optional
-            String or iterable of search terms to match on
-            the query table name, by default None
-        param : Union[str, Iterable[str]], optional
-            String or iterable of search terms to match on
-            the query parameter names, by default None
-        ignore_case : bool
-            Use case-insensitive search, default is True.
-
-        Returns
-        -------
-        List[str]
-            A list of matched queries
-
-        Notes
-        -----
-        Search terms are treated as regular expressions.
-        Supplying multiple parameters returns the intersection
-        of matches for each category. For example:
-        `qry_prov.search(search="account", table="syslog")` will
-        match queries that have a table parameter of "syslog" AND
-        have the term "Account" somewhere in the query properties.
-
-        """
-        if not (search or table or param):
-            return []
-
-        glob_searches = _normalize_to_regex(search, ignore_case)
-        table_searches = _normalize_to_regex(table, ignore_case)
-        param_searches = _normalize_to_regex(param, ignore_case)
-        search_hits: List[str] = []
-        for query, search_data in self.query_store.search_items.items():
-            glob_match = (not glob_searches) or any(
-                re.search(term, prop)
-                for term in glob_searches
-                for prop in search_data.values()
-            )
-            table_match = (not table_searches) or any(
-                re.search(term, search_data["table"]) for term in table_searches
-            )
-            param_match = (not param_searches) or any(
-                re.search(term, search_data["params"]) for term in param_searches
-            )
-            if glob_match and table_match and param_match:
-                search_hits.append(query)
-        return sorted(search_hits)
-
-    def list_connections(self) -> List[str]:
-        """
-        Return a list of current connections or the default connection.
-
-        Returns
-        -------
-        List[str]
-            The alias and connection string for each connection.
-
-        """
-        add_connections = [
-            f"{alias}: {driver.current_connection}"
-            for alias, driver in self._additional_connections.items()
-        ]
-        return [f"Default: {self._query_provider.current_connection}", *add_connections]
-
-    def query_help(self, query_name: str):
-        """
-        Print help for `query_name`.
-
-        Parameters
-        ----------
-        query_name : str
-            The name of the query.
-
-        """
-        self.query_store[query_name].help()
-
-    def get_query(self, query_name: str) -> str:
-        """
-        Return the raw query text for `query_name`.
-
-        Parameters
-        ----------
-        query_name : str
-            The name of the query.
-
-        """
-        return self.query_store[query_name].query
 
     def exec_query(self, query: str, **kwargs) -> Union[pd.DataFrame, Any]:
         """
@@ -449,127 +238,18 @@ class QueryProvider:
         """
         query_options = kwargs.pop("query_options", {}) or kwargs
         query_source = kwargs.pop("query_source", None)
-        result = self._query_provider.query(
-            query, query_source=query_source, **query_options
-        )
+
+        logger.info("Executing query '%s...'", query[:40])
         if not self._additional_connections:
-            return result
-        # run query against all connections
-        results = [result]
-        print(f"Running query for {len(self._additional_connections)} connections.")
-        for con_name, connection in self._additional_connections.items():
-            print(f"{con_name}...")
-            try:
-                results.append(
-                    connection.query(query, query_source=query_source, **query_options)
-                )
-            except MsticpyDataQueryError:
-                print(f"Query {con_name} failed.")
-        return pd.concat(results)
-
-    def browse_queries(self, **kwargs):
-        """
-        Return QueryProvider query browser.
-
-        Other Parameters
-        ----------------
-        kwargs :
-            passed to SelectItem constructor.
-
-        Returns
-        -------
-        SelectItem
-            SelectItem browser for TI Data.
-
-        """
-        # pylint: disable=import-outside-toplevel
-        from ...vis.query_browser import browse_queries
-
-        return browse_queries(self, **kwargs)
-
-    # alias for browse_queries
-    browse = browse_queries
+            return self._query_provider.query(
+                query, query_source=query_source, **query_options
+            )
+        return self._exec_additional_connections(query, **kwargs)
 
     @property
     def query_time(self):
         """Return the default QueryTime control for queries."""
         return self._query_time
-
-    def add_custom_query(
-        self,
-        name: str,
-        query: str,
-        family: Union[str, Iterable[str]],
-        description: Optional[str] = None,
-        parameters: Optional[Iterable[QueryParam]] = None,
-    ):
-        """
-        Add a custom function to the provider.
-
-        Parameters
-        ----------
-        name : str
-            The name of the query.
-        query : str
-            The query text (optionally parameterized).
-        family : Union[str, Iterable[str]]
-            The query group/family or list of families. The query will
-            be added to attributes of the query provider with these
-            names.
-        description : Optional[str], optional
-            Optional description (for query help), by default None
-        parameters : Optional[Iterable[QueryParam]], optional
-            Optional list of parameter definitions, by default None.
-            If the query is parameterized you must supply definitions
-            for the parameters here - at least name and type.
-            Parameters can be the named tuple QueryParam (also
-            exposed as QueryProvider.Param) or a 4-value
-
-        Examples
-        --------
-        >>> qp = QueryProvider("MSSentinel")
-        >>> qp_host = qp.create_paramramram("host_name", "str", "Name of Host")
-        >>> qp_start = qp.create_param("start", "datetime")
-        >>> qp_end = qp.create_param("end", "datetime")
-        >>> qp_evt = qp.create_param("event_id", "int", None, 4688)
-        >>>
-        >>> query = '''
-        >>> SecurityEvent
-        >>> | where EventID == {event_id}
-        >>> | where TimeGenerated between (datetime({start}) .. datetime({end}))
-        >>> | where Computer has "{host_name}"
-        >>> '''
-        >>>
-        >>> qp.add_custom_query(
-        >>>     name="test_host_proc",
-        >>>     query=query,
-        >>>     family="Custom",
-        >>>     parameters=[qp_host, qp_start, qp_end, qp_evt]
-        >>> )
-
-        """
-        if parameters:
-            param_dict = {
-                param[0]: {
-                    "type": param[1],
-                    "default": param[2],
-                    "description": param[3],
-                }
-                for param in parameters
-            }
-        else:
-            param_dict = {}
-        source = {
-            "args": {"query": query},
-            "description": description,
-            "parameters": param_dict,
-        }
-        metadata = {"data_families": [family] if isinstance(family, str) else family}
-        query_source = QuerySource(
-            name=name, source=source, defaults={}, metadata=metadata
-        )
-        self.query_store.add_data_source(query_source)
-        self._add_query_functions()
 
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:
@@ -594,17 +274,22 @@ class QueryProvider:
             return None
 
         params, missing = extract_query_params(query_source, *args, **kwargs)
-        self._check_for_time_params(params, missing)
+        logger.info("Parameters for query: %s", params)
+        query_options = {
+            "default_time_params": self._check_for_time_params(params, missing)
+        }
         if missing:
             query_source.help()
             raise ValueError(f"No values found for these parameters: {missing}")
 
-        split_by = kwargs.pop("split_query_by", None)
+        split_by = kwargs.pop("split_query_by", kwargs.pop("split_by", None))
         if split_by:
+            logger.info("Split query selected - interval - %s", split_by)
             split_result = self._exec_split_query(
                 split_by=split_by,
                 query_source=query_source,
                 query_params=params,
+                debug=_debug_flag(*args, **kwargs),
                 args=args,
                 **kwargs,
             )
@@ -618,18 +303,25 @@ class QueryProvider:
         if _debug_flag(*args, **kwargs):
             return query_str
 
-        # Handle any query options passed
-        query_options = _get_query_options(params, kwargs)
+        # Handle any query options passed and run the query
+        query_options.update(self._get_query_options(params, kwargs))
+        logger.info(
+            "Running query '%s...' with params: %s", query_str[:40], query_options
+        )
         return self.exec_query(query_str, query_source=query_source, **query_options)
 
-    def _check_for_time_params(self, params, missing):
+    def _check_for_time_params(self, params, missing) -> bool:
         """Fall back on builtin query time if no time parameters were supplied."""
+        defaults_added = False
         if "start" in missing:
             missing.remove("start")
             params["start"] = self._query_time.start
+            defaults_added = True
         if "end" in missing:
             missing.remove("end")
             params["end"] = self._query_time.end
+            defaults_added = True
+        return defaults_added
 
     def _get_query_folder_for_env(self, root_path: str, environment: str) -> List[Path]:
         """Return query folder for current environment."""
@@ -648,7 +340,7 @@ class QueryProvider:
         for def_qry_path in settings.get("Default"):  # type: ignore
             # only read queries from environment folder
             builtin_qry_paths = self._get_query_folder_for_env(
-                def_qry_path, self.environment
+                def_qry_path, self.environment_name
             )
             all_query_paths.extend(
                 str(qry_path) for qry_path in builtin_qry_paths if qry_path.is_dir()
@@ -665,13 +357,14 @@ class QueryProvider:
                 if param_qry_path:
                     all_query_paths.append(param_qry_path)
         if all_query_paths:
+            logger.info("Reading queries from %s", all_query_paths)
             return QueryStore.import_files(
                 source_path=all_query_paths,
                 recursive=True,
                 driver_query_filter=self._query_provider.query_attach_spec,
             )
         # if no queries - just return an empty store
-        return {self.environment: QueryStore(self.environment)}
+        return {self.environment_name: QueryStore(self.environment_name)}
 
     def _add_query_functions(self):
         """Add queries to the module as callable methods."""
@@ -718,80 +411,23 @@ class QueryProvider:
         # queries it should not be noticeable.
         self._add_query_functions()
 
-    def _exec_split_query(
-        self,
-        split_by: str,
-        query_source: QuerySource,
-        query_params: Dict[str, Any],
-        args,
-        **kwargs,
-    ) -> Union[pd.DataFrame, str, None]:
-        start = query_params.pop("start", None)
-        end = query_params.pop("end", None)
-        if not (start or end):
-            print(
-                "Cannot split a query that does not have 'start' and 'end' parameters"
-            )
-            return None
-        try:
-            split_delta = pd.Timedelta(split_by)
-        except ValueError:
-            split_delta = pd.Timedelta("1D")
-
-        ranges = _calc_split_ranges(start, end, split_delta)
-
-        split_queries = [
-            query_source.create_query(
-                formatters=self._query_provider.formatters,
-                start=q_start,
-                end=q_end,
-                **query_params,
-            )
-            for q_start, q_end in ranges
-        ]
-        # This looks for any of the "print query" debug args in args or kwargs
-        if _debug_flag(*args, **kwargs):
-            return "\n\n".join(split_queries)
-
-        # Retrieve any query options passed (other than query params)
-        # and send to query function.
-        query_options = _get_query_options(query_params, kwargs)
-        query_dfs = [
-            self.exec_query(query_str, query_source=query_source, **query_options)
-            for query_str in tqdm(split_queries, unit="sub-queries", desc="Running")
-        ]
-
-        return pd.concat(query_dfs)
-
-
-def _calc_split_ranges(start: datetime, end: datetime, split_delta: pd.Timedelta):
-    """Return a list of time ranges split by `split_delta`."""
-    # Use pandas date_range and split the result into 2 iterables
-    s_ranges, e_ranges = tee(pd.date_range(start, end, freq=split_delta))
-    next(e_ranges, None)  # skip to the next item in the 2nd iterable
-    # Zip them together to get a list of (start, end) tuples of ranges
-    # Note: we subtract 1 nanosecond from the 'end' value of each range so
-    # to avoid getting duplicated records at the boundaries of the ranges.
-    # Some providers don't have nanosecond granularity so we might
-    # get duplicates in these cases
-    ranges = [
-        (s_time, e_time - pd.Timedelta("1ns"))
-        for s_time, e_time in zip(s_ranges, e_ranges)
-    ]
-
-    # Since the generated time ranges are based on deltas from 'start'
-    # we need to adjust the end time on the final range.
-    # If the difference between the calculated last range end and
-    # the query 'end' that the user requested is small (< 10% of a delta),
-    # we just replace the last "end" time with our query end time.
-    if (ranges[-1][1] - end) < (split_delta / 10):
-        ranges[-1] = ranges[-1][0], end
-    else:
-        # otherwise append a new range starting after the last range
-        # in ranges and ending in 'end"
-        # note - we need to add back our subtracted 1 nanosecond
-        ranges.append((ranges[-1][0] + pd.Timedelta("1ns"), end))
-    return ranges
+    @staticmethod
+    def _get_query_options(
+        params: Dict[str, Any], kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        # sourcery skip: inline-immediately-returned-variable, use-or-for-fallback
+        """Return any kwargs not already in params."""
+        query_options = kwargs.pop("query_options", {})
+        if not query_options:
+            # Any kwargs left over we send to the query provider driver
+            query_options = {
+                key: val for key, val in kwargs.items() if key not in params
+            }
+        query_options["time_span"] = {
+            "start": params.get("start"),
+            "end": params.get("end"),
+        }
+        return query_options
 
 
 def _resolve_package_path(config_path: str) -> Path:
@@ -823,29 +459,3 @@ def _debug_flag(*args, **kwargs) -> bool:
     return any(db_arg for db_arg in _DEBUG_FLAGS if db_arg in args) or any(
         db_arg for db_arg in _DEBUG_FLAGS if kwargs.get(db_arg, False)
     )
-
-
-def _get_query_options(
-    params: Dict[str, Any], kwargs: Dict[str, Any]
-) -> Dict[str, Any]:
-    # sourcery skip: inline-immediately-returned-variable, use-or-for-fallback
-    """Return any kwargs not already in params."""
-    query_options = kwargs.pop("query_options", {})
-    if not query_options:
-        # Any kwargs left over we send to the query provider driver
-        query_options = {key: val for key, val in kwargs.items() if key not in params}
-    return query_options
-
-
-def _normalize_to_regex(
-    search_term: Union[str, Iterable[str], None], ignore_case: bool
-) -> List[Pattern[str]]:
-    """Return iterable or str search term as list of compiled reg expressions."""
-    if not search_term:
-        return []
-    regex_opts = [re.IGNORECASE] if ignore_case else []
-    if isinstance(search_term, str):
-        return [re.compile(search_term, *regex_opts)]
-    if isinstance(search_term, abc.Iterable):
-        return [re.compile(term, *regex_opts) for term in set(search_term)]
-    return []

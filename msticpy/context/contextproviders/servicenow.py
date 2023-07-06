@@ -39,7 +39,7 @@ _DEF_HEADERS = {
 class _ServiceNowParams(APILookupParams):
     # override LookupParams to set common defaults
     def __attrs_post_init__(self):
-        self.auth_str = ["{API_ID}", "{API_KEY}"]
+        self.auth_str = ["{ApiID}", "{AuthKey}"]
         self.auth_type = "HTTPBasic"
 
 
@@ -47,7 +47,7 @@ class _ServiceNowParams(APILookupParams):
 class ServiceNow(HttpContextProvider):
     """ServiceNow Lookup."""
 
-    _BASE_URL = "https://{INSTANCE}.service-now.com/api/now/table"
+    _BASE_URL = "https://{Instance}.service-now.com/api/now/table"
 
     _SERVICE_NOW_PARAMS = {
         "sysparm_display_value": True,
@@ -89,7 +89,7 @@ class ServiceNow(HttpContextProvider):
         ),
     }
 
-    _REQUIRED_PARAMS = ["API_ID", "API_KEY", "INSTANCE"]
+    _REQUIRED_PARAMS = ["ApiID", "AuthKey", "Instance"]
 
     def parse_results(self, response: Dict[str, Any]) -> Tuple[bool, Any]:
         """

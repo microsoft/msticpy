@@ -116,7 +116,9 @@ initialization and checks are performed.
 """
 import importlib
 import os
-from typing import Any
+import traceback
+import warnings
+from typing import Any, Iterable, Union
 
 from . import nbwidgets
 
@@ -124,6 +126,11 @@ from . import nbwidgets
 from ._version import VERSION
 from .common import pkg_config as settings
 from .common.check_version import check_version
+from .common.exceptions import (
+    MsticpyException,
+    MsticpyImportExtraError,
+    MsticpyMissingDependencyError,
+)
 from .common.utility import search_name as search
 from .init.logging import set_logging_level, setup_logging
 
@@ -131,6 +138,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen, Pete Bryan, Ashwin Patil"
 
 refresh_config = settings.refresh_config
+get_config = settings.get_config
 setup_logging()
 
 if not os.environ.get("KQLMAGIC_EXTRAS_REQUIRES"):
@@ -145,7 +153,6 @@ _DEFAULT_IMPORTS = {
     "GeoLiteLookup": "msticpy.context.geoip",
     "init_notebook": "msticpy.init.nbinit",
     "reset_ipython_exception_handler": "msticpy.init.nbinit",
-    "IPStackLookup": "msticpy.context.geoip",
     "MicrosoftSentinel": "msticpy.context.azure",
     "MpConfigEdit": "msticpy.config.mp_config_edit",
     "MpConfigFile": "msticpy.config.mp_config_file",
@@ -179,11 +186,49 @@ def __getattr__(attrib: str) -> Any:
 
     """
     if attrib in _DEFAULT_IMPORTS:
-        module = importlib.import_module(_DEFAULT_IMPORTS[attrib])
-        return getattr(module, attrib)
-    raise AttributeError(f"msticpy has no attribute {attrib}")
+        try:
+            return getattr(importlib.import_module(_DEFAULT_IMPORTS[attrib]), attrib)
+        except (MsticpyImportExtraError, MsticpyImportExtraError):
+            raise
+        except (ImportError, MsticpyException) as err:
+            warnings.warn(f"Unable to import module for 'msticpy.{attrib}'")
+            print(
+                f"WARNING. The msticpy attribute '{attrib}' is not loadable.",
+                "You may need to install one or more additional dependencies.\n",
+                "Please check the exception details below for more information.",
+                "\n".join(
+                    traceback.format_exception(
+                        type(err), value=err, tb=err.__traceback__
+                    )
+                ),
+            )
+            raise AttributeError(f"msticpy failed to load '{attrib}'") from err
+    raise AttributeError(f"msticpy has no attribute '{attrib}'")
 
 
 def __dir__():
     """Return attribute list."""
     return sorted(set(_STATIC_ATTRIBS + list(_DEFAULT_IMPORTS)))
+
+
+def load_plugins(plugin_paths: Union[str, Iterable[str]]):
+    """
+    Load plugins from specified paths or configuration.
+
+    Parameters
+    ----------
+    plugin_paths : Union[str, Iterable[str]]
+        A path or collection of paths from which to
+        load plugins. If not supplied, msticpyconfig is checked for
+        a PluginFolders key and list of paths are read from there.
+
+    Notes
+    -----
+    No attempt to load plugins is made if both parameter and
+    configuration are empty.
+
+    """
+    # pylint: disable=import-outside-toplevel
+    from .init.mp_plugins import read_plugins
+
+    read_plugins(plugin_paths)

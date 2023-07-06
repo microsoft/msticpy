@@ -12,6 +12,8 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   msticpy.data.drivers.azure_kusto_driver
+   msticpy.data.drivers.azure_monitor_driver
    msticpy.data.drivers.cybereason_driver
    msticpy.data.drivers.driver_base
    msticpy.data.drivers.elastic_driver
@@ -19,6 +21,7 @@ Submodules
    msticpy.data.drivers.kusto_driver
    msticpy.data.drivers.local_data_driver
    msticpy.data.drivers.local_osquery_driver
+   msticpy.data.drivers.local_velociraptor_driver
    msticpy.data.drivers.mdatp_driver
    msticpy.data.drivers.mordor_driver
    msticpy.data.drivers.odata_driver
