@@ -25,7 +25,7 @@ defaults:
         default: ''
 sources:
   list_alerts:
-    description: Retrieves list of alerts
+    description: Returns security alerts for a given time range
     metadata:
     args:
       query: '
@@ -46,7 +46,7 @@ sources:
         description: Query end time
         type: datetime
   list_alerts_counts:
-    description: Retrieves summary count of alerts by type
+    description: Returns summary count of alerts by type
     metadata:
     args:
       query: '
@@ -82,7 +82,7 @@ sources:
         description: 'The ID of the alert'
         type: str
   list_related_alerts:
-    description: Retrieves list of alerts with a common host, account or process
+    description: Returns alerts with a host, account or process entity
     metadata:
       pivot:
         short_name: alerts
@@ -144,7 +144,7 @@ sources:
         type: str
         default: '\\'
   list_alerts_for_ip:
-    description: Retrieves list of alerts with a common IP Address
+    description: Returns alerts with the specified IP Address or addresses.
     metadata:
     args:
       query: '
