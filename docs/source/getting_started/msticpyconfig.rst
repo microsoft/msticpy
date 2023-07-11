@@ -139,7 +139,7 @@ Currently supported provider names are:
         Provider: "OPR"
       CrowdSec:
         Args:
-          AuthKey: 12ffVvqTaV1fYf7eieoic21rftntHQhO2Hdsxyzabcd
+          AuthKey: [PLACEHOLDER]
         Primary: True
         Provider: "CrowdSec"
 

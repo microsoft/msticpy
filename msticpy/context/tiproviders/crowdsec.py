@@ -36,14 +36,8 @@ class CrowdSec(HttpTIProvider):
                 "User-Agent": "crowdsec-msticpy-tiprovider/v1.0.0",
             },
         ),
-        "ipv6": APILookupParams(
-            path="/v2/smoke/{observable}",
-            headers={
-                "x-api-key": "{AuthKey}",
-                "User-Agent": "crowdsec-msticpy-tiprovider/v1.0.0",
-            },
-        ),
     }
+    _QUERIES["ipv6"] = _QUERIES["ipv4"]
 
     def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         if self._failed_response(response):

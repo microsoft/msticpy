@@ -271,7 +271,7 @@ fictitious - the format of the keys may differ from what is shown
         Provider: "AzSTI"
       CrowdSec:
         Args:
-          AuthKey: 12ffVvqTaV1fYf7eieoic21rftntHQhO2Hdsxyzabcd
+          AuthKey: [PLACEHOLDER]
         Primary: True
         Provider: "CrowdSec"
 
