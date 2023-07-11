@@ -932,8 +932,8 @@ _PROVIDER_RESPONSES = {
                     },
                 ],
                 "history": {
-                    "first_seen": f"{dt.now().isoformat(timespec='seconds')}+00:00",
-                    "last_seen": f"{dt.now().isoformat(timespec='seconds')}+00:00",
+                    "first_seen": f"{dt.datetime.now().isoformat(timespec='seconds')}+00:00",
+                    "last_seen": f"{dt.datetime.now().isoformat(timespec='seconds')}+00:00",
                     "full_age": 490,
                     "days_age": 489,
                 },
