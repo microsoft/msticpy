@@ -29,6 +29,8 @@ class MsticpyCoreAccessor:
         self._df = pandas_obj
         self._ioc = IoCExtract()
 
+        self._data_viewer_class: Any = None
+
     def b64extract(self, column: str, **kwargs) -> pd.DataFrame:
         """
         Base64-decode strings taken from a pandas dataframe.
@@ -241,3 +243,55 @@ class MsticpyCoreAccessor:
 
         """
         return get_whois_df(data=self._df, ip_column=ip_column, **kwargs)
+
+    def view(self, **kwargs):
+        """
+        Initialize the DataViewer class.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            The DataFrame to view
+        selected_cols : List[str], optional
+            Initial subset of columns to show, by default None (all cols)
+
+        Other Parameters
+        ----------------
+        selectable : Union[bool, str], optional
+            Whether rows should be selectable, by default "checkbox"
+        show_index : bool, optional
+            If True show the DataFrame index as a column, by default  True.
+        show_tenant_id : bool, optional
+            If True show the TenantId column, by default  True.
+        max_col_width : int, optional
+            Sets the maximum column width to display, by default 500
+        detail_cols : List[str]
+            List of columns for which details are displayed in collapsible
+            field beneath each table row.
+        kwargs :
+            Other keyword arguments are passed to the panel
+            Tabulator control.
+
+        Notes
+        -----
+        Main attributes:
+        value - original dataframe
+        selected - indexes of currently selected rows
+        selected_dataframe - currently selected rows
+        current_view - current dataframe after filtering and sorting
+        selection - indexes of currently selected rows
+
+        See Also
+        --------
+        Tabulator - https://panel.holoviz.org/reference/widgets/Tabulator.html
+
+        """
+        if self._data_viewer_class is None:
+            try:
+                # pylint: disable=import-outside-toplevel
+                from ..vis.data_viewer_panel import DataViewer
+            except ImportError:
+                print("This component needs the panel package.")
+                return self._df
+            self._data_viewer_class = DataViewer
+        return self._data_viewer_class(data=self._df, **kwargs)
