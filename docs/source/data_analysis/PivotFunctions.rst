@@ -1577,7 +1577,7 @@ as outputs, you can could imagine implementing this chain of operations as
 a series of calls to various pivot functions, taking the output from one
 and feeding it to the next, and so on. Pandas already supports
 stacking these kinds of operations in what is known as a
-`fluent interface <https://en.wikipedia.org/wiki/Fluent_interface>`_.
+`fluent interface <https://en.wikipedia.org/wiki/Fluent_interface>`__.
 
 Here is an example that chains three operations but without using
 any intermediate variables to store the results of each step. Each operation
@@ -1787,7 +1787,7 @@ The name of the function to be run should be passed (as a string) in the
 The function **must** be a method of a pandas DataFrame - this includes
 built-in functions such as ``.plot``, ``.sort_values`` or a custom function
 added as a custom pd accessor function (see
-`Extending pandas <https://pandas.pydata.org/pandas-docs/stable/development/extending.html?highlight=accessor>`_)
+`Extending pandas <https://pandas.pydata.org/pandas-docs/stable/development/extending.html?highlight=accessor>`__)
 
 You can pass other named arguments to the ``tee_exec``. These
 will be passed to the ``df_func`` function.

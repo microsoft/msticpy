@@ -16,4 +16,3 @@ Submodules
    msticpy.common.utility.ipython
    msticpy.common.utility.package
    msticpy.common.utility.types
-   msticpy.common.utility.yaml_loader

@@ -96,7 +96,7 @@ details) with:
     )
 
 
-For more details see :py:class:`QueryProvider API<msticpy.data.data_providers.QueryProvider>`.
+For more details see :py:class:`QueryProvider API <msticpy.data.data_providers.QueryProvider>`.
 
 
 Connecting to a Data Environment

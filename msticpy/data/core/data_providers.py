@@ -32,7 +32,7 @@ _DEBUG_FLAGS = ("print", "debug_query", "print_query")
 _COMPATIBLE_DRIVER_MAPPINGS = {
     "mssentinel": ["m365d"],
     "mde": ["m365d"],
-    "mssentinel_new": ["mssentinel"],
+    "mssentinel_new": ["mssentinel", "m365d"],
     "kusto_new": ["kusto"],
 }
 

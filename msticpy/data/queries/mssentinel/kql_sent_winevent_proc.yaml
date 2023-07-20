@@ -59,7 +59,7 @@ defaults:
         default: '\\'
 sources:
   list_host_processes:
-    description: Retrieves list of processes on a host
+    description: Returns list of processes on a host for a time range
     metadata:
       pivot:
         short_name: processes
@@ -86,7 +86,7 @@ sources:
         type: str
         default: has
   list_matching_processes:
-    description: Retrieves list of processes matching process name
+    description: Returns list of processes matching process name (all hosts)
     metadata:
       pivot:
         short_name: similar_processes
@@ -113,7 +113,7 @@ sources:
         type: str
         default: has
   get_process_tree:
-    description: Retrieves the process tree of a supplied process
+    description: Returns the process tree for process id, session id and host name.
     args:
       query: '
         let start = datetime({start});
@@ -226,7 +226,7 @@ sources:
         description: The logon session ID of the source process
         type: str
   get_parent_process:
-    description: Retrieves the parent process of a supplied process
+    description: Returns the parent process of process (process id, session id and host name)
     metadata:
       pivot:
         short_name: parent_process
@@ -286,7 +286,7 @@ sources:
         type: int
         default: 2
   list_hosts_matching_commandline:
-    description: Retrieves processes on hosts with matching commandline
+    description: Returns processes on hosts with matching command line
     metadata:
       pivot:
         short_name: processes_with_same_commandline
@@ -311,7 +311,7 @@ sources:
         description: The command line of the source process
         type: str
   list_processes_in_session:
-    description: Retrieves all processes on the host for a logon session
+    description: Returns all processes on the host for a logon session
     metadata:
       pivot:
         short_name: process_session
@@ -335,12 +335,6 @@ sources:
     parameters:
       host_name:
         description: Name of host
-        type: str
-      process_name:
-        description: Name of process
-        type: str
-      process_id:
-        description: The process ID of the source process
         type: str
       logon_session_id:
         description: The logon session ID of the source process
