@@ -119,6 +119,21 @@
                 },
                 "cluster": {
                     "type": "string"
+                },
+                "clusters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "cluster_groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "database": {
+                    "type": "string"
                 }
             },
             "additionalProperties": false,
