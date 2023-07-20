@@ -40,6 +40,7 @@ class CrowdSec(HttpTIProvider):
     _QUERIES["ipv6"] = _QUERIES["ipv4"]
 
     def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
+        """Return the details of the response."""
         if self._failed_response(response):
             return False, ResultSeverity.information, response["RawResult"]["message"]
 
