@@ -277,7 +277,7 @@ sources:
         type: str
         default: ""
   ip_network_connections_csl:
-    descritpion: Returns network connections to and from an IP address (CommonSecurityLog)
+    description: Returns network connections to and from an IP address (CommonSecurityLog)
     metadata:
       pivot:
         short_name: ip_connections_csl
@@ -302,7 +302,7 @@ sources:
         type: str
         default: ""
   all_network_connections_csl:
-    descritpion: Returns all network connections for a time range (CommonSecurityLog)
+    description: Returns all network connections for a time range (CommonSecurityLog)
     args:
       query: "
         {table}
@@ -318,7 +318,7 @@ sources:
         type: str
         default: "CommonSecurityLog"
   ips_by_host_csl:
-    descritpion: Returns all IP addresses associated with a host (CommonSecurityLog)
+    description: Returns all IP addresses associated with a host (CommonSecurityLog)
     metadata:
       pivot:
         short_name: ips_csl
@@ -344,7 +344,7 @@ sources:
         type: str
         default: ""
   hosts_by_ip_csl:
-    descritpion: Returns hosts associated with a IP addresses (CommonSecurityLog)
+    description: Returns hosts associated with a IP addresses (CommonSecurityLog)
     metadata:
       pivot:
         short_name: hosts_csl
