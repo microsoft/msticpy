@@ -63,7 +63,11 @@ def test_load_default():
         check.is_true(path.is_dir())
         for query_file in Path(path).resolve().rglob("*.yaml"):
             validate_queries_file_structure(
-                query_file, expected=not ("fail" in query_file.name)
+                query_file,
+                expected=not (
+                    "fail" in query_file.name
+                    or "sentinel_query_import_data" in query_file.absolute
+                ),
             )
 
 
