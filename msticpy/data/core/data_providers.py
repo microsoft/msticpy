@@ -4,14 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data provider loader."""
-from datetime import datetime
+import logging
 from functools import partial
-from itertools import tee
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
-from tqdm.auto import tqdm
 
 from ..._version import VERSION
 from ...common.pkg_config import get_config
@@ -24,7 +22,6 @@ from .query_container import QueryContainer
 from .query_defns import DataEnvironment
 from .query_provider_connections_mixin import QueryProviderConnectionsMixin
 from .query_provider_utils_mixin import QueryProviderUtilsMixin
-from .query_source import QuerySource
 from .query_store import QueryStore
 
 __version__ = VERSION
@@ -35,9 +32,11 @@ _DEBUG_FLAGS = ("print", "debug_query", "print_query")
 _COMPATIBLE_DRIVER_MAPPINGS = {
     "mssentinel": ["m365d"],
     "mde": ["m365d"],
-    "mssentinel_new": ["mssentinel"],
+    "mssentinel_new": ["mssentinel", "m365d"],
     "kusto_new": ["kusto"],
 }
+
+logger = logging.getLogger(__name__)
 
 
 # These are mixin classes that do not have an __init__ method
@@ -114,6 +113,8 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             driver.get_driver_property(DriverProps.EFFECTIVE_ENV)
             or self.environment_name
         )
+        logger.info("Using data environment %s", self.environment_name)
+        logger.info("Driver class: %s", self.driver_class.__name__)
 
         self._additional_connections: Dict[str, DriverBase] = {}
         self._query_provider = driver
@@ -124,15 +125,19 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
 
         # Add any query files
         data_env_queries: Dict[str, QueryStore] = {}
+        self._query_paths = query_paths
         if driver.use_query_paths:
+            logger.info("Using query paths %s", query_paths)
             data_env_queries.update(
                 self._read_queries_from_paths(query_paths=query_paths)
             )
         self.query_store = data_env_queries.get(
             self.environment_name, QueryStore(self.environment_name)
         )
+        logger.info("Adding query functions to provider")
         self._add_query_functions()
         self._query_time = QueryTime(units="day")
+        logger.info("Initialization complete.")
 
     def _check_environment(
         self, data_environment
@@ -179,6 +184,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             Connection string for the data source
 
         """
+        logger.info("Calling connect on driver")
         self._query_provider.connect(connection_str=connection_str, **kwargs)
 
         # If the driver has any attributes to expose via the provider
@@ -194,6 +200,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             refresh_query_funcs = True
         # Add any built-in or dynamically retrieved queries from driver
         if self._query_provider.has_driver_queries:
+            logger.info("Adding driver queries to provider")
             driver_queries = self._query_provider.driver_queries
             self._add_driver_queries(queries=driver_queries)
             refresh_query_funcs = True
@@ -202,6 +209,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             self._add_query_functions()
 
         # Since we're now connected, add Pivot functions
+        logger.info("Adding query pivot functions")
         self._add_pivots(lambda: self._query_time.timespan)
 
     def exec_query(self, query: str, **kwargs) -> Union[pd.DataFrame, Any]:
@@ -230,12 +238,13 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         """
         query_options = kwargs.pop("query_options", {}) or kwargs
         query_source = kwargs.pop("query_source", None)
-        result = self._query_provider.query(
-            query, query_source=query_source, **query_options
-        )
+
+        logger.info("Executing query '%s...'", query[:40])
         if not self._additional_connections:
-            return result
-        return self._exec_additional_connections(query, result, **kwargs)
+            return self._query_provider.query(
+                query, query_source=query_source, **query_options
+            )
+        return self._exec_additional_connections(query, **kwargs)
 
     @property
     def query_time(self):
@@ -265,6 +274,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             return None
 
         params, missing = extract_query_params(query_source, *args, **kwargs)
+        logger.info("Parameters for query: %s", params)
         query_options = {
             "default_time_params": self._check_for_time_params(params, missing)
         }
@@ -272,12 +282,14 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             query_source.help()
             raise ValueError(f"No values found for these parameters: {missing}")
 
-        split_by = kwargs.pop("split_query_by", None)
+        split_by = kwargs.pop("split_query_by", kwargs.pop("split_by", None))
         if split_by:
+            logger.info("Split query selected - interval - %s", split_by)
             split_result = self._exec_split_query(
                 split_by=split_by,
                 query_source=query_source,
                 query_params=params,
+                debug=_debug_flag(*args, **kwargs),
                 args=args,
                 **kwargs,
             )
@@ -292,7 +304,10 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             return query_str
 
         # Handle any query options passed and run the query
-        query_options.update(_get_query_options(params, kwargs))
+        query_options.update(self._get_query_options(params, kwargs))
+        logger.info(
+            "Running query '%s...' with params: %s", query_str[:40], query_options
+        )
         return self.exec_query(query_str, query_source=query_source, **query_options)
 
     def _check_for_time_params(self, params, missing) -> bool:
@@ -342,6 +357,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
                 if param_qry_path:
                     all_query_paths.append(param_qry_path)
         if all_query_paths:
+            logger.info("Reading queries from %s", all_query_paths)
             return QueryStore.import_files(
                 source_path=all_query_paths,
                 recursive=True,
@@ -395,80 +411,23 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         # queries it should not be noticeable.
         self._add_query_functions()
 
-    def _exec_split_query(
-        self,
-        split_by: str,
-        query_source: QuerySource,
-        query_params: Dict[str, Any],
-        args,
-        **kwargs,
-    ) -> Union[pd.DataFrame, str, None]:
-        start = query_params.pop("start", None)
-        end = query_params.pop("end", None)
-        if not (start or end):
-            print(
-                "Cannot split a query that does not have 'start' and 'end' parameters"
-            )
-            return None
-        try:
-            split_delta = pd.Timedelta(split_by)
-        except ValueError:
-            split_delta = pd.Timedelta("1D")
-
-        ranges = _calc_split_ranges(start, end, split_delta)
-
-        split_queries = [
-            query_source.create_query(
-                formatters=self._query_provider.formatters,
-                start=q_start,
-                end=q_end,
-                **query_params,
-            )
-            for q_start, q_end in ranges
-        ]
-        # This looks for any of the "print query" debug args in args or kwargs
-        if _debug_flag(*args, **kwargs):
-            return "\n\n".join(split_queries)
-
-        # Retrieve any query options passed (other than query params)
-        # and send to query function.
-        query_options = _get_query_options(query_params, kwargs)
-        query_dfs = [
-            self.exec_query(query_str, query_source=query_source, **query_options)
-            for query_str in tqdm(split_queries, unit="sub-queries", desc="Running")
-        ]
-
-        return pd.concat(query_dfs)
-
-
-def _calc_split_ranges(start: datetime, end: datetime, split_delta: pd.Timedelta):
-    """Return a list of time ranges split by `split_delta`."""
-    # Use pandas date_range and split the result into 2 iterables
-    s_ranges, e_ranges = tee(pd.date_range(start, end, freq=split_delta))
-    next(e_ranges, None)  # skip to the next item in the 2nd iterable
-    # Zip them together to get a list of (start, end) tuples of ranges
-    # Note: we subtract 1 nanosecond from the 'end' value of each range so
-    # to avoid getting duplicated records at the boundaries of the ranges.
-    # Some providers don't have nanosecond granularity so we might
-    # get duplicates in these cases
-    ranges = [
-        (s_time, e_time - pd.Timedelta("1ns"))
-        for s_time, e_time in zip(s_ranges, e_ranges)
-    ]
-
-    # Since the generated time ranges are based on deltas from 'start'
-    # we need to adjust the end time on the final range.
-    # If the difference between the calculated last range end and
-    # the query 'end' that the user requested is small (< 10% of a delta),
-    # we just replace the last "end" time with our query end time.
-    if (ranges[-1][1] - end) < (split_delta / 10):
-        ranges[-1] = ranges[-1][0], end
-    else:
-        # otherwise append a new range starting after the last range
-        # in ranges and ending in 'end"
-        # note - we need to add back our subtracted 1 nanosecond
-        ranges.append((ranges[-1][0] + pd.Timedelta("1ns"), end))
-    return ranges
+    @staticmethod
+    def _get_query_options(
+        params: Dict[str, Any], kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        # sourcery skip: inline-immediately-returned-variable, use-or-for-fallback
+        """Return any kwargs not already in params."""
+        query_options = kwargs.pop("query_options", {})
+        if not query_options:
+            # Any kwargs left over we send to the query provider driver
+            query_options = {
+                key: val for key, val in kwargs.items() if key not in params
+            }
+        query_options["time_span"] = {
+            "start": params.get("start"),
+            "end": params.get("end"),
+        }
+        return query_options
 
 
 def _resolve_package_path(config_path: str) -> Path:
@@ -500,19 +459,3 @@ def _debug_flag(*args, **kwargs) -> bool:
     return any(db_arg for db_arg in _DEBUG_FLAGS if db_arg in args) or any(
         db_arg for db_arg in _DEBUG_FLAGS if kwargs.get(db_arg, False)
     )
-
-
-def _get_query_options(
-    params: Dict[str, Any], kwargs: Dict[str, Any]
-) -> Dict[str, Any]:
-    # sourcery skip: inline-immediately-returned-variable, use-or-for-fallback
-    """Return any kwargs not already in params."""
-    query_options = kwargs.pop("query_options", {})
-    if not query_options:
-        # Any kwargs left over we send to the query provider driver
-        query_options = {key: val for key, val in kwargs.items() if key not in params}
-    query_options["time_span"] = {
-        "start": params.get("start"),
-        "end": params.get("end"),
-    }
-    return query_options

@@ -24,7 +24,7 @@ defaults:
         default: "true"
 sources:
   sysmon_process_events:
-    description: Get Process Events from a specified host
+    description: Sysmon Process Events on host
     metadata:
     args:
       query: |

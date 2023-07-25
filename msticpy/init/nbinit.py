@@ -66,7 +66,6 @@ except ImportError:
     sns = None
 
 from .._version import VERSION
-from ..auth.azure_auth_core import AzureCliStatus, check_cli_credentials
 from ..common.check_version import check_version
 from ..common.exceptions import MsticpyException, MsticpyUserError
 from ..common.pkg_config import _HOME_PATH
@@ -84,8 +83,7 @@ from ..common.utility import (
     search_for_file,
     unit_testing,
 )
-from .azure_ml_tools import check_versions as check_versions_aml
-from .azure_ml_tools import is_in_aml, populate_config_to_mp_config
+from .azure_ml_tools import check_aml_settings, is_in_aml, populate_config_to_mp_config
 from .azure_synapse_tools import init_synapse, is_in_synapse
 from .pivot import Pivot
 from .user_config import load_user_defaults
@@ -225,17 +223,6 @@ _CONF_URI = (
 _AZNB_GUIDE = (
     "Please run the <i>Getting Started Guide for Azure Sentinel "
     + "ML Notebooks</i> notebook."
-)
-_AZ_CLI_WIKI_URI = (
-    "https://github.com/Azure/Azure-Sentinel-Notebooks/wiki/"
-    "Caching-credentials-with-Azure-CLI"
-)
-_CLI_WIKI_MSSG_GEN = (
-    f"For more information see <a href='{_AZ_CLI_WIKI_URI}'>"
-    "Caching credentials with Azure CLI</>"
-)
-_CLI_WIKI_MSSG_SHORT = (
-    f"see <a href='{_AZ_CLI_WIKI_URI}'>Caching credentials with Azure CLI</>"
 )
 
 current_providers: Dict[str, Any] = {}  # pylint: disable=invalid-name
@@ -426,7 +413,7 @@ def init_notebook(
     logger.info("Starting Notebook initialization")
     # Check Azure ML environment
     if _detect_env("aml", **kwargs) and is_in_aml():
-        check_versions_aml(*_get_aml_globals(namespace))
+        check_aml_settings(*_get_aml_globals(namespace))
     else:
         # If not in AML check and print version status
         stdout_cap = io.StringIO()
@@ -434,7 +421,7 @@ def init_notebook(
             check_version()
             output = stdout_cap.getvalue()
             _pr_output(output)
-            logger.info(output)
+            logger.info("Check version failures: %s", output)
 
     if _detect_env("synapse", **kwargs) and is_in_synapse():
         synapse_params = {
@@ -451,7 +438,7 @@ def init_notebook(
         )
         output = stdout_cap.getvalue()
         _pr_output(output)
-        logger.info(output)
+        logger.info("Import failures: %s", output)
 
     # Configuration check
     if no_config_check:
@@ -459,7 +446,6 @@ def init_notebook(
     else:
         _pr_output("Checking configuration....")
         conf_ok = _get_or_create_config()
-        _check_azure_cli_status()
 
     # Notebook options
     _pr_output("Setting notebook options....")
@@ -482,7 +468,7 @@ def init_notebook(
         _load_pivots(namespace=namespace)
         output = stdout_cap.getvalue()
         _pr_output(output)
-        logger.info(output)
+        logger.info("Pivot load failures: %s", output)
 
     # User defaults
     stdout_cap = io.StringIO()
@@ -492,6 +478,7 @@ def init_notebook(
         output = stdout_cap.getvalue()
         _pr_output(output)
         logger.info(output)
+        logger.info("User default load failures: %s", output)
 
     if prov_dict:
         namespace.update(prov_dict)
@@ -897,17 +884,3 @@ def reset_ipython_exception_handler():
     """Remove MSTICPy custom exception handler."""
     if hasattr(InteractiveShell.showtraceback, "__wrapped__"):
         InteractiveShell.showtraceback = InteractiveShell.showtraceback.__wrapped__
-
-
-def _check_azure_cli_status():
-    """Check for Azure CLI credentials."""
-    if not unit_testing():
-        status, message = check_cli_credentials()
-        if status == AzureCliStatus.CLI_OK:
-            _pr_output(message)
-        elif status == AzureCliStatus.CLI_NOT_INSTALLED:
-            _pr_output(
-                "Azure CLI credentials not detected." f" ({_CLI_WIKI_MSSG_SHORT})"
-            )
-        elif message:
-            _pr_output("\n".join([message, _CLI_WIKI_MSSG_GEN]))

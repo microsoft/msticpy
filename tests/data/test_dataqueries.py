@@ -20,8 +20,9 @@ import pytest_check as check
 
 from msticpy.common import pkg_config
 from msticpy.common.exceptions import MsticpyException
-from msticpy.data.core.data_providers import QueryProvider, _calc_split_ranges
+from msticpy.data.core.data_providers import QueryProvider
 from msticpy.data.core.query_container import QueryContainer
+from msticpy.data.core.query_provider_connections_mixin import _calc_split_ranges
 from msticpy.data.core.query_source import QuerySource
 from msticpy.data.drivers.driver_base import DriverBase, DriverProps
 
@@ -225,7 +226,7 @@ class TestDataQuery(unittest.TestCase):
     def test_load_yaml_def(self):
         """Test query loader rejecting badly formed query files."""
         la_provider = self.la_provider
-        with self.assertRaises((MsticpyException, ValueError)) as cm:
+        with self.assertRaises((MsticpyException, ValueError, KeyError)) as cm:
             file_path = Path(_TEST_DATA, "data_q_meta_fail.yaml")
             la_provider.import_query_file(query_file=file_path)
             self.assertIn("no data families defined", str(cm.exception))
@@ -404,7 +405,7 @@ class TestDataQuery(unittest.TestCase):
         queries = result_queries.split("\n\n")
         # if no start and end - provider prints message and returns None
         self.assertEqual(len(queries), 1)
-        self.assertIn("Cannot split a query that", mssg.getvalue())
+        self.assertIn("Cannot split a query", mssg.getvalue())
 
         # With invalid split_query_by value it will default to 1D
         start = datetime.utcnow() - pd.Timedelta("5D")
@@ -420,7 +421,7 @@ class TestDataQuery(unittest.TestCase):
 _LOCAL_DATA_PATHS = [str(get_test_data_path().joinpath("localdata"))]
 
 
-def test_add_provider():
+def test_multiple_connections():
     """Test adding connection instance to provider."""
     prov_args = dict(query_paths=_LOCAL_DATA_PATHS, data_paths=_LOCAL_DATA_PATHS)
     # create local provider and run a query

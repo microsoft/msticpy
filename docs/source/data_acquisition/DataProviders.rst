@@ -85,7 +85,7 @@ would only use this parameter if you were building your own
 data driver backend, which is not common.
 
 2. You can choose to import additional queries from a custom
-query directory (see `Creating new queries`_ for more
+query directory (see :doc:`../extending/Queries` for more
 details) with:
 
 .. code:: ipython3
@@ -96,7 +96,7 @@ details) with:
     )
 
 
-For more details see :py:class:`QueryProvider API<msticpy.data.data_providers.QueryProvider>`.
+For more details see :py:class:`QueryProvider API <msticpy.data.data_providers.QueryProvider>`.
 
 
 Connecting to a Data Environment
@@ -449,6 +449,75 @@ TimeGenerated        AlertDisplayName                                   Severity
 2019-07-22 07:02:42  Traffic from unrecommended IP addresses was de...  Low         Azure security center has detected incoming tr...  {\r\n "Destination Port": "3389",\r\n "Proto...   [\r\n {\r\n "$id": "4",\r\n "ResourceId...  Detection
 ===================  =================================================  ==========  =================================================  ================================================  ==========================================  ==============
 
+.. _multiple_connections:
+
+Running a query across multiple connections
+-------------------------------------------
+
+It is common for data services to be spread across multiple tenants or
+workloads. For example, you may have multiple Sentinel workspaces,
+Microsoft Defender subscriptions or Splunk instances. You can use the
+``QueryProvider`` to run a query across multiple connections and return
+the results in a single DataFrame.
+
+.. note:: This feature only works for multiple instances using the same
+    ``DataEnvironment`` (e.g. "MSSentinel", "Splunk", etc.)
+
+To create a multi-instance provider you first need to create an
+instance of a QueryProvider for your data source and execute
+the ``connect()`` method to connect to the first instance of your
+data service. Which instance you choose is not important.
+Then use the
+:py:meth:`add_connection() <msticpy.data.core.query_provider_connections_mixin.QueryProviderConnectionsMixin.add_connection>`
+method. This takes the same parameters as the
+:py:meth:`connect() <msticpy.data.core.data_providers.QueryProvider.connect>`
+method (the parameters for this method vary by data provider).
+
+``add_connection()`` also supports an ``alias`` parameter to allow
+you to refer to the connection by a friendly name. Otherwise, the
+connection is just assigned an index number in the order that it was
+added.
+
+Use the
+:py:meth:`list_connections() <msticpy.data.core.query_provider_connections_mixin.QueryProviderConnectionsMixin.list_connections>`
+to see all of the current connections.
+
+.. code:: ipython3
+
+    qry_prov = QueryProvider("MSSentinel")
+    qry_prov.connect(workspace="Workspace1")
+    qry_prov.add_connection(workspace="Workspace2, alias="Workspace2")
+    qry_prov.list_connections()
+
+When you now run a query for this provider, the query will be run on
+all of the connections and the results will be returned as a single
+dataframe.
+
+.. code:: ipython3
+
+    test_query = '''
+        SecurityAlert
+        | take 5
+        '''
+
+    query_test = qry_prov.exec_query(query=test_query)
+    query_test.head()
+
+Some of the MSTICPy drivers support asynchronous execution of queries
+against multiple instances, so that the time taken to run the query is
+much reduced compared to running the queries sequentially. Drivers
+that support asynchronous queries will use this automatically.
+
+By default, the queries will use at most 4 concurrent threads. You can
+override this by initializing the QueryProvider with the
+``max_threads`` parameter to set it to the number of threads you want.
+
+.. code:: ipython3
+
+    qry_prov = QueryProvider("MSSentinel", max_threads=10)
+
+
+.. _splitting_query_execution:
 
 Splitting Query Execution into Chunks
 -------------------------------------
@@ -458,6 +527,11 @@ single request. The MSTICPy data providers have an option to
 split a query into time ranges. Each sub-range is run as an independent
 query and the results are combined before being returned as a
 DataFrame.
+
+.. note:: Some data drivers support running queries asynchronously.
+    This means that the time taken to run all chunks of the query is much reduced
+    compared to running these sequentially. Drivers that support
+    asynchronous queries will use this automatically.
 
 To use this feature you must specify the keyword parameter ``split_query_by``
 when executing the query function. The value to this parameter is a
@@ -471,7 +545,7 @@ chunks.
    than the split period that you specified in the *split_query_by*
    parameter. This can happen if *start* and *end* are not aligned
    exactly on time boundaries (e.g. if you used a one hour split period
-   and *end* is 10 hours 15 min after *start*. The query split logic
+   and *end* is 10 hours 15 min after *start*). The query split logic
    will create a larger final slice if *end* is close to the final time
    range or it will insert an extra time range to ensure that the full
    *start** to *end* time range is covered.
@@ -494,7 +568,7 @@ for Timedelta in the
 .. warning:: There are some important caveats to this feature.
 
    1. It currently only works with pre-defined queries (including ones
-      that you may create and add yourself, see `Creating new queries`_
+      that you may create and add yourself, see :doc:`../extending/Queries`
       below). It does not work with `Running an ad hoc query`_
    2. If the query contains joins, the joins will only happen within
       the time ranges of each subquery.
@@ -512,7 +586,7 @@ Dynamically adding new queries
 You can use the :py:meth:`msticpy.data.core.data_providers.QueryProvider.add_query`
 to add parameterized queries from a notebook or script. This
 let you use temporary parameterized queries without having to
-add them to a YAML file (as described in `Creating new queries`_).
+add them to a YAML file (as described in :doc:`../extending/Queries`).
 
 get_host_events
 

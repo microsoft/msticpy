@@ -105,6 +105,8 @@ def validate_query_defs(query_def_dict: Dict[str, Any]) -> bool:
         exception message (arg[0])
 
     """
+    if query_def_dict is None or not query_def_dict:
+        raise ValueError("Imported file is empty")
     # verify that sources and metadata are in the data dict
     if "sources" not in query_def_dict or not query_def_dict["sources"]:
         raise ValueError("Imported file has no sources defined")

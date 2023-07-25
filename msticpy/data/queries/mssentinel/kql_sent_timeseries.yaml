@@ -49,7 +49,7 @@ defaults:
         default: 'count()'
 sources:
   get_timeseries_data:
-    description: Retrieves TimeSeriesData prepared to use with built-in KQL time series functions
+    description: Generic query to return TimeSeriesData for use with native KQL time series functions
     args:
       query: '
             {table}
@@ -60,7 +60,7 @@ sources:
             | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn}
             {add_query_items}'
   get_timeseries_decompose:
-    description: Time Series decomposition and anomalies generated using built-in KQL time series function- series_decompose
+    description: Generic Time Series decomposition using native KQL analysis (series_decompose)
     args:
       query: '
             {table}
@@ -73,7 +73,7 @@ sources:
             | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), baseline to typeof(double), seasonal to typeof(double), trend to typeof(long), residual to typeof(long)
             {add_query_items}'
   get_timeseries_anomalies:
-    description: Time Series filtered anomalies detected using built-in KQL time series function-series_decompose_anomalies
+    description: Time Series filtered anomalies using native KQL analysis (series_decompose_anomalies)
     args:
       query: '
             {table}
@@ -87,7 +87,7 @@ sources:
             | extend score = round(score,2)
             {add_query_items}'
   plot_timeseries_datawithbaseline:
-    description: Plot timeseries data using built-in KQL time series decomposition using built-in KQL render method
+    description: Plot of Time Series data using native KQL analysis and plot rendering (KQLMagic only)
     args:
       query: '
             {table}
@@ -100,9 +100,9 @@ sources:
             | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), baseline to typeof(long), seasonal to typeof(long), trend to typeof(long), residual to typeof(long)
             | project {timestampcolumn}, {aggregatecolumn}, baseline
             | render timechart with (title="Time Series Decomposition - Baseline vs Observed TimeChart")
-            {add_query_items}'
+            '
   plot_timeseries_scoreanomolies:
-    description: Plot timeseries anomaly score using built-in KQL render method
+    description: Plot Time Series anomaly score using native KQL render (KQLMagic only)
     args:
       query: '
             {table}

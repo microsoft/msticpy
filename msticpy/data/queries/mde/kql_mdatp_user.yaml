@@ -2,7 +2,7 @@ metadata:
   version: 1
   description: MDATP Queries
   data_environments: [MDATP, MDE, M365D, LogAnalytics]
-  data_families: [MDATP, MDE]
+  data_families: [MDE, MDATP]
   tags: ["user"]
 defaults:
   metadata:
@@ -20,7 +20,7 @@ defaults:
       default: ""
 sources:
   user_logons:
-    description: Lists all user logons by user
+    description: Return all user logons for user name
     metadata:
       pivot:
         short_name: logon_events
@@ -41,7 +41,7 @@ sources:
         description: Name of user
         type: str
   user_processes:
-    description: Lists all processes created by a user
+    description: Return all processes created by a user
     metadata:
       pivot:
         short_name: process_events
@@ -61,7 +61,7 @@ sources:
         description: Name of user
         type: str
   user_files:
-    description: Lists all files created by a user
+    description: Return all files created by a user
     metadata:
       pivot:
         short_name: file_events
@@ -81,7 +81,7 @@ sources:
         description: Name of user
         type: str
   user_network:
-    description: Lists all network connections associated with a user
+    description: Return all network connections associated with a user
     metadata:
       pivot:
         short_name: network_events

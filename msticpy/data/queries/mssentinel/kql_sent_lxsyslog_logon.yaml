@@ -71,7 +71,7 @@ defaults:
         | extend TimeCreatedUtc=TimeGenerated"
 sources:
   user_logon:
-    description: All user logon events on a host
+    description: User logon events on a host
     args:
       query: '
         {table}
@@ -115,7 +115,7 @@ sources:
         description: Hostname to query for
         type: str
   list_logons_for_account:
-    description: All successful user logon events for account (all hosts)
+    description: Successful user logon events for account name (all hosts)
     metadata:
       pivot:
         short_name: logons
@@ -168,7 +168,7 @@ sources:
         description: The account name to search on
         type: str
   list_logons_for_source_ip:
-    description: All successful user logon events for source IP (all hosts)
+    description: Successful user logon events for source IP (all hosts)
     metadata:
       pivot:
         short_name: logons
@@ -251,7 +251,7 @@ sources:
         description: Hostname to query for
         type: str
   list_host_logon_failures:
-    description: All failed user logon events on a host
+    description: Failed user logon events on a host
     metadata:
       pivot:
         short_name: logon_failures
@@ -268,7 +268,7 @@ sources:
         description: Hostname where clause
         value: '| where Computer has "{host_name}"'
   list_ip_logon_failures:
-    description: All failed user logon events from an IP address
+    description: Failed user logon events from an IP address
     metadata:
       pivot:
         short_name: logon_failures
@@ -285,7 +285,7 @@ sources:
         description: IP Address where clause
         value: '| where SyslogMessage has "{ip_address}"'
   list_account_logon_failures:
-    description: All failed user logon events from an IP address
+    description: All failed user logon events for account name
     metadata:
       pivot:
         short_name: logon_failures

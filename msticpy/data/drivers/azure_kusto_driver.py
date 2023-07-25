@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Kusto Driver subclass."""
+import base64
 import dataclasses
 import json
 import logging
@@ -17,6 +18,8 @@ from azure.kusto.data import (
     KustoClient,
     KustoConnectionStringBuilder,
 )
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.serialization import pkcs12
 
 from ..._version import VERSION
 from ...auth.azure_auth import az_connect, get_default_resource_name
@@ -34,6 +37,7 @@ from ..core.query_defns import DataEnvironment
 from ..core.query_source import QuerySource
 from .driver_base import DriverBase, DriverProps
 
+# pylint: disable=ungrouped-imports
 try:
     from azure.kusto.data.exceptions import KustoApiError, KustoServiceError
     from azure.kusto.data.helpers import dataframe_from_result_table
@@ -78,6 +82,7 @@ class KustoConfig:
         CLIENT_SEC = "ClientSecret"
         ARGS = "Args"
         CLUSTER_GROUPS = "ClusterGroups"
+        CERTIFICATE = "Certificate"
 
     # pylint: disable=no-member
     @property
@@ -162,7 +167,7 @@ class AzureKustoDriver(DriverBase):
         self._strict_query_match = kwargs.get("strict_query_match", False)
         self._kusto_settings: Dict[str, Dict[str, KustoConfig]] = _get_kusto_settings()
         self._default_database: Optional[str] = None
-        self.current_connection: Optional[str] = connection_str
+        self._current_connection: Optional[str] = connection_str
         self._current_config: Optional[KustoConfig] = None
         self.client: Optional[KustoClient] = None
         self._az_auth_types: Optional[List[str]] = None
@@ -174,6 +179,10 @@ class AzureKustoDriver(DriverBase):
         self.set_driver_property(DriverProps.PUBLIC_ATTRS, self._set_public_attribs())
         self.set_driver_property(DriverProps.FILTER_ON_CONNECT, True)
         self.set_driver_property(DriverProps.EFFECTIVE_ENV, DataEnvironment.Kusto.name)
+        self.set_driver_property(DriverProps.SUPPORTS_THREADING, value=True)
+        self.set_driver_property(
+            DriverProps.MAX_PARALLEL, value=kwargs.get("max_threads", 4)
+        )
         self._loaded = True
 
     def _set_public_attribs(self):
@@ -190,18 +199,26 @@ class AzureKustoDriver(DriverBase):
         }
 
     @property
+    def current_connection(self) -> Optional[str]:
+        """Return current connection string or URI."""
+        if self._current_connection:
+            return self._current_connection
+        return self.cluster_uri
+
+    @current_connection.setter
+    def current_connection(self, value: str):
+        """Set current connection string or URI."""
+        self._current_connection = value
+
+    @property
     def cluster_uri(self) -> str:
         """Return current cluster URI."""
-        if not self._current_config:
-            return ""
-        return self._current_config.cluster
+        return "" if not self._current_config else self._current_config.cluster
 
     @property
     def cluster_name(self) -> str:
         """Return current cluster URI."""
-        if not self._current_config:
-            return ""
-        return self._current_config.name
+        return self._current_config.name if self._current_config else ""
 
     @property
     def cluster_config_name(self) -> str:
@@ -302,6 +319,7 @@ class AzureKustoDriver(DriverBase):
         )
 
         cluster = kwargs.pop("cluster", None)
+        self.current_connection = connection_str or self.current_connection
         if not connection_str and not cluster:
             raise MsticpyParameterError(
                 "Must specify either a connection string or a cluster name",
@@ -310,14 +328,18 @@ class AzureKustoDriver(DriverBase):
 
         if cluster:
             self._current_config = self._lookup_cluster_settings(cluster)
+            if not self._az_tenant_id:
+                self._az_tenant_id = self._current_config.tenant_id
             logger.info(
-                "Using cluster id: %s, retrieved %s",
+                "Using cluster id: %s, retrieved url %s to build connection string",
                 cluster,
                 self.cluster_uri,
             )
             kusto_cs = self._get_connection_string_for_cluster(self._current_config)
+            self.current_connection = cluster
         else:
             logger.info("Using connection string %s", connection_str)
+            self.current_connection = connection_str
             kusto_cs = connection_str
 
         self.client = KustoClient(kusto_cs)
@@ -538,14 +560,23 @@ class AzureKustoDriver(DriverBase):
     ) -> KustoConnectionStringBuilder:
         """Return full cluster URI and credential for cluster name or URI."""
         auth_params = self._get_auth_params_from_config(cluster_config)
+        connect_auth_types = self._az_auth_types or AzureCloudConfig().auth_methods
         if auth_params.method == "clientsecret":
-            connect_auth_types = self._az_auth_types or AzureCloudConfig().auth_methods
+            logger.info("Client secret specified in config - using client secret authn")
             if "clientsecret" not in connect_auth_types:
-                connect_auth_types.append("clientsecret")
+                connect_auth_types.insert(0, "clientsecret")
             credential = az_connect(
                 auth_types=connect_auth_types, **(auth_params.params)
             )
+        elif auth_params.method == "certificate":
+            logger.info("Certificate specified in config - using certificate authn")
+            connect_auth_types.insert(0, "certificate")
+            credential = az_connect(
+                auth_types=self._az_auth_types, **(auth_params.params)
+            )
+            return self._create_kusto_cert_connection_str(auth_params)
         else:
+            logger.info("Using integrated authn")
             credential = az_connect(
                 auth_types=self._az_auth_types, **(auth_params.params)
             )
@@ -557,6 +588,41 @@ class AzureKustoDriver(DriverBase):
             user_token=token.token,
         )
 
+    def _create_kql_cert_connection_str(
+        self, auth_params: AuthParams
+    ) -> KustoConnectionStringBuilder:
+        logger.info("Creating KQL connection string for certificate authentication")
+        if not self._az_tenant_id:
+            raise ValueError(
+                "Azure tenant ID must be set in config or connect parameter",
+                "to use certificate authentication",
+            )
+        cert_bytes = base64.b64decode(auth_params.params["certificate"])
+        (
+            private_key,
+            certificate,
+            _,
+        ) = pkcs12.load_key_and_certificates(data=cert_bytes, password=None)
+        if private_key is None or certificate is None:
+            raise ValueError(
+                f"Could not load certificate for cluster {self.cluster_uri}"
+            )
+        private_cert = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+        public_cert = certificate.public_bytes(encoding=serialization.Encoding.PEM)
+        thumbprint = certificate.fingerprint(hashes.SHA1())
+        return KustoConnectionStringBuilder.with_aad_application_certificate_sni_authentication(
+            connection_string=self.cluster_uri,
+            aad_app_id=auth_params.params["client_id"],
+            private_certificate=private_cert.decode("utf-8"),
+            public_certificate=public_cert.decode("utf-8"),
+            thumbprint=thumbprint.hex().upper(),
+            authority_id=self._az_tenant_id,
+        )
+
     def _get_auth_params_from_config(self, cluster_config: KustoConfig) -> AuthParams:
         """Get authentication parameters for cluster from KustoConfig values."""
         method = "integrated"
@@ -565,6 +631,16 @@ class AzureKustoDriver(DriverBase):
             method = "clientsecret"
             auth_params_dict["client_id"] = cluster_config.ClientId
             auth_params_dict["client_secret"] = cluster_config.ClientSecret
+            logger.info(
+                "Using client secret authentication because client_secret in config"
+            )
+        elif (
+            KFields.CERTIFICATE in cluster_config
+            and KFields.CLIENT_ID in cluster_config
+        ):
+            method = "certificate"
+            auth_params_dict["client_id"] = cluster_config.ClientId
+            auth_params_dict["certificate"] = cluster_config.Certificate
             logger.info(
                 "Using client secret authentication because client_secret in config"
             )

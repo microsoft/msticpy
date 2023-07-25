@@ -55,7 +55,7 @@ defaults:
           | extend TimeCreatedUtc=TimeGenerated'
 sources:
   sudo_activity:
-    description: All sudo activity
+    description: Returns all sudo activity for a host and account name
     args:
       query: '
         {table}
@@ -75,7 +75,7 @@ sources:
         type: str
         default: ''
   cron_activity:
-    description: All cron activity
+    description: Returns all cron activity for a host
     args:
       query: '
         {table}
@@ -88,7 +88,7 @@ sources:
         {add_query_items}'
     parameters:
   user_group_activity:
-    description: All user/group additions, deletions, and modifications
+    description: Returns all user/group additions, deletions, and modifications for a host
     args:
       query: '
         {table}
@@ -118,7 +118,7 @@ sources:
         {add_query_items}'
     parameters:
   summarize_events:
-    description: Returns all syslog activity for a host
+    description: Returns summarized syslog activity for a host
     args:
       query: '
          {table}
@@ -130,7 +130,7 @@ sources:
         {add_query_items}'
     parameters:
   notable_events:
-    description: Returns all syslog activity for a host
+    description: Returns all 'alert' and 'crit' syslog activity for a host
     args:
       query: '
          {table}

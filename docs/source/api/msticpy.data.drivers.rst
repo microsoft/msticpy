@@ -21,10 +21,12 @@ Submodules
    msticpy.data.drivers.kusto_driver
    msticpy.data.drivers.local_data_driver
    msticpy.data.drivers.local_osquery_driver
+   msticpy.data.drivers.local_velociraptor_driver
    msticpy.data.drivers.mdatp_driver
    msticpy.data.drivers.mordor_driver
    msticpy.data.drivers.odata_driver
    msticpy.data.drivers.resource_graph_driver
    msticpy.data.drivers.security_graph_driver
+   msticpy.data.drivers.sentinel_query_reader
    msticpy.data.drivers.splunk_driver
    msticpy.data.drivers.sumologic_driver

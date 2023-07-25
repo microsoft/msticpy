@@ -98,6 +98,26 @@ _ENTITY_PROPS = {
     "Url": "Url",
 }
 
+_FUNC_DOC = """
+{description}
+
+Parameters
+----------
+observable: str
+    The observable value
+limit: int
+    Relations limit
+all_props : bool, optional
+    If True, return all properties, by default False
+full_objects : bool, optional
+    If True, return the full object rather than just ID links.
+
+Returns
+-------
+    Relationship Pandas DataFrame with the relationships of the entity
+
+"""
+
 
 def init():
     """Load VT3 Pivots if vt library is available."""
@@ -166,7 +186,8 @@ def _create_pivots(api_scope: Union[str, VTAPIScope, None]):
                 vt_type=vt_type,
                 relationship=relationship,
             )
-            func_dict[_create_func_name(relationship)] = f_part
+            f_part.__doc__ = _create_func_doc(entity, relationship)
+            func_dict[relationship] = f_part
         ent_funcs[entity] = func_dict
     return ent_funcs
 
@@ -174,8 +195,11 @@ def _create_pivots(api_scope: Union[str, VTAPIScope, None]):
 # pylint: enable=no-member
 
 
-def _create_func_name(relationship):
-    return f"vt_{relationship}"
+def _create_func_doc(entity, relationship):
+    """Create the relationship docstring."""
+    fmt_name = " ".join(rel.capitalize() for rel in relationship.split("_"))
+    description = f"Lookup VirusTotal {fmt_name} for {entity}."
+    return _FUNC_DOC.format(description=description)
 
 
 def _get_relationships(vt_client, entity_id, vt_type, relationship):

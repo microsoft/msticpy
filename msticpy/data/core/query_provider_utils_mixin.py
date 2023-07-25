@@ -148,7 +148,11 @@ class QueryProviderUtilsMixin(QueryProviderProtocol):
 
         """
         # pylint: disable=not-an-iterable
-        return [env for env in DataEnvironment.__members__ if env != "Unknown"]
+        return [
+            de
+            for de in dir(DataEnvironment)
+            if de != "Unknown" and not de.startswith("_")
+        ]
         # pylint: enable=not-an-iterable
 
     def list_queries(self, substring: Optional[str] = None) -> List[str]:

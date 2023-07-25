@@ -3,14 +3,16 @@ Azure Data Explorer/Kusto Provider - New Implementation
 
 This is a new implementation of the Azure Data Explorer/Kusto
 QueryProvider using the
-`azure-data-kusto SDK <https://learn.microsoft.com/azure/data-explorer/python-query-data>`__
+`azure-kusto-data SDK <https://learn.microsoft.com/azure/data-explorer/python-query-data>`__
 (the earlier implementation used
 `Kqlmagic <https://github.com/microsoft/jupyter-Kqlmagic>`__).
 
 
 .. warning:: This provider currently in beta and is available for testing.
    It is available alongside the existing Kusto provider for you
-   to compare old and new.
+   to compare old and new. To use it you will need the ``azure-kusto-data``
+   package installed. You can install this with ``pip install azure-kusto-data``
+   or ``pip install msticpy[azure_query]``.
    If you are using the existing implementation, see :doc:`./DataProv-Kusto`
 
 Changes from the previous implementation
@@ -18,19 +20,27 @@ Changes from the previous implementation
 
 * Use the provider name ``Kusto_New`` when creating a QueryProvider
   instance. This will be changed to ``Kusto`` in a future release.
+* The driver supports asynchronous execution of queries. This is used
+  when you create a Query provider with multiple connections (e.g.
+  to different clusters) and when you split queries into time chunks.
+  See :ref:`multiple_connections` and :ref:`splitting_query_execution` for
+  for more details.
 * The settings format has changed (although the existing format
   is still supported albeit with some limited functionality).
+* Supports user-specified timeout for queries.
+* Supports proxies (via MSTICPy config or the ``proxies`` parameter to
+  the ``connect`` method)
 * You could previously specify a new cluster to connect to in
   when executing a query. This is no longer supported. Once the
   provider is connected to a cluster it will only execute queries against
-  that cluster. (You can however, call the connect() function to connect
+  that cluster. (You can however, call the ``connect()`` function to connect
   the provider to a new cluster before running the query.)
 * Some of the previous parameters have been deprecated:
 
-  * ``mp_az_auth`` is replaced by ``auth_types`` (the former still works
+  * The ``mp_az_auth`` parameter is replaced by ``auth_types`` (the former still works
     but will be removed in a future release).
   * ``mp_az_auth_tenant_id`` is replaced by ``tenant_id`` (the former
-    is no longer supported
+    is no longer supported).
 
 Kusto Configuration
 -------------------
@@ -47,9 +57,9 @@ and :doc:`MSTICPy Settings Editor<../getting_started/SettingsEditor>`
 .. note:: The settings for the new Kusto provider are stored in the
    ``KustoClusters`` section of the configuration file. This cannot
    currently be edited from the MSTICPy Settings Editor - please
-   edit the *msticpyconfig.yaml* directly to edit these.
+   edit the *msticpyconfig.yaml* in a text editor to change these.
 
-To accommodate the use of multiple clusters the new provider supports
+To accommodate the use of multiple clusters, the new provider supports
 a different configuration format.
 
 The basic settings in the file should look like the following:
@@ -90,7 +100,7 @@ for *clientsecret* authentication.
 The ClusterDefaults section
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you have parameters that you want to apply to all clusters
+If you have parameters that you want to apply to all clusters,
 you can add these to a ``ClusterDefaults`` section.
 
 .. code:: yaml
@@ -115,7 +125,7 @@ cluster group name. This is useful if you have clusters in different regions
 that share the same schema and you want to run the same queries
 against all of them.
 
-This is used primarily to support query templates, to match
+ClusterGroups are used primarily to support query templates, to match
 queries to the correct cluster. See `Writing query templates for Kusto clusters`_
 later in this document.
 
