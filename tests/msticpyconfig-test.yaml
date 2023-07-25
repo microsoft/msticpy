@@ -90,6 +90,11 @@ TIProviders:
       AuthKey: "[PLACEHOLDER]"
     Primary: True
     Provider: Pulsedive
+  CrowdSec:
+    Args:
+      AuthKey: "[PLACEHOLDER]"
+    Primary: True
+    Provider: CrowdSec
 ContextProviders:
   ServiceNow:
     Primary: True
