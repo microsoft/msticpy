@@ -178,7 +178,7 @@ class IoCExtract:
     _content_regex: Dict[str, IoCPattern] = {}
     _content_df_regex: Dict[str, IoCPattern] = {}
 
-    def __init__(self, defanged: bool = False):
+    def __init__(self, defanged: bool = True):
         """
         Initialize new instance of IoCExtract.
 

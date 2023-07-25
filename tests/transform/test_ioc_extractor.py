@@ -294,7 +294,7 @@ TEST_DF_CASES = {
     "email": [
         ("some text with a user@domain[.]like.uk in it", True),
         ("some text with a user@domain[.]like.uk in it", True),
-        ("some text with a user@domain[.]like.uk in it", True),
+        ("some text with a user[AT]domain[.]like.uk in it", True),
         ("some text with a user@domain.like.uk in it", True),
     ],
 }
@@ -319,7 +319,9 @@ def _tests():
 @pytest.mark.parametrize("ioc, test, expected", _tests(), ids=_test_ids())
 def test_defanged_iocs(ioc, test, expected, ioc_extract):
     """Test defanged IoC Types."""
-    results = ioc_extract.extract(test)
+    results = ioc_extract.extract(
+        test,
+    )
     if expected:
         check.greater(len(results[ioc]), 0)
     else:
