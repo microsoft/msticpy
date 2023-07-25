@@ -268,11 +268,7 @@ class SentinelWatchlistsMixin:
             raise CloudError(response=response)
         print(f"Watchlist {watchlist_name} deleted")
 
-    def delete_watchlist_item(
-        self,
-        watchlist_name: str,
-        watchlist_item_id: str
-    ):
+    def delete_watchlist_item(self, watchlist_name: str, watchlist_item_id: str):
         """
         Delete a Watchlist item.
 
