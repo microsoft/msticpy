@@ -165,6 +165,7 @@ _TI_PROVIDER_TESTS = [
     "RiskIQ",
     "IntSights",
     "CrowdSec",
+    "AbuseIPDB"
 ]
 
 
@@ -234,6 +235,7 @@ def verify_result(result, ti_lookup):
                 "RiskIQ",
                 "IntSights",
                 "CrowdSec",
+                "AbuseIPDB"
             ],
         )
         check.is_not_none(lu_result["Ioc"])
@@ -1015,6 +1017,27 @@ _PROVIDER_RESPONSES = {
             "references": [],
         },
     },
+    "https://api.abuseipdb.com": {
+        "response": {
+            "data": {
+                "ipAddress": "38.75.137.9",
+                "isPublic": True,
+                "ipVersion": 4,
+                "isWhitelisted": None,
+                "abuseConfidenceScore": 0,
+                "countryCode": "US",
+                "usageType": "Data Center/Web Hosting/Transit",
+                "isp": "GlobalTeleHost Corp.",
+                "domain": "gthost.com",
+                "hostnames": ["9-137-75-38.clients.gthost.com"],
+                "isTor": False,
+                "totalReports": 0,
+                "numDistinctUsers": 0,
+                "lastReportedAt": None
+            }
+        } 
+        
+    }
 }
 
 _TOR_NODES = [
