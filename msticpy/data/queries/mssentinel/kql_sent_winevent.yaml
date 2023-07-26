@@ -28,7 +28,7 @@ defaults:
         default: ''
 sources:
   list_host_events:
-    description: Retrieves list of all events on a host
+    description: Returns list of all events on a host
     metadata:
       pivot:
         short_name: all_events
@@ -51,7 +51,7 @@ sources:
         type: str
         default: has
   list_host_events_by_id:
-    description: Retrieves list of events on a host
+    description: Returns list of specified event IDs on a host
     metadata:
       pivot:
         short_name: events_by_id
@@ -79,7 +79,7 @@ sources:
         type: list
         default: has
   list_other_events:
-    description: Retrieves list of events other than logon and process on a host
+    description: Returns list of events other than logon and process on a host
     args:
       query: '
         {table}
@@ -108,7 +108,7 @@ sources:
         {add_query_items}'
     parameters:
   list_events_by_id:
-    description: Retrieves list of events on a host
+    description: Returns list of events on a host by EventID
     args:
       query: '
         {table}
@@ -122,7 +122,7 @@ sources:
         description: List of event IDs to match
         type: list
   summarize_events:
-    description: Summarizes a the events on a host
+    description: Summarize the events on a host by event type
     args:
       query: '
         {table}
@@ -141,7 +141,7 @@ sources:
         type: str
         default: has
   schdld_tasks_and_services:
-    description: Gets events related to scheduled tasks and services
+    description: Returns scheduled tasks and services events (4698, 4700, 4697, 4702)
     args:
       query: '
         let account_evnt_ids = dynamic([4698, 4700, 4697, 4702]);
@@ -171,7 +171,7 @@ sources:
         type: str
         default: has
   account_change_events:
-    description: Gets events related to account changes
+    description: Returns events related to account changes
     args:
       query: '
         let account_evnt_ids = dynamic([4720, 4725, 4727, 4728, 4731, 4732, 4740, 4754, 4756, 4767]);
@@ -190,7 +190,7 @@ sources:
         type: str
         default: has
   notable_events:
-    description: Get notebable Windows events not returned in other queries
+    description: Return other significant Windows events not returned in other queries
     args:
       query: '
         let evnt_ids = dynamic([1102, 4657]);

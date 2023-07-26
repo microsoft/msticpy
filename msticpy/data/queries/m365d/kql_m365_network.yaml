@@ -1,8 +1,8 @@
 metadata:
   version: 1
-  description: MDE Queries
+  description: M365D Network Queries
   data_environments: [MDATP, MDE, M365D, LogAnalytics]
-  data_families: [MDATP, MDE]
+  data_families: [M365D]
   tags: ["network"]
 defaults:
   metadata:
@@ -39,7 +39,7 @@ sources:
       uri: None
     parameters:
   host_connections:
-    description: Lists connections by for a specified hostname
+    description: Returns connections by for a specified hostname
     metadata:
     args:
       query: '
@@ -55,7 +55,7 @@ sources:
         aliases:
           - hostname
   ip_connections:
-    description: Lists network connections associated with a specified remote IP
+    description: Returns network connections associated with a specified remote IP
     metadata:
     args:
       query: '
@@ -69,7 +69,7 @@ sources:
         description: Remote IP Address
         type: str
   url_connections:
-    description: Lists connections associated with a specified URL
+    description: Returns connections associated with a specified URL
     metadata:
     args:
       query: '
@@ -83,7 +83,7 @@ sources:
         description: Remote URL
         type: str
   protocol_connections:
-    description: Lists connections associated with a specified protocol
+    description: Returns connections associated with a specified protocol (port number)
     metadata:
     args:
       query: "

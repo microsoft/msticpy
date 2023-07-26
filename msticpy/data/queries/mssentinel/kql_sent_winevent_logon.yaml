@@ -58,7 +58,7 @@ defaults:
       default: "true"
 sources:
   get_host_logon:
-    description: Retrieves the logon event for the session id on the host
+    description: Returns the logon event for the logon session id on a host
     metadata:
       pivot:
         short_name: logon_session
@@ -81,7 +81,7 @@ sources:
         description: The logon session ID of the source process
         type: str
   list_host_logons:
-    description: Retrieves the logon events on the host
+    description: Returns the logon events on a host for time range
     metadata:
       pivot:
         short_name: logons
@@ -102,7 +102,7 @@ sources:
         description: Name of host
         type: str
   list_host_logon_failures:
-    description: Retrieves the logon failure events on the host
+    description: Returns the logon failure events on a host for time range
     metadata:
       pivot:
         short_name: logon_failures
@@ -127,7 +127,7 @@ sources:
         type: str
         default: "| where EventID == 4625"
   list_logons_by_account:
-    description: Retrieves the logon events for an account
+    description: Returns the logon success events for an account (all hosts)
     metadata:
       pivot:
         short_name: logons
@@ -148,7 +148,7 @@ sources:
         description: The account name to find
         type: str
   list_logon_attempts_by_account:
-    description: Retrieves the logon events for an account
+    description: Retrieves all logon events for an account (all hosts)
     metadata:
       pivot:
         short_name: logon_attempts
@@ -173,7 +173,7 @@ sources:
         type: str
         default: "| where EventID in (4624, 4625)"
   list_logon_failures_by_account:
-    description: Retrieves the logon failure events  for an account
+    description: Returns the logon failure events for an account (all hosts)
     metadata:
       pivot:
         short_name: logon_failures
@@ -198,7 +198,7 @@ sources:
         type: str
         default: "| where EventID == 4625"
   list_all_logons_by_host:
-    description: account all failed or successful logons to a host
+    description: Returns all failed or successful logons on a host
     metadata:
       pivot:
         short_name: logon_attempts
@@ -225,7 +225,7 @@ sources:
         type: str
         default: "| where EventID in (4624, 4625)"
   list_logon_attempts_by_ip:
-    description: Retrieves the logon events for an IP Address
+    description: Returns the logon events for an IP Address (all hosts)
     metadata:
       pivot:
         short_name: logon_attempts

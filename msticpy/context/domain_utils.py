@@ -32,7 +32,7 @@ from urllib3.util import parse_url
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserConfigError
-from ..common.pkg_config import get_config, get_http_timeout
+from ..common.settings import get_config, get_http_timeout
 from ..common.utility import export, mp_ua_header
 
 __version__ = VERSION

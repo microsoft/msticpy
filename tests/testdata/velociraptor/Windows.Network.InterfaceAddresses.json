@@ -1,0 +1,5 @@
+{"Index":2,"MTU":1500,"Name":"Ethernet 2","HardwareAddr":"06:f7:47:22:b0:c6","Flags":19,"IP":"fe80::89af:1f88:9430:707","Mask":"ffffffffffffffff0000000000000000"}
+{"Index":2,"MTU":1500,"Name":"Ethernet 2","HardwareAddr":"06:f7:47:22:b0:c6","Flags":19,"IP":"172.16.50.130","Mask":"ffffff00"}
+{"Index":1,"MTU":-1,"Name":"Loopback Pseudo-Interface 1","HardwareAddr":null,"Flags":21,"IP":"::1","Mask":"ffffffffffffffffffffffffffffffff"}
+{"Index":1,"MTU":-1,"Name":"Loopback Pseudo-Interface 1","HardwareAddr":null,"Flags":21,"IP":"127.0.0.1","Mask":"ff000000"}
+{"Index":7,"MTU":1280,"Name":"isatap.us-east-2.compute.internal","HardwareAddr":"00:00:00:00:00:00:00:e0","Flags":24,"IP":"fe80::5efe:ac10:3282","Mask":"ffffffffffffffffffffffffffffffff"}

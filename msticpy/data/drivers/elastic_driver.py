@@ -14,7 +14,7 @@ from ..._version import VERSION
 from ...common.exceptions import MsticpyUserConfigError
 from ...common.utility import check_kwargs, export
 from ..core.query_defns import Formatters
-from .driver_base import DriverBase, QuerySource
+from .driver_base import DriverBase, DriverProps, QuerySource
 
 __version__ = VERSION
 __author__ = "Neil Desai, Ian Hellen"
@@ -42,11 +42,14 @@ class ElasticDriver(DriverBase):
         self._connected = False
         self._debug = kwargs.get("debug", False)
 
-        self.formatters = {
-            Formatters.PARAM_HANDLER: self._custom_param_handler,
-            Formatters.DATETIME: self._format_datetime,
-            Formatters.LIST: self._format_list,
-        }
+        self.set_driver_property(
+            DriverProps.FORMATTERS,
+            {
+                Formatters.PARAM_HANDLER: self._custom_param_handler,
+                Formatters.DATETIME: self._format_datetime,
+                Formatters.LIST: self._format_list,
+            },
+        )
 
     def connect(self, connection_str: str = None, **kwargs):
         """

@@ -28,7 +28,7 @@ defaults:
       default: ""
 sources:
   list_bookmarks:
-    description: Retrieves list of bookmarks
+    description: Retrieves list of bookmarks for a time range
     metadata:
     args:
       query: '
@@ -45,7 +45,7 @@ sources:
         {add_query_items}'
     parameters:
   list_bookmarks_for_entity:
-    description: Retrieves bookmarks for entity string
+    description: Retrieves bookmarks for a host, account, ip address, domain, url or other entity identifier
     metadata:
       pivot:
         short_name: bookmarks
@@ -104,7 +104,7 @@ sources:
         type: str
         default: na
   get_bookmark_by_id:
-    description: Retrieves a single Bookmark by BookmarkId
+    description: Returns a single Bookmark by BookmarkId
     metadata:
     args:
       query: '
@@ -143,7 +143,7 @@ sources:
         description: Name or part name of Bookmark
         type: str
   list_bookmarks_for_tags:
-    description: Retrieves Bookmark by one or mare Tags
+    description: Returns Bookmark by one or more Tags
     metadata:
     args:
       query: '
@@ -166,7 +166,7 @@ sources:
         description: Bookmark tags
         type: list
   get_dynamic_summary_by_id:
-    description: Retrieves Dynamic Summary by SummaryId
+    description: Returns a Dynamic Summary by SummaryId
     metadata:
     args:
       query: '
@@ -187,7 +187,7 @@ sources:
         description: Dynamic Summary ID
         type: str
   get_dynamic_summary_by_name:
-    description: Retrieves Dynamic Summary by Name
+    description: Returns a Dynamic Summary by Name
     metadata:
     args:
       query: '
@@ -214,7 +214,7 @@ sources:
         description: Dynamic Summary Name
         type: str
   list_dynamic_summaries:
-    description: Retrieves Dynamic Summaries by date range
+    description: Returns all Dynamic Summaries by time range
     metadata:
     args:
       query: '

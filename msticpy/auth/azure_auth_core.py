@@ -437,7 +437,7 @@ def check_cli_credentials() -> Tuple[AzureCliStatus, Optional[str]]:
     except ImportError:
         # Azure CLI not installed
         return AzureCliStatus.CLI_NOT_INSTALLED, None
-    except Exception as ex:  # pylint: disable=broad-except, broad-exception-caught
+    except Exception as ex:  # pylint: disable=broad-except
         if "AADSTS70043: The refresh token has expired" in str(ex):
             message = (
                 "Azure CLI was detected but the token has expired. "

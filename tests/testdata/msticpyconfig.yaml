@@ -67,6 +67,11 @@ TIProviders:
       AuthKey: "INTSIGHTS_KEY"
     Primary: False
     Provider: "IntSights"
+  CrowdSec:
+    Args:
+      AuthKey: "[PLACEHOLDER]"
+    Primary: True
+    Provider: CrowdSec
 OtherProviders:
   GeoIPLite:
     Args:
