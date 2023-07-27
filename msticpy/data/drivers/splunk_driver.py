@@ -255,7 +255,7 @@ class SplunkDriver(DriverBase):
             query_job = self.service.jobs.create(
                 query, count=count, **kwargs_normalsearch
             )
-            resp_rows, reader = self._exec_async_search(query_job, page_size, **kwargs)
+            resp_rows, reader = self._exec_async_search(query_job, page_size)
 
         if len(resp_rows) == 0 or not resp_rows:
             print("Warning - query did not return any results.")
