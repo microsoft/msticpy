@@ -23,6 +23,7 @@ from .ti_http_provider import HttpTIProvider
 __version__ = VERSION
 __author__ = "Rubén Revuelta Briz"
 
+
 @export
 class AbuseIPDB(HttpTIProvider):
     """AbuseIPDB Lookup."""
@@ -61,7 +62,6 @@ class AbuseIPDB(HttpTIProvider):
 
         score = data.get("abuseConfidenceScore", None)
 
-
         if score == 0:
             result_severity = ResultSeverity.information
         elif score <= 50:
@@ -70,4 +70,3 @@ class AbuseIPDB(HttpTIProvider):
             result_severity = ResultSeverity.high
 
         return (True, result_severity, result_dict)
-    
