@@ -23,6 +23,7 @@ from .ti_http_provider import HttpTIProvider
 __version__ = VERSION
 __author__ = "Rubén Revuelta Briz"
 
+
 @export
 class AbuseIPDB(HttpTIProvider):
     """AbuseIPDB Lookup."""
@@ -35,9 +36,8 @@ class AbuseIPDB(HttpTIProvider):
         "ipv4": APILookupParams(
             path="api/v2/check",
             params={"ipAddress": "{observable}"},
-            headers={"Key": "{AuthKey}", "Accept": "application/json"}
-        ) 
-
+            headers={"Key": "{AuthKey}", "Accept": "application/json"},
+        )
     }
 
     # aliases
@@ -57,13 +57,13 @@ class AbuseIPDB(HttpTIProvider):
             "isp": data.get("isp", None),
             "domain": data.get("domain", None),
             "hostNames": data.get("hostnames", None),
-            "lastReportedAt": data.get("lastReportedAt", None)
+            "lastReportedAt": data.get("lastReportedAt", None),
         }
 
         score = data.get("abuseConfidenceScore", None)
-        
+
         if score == 0:
-           result_severity = ResultSeverity.information
+            result_severity = ResultSeverity.information
         elif score <= 50:
             result_severity = ResultSeverity.warning
         elif score > 50:
