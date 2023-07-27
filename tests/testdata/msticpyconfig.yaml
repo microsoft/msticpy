@@ -72,6 +72,11 @@ TIProviders:
       AuthKey: "[PLACEHOLDER]"
     Primary: True
     Provider: CrowdSec
+  AbuseIPDB:
+    Args:
+      AuthKey: "aaaa-bbbb-cccc-dddd-eeee"
+    Primary: True
+    Provider: AbuseIPDB
 OtherProviders:
   GeoIPLite:
     Args:
