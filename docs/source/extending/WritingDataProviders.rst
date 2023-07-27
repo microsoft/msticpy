@@ -1,6 +1,9 @@
 Writing and Contributing a Data Provider
 ========================================
 
+See :doc:`../data_acquisition/DataProviders` for more details on use
+of data providers.
+
 A data provider lets you query data from a notebook in a standardized way.
 Before reading further you should familiarize yourself with how the data
 providers work from the :doc:`Querying and Importing Data <../DataAcquisition>`
@@ -32,14 +35,15 @@ To implement a data provider you need to do the following:
 2. Customize the driver (optional)
 3. Register the driver
 4. Add queries
-5. Create documentation
-6. Create unit tests
+5. Add settings definition
+6. Create documentation
+7. Create unit tests
 
 1. Write the driver class
 -------------------------
 
-This must be derived from :py:class:`DriverBase<msticpy.data.drivers.driver_base.DriverBase>`
-(`DriverBase source <https://github.com/microsoft/msticpy/tree/main/msticpy/data/drivers/driver_base.py>`_).
+This must be derived from :py:class:`DriverBase <msticpy.data.drivers.driver_base.DriverBase>`
+(`DriverBase source <https://github.com/microsoft/msticpy/tree/main/msticpy/data/drivers/driver_base.py>`__).
 You should implement the following methods:
 
 - ``__init__``
@@ -82,7 +86,7 @@ section of your configuration settings from ``msticpyconfig.yaml``.
 
 Some existing drivers use an API key to authenticate, some use name/password and others
 use Azure Active Directory (AAD). See :py:class:`KqlDriver <msticpy.data.drivers.kql_driver.KqlDriver>`
-(`KqlDriver source <https://github.com/microsoft/msticpy/tree/main/msticpy/data/drivers/kql_driver.py>`_)
+(`KqlDriver source <https://github.com/microsoft/msticpy/tree/main/msticpy/data/drivers/kql_driver.py>`__)
 for an example
 of the latter.)
 
@@ -202,7 +206,7 @@ follows:
         }
 
 See :py:class:`SplunkDriver <msticpy.data.drivers.splunk_driver.SplunkDriver>`
-(`SplunkDriver source <https://github.com/microsoft/msticpy/tree/main/msticpy/data/drivers/splunk_driver.py>`_)
+(`SplunkDriver source <https://github.com/microsoft/msticpy/tree/main/msticpy/data/drivers/splunk_driver.py>`__)
 for an example.
 
 Code:
@@ -268,7 +272,7 @@ Add the provider as a DataEnvironment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the enum :py:class:`DataEnvironment <msticpy.data.query_defns.DataEnvironment>`
-(`DataEnvironments source <https://github.com/microsoft/msticpy/tree/main/msticpy/data/query_defns.py>`_)
+(`DataEnvironments source <https://github.com/microsoft/msticpy/tree/main/msticpy/data/query_defns.py>`__)
 add an entry for your provider using the next available enum value.
 
 .. code-block:: Python3
@@ -303,7 +307,7 @@ Add an entry to the driver dynamic load table
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the ``__init__.py`` module of data drivers
-(`drivers sub-package __init__ source <https://github.com/microsoft/msticpy/tree/main/msticpy/data/drivers/__init__.py>`_)
+(`drivers sub-package __init__ source <https://github.com/microsoft/msticpy/tree/main/msticpy/data/drivers/__init__.py>`__)
 
 .. code-block: Python3
   :emphasize-lines: 10
@@ -393,9 +397,9 @@ A data provider should have documentation describing its configuration and use.
 This should be in restructured text for generating document pages
 in Sphinx.
 
-See the examples :doc:`./SplunkProvider` and :doc:`./DataProv-Sumologic`
+See the examples :doc:`../data_acquisition/SplunkProvider` and :doc:`../data_acquisition/DataProv-Sumologic`
 
-6. Create driver unit tests
+7. Create driver unit tests
 ---------------------------
 
 Please add a unit test using mocks to simulate the service

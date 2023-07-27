@@ -69,7 +69,7 @@ defaults:
       default: "DestinationIP"
 sources:
   get_ips_for_host:
-    description: Gets the latest AzureNetworkAnalytics interface event for a host.
+    description: Returns the most recent Azure Network NSG Interface event for a host.
     metadata:
       pivot:
         short_name: interface
@@ -93,7 +93,7 @@ sources:
         type: str
         default: AzureNetworkAnalytics_CL
   get_host_for_ip:
-    description: Gets the latest AzureNetworkAnalytics interface event for a host.
+    description: Returns the most recent Azure NSG Interface event for an IP Address.
     metadata:
       pivot:
         short_name: interface
@@ -119,7 +119,7 @@ sources:
         type: str
         default: AzureNetworkAnalytics_CL
   get_heartbeat_for_host:
-    description: Retrieves latest OMS Heartbeat event for host.
+    description: Returns latest OMS Heartbeat event for host.
     metadata:
       data_families: [AzureNetwork, Network, Heartbeat]
       pivot:
@@ -141,7 +141,7 @@ sources:
         type: str
         default: Heartbeat
   get_heartbeat_for_ip:
-    description: Retrieves latest OMS Heartbeat event for ip address.
+    description: Returns latest OMS Heartbeat event for ip address.
     metadata:
       data_families: [AzureNetwork, Network, Heartbeat]
       pivot:
@@ -163,7 +163,7 @@ sources:
         type: str
         default: Heartbeat
   list_azure_network_flows_by_ip:
-    description: Retrieves Azure network analytics flow events.
+    description: Returns Azure NSG flow events for an IP Address.
     metadata:
       pivot:
         short_name: net_flows
@@ -197,7 +197,7 @@ sources:
            or DestIP_s in ({ip_address_list})
           )'
   list_azure_network_flows_by_host:
-    description: Retrieves Azure network analytics flow events.
+    description: Returns Azure NSG flow events for a host.
     metadata:
       pivot:
         short_name: net_flows
@@ -228,7 +228,7 @@ sources:
         description: Query-specific where clause
         value: '| where VM_s has "{host_name}"'
   network_connections_to_url:
-    description: List of network connections to a URL
+    description: Returns connections to a URL or domain (CommonSecurityLog)
     metadata:
       pivot:
         short_name: url_connections
@@ -249,10 +249,10 @@ sources:
         type: str
         default: "CommonSecurityLog"
       url:
-        description: URL to search for
+        description: URL or partial URL to search for
         type: str
   host_network_connections_csl:
-    descritpion: List network connections to and from a host using CommonSecurityLog
+    description: Returns network connections to and from a host (CommonSecurityLog)
     metadata:
       pivot:
         short_name: host_connections_csl
@@ -277,7 +277,7 @@ sources:
         type: str
         default: ""
   ip_network_connections_csl:
-    descritpion: List network connections to and from an IP address using CommonSecurityLog
+    descritpion: Returns network connections to and from an IP address (CommonSecurityLog)
     metadata:
       pivot:
         short_name: ip_connections_csl
@@ -302,7 +302,7 @@ sources:
         type: str
         default: ""
   all_network_connections_csl:
-    descritpion: List network connections to and from an IP address using CommonSecurityLog
+    descritpion: Returns all network connections for a time range (CommonSecurityLog)
     args:
       query: '
         {table}
@@ -318,7 +318,7 @@ sources:
         type: str
         default: "CommonSecurityLog"
   ips_by_host_csl:
-    descritpion: All IP addresses associated with a host using CommonSecurityLog
+    descritpion: Returns all IP addresses associated with a host (CommonSecurityLog)
     metadata:
       pivot:
         short_name: ips_csl
@@ -344,7 +344,7 @@ sources:
         type: str
         default: ""
   hosts_by_ip_csl:
-    descritpion: All hosts associated with a IP addresses using CommonSecurityLog
+    descritpion: Returns hosts associated with a IP addresses (CommonSecurityLog)
     metadata:
       pivot:
         short_name: hosts_csl

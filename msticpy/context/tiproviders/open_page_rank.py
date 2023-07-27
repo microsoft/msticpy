@@ -39,11 +39,11 @@ class OPR(HttpTIProvider):
         "dns": APILookupParams(
             path="/api/v1.0/getPageRank",
             params={"domains[0]": "{observable}"},
-            headers={"API-OPR": "{API_KEY}"},
+            headers={"API-OPR": "{AuthKey}"},
         )
     }
 
-    _REQUIRED_PARAMS = ["API_KEY"]
+    _REQUIRED_PARAMS = ["AuthKey"]
 
     def __init__(self, **kwargs):
         """Initialize a new instance of the class."""

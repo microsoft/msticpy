@@ -43,7 +43,11 @@ try:
     from azure.mgmt.compute.models import VirtualMachineInstanceView
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
-        "Cannot use this feature without azure packages installed",
+        "Cannot use this feature without these azure packages installed",
+        "azure.mgmt.network",
+        "azure.mgmt.resource",
+        "azure.mgmt.monitor",
+        "azure.mgmt.compute",
         title="Error importing azure module",
         extra="azure",
     ) from imp_err

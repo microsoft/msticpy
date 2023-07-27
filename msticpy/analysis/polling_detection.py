@@ -14,12 +14,11 @@ There is currently only one technique available for filtering polling data which
 the class PeriodogramPollingDetector.
 """
 from collections import Counter
-from typing import Optional, Tuple, Union, List
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-
 from scipy import signal, special
 
 from ..common.utility import export
@@ -35,11 +34,6 @@ class PeriodogramPollingDetector:
     data: DataFrame
         Dataframe containing the data to be analysed. Must contain a
         column of edges and a column of timestamps
-
-    Methods
-    -------
-    detect_polling(timestamps, process_start, process_end, interval)
-        Detect strong periodic frequencies
 
     """
 

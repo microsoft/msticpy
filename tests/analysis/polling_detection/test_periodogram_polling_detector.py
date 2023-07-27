@@ -10,9 +10,8 @@ The g test outputs are tested against the fisher.g.test.single function in the G
 
 The code for this is located at https://github.com/cran/GeneCycle/blob/master/R/fisher.g.test.R
 """
-from datetime import datetime
-
 import unittest.mock as mock
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -21,6 +20,7 @@ import pytest
 from msticpy.analysis import polling_detection as poll
 
 __author__ = "Daniel Yates"
+
 
 ## #### ##
 ## init ##

@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """MDATP OData Driver class."""
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import pandas as pd
 
@@ -27,7 +27,9 @@ class MDATPDriver(OData):
     CONFIG_NAME = "MicrosoftDefender"
     _ALT_CONFIG_NAMES = ["MDATPApp"]
 
-    def __init__(self, connection_str: str = None, instance: str = "Default", **kwargs):
+    def __init__(
+        self, connection_str: Optional[str] = None, instance: str = "Default", **kwargs
+    ):
         """
         Instantiate MSDefenderDriver and optionally connect.
 
@@ -50,9 +52,7 @@ class MDATPDriver(OData):
         api_uri, oauth_uri, api_suffix = _select_api_uris(
             self.data_environment, self.cloud
         )
-        self.add_query_filter("data_environments", "MDE")
-        self.add_query_filter("data_environments", "M365D")
-        self.add_query_filter("data_environments", "MDATP")
+        self.add_query_filter("data_environments", ("MDE", "M365D", "MDATP"))
 
         self.req_body = {
             "client_id": None,
@@ -76,7 +76,7 @@ class MDATPDriver(OData):
             self.connect(connection_str)
 
     def query(
-        self, query: str, query_source: QuerySource = None, **kwargs
+        self, query: str, query_source: Optional[QuerySource] = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
@@ -91,7 +91,7 @@ class MDATPDriver(OData):
         Returns
         -------
         Union[pd.DataFrame, results.ResultSet]
-            A DataFrame (if successfull) or
+            A DataFrame (if successful) or
             the underlying provider result if an error.
 
         """

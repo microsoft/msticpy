@@ -44,7 +44,7 @@ defaults:
           | extend TimeCreatedUtc=TimeGenerated'
 sources:
   squid_activity:
-    description: All squid proxy activity
+    description: Returns all squid proxy activity for a host
     args:
       query: '
         {table}

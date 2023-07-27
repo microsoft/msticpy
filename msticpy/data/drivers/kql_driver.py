@@ -30,7 +30,7 @@ from ...common.exceptions import (
 from ...common.utility import MSTICPY_USER_AGENT, export
 from ...common.wsconfig import WorkspaceConfig
 from ..core.query_defns import DataEnvironment
-from .driver_base import DriverBase, QuerySource
+from .driver_base import DriverBase, DriverProps, QuerySource
 
 _KQL_ENV_OPTS = "KQLMAGIC_CONFIGURATION"
 
@@ -117,8 +117,11 @@ class KqlDriver(DriverBase):
         self._ip = get_ipython()
         self._debug = kwargs.get("debug", False)
         super().__init__(**kwargs)
-
-        self.formatters = {"datetime": self._format_datetime, "list": self._format_list}
+        self.workspace_id: Optional[str] = None
+        self.set_driver_property(
+            DriverProps.FORMATTERS,
+            {"datetime": self._format_datetime, "list": self._format_list},
+        )
         self._loaded = self._is_kqlmagic_loaded()
 
         os.environ["KQLMAGIC_LOAD_MODE"] = "silent"
@@ -434,6 +437,8 @@ class KqlDriver(DriverBase):
         """Get the current connection Workspace ID from KQLMagic."""
         connections = kql_exec("--conn")
         current_connection = [conn for conn in connections if conn.startswith(" * ")]
+        if not current_connection:
+            return ""
         return current_connection[0].strip(" * ").split("@")[0]
 
     def _set_kql_cloud(self):

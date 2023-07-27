@@ -1,0 +1,255 @@
+{
+  "tables": [
+    {
+      "name": "PrimaryResult",
+      "columns": [
+        {
+          "name": "TenantId",
+          "type": "string"
+        },
+        {
+          "name": "TimeGenerated",
+          "type": "datetime"
+        },
+        {
+          "name": "DisplayName",
+          "type": "string"
+        },
+        {
+          "name": "AlertName",
+          "type": "string"
+        },
+        {
+          "name": "AlertSeverity",
+          "type": "string"
+        },
+        {
+          "name": "Description",
+          "type": "string"
+        },
+        {
+          "name": "ProviderName",
+          "type": "string"
+        },
+        {
+          "name": "VendorName",
+          "type": "string"
+        },
+        {
+          "name": "VendorOriginalId",
+          "type": "string"
+        },
+        {
+          "name": "SystemAlertId",
+          "type": "string"
+        },
+        {
+          "name": "ResourceId",
+          "type": "string"
+        },
+        {
+          "name": "SourceComputerId",
+          "type": "string"
+        },
+        {
+          "name": "AlertType",
+          "type": "string"
+        },
+        {
+          "name": "ConfidenceLevel",
+          "type": "string"
+        },
+        {
+          "name": "ConfidenceScore",
+          "type": "real"
+        },
+        {
+          "name": "IsIncident",
+          "type": "bool"
+        },
+        {
+          "name": "StartTime",
+          "type": "datetime"
+        },
+        {
+          "name": "EndTime",
+          "type": "datetime"
+        },
+        {
+          "name": "ProcessingEndTime",
+          "type": "datetime"
+        },
+        {
+          "name": "RemediationSteps",
+          "type": "string"
+        },
+        {
+          "name": "ExtendedProperties",
+          "type": "string"
+        },
+        {
+          "name": "Entities",
+          "type": "string"
+        },
+        {
+          "name": "SourceSystem",
+          "type": "string"
+        },
+        {
+          "name": "WorkspaceSubscriptionId",
+          "type": "string"
+        },
+        {
+          "name": "WorkspaceResourceGroup",
+          "type": "string"
+        },
+        {
+          "name": "ExtendedLinks",
+          "type": "string"
+        },
+        {
+          "name": "ProductName",
+          "type": "string"
+        },
+        {
+          "name": "ProductComponentName",
+          "type": "string"
+        },
+        {
+          "name": "AlertLink",
+          "type": "string"
+        },
+        {
+          "name": "Status",
+          "type": "string"
+        },
+        {
+          "name": "CompromisedEntity",
+          "type": "string"
+        },
+        {
+          "name": "Tactics",
+          "type": "string"
+        },
+        {
+          "name": "Techniques",
+          "type": "string"
+        },
+        {
+          "name": "Type",
+          "type": "string"
+        }
+      ],
+      "rows": [
+        [
+          "52b1ab41-869e-4138-9e40-2a4457f09bf0",
+          "2023-02-20T11:04:02.6371632Z",
+          "Linux security related process termination activity detected",
+          "Linux security related process termination activity detected",
+          "Medium",
+          "This query will alert on any attempts to terminate processes related to security monitoring on the host.",
+          "ASI Scheduled Alerts",
+          "Microsoft",
+          "a3ce3da5-93a4-42f7-ae0f-0fee36a16527",
+          "c19a6ccd-40a6-9ef9-5a8b-598bcc3c53b0",
+          "",
+          "",
+          "52b1ab41-869e-4138-9e40-2a4457f09bf0_1e65fb27-5c2a-4e44-80da-8b5f9d8fdb24",
+          "",
+          null,
+          false,
+          "2022-01-06T13:01:34Z",
+          "2022-01-06T13:04:53Z",
+          "2023-02-20T11:04:02.5649668Z",
+          "",
+          "{\"Query Period\":\"05:00:00\",\"Trigger Operator\":\"GreaterThan\",\"Trigger Threshold\":\"0\",\"Correlation Id\":\"7c1a062d-f817-41fa-87f0-c3a1c87a441f\",\"Search Query Results Overall Count\":\"3\",\"Data Sources\":\"[]\",\"Query\":\"// The query_now parameter represents the time (in UTC) at which the scheduled analytics rule ran to produce this alert.\\nset query_now = datetime(2023-02-20T10:58:58.1280000Z);\\nSummarizedLog4JEvents | where EventType == \\\"Linux security related process termination activity detected\\\"\\n| extend Account_0_Name = User\\n| extend Host_0_HostName = Host\",\"Query Start Time UTC\":\"2023-02-20 05:58:58Z\",\"Query End Time UTC\":\"2023-02-20 10:58:59Z\",\"Analytic Rule Ids\":\"[\\\"1e65fb27-5c2a-4e44-80da-8b5f9d8fdb24\\\"]\",\"Event Grouping\":\"SingleAlert\",\"Analytic Rule Name\":\"Linux security related process termination activity detected\",\"ProcessedBySentinel\":\"True\",\"Alert generation status\":\"Full alert created\"}",
+          "",
+          "Detection",
+          "40dcc8bf-0478-4f3b-b275-ed0a94f2c013",
+          "asihuntomsworkspacerg",
+          "",
+          "Azure Sentinel",
+          "Scheduled Alerts",
+          "",
+          "New",
+          "",
+          "Unknown",
+          "",
+          "SecurityAlert"
+        ],
+        [
+          "52b1ab41-869e-4138-9e40-2a4457f09bf0",
+          "2023-02-20T15:45:37.4668968Z",
+          "Linux security related process termination activity detected",
+          "Linux security related process termination activity detected",
+          "Medium",
+          "This query will alert on any attempts to terminate processes related to security monitoring on the host.",
+          "ASI Scheduled Alerts",
+          "Microsoft",
+          "3d90a0ee-b031-425c-b720-cb296b927d2f",
+          "4422fdcc-ed33-8b4a-fec8-1cfbf799c74b",
+          "",
+          "",
+          "52b1ab41-869e-4138-9e40-2a4457f09bf0_2d31af09-e46f-4542-891a-f97dcadd0725",
+          "",
+          null,
+          false,
+          "2022-01-06T13:01:34Z",
+          "2022-01-06T13:04:53Z",
+          "2023-02-20T15:45:37.388088Z",
+          "",
+          "{\"Query Period\":\"05:00:00\",\"Trigger Operator\":\"GreaterThan\",\"Trigger Threshold\":\"0\",\"Correlation Id\":\"b0d7815a-b84b-467d-ba56-e5a1a9dfb9d1\",\"Search Query Results Overall Count\":\"3\",\"Data Sources\":\"[]\",\"Query\":\"// The query_now parameter represents the time (in UTC) at which the scheduled analytics rule ran to produce this alert.\\nset query_now = datetime(2023-02-20T15:40:34.6400000Z);\\nSummarizedLog4JEvents | where EventType == \\\"Linux security related process termination activity detected\\\"\\n| extend Account_0_Name = User\\n| extend Host_0_HostName = Host\",\"Query Start Time UTC\":\"2023-02-20 10:40:34Z\",\"Query End Time UTC\":\"2023-02-20 15:40:35Z\",\"Analytic Rule Ids\":\"[\\\"2d31af09-e46f-4542-891a-f97dcadd0725\\\"]\",\"Event Grouping\":\"SingleAlert\",\"Analytic Rule Name\":\"Linux security related process termination activity detected\",\"ProcessedBySentinel\":\"True\",\"Alert generation status\":\"Full alert created\"}",
+          "",
+          "Detection",
+          "40dcc8bf-0478-4f3b-b275-ed0a94f2c013",
+          "asihuntomsworkspacerg",
+          "",
+          "Azure Sentinel",
+          "Scheduled Alerts",
+          "",
+          "New",
+          "",
+          "Unknown",
+          "",
+          "SecurityAlert"
+        ],
+        [
+          "52b1ab41-869e-4138-9e40-2a4457f09bf0",
+          "2023-02-20T21:11:02.2810341Z",
+          "Linux security related process termination activity detected",
+          "Linux security related process termination activity detected",
+          "Medium",
+          "This query will alert on any attempts to terminate processes related to security monitoring on the host.",
+          "ASI Scheduled Alerts",
+          "Microsoft",
+          "5261283a-bc81-462a-a69a-63809f2bec03",
+          "24242093-7022-7aaf-763c-4d651ffd94ff",
+          "",
+          "",
+          "52b1ab41-869e-4138-9e40-2a4457f09bf0_1e65fb27-5c2a-4e44-80da-8b5f9d8fdb24",
+          "",
+          null,
+          false,
+          "2022-01-06T13:01:34Z",
+          "2022-01-06T13:04:53Z",
+          "2023-02-20T21:11:02.241001Z",
+          "",
+          "{\"Query Period\":\"05:00:00\",\"Trigger Operator\":\"GreaterThan\",\"Trigger Threshold\":\"0\",\"Correlation Id\":\"1632aa6c-44f2-4d12-87c7-5968a7e9fd0b\",\"Search Query Results Overall Count\":\"3\",\"Data Sources\":\"[]\",\"Query\":\"// The query_now parameter represents the time (in UTC) at which the scheduled analytics rule ran to produce this alert.\\nset query_now = datetime(2023-02-20T20:58:58.1280000Z);\\nSummarizedLog4JEvents | where EventType == \\\"Linux security related process termination activity detected\\\"\\n| extend Account_0_Name = User\\n| extend Host_0_HostName = Host\",\"Query Start Time UTC\":\"2023-02-20 15:58:58Z\",\"Query End Time UTC\":\"2023-02-20 20:58:59Z\",\"Analytic Rule Ids\":\"[\\\"1e65fb27-5c2a-4e44-80da-8b5f9d8fdb24\\\"]\",\"Event Grouping\":\"SingleAlert\",\"Analytic Rule Name\":\"Linux security related process termination activity detected\",\"ProcessedBySentinel\":\"True\",\"Alert generation status\":\"Full alert created\"}",
+          "",
+          "Detection",
+          "40dcc8bf-0478-4f3b-b275-ed0a94f2c013",
+          "asihuntomsworkspacerg",
+          "",
+          "Azure Sentinel",
+          "Scheduled Alerts",
+          "",
+          "New",
+          "",
+          "Unknown",
+          "",
+          "SecurityAlert"
+        ]
+      ]
+    }
+  ]
+}

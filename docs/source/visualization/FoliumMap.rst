@@ -4,7 +4,7 @@ Folium Map Plotting
 The :py:class:`FoliumMap<msticpy.vis.foliummap.FoliumMap>`
 class is a wrapper around the Folium geo-mapping interactive
 mapping package.
-See `Folium <https://python-visualization.github.io/folium/>`_.
+See `Folium <https://python-visualization.github.io/folium/>`__.
 
 The MSTICPy Folium plotting can be used with DataFrames,
 IP addresses, locations, and geohashes as well as the MSTICPy

@@ -1,0 +1,10 @@
+{"Pid":692,"Name":"svchost.exe","Family":"IPv4","Type":"TCP","Status":"LISTEN","Laddr.IP":"0.0.0.0","Laddr.Port":135,"Raddr.IP":"0.0.0.0","Raddr.Port":0,"Timestamp":"2022-02-12T19:35:44Z"}
+{"Pid":4,"Name":"System","Family":"IPv4","Type":"TCP","Status":"LISTEN","Laddr.IP":"172.16.50.130","Laddr.Port":139,"Raddr.IP":"0.0.0.0","Raddr.Port":0,"Timestamp":"2022-02-12T19:35:44Z"}
+{"Pid":872,"Name":"svchost.exe","Family":"IPv4","Type":"TCP","Status":"LISTEN","Laddr.IP":"0.0.0.0","Laddr.Port":3389,"Raddr.IP":"0.0.0.0","Raddr.Port":0,"Timestamp":"2022-02-12T19:35:45Z"}
+{"Pid":872,"Name":"svchost.exe","Family":"IPv4","Type":"TCP","Status":"ESTAB","Laddr.IP":"172.16.50.130","Laddr.Port":3389,"Raddr.IP":"172.16.21.100","Raddr.Port":51588,"Timestamp":"2022-02-12T23:57:49Z"}
+{"Pid":2288,"Name":"windows_exporter.exe","Family":"IPv4","Type":"TCP","Status":"ESTAB","Laddr.IP":"172.16.50.130","Laddr.Port":9100,"Raddr.IP":"172.16.10.100","Raddr.Port":39806,"Timestamp":"2022-02-12T19:35:58Z"}
+{"Pid":416,"Name":"wininit.exe","Family":"IPv4","Type":"TCP","Status":"LISTEN","Laddr.IP":"0.0.0.0","Laddr.Port":49664,"Raddr.IP":"0.0.0.0","Raddr.Port":0,"Timestamp":"2022-02-12T19:35:44Z"}
+{"Pid":912,"Name":"svchost.exe","Family":"IPv4","Type":"TCP","Status":"LISTEN","Laddr.IP":"0.0.0.0","Laddr.Port":49665,"Raddr.IP":"0.0.0.0","Raddr.Port":0,"Timestamp":"2022-02-12T19:35:44Z"}
+{"Pid":1284,"Name":"svchost.exe","Family":"IPv4","Type":"TCP","Status":"LISTEN","Laddr.IP":"0.0.0.0","Laddr.Port":49667,"Raddr.IP":"0.0.0.0","Raddr.Port":0,"Timestamp":"2022-02-12T19:35:45Z"}
+{"Pid":548,"Name":"lsass.exe","Family":"IPv4","Type":"TCP","Status":"LISTEN","Laddr.IP":"0.0.0.0","Laddr.Port":49669,"Raddr.IP":"0.0.0.0","Raddr.Port":0,"Timestamp":"2022-02-12T19:35:45Z"}
+{"Pid":1664,"Name":"spoolsv.exe","Family":"IPv4","Type":"TCP","Status":"LISTEN","Laddr.IP":"0.0.0.0","Laddr.Port":49697,"Raddr.IP":"0.0.0.0","Raddr.Port":0,"Timestamp":"2022-02-12T19:35:45Z"}

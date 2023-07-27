@@ -34,7 +34,7 @@ class SentinelWorkspacesMixin:
     """Mixin class for Sentinel workspaces."""
 
     _TENANT_URI = "{cloud_endpoint}/{tenant_name}/.well-known/openid-configuration"
-    _RES_GRAPH_PROV = QueryProvider("ResourceGraph")
+    _RES_GRAPH_PROV: Optional[QueryProvider] = None
 
     @classmethod
     def get_resource_id_from_url(cls, portal_url: str) -> str:
@@ -239,15 +239,22 @@ class SentinelWorkspacesMixin:
         return {}
 
     @classmethod
+    def _get_resource_graph_provider(cls) -> QueryProvider:
+        if not cls._RES_GRAPH_PROV:
+            cls._RES_GRAPH_PROV = QueryProvider("ResourceGraph")
+        if not cls._RES_GRAPH_PROV.connected:
+            cls._RES_GRAPH_PROV.connect()  # pragma: no cover
+        return cls._RES_GRAPH_PROV
+
+    @classmethod
     def _lookup_workspace_by_name(
         cls,
         workspace_name: str,
         subscription_id: str = "",
         resource_group: str = "",
     ) -> pd.DataFrame:
-        if not cls._RES_GRAPH_PROV.connected:
-            cls._RES_GRAPH_PROV.connect()  # pragma: no cover
-        return cls._RES_GRAPH_PROV.Sentinel.list_sentinel_workspaces_for_name(
+        res_graph_prov = cls._get_resource_graph_provider()
+        return res_graph_prov.Sentinel.list_sentinel_workspaces_for_name(
             workspace_name=workspace_name,
             subscription_id=subscription_id,
             resource_group=resource_group,
@@ -255,17 +262,15 @@ class SentinelWorkspacesMixin:
 
     @classmethod
     def _lookup_workspace_by_ws_id(cls, workspace_id: str) -> pd.DataFrame:
-        if not cls._RES_GRAPH_PROV.connected:
-            cls._RES_GRAPH_PROV.connect()  # pragma: no cover
-        return cls._RES_GRAPH_PROV.Sentinel.get_sentinel_workspace_for_workspace_id(
+        res_graph_prov = cls._get_resource_graph_provider()
+        return res_graph_prov.Sentinel.get_sentinel_workspace_for_workspace_id(
             workspace_id=workspace_id
         )
 
     @classmethod
     def _lookup_workspace_by_res_id(cls, resource_id: str):
-        if not cls._RES_GRAPH_PROV.connected:
-            cls._RES_GRAPH_PROV.connect()  # pragma: no cover
-        return cls._RES_GRAPH_PROV.Sentinel.get_sentinel_workspace_for_resource_id(
+        res_graph_prov = cls._get_resource_graph_provider()
+        return res_graph_prov.Sentinel.get_sentinel_workspace_for_resource_id(
             resource_id=resource_id
         )
 

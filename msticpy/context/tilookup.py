@@ -13,16 +13,16 @@ requests per minute for the account type that you have.
 
 """
 
-from typing import Iterable, List, Mapping, Optional, Union
+from typing import Dict, Iterable, List, Mapping, Optional, Union
 
 import pandas as pd
 
 from .._version import VERSION
 from ..common.utility import export
 from .lookup import Lookup
-from .provider_base import _make_sync
 
 # used in dynamic instantiation of providers
+from .provider_base import Provider, _make_sync
 from .tiproviders import TI_PROVIDERS
 
 __version__ = VERSION
@@ -44,6 +44,7 @@ class TILookup(Lookup):
 
     PROVIDERS = TI_PROVIDERS
     PACKAGE = "tiproviders"
+    CUSTOM_PROVIDERS: Dict[str, Provider] = {}
 
     # pylint: disable=too-many-arguments
     def lookup_ioc(
@@ -57,7 +58,7 @@ class TILookup(Lookup):
         **kwargs,
     ) -> pd.DataFrame:
         """
-        Lookup single IoC in active providers.
+        Lookup Threat Intelligence reports for a single IoC in active providers.
 
         Parameters
         ----------
@@ -87,6 +88,19 @@ class TILookup(Lookup):
             bool indicates whether a TI record was found in any provider
             list has an entry for each provider result
 
+        See Also
+        --------
+        lookup_iocs : Lookup Threat Intelligence reports for a collection of IoCs.
+
+        Notes
+        -----
+        Queries active Threat Intelligence (TI) providers for a single
+        indicator of compromise (IoC). It returns results as a pandas
+        DataFrame. `ioc_type` can be used to specify the type (ipv4,
+        ipv6, dns, url, file_hash). If this is not supplied the
+        type is inferred using regular expressions.
+        By default, providers are queried asynchronously, in parallel.
+
         """
         ioc = ioc or kwargs.pop("observable", None)
         if ioc is None:
@@ -113,7 +127,7 @@ class TILookup(Lookup):
         **kwargs,
     ) -> pd.DataFrame:
         """
-        Lookup a collection of IoCs.
+        Lookup Threat Intelligence reports for a collection of IoCs in active providers.
 
         Parameters
         ----------
@@ -144,6 +158,21 @@ class TILookup(Lookup):
         -------
         pd.DataFrame
             DataFrame of results
+
+        See Also
+        --------
+        lookup_ioc : Lookup Threat Intelligence reports for a single IoC.
+
+        Notes
+        -----
+        `lookup_iocs` queries active Threat Intelligence (TI) providers for
+        threat reports. It can accept input as a Python iterable or
+        a pandas dataframe. In the latter case, you also need to supply
+        the `ioc_col` parameter to indicate which column the IoC value can
+        be found. The `ioc_type_col` parameter is optional and can be used
+        to manually specify the IoC type for each row. If this is not supplied
+        the ioc types are inferred using regular expressions.
+        The results are returned as a pandas DataFrame.
 
         """
         return _make_sync(

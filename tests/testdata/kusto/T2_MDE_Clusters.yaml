@@ -1,0 +1,134 @@
+metadata:
+  version: 1
+  description: Kusto Queries
+  data_environments: [Kusto]
+  data_families: [T2_MDE_Clusters]
+  database: "AppDB"
+  clusters:
+    - https://test.kusto.windows.net
+    - msticti
+  tags: ["user"]
+defaults:
+  parameters:
+    table:
+      description: Table name
+      type: str
+      default: "DeviceProcessEvents"
+    start:
+      description: Query start time
+      type: datetime
+      default: -30
+    end:
+      description: Query end time
+      type: datetime
+      default: 0
+    add_query_items:
+      description: Additional query clauses
+      type: str
+      default: ""
+sources:
+  list_host_processes:
+    description: Lists all process creations for a host
+    metadata:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where DeviceName has "{host_name}"
+        {add_query_items}'
+      uri: None
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
+  process_creations:
+    description: Lists all processes created by name or hash
+    metadata:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where FileName contains "{process_identifier}" or SHA1 has "{process_identifier}" or SHA256 has "{process_identifier}" or MD5 has "{process_identifier}"
+        {add_query_items}'
+    parameters:
+      process_identifier:
+        description: Identifier for the process, filename, or hash
+        type: str
+  process_paths:
+    description: Lists all processes created from a path
+    metadata:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where FileName contains "{file_path}"
+        {add_query_items}'
+    parameters:
+      file_path:
+        description: full or partial path
+        type: str
+  process_cmd_line:
+    description: Lists all processes with a command line containing a string
+    metadata:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where ProcessCommandLine contains "{cmd_line}"
+        {add_query_items}'
+    parameters:
+      cmd_line:
+        description: Command line artifact to search for
+        type: str
+  query_new_alias:
+    description: Lists all processes with a command line containing a string
+    metadata:
+      data_families: [T2_MDE_Clusters_item1]
+      cluster: https://msticapp.kusto.windows.net
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where ProcessCommandLine contains "{cmd_line}"
+        {add_query_items}'
+    parameters:
+      cmd_line:
+        description: Command line artifact to search for
+        type: str
+  bad_query_fam_no_dot:
+    description: Lists all processes with a command line containing a string
+    metadata:
+      data_families: [T2_MDE_Clusters_item2]
+      cluster: https://msticapp.kusto.windows.net
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where ProcessCommandLine contains "{cmd_line}"
+        {add_query_items}'
+    parameters:
+      cmd_line:
+        description: Command line artifact to search for
+        type: str
+  bad_query_no_cluster:
+    description: Lists all processes with a command line containing a string
+    metadata:
+      data_families: [T2_MDE_Clusters_item3]
+      cluster:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where ProcessCommandLine contains "{cmd_line}"
+        {add_query_items}'
+    parameters:
+      cmd_line:
+        description: Command line artifact to search for
+        type: str
