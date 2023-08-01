@@ -37,15 +37,15 @@ sources:
         let docAttachments =
           DeviceFileEvents
           | where {time_column} > minTimeRange
-			    // Query for common document file extensions
+          // Query for common document file extensions
             and (FileName endswith ".docx" or FileName endswith ".docm" or FileName endswith ".doc")
-			    // Query for files saved from email clients such as the Office Outlook app or the Windows Mail app
+          // Query for files saved from email clients such as the Office Outlook app or the Windows Mail app
             and InitiatingProcessFileName in~ ("outlook.exe", "hxoutlook.exe")
           | summarize AttachmentSaveTime=min({time_column}) by AttachmentName=FileName, DeviceId;
         let browserDownloads =
           DeviceFileEvents
           | where {time_column} > minTimeRange
-			    // Query for files created by common browsers
+          // Query for files created by common browsers
             and InitiatingProcessFileName in~ ("browser_broker.exe", "chrome.exe", "iexplore.exe", "firefox.exe")
             // Exclude JS files that are used for loading sites (but still query for JS files that are known to be downloaded)
             and not (FileName endswith ".js" and isempty(FileOriginUrl))
