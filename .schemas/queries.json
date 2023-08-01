@@ -68,29 +68,33 @@
                 "data_environments": {
                     "type": "array",
                     "items": {
-                        "type": "string",
-                        "enum": [
-                            "AzureSecurityCenter",
-                            "AzureSentinel",
-                            "Cybereason",
-                            "Elastic",
-                            "Kusto",
-                            "LocalData",
-                            "LogAnalytics",
-                            "M365D",
-                            "MDATP",
-                            "MDE",
-                            "Mordor",
-                            "MSGraph",
-                            "MSSentinel",
-                            "OSQueryLogs",
-                            "OTRF",
-                            "ResourceGraph",
-                            "SecurityGraph",
-                            "Splunk",
-                            "Sumologic",
-                            "SQLTestProvider",
-                            "SQLProdProvider"
+                        "oneOf": [
+                            {
+                                "enum": [
+                                    "AzureSecurityCenter",
+                                    "AzureSentinel",
+                                    "Cybereason",
+                                    "Elastic",
+                                    "Kusto",
+                                    "LocalData",
+                                    "LogAnalytics",
+                                    "M365D",
+                                    "MDATP",
+                                    "MDE",
+                                    "Mordor",
+                                    "MSGraph",
+                                    "MSSentinel",
+                                    "OSQueryLogs",
+                                    "OTRF",
+                                    "ResourceGraph",
+                                    "SecurityGraph",
+                                    "Splunk",
+                                    "Sumologic"
+                                ]
+                            },
+                            {
+                                "type": "string"
+                            }
                         ]
                     }
                 },
