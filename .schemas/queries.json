@@ -68,7 +68,7 @@
                 "data_environments": {
                     "type": "array",
                     "items": {
-                        "oneOf": [
+                        "anyOf": [
                             {
                                 "enum": [
                                     "AzureSecurityCenter",
