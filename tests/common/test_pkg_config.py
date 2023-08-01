@@ -66,13 +66,8 @@ def test_load_default():
                 query_file,
                 expected=not (
                     "fail" in query_file.name
-                    or query_file.absolute().is_relative_to(
-                        Path(__file__)
-                        .resolve()
-                        .parent.parent.joinpath(
-                            "testdata", "sentinel_query_import_data"
-                        )
-                    )
+                    or "sentinel_query_import_data"
+                    in [parent.name for parent in query_file.absolute().parents]
                 ),
             )
 
