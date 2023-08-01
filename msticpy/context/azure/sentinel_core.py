@@ -95,6 +95,7 @@ class MicrosoftSentinel(
         self.sent_urls: Dict[str, str] = {}
         self.sent_data_query: Optional[SentinelQueryProvider] = None  # type: ignore
         self.url: Optional[str] = None
+        self._token: Optional[str] = None
 
         workspace = kwargs.get("workspace", ws_name)
         self._default_workspace: Optional[str] = workspace
@@ -151,6 +152,17 @@ class MicrosoftSentinel(
             Specify cloud tenant to use
         silent : bool, optional
             Set true to prevent output during auth process, by default False
+        cloud : str, optional
+            What Azure cloud to connect to.
+            By default it will attempt to use the cloud setting from config file.
+            If this is not set it will default to Azure Public Cloud
+        credential: AzureCredential, optional
+            Credentials to use for authentication. This will use the credential
+            directly and bypass the MSTICPy Azure credential selection process.
+
+        See Also
+        --------
+        msticpy.auth.azure_auth.az_connect : function to authenticate to Azure SDK
 
         """
         if workspace := kwargs.get("workspace"):
@@ -161,12 +173,12 @@ class MicrosoftSentinel(
         tenant_id = (
             tenant_id or self.workspace_config[WorkspaceConfig.CONF_TENANT_ID_KEY]
         )
-
-        super().connect(auth_methods=auth_methods, tenant_id=tenant_id, silent=silent)
-        if "token" in kwargs:
-            self.token = kwargs["token"]
-        else:
-            self.token = get_token(
+        self._token = kwargs.pop("token", None)
+        super().connect(
+            auth_methods=auth_methods, tenant_id=tenant_id, silent=silent, **kwargs
+        )
+        if not self._token:
+            self._token = get_token(
                 self.credentials, tenant_id=tenant_id, cloud=self.user_cloud  # type: ignore
             )
 
@@ -197,11 +209,13 @@ class MicrosoftSentinel(
         """Save configuration and build API URLs for workspace."""
         if workspace_name:
             self.workspace_config = WorkspaceConfig(workspace=workspace_name)
-        az_resource_id = az_resource_id or self._resource_id
-        if not az_resource_id:
-            az_resource_id = self._build_sent_res_id(
+        az_resource_id = (
+            az_resource_id
+            or self._resource_id
+            or self._build_sent_res_id(
                 subscription_id, resource_group, workspace_name  # type: ignore
             )
+        )
         az_resource_id = validate_res_id(az_resource_id)
         self.url = self._build_sent_paths(az_resource_id, self.base_url)  # type: ignore
 

@@ -274,9 +274,8 @@ def sentinel_loader(mock_creds, get_token, monkeypatch):
             ws_name=settings.get("WorkspaceName", "Default"),
         )
         sent._default_workspace = ws_key
-        sent.connect(workspace=ws_key)
+        sent.connect(workspace=ws_key, token=["PLACEHOLDER"])  # nosec
         sent.connected = True
-        sent.token = "fd09863b-5cec-4833-ab9c-330ad07b0c1a"  # nosec
     return sent
 
 
@@ -439,9 +438,12 @@ def test_sent_get_dynamic_summary_plus_items(qry_prov, sentinel_loader):
     )
     qry_prov_instance.MSSentinel.get_dynamic_summary_by_id.return_value = dyn_summary_df
 
-    dyn_summary = sentinel_loader.get_dynamic_summary(
-        summary_id="test", summary_items=True
-    )
+    with custom_mp_config(
+        get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
+    ):
+        dyn_summary = sentinel_loader.get_dynamic_summary(
+            summary_id="test", summary_items=True
+        )
 
     check.equal(dyn_summary.summary_name, "test2")
     summary_items = dyn_summary_df[dyn_summary_df["SummaryDataType"] == "SummaryItem"]
