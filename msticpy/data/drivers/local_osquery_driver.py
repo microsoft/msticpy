@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
-from pandas import to_datetime
+from pandas import to_datetime, to_numeric
 from tqdm.auto import tqdm
 
 from ..._version import VERSION
@@ -268,9 +268,8 @@ class OSQueryLogDriver(DriverBase):
             axis=1, how="all"
         )
         for date_column in self.OS_QUERY_DATEIME_COLS & set(query_df.columns):
-            query_df[date_column] = pd.to_datetime(
-                query_df[date_column],
-                unit="s",
+            query_df[date_column] = to_datetime(
+                to_numeric(query_df[date_column]),
                 origin="unix",
                 utc=True,
             )

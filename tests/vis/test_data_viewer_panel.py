@@ -33,7 +33,6 @@ def dataframe():
         str(df_path),
         index_col=0,
         parse_dates=["TimeGenerated"],
-        infer_datetime_format=True,
     )
 
 
