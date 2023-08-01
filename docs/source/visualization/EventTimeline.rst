@@ -4,18 +4,35 @@ Event Timeline
 This document describes the use of the interactive timeline controls built
 using the `Bokeh library <https://bokeh.pydata.org>`__.
 
-There are two chart controls types:
+There are several variants on the timeline plot:
 
-* Discrete event series - this plots multiple series of events as discrete
+* timeline - Discrete event series - this plots multiple series of events as discrete
   glyphs
-* Event value series - this plots a scalar value of the events using glyphs,
+* timeline_values - Event value series - this plots a scalar value of the events using glyphs,
   bars or traditional line graph (or some combination).
+* timeline_duration - Similar to timeline but visually shows the duration of each event
+  group as a bar.
 
 A sample notebook demonstrating the use of these plot controls is
 available here `Event Timeline Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/EventTimeline.ipynb>`__
 
 
+Plotting directly from a DataFrame
+----------------------------------
 
+We've implemented the timeline plotting functions as pandas accessors so
+you can plot directly from the DataFrame using ``mp_plot.timeline()``.
+
+These are built on top of the standalone functions described and are
+in most cases, interchangeable. The main difference is that the
+standalone functions require a dataframe (the ``data`` parameter)
+as a parameter.
+All of the parameters used in the standalone function are available in
+the pandas accessor functions.
+
+.. note: if you have not run msticpy.init_notebook, you may
+   need to import timeline or one of the other packages in msticpy.vis
+   to load these accessor functions.
 
 Discrete Event Timelines
 ------------------------
@@ -23,7 +40,7 @@ Discrete Event Timelines
 Plotting a simple timeline
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The display_timeline function (see
+The ``mp_plot.timeline`` function (see
 :py:func:`display_timeline<msticpy.vis.timeline.display_timeline>`) takes three main
 parameters:
 
@@ -40,7 +57,7 @@ time series.
 
 .. code:: ipython3
 
-   from msticpy.vis.timeline import display_timeline
+   from msticpy.vis import mp_pandas_plot
 
    # load some data
    processes_on_host = pd.read_csv(
@@ -52,7 +69,7 @@ time series.
 
    # At a minimum we need to pass a dataframe with timestamp column
    # (defaults to TimeGenerated)
-   display_timeline(processes_on_host)
+   processes_on_host.mp_plot.timeline(time_column="TimeGenerated");
 
 
 .. figure:: _static/Timeline-01.png
@@ -103,8 +120,7 @@ Grouping Series From a Single DataFrame
 
 .. code:: ipython3
 
-   display_timeline(
-      processes_on_host,
+   processes_on_host.mp_plot.timeline(
       group_by="Account",
       source_columns=["NewProcessName", "ParentProcessName"],
       legend="inline"
@@ -131,7 +147,7 @@ hide/show the data. The legend can be placed inside of the chart
 
 
 .. note:: the trailing semicolon just prevents Jupyter showing the return
-   value from the function. It isn’t mandatory.
+   value from the function. It isn't mandatory.
 
 
 Alternatively we can enable the ``yaxis`` - although this is not guaranteed
@@ -139,8 +155,7 @@ to show all values of the groups.
 
 .. code:: ipython3
 
-   display_timeline(
-      processes_on_host,
+   processes_on_host.mp_plot.timeline(
       group_by="Account",
       source_columns=["NewProcessName", "ParentProcessName"],
       yaxis=True
@@ -150,20 +165,19 @@ to show all values of the groups.
    :alt: Grouped timeline chart with yaxis
 
 
-Plotting directly from a DataFrame
-----------------------------------
+Using standalone timeline functions
+-----------------------------------
 
-We've implemented the timeline plotting functions as pandas accessors so
-you can plot directly from the DataFrame using ``mp_plot.timeline()``.
-
-All of the parameters used in the standalone function are available in
-the pandas accessor functions.
+You can access the same functionality using the standalone functions
+although you need to import these explicitly.
 
 .. note: if you have not run msticpy.init_notebook, you may
    need to import timeline or one of the other packages in msticpy.vis
    to load these accessor functions.
 
 .. code:: ipython3
+
+   from msticpy.vis.timeline import display_timeline
 
    # load some data
    host_logons = pd.read_csv(
@@ -174,7 +188,8 @@ the pandas accessor functions.
    )
 
 
-   host_logons.mp_plot.timeline(
+   display_timeline(
+      data=host_logons,
       title="Logons by Account name",
       group_by="Account",
       source_columns=["Account", "TargetLogonId", "LogonType"],
@@ -183,7 +198,8 @@ the pandas accessor functions.
    )
 
 
-   host_logons.mp_plot.timeline(
+   display_timeline(
+      data=host_logons,
       title="Logons by logon type",
       group_by="LogonType",
       source_columns=["Account", "TargetLogonId", "LogonType"],
@@ -229,8 +245,7 @@ list entry.
     # pull out a sample row to use as a reference marker
     alerts = processes_on_host.sample(3)
 
-    display_timeline(
-        host_logons,
+    host_logons.mp_plot.timeline(
         title="Processes with marker",
         group_by="Account",
         source_columns=["Account", "TargetLogonId", "LogonType"],
@@ -282,7 +297,12 @@ union of all of the individual sets so some items will display "???" If
 the source data does not have a column corresponding to one or more of the
 names.
 
+.. note:: You cannot use the pandas accessor functions when plotting
+   from a dictionary of data sets.
+
 .. code:: ipython3
+
+   from msticpy.vis.timeline import display_timeline
 
    procs_and_logons = {
       "Processes" : {
@@ -295,7 +315,7 @@ names.
       }
    }
 
-   nbdisplay.display_timeline(
+   display_timeline(
       data=procs_and_logons,
       title="Logons and Processes",
       legend="left"
@@ -311,11 +331,11 @@ Plotting Series with Scalar Values
 
 Often you may want to see a scalar value plotted with the series.
 
-The example below uses ``display_timeline_values`` to plot network flow
+The example below uses the pandas ``mp_plot.timeline_values`` to plot network flow
 data using the total flows recorded between a pair of IP addresses.
 
 Note that the majority of parameters are the same as
-``display_timeline`` but include a mandatory ``y`` parameter which
+``mp_plot.timeline`` but include a mandatory ``y`` parameter which
 indicates which value you want to plot on the y (vertical) axis.
 
 See :py:func:`display_timeline_values<msticpy.vis.timeline.display_timeline_values>` documentation
@@ -331,8 +351,7 @@ for a description of all of the parameters.
       index_col=0,
    )
 
-   flow_plot = nbdisplay.display_timeline_values(
-      data=az_net_flows_df,
+   az_net_flows_df.mp_plot.timeline_values(
       group_by="L7Protocol",
       source_columns=[
          "FlowType",
@@ -363,8 +382,7 @@ the hover value.
 
 .. code:: ipython3
 
-    flow_plot = nbdisplay.display_timeline_values(
-      data=az_net_flows_df,
+    az_net_flows_df.mp_plot.timeline_values(
       group_by="L7Protocol",
       source_columns=[
          "FlowType",
@@ -402,7 +420,7 @@ two plots.
 Timeline Durations
 ------------------
 
-Sometimes it’s useful to be able to group data and see the start and
+Sometimes it is useful to be able to group data and see the start and
 ending activity over a period. The timeline durations plot gives you
 that option. It creates bands for the start and ending duration of each
 group, as well as the locations of the individual events.
@@ -414,6 +432,18 @@ before calculating the start and end of the events within that group.
 
 Durations are shown using boxes with individual events superimposed (as
 diamonds).
+
+.. code:: ipython3
+
+   az_net_flows_df.mp_plot.timeline_duration(
+       group_by=["SrcIP", "DestIP", "L7Protocol"]
+   )
+
+.. figure:: _static/Timeline_duration-02.png
+   :alt: Timeline duration for IP addresses showing bands for
+      start and end of event groups.
+
+You can also use the standalone function ``display_timeline_duration``
 
 .. code:: ipython3
 
@@ -429,15 +459,6 @@ diamonds).
 .. figure:: _static/Timeline_duration-01.png
    :alt: Timeline duration showing bands for start and end of event groups.
 
-.. code:: ipython3
-
-   az_net_flows_df.mp_plot.timeline_duration(
-       group_by=["SrcIP", "DestIP", "L7Protocol"]
-   )
-
-.. figure:: _static/Timeline_duration-02.png
-   :alt: Timeline duration for IP addresses showing bands for
-      start and end of event groups.
 
 Exporting Plots as PNGs
 -----------------------
@@ -465,19 +486,19 @@ function.
    from IPython.display import display, Image, Markdown
 
    # Create a plot
-   flow_plot = nbdisplay.display_timeline_values(data=az_net_flows_df,
-                                                 group_by="L7Protocol",
-                                                 source_columns=["FlowType",
-                                                                 "AllExtIPs",
-                                                                 "L7Protocol",
-                                                                 "FlowDirection",
-                                                                 "TotalAllowedFlows"],
-                                                 time_column="FlowStartTime",
-                                                 y="TotalAllowedFlows",
-                                                 legend="right",
-                                                 height=500,
-                                                 kind=["vbar", "circle"]
-                                               );
+   flow_plot = az_net_flows_df.mp_plot.timeline_values(
+      group_by="L7Protocol",
+      source_columns=["FlowType",
+                     "AllExtIPs",
+                     "L7Protocol",
+                     "FlowDirection",
+                     "TotalAllowedFlows"],
+      time_column="FlowStartTime",
+      y="TotalAllowedFlows",
+      legend="right",
+      height=500,
+      kind=["vbar", "circle"]
+   )
 
    # Export
    file_name = "plot.png"
