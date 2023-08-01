@@ -268,6 +268,45 @@ class SentinelWatchlistsMixin:
             raise CloudError(response=response)
         print(f"Watchlist {watchlist_name} deleted")
 
+    def delete_watchlist_item(self, watchlist_name: str, watchlist_item_id: str):
+        """
+        Delete a Watchlist item.
+
+        Parameters
+        ----------
+        watchlist_name : str
+            The name of the watchlist with the item to be deleted
+        watchlist_item_id : str
+            The watchlist item ID to delete
+
+        Raises
+        ------
+        MsticpyUserError
+            If the specified Watchlist does not exist.
+        CloudError
+            If the API returns an error.
+
+        """
+        self.check_connected()  # type: ignore
+        # Check requested watchlist actually exists
+        if not self._check_watchlist_exists(watchlist_name):
+            raise MsticpyUserError(f"Watchlist {watchlist_name} does not exist.")
+
+        watchlist_url = (
+            self.sent_urls["watchlists"]  # type: ignore
+            + f"/{watchlist_name}/watchlistItems/{watchlist_item_id}"
+        )
+        response = httpx.delete(
+            watchlist_url,
+            headers=get_api_headers(self.token),  # type: ignore
+            params={"api-version": "2023-02-01"},
+            timeout=get_http_timeout(),
+        )
+        if response.status_code != 200:
+            raise CloudError(response=response)
+
+        print(f"Item deleted from {watchlist_name}")
+
     def _check_watchlist_exists(
         self,
         watchlist_name: str,
