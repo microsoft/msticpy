@@ -66,7 +66,7 @@ def test_load_default():
                 query_file,
                 expected=not (
                     "fail" in query_file.name
-                    or "sentinel_query_import_data" in query_file.absolute
+                    or "sentinel_query_import_data" in query_file.absolute()
                 ),
             )
 
