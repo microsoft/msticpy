@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to collect and return details related to Azure."""
 import datetime
+import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 import attr
@@ -54,6 +55,8 @@ except ImportError as imp_err:
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
+
+logger = logging.getLogger(__name__)
 
 _CLIENT_MAPPING = {
     "sub_client": SubscriptionClient,
@@ -129,6 +132,7 @@ class AzureData:
         self.compute_client: Optional[ComputeManagementClient] = None
         self.cloud = cloud or AzureCloudConfig().cloud
         self.endpoints = get_all_endpoints(self.cloud)  # type: ignore
+        logger.info("Initialized AzureData")
         if connect:
             self.connect()
 
@@ -168,6 +172,10 @@ class AzureData:
         msticpy.auth.azure_auth.az_connect : function to authenticate to Azure SDK
 
         """
+        if kwargs.get("cloud"):
+            logger.info("Setting cloud to %s", kwargs["cloud"])
+            self.cloud = kwargs["cloud"]
+            self.azure_cloud_config = AzureCloudConfig(self.cloud)
         auth_methods = auth_methods or self.az_cloud_config.auth_methods
         tenant_id = tenant_id or self.az_cloud_config.tenant_id
         self.credentials = az_connect(
@@ -186,6 +194,7 @@ class AzureData:
         )
         if not self.sub_client:
             raise CloudError("Could not create a Subscription client.")
+        logger.info("Connected to Azure Subscription Client")
         self.connected = True
 
     def get_subscriptions(self) -> pd.DataFrame:
