@@ -11,8 +11,7 @@ import logging
 import os
 import re
 import warnings
-from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 from azure.core.exceptions import ClientAuthenticationError
@@ -30,7 +29,7 @@ from ...common.exceptions import (
 from ...common.utility import MSTICPY_USER_AGENT, export
 from ...common.wsconfig import WorkspaceConfig
 from ..core.query_defns import DataEnvironment
-from .driver_base import DriverBase, DriverProps, QuerySource
+from .driver_base import DriverBase, QuerySource
 
 _KQL_ENV_OPTS = "KQLMAGIC_CONFIGURATION"
 
@@ -118,10 +117,6 @@ class KqlDriver(DriverBase):
         self._debug = kwargs.get("debug", False)
         super().__init__(**kwargs)
         self.workspace_id: Optional[str] = None
-        self.set_driver_property(
-            DriverProps.FORMATTERS,
-            {"datetime": self._format_datetime, "list": self._format_list},
-        )
         self._loaded = self._is_kqlmagic_loaded()
 
         os.environ["KQLMAGIC_LOAD_MODE"] = "silent"
@@ -303,7 +298,7 @@ class KqlDriver(DriverBase):
         Returns
         -------
         Tuple[pd.DataFrame, results.ResultSet]
-            A DataFrame (if successfull) and
+            A DataFrame (if successful) and
             Kql ResultSet.
 
         """
@@ -455,22 +450,6 @@ class KqlDriver(DriverBase):
         if kql_cloud != self._get_kql_option("cloud"):
             self._set_kql_option("cloud", kql_cloud)
         return kql_cloud, az_cloud
-
-    @staticmethod
-    def _format_datetime(date_time: datetime) -> str:
-        """Return datetime-formatted string."""
-        return date_time.isoformat(sep="T") + "Z"
-
-    @staticmethod
-    def _format_list(param_list: Iterable[Any]):
-        """Return formatted list parameter."""
-        fmt_list = []
-        for item in param_list:
-            if isinstance(item, str):
-                fmt_list.append(f"'{item}'")
-            else:
-                fmt_list.append(f"{item}")
-        return ", ".join(fmt_list)
 
     @staticmethod
     def _raise_query_failure(query, result):

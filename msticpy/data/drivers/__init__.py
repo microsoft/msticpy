@@ -17,10 +17,10 @@ from .driver_base import DriverBase
 __version__ = VERSION
 
 _ENVIRONMENT_DRIVERS = {
-    DataEnvironment.LogAnalytics: ("kql_driver", "KqlDriver"),
+    DataEnvironment.LogAnalytics: ("azure_monitor_driver", "AzureMonitorDriver"),
     DataEnvironment.AzureSecurityCenter: ("kql_driver", "KqlDriver"),
     DataEnvironment.SecurityGraph: ("security_graph_driver", "SecurityGraphDriver"),
-    DataEnvironment.Kusto: ("kusto_driver", "KustoDriver"),
+    DataEnvironment.Kusto: ("azure_kusto_driver", "AzureKustoDriver"),
     DataEnvironment.MDATP: ("mdatp_driver", "MDATPDriver"),
     DataEnvironment.MDE: ("mdatp_driver", "MDATPDriver"),
     DataEnvironment.LocalData: ("local_data_driver", "LocalDataDriver"),
@@ -38,6 +38,8 @@ _ENVIRONMENT_DRIVERS = {
         "local_velociraptor_driver",
         "VelociraptorLogDriver",
     ),
+    DataEnvironment.MSSentinel_Legacy: ("kql_driver", "KqlDriver"),
+    DataEnvironment.Kusto_Legacy: ("kusto_driver", "KustoDriver"),
 }
 
 CUSTOM_PROVIDERS: Dict[str, type] = {}
