@@ -97,7 +97,7 @@ TIProviders:
     Provider: CrowdSec
   AbuseIPDB:
     Args:
-      AuthKey: "ABUSEIPDB_AUTH"
+      AuthKey: "[PLACEHOLDER]"
     Primary: True
     Provider: AbuseIPDB
 ContextProviders:
