@@ -116,6 +116,7 @@ Currently supported provider names are:
 - TorExitNodes
 - OpenPageRank
 - CrowdSec
+- AbuseIPDB
 
 .. code:: yaml
 
@@ -142,6 +143,11 @@ Currently supported provider names are:
           AuthKey: [PLACEHOLDER]
         Primary: True
         Provider: "CrowdSec"
+      AbuseIPDB:
+        Args:
+          AuthKey: 1234567890
+        Primary: True
+        Provider: "AbuseIPDB"
 
 .. note:: You store values in the ``Args`` section as simple strings,
    as names of environment variables containing the value, or
