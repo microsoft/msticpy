@@ -1,14 +1,16 @@
-Azure Data Explorer/Kusto Provider - New Implementation
-=======================================================
+Azure Data Explorer/Kusto Provider
+==================================
 
-This is a new implementation of the Azure Data Explorer/Kusto
-QueryProvider using the
+The Azure Data Explorer/Kusto
+QueryProvider uses the
 `azure-kusto-data SDK <https://learn.microsoft.com/azure/data-explorer/python-query-data>`__
+to connect to Azure Data Explorer clusters and provide
+query capability.
 
 
 
-.. warning:: This provider currently replaces the previous driver
-   that used KqlMagic as the underlying data connector.
+.. warning:: This provider replaces the an earlier implementation,
+   which used KqlMagic as the underlying data connector.
    The previous driver is still available but to use it you must
    specify ``Kusto_Legacy`` as the provider name when creating
    the QueryProvider instance.
@@ -136,7 +138,28 @@ Loading a QueryProvider for Kusto
     import msticpy as mp
     kql_prov = mp.QueryProvider("Kusto")
 
+Optional parameters
+~~~~~~~~~~~~~~~~~~~
 
+**timeout**: Query timeout in seconds, default is 240 seconds (4 minutes)
+Maximum is 3600 seconds (1 hour). This can also be set in the
+``connect`` call (see below) and overridden in query methods.
+
+**proxies**: Proxy settings for Kusto queries.
+Dictionary format is {protocol: proxy_url}
+Where protocol is https, http, etc. and proxy_url can contain
+optional authentication information in the format
+"https://username:password@proxy_host:port"
+If you have a proxy configuration in msticpyconfig.yaml and
+you do not want to use it, set this to an empty dictionary.
+This can be overridden in ``connect`` call (see below).
+
+.. note:: Proxy settings can also be configured globally in
+    *msticpyconfig.yaml* in the ``Proxies`` key of the ``msticpy``
+    section. This will be used automatically if set unless you
+    override it in the ``proxies`` parameter in the
+    ``connect`` call. Set to an empty dictionary to disable
+    global proxy settings.
 
 Connecting to a Kusto cluster
 -----------------------------
@@ -195,6 +218,16 @@ You can also pass authentication parameters in the ``connect`` call:
 
 For more details on Azure Authentication in *MSTICPy* see
 :doc:`Azure Authentication <../getting_started/AzureAuthentication>`
+
+Other parameters
+~~~~~~~~~~~~~~~~
+
+**timeout**: Query timeout in seconds, default is 240 seconds (4 minutes)
+Maximum is 3600 seconds (1 hour). This can also be set in the
+``connect`` call (see below) and overridden in query methods.
+**connection_str**: Provide a full connection string, including authentication
+credentials. This can be used instead of the ``cluster`` parameter.
+
 
 Kusto QueryProvider methods and properties
 ------------------------------------------

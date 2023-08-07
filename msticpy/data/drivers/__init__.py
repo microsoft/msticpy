@@ -18,7 +18,6 @@ __version__ = VERSION
 
 _ENVIRONMENT_DRIVERS = {
     DataEnvironment.LogAnalytics: ("azure_monitor_driver", "AzureMonitorDriver"),
-    DataEnvironment.AzureSecurityCenter: ("kql_driver", "KqlDriver"),
     DataEnvironment.SecurityGraph: ("security_graph_driver", "SecurityGraphDriver"),
     DataEnvironment.Kusto: ("azure_kusto_driver", "AzureKustoDriver"),
     DataEnvironment.MDATP: ("mdatp_driver", "MDATPDriver"),

@@ -1,12 +1,13 @@
 Microsoft Sentinel Provider
 ===========================
 
-This is a new implementation of the MS Sentinel QueryProvider using
+Th MS Sentinel QueryProvider uses
 the
 `azure-monitor-query SDK <https://learn.microsoft.com/python/api/overview/azure/monitor-query-readme?view=azure-python>`__
+to connect to Microsoft Sentinel workspaces.
 
-.. note:: This provider currently replaces the previous driver
-   that used KqlMagic as the underlying data connector.
+.. note:: This provider replaces an earlier version,
+   which used KqlMagic as the underlying data connector.
    The previous driver is still available but to use it you must
    specify ``MSSentinel_Legacy`` as the provider name when creating
    the QueryProvider instance.
@@ -18,7 +19,7 @@ the
 Changes from the previous implementation
 ----------------------------------------
 
-* By default, it uses the *MSTICPy* built-in Azure authentication by
+* Uses the *MSTICPy* built-in Azure authentication by
   default - you do not have to specify parameters to enable this.
 * Supports simultaneous queries against multiple workspaces (see below).
 * Supports user-specified timeout for queries.
@@ -108,7 +109,8 @@ Optional parameters for the Sentinel QueryProvider
 
 ``timeout`` : int (seconds)
 
-Specify a timeout for queries. Default is 300 seconds.
+Specify a timeout for queries. Default is 300 seconds,
+the maximum is 600 seconds (10 minutes).
 This parameter can be set here or in the ``connect`` method
 and overridden for individual queries.
 

@@ -29,7 +29,7 @@ from ...common.exceptions import (
 from ...common.utility import MSTICPY_USER_AGENT, export
 from ...common.wsconfig import WorkspaceConfig
 from ..core.query_defns import DataEnvironment
-from .driver_base import DriverBase, QuerySource
+from .driver_base import DriverBase, DriverProps, QuerySource
 
 _KQL_ENV_OPTS = "KQLMAGIC_CONFIGURATION"
 
@@ -127,6 +127,9 @@ class KqlDriver(DriverBase):
         self._set_kql_env_option("enable_add_items_to_help", False)
         self._schema: Dict[str, Any] = {}
         self.environment = kwargs.pop("data_environment", DataEnvironment.MSSentinel)
+        self.set_driver_property(
+            DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinel.name
+        )
         self.kql_cloud, self.az_cloud = self._set_kql_cloud()
         for option, value in kwargs.items():
             self._set_kql_option(option, value)

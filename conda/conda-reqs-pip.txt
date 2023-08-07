@@ -1,5 +1,5 @@
 azure-mgmt-monitor>=2.0.0
-azure-mgmt-resourcegraph>=8.0.0,
+azure-mgmt-resourcegraph>=8.0.0
 azure-mgmt-subscription>=3.0.0
 KqlmagicCustom[jupyter-basic,auth_code_clipboard]>=0.1.114.post22
 mo-sql-parsing>=8, <9.0.0
