@@ -5,12 +5,11 @@
 # --------------------------------------------------------------------------
 """TIProviders test class."""
 import datetime as dt
-import io
 import json
 import random
 import string
 import warnings
-from contextlib import redirect_stdout
+from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
@@ -157,12 +156,32 @@ _TEST_IOCS = {
     "www.microsoft.com": ("hostname", "whois"),
 }
 
-_TI_PROVIDER_TESTS = ["XForce", "OTX", "VirusTotal", "GreyNoise", "RiskIQ", "IntSights"]
+
+@dataclass
+class TiTestCase:
+    """Class for test cases."""
+
+    provider: str
+    exp_requests: int = 20
+    exp_responses: int = 17
 
 
-@pytest.mark.parametrize("provider_name", _TI_PROVIDER_TESTS)
-def test_ti_provider(ti_lookup, provider_name):
+_TI_PROVIDER_TESTS = [
+    TiTestCase("XForce"),
+    TiTestCase("OTX"),
+    TiTestCase("VirusTotal"),
+    TiTestCase("GreyNoise"),
+    TiTestCase("RiskIQ"),
+    TiTestCase("IntSights"),
+    TiTestCase("CrowdSec"),
+    TiTestCase("AbuseIPDB", exp_responses=20),
+]
+
+
+@pytest.mark.parametrize("provider_test", _TI_PROVIDER_TESTS)
+def test_ti_provider(ti_lookup, provider_test):
     """Test individual providers."""
+    provider_name = provider_test.provider
     ti_provider = ti_lookup.loaded_providers[provider_name]
     saved_session = ti_provider._httpx_client
     ti_provider._httpx_client = RequestSession()
@@ -193,15 +212,15 @@ def test_ti_provider(ti_lookup, provider_name):
     results_df = ti_lookup.lookup_iocs(
         data=(_IOC_IPS + _BENIGN_IPS), providers=[provider_name]
     )
-    check.equal(20, len(results_df))
-    check.equal(17, len(results_df[results_df["Result"]]))
+    check.equal(provider_test.exp_requests, len(results_df))
+    check.equal(provider_test.exp_responses, len(results_df[results_df["Result"]]))
 
     # test the sync version of the API
     results_df = ti_lookup.lookup_iocs_sync(
         data=(_IOC_IPS + _BENIGN_IPS), providers=[provider_name]
     )
-    check.equal(20, len(results_df))
-    check.equal(17, len(results_df[results_df["Result"]]))
+    check.equal(provider_test.exp_requests, len(results_df))
+    check.equal(provider_test.exp_responses, len(results_df[results_df["Result"]]))
 
     ti_lookup.browse_results(results_df, severities=["information", "warning", "high"])
 
@@ -218,7 +237,16 @@ def verify_result(result, ti_lookup):
     for lu_result in result.to_dict(orient="records"):
         check.is_in(
             lu_result["Provider"],
-            ["OTX", "XForce", "VirusTotal", "GreyNoise", "RiskIQ", "IntSights"],
+            [
+                "OTX",
+                "XForce",
+                "VirusTotal",
+                "GreyNoise",
+                "RiskIQ",
+                "IntSights",
+                "CrowdSec",
+                "AbuseIPDB",
+            ],
         )
         check.is_not_none(lu_result["Ioc"])
         check.is_not_none(lu_result["IocType"])
@@ -557,15 +585,13 @@ def test_iterable_generator():
 
 def test_json_responses():
     """Tests any json string test responses for correct formatting."""
+    kwargs = {
+        "url": "http://foo",
+        "params": {"one": "two", "query": "query_str"},
+    }
     for url, resp_data in _PROVIDER_RESPONSES.items():
         print(url, resp_data.keys())
-
         if isinstance(resp_data["response"], str):
-            kwargs = {
-                "url": "http://foo",
-                "params": {"one": "two", "query": "query_str"},
-            }
-
             repl_str = RequestSession._format_json_response(resp_data, **kwargs)
             print(url)
             print(repl_str)
@@ -886,6 +912,138 @@ _PROVIDER_RESPONSES = {
             "RelatedThreatActors": ["Threat Actor 00"],
             "Tags": ["tag"],
         },
+    },
+    "https://cti.api.crowdsec.net": {
+        "response": {
+            "ip_range_score": 1,
+            "ip": "167.248.133.133",
+            "ip_range": "167.248.133.0/24",
+            "as_name": "CENSYS-ARIN-03",
+            "as_num": 398722,
+            "location": {
+                "country": "US",
+                "city": None,
+                "latitude": 1.751,
+                "longitude": -97.822,
+            },
+            "reverse_dns": "scanner-03.ch1.censys-scanner.com",
+            "behaviors": [
+                {
+                    "name": "sip:bruteforce",
+                    "label": "SIP Bruteforce",
+                    "description": "IP has been reported for performing a SIP (VOIP) brute force attack.",
+                },
+                {
+                    "name": "tcp:scan",
+                    "label": "TCP Scan",
+                    "description": "IP has been reported for performing TCP port scanning.",
+                },
+            ],
+            "history": {
+                "first_seen": f"{dt.datetime.now().isoformat(timespec='seconds')}+00:00",
+                "last_seen": f"{dt.datetime.now().isoformat(timespec='seconds')}+00:00",
+                "full_age": 490,
+                "days_age": 489,
+            },
+            "classifications": {
+                "false_positives": [],
+                "classifications": [
+                    {
+                        "name": "scanner:legit",
+                        "label": "Legit scanner",
+                        "description": "IP belongs to a company that scans the internet",
+                    },
+                    {
+                        "name": "scanner:censys",
+                        "label": "Known Security Company",
+                        "description": "IP belongs to a company that scans the internet: Censys.",
+                    },
+                    {
+                        "name": "community-blocklist",
+                        "label": "CrowdSec Community Blocklist",
+                        "description": "IP belongs to the CrowdSec Community Blocklist",
+                    },
+                ],
+            },
+            "attack_details": [
+                {
+                    "name": "crowdsecurity/opensips-request",
+                    "label": "SIP Bruteforce",
+                    "description": "Detect brute force on VOIP/SIP services",
+                    "references": [],
+                },
+                {
+                    "name": "firewallservices/pf-scan-multi_ports",
+                    "label": "Port Scanner",
+                    "description": "Detect tcp port scan",
+                    "references": [],
+                },
+            ],
+            "target_countries": {
+                "DE": 27,
+                "FR": 19,
+                "US": 16,
+                "EE": 16,
+                "HK": 5,
+                "DK": 2,
+                "GB": 2,
+                "FI": 2,
+                "KR": 2,
+                "SG": 2,
+            },
+            "background_noise_score": 10,
+            "scores": {
+                "overall": {
+                    "aggressiveness": 1,
+                    "threat": 4,
+                    "trust": 5,
+                    "anomaly": 0,
+                    "total": 3,
+                },
+                "last_day": {
+                    "aggressiveness": 0,
+                    "threat": 0,
+                    "trust": 0,
+                    "anomaly": 0,
+                    "total": 0,
+                },
+                "last_week": {
+                    "aggressiveness": 0,
+                    "threat": 4,
+                    "trust": 5,
+                    "anomaly": 0,
+                    "total": 3,
+                },
+                "last_month": {
+                    "aggressiveness": 0,
+                    "threat": 4,
+                    "trust": 5,
+                    "anomaly": 0,
+                    "total": 3,
+                },
+            },
+            "references": [],
+        },
+    },
+    "https://api.abuseipdb.com": {
+        "response": {
+            "data": {
+                "ipAddress": "38.75.137.9",
+                "isPublic": True,
+                "ipVersion": 4,
+                "isWhitelisted": None,
+                "abuseConfidenceScore": 0,
+                "countryCode": "US",
+                "usageType": "Data Center/Web Hosting/Transit",
+                "isp": "GlobalTeleHost Corp.",
+                "domain": "gthost.com",
+                "hostnames": ["9-137-75-38.clients.gthost.com"],
+                "isTor": False,
+                "totalReports": 0,
+                "numDistinctUsers": 0,
+                "lastReportedAt": None,
+            }
+        }
     },
 }
 

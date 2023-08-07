@@ -115,6 +115,8 @@ Currently supported provider names are:
 - IntSights
 - TorExitNodes
 - OpenPageRank
+- CrowdSec
+- AbuseIPDB
 
 .. code:: yaml
 
@@ -136,6 +138,16 @@ Currently supported provider names are:
             KeyVault:
         Primary: False
         Provider: "OPR"
+      CrowdSec:
+        Args:
+          AuthKey: [PLACEHOLDER]
+        Primary: True
+        Provider: "CrowdSec"
+      AbuseIPDB:
+        Args:
+          AuthKey: 1234567890
+        Primary: True
+        Provider: "AbuseIPDB"
 
 .. note:: You store values in the ``Args`` section as simple strings,
    as names of environment variables containing the value, or

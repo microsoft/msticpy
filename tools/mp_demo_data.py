@@ -205,9 +205,7 @@ def read_pd_df(data_file, query_name):
         )
 
     if data_file.lower().endswith("csv"):
-        return pd.read_csv(
-            data_file, infer_datetime_format=True, parse_dates=["TimeGenerated"]
-        )
+        return pd.read_csv(data_file, parse_dates=["TimeGenerated"])
     return pd.read_pickle(data_file)
 
 

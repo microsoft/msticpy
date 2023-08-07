@@ -14,6 +14,7 @@ from .ti_provider_base import TIProvider  # noqa:F401
 __version__ = VERSION
 
 TI_PROVIDERS: Dict[str, Tuple[str, str]] = {
+    "CrowdSec": ("crowdsec", "CrowdSec"),
     "OTX": ("alienvault_otx", "OTX"),
     "AzSTI": ("azure_sent_byoti", "AzSTI"),
     "GreyNoise": ("greynoise", "GreyNoise"),
@@ -24,4 +25,5 @@ TI_PROVIDERS: Dict[str, Tuple[str, str]] = {
     "VirusTotal": ("virustotal", "VirusTotal"),
     "RiskIQ": ("riskiq", "RiskIQ"),
     "Pulsedive": ("pulsedive", "Pulsedive"),
+    "AbuseIPDB": ("abuseipdb", "AbuseIPDB"),
 }
