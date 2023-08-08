@@ -42,13 +42,10 @@ stages:
   - job: InstallAndTestPackage
     strategy:
       matrix:
-        linux:
-          imageName: "ubuntu-latest"
-          python.version: '3.8'
         mac:
           imageName: "macos-latest"
           python.version: '3.8'
-        windows-py36:
+        windows:
           imageName: "windows-latest"
           python.version: '3.8'
       maxParallel: 4
@@ -139,12 +136,12 @@ stages:
   variables:
     # This is run explicitly, so does not need to be auto-injected
     skipComponentGovernanceDetection: true
+    python.version: '3.8'
   jobs:
   - job: SecurityTests
     # Credscan must be run on Windows
     pool:
       vmImage: windows-latest
-      python.version: '3.8'
     steps:
     - task: CredScan@2
       displayName: 'Run CredScan'
@@ -171,6 +168,29 @@ stages:
         verbosity: 'Verbose'
         alertWarningLevel: 'High'
       displayName: 'Component Detection'
+    - task: securedevelopmentteam.vss-secure-development-tools.build-task-report.SdtReport@1
+      displayName: 'Create Security Analysis Report'
+      inputs:
+        CredScan: true
+        PoliCheck: true
+    - task: notice@0
+      displayName: NOTICE File Generator
+      # This fails for external forks
+      condition: not(variables['System.PullRequest.IsFork'])
+    - task: PostAnalysis@1
+      displayName: Post Analysis
+      inputs:
+        CredScan: true
+        PoliCheck: true
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results'
+      inputs:
+        testResultsFiles: '**/*-results.xml'
+        testRunTitle: 'Python $(python.version)-sec'
+  - job: AntiMalware
+    pool:
+      vmImage: ""
+    steps:
     - task: AntiMalware@3
       inputs:
         InputType: 'Basic'
@@ -183,11 +203,6 @@ stages:
         TreatStaleSignatureAs: 'Error'
       continueOnError: true
       condition: succeededOrFailed()
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-report.SdtReport@1
-      displayName: 'Create Security Analysis Report'
-      inputs:
-        CredScan: true
-        PoliCheck: true
     - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
       displayName: 'Publish Security Analysis Logs'
       inputs:
@@ -205,15 +220,15 @@ stages:
         Semmle: false
         TSLint: false
         WebScout: false
-    - task: notice@0
-      displayName: NOTICE File Generator
-      # This fails for external forks
-      condition: not(variables['System.PullRequest.IsFork'])
-    - task: PostAnalysis@1
-      displayName: Post Analysis
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results'
       inputs:
-        CredScan: true
-        PoliCheck: true
+        testResultsFiles: '**/*-results.xml'
+        testRunTitle: 'Python $(python.version)-antimalware'
+  - job: OWASPCheck
+    pool:
+      vmImage: "ubuntu-latest"
+    steps:
     - task: dependency-check-build-task@5
       displayName: 'OWASP Dependency Check'
       inputs:
@@ -227,7 +242,7 @@ stages:
       displayName: 'Publish Test Results'
       inputs:
         testResultsFiles: '**/*-results.xml'
-        testRunTitle: 'Python $(python.version)'
+        testRunTitle: 'Python $(python.version)-owasp'
 - stage: CreatePythonPackage
   displayName: Create msticpy distribution package and publish msticpy artifact
   variables:
