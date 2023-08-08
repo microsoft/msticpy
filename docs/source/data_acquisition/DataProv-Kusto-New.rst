@@ -237,7 +237,7 @@ create and use parameterized queries there are some additional steps
 that you need to take.
 
 Please read the general section on
-:ref:`Creating new queries <data_acquisition/DataProviders:Creating new queries>`
+:doc:`Creating new queries <../extending/Queries>`
 if you are not familiar with the general process of creating query
 templates for *MSTICPy*.
 
