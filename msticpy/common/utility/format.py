@@ -114,7 +114,7 @@ def defang_ioc(ioc: str, ioc_type: str = None) -> str:
     """
     de_fanged = ioc
     if ioc_type == "email":
-        de_fanged = de_fanged.replace("@", "AT")
+        de_fanged = de_fanged.replace("@", "[AT]")
     elif ioc_type == "url":
         de_fanged = de_fanged.replace("http", "hXXp").replace("ftp", "fXp")
     return de_fanged.replace(".", "[.]")
@@ -141,7 +141,7 @@ def refang_ioc(ioc: str, ioc_type: str = None) -> str:
     """
     re_fanged = ioc
     if ioc_type == "email":
-        re_fanged = re_fanged.replace("AT", "@")
+        re_fanged = re_fanged.replace("[AT]", "@")
     elif ioc_type == "url":
         re_fanged = re_fanged.replace("hXXp", "http").replace("fXp", "ftp")
     return re_fanged.replace("[.]", ".")
