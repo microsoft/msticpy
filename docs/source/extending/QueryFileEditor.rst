@@ -354,7 +354,7 @@ except where noted:
   not used by the query system.
 
 For the Kusto driver, you can also specify cluster and database parameters.
-See the :doc:`../data_acquisition/DataProv-Kusto-New` section for more details.
+See the :doc:`../data_acquisition/DataProv-Kusto` section for more details.
 
 Query-specific metadata
 -----------------------
