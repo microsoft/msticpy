@@ -1,0 +1,74 @@
+metadata:
+  version: 1
+  description: M365D User Queries
+  data_environments: [MDATP, MDE, M365D, LogAnalytics]
+  data_families: [IdentityOnPrem]
+  tags: ["user", "account"]
+defaults:
+  metadata:
+    data_source: "user_events"
+  parameters:
+    start:
+      description: Query start time
+      type: datetime
+    end:
+      description: Query end time
+      type: datetime
+    add_query_items:
+      description: Additional query clauses
+      type: str
+      default: ""
+    time_column:
+      description: The name of the column detailing the time the event was generated.
+      type: str
+      default: "Timestamp"
+    table:
+      description: Table name
+      type: str
+      default: IdentityLogonEvents
+sources:
+  logons_for_account:
+    description: Return all Active Directory on-premises user logons for user name
+    metadata:
+    args:
+      query: '
+        {table}
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
+        | where AccountUpn has "{account_name}"
+        {add_query_items}'
+      uri: None
+    parameters:
+      account_name:
+        description: Name or part name of user/UPN
+        type: str
+  logons_for_ip:
+    description: Return all Active Directory on-premises user logons for ip address
+    metadata:
+    args:
+      query: '
+        {table}
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
+        | where IPAddress == "{ip_address}"
+        {add_query_items}'
+      uri: None
+    parameters:
+      ip_address:
+        description: Source IP address of logons
+        type: str
+  logons_for_host:
+    description: Return all Active Directory on-premises user logons for host/device name
+    metadata:
+    args:
+      query: '
+        {table}
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
+        | where DeviceName has "{host_name}"
+        {add_query_items}'
+      uri: None
+    parameters:
+      host_name:
+        description: The host/device source name for logons
+        type: str

@@ -5,12 +5,11 @@
 # --------------------------------------------------------------------------
 """TIProviders test class."""
 import datetime as dt
-import io
 import json
 import random
 import string
 import warnings
-from contextlib import redirect_stdout
+from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
@@ -157,20 +156,32 @@ _TEST_IOCS = {
     "www.microsoft.com": ("hostname", "whois"),
 }
 
+
+@dataclass
+class TiTestCase:
+    """Class for test cases."""
+
+    provider: str
+    exp_requests: int = 20
+    exp_responses: int = 17
+
+
 _TI_PROVIDER_TESTS = [
-    "XForce",
-    "OTX",
-    "VirusTotal",
-    "GreyNoise",
-    "RiskIQ",
-    "IntSights",
-    "CrowdSec",
+    TiTestCase("XForce"),
+    TiTestCase("OTX"),
+    TiTestCase("VirusTotal"),
+    TiTestCase("GreyNoise"),
+    TiTestCase("RiskIQ"),
+    TiTestCase("IntSights"),
+    TiTestCase("CrowdSec"),
+    TiTestCase("AbuseIPDB", exp_responses=20),
 ]
 
 
-@pytest.mark.parametrize("provider_name", _TI_PROVIDER_TESTS)
-def test_ti_provider(ti_lookup, provider_name):
+@pytest.mark.parametrize("provider_test", _TI_PROVIDER_TESTS)
+def test_ti_provider(ti_lookup, provider_test):
     """Test individual providers."""
+    provider_name = provider_test.provider
     ti_provider = ti_lookup.loaded_providers[provider_name]
     saved_session = ti_provider._httpx_client
     ti_provider._httpx_client = RequestSession()
@@ -201,15 +212,15 @@ def test_ti_provider(ti_lookup, provider_name):
     results_df = ti_lookup.lookup_iocs(
         data=(_IOC_IPS + _BENIGN_IPS), providers=[provider_name]
     )
-    check.equal(20, len(results_df))
-    check.equal(17, len(results_df[results_df["Result"]]))
+    check.equal(provider_test.exp_requests, len(results_df))
+    check.equal(provider_test.exp_responses, len(results_df[results_df["Result"]]))
 
     # test the sync version of the API
     results_df = ti_lookup.lookup_iocs_sync(
         data=(_IOC_IPS + _BENIGN_IPS), providers=[provider_name]
     )
-    check.equal(20, len(results_df))
-    check.equal(17, len(results_df[results_df["Result"]]))
+    check.equal(provider_test.exp_requests, len(results_df))
+    check.equal(provider_test.exp_responses, len(results_df[results_df["Result"]]))
 
     ti_lookup.browse_results(results_df, severities=["information", "warning", "high"])
 
@@ -234,6 +245,7 @@ def verify_result(result, ti_lookup):
                 "RiskIQ",
                 "IntSights",
                 "CrowdSec",
+                "AbuseIPDB",
             ],
         )
         check.is_not_none(lu_result["Ioc"])
@@ -573,15 +585,13 @@ def test_iterable_generator():
 
 def test_json_responses():
     """Tests any json string test responses for correct formatting."""
+    kwargs = {
+        "url": "http://foo",
+        "params": {"one": "two", "query": "query_str"},
+    }
     for url, resp_data in _PROVIDER_RESPONSES.items():
         print(url, resp_data.keys())
-
         if isinstance(resp_data["response"], str):
-            kwargs = {
-                "url": "http://foo",
-                "params": {"one": "two", "query": "query_str"},
-            }
-
             repl_str = RequestSession._format_json_response(resp_data, **kwargs)
             print(url)
             print(repl_str)
@@ -1014,6 +1024,26 @@ _PROVIDER_RESPONSES = {
             },
             "references": [],
         },
+    },
+    "https://api.abuseipdb.com": {
+        "response": {
+            "data": {
+                "ipAddress": "38.75.137.9",
+                "isPublic": True,
+                "ipVersion": 4,
+                "isWhitelisted": None,
+                "abuseConfidenceScore": 0,
+                "countryCode": "US",
+                "usageType": "Data Center/Web Hosting/Transit",
+                "isp": "GlobalTeleHost Corp.",
+                "domain": "gthost.com",
+                "hostnames": ["9-137-75-38.clients.gthost.com"],
+                "isTor": False,
+                "totalReports": 0,
+                "numDistinctUsers": 0,
+                "lastReportedAt": None,
+            }
+        }
     },
 }
 

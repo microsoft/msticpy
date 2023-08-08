@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Creates an entity graph for a Microsoft Sentinel Incident."""
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, Union
 
 import networkx as nx
@@ -14,6 +14,7 @@ from bokeh.io import output_notebook, show
 from bokeh.layouts import column
 from bokeh.models import Circle, HoverTool, Label, LayoutDOM  # type: ignore
 from bokeh.plotting import figure, from_networkx
+from dateutil import parser
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
@@ -135,6 +136,7 @@ class EntityGraph:
         timeline = None
         tl_df = self.to_df()
         tl_type = "duration"
+        # pylint: disable=unsubscriptable-object
         if len(tl_df["EndTime"].unique()) == 1 and not tl_df["EndTime"].unique()[0]:
             tl_type = "discreet"
             if (
@@ -143,9 +145,9 @@ class EntityGraph:
             ):
                 print("No timestamps available to create timeline")
                 return self._plot_no_timeline(timeline=False, hide=hide, **kwargs)
-        tl_df["TimeGenerated"] = pd.to_datetime(tl_df["TimeGenerated"], utc=True)
-        tl_df["StartTime"] = pd.to_datetime(tl_df["StartTime"], utc=True)
-        tl_df["EndTime"] = pd.to_datetime(tl_df["EndTime"], utc=True)
+        # tl_df["TimeGenerated"] = pd.to_datetime(tl_df["TimeGenerated"], utc=True)
+        # tl_df["StartTime"] = pd.to_datetime(tl_df["StartTime"], utc=True)
+        # tl_df["EndTime"] = pd.to_datetime(tl_df["EndTime"], utc=True)
         graph = self._plot_no_timeline(hide=True, **kwargs)
         if tl_type == "duration":
             timeline = display_timeline_duration(
@@ -320,35 +322,20 @@ class EntityGraph:
 
     def to_df(self) -> pd.DataFrame:
         """Generate a dataframe of nodes in the graph."""
-        names = [node[1]["Name"] for node in self.alertentity_graph.nodes.items()]
-        descs = [
-            node[1]["Description"] for node in self.alertentity_graph.nodes.items()
-        ]
-        types = [node[1]["Type"] for node in self.alertentity_graph.nodes.items()]
-        times = [
-            node[1]["TimeGenerated"] if "TimeGenerated" in node[1] else None
-            for node in self.alertentity_graph.nodes.items()
-        ]
-        starttimes = [
-            node[1]["StartTime"] if "StartTime" in node[1] else node[1]["TimeGenerated"]
-            for node in self.alertentity_graph.nodes.items()
-        ]
-        endtimes = [
-            node[1]["EndTime"] if "EndTime" in node[1] else None
-            for node in self.alertentity_graph.nodes.items()
-        ]
-        tl_df = pd.DataFrame(
+        node_list = [
             {
-                "Name": names,
-                "Description": descs,
-                "Type": types,
-                "TimeGenerated": times,
-                "EndTime": endtimes,
-                "StartTime": starttimes,
+                "Name": node.get("Name"),
+                "Description": node.get("Description"),
+                "Type": node.get("Type"),
+                "TimeGenerated": _convert_to_tz_aware_ts(node.get("TimeGenerated")),
+                "EndTime": _convert_to_tz_aware_ts(node.get("EndTime")),
+                "StartTime": _convert_to_tz_aware_ts(
+                    node.get("StartTime", node.get("TimeGenerated"))
+                ),
             }
-        )
-        tl_df.replace("None", np.NaN, inplace=True)
-        return tl_df
+            for node in self.alertentity_graph.nodes.values()
+        ]
+        return pd.DataFrame(node_list).replace("None", np.NaN)
 
     def _add_incident_or_alert_node(self, incident: Union[Incident, Alert, None]):
         """Check what type of entity is passed in and creates relevant graph."""
@@ -400,6 +387,16 @@ class EntityGraph:
     def graph(self) -> nx.Graph:
         """Return the raw NetworkX graph."""
         return self.alertentity_graph
+
+
+def _convert_to_tz_aware_ts(date_string: Optional[str]) -> Optional[datetime]:
+    """Convert a date string to a timezone aware datetime object."""
+    if date_string is None:
+        return None
+    date_time = parser.parse(date_string)
+    if date_time.tzinfo is None:
+        return date_time.replace(tzinfo=timezone.utc)
+    return date_time
 
 
 def _dedupe_entities(alerts, ents) -> list:
