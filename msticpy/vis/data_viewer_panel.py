@@ -63,6 +63,7 @@ class DataViewer:
         -----
         Main attributes:
         value - original dataframe
+        selected - indexes of currently selected rows
         selected_dataframe - currently selected rows
         current_view - current dataframe after filtering and sorting
         selection - indexes of currently selected rows
