@@ -28,7 +28,7 @@ from msticpy.data.drivers import import_driver, kql_driver
 # from Kqlmagic import kql as kql_exec
 
 
-KqlDriver = import_driver(DataEnvironment.AzureSentinel)
+KqlDriver = import_driver(DataEnvironment.MSSentinel_Legacy)
 
 # from msticpy.data.drivers.kql_driver import KqlDriver
 GET_IPYTHON_PATCH = KqlDriver.__module__ + ".get_ipython"
@@ -139,7 +139,7 @@ class AzCredentials:
         class Token:
             """Mocked token class."""
 
-            token = "Token"
+            token = "Token"  # nosec
 
         @classmethod
         def get_token(cls, *args, **kwargs):

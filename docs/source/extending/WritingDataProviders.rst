@@ -105,7 +105,7 @@ This takes the following parameters:
 - ``query`` - string of query text
 - ``query_source`` - this is populated if the query is a MSTICPy template query
   read from a query yaml file (see
-  :doc:`Creating new queries <./Queries>`)
+  :doc:`Creating new queries <../extending/Queries>`)
   and is an instance of
   :py:class:`QuerySource <msticpy.data.query_source.QuerySource>`. This is a representation
   of the yaml query with extracted parameters and metadata available as explicit
@@ -331,7 +331,7 @@ In the ``__init__.py`` module of data drivers
 Create a folder in msticpy/data/queries with the name of your *DataEnvironment* and
 add queries. The folder name must match the item that you added to the DataEnvironment
 Enum class in step 3 above. The For more details on creating queries, see
-:doc:`./Queries`.
+:doc:`Creating new queries <../extending/Queries>`.
 
 Query parameter names
 ~~~~~~~~~~~~~~~~~~~~~
