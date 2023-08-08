@@ -29,3 +29,4 @@ Submodules
    msticpy.config.mp_config_control
    msticpy.config.mp_config_edit
    msticpy.config.mp_config_file
+   msticpy.config.query_editor

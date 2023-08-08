@@ -232,7 +232,7 @@ class SentinelAnalyticsMixin:
         params = {"api-version": "2020-01-01"}
         response = httpx.put(
             analytic_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             content=str(data),
             timeout=get_http_timeout(),
@@ -305,7 +305,7 @@ class SentinelAnalyticsMixin:
         params = {"api-version": "2020-01-01"}
         response = httpx.delete(
             analytic_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             timeout=get_http_timeout(),
         )

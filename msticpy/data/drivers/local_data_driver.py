@@ -132,9 +132,7 @@ class LocalDataDriver(DriverBase):
             )
         if file_path.endswith("csv"):
             try:
-                return pd.read_csv(
-                    file_path, infer_datetime_format=True, parse_dates=["TimeGenerated"]
-                )
+                return pd.read_csv(file_path, parse_dates=["TimeGenerated"])
             except ValueError:
                 return pd.read_csv(file_path)
         data_df = pd.read_pickle(file_path)  # nosec
