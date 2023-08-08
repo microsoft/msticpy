@@ -60,5 +60,5 @@ def sent_loader(mock_creds, get_token, monkeypatch):
         )
     sentinel.connect()
     sentinel.connected = True
-    sentinel.token = "fd09863b-5cec-4833-ab9c-330ad07b0c1a"
+    sentinel._token = "fd09863b-5cec-4833-ab9c-330ad07b0c1a"
     return sentinel

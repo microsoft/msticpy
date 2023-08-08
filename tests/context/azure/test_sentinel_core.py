@@ -62,7 +62,7 @@ def test_azuresent_connect_token(get_token: Mock, az_data_connect: Mock):
         sentinel_inst.connect(auth_methods=["env"], token=token)
 
         tenant_id = sentinel_inst._check_config(["tenant_id"])["tenant_id"]
-        assert sentinel_inst.token == token
+        assert sentinel_inst._token == token
         az_data_connect.assert_called_once_with(
             auth_methods=["env"], tenant_id=tenant_id, silent=False
         )
@@ -75,7 +75,7 @@ def test_azuresent_connect_token(get_token: Mock, az_data_connect: Mock):
         setattr(sentinel_inst, "set_default_workspace", MagicMock())
         sentinel_inst.connect(auth_methods=["env"])
 
-        assert sentinel_inst.token == token
+        assert sentinel_inst._token == token
         get_token.assert_called_once_with(
             sentinel_inst.credentials,
             tenant_id=tenant_id,
@@ -103,7 +103,7 @@ def sentinel_inst_loader(mock_creds):
         sentinel_inst = MicrosoftSentinel(sub_id="123", res_grp="RG", ws_name="WSName")
         sentinel_inst.connect()
         sentinel_inst.connected = True
-        sentinel_inst.token = "123"
+        sentinel_inst._token = "123"
         return sentinel_inst
 
 
