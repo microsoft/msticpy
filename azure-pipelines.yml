@@ -72,15 +72,6 @@ stages:
         python -m pip install -e .
       displayName: 'Install package and dependencies'
     - script: |
-        python -m pip install sphinx readthedocs-sphinx-ext>=2.1.4 sphinx-rtd-theme>=1.0.0
-        python -m pip install -r $(Build.SourcesDirectory)/docs/requirements.txt
-        make html
-      env:
-        SPHINX_NOGEN: "true"
-      workingDirectory: docs
-      condition: eq(variables.imageName, 'windows-latest')
-      displayName: 'Sphinx Read the Docs build'
-    - script: |
         mkdir ~/.msticpy
         mkdir ~/.msticpy/mordor
         cp $(Build.SourcesDirectory)/tests/testdata/geolite/GeoLite2-City.mmdb ~/.msticpy
@@ -127,12 +118,23 @@ stages:
         codeCoverageTool: Cobertura
         summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage.xml'
         reportDirectory: '$(System.DefaultWorkingDirectory)/htmlcov'
+  - job: Sphinx-Docs
+    pool:
+      vmImage: "ubuntu-latest"
+      python.version: '3.8'
+    steps:
+    - script: |
+        python -m pip install sphinx readthedocs-sphinx-ext>=2.1.4 sphinx-rtd-theme>=1.0.0
+        python -m pip install -r $(Build.SourcesDirectory)/docs/requirements.txt
+        make html
+      env:
+        SPHINX_NOGEN: "true"
+      workingDirectory: docs
+      condition: eq(variables.imageName, 'windows-latest')
+      displayName: 'Sphinx Read the Docs build'
 - stage: SecurityChecks
   # Pipeline
   displayName: Azure pipeline, security and component governance tools
-  dependsOn:
-  - PythonTests
-  # - PythonLinters
   variables:
     # This is run explicitly, so does not need to be auto-injected
     skipComponentGovernanceDetection: true
@@ -189,7 +191,7 @@ stages:
         testRunTitle: 'Python $(python.version)-sec'
   - job: AntiMalware
     pool:
-      vmImage: ""
+      vmImage: "windows-latest"
     steps:
     - task: AntiMalware@3
       inputs:
@@ -227,7 +229,7 @@ stages:
         testRunTitle: 'Python $(python.version)-antimalware'
   - job: OWASPCheck
     pool:
-      vmImage: "ubuntu-latest"
+      vmImage: "windows-latest"
     steps:
     - task: dependency-check-build-task@5
       displayName: 'OWASP Dependency Check'
