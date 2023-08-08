@@ -130,7 +130,6 @@ stages:
       env:
         SPHINX_NOGEN: "true"
       workingDirectory: docs
-      condition: eq(variables.imageName, 'windows-latest')
       displayName: 'Sphinx Read the Docs build'
 - stage: SecurityChecks
   # Pipeline
