@@ -55,6 +55,10 @@ def az_connect(
         Set True to hide all output during connection, by default False
     credential : AzureCredential
         If an Azure credential is passed, it will be used directly.
+    cloud : str, optional
+        What Azure cloud to connect to.
+        By default it will attempt to use the cloud setting from config file.
+        If this is not set it will default to Azure Public Cloud
 
     Returns
     -------
@@ -74,7 +78,7 @@ def az_connect(
     list_auth_methods
 
     """
-    az_cloud_config = AzureCloudConfig()
+    az_cloud_config = AzureCloudConfig(cloud=kwargs.get("cloud"))
     # Use auth_methods param or configuration defaults
     data_provs = get_provider_settings(config_section="DataProviders")
     auth_methods = auth_methods or az_cloud_config.auth_methods

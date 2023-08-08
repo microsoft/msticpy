@@ -74,7 +74,7 @@ class SentinelSearchlistsMixin:
         search_body = _build_sent_data(search_items)
         search_create_response = httpx.put(
             search_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             json=search_body,
             timeout=60,
         )
@@ -108,7 +108,7 @@ class SentinelSearchlistsMixin:
             + f"/{search_name}_SRCH?api-version=2021-12-01-preview"
         )
         search_check_response = httpx.get(
-            search_url, headers=get_api_headers(self.token)  # type: ignore
+            search_url, headers=get_api_headers(self._token)  # type: ignore
         )
         if search_check_response.status_code != 200:
             raise CloudError(response=search_check_response)
@@ -140,7 +140,7 @@ class SentinelSearchlistsMixin:
             + f"/{search_name}_SRCH?api-version=2021-12-01-preview"
         )
         search_delete_response = httpx.delete(
-            search_url, headers=get_api_headers(self.token)  # type: ignore
+            search_url, headers=get_api_headers(self._token)  # type: ignore
         )
         if search_delete_response.status_code != 202:
             raise CloudError(response=search_delete_response)
