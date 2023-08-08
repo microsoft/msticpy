@@ -89,7 +89,7 @@ class SentinelBookmarksMixin:
         params = {"api-version": "2020-01-01"}
         response = httpx.put(
             bookmark_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             content=str(data),
             timeout=get_http_timeout(),
@@ -123,7 +123,7 @@ class SentinelBookmarksMixin:
         params = {"api-version": "2020-01-01"}
         response = httpx.delete(
             bookmark_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             timeout=get_http_timeout(),
         )

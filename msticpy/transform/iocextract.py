@@ -133,9 +133,10 @@ class IoCExtract:
         r"((?=[a-z0-9-]{1,63}\[?\.\]?)[a-z0-9]+(-[a-z0-9]+)*\[?\.\]?){1,126}[a-z]{2,63}"
     )
 
-    EMAIL_USER_REGEX = r"(?P<user>[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+)(@|AT)"
-    EMAIL_REGEX = f"{EMAIL_USER_REGEX}(?P<domain>{DNS_REGEX})"
-    EMAIL_DF_REGEX = f"{EMAIL_USER_REGEX}(?P<domain>{DNS_DF_REGEX})"
+    EMAIL_USER_REGEX = r"(?P<user>[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+)"
+    EMAIL_REGEX = f"{EMAIL_USER_REGEX}@(?P<domain>{DNS_REGEX})"
+    DF_AT = r"(@|\[at\])"
+    EMAIL_DF_REGEX = f"{EMAIL_USER_REGEX}{DF_AT}(?P<domain>{DNS_DF_REGEX})"
 
     URL_REGEX = r"""
             (?P<protocol>(https?|s?ftps?|telnet|ldap|file)://)
@@ -175,15 +176,28 @@ class IoCExtract:
     SHA256_REGEX = r"(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{64})(?:$|[^A-Fa-f0-9])"
 
     _content_regex: Dict[str, IoCPattern] = {}
+    _content_df_regex: Dict[str, IoCPattern] = {}
 
     def __init__(self, defanged: bool = True):
-        """Initialize new instance of IoCExtract."""
+        """
+        Initialize new instance of IoCExtract.
+
+        Parameters
+        ----------
+        defanged : bool, optional
+            If True, the regex will be used to match defanged IoC patterns
+
+        """
         # IP Addresses
         self.add_ioc_type(
+            IoCType.ipv4.name, self.IPV4_REGEX, 0, "ipaddress", defang_pattern=False
+        )
+        self.add_ioc_type(
             IoCType.ipv4.name,
-            self.IPV4_DF_REGEX if defanged else self.IPV4_REGEX,
+            self.IPV4_DF_REGEX,
             0,
             "ipaddress",
+            defang_pattern=True,
         )
         self.add_ioc_type(IoCType.ipv6.name, self.IPV6_REGEX, 0)
 
@@ -191,17 +205,16 @@ class IoCExtract:
         # This also matches IP addresses but IPs have higher
         # priority both matching on the same substring will defer
         # to the IP regex
-        self.add_ioc_type(
-            IoCType.dns.name, self.DNS_DF_REGEX if defanged else self.DNS_REGEX, 2
-        )
+        self.add_ioc_type(IoCType.dns.name, self.DNS_REGEX, 2, defang_pattern=False)
+        self.add_ioc_type(IoCType.dns.name, self.DNS_DF_REGEX, 2, defang_pattern=True)
 
         # URLs
-        self.add_ioc_type(
-            IoCType.url.name, self.URL_DF_REGEX if defanged else self.URL_REGEX, 0
-        )
+        self.add_ioc_type(IoCType.url.name, self.URL_REGEX, 0, defang_pattern=False)
+        self.add_ioc_type(IoCType.url.name, self.URL_DF_REGEX, 0, defang_pattern=True)
         # Email addresses (lower priority than URLs)
+        self.add_ioc_type(IoCType.email.name, self.EMAIL_REGEX, 1, defang_pattern=False)
         self.add_ioc_type(
-            IoCType.email.name, self.EMAIL_DF_REGEX if defanged else self.EMAIL_REGEX, 1
+            IoCType.email.name, self.EMAIL_DF_REGEX, 1, defang_pattern=True
         )
         # File paths
         self.add_ioc_type(IoCType.windows_path.name, self.WINPATH_REGEX, 3)
@@ -219,10 +232,16 @@ class IoCExtract:
         # pylint: enable=import-outside-toplevel
         self._dom_validator = DomainValidator()
         self._ignore_tld = False
+        self._defanged = defanged
 
     # Public members
     def add_ioc_type(
-        self, ioc_type: str, ioc_regex: str, priority: int = 0, group: str = None
+        self,
+        ioc_type: str,
+        ioc_regex: str,
+        priority: int = 0,
+        group: str = None,
+        defang_pattern: Optional[bool] = None,
     ):
         """
         Add an IoC type and regular expression to use to the built-in set.
@@ -239,6 +258,10 @@ class IoCExtract:
         group : str, optional
             The regex group to match (the default is None,
             which will match on the whole expression)
+        defang_pattern : bool, optional
+            If True, the regex will be used to match defanged patterns
+            If False, the regex will be used to match non-defanged patterns
+            If None, the regex will be used to match both defanged and non-defanged patterns
 
         Notes
         -----
@@ -255,12 +278,16 @@ class IoCExtract:
         if ioc_regex is None or ioc_regex.strip() is None:
             raise ValueError("No value supplied for ioc_regex parameter")
 
-        self._content_regex[ioc_type] = IoCPattern(
+        ioc_pattern = IoCPattern(
             ioc_type=ioc_type,
             comp_regex=_compile_regex(regex=ioc_regex),
             priority=priority,
             group=group,
         )
+        if not defang_pattern:
+            self._content_regex[ioc_type] = ioc_pattern
+        if defang_pattern or defang_pattern is None:
+            self._content_df_regex[ioc_type] = ioc_pattern
 
     @property
     def ioc_types(self) -> dict:
@@ -274,6 +301,19 @@ class IoCExtract:
 
         """
         return self._content_regex
+
+    @property
+    def ioc_df_types(self) -> dict:
+        """
+        Return current set of IoC types and regular expressions for defanged IoCs.
+
+        Returns
+        -------
+        dict
+            dict of IoC Type names and regular expressions
+
+        """
+        return self._content_df_regex
 
     # pylint: disable=too-many-locals
     def extract(
@@ -313,8 +353,8 @@ class IoCExtract:
             list when determining whether a domain name is
             a legal domain.
         defanged : bool, optional
-            If False will remove any [] from email, dns and ip
-            entities.
+            If True will match defanged versions of from email, dns,
+            url and ip entities.
 
         Returns
         -------
@@ -347,10 +387,10 @@ class IoCExtract:
         include_paths = kwargs.get("include_paths", False)
         ignore_tld_current = self._ignore_tld
         self._ignore_tld = kwargs.get("ignore_tlds", False)
-        defanged = kwargs.get("defanged", True)
+        defanged = kwargs.get("defanged", self._defanged)
 
         if src and src.strip():
-            return self._scan_for_iocs(src=src, ioc_types=ioc_types, defang=defanged)
+            return self._scan_for_iocs(src=src, ioc_types=ioc_types, defanged=defanged)
 
         if data is None:
             raise ValueError("No source data was supplied to extract")
@@ -427,6 +467,9 @@ class IoCExtract:
             If True, ignore the official Top Level Domains
             list when determining whether a domain name is
             a legal domain.
+        defanged : bool, optional
+            If True will match defanged versions of from email, dns,
+            url and ip entities.
 
         Returns
         -------
@@ -456,7 +499,7 @@ class IoCExtract:
         include_paths = kwargs.get("include_paths", False)
         ignore_tld_current = self._ignore_tld
         self._ignore_tld = kwargs.get("ignore_tlds", False)
-        defanged = kwargs.get("defanged", False)
+        defanged = kwargs.get("defanged", self._defanged)
 
         ioc_types_to_use = self._get_ioc_types_to_use(ioc_types, include_paths)
         if isinstance(columns, str):
@@ -484,7 +527,7 @@ class IoCExtract:
         if ioc_types:
             ioc_types_to_use = list(set(ioc_types))
         else:
-            ioc_types_to_use = list(set(self._content_regex.keys()))
+            ioc_types_to_use = list(set(self.ioc_types.keys()))
             # don't include linux paths unless explicitly included
             ioc_types_to_use.remove(IoCType.linux_path.name)
             if not include_paths:
@@ -493,7 +536,11 @@ class IoCExtract:
         return ioc_types_to_use
 
     def validate(
-        self, input_str: str, ioc_type: str, ignore_tlds: bool = False
+        self,
+        input_str: str,
+        ioc_type: str,
+        ignore_tlds: bool = False,
+        defanged: Optional[bool] = None,
     ) -> bool:
         """
         Check that `input_str` matches the regex for the specified `ioc_type`.
@@ -508,6 +555,9 @@ class IoCExtract:
             If True, ignore the official Top Level Domains
             list when determining whether a domain name is
             a legal domain.
+        defanged : bool, optional
+            If True, the input string will also match
+            defanged versions of the IoC, default is False.
 
         Returns
         -------
@@ -523,12 +573,16 @@ class IoCExtract:
             val_type = "dns"
         else:
             val_type = ioc_type
-        if val_type not in self._content_regex:
+        if val_type not in self.ioc_types:
             raise KeyError(
                 f"Unknown type {ioc_type}.",
-                f"Valid types are: {list(self._content_regex.keys())}",
+                f"Valid types are: {list(self.ioc_types.keys())}",
             )
-        rgx = self._content_regex[val_type]
+        use_defanged = defanged if defanged is not None else self._defanged
+        if use_defanged:
+            rgx = self._content_df_regex[val_type]
+        else:
+            rgx = self._content_regex[val_type]
         pattern_match = rgx.comp_regex.fullmatch(input_str)
         validated = self._validate_tld(input_str) if val_type == "dns" else True
         self._ignore_tld = ignore_tld_current
@@ -573,22 +627,20 @@ class IoCExtract:
             The IoC type enumeration (unknown, if no match)
 
         """
-        results = self._scan_for_iocs(src=observable)
-
-        if not results:
-            results = self._scan_for_iocs(
-                src=observable, ioc_types=[IoCType.linux_path.name]
-            )
+        results = self._scan_for_iocs(src=observable) or self._scan_for_iocs(
+            src=observable, ioc_types=[IoCType.linux_path.name]
+        )
         if not results:
             return IoCType.unknown.name
 
-        # we need to select the type that is an exact match for the whole
-        # observable string (_scan_for_iocs will return matching substrings)
-        for ioc_type, match_set in results.items():
-            if observable in match_set:
-                return ioc_type
-
-        return IoCType.unknown.name
+        return next(
+            (
+                ioc_type
+                for ioc_type, match_set in results.items()
+                if observable in match_set
+            ),
+            IoCType.unknown.name,
+        )
 
     # Private methods
     def _validate_tld(self, domain: str) -> bool:
@@ -601,14 +653,15 @@ class IoCExtract:
         self,
         src: str,
         ioc_types: List[str] = None,
-        defang: bool = True,
+        defanged: bool = True,
     ) -> Dict[str, Set[str]]:
         """Return IoCs found in the string."""
         ioc_results: Dict[str, Set] = defaultdict(set)
         iocs_found: Dict[str, Tuple[str, int]] = {}
 
         # pylint: disable=too-many-nested-blocks
-        for ioc_type, rgx_def in self._content_regex.items():
+        ioc_regexes = self._content_df_regex if defanged else self._content_regex
+        for ioc_type, rgx_def in ioc_regexes.items():
             if ioc_types and ioc_type not in ioc_types:
                 continue
 
@@ -632,7 +685,13 @@ class IoCExtract:
                 match_pos = rgx_match.end()
 
         for ioc, ioc_result in iocs_found.items():
-            if not defang and ioc_result[0] in ["ipv4", "ipv6", "url", "dns", "email"]:
+            if not defanged and ioc_result[0] in [
+                "ipv4",
+                "ipv6",
+                "url",
+                "dns",
+                "email",
+            ]:
                 ioc = refang_ioc(ioc, ioc_result[0])
             ioc_results[ioc_result[0]].add(ioc)
 
@@ -647,7 +706,7 @@ class IoCExtract:
                 self._add_highest_pri_match(
                     iocs_found,
                     url_match.groupdict()["host"],
-                    self._content_regex["dns"],
+                    self._content_df_regex["dns"],
                 )
 
     @staticmethod

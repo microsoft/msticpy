@@ -46,7 +46,7 @@ class SentinelUtilsMixin:
             params = {"api-version": "2020-01-01"}
         return httpx.get(
             url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             timeout=get_http_timeout(),
         )
