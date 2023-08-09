@@ -152,7 +152,7 @@ from the logs.
     qry_prov.osquery.processes()
 
 ==================================  ================  =========================  =====  ==========  =========  ======  ========  ========  =====  ==========
-name                                hostIdentifier    unixTime                    ...   username    cmdline      euid  tname_      parent    uid  username
+name                                hostIdentifier    unixTime                    ...   username    cmdline      euid  tname\_     parent    uid  username
 ==================================  ================  =========================  =====  ==========  =========  ======  ========  ========  =====  ==========
 pack_osquery-custom-pack_processes  jumpvm            2023-03-16 03:08:58+00:00   ...   LOGIN                       0  kthreadd         2      0  root
 pack_osquery-custom-pack_processes  jumpvm            2023-03-16 03:08:58+00:00   ...   LOGIN                       0  kthreadd         2      0  root

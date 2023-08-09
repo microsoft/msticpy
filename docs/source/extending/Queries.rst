@@ -4,7 +4,7 @@ Adding Queries to MSTICPy
 See :doc:`../data_acquisition/DataProviders` for more details on use
 of data queries.
 
-See :doc:`QueryEditor` for more details on the notebook Query Editor.
+See :doc:`QueryFileEditor` for more details on the notebook Query Editor.
 
 *MSTICPy* provides a number of
 pre-defined queries used by the different query providers. You can also

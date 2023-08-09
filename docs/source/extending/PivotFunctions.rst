@@ -216,6 +216,7 @@ Once you have your yaml definition file you can call
     `the MSTICPy repo <https://github.com/microsoft/msticpy>`_
     if you would like to see this.
 
+.. _creating-deleting-shortcut-pivot-functions:
 
 Creating and deleting shortcut pivot functions
 ----------------------------------------------
