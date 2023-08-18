@@ -50,6 +50,11 @@
             }
         }
     },
+    "required": [
+        "metadata",
+        "defaults",
+        "sources"
+    ],
     "$defs": {
         "description": {
             "type": "string",
