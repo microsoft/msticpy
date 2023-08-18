@@ -229,6 +229,9 @@ class SplunkDriver(DriverBase):
         # Get sets of N results at a time, N=100 by default
         page_size = kwargs.pop("page_size", 100)
 
+        # default to 60s unless timeout is specified
+        timeout = kwargs.pop("timeout", 60)
+
         # Normal (non-blocking) searches or oneshot (blocking) searches.
         # Defaults to Normal(non-blocking)
 
@@ -255,7 +258,9 @@ class SplunkDriver(DriverBase):
             query_job = self.service.jobs.create(
                 query, count=count, **kwargs_normalsearch
             )
-            resp_rows, reader = self._exec_async_search(query_job, page_size, **kwargs)
+            resp_rows, reader = self._exec_async_search(
+                query_job, page_size, timeout=timeout
+            )
 
         if len(resp_rows) == 0 or not resp_rows:
             print("Warning - query did not return any results.")
@@ -333,7 +338,7 @@ class SplunkDriver(DriverBase):
             ]
         return []
 
-    def _exec_async_search(self, query_job, page_size, timeout=60):
+    def _exec_async_search(self, query_job, page_size, timeout):
         """Execute an async search and return results."""
         # Initiate progress bar and start while loop, waiting for async query to complete
         progress_bar = tqdm(total=100, desc="Waiting Splunk job to complete")

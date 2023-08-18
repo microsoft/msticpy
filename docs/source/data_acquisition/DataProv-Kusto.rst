@@ -1,6 +1,48 @@
 Azure Data Explorer/Kusto Provider
 ==================================
 
+The Azure Data Explorer/Kusto
+QueryProvider uses the
+`azure-kusto-data SDK <https://learn.microsoft.com/azure/data-explorer/python-query-data>`__
+to connect to Azure Data Explorer clusters and provide
+query capability.
+
+
+
+.. warning:: This provider replaces the an earlier implementation,
+   which used KqlMagic as the underlying data connector.
+   The previous driver is still available but to use it you must
+   specify ``Kusto_Legacy`` as the provider name when creating
+   the QueryProvider instance.
+
+   For more information about the previous driver see
+   :doc:`./DataProv-Kusto-Legacy`
+
+Changes from the previous implementation
+----------------------------------------
+
+* The driver supports asynchronous execution of queries. This is used
+  when you create a Query provider with multiple connections (e.g.
+  to different clusters) and when you split queries into time chunks.
+  See :ref:`multiple_connections` and :ref:`splitting_query_execution` for
+  for more details.
+* The settings format has changed (although the existing format
+  is still supported albeit with some limited functionality).
+* Supports user-specified timeout for queries.
+* Supports proxies (via MSTICPy config or the ``proxies`` parameter to
+  the ``connect`` method)
+* You could previously specify a new cluster to connect to in
+  when executing a query. This is no longer supported. Once the
+  provider is connected to a cluster it will only execute queries against
+  that cluster. (You can however, call the ``connect()`` function to connect
+  the provider to a new cluster before running the query.)
+* Some of the previous parameters have been deprecated:
+
+  * The ``mp_az_auth`` parameter is replaced by ``auth_types`` (the former still works
+    but will be removed in a future release).
+  * ``mp_az_auth_tenant_id`` is replaced by ``tenant_id`` (the former
+    is no longer supported).
+
 Kusto Configuration
 -------------------
 
@@ -13,290 +55,476 @@ For more information on using and configuring *msticpyconfig.yaml* see
 :doc:`msticpy Package Configuration <../getting_started/msticpyconfig>`
 and :doc:`MSTICPy Settings Editor<../getting_started/SettingsEditor>`
 
-The settings in the file should look like the following two examples:
+.. note:: The settings for the new Kusto provider are stored in the
+   ``KustoClusters`` section of the configuration file. This cannot
+   currently be edited from the MSTICPy Settings Editor - please
+   edit the *msticpyconfig.yaml* in a text editor to change these.
+
+To accommodate the use of multiple clusters, the new provider supports
+a different configuration format.
+
+The basic settings in the file should look like the following:
 
 .. code:: yaml
 
-    DataProviders:
+    KustoClusters:
       ...
-      Kusto:
+      Cluster1:
         Args:
-          Cluster: https://mstic.kusto.windows.net
-          IntegratedAuth: True
+          Cluster: https://uscluster.kusto.windows.net
+      Cluster2:
+        Args:
+          Cluster: https://eucluster.kusto.windows.net
+          IntegratedAuth: True  # This is default and is optional
+
+You can have any number of cluster entries in this section.
+
+Specifying additional parameters for a cluster
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can add authentication and other parameters to the ``Args``
+sub-key of a cluster definition. In the following example,
+the TenantId is specified along with Client app ID and client secret
+for *clientsecret* authentication.
 
 .. code:: yaml
 
-    DataProviders:
-      ...
-      Kusto:
+    KustoClusters:
+      DataClusterX:
         Args:
-          Cluster: https://msticapp.kusto.windows.net
-          ClientId: 69d28fd7-42a5-48bc-a619-af56397b1111
-          TenantId: 69d28fd7-42a5-48bc-a619-af56397b9f28
-          ClientSecret: "[PLACEHOLDER]"
-
-
-We strongly recommend storing the client secret value
-in Azure Key Vault. You can replace the text value with a referenced
-to a Key Vault secret using the MSTICPy configuration editor.
-
-Your configuration when using Key Vault should look like the following:
-
-.. code:: yaml
-
-        Kusto:
-          Args:
-            Cluster: https://msticapp.kusto.windows.net
-            ClientId: 69d28fd7-42a5-48bc-a619-af56397b1111
-            TenantId: 69d28fd7-42a5-48bc-a619-af56397b9f28
-            ClientSecret:
-              KeyVault:
-
-You can create multiple instances of the Kusto settings for
-multiple clusters by adding
-an instance string to the "Kusto" section names
-
-.. code:: yaml
-
-    DataProviders:
-      ...
-      Kusto-mstic:
-        Args:
-          Cluster: https://mstic.kusto.windows.net
-          IntegratedAuth: True
-      Kusto-mstic2:
-        Args:
-          Cluster: https://mstic2.kusto.windows.net
-          IntegratedAuth: True
-      Kusto-msticapp:
-        Args:
-          Cluster: https://msticapp.kusto.windows.net
+          Cluster: https://xxx.kusto.windows.net
           ClientId: 69d28fd7-42a5-48bc-a619-af56397b1111
           TenantId: 69d28fd7-42a5-48bc-a619-af56397b9f28
           ClientSecret:
             KeyVault:
 
+The ClusterDefaults section
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Data Query Format for Kusto clusters
-------------------------------------
-
-The query template format for Kusto queries should look like
-the following.
-
-.. code:: yaml
-
-    metadata:
-        version: 1
-        description: Kusto Queries
-        data_environments: [Kusto]
-        data_families: [DeviceEvents.hostdata]
-        cluster: https://msticapp.kusto.windows.net
-        database: hostdata
-        tags: ["user"]
-    defaults:
-      parameters:
-        table:
-            description: Table name
-            type: str
-            default: "DeviceProcessEvents"
-        start:
-            description: Query start time
-            type: datetime
-            default: -30
-        end:
-            description: Query end time
-            type: datetime
-            default: 0
-        add_query_items:
-            description: Additional query clauses
-            type: str
-            default: ""
-    sources:
-        list_host_processes:
-            description: Lists all process creations for a host
-            metadata:
-            args:
-            query: '
-                {table}
-                | where Timestamp >= datetime({start})
-                | where Timestamp <= datetime({end})
-                | where DeviceName has "{host_name}"
-                {add_query_items}'
-            uri: None
-            parameters:
-            host_name:
-                description: Name of host
-                type: str
-
-Most of the query file is identical to queries for other drivers.
-However, the metadata section has additional items: ``cluster`` and
-``database``.
-
-.. code-block:: yaml
-   :emphasize-lines: 4, 5, 6
-
-    metadata:
-        version: 1
-        description: Kusto Queries
-        data_environments: [Kusto]
-        data_families: [ALIAS[.DATABASE]]
-        cluster: KUSTO_CLUSTER_URI
-        database: DATABASE
-
-
-The ``data_environments`` item must include "Kusto" in the list of
-applicable environments.
-
-You can specify the Kusto database to use in one of two ways:
-
-1. Use the ``database`` key.
-   Add the name of the database to connect to. The ``data_families`` key
-   is used as a container name when adding attributes. Whatever string
-   you specify here will be added as a prefix to the query name before attaching
-   the query to the query provider.
-
-2. Encode the database in the ``data_families`` item. If you do not
-   specify a database key explicitly, you should use a dot-separated string
-   for the data_families item:
-
-   - the first part (before the dot) is an alias that will be used as a prefix
-     when the queries are added to the query provider.
-   - the second part is the Kusto database containing the data to be queried.
-
-The ``cluster`` item in the query template file must match the ``Cluster``
-setting in the *msticpyconfig* setting described in the previous section.
-
-Here is are two examples.
-
-.. code-block:: yaml
-
-    metadata:
-        version: 1
-        description: Kusto Queries
-        data_environments: [Kusto]
-        data_families: [DeviceEvents]
-        database: hostdata
-        cluster: https://msticapp.kusto.windows.net
-
-.. code-block:: yaml
-
-    metadata:
-        version: 1
-        description: Kusto Queries
-        data_environments: [Kusto]
-        data_families: [DeviceEvents.hostdata]
-        cluster: https://msticapp.kusto.windows.net
-
-Queries using either of these metadata sections would be accessed and run as follows:
-
-.. code:: ipython3
-
-    kql_prov.DeviceEvents.list_host_processes(host_name="my_host", ...)
-
-The file-level ``metadata`` section applies to all queries in the file by
-default. You can specify a metadata section for individual queries. Any
-settings here will override the file-level settings.
-
-The example below shows overriding the ``data_families`` and ``cluster``
-entries for an individual query.
+If you have parameters that you want to apply to all clusters,
+you can add these to a ``ClusterDefaults`` section.
 
 .. code:: yaml
 
-    metadata:
-        version: 1
-        description: Kusto Queries
-        data_environments: [Kusto]
-        data_families: [DeviceEvents.hostdata]
-        cluster: https://msticapp.kusto.windows.net
-        tags: ["user"]
-    defaults:
-      parameters:
-        table:
-            description: Table name
-            type: str
-            default: "DeviceProcessEvents"
-        # ...
-    sources:
-        list_host_processes:
-            description: Lists all process creations for a host
-            metadata:
-                data_families: [DeviceEvents.scrubbeddata]
-                cluster: https://msticapp.kusto.windows.net
-            args:
-            query: '
-                {table}
-                | where Timestamp >= datetime({start})
-                | where Timestamp <= datetime({end})
-                | where DeviceName has "{host_name}"
-                {add_query_items}'
-            uri: None
-            parameters:
-            host_name:
-                description: Name of host
-                type: str
+    KustoClusters:
+      ClusterDefaults:
+        Args:
+          TenantId: 69d28fd7-42a5-48bc-a619-af56397b9f28
+      Cluster1:
+        Args:
+          Cluster: https://uscluster.kusto.windows.net
+      Cluster2:
+        Args:
+          Cluster: https://eucluster.kusto.windows.net
+
+
+Creating ClusterGroups
+~~~~~~~~~~~~~~~~~~~~~~
+
+You can create a group of clusters that you can reference by
+cluster group name. This is useful if you have clusters in different regions
+that share the same schema and you want to run the same queries
+against all of them.
+
+ClusterGroups are used primarily to support query templates, to match
+queries to the correct cluster. See `Writing query templates for Kusto clusters`_
+later in this document.
 
 Loading a QueryProvider for Kusto
 ---------------------------------
 
 .. code:: ipython3
 
-        kql_prov = QueryProvider("Kusto")
+    import msticpy as mp
+    kql_prov = mp.QueryProvider("Kusto")
 
+Optional parameters
+~~~~~~~~~~~~~~~~~~~
 
+**timeout**: Query timeout in seconds, default is 240 seconds (4 minutes)
+Maximum is 3600 seconds (1 hour). This can also be set in the
+``connect`` call (see below) and overridden in query methods.
+
+**proxies**: Proxy settings for Kusto queries.
+Dictionary format is {protocol: proxy_url}
+Where protocol is https, http, etc. and proxy_url can contain
+optional authentication information in the format
+"https://username:password@proxy_host:port"
+If you have a proxy configuration in msticpyconfig.yaml and
+you do not want to use it, set this to an empty dictionary.
+This can be overridden in ``connect`` call (see below).
+
+.. note:: Proxy settings can also be configured globally in
+    *msticpyconfig.yaml* in the ``Proxies`` key of the ``msticpy``
+    section. This will be used automatically if set unless you
+    override it in the ``proxies`` parameter in the
+    ``connect`` call. Set to an empty dictionary to disable
+    global proxy settings.
 
 Connecting to a Kusto cluster
 -----------------------------
 
-If you are using query files (as described above) you do not need to explicitly
-connect - the connection will be made dynamically using the parameters in the
-query definition.
+Before running queries you need to connect to a cluster using
+the ``connect()`` method.
 
-To run add-hoc queries however, you need to explicitly connect to a cluster and
-database. The parameters required for connection to a Kusto cluster can be passed in
-a number of ways. You can provide a full connection string or parameters
-for ``cluster`` and ``database``. In the latter case, you must have configured
+See
+:py:meth:`connect() <msticpy.data.drivers.azure_kusto_driver.AzureKustoDriver.connect>`
+
+The parameters required for connection to a Kusto cluster can be passed
+to ``connect()`` in
+several of ways. You can provide a full connection string or parameters
+for ``cluster`` (and optionally, ``database``).
+In the latter case, you must have configured
 settings for the cluster defined in your msticpyconfig.yaml.
 
-The ``cluster`` name can be either the actual cluster name or the alias
-that you used in your settings (i.e. the ``INSTANCE`` value in ``Kusto-INSTANCE``
-configuration key). To connect, you must also specify a valid database
-name in the cluster.
+If you have the cluster details configured in msticpy, the ``cluster``
+parameter can be one of the following:
 
+* The section name ("Cluster1" or "Cluster2" in the configuration example above)
+* The full URL of the cluster either the actual cluster name
+* The host name of the cluster (e.g. "uscluster", "eucluster" in the example)
 
-.. code:: ipython3
+In all cases these are case-insensitive.
 
-        kql_prov.connect(cluster="msticapp", database="hostdata")
-
-
-If you have queries defined (in template files) for multiple clusters
-and databases, you do not need to connect explicitly to each one.
-You can call these queries by name - the driver will dynamically
-read the connection parameters from the query file and attempt
-to authenticate to the cluster.
-
-Additional Kusto query parameters
----------------------------------
-
-You can override the cluster and database for an individual
-query by supply the ``cluster`` and/or ``database`` parameters
-as query parameters.
-
+These are all equivalent:
 
 .. code:: ipython3
 
-        kql_prov.DeviceEvents.list_host_processes(
-            host_name="my_host",
-            cluster="https://somecluster.kusto.windows.net",
-            database="archive"
-            ...
+        kql_prov.connect(cluster="Cluster2")
+        kql_prov.connect(cluster="eucluster")
+        kql_prov.connect(cluster="https://eucluster.kusto.windows.net")
+
+
+If the cluster is not in your configuration you must use the full
+URL of the cluster.
+
+You can optionally specify a default database to connect to. The database
+can be changed with each query (either by specifying a ``database`` parameter
+or by using the ``database`` metadata property in a query definition file
+(see `Writing query templates for Kusto clusters`_) below)
+
+You can also pass authentication parameters in the ``connect`` call:
+
+* auth_types - to override the configured Azure credential types
+* tenant_id - to override your default tenant_id
+
+.. code:: python3
+
+        kql_prov.connect(
+            cluster="Cluster2",
+            auth_types=["device_code"],
+            tenant_id="69d28fd7-42a5-48bc-a619-af56397b9f28"
         )
 
+For more details on Azure Authentication in *MSTICPy* see
+:doc:`Azure Authentication <../getting_started/AzureAuthentication>`
+
+Other parameters
+~~~~~~~~~~~~~~~~
+
+**timeout**: Query timeout in seconds, default is 240 seconds (4 minutes)
+Maximum is 3600 seconds (1 hour). This can also be set in the
+``connect`` call (see below) and overridden in query methods.
+**connection_str**: Provide a full connection string, including authentication
+credentials. This can be used instead of the ``cluster`` parameter.
+
+
+Kusto QueryProvider methods and properties
+------------------------------------------
+
+The Kusto QueryProvider has the following methods and properties
+in addition to those inherited from the base QueryProvider class.
+
+* :py:meth:`get_database_names() <msticpy.data.drivers.azure_kusto_driver.AzureKustoDriver.get_database_names>`
+  Returns the names of the databases for a connected cluster.
+* :py:meth:`get_database_schema([database]) <msticpy.data.drivers.azure_kusto_driver.AzureKustoDriver.get_database_schema>`
+  Returns a schema dictionary for the tables in a database a connected cluster.
+* :py:meth:`configured_clusters (property) <msticpy.data.drivers.azure_kusto_driver.AzureKustoDriver.configured_clusters>`
+* Returns a list of the configured cluster read from msticpyconfig.yaml.
+* :py:meth:`cluster_uri (property) <msticpy.data.drivers.azure_kusto_driver.AzureKustoDriver.cluster_uri>`
+  The URI of the connected cluster.
+* :py:meth:`cluster_name  (property) <msticpy.data.drivers.azure_kusto_driver.AzureKustoDriver.cluster_name>`
+  The host name of the connected cluster.
+* :py:meth:`cluster_config_name  (property) <msticpy.data.drivers.azure_kusto_driver.AzureKustoDriver.cluster_config_name>`
+  The configuration entry name for the connected cluster.
+* :py:meth:`set_cluster(cluster) <msticpy.data.drivers.azure_kusto_driver.AzureKustoDriver.set_cluster>`
+  Switch the provider to a different cluster - this is a more restricted version of the ``connect()`` method.
+* :py:meth:`set_database(database) <msticpy.data.drivers.azure_kusto_driver.AzureKustoDriver.set_database>`
+  Switches the default database for the provider.
+
+Running Ad Hoc queries
+----------------------
+
+You can run ad hoc queries using the ``exec_query()`` method of the QueryProvider.
+
+.. note:: You usually need to specify a ``database`` parameter when running
+          ad hoc queries.
+
+Writing query templates for Kusto clusters
+------------------------------------------
+
+The details for configuring and connecting to Kusto clusters
+are enough to allow you to run ad hoc queries. However, if you want to
+create and use parameterized queries there are some additional steps
+that you need to take.
+
+Please read the general section on
+:doc:`Creating new queries <../extending/Queries>`
+if you are not familiar with the general process of creating query
+templates for *MSTICPy*.
+
+The queries for Kusto work in the same way as for many other data providers
+except that you can (and should) specify the cluster(s) and database for
+the query to use.
+
+Controlling which queries are displayed and runnable for a provider
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Since Kusto clusters have widely varying schemas, it only makes sense
+to run a query on a cluster for which it was designed.
+MSTICPy enforces this by allowing you to specify parameters in
+both the query template definitions and the cluster configuration
+in ``msticpyconfig.yaml`` that correctly match queries to
+providers connected to appropriate clusters.
+
+When you first instantiate a Kusto QueryProvider, it will read
+all queries files available for the Kusto DataEnvironment. However,
+when you connect to a cluster, these queries and filtered so that
+only ones compatible with this cluster are available.
+
+If you have query definition files (query templates) you can
+try this by creating a Kusto QueryProvider and running the
+``list_queries()`` method. Then connect to a cluster and run
+``list_queries()`` again. In the first case, you should see all
+queries that you have defined but in the second case, you
+should only see queries that have been built to run on that
+cluster.
+
+.. code:: python3
+
+        from msticpy.data import QueryProvider
+        kql_prov = QueryProvider("Kusto")
+        kql_prov.list_queries()
+
+.. code:: python3
+
+        # new cell
+        kql_prov.connect(cluster="Cluster2")
+        kql_prov.list_queries()
+
+This is explained more in the later sections on `Kusto cluster specifier`_
+and
+
+Basic Kusto query format
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The query template format for Kusto queries should look like
+the following. The ``data_environments`` item must include
+"Kusto" in the list of applicable environments.
+
+This example show the metadata section for a query file, highlighting
+the items that are specific Kusto queries. (``data_families`` is common
+to other query types but has some Kusto-specific usage that is different
+as explained later.)
+
+.. code-block::
+    :emphasize-lines: 4-12
+
+    metadata:
+        version: 1
+        description: Kusto Queries
+        data_environments: [Kusto]
+        data_families: [DeviceEvents.hostdata]
+        cluster: https://uscluster.kusto.windows.net
+        clusters:
+        - https://uscluster.kusto.windows.net
+        - https://eucluster.kusto.windows.net
+        cluster_groups:
+        - Group1
+        database: hostdata
+        tags: ["user"]
+    defaults:
+      parameters:
+        table:
+          # ....
+    sources:
+        list_host_processes:
+          description: Lists all process creations for a host
+            # ....
+
+
+Most of the query file is identical to queries for other drivers.
+However, the metadata section has some additional items. These
+are explained in the following sections.
+
+Kusto database specifier
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can use the ``database`` item to specify the cluster database to
+use. For backward compatibility you can also specify this in the
+``data_families`` entry using a dotted notation. ``data_families``
+is also used to group queries in the query provider, so using this
+to specify the database name is not recommended.
+
+The following examples show the different ways of configuring
+this.
+
+For the following two configurations, the database used is ``DeviceEvents``
+and the queries are grouped under the ``hostdata`` family (the
+queries are attached as methods to the QueryProvider).
+
+.. code-block:: yaml
+   :emphasize-lines: 5,6
+
+    metadata:
+        version: 1
+        description: Kusto Queries
+        data_environments: [Kusto]
+        data_families: [hostdata]
+        database: DeviceEvents
+        cluster: https://uscluster.kusto.windows.net
+
+.. code-block:: yaml
+    :emphasize-lines: 5,6
+
+    # Deprecated format
+    metadata:
+        version: 1
+        description: Kusto Queries
+        data_environments: [Kusto]
+        data_families: [hostdata.DeviceEvents]
+        cluster: https://uscluster.kusto.windows.net
+
+For this configuration the database used is ``DeviceEvents`` and the
+queries will also be grouped under the DeviceEvents container.
+
+.. code-block:: yaml
+    :emphasize-lines: 5
+
+    # Deprecated format
+    metadata:
+        version: 1
+        description: Kusto Queries
+        data_environments: [Kusto]
+        data_families: [DeviceEvents]
+        cluster: https://uscluster.kusto.windows.net
+
+.. note:: The when using the ``data_families`` entry to specify
+   the database name, only the first entry in the list is used
+   for this. Subsequent items still work for creating
+   data query groupings.
+
+Kusto cluster specifier
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Adding a cluster specifier matches queries to the right cluster
+and prevents a query from being used with
+a cluster and database for which it was not intended.
+
+You can specify the cluster to use in three ways:
+
+* Including a ``cluster_groups`` item in the metadata section.
+  This is a list of cluster group names that are defined in the
+  ``msticpyconfig.yaml`` file. Queries with one or more ``cluster_groups``
+  entries can be used against any of the cluster definitions in
+  ``msticpyconfig.yaml`` that have matching cluster group names.
+* Including a ``clusters`` item in the metadata section.
+  This is a list of cluster identifiers (URIs, names or configuration section names
+  that are defined in the ``msticpyconfig.yaml`` file). These queries
+  can be used with any cluster configuration entry that matches one
+  of the IDs in the ``clusters`` item.
+* Including a ``cluster`` item in the metadata section.
+  This is a single cluster identifier (URI, name or configuration section name
+  that is defined in the ``msticpyconfig.yaml`` file). These queries
+  can only be used with the cluster configuration entry that matches
+  the ID in the ``cluster`` item.
+
+The cluster specifiers are used in the order above until a match is found.
+You can include more than one cluster specifier in a query definition file.
+If no match is found, the query will not be added to the query provider.
+
+.. note:: For queries that have no cluster specifier, they will
+          be added to the query provider but but may not work.
+
+.. tip:: If you want to avoid these queries being added use
+          the parameter ``strict_query_match=True`` when
+          creating the Kusto QueryProvider as shown in the following
+          example
+
+.. code:: python3
+
+        import msticpy as mp
+        kql_prov = mp.QueryProvider("Kusto_New", strict_query_match=True)
+
+
+The following examples show the different ways of configuring
+clusters to match queries:
+
+
+.. code-block:: yaml
+   :emphasize-lines: 6,7
+
+    metadata:
+        version: 1
+        description: Kusto Queries
+        data_environments: [Kusto]
+        data_families: [hostdata]
+        cluster_groups:
+        - Group1
+        database: DeviceEvents
+
+.. code-block:: yaml
+   :emphasize-lines: 6,7
+
+    metadata:
+        version: 1
+        description: Kusto Queries
+        data_environments: [Kusto]
+        data_families: [hostdata]
+        clusters:
+        - https://uscluster.kusto.windows.net
+        - https://eucluster.kusto.windows.net
+        database: DeviceEvents
+
+.. code-block:: yaml
+   :emphasize-lines: 6
+
+    metadata:
+        version: 1
+        description: Kusto Queries
+        data_environments: [Kusto]
+        data_families: [hostdata]
+        cluster: https://uscluster.kusto.windows.net
+        database: DeviceEvents
+
+.. note:: you can also use cluster specifiers (using the same syntax
+    as show above) for individual query metadata. Each query has
+    it's own optional ``metadata`` sub-key. Setting cluster
+    specifiers at the query level, with different queries assigned
+    to different clusters in the same file may make organizing
+    your queries more difficult, so we recommend only using
+    cluster specifiers at the file level. However, it is possible
+    to do this if you need to.
+
+
+Logical flow used to determine if a query is shown
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This flowchart shows the logic applied using the query definition
+and configuration parameters to determine whether a query is
+shown or not (i.e. whether it appears in ``list_queries()`` and
+as attached to the QueryProvider as a query function.)
+
+.. figure:: _static/kusto_query_display.png
+   :alt: Flow chart showing how queries are filtered based on query metadata
+         and configuration settings.
+   :height: 5in
 
 Other Kusto Documentation
 -----------------------------------
 
 For examples of using the Kusto provider, see the samples
-`Kusto Analysis Notebook<https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Kusto-Analysis.ipynb>`
-and `Kusto Ingest Notebook<https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Kusto-Ingest.ipynb>`
+`Kusto Analysis Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Kusto-Analysis.ipynb>`__
+and `Kusto Ingest Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Kusto-Ingest.ipynb>`__
 
-:py:mod:`Kusto driver API documentation<msticpy.data.drivers.kusto_driver>`
+:py:mod:`Kusto driver API documentation<msticpy.data.drivers.azure_kusto_driver>`

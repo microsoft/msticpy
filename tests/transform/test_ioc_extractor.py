@@ -46,6 +46,7 @@ TEST_CASES = {
     "domain1_test": "some text with a domain.like.uk in it",
     "domain_neg_test": "some text with a bad domain.like.iandom in it",
     "domain_short_test": "some text with a microsoft.com in it",
+    "domain_ycombinator_test": "some text with a news.ycombinator.com in it",
     "email1_test": "some text with user@microsoft.com in it",
     "email2_test": "some text with User <user@microsoft.com> in it",
     "email3_test": "some text with user@microsoft.com (User XYZ)> in it",
@@ -92,6 +93,7 @@ def test_dns(ioc_extract):
     _run_extract(ioc_extract, "domain1", {"dns": 1})
     _run_extract(ioc_extract, "domain_neg", {"dns": 0})
     _run_extract(ioc_extract, "domain_short", {"dns": 1})
+    _run_extract(ioc_extract, "domain_ycombinator", {"dns": 1})
 
 
 def test_email(ioc_extract):
@@ -291,9 +293,9 @@ TEST_DF_CASES = {
     ],
     "email": [
         ("some text with a user@domain[.]like.uk in it", True),
-        ("some text with a userATdomain[.]like.uk in it", True),
-        ("some text with a userATdomain[.]like.uk in it", True),
-        ("some text with a userATdomain.like.uk in it", True),
+        ("some text with a user@domain[.]like.uk in it", True),
+        ("some text with a user[AT]domain[.]like.uk in it", True),
+        ("some text with a user@domain.like.uk in it", True),
     ],
 }
 
@@ -317,7 +319,9 @@ def _tests():
 @pytest.mark.parametrize("ioc, test, expected", _tests(), ids=_test_ids())
 def test_defanged_iocs(ioc, test, expected, ioc_extract):
     """Test defanged IoC Types."""
-    results = ioc_extract.extract(test)
+    results = ioc_extract.extract(
+        test,
+    )
     if expected:
         check.greater(len(results[ioc]), 0)
     else:

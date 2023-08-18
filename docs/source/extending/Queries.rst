@@ -4,12 +4,16 @@ Adding Queries to MSTICPy
 See :doc:`../data_acquisition/DataProviders` for more details on use
 of data queries.
 
-*msticpy* provides a number of
-pre-defined queries to call with using the data package. You can also
-add additional queries to be imported and used by your Query
-Provider, these are defined in YAML format files and examples of these
-files can be found at the msticpy GitHub site
-https://github.com/microsoft/msticpy/tree/master/msticpy/data/queries.
+See :doc:`QueryFileEditor` for more details on the notebook Query Editor.
+
+*MSTICPy* provides a number of
+pre-defined queries used by the different query providers. You can also
+add you own queries for use by the built-in providers or custom
+data providers.
+
+Queries are grouped into query template files that use the YAML format.
+You can see some examples of these files in the
+`MSTICPy GitHub repo queries folder <https://github.com/microsoft/msticpy/tree/master/msticpy/data/queries>`_.
 
 Here is an example of a query definition file:
 
@@ -73,9 +77,10 @@ Here is an example of a query definition file:
 The required structure of these query definition files is as follows.
 
 At the top level the file has the following keys:
-- **metadata**
-- **defaults**
-- **sources**
+
+- **metadata** - global parameters affecting all queries in the file
+- **defaults** - default values for parameters used in the queries
+- **sources** - the individual query definitions
 
 These are described in the following sections.
 
@@ -98,10 +103,12 @@ The metadata section
   the defined queries can be run against (1 or more). This value defines
   which QueryProvider instances the queries will be attached to.
 - **data_families** []: A list of Data Families the defined queries related
-  to. These are just arbitrary strings that allow you to group related
-  queries in the same subcontainer (e.g. Logons, Processes). If you add
-  more than one `data_family` the query will be added to each group
-  (sub-container)
+  to. These are just strings that allow you to group related
+  queries in the same subcontainer (e.g. queries with a data family "Logons"
+  will appear as ``qry_prov.Logons.query_name()``. You can you add
+  more than one `data_family` causing the query to be added to each group
+  (sub-container). A data family can be a dotted string, causing queries
+  to be added to a hierarchy (e.g. "Logons.AAD", "Logons.Linux").
 - **tags** []: A list of tags to help manage definition files (this is not
   currently used)
 
@@ -126,8 +133,9 @@ common use for this section is to define parameters that are common to all
 or many queries in the file. Child keys of the ``defaults`` section
 are inherited by the individual query definitions in the file.
 
-.. note:: queries that do not use parameters defined in defaults
-    will just ignore them
+.. note:: queries that do not make use parameters defined in defaults
+    will just ignore them. That is, if you have a parameter ``xyz`` defined
+    here, it will only be used if the query text contains ``{xyz}``.
 
 - **parameters**: parameter defaults for the queries (the format of
   the parameters section is the same as described in

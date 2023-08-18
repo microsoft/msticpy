@@ -38,7 +38,7 @@ sources:
         {add_query_items}"
       uri: None
   host_connections:
-    description: Returns connections by for a specified hostname
+    description: Returns connections by a specified hostname
     metadata:
     args:
       query: '
