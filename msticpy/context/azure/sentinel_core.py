@@ -89,8 +89,7 @@ class MicrosoftSentinel(
             Alias of ws_name
 
         """
-        self.user_cloud = cloud
-        super().__init__(connect=False, cloud=self.user_cloud)
+        super().__init__(connect=False, cloud=cloud)
         self.base_url = self.endpoints.resource_manager
         self.default_subscription: Optional[str] = None
         self._resource_id = res_id
@@ -190,6 +189,14 @@ class MicrosoftSentinel(
                 "Using default workspace settings for %s",
                 self.workspace_config.get(WorkspaceConfig.CONF_WS_NAME_KEY),
             )
+        if kwargs.get("cloud", self.cloud) != self.cloud:
+            raise MsticpyUserConfigError(
+                "Cannot switch to different cloud",
+                f"Current cloud '{self.cloud}'",
+                f"Create a new instance of `{self.__class__.__name__}`",
+                "and specify the new cloud name using the `cloud` parameter.",
+                title="Cannot switch cloud at connect time",
+            )
         tenant_id = (
             tenant_id or self.workspace_config[WorkspaceConfig.CONF_TENANT_ID_KEY]
         )
@@ -201,7 +208,7 @@ class MicrosoftSentinel(
         if not self._token:
             logger.info("Getting token for %s", tenant_id)
             self._token = get_token(
-                self.credentials, tenant_id=tenant_id, cloud=self.user_cloud  # type: ignore
+                self.credentials, tenant_id=tenant_id, cloud=self.cloud  # type: ignore
             )
 
         with contextlib.suppress(KeyError):

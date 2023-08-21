@@ -40,6 +40,9 @@ _M365D_MAPPINGS = {
     "us": "https://api-us.security.microsoft.com/",
     "eu": "https://api-eu.security.microsoft.com/",
     "uk": "https://api-uk.security.microsoft.com/",
+    "gcc": "https://api-gcc.security.microsoft.us",
+    "gcc-high": "https://api-gov.security.microsoft.us",
+    "dod": "https://api-gov.security.microsoft.us",
 }
 
 
@@ -286,3 +289,10 @@ def get_defender_endpoint(cloud: str) -> str:
 def get_m365d_endpoint(cloud: str) -> str:
     """Get the URI of the applicable Defender for Endpoint API."""
     return _M365D_MAPPINGS[cloud]
+
+
+def get_m365d_login_endpoint(cloud: str) -> str:
+    """Get M365 login URL."""
+    if cloud in {"gcc-high", "dod"}:
+        return "https://login.microsoftonline.us"
+    return AzureCloudConfig().endpoints.active_directory

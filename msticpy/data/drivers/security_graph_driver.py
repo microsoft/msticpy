@@ -35,7 +35,7 @@ class SecurityGraphDriver(OData):
 
         """
         super().__init__(**kwargs)
-        azure_cloud = AzureCloudConfig()
+        azure_cloud = AzureCloudConfig(cloud=kwargs.pop("cloud", None))
         self.scopes = ["User.Read"]
         self.req_body = {
             "client_id": None,

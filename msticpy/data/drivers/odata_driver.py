@@ -88,7 +88,7 @@ class OData(DriverBase):
         Returns
         -------
         Union[pd.DataFrame, Any]
-            A DataFrame (if successfull) or
+            A DataFrame (if successful) or
             the underlying provider result if an error.
 
         """
