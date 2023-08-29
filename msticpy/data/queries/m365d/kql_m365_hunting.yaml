@@ -429,7 +429,7 @@ sources:
             makeset(Command), count(), min({time_column}) by
             AccountName, DeviceName, DeviceId
         | order by AccountName asc
-        | where min_Timestamp > ago(1d)
+        | where min_{time_column} > ago(1d)
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Lateral%20Movement/ServiceAccountsPerformingRemotePS.txt"
     parameters:
