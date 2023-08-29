@@ -78,8 +78,7 @@ class SplunkUploader(UploaderBase):
             )
         if not host:
             host = "Upload"
-        create_idx = kwargs.get("create_index", False)
-        index = self._load_index(index_name, create_idx)
+        index = self._load_index(index_name, kwargs.get("create_index", False))
         progress = tqdm(total=len(data.index), desc="Rows", position=0)
         for row in data.iterrows():
             data = row[1].to_csv()

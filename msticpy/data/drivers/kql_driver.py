@@ -11,8 +11,7 @@ import logging
 import os
 import re
 import warnings
-from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 from azure.core.exceptions import ClientAuthenticationError
@@ -118,10 +117,6 @@ class KqlDriver(DriverBase):
         self._debug = kwargs.get("debug", False)
         super().__init__(**kwargs)
         self.workspace_id: Optional[str] = None
-        self.set_driver_property(
-            DriverProps.FORMATTERS,
-            {"datetime": self._format_datetime, "list": self._format_list},
-        )
         self._loaded = self._is_kqlmagic_loaded()
 
         os.environ["KQLMAGIC_LOAD_MODE"] = "silent"
@@ -132,6 +127,9 @@ class KqlDriver(DriverBase):
         self._set_kql_env_option("enable_add_items_to_help", False)
         self._schema: Dict[str, Any] = {}
         self.environment = kwargs.pop("data_environment", DataEnvironment.MSSentinel)
+        self.set_driver_property(
+            DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinel.name
+        )
         self.kql_cloud, self.az_cloud = self._set_kql_cloud()
         for option, value in kwargs.items():
             self._set_kql_option(option, value)
@@ -303,7 +301,7 @@ class KqlDriver(DriverBase):
         Returns
         -------
         Tuple[pd.DataFrame, results.ResultSet]
-            A DataFrame (if successfull) and
+            A DataFrame (if successful) and
             Kql ResultSet.
 
         """
@@ -455,22 +453,6 @@ class KqlDriver(DriverBase):
         if kql_cloud != self._get_kql_option("cloud"):
             self._set_kql_option("cloud", kql_cloud)
         return kql_cloud, az_cloud
-
-    @staticmethod
-    def _format_datetime(date_time: datetime) -> str:
-        """Return datetime-formatted string."""
-        return date_time.isoformat(sep="T") + "Z"
-
-    @staticmethod
-    def _format_list(param_list: Iterable[Any]):
-        """Return formatted list parameter."""
-        fmt_list = []
-        for item in param_list:
-            if isinstance(item, str):
-                fmt_list.append(f"'{item}'")
-            else:
-                fmt_list.append(f"{item}")
-        return ", ".join(fmt_list)
 
     @staticmethod
     def _raise_query_failure(query, result):

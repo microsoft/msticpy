@@ -4,8 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """MSTICPy query template definition."""
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from dataclasses import field
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic.dataclasses import dataclass
 
 from ..._version import VERSION
 
@@ -13,8 +15,9 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclass
-class Metadata:
+class QueryMetadata:
     """Metadata for query definitions."""
 
     version: int
@@ -24,33 +27,37 @@ class Metadata:
     database: Optional[str] = None
     cluster: Optional[str] = None
     clusters: Optional[List[str]] = None
+    cluster_groups: Optional[List[str]] = None
     tags: List[str] = field(default_factory=list)
     data_source: Optional[str] = None
+    aliases: Optional[Union[str, List[str]]] = None
+    query_macros: Optional[Dict[str, Any]] = None
 
 
 @dataclass
-class Parameter:
+class QueryParameter:
     """Query parameter."""
 
     description: str
     datatype: str
     default: Any = None
-    required: Optional[bool] = None
+    aliases: Optional[List[str]] = None
 
 
 @dataclass
-class Defaults:
+class QueryDefaults:
     """Default values for query definitions."""
 
     metadata: Optional[Dict[str, Any]] = None
-    parameters: Dict[str, Parameter] = field(default_factory=dict)
+    parameters: Dict[str, QueryParameter] = field(default_factory=dict)
 
 
 @dataclass
-class Args:
+class QueryArgs:
     """Query arguments."""
 
     query: str = ""
+    uri: Optional[str] = None
 
 
 @dataclass
@@ -58,16 +65,16 @@ class Query:
     """A Query definition."""
 
     description: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    args: Args = field(default_factory=Args)
-    parameters: Dict[str, Parameter] = field(default_factory=dict)
+    args: QueryArgs = field(default_factory=QueryArgs)
+    metadata: Optional[Dict[str, Any]] = field(default_factory=dict)  # type: ignore
+    parameters: Optional[Dict[str, QueryParameter]] = field(default_factory=dict)  # type: ignore
 
 
 @dataclass
 class QueryCollection:
     """Query Collection class - a query template."""
 
-    file_name: str
-    metadata: Metadata
-    defaults: Optional[Defaults] = None
+    metadata: QueryMetadata
+    defaults: Optional[QueryDefaults] = None
     sources: Dict[str, Query] = field(default_factory=dict)
+    file_name: Optional[str] = None

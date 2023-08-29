@@ -106,7 +106,7 @@ class SentinelWatchlistsMixin:
         request_data = _build_sent_data(data_items, props=True)
         response = httpx.put(
             watchlist_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             content=str(request_data),
             timeout=get_http_timeout(),
@@ -222,7 +222,7 @@ class SentinelWatchlistsMixin:
             )
             response = httpx.put(
                 watchlist_url,
-                headers=get_api_headers(self.token),  # type: ignore
+                headers=get_api_headers(self._token),  # type: ignore
                 params={"api-version": "2021-04-01"},
                 content=str({"properties": {"itemsKeyValue": item}}),
                 timeout=get_http_timeout(),
@@ -260,7 +260,7 @@ class SentinelWatchlistsMixin:
         params = {"api-version": "2021-04-01"}
         response = httpx.delete(
             watchlist_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             timeout=get_http_timeout(),
         )
@@ -298,7 +298,7 @@ class SentinelWatchlistsMixin:
         )
         response = httpx.delete(
             watchlist_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params={"api-version": "2023-02-01"},
             timeout=get_http_timeout(),
         )

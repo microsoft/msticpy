@@ -97,7 +97,7 @@ Uploading a DataFrame to Splunk
 
 To upload a Pandas DataFrame to Splunk you simply pass the DataFrame to ``.upload_df()`` along with the name of a table,
 and index you wish the data to be uploaded to. If the index provided does not exist and you want it to be created,
-you can pass the parameter ``create_idx = True``.
+you can pass the parameter ``create_index = True``.
 
 .. Note – table name for Splunk refers to sourcetype.
 
@@ -114,7 +114,7 @@ To upload a file to Splunk pass the path to the file to ``.upload_file()`` along
 want the data uploaded to. By default a comma separated value file is expected but if you have some other separator
 value you can pass this with the ``delim`` parameter. You can specify a table name to upload the data to with that ``table_name``
 parameter but by default the uploader will upload to a table with the same name as the file. As with uploading a DataFrame
-if the index provided does not exist and you want it to be created, you can pass the parameter ``create_idx = True``.
+if the index provided does not exist and you want it to be created, you can pass the parameter ``create_index = True``.
 
 .. code:: ipython3
 
@@ -132,7 +132,7 @@ only support for a single delim type across files. By default this method attemp
 folders, if you want to only process certain file extensions you can pass the ``glob`` keyword parameter with the a pattern
 for files to attempt to upload. The pattern format required follows the ``pathlib.glob()`` pattern - more details are
 avaliable `here <"https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob>`_
-As with the other methods if the index provided does not exist and you want it to be created, you can pass the parameter ``create_idx = True``.
+As with the other methods if the index provided does not exist and you want it to be created, you can pass the parameter ``create_index = True``.
 
 .. code:: ipython3
 

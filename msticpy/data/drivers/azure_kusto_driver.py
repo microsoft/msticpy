@@ -150,7 +150,7 @@ class AzureKustoDriver(DriverBase):
             Maximum is 3600 seconds (1 hour).
             (can be set here or in connect and overridden in query methods)
         proxies : Dict[str, str]
-            Proxy settings for log analytics queries.
+            Proxy settings for Kusto queries.
             Dictionary format is {protocol: proxy_url}
             Where protocol is https, http, etc. and proxy_url can contain
             optional authentication information in the format

@@ -4,12 +4,12 @@ azure-core>=1.24.0
 azure-mgmt-core>=1.2.1
 azure-identity>=1.10.0
 azure-keyvault-secrets>=4.0.0
-azure-kusto-data>=4.0.0
+azure-kusto-data>=4.0.0, <=5.0.0
 azure-mgmt-compute>=4.6.2
 azure-mgmt-keyvault>=2.0.0
 azure-mgmt-network>=2.7.0
 azure-mgmt-resource>=16.1.0
-azure-monitor-query>=1.0.0
+azure-monitor-query>=1.0.0, <=2.0.0
 azure-storage-blob>=12.5.0
 beautifulsoup4>=4.0.0
 bokeh>=1.4.0, <4.0.0
@@ -19,7 +19,7 @@ dnspython>=2.0.0, <3.0.0
 folium>=0.9.0
 geoip2>=2.9.0
 html5lib
-httpx==0.24.1
+httpx>=0.23.0, <1.0.0
 ipython>=7.23.1
 ipywidgets>=7.4.2, <9.0.0
 keyring>=13.2.1
@@ -31,8 +31,9 @@ msrest>=0.6.0
 msrestazure>=0.6.0
 networkx>=2.2
 numpy>=1.15.4
-pandas>=1.4.0, <2.0.0
+pandas>=1.4.0, <3.0.0
 panel>=0.14.4
+pydantic>=1.8.0, <3.0.0
 pygments>=2.0.0
 pyjwt>=2.3.0
 python-dateutil>=2.8.1

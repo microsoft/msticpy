@@ -176,7 +176,7 @@ class TimeSpan:
             return time_val
         with contextlib.suppress(ValueError, ParserError):
             if isinstance(time_val, str):
-                return pd.to_datetime(time_val, infer_datetime_format=True)
+                return pd.to_datetime(time_val)
         raise ValueError(f"'{prop_name}' must be a datetime or a datetime string.")
 
     @staticmethod

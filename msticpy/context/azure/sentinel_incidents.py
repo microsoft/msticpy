@@ -103,7 +103,7 @@ class SentinelIncidentsMixin:
         ent_parameters = {"api-version": "2021-04-01"}
         ents = httpx.post(
             entities_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=ent_parameters,
             timeout=get_http_timeout(),
         )
@@ -134,7 +134,7 @@ class SentinelIncidentsMixin:
         alerts_parameters = {"api-version": "2021-04-01"}
         alerts_resp = httpx.post(
             alerts_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=alerts_parameters,
             timeout=get_http_timeout(),
         )
@@ -252,7 +252,7 @@ class SentinelIncidentsMixin:
         data = _build_sent_data(update_items, etag=incident_dets.iloc[0]["etag"])
         response = httpx.put(
             incident_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             content=str(data),
             timeout=get_http_timeout(),
@@ -329,7 +329,7 @@ class SentinelIncidentsMixin:
         data = _build_sent_data(data_items, props=True)
         response = httpx.put(
             incident_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             content=str(data),
             timeout=get_http_timeout(),
@@ -347,7 +347,7 @@ class SentinelIncidentsMixin:
                 params = {"api-version": "2021-04-01"}
                 response = httpx.put(
                     relations_url,
-                    headers=get_api_headers(self.token),  # type: ignore
+                    headers=get_api_headers(self._token),  # type: ignore
                     params=params,
                     content=str(data),
                     timeout=get_http_timeout(),
@@ -426,7 +426,7 @@ class SentinelIncidentsMixin:
         data = _build_sent_data({"message": comment})
         response = httpx.put(
             comment_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             content=str(data),
             timeout=get_http_timeout(),
@@ -467,7 +467,7 @@ class SentinelIncidentsMixin:
         params = {"api-version": "2021-04-01"}
         response = httpx.put(
             bookmark_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             content=str(data),
             timeout=get_http_timeout(),

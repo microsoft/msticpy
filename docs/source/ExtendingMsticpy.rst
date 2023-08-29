@@ -29,6 +29,7 @@ Extension points documentation
    :maxdepth: 2
 
    extending/Queries
+   extending/QueryFileEditor
    extending/PivotFunctions
    extending/WritingDataProviders
    extending/WritingTIAndContextProviders

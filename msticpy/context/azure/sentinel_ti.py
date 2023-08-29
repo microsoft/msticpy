@@ -171,7 +171,7 @@ class SentinelTIMixin:
         data["kind"] = "indicator"
         response = httpx.post(
             ti_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             content=str(data),
             timeout=get_http_timeout(),
@@ -247,7 +247,7 @@ class SentinelTIMixin:
         params = {"api-version": "2021-10-01"}
         response = httpx.get(
             ti_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             timeout=get_http_timeout(),
         )
@@ -302,7 +302,7 @@ class SentinelTIMixin:
         params = {"api-version": "2021-10-01"}
         response = httpx.put(
             ti_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             content=str(data),
             timeout=get_http_timeout(),
@@ -350,7 +350,7 @@ class SentinelTIMixin:
         params = {"api-version": "2021-10-01"}
         response = httpx.delete(
             ti_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             timeout=get_http_timeout(),
         )
@@ -406,7 +406,7 @@ class SentinelTIMixin:
         params = {"api-version": "2021-10-01"}
         response = httpx.post(
             ti_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             content=str(data_items),
             timeout=get_http_timeout(),
