@@ -215,8 +215,7 @@ class Entity(ABC, Node):
 
     def __getattr__(self, name: str):
         """Return the value of the named property 'name'."""
-        props = ["name_str", "description_str"]
-        if name in self._entity_schema or name in props:
+        if name in self._entity_schema or name in {"name_str", "description_str"}:
             return None
         raise AttributeError(f"{name} is not a valid attribute.")
 
