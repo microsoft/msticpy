@@ -248,17 +248,34 @@ class WorkspaceConfig:
     @classmethod
     def from_connection_string(cls, connection_str: str) -> "WorkspaceConfig":
         """Create a WorkstationConfig from a connection string."""
-        tenant_regex = r".*tenant\(\s?['\"](?P<tenant_id>[\w]+)['\"].*"
-        workspace_regex = r".*workspace\(\s?['\"](?P<workspace_id>[\w]+)['\"].*"
-        tenant_id = workspace_id = None
-        if match := re.match(tenant_regex, connection_str):
+        tenant_regex = r"""
+        .*tenant\s?=\s?['\"]\{?
+        (?P<tenant_id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})
+        \}?['\"].*"""
+        workspace_regex = r"""
+        .*workspace\s?=\s?['\"]\{?
+        (?P<workspace_id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})
+        \}?['\"].*"""
+        ws_name_regex = r".*alias\s?=\s?['\"]\{?(?P<workspace_name>\w+)['\"].*"
+
+        tenant_id = workspace_id = workspace_name = None
+        if match := re.match(tenant_regex, connection_str, re.IGNORECASE | re.VERBOSE):
             tenant_id = match.groupdict()["tenant_id"]
-        if match := re.match(workspace_regex, connection_str):
+        else:
+            raise ValueError("Could not find tenant ID in connection string.")
+        if match := re.match(
+            workspace_regex, connection_str, re.IGNORECASE | re.VERBOSE
+        ):
             workspace_id = match.groupdict()["workspace_id"]
+        else:
+            raise ValueError("Could not find workspace ID in connection string.")
+        if match := re.match(ws_name_regex, connection_str, re.IGNORECASE | re.VERBOSE):
+            workspace_name = match.groupdict()["workspace_name"]
         return cls(
             config={
                 cls.CONF_WS_ID_KEY: workspace_id,  # type: ignore[dict-item]
                 cls.CONF_TENANT_ID_KEY: tenant_id,  # type: ignore[dict-item]
+                cls.CONF_WS_NAME_KEY: workspace_name,  # type: ignore[dict-item]
             }
         )
 
