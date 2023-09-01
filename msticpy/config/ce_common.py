@@ -39,7 +39,6 @@ TEXT_AREA_LAYOUT = {
     "style": {"description_width": "100px"},
 }
 
-
 if _DEBUG:
 
     def print_debug(*args):
@@ -154,6 +153,31 @@ def widget_to_py(ctrl: Union[widgets.Widget, SettingsControl]) -> Any:
 # pylint: enable=too-many-return-statements
 
 
+def get_subscription_metadata(sub_id: str) -> dict:
+    """
+    Get the subscription metadata for a subscription.
+
+    Parameters
+    ----------
+    sub_id : str
+        Subscription ID
+
+    Returns
+    -------
+    dict
+        Subscription metadata
+
+    """
+    res_mgmt_uri = AzureCloudConfig().resource_manager
+    get_sub_url = (
+        f"{res_mgmt_uri}/subscriptions/{{subscriptionid}}?api-version=2021-04-01"
+    )
+    resp = httpx.get(
+        get_sub_url.format(subscriptionid=sub_id), headers=mp_ua_header()
+    ).json()
+    return resp.json()
+
+
 def get_def_tenant_id(sub_id: str) -> Optional[str]:
     """
     Get the tenant ID for a subscription.
@@ -171,27 +195,27 @@ def get_def_tenant_id(sub_id: str) -> Optional[str]:
     Notes
     -----
     This function returns the tenant ID that owns the subscription.
-    This may not be the correct ID to use if you are using delegated
-    authorization via Azure Lighthouse.
 
     """
-    res_mgmt_uri = AzureCloudConfig().endpoints.resource_manager
-    get_tenant_url = (
-        f"{res_mgmt_uri}/subscriptions/{{subscriptionid}}" + "?api-version=2015-01-01"
-    )
-    resp = httpx.get(
-        get_tenant_url.format(subscriptionid=sub_id), headers=mp_ua_header()
-    )
-    # Tenant ID is returned in the WWW-Authenticate header/Bearer authorization_uri
-    www_header = resp.headers.get("WWW-Authenticate")
-    if not www_header:
-        return None
-    hdr_dict = {
-        item.split("=")[0]: item.split("=")[1].strip('"')
-        for item in www_header.split(", ")
-    }
-    tenant_path = hdr_dict.get("Bearer authorization_uri", "").split("/")
-    return tenant_path[-1] if tenant_path else None
+    sub_metadata = get_subscription_metadata(sub_id)
+    return sub_metadata.get("tenantId", None)
+
+
+def get_managed_tenant_id(sub_id: str) -> Optional[list[str]]:
+    """
+    Get the tenant IDs that are managing a subscription.
+
+    Args:
+        sub_id :str
+            Subscription ID
+
+    Returns:
+        Optional[list[str]]
+            A list of tenant IDs or None if it could not be found.
+    """
+    sub_metadata = get_subscription_metadata(sub_id)
+    tenant_ids = sub_metadata.get("managedByTenants", None)
+    return tenant_ids if tenant_ids else None
 
 
 def txt_to_dict(txt_val: str) -> Dict[str, Any]:
@@ -382,7 +406,9 @@ def get_defn_or_default(defn: Union[Tuple[str, Any], Any]) -> Tuple[str, Dict]:
 
 # flake8: noqa: F821
 def get_or_create_mpc_section(
-    mp_controls: "MpConfigControls", section: str, subkey: Optional[str] = None  # type: ignore
+    mp_controls: "MpConfigControls",
+    section: str,
+    subkey: Optional[str] = None,  # type: ignore
 ) -> Any:
     """
     Return (and create if it doesn't exist) a settings section.

@@ -88,7 +88,7 @@ class OData(DriverBase):
         Returns
         -------
         Union[pd.DataFrame, Any]
-            A DataFrame (if successfull) or
+            A DataFrame (if successful) or
             the underlying provider result if an error.
 
         """
@@ -180,10 +180,13 @@ class OData(DriverBase):
         else:
             _check_config(cs_dict, "username", "delegated authentication")
             authority = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
-            if authority.startswith("https://login.microsoftonline.com/"):
-                authority = re.split(
-                    r"(https:\/\/login\.microsoftonline\.com\/[^\/]*)", authority
-                )[1]
+            if authority.startswith("https://login"):
+                auth_url = urllib.parse.urlparse(authority)
+                authority = (
+                    f"{auth_url.scheme}://{auth_url.netloc}/{{tenantId}}".format(
+                        tenantId=cs_dict["tenant_id"]
+                    )
+                )
             self.msal_auth = MSALDelegatedAuth(
                 client_id=cs_dict["client_id"],
                 authority=authority,
