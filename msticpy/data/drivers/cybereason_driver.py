@@ -320,6 +320,18 @@ class CybereasonDriver(DriverBase):
         except TypeError:
             return timestamp
 
+    @staticmethod
+    def _format_result_to_dataframe(result: Dict[str, Any]) -> pd.DataFrame:
+        """Return a dataframe from a cybereason result object."""
+        df_result = [
+            dict(
+                CybereasonDriver._flatten_result(values),
+                **{"resultId": result_id},
+            )
+            for result_id, values in result["data"]["resultIdToElementDataMap"].items()
+        ]
+        return pd.json_normalize(df_result)
+
     # Retrieve configuration parameters with aliases
     @staticmethod
     def _map_config_dict_name(config_dict: Dict[str, str]):
