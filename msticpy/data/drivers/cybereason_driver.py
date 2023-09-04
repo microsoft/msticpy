@@ -96,6 +96,10 @@ class CybereasonDriver(DriverBase):
             },
         )
 
+        self.set_driver_property(DriverProps.SUPPORTS_THREADING, value=True)
+        self.set_driver_property(
+            DriverProps.MAX_PARALLEL, value=kwargs.get("max_threads", 4)
+        )
         self._debug = kwargs.get("debug", False)
 
     def query(
