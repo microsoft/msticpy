@@ -298,64 +298,7 @@ class CybereasonDriver(DriverBase):
             Kql ResultSet.
 
         """
-        if not self.connected:
-            self.connect(self.current_connection)
-        if not self.connected:
-            raise ConnectionError(
-                "Source is not connected. ", "Please call connect() and retry."
-            )
-
-        if self._debug:
-            print(query)
-
-        json_query = json.loads(query)
-        body = self.req_body
-        body.update(json_query)
-        response = self.client.post(self.search_endpoint, json=body)
-
-        self._check_response_errors(response)
-
-        json_response = response.json()
-        if json_response["status"] != "SUCCESS":
-            print(
-                "Warning - query did not complete successfully.",
-                f"Status: {json_response['status']}.",
-                json_response["message"],
-            )
-            return pd.DataFrame(), json_response
-
-        data = json_response.get("data", json_response)
-        results = data.get("resultIdToElementDataMap", data)
-        total_results = data.get("totalResults", len(results))
-        guessed_results = data.get("guessedPossibleResults", len(results))
-        if guessed_results > len(results):
-            print(
-                f"Warning - query returned {total_results} out of {guessed_results}.",
-                "Check returned response.",
-            )
-        results = [
-            dict(CybereasonDriver._flatten_result(values), **{"resultId": result_id})
-            for result_id, values in results.items()
-        ]
-
-        return pd.json_normalize(results), json_response
-
-    # pylint: enable=too-many-branches
-
-    @staticmethod
-    def _check_response_errors(response):
-        """Check the response for possible errors."""
-        if response.status_code == httpx.codes.OK:
-            return
-        print(response.json()["error"]["message"])
-        if response.status_code == 401:
-            raise ConnectionRefusedError(
-                "Authentication failed - possible ", "timeout. Please re-connect."
-            )
-        # Raise an exception to handle hitting API limits
-        if response.status_code == 429:
-            raise ConnectionRefusedError("You have likely hit the API limit. ")
-        response.raise_for_status()
+        raise NotImplementedError(f"Not supported for {self.__class__.__name__}")
 
     # Parameter Formatting method
     @staticmethod
