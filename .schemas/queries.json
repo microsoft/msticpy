@@ -52,7 +52,6 @@
     },
     "required": [
         "metadata",
-        "defaults",
         "sources"
     ],
     "$defs": {
