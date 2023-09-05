@@ -9,7 +9,6 @@ import warnings
 from pathlib import Path
 
 import httpx
-from jsonschema import Draft7Validator
 import pytest
 import pytest_check as check
 import yaml
@@ -17,28 +16,12 @@ import yaml
 from msticpy.common import pkg_config
 from msticpy.context.geoip import GeoLiteLookup, IPStackLookup
 
-from ..unit_test_lib import custom_mp_config, get_test_data_path, get_queries_schema
+from ..unit_test_lib import custom_mp_config, get_test_data_path
+from ..data.queries.test_query_files import validate_queries_file_structure
 
 _TEST_DATA = get_test_data_path()
-_QUERIES_SCHEMA = get_queries_schema()
 
 # pylint: disable=protected-access
-
-
-def validate_queries_file_structure(query_file: Path, expected: bool = True):
-    """Test if query files have a valid structure."""
-    with query_file.open(mode="r", encoding="utf-8") as queries:
-        queries_yaml = yaml.safe_load(queries)
-        if expected:
-            check.is_true(
-                Draft7Validator(_QUERIES_SCHEMA).is_valid(queries_yaml),
-                msg=f"File {query_file} is not a valid query file",
-            )
-        else:
-            check.is_false(
-                Draft7Validator(_QUERIES_SCHEMA).is_valid(queries_yaml),
-                msg=f"File {query_file} was expected to be invalid but is a valid query file",
-            )
 
 
 def test_load_default():
@@ -62,15 +45,8 @@ def test_load_default():
             path = Path(__file__).resolve().parent.parent.joinpath(path)
         check.is_true(path.is_dir())
         for query_file in Path(path).resolve().rglob("*.yaml"):
-            validate_queries_file_structure(
-                query_file,
-                expected=not (
-                    "fail" in query_file.name
-                    or "msticpyconfig" in query_file.name
-                    or "sentinel_query_import_data"
-                    in [parent.name for parent in query_file.absolute().parents]
-                ),
-            )
+            if "tests" not in [parent.name for parent in query_file.absolute().parents]:
+                validate_queries_file_structure(query_file)
 
 
 def test_custom_config():
