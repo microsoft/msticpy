@@ -35,14 +35,14 @@ except ImportError as imp_err:
     ) from imp_err
 
 __version__ = VERSION
-__author__ = "Ashwin Patil"
+__author__ = "Ashwin Patil, Tatsuya Hasegawa"
 
 logger = logging.getLogger(__name__)
 
 
 SPLUNK_CONNECT_ARGS = {
     "host": "(string) The host name (the default is 'localhost').",
-    "port": "(integer) The port number (the default is 8089).",
+    "port": "(string) The port number (the default is '8089').",
     "http_scheme": "('https' or 'http') The scheme for accessing the service "
     + "(the default is 'https').",
     "verify": "(Boolean) Enable (True) or disable (False) SSL verrification for "
@@ -60,6 +60,7 @@ SPLUNK_CONNECT_ARGS = {
     "username": "(string) The Splunk account username, which is used to "
     + "authenticate the Splunk instance.",
     "password": "(string) The password for the Splunk account.",
+    "splunkToken": "(string) The Authorization Bearer Token <JWT> created in the Splunk.",
 }
 
 
@@ -67,8 +68,8 @@ SPLUNK_CONNECT_ARGS = {
 class SplunkDriver(DriverBase):
     """Driver to connect and query from Splunk."""
 
-    _SPLUNK_REQD_ARGS = ["host", "username", "password"]
-    _CONNECT_DEFAULTS: Dict[str, Any] = {"port": 8089}
+    _SPLUNK_REQD_ARGS = ["host"]
+    _CONNECT_DEFAULTS: Dict[str, Any] = {"port": "8089"}
     _TIME_FORMAT = '"%Y-%m-%d %H:%M:%S.%6N"'
 
     def __init__(self, **kwargs):
@@ -142,7 +143,7 @@ class SplunkDriver(DriverBase):
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
             ) from err
         self._connected = True
-        print("connected")
+        print("Connected.")
 
     def _get_connect_args(
         self, connection_str: Optional[str], **kwargs
@@ -171,6 +172,12 @@ class SplunkDriver(DriverBase):
             cs_dict["verify"] = "true" in verify_opt.casefold()
         elif isinstance(verify_opt, bool):
             cs_dict["verify"] = verify_opt
+
+        # judge the REST API authentification method between user/pass and authorization bearer token
+        if "username" in cs_dict:
+            self._SPLUNK_REQD_ARGS = ["host","username","password"]
+        else:
+            self._SPLUNK_REQD_ARGS = ["host","splunkToken"]
 
         missing_args = set(self._SPLUNK_REQD_ARGS) - cs_dict.keys()
         if missing_args:
