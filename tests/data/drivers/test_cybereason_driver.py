@@ -213,7 +213,7 @@ def _cr_pre_checks(driver: CybereasonDriver):
 @respx.mock
 def test_connect(driver):
     """Test connect."""
-    connect = respx.post(re.compile(r"https://.*.cybereason.net/login.html")).respond(
+    connect = respx.post(re.compile(r"^https://.*\.cybereason.net/login.html")).respond(
         200
     )
     with custom_mp_config(MP_PATH):
@@ -225,11 +225,11 @@ def test_connect(driver):
 @respx.mock
 def test_query(driver):
     """Test query calling returns data in expected format."""
-    connect = respx.post(re.compile(r"https://.*.cybereason.net/login.html")).respond(
+    connect = respx.post(re.compile(r"^https://.*\.cybereason.net/login.html")).respond(
         200
     )
     query = respx.post(
-        re.compile(r"https://.*.cybereason.net/rest/visualsearch/query/simple")
+        re.compile(r"^https://.*\.cybereason.net/rest/visualsearch/query/simple")
     ).respond(200, json=_CR_RESULT)
     with custom_mp_config(MP_PATH):
         driver.connect()
@@ -242,15 +242,15 @@ def test_query(driver):
 @respx.mock
 def test_paginated_query(driver):
     """Test query calling returns data in expected format."""
-    connect = respx.post(re.compile(r"https://.*.cybereason.net/login.html")).respond(
+    connect = respx.post(re.compile(r"^https://.*\.cybereason.net/login.html")).respond(
         200
     )
     query1 = respx.post(
-        re.compile(r"https://.*.cybereason.net/rest/visualsearch/query/simple"),
+        re.compile(r"^https://.*\.cybereason.net/rest/visualsearch/query/simple"),
         params={"page": 0},
     ).respond(200, json=_CR_PAGINATED_RESULT[0])
     query2 = respx.post(
-        re.compile(r"https://.*.cybereason.net/rest/visualsearch/query/simple"),
+        re.compile(r"^https://.*\.cybereason.net/rest/visualsearch/query/simple"),
         params={"page": 1},
     ).respond(200, json=_CR_PAGINATED_RESULT[1])
     with custom_mp_config(MP_PATH):
