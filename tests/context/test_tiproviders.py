@@ -885,32 +885,27 @@ _PROVIDER_RESPONSES = {
     "https://api.ti.insight.rapid7.com": {
         "ioc_param": "params",
         "response": {
-            "Value": "124.5.6.7",
-            "Type": "IpAddresses",
-            "Score": 42,
-            "Severity": "Medium",
-            "Whitelist": False,
-            "FirstSeen": dt.datetime.strftime(
+            "value": "124.5.6.7",
+            "type": "IpAddresses",
+            "score": 42,
+            "severity": "Medium",
+            "whitelist": False,
+            "firstSeen": dt.datetime.strftime(
                 dt.datetime.now(), "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
-            "LastSeen": dt.datetime.strftime(
+            "lastSeen": dt.datetime.strftime(
                 dt.datetime.now(), "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
-            "LastUpdate": dt.datetime.strftime(
+            "lastUpdateDate": dt.datetime.strftime(
                 dt.datetime.now(), "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
-            "Sources": [
-                {"ConfidenceLevel": 2, "Name": "Source A"},
-                {"ConfidenceLevel": 1, "Name": "Source B"},
-                {"ConfidenceLevel": 1, "Name": "Source C"},
-                {"ConfidenceLevel": 3, "Name": "Source D"},
-            ],
-            "SystemTags": ["bot", "malware related"],
-            "Geolocation": "FR",
-            "RelatedMalware": ["malware1"],
-            "RelatedCampaigns": ["Campaign A"],
-            "RelatedThreatActors": ["Threat Actor 00"],
-            "Tags": ["tag"],
+            "systemTags": ["bot", "malware related"],
+            "geolocation": "FR",
+            "relatedMalware": ["malware1"],
+            "relatedCampaigns": ["Campaign A"],
+            "relatedThreatActors": ["Threat Actor 00"],
+            "tags": ["tag"],
+            "whitelisted": False,
         },
     },
     "https://cti.api.crowdsec.net": {
