@@ -148,6 +148,8 @@ class CybereasonDriver(DriverBase):
 
         logger.debug("Retrieved %d/%d results", len(results), total_results)
 
+        df_result: pd.DataFrame = None
+
         if len(results) < total_results:
             df_result = self._exec_paginated_queries(
                 body=body,
@@ -156,7 +158,7 @@ class CybereasonDriver(DriverBase):
                 total_results=total_results,
             )
         else:
-            df_result: pd.DataFrame = self._format_result_to_dataframe(result=response)
+            df_result = self._format_result_to_dataframe(result=response)
 
         return df_result
 
