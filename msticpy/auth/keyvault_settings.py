@@ -73,9 +73,8 @@ class KeyVaultSettings:
         norm_settings = {key.casefold(): val for key, val in kv_config.items()}
         self.__dict__.update(norm_settings)
 
-        self._get_auth_methods_from_settings()
-        self._get_authority_from_settings()
         self.az_cloud_config = AzureCloudConfig(self.authority)
+        self._get_auth_methods_from_settings()
         self.authority = self.authority or self.az_cloud_config.cloud
 
     def _get_auth_methods_from_settings(self):
@@ -123,7 +122,7 @@ class KeyVaultSettings:
     @property
     def keyvault_uri(self) -> Optional[str]:
         """Return KeyVault URI template for current cloud."""
-        kv_endpoint = self.az_cloud_config.suffixes.get("keyVaultDns")
+        suffix = self.az_cloud_config.suffixes.get("keyVaultDns")
         kv_uri = f"https://{{vault}}.{suffix}"
         if not kv_uri:
             mssg = f"Could not find a valid KeyVault endpoint for {self.cloud}"
