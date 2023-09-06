@@ -5,13 +5,14 @@
 # --------------------------------------------------------------------------
 """Azure Cloud Mappings."""
 import contextlib
-import requests
+import httpx
 from typing import Dict, List, Optional
 from functools import cache
 
 from .._version import VERSION
 from ..common import pkg_config as config
 from ..common.exceptions import MsticpyAzureConfigError
+from ..common.pkg_config import get_http_timeout
 from .cloud_mappings_offline import cloud_mappings_offline
 
 __version__ = VERSION
@@ -129,7 +130,7 @@ def get_cloud_endpoints_by_resource_manager_url(
     f_resource_manager_url = format_endpoint(resource_manager_url)
     endpoint_url = f"{f_resource_manager_url}metadata/endpoints?api-version=latest"
     try:
-        resp = requests.get(endpoint_url)
+        resp = httpx.get(endpoint_url, timeout=get_http_timeout())
         if resp.status_code == 200:
             return resp.json()
 
@@ -218,7 +219,7 @@ class AzureCloudConfig:
     @staticmethod
     def resolve_cloud_alias(
         alias,
-    ) -> Optional[str]: 
+    ) -> Optional[str]:
         """Return match of cloud alias or name."""
         alias_cf = alias.casefold()
         aliases = {alias.casefold(): cloud for alias, cloud in CLOUD_ALIASES.items()}
