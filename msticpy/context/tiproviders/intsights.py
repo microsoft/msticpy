@@ -46,42 +46,42 @@ class IntSights(HttpTIProvider):
 
     _QUERIES = {
         "ipv4": _IntSightsParams(
-            path="/public/v2/iocs/ioc-by-value",
+            path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
             headers=_DEF_HEADERS,
         ),
         "ipv6": _IntSightsParams(
-            path="/public/v2/iocs/ioc-by-value",
+            path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
             headers=_DEF_HEADERS,
         ),
         "dns": _IntSightsParams(
-            path="/public/v2/iocs/ioc-by-value",
+            path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
             headers=_DEF_HEADERS,
         ),
         "url": _IntSightsParams(
-            path="/public/v2/iocs/ioc-by-value",
+            path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
             headers=_DEF_HEADERS,
         ),
         "md5_hash": _IntSightsParams(
-            path="/public/v2/iocs/ioc-by-value",
+            path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
             headers=_DEF_HEADERS,
         ),
         "sha1_hash": _IntSightsParams(
-            path="/public/v2/iocs/ioc-by-value",
+            path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
             headers=_DEF_HEADERS,
         ),
         "sha256_hash": _IntSightsParams(
-            path="/public/v2/iocs/ioc-by-value",
+            path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
             headers=_DEF_HEADERS,
         ),
         "email": _IntSightsParams(
-            path="/public/v2/iocs/ioc-by-value",
+            path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
             headers=_DEF_HEADERS,
         ),
