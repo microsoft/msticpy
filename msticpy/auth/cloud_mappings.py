@@ -7,7 +7,7 @@
 import contextlib
 import httpx
 from typing import Dict, List, Optional
-from functools import cache
+from functools import lru_cache
 
 from .._version import VERSION
 from ..common import pkg_config as config
@@ -54,7 +54,7 @@ def format_endpoint(endpoint: str) -> str:
     return f"{endpoint}/"
 
 
-@cache
+@lru_cache(maxsize=None)
 def get_cloud_endpoints(cloud: str, resource_manager_url: Optional[str] = None) -> dict:
     """
     Get the cloud endpoints for a specific cloud. If resource_manager_url is supplied, it will be used instead of the cloud name.
