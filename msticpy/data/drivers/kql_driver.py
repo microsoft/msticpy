@@ -99,6 +99,7 @@ class KqlDriver(DriverBase):
             print out additional diagnostic information.
 
         """
+        self.az_cloud_config = AzureCloudConfig()
         self._ip = get_ipython()
         self._debug = kwargs.get("debug", False)
         super().__init__(**kwargs)
@@ -126,7 +127,6 @@ class KqlDriver(DriverBase):
             self.current_connection = connection_str
             self.current_connection_args.update(kwargs)
             self.connect(connection_str)
-        self.az_cloud_config = AzureCloudConfig()
 
     # pylint: disable=too-many-branches
     def connect(self, connection_str: Optional[str] = None, **kwargs):  # noqa: MC0001
