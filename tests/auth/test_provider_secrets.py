@@ -190,7 +190,9 @@ class TestSecretsConfig(unittest.TestCase):
         self.assertIn("TenantId", kv_settings)
         self.assertIsNone(kv_settings.get("NotATenantId"))
 
-        self.assertEqual(kv_settings.authority_uri, "https://login.microsoftonline.com")
+        self.assertEqual(
+            kv_settings.authority_uri, "https://login.microsoftonline.com/"
+        )
         self.assertEqual(
             kv_settings.get_tenant_authority_uri(),
             "https://login.microsoftonline.com/57e3d15e-594c-4ff2-a87b-e8f7f1b78dbb",

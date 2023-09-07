@@ -1,3 +1,4 @@
+"""Cloud mappings for offline use."""
 cloud_mappings_offline = {
     # All endpoints were retrieved with api-version 2023-01-01
     "global": {

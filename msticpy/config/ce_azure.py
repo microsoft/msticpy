@@ -40,9 +40,9 @@ class CEAzure(CESimpleSettings):
     <li>cache" - to use shared token cache credentials</li>
     </ul>
     <br>
-    
-    <b>resource_manager_url</b> setting allows you to specify the Azure Resource Manager Url to use. 
-    This is only needed if you are using a cloud outside of global, usgov, cn, and de. 
+
+    <b>resource_manager_url</b> setting allows you to specify the Azure Resource Manager Url to use.
+    This is only needed if you are using a cloud outside of global, usgov, cn, and de.
     This will override the cloud and its associated Authority and API endpoint URLs.
 
     """

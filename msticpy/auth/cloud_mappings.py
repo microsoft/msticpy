@@ -5,9 +5,9 @@
 # --------------------------------------------------------------------------
 """Azure Cloud Mappings."""
 import contextlib
-import httpx
-from typing import Dict, List, Optional
+from typing import List, Optional
 from functools import lru_cache
+import httpx
 
 from .._version import VERSION
 from ..common import pkg_config as config
@@ -57,14 +57,16 @@ def format_endpoint(endpoint: str) -> str:
 @lru_cache(maxsize=None)
 def get_cloud_endpoints(cloud: str, resource_manager_url: Optional[str] = None) -> dict:
     """
-    Get the cloud endpoints for a specific cloud. If resource_manager_url is supplied, it will be used instead of the cloud name.
+    Get the cloud endpoints for a specific cloud.
+    If resource_manager_url is supplied, it will be used instead of the cloud name.
 
     Parameters
     ----------
     cloud : str
         The name of the cloud to get endpoints for.
     resource_manager_url : str, optional
-        The resource manager url for a cloud. Can be used to get all endpoints for a specific cloud. Defaults to None.
+        The resource manager url for a cloud.
+        Can be used to get all endpoints for a specific cloud. Defaults to None.
 
     Returns
     -------
@@ -134,12 +136,14 @@ def get_cloud_endpoints_by_resource_manager_url(
         if resp.status_code == 200:
             return resp.json()
 
-    except requests.exceptions.ConnectionError as err:
-        for k, v in CLOUD_MAPPING.items():
-            if v == f_resource_manager_url:
-                cloud = k
+    except httpx.ConnectError:
+        for key, val in CLOUD_MAPPING.items():
+            if val == f_resource_manager_url:
+                cloud = key
                 break
         return cloud_mappings_offline.get(cloud, "global")
+
+    return cloud_mappings_offline.get("global")
 
 
 def get_azure_config_value(key, default):
