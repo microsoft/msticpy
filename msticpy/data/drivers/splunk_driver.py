@@ -173,11 +173,12 @@ class SplunkDriver(DriverBase):
         elif isinstance(verify_opt, bool):
             cs_dict["verify"] = verify_opt
 
-        # judge the REST API authentification method between user/pass and authorization bearer token
+        # judge the REST API authentification method 
+        #   between user/pass and authorization bearer token
         if "username" in cs_dict:
-            self._SPLUNK_REQD_ARGS = ["host","username","password"]
+            self._SPLUNK_REQD_ARGS = ["host", "username", "password"]
         else:
-            self._SPLUNK_REQD_ARGS = ["host","splunkToken"]
+            self._SPLUNK_REQD_ARGS = ["host", "splunkToken"]
 
         missing_args = set(self._SPLUNK_REQD_ARGS) - cs_dict.keys()
         if missing_args:
