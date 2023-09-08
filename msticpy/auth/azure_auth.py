@@ -82,6 +82,7 @@ def az_connect(
     # Use auth_methods param or configuration defaults
     data_provs = get_provider_settings(config_section="DataProviders")
     auth_methods = auth_methods or az_cloud_config.auth_methods
+    tenant_id = tenant_id or az_cloud_config.tenant_id
 
     # Ignore AzCLI settings except for authentication creds for EnvCred
     az_cli_config = data_provs.get("AzureCLI")

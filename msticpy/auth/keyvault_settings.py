@@ -205,8 +205,7 @@ class KeyVaultSettings:
             If tenant is not defined.
 
         """
-        if not tenant:
-            tenant = self.get("tenantid")
+        tenant = tenant or self.az_cloud_config.tenant_id
         if not tenant:
             raise MsticpyKeyVaultConfigError(
                 "Could not get TenantId from function parameters or configuration.",

@@ -970,6 +970,8 @@ def get_token(
         A token to be used in API calls.
 
     """
+    az_cloud_config = AzureCloudConfig(cloud)
+    tenant_id = tenant_id or az_cloud_config.tenant_id
     if tenant_id:
         try:
             token = credential.modern.get_token(AzureCloudConfig().token_uri)
