@@ -8,13 +8,6 @@ defaults:
   metadata:
     data_source: 'hunting_queries'
   parameters:
-      # The m365d hunting queries doesn't use start and end time param, time range is implemented statically.
-      #start:
-      #  description: Query start time
-      #  type: datetime
-      #end:
-      #  description: Query end time
-      #  type: datetime
       add_query_items:
         description: Additional query clauses
         type: str
