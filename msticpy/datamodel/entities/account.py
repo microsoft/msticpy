@@ -121,12 +121,13 @@ class Account(Entity):
         return self.Name or self.DisplayName or "Unknown Account"
 
     @property
-    def AadUserId(self) -> Optional[str]:
+    def AadUserId(self) -> Optional[str]:  # noqa: N802
         """Return the Azure AD user ID or the ObjectGuid."""
         return self._AadUserId or self.ObjectGuid
 
     @AadUserId.setter
-    def AadUserId(self, value: str):
+    def AadUserId(self, value: str):  # noqa: N802
+        """Set the Azure AD user ID."""
         self._AadUserId = value
 
     @property
