@@ -360,8 +360,8 @@ class AzureData:
         resources = []  # type: List
         if rgroup is None:
             resources.extend(
-                iter(self.resource_client.resources.list())
-            )  # type: ignore
+                iter(self.resource_client.resources.list())  # type: ignore
+            )
         else:
             resources.extend(
                 iter(

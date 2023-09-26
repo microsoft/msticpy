@@ -460,7 +460,9 @@ class SentinelIncidentsMixin:
         mark_res_id = self.sent_urls["bookmarks"] + f"/{bookmark_id}"  # type: ignore
         relations_id = uuid4()
         bookmark_url = incident_url + f"/relations/{relations_id}"
-        bkmark_data_items = {"relatedResourceId": mark_res_id.split(self.base_url)[1]}
+        bkmark_data_items = {
+            "relatedResourceId": mark_res_id.split(self.base_url)[1]  # type: ignore
+        }
         data = _build_sent_data(bkmark_data_items, props=True)
         params = {"api-version": "2021-04-01"}
         response = httpx.put(

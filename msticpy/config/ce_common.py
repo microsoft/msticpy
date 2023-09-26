@@ -432,7 +432,7 @@ def get_defn_or_default(defn: Union[Tuple[str, Any], Any]) -> Tuple[str, Dict]:
 
 # flake8: noqa: F821
 def get_or_create_mpc_section(
-    mp_controls: "MpConfigControls",
+    mp_controls: "MpConfigControls",  # type: ignore[name-defined]
     section: str,
     subkey: Optional[str] = None,  # type: ignore
 ) -> Any:

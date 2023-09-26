@@ -117,7 +117,7 @@ class AzureBlobStorage:
             Details of the blobs.
 
         """
-        container_client = self.abs_client.get_container_client(
+        container_client = self.abs_client.get_container_client(  # type: ignore[union-attr]
             container_name
         )  # type: ignore
         blobs = list(container_client.list_blobs())
