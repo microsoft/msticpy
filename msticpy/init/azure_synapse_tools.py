@@ -15,10 +15,10 @@ import jwt
 
 from .._version import VERSION
 from ..auth.azure_auth import AzureCredEnvNames, az_connect
+from ..auth.cloud_mappings import AzureCloudConfig
 from ..common.pkg_config import get_config, get_http_timeout, refresh_config, set_config
 from ..common.provider_settings import get_provider_settings
 from ..common.utility import mp_ua_header
-from ..auth.cloud_mappings import AzureCloudConfig
 
 logger = logging.getLogger(__name__)
 

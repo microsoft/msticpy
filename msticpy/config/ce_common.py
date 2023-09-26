@@ -10,10 +10,10 @@ import httpx
 import ipywidgets as widgets
 
 from .._version import VERSION
-from ..auth.azure_auth_core import AzureCloudConfig
 from ..auth.azure_auth import az_connect
-from ..context.azure.azure_data import get_token
+from ..auth.azure_auth_core import AzureCloudConfig
 from ..common.utility import mp_ua_header
+from ..context.azure.azure_data import get_token
 from .comp_edit import SettingsControl
 
 __version__ = VERSION
@@ -176,11 +176,8 @@ def get_subscription_metadata(sub_id: str) -> dict:
         f"{res_mgmt_uri}/subscriptions/{{subscriptionid}}?api-version=2021-04-01"
     )
     headers = mp_ua_header()
-
     sub_url = get_sub_url.format(subscriptionid=sub_id)
-
     resp = httpx.get(sub_url, headers=headers)
-
     www_header = resp.headers.get("WWW-Authenticate")
 
     if not www_header:
@@ -192,20 +189,16 @@ def get_subscription_metadata(sub_id: str) -> dict:
     }
     tenant_path = hdr_dict.get("Bearer authorization_uri", "").split("/")
 
-    if tenant_path:
-        tenant_id = tenant_path[-1]
-
-        az_credentials = az_connect()
-        token = get_token(az_credentials, tenant_id)
-        headers["Authorization"] = f"Bearer {token}"
-        resp = httpx.get(sub_url, headers=headers)
-
-        if resp.status_code == 200:
-            return resp.json()
-        else:
-            return {"tenantId": tenant_id}
-    else:
+    if not tenant_path:
         return {}
+
+    tenant_id = tenant_path[-1]
+    az_credentials = az_connect()
+    token = get_token(az_credentials, tenant_id)
+    headers["Authorization"] = f"Bearer {token}"
+    resp = httpx.get(sub_url, headers=headers)
+
+    return resp.json() if resp.status_code == 200 else {"tenantId": tenant_id}
 
 
 def get_def_tenant_id(sub_id: str) -> Optional[str]:
@@ -235,13 +228,16 @@ def get_managed_tenant_id(sub_id: str) -> Optional[List[str]]:  # type: ignore
     """
     Get the tenant IDs that are managing a subscription.
 
-    Args:
-        sub_id :str
-            Subscription ID
+    Parameters
+    ----------
+    sub_id :str
+        Subscription ID
 
-    Returns:
-        Optional[list[str]]
-            A list of tenant IDs or None if it could not be found.
+    Returns
+    -------
+    Optional[list[str]]
+        A list of tenant IDs or None if it could not be found.
+
     """
     sub_metadata = get_subscription_metadata(sub_id)
     tenant_ids = sub_metadata.get("managedByTenants", None)

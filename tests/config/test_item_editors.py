@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Config settings Items editors."""
+import json
 import os
 import re
 from pathlib import Path
@@ -291,6 +292,12 @@ def test_tiproviders_editor(kv_sec, mp_conf_ctrl):
 @respx.mock
 def test_get_tenant_id():
     """Test get tenantID function."""
+    endpoints_uri = "https://management.azure.com/metadata/endpoints.*"
+    endpoints_resp = json.loads(
+        Path(TEST_DATA_PATH)
+        .joinpath("az_global_cloud_endpoints.json")
+        .read_text(encoding="utf-8")
+    )
     subs_uri = (
         r"https://management\.azure\.com//subscriptions/"
         r"40dcc8bf-0478-4f3b-b275-ed0a94f2c013.*"
@@ -314,6 +321,7 @@ def test_get_tenant_id():
         "content-length": "115",
     }
     respx.get(re.compile(subs_uri)).respond(401, json=subs_json, headers=subs_headers)
+    respx.get(re.compile(endpoints_uri)).respond(200, json=endpoints_resp)
     tenantid = get_def_tenant_id("40dcc8bf-0478-4f3b-b275-ed0a94f2c013")
     check.equal(tenantid.casefold(), "72f988bf-86f1-41af-91ab-2d7cd011db47".casefold())
 

@@ -45,7 +45,7 @@ class SecurityGraphDriver(OData):
             "scope": f"{self.api_root}.default",
         }
         login_endpoint = az_cloud_config.authority_uri
-        self.oauth_url = f"{login_endpoint}/{{tenantId}}/oauth2/v2.0/token"
+        self.oauth_url = f"{login_endpoint}{{tenantId}}/oauth2/v2.0/token"
         self.api_ver = kwargs.get("api_ver", "v1.0")
 
         if connection_str:

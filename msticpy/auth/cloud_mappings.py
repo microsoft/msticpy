@@ -5,8 +5,9 @@
 # --------------------------------------------------------------------------
 """Azure Cloud Mappings."""
 import contextlib
-from typing import List, Optional
 from functools import lru_cache
+from typing import Any, Dict, List, Optional
+
 import httpx
 
 from .._version import VERSION
@@ -24,7 +25,14 @@ CLOUD_MAPPING = {
     "cn": "https://management.chinacloudapi.cn/",
 }
 
-CLOUD_ALIASES = {"public": "global", "gov": "usgov", "china": "cn"}
+CLOUD_ALIASES = {
+    "public": "global",
+    "global": "global",
+    "gov": "usgov",
+    "usgov": "usgov",
+    "china": "cn",
+    "cn": "cn",
+}
 
 _DEFENDER_MAPPINGS = {
     "global": "https://api.securitycenter.microsoft.com/",
@@ -49,15 +57,16 @@ _M365D_MAPPINGS = {
 
 def format_endpoint(endpoint: str) -> str:
     """Format an endpoint with "/" if needed ."""
-    if endpoint.endswith("/"):
-        return endpoint
-    return f"{endpoint}/"
+    return endpoint if endpoint.endswith("/") else f"{endpoint}/"
 
 
 @lru_cache(maxsize=None)
-def get_cloud_endpoints(cloud: str, resource_manager_url: Optional[str] = None) -> dict:
+def get_cloud_endpoints(
+    cloud: str, resource_manager_url: Optional[str] = None
+) -> Dict[str, Any]:
     """
     Get the cloud endpoints for a specific cloud.
+
     If resource_manager_url is supplied, it will be used instead of the cloud name.
 
     Parameters
@@ -77,8 +86,8 @@ def get_cloud_endpoints(cloud: str, resource_manager_url: Optional[str] = None) 
     ------
     MsticpyAzureConfigError
         If the cloud name is not valid.
-    """
 
+    """
     response = None
     if resource_manager_url:
         response = get_cloud_endpoints_by_resource_manager_url(resource_manager_url)
@@ -88,11 +97,12 @@ def get_cloud_endpoints(cloud: str, resource_manager_url: Optional[str] = None) 
         return response
 
     raise MsticpyAzureConfigError(
-        f"Error retrieving endpoints for Cloud: {cloud} / Resource Manager Url: {resource_manager_url}. Status Code: {response.status_code} {response.st}"
+        f"Error retrieving endpoints for Cloud: {cloud}",
+        f"Resource Manager Url: {resource_manager_url}.",
     )
 
 
-def get_cloud_endpoints_by_cloud(cloud: str) -> dict:
+def get_cloud_endpoints_by_cloud(cloud: str) -> Dict[str, Any]:
     """
     Get the cloud endpoints for a specific cloud.
 
@@ -107,14 +117,13 @@ def get_cloud_endpoints_by_cloud(cloud: str) -> dict:
         Contains endpoints and suffixes for a specific cloud.
 
     """
-
     resource_manager_url = CLOUD_MAPPING.get(CLOUD_ALIASES.get(cloud, "global"))
-    return get_cloud_endpoints_by_resource_manager_url(resource_manager_url)
+    return get_cloud_endpoints_by_resource_manager_url(resource_manager_url)  # type: ignore
 
 
 def get_cloud_endpoints_by_resource_manager_url(
     resource_manager_url: str,
-) -> dict:
+) -> Dict[str, Any]:
     """
     Get the cloud endpoints for a specific resource manager url.
 
@@ -141,9 +150,9 @@ def get_cloud_endpoints_by_resource_manager_url(
             if val == f_resource_manager_url:
                 cloud = key
                 break
-        return cloud_mappings_offline.get(cloud, "global")
+        return cloud_mappings_offline[cloud or "global"]
 
-    return cloud_mappings_offline.get("global")
+    return cloud_mappings_offline["global"]
 
 
 def get_azure_config_value(key, default):
@@ -175,7 +184,7 @@ def get_m365d_endpoint(cloud: str) -> str:
 def get_m365d_login_endpoint(cloud: str) -> str:
     """Get M365 login URL."""
     if cloud in {"gcc-high", "dod"}:
-        return "https://login.microsoftonline.us"
+        return "https://login.microsoftonline.us/"
     return AzureCloudConfig().authority_uri
 
 
@@ -232,7 +241,7 @@ class AzureCloudConfig:
         return alias_cf if alias_cf in aliases.values() else None
 
     @property
-    def suffixes(self) -> dict:
+    def suffixes(self) -> Dict[str, str]:
         """
         Get CloudSuffixes class an Azure cloud.
 
@@ -247,7 +256,7 @@ class AzureCloudConfig:
             If the cloud name is not valid.
 
         """
-        return self.endpoints.get("suffixes")
+        return self.endpoints.get("suffixes", {})
 
     @property
     def token_uri(self) -> str:
@@ -260,15 +269,17 @@ class AzureCloudConfig:
     def authority_uri(self) -> str:
         """Return the AAD authority URI."""
         return format_endpoint(
-            self.endpoints.get("authentication").get("loginEndpoint")
+            self.endpoints.get("authentication", {}).get("loginEndpoint")
         )
 
     @property
     def log_analytics_uri(self) -> str:
         """Return the AAD authority URI."""
-        return format_endpoint(self.endpoints.get("logAnalyticsResourceId"))
+        return format_endpoint(
+            self.endpoints.get("logAnalyticsResourceId")  # type: ignore
+        )
 
     @property
     def resource_manager(self) -> str:
         """Return the resource manager URI."""
-        return format_endpoint(self.endpoints.get("resourceManager"))
+        return format_endpoint(self.endpoints.get("resourceManager"))  # type: ignore

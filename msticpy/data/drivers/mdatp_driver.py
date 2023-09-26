@@ -120,11 +120,11 @@ def _select_api_uris(data_environment, cloud):
     if data_environment == DataEnvironment.M365D:
         return (
             get_m365d_endpoint(cloud),
-            f"{login_uri}/{{tenantId}}/oauth2/token",
+            f"{login_uri}{{tenantId}}/oauth2/token",
             "/advancedhunting/run",
         )
     return (
         get_defender_endpoint(cloud),
-        f"{login_uri}/{{tenantId}}/oauth2/token",
+        f"{login_uri}{{tenantId}}/oauth2/token",
         "/advancedqueries/run",
     )

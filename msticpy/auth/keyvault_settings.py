@@ -166,8 +166,7 @@ class KeyVaultSettings:
 
         """
         auth = authority_uri or self.authority_uri.strip()
-        if not tenant:
-            tenant = self.get("tenantid")
+        tenant = tenant or self.get("tenantid") or self.az_cloud_config.tenant_id
         if not tenant:
             raise MsticpyKeyVaultConfigError(
                 "Could not get TenantId from function parameters or configuration.",
@@ -205,7 +204,7 @@ class KeyVaultSettings:
             If tenant is not defined.
 
         """
-        tenant = tenant or self.az_cloud_config.tenant_id
+        tenant = tenant or self.get("tenantid") or self.az_cloud_config.tenant_id
         if not tenant:
             raise MsticpyKeyVaultConfigError(
                 "Could not get TenantId from function parameters or configuration.",

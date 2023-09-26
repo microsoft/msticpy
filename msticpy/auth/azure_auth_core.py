@@ -147,7 +147,7 @@ def _build_certificate_client(
         return None
     return CertificateCredential(
         authority=aad_uri,
-        tenant_id=tenant_id,
+        tenant_id=tenant_id,  # type: ignore
         client_id=client_id,
         **kwargs,  # type: ignore
     )
