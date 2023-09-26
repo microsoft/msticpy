@@ -17,7 +17,8 @@ __author__ = "Ian Hellen"
 def lazy_import(
     importer_name: str, import_list: Iterable[str]
 ) -> Tuple[ModuleType, Callable, Callable]:
-    """Return the importing module and a callable for lazy importing.
+    """
+    Return the importing module and a callable for lazy importing.
 
     Parameters
     ----------
@@ -55,6 +56,7 @@ def lazy_import(
         import_mapping[binding] = importing
 
     def __getattr__(name: str):
+        """Return the imported module or module member."""
         if name not in import_mapping:
             message = f"module {importer_name!r} has no attribute {name!r}"
             raise AttributeError(message)
