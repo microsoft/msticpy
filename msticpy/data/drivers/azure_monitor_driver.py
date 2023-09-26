@@ -61,20 +61,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_KQL_CLOUD_MAP = {
-    "global": "public",
-    "cn": "china",
-    "usgov": "government",
-    "de": "germany",
-}
-
-_LOGANALYTICS_URL_BY_CLOUD = {
-    "global": "https://api.loganalytics.io/",
-    "cn": "https://api.loganalytics.azure.cn/",
-    "usgov": "https://api.loganalytics.us/",
-    "de": "https://api.loganalytics.de/",
-}
-
+_KQL_CLOUD_MAP = {"global": "public", "cn": "china", "usgov": "government"}
 
 _HELP_URL = (
     "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProv-MSSentinel.html"
@@ -148,6 +135,7 @@ class AzureMonitorDriver(DriverBase):
         self.set_driver_property(
             DriverProps.MAX_PARALLEL, value=kwargs.get("max_threads", 4)
         )
+        self.az_cloud_config = AzureCloudConfig()
         logger.info(
             "AzureMonitorDriver loaded. connect_str  %s, kwargs: %s",
             connection_str,
@@ -157,9 +145,7 @@ class AzureMonitorDriver(DriverBase):
     @property
     def url_endpoint(self) -> str:
         """Return the current URL endpoint for Azure Monitor."""
-        base_url = _LOGANALYTICS_URL_BY_CLOUD.get(
-            AzureCloudConfig().cloud, _LOGANALYTICS_URL_BY_CLOUD["global"]
-        )
+        base_url = self.az_cloud_config.log_analytics_uri
         # post v1.1.0 of azure-monitor-query, the API version requires a 'v1' suffix
         if parse_version(az_monitor_version) > parse_version("1.1.0"):
             return f"{base_url}v1"
@@ -553,7 +539,7 @@ class AzureMonitorDriver(DriverBase):
         if not self._ws_config:
             logger.info("No workspace config - cannot get schema")
             return {}
-        mgmt_endpoint = AzureCloudConfig().endpoints.resource_manager
+        mgmt_endpoint = self.az_cloud_config.resource_manager
 
         url_tables = (
             "{endpoint}subscriptions/{sub_id}/resourcegroups/"

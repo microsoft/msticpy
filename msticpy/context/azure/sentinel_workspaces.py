@@ -23,7 +23,6 @@ from ...data import QueryProvider
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-
 ParsedUrlComponents = namedtuple(
     "ParsedUrlComponents",
     "domain, resource_id, tenant_name, res_components, raw_res_id",
@@ -316,8 +315,8 @@ class SentinelWorkspacesMixin:
         cls, domain, cloud: str = "global"
     ) -> Optional[str]:
         """Get the tenant ID from login domain."""
-        cloud_config = AzureCloudConfig(cloud)
-        login_endpoint = cloud_config.endpoints.active_directory
+        az_cloud_config = AzureCloudConfig(cloud)
+        login_endpoint = az_cloud_config.authority_uri
         t_resp = httpx.get(
             cls._TENANT_URI.format(cloud_endpoint=login_endpoint, tenant_name=domain),
             timeout=get_http_timeout(),
