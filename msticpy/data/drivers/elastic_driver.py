@@ -142,7 +142,7 @@ class ElasticDriver(DriverBase):
 
         # TBD
         # Run query and return results
-        return pd.DateFrame()
+        return pd.DataFrame()
 
     def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
         """

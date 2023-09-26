@@ -114,6 +114,7 @@ class VelociraptorLogDriver(DriverBase):
                 if not files:
                     continue
                 sample_df = pd.read_json(files[0], lines=True, nrows=1)
+                # pylint: disable=no-member
                 self._schema[table] = {
                     col: dtype.name for col, dtype in sample_df.dtypes.to_dict().items()
                 }
