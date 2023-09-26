@@ -15,6 +15,7 @@ import jwt
 
 from .._version import VERSION
 from ..auth.azure_auth import AzureCredEnvNames, az_connect
+from ..auth.cloud_mappings import AzureCloudConfig
 from ..common.pkg_config import get_config, get_http_timeout, refresh_config, set_config
 from ..common.provider_settings import get_provider_settings
 from ..common.utility import mp_ua_header
@@ -45,7 +46,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 _LINKED_SERVICES_URL = (
-    "https://{ws_name}.dev.azuresynapse.net/linkedservices?api-version=2020-12-01"
+    "https://{ws_name}.{synapse_endpoint}/linkedservices?api-version=2020-12-01"
 )
 
 _AZ_NAME_PATTERN = re.compile(r"^https://(?P<name>[^.]+)\.(?P<suffix>.*$)")
@@ -473,11 +474,13 @@ class MPSparkUtils:
 
 def _fetch_linked_services(ws_name: str):
     """Fetch list of linked services via Azure Synapse API."""
+    az_cloud_config = AzureCloudConfig()
+    synapse_endpoint = az_cloud_config.suffixes.get("synapseAnalytics")
     token = mssparkutils.credentials.getToken("Synapse")
     req_headers = {"Authorization": f"Bearer {token}", **mp_ua_header()}
 
     resp = httpx.get(
-        _LINKED_SERVICES_URL.format(ws_name=ws_name),
+        _LINKED_SERVICES_URL.format(ws_name=ws_name, synapse_endpoint=synapse_endpoint),
         headers=req_headers,
         timeout=get_http_timeout(),
     )
