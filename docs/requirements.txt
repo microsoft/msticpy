@@ -2,7 +2,7 @@ attrs>=18.2.0
 cryptography
 deprecated>=1.2.4
 docutils<0.20.0
-httpx==0.24.1
+httpx==0.25.0
 ipython >= 7.1.1
 jinja2<3.2.0
 numpy>=1.15.4
