@@ -323,7 +323,7 @@ def init_dir(static_attribs: List[str], dynamic_imports: Dict[str, str]):
     return sorted(set(static_attribs + list(dynamic_imports)))
 
 
-def lazy_import(module: str, attrib: str, call: bool = False):
+def delayed_import(module: str, attrib: str, call: bool = False):
     """Import attribute from module on demand."""
     attribute = None
 

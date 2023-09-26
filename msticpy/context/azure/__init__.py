@@ -5,6 +5,11 @@
 # --------------------------------------------------------------------------
 """Data provider sub-package."""
 
-# flake8: noqa: F401
-from .azure_data import AzureData
-from .sentinel_core import MicrosoftSentinel
+from ...lazy_importer import lazy_import
+
+_LAZY_IMPORTS = {
+    "msticpy.context.azure.azure_data.AzureData",
+    "msticpy.context.azure.sentinel_core.MicrosoftSentinel",
+}
+
+module, __getattr__, __dir__ = lazy_import(__name__, _LAZY_IMPORTS)

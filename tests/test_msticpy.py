@@ -8,7 +8,7 @@
 import pytest_check as check
 
 import msticpy
-from msticpy import _DEFAULT_IMPORTS
+from msticpy import _LAZY_IMPORTS
 
 __author__ = "Ian Hellen"
 
@@ -16,9 +16,10 @@ __author__ = "Ian Hellen"
 def test_getattr():
     """Test fetching and importing dynamic attributes."""
 
-    for attrib in _DEFAULT_IMPORTS:
-        check.is_in(attrib, dir(msticpy))
+    for lazy_import in _LAZY_IMPORTS:
+        _, _, lazy_attrib = lazy_import.rpartition(".")
+        check.is_in(lazy_attrib, dir(msticpy))
 
-        obj = getattr(msticpy, attrib)
+        obj = getattr(msticpy, lazy_attrib)
         if isinstance(obj, type) or callable(obj):
-            check.equal(obj.__name__, attrib)
+            check.equal(obj.__name__, lazy_attrib)

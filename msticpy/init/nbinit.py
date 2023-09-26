@@ -178,14 +178,14 @@ _VERBOSITY: Callable[[Optional[int]], int] = _get_verbosity_setting()
 
 # pylint: disable=use-dict-literal
 _NB_IMPORTS = [
-    dict(pkg="pandas", alias="pd"),
+    # dict(pkg="pandas", alias="pd"),
     dict(pkg="IPython", tgt="get_ipython"),
     dict(pkg="IPython.display", tgt="display"),
     dict(pkg="IPython.display", tgt="HTML"),
     dict(pkg="IPython.display", tgt="Markdown"),
-    dict(pkg="ipywidgets", alias="widgets"),
+    # dict(pkg="ipywidgets", alias="widgets"),
     dict(pkg="pathlib", tgt="Path"),
-    dict(pkg="numpy", alias="np"),
+    # dict(pkg="numpy", alias="np"),
 ]
 if sns is not None:
     _NB_IMPORTS.append(dict(pkg="seaborn", alias="sns"))
@@ -193,22 +193,22 @@ if sns is not None:
 _MP_IMPORTS = [
     dict(pkg="msticpy"),
     dict(pkg="msticpy.data", tgt="QueryProvider"),
-    dict(pkg="msticpy.vis.foliummap", tgt="FoliumMap"),
-    dict(pkg="msticpy.context", tgt="TILookup"),
-    dict(pkg="msticpy.context", tgt="GeoLiteLookup"),
-    dict(pkg="msticpy.context", tgt="IPStackLookup"),
-    dict(pkg="msticpy.transform", tgt="IoCExtract"),
+    # dict(pkg="msticpy.vis.foliummap", tgt="FoliumMap"),
+    # dict(pkg="msticpy.context", tgt="TILookup"),
+    # dict(pkg="msticpy.context", tgt="GeoLiteLookup"),
+    # dict(pkg="msticpy.context", tgt="IPStackLookup"),
+    # dict(pkg="msticpy.transform", tgt="IoCExtract"),
     dict(pkg="msticpy.common.utility", tgt="md"),
     dict(pkg="msticpy.common.utility", tgt="md_warn"),
     dict(pkg="msticpy.common.wsconfig", tgt="WorkspaceConfig"),
     dict(pkg="msticpy.init.pivot", tgt="Pivot"),
     dict(pkg="msticpy.datamodel", tgt="entities"),
     dict(pkg="msticpy.init", tgt="nbmagics"),
-    dict(pkg="msticpy.nbtools", tgt="SecurityAlert"),
+    # dict(pkg="msticpy.nbtools", tgt="SecurityAlert"),
     dict(pkg="msticpy.vis", tgt="mp_pandas_plot"),
-    dict(pkg="msticpy.vis", tgt="nbdisplay"),
+    # dict(pkg="msticpy.vis", tgt="nbdisplay"),
     dict(pkg="msticpy.init", tgt="mp_pandas_accessors"),
-    dict(pkg="msticpy", tgt="nbwidgets"),
+    # dict(pkg="msticpy", tgt="nbwidgets"),
 ]
 
 _MP_IMPORT_ALL: List[Dict[str, str]] = [
