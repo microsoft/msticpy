@@ -1,0 +1,81 @@
+metadata:
+  version: 1
+  description: Fancy description for a sample query
+  data_environments:
+    - MyEnvironment
+  data_families:
+    - Data Family 1
+    - Data Family 2
+  tags:
+    - alert
+    - securityalert
+  aliases: MyAlias
+  cluster: MyCluster
+  clusters:
+    - MyCluster1
+    - MyCluster2
+  cluster_groups:
+    - MyClusterGroup1
+    - MyClusterGroup2
+  database: MyDatabase
+defaults:
+  metadata:
+    data_source: security_alert
+    data_families:
+      - DataFamily1
+      - DataFamily2
+    pivot:
+      myPivot:
+        - pivot1
+    top: 42
+  parameters:
+      parameter1:
+        description: First Parameter
+        type: str
+        default: Default Value for Parameter 1
+        aliases:
+          - param1
+          - p1
+      parameter2:
+        description: Second Parameter
+        type: datetime
+        default: Default Value for Parameter 2
+        aliases: param2
+      parameter3:
+        description: Third Parameter
+        type: int
+      parameter4:
+        description: Fourth Parameter
+        type: float
+sources:
+  query1:
+    description: Description for the first query
+    metadata:
+        version: 1
+        description: Fancy description for a sample query
+        data_environments: MyEnvironment
+        data_families: 
+          - SecurityAlert
+        tags:
+          - alert
+          - securityalert
+        aliases: MyAlias
+        cluster: MyCluster
+        clusters:
+          - MyCluster1
+          - MyCluster2
+        cluster_groups:
+          - MyClusterGroup1
+          - MyClusterGroup2
+        database: MyDatabase
+    args:
+      query: MyQuery
+      uri: https://microsoft.com/
+    query_macros:
+      macro1:
+        description: Macro Description
+        value: MyMacroValue
+    parameters:
+      parameter5:
+        description: Fifth Parameter
+        type: list

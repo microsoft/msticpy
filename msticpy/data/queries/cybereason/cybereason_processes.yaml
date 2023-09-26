@@ -78,7 +78,7 @@ sources:
     parameters:
       command:
         description: Command to search for
-        type: string
+        type: str
   find_process_by_suspicions:
     description: Search for process with a specific suspicion
     metadata:
@@ -108,7 +108,7 @@ sources:
     parameters:
       suspicion:
         description: Suspicion that the process should have
-        type: string
+        type: str
   find_process_by_pid:
     description: Search for a process by pid and hostname
     metadata:

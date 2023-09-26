@@ -39,7 +39,6 @@ sources:
       query: '{path}?$filter=createdDateTime ge {start}
         and createdDateTime le {end} {add_query_items}'
       uri: None
-    parameters:
   get_alert:
     description: Retrieves a single alert by AlertId
     metadata:

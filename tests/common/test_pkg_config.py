@@ -17,6 +17,7 @@ from msticpy.common import pkg_config
 from msticpy.context.geoip import GeoLiteLookup, IPStackLookup
 
 from ..unit_test_lib import custom_mp_config, get_test_data_path
+from ..data.queries.test_query_files import validate_queries_file_structure
 
 _TEST_DATA = get_test_data_path()
 
@@ -31,10 +32,21 @@ def test_load_default():
     check.equal(1, len(settings["QueryDefinitions"]["Default"]))
     for path in settings["QueryDefinitions"]["Default"]:
         check.is_true(type(path), str)
-        path = f"data/{path}"
-        check.is_true(
-            Path(pkg_config.__file__).resolve().parent.parent.joinpath(path).is_dir()
+        path = (
+            Path(pkg_config.__file__).resolve().parent.parent.joinpath(f"data/{path}")
         )
+        check.is_true(path.is_dir())
+        for query_file in path.rglob("*.yaml"):
+            validate_queries_file_structure(query_file)
+    for path in settings["QueryDefinitions"].get("Custom", []):
+        check.is_true(type(path), str)
+        path = Path(path)
+        if not path.is_absolute():
+            path = Path(__file__).resolve().parent.parent.joinpath(path)
+        check.is_true(path.is_dir())
+        for query_file in Path(path).resolve().rglob("*.yaml"):
+            if "tests" not in [parent.name for parent in query_file.absolute().parents]:
+                validate_queries_file_structure(query_file)
 
 
 def test_custom_config():

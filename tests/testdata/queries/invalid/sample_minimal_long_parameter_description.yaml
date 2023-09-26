@@ -1,0 +1,21 @@
+metadata:
+  version: 1
+  description: Fancy description for a sample query
+  data_environments:
+    - MyEnvironment
+  data_families:
+    - Data Family 1
+    - Data Family 2
+defaults:
+  parameters:
+      parameter1:
+        description: |-
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce in felis tincidunt, posuere libero vehicula, accumsan ipsum. Nullam molestie dolor eu tellus sollicitudin consequat. Duis lobortis facilisis sapien, sit amet sagittis urna tempus eget. Donec luctus, erat in egestas mattis, tellus nunc elementum felis, ac suscipit lectus sapien ut magna. Donec id purus et urna cursus cursus nec eget neque. Donec id feugiat arcu. Ut aliquam et ipsum non tincidunt. Sed vehicula imperdiet mi, a ultrices ante vestibulum vitae. Sed vestibulum tortor tortor, a consequat dui ornare sed. In dui nibh, congue vitae nibh ut, facilisis suscipit ipsum. Integer iaculis neque in lobortis volutpat. Suspendisse tristique molestie nisi, nec molestie massa pulvinar sit amet.
+
+          Proin sapien nulla, aliquet rhoncus libero eget, rhoncus eleifend arcu. Vestibulum vitae neque sollicitudin orci ultricies varius. Sed id eros elementum, molestie sapien et, mollis purus. Ut ac ultrices sapien, ac efficitur ipsum. Nunc nec aliquet mauris, nec fermentum arcu. Nulla facilisi. Morbi non commodo nulla. Fusce quis leo vitae leo commodo pulvinar vitae eget turpis. Vestibulum ultricies mauris quis urna facilisis, nec vestibulum enim cursus. Suspendisse ac convallis ligula. Nam non velit iaculis, viverra orci a, ornare leo. Sed ac porttitor risus.
+        type: str
+sources:
+  query1:
+    description: Description for the first query
+    args:
+      query: MyQuery

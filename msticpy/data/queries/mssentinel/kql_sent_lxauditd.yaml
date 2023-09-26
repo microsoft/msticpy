@@ -48,4 +48,3 @@ sources:
         | extend typed_mssg = pack(mssg_type, mssg_content)
         | summarize AuditdMessage = makelist(typed_mssg) by TenantId, TimeGenerated, Computer, mssg_id
         {add_query_items}'
-    parameters:
