@@ -237,3 +237,101 @@ se, and choose the conda file saved earlier with the Spark session configuration
     - numpy
     - pip:
         - msticpy[azure]>=2.3.1
+
+Installing for isolated or semi-isolated environments
+-----------------------------------------------------
+
+There are instances in which you may want to utilize msticpy in an isolated or semi-isolated environment. Below are some examples on how to do this for certain platforms:
+
+Windows -> Isolated Windows Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- On your primary Windows machine with internet access create a virtual environment for the python version you want to use. 
+- Download msticpy by running the following:
+
+.. code-block:: powershell
+
+    pip download msticpy --no-deps --dest \path\to\destination
+
+- Within \path\to\destination you should see a .whl file for msticpy and the other dependencies. Some dependencies may not be .whl files, but tar.gz files. These files will need to be built into .whl files. To do this, run the following:
+
+.. code-block:: powershell
+
+    pip wheel {file.tar.gz} -w \path\to\destination
+
+or use the tool here 
+`build_wheel_from_targz.py
+<https://github.com/microsoft/msticpy/blob/main/tools/build_wheel_from_targz.py>`__
+to build all the tar.gz files in a directory.
+
+- Zip and/or copy the directory folder to the isolated environment.
+
+- From the Isolated environment, unzip if needed and then run the following:
+
+.. code-block:: powershell
+
+    pip install "\path\to\destination\{msticpy.whl}"
+
+.. note:: If you have an issue installing msticpy, you may have to install the dependencies first. You can also utilize 
+`install_all_whl_files.py
+<https://github.com/microsoft/msticpy/blob/main/tools/install_all_whl_files.py>`__
+to help. 
+
+
+- Test the installation by running msticpy that suites your needs.
+
+
+
+Linux -> Isolated Linux Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Similar to Windows to Isolated Windows Environment instructions above
+
+
+Windows -> Isolated Linux Environment including Jupyter Notebooks
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- On your primary Windows machine with internet access download dockers for windows.
+- Run the  script 
+`download_python_package.py
+<https://github.com/microsoft/msticpy/blob/main/tools/download_python_package.py>`__
+
+Example:
+.. code-block:: powershell
+
+    python \path\to\python\file --python-version "3.8.5" --module-name "msticpy[sentinel]" --module-version "2.7.0" --directory \path\to\destination
+
+- Zip and/or copy the directory folder to the isolated environment.
+
+- From the Isolated environment, unzip if needed and then run the following:
+
+.. code-block:: powershell
+
+    pip install "\path\to\destination\{msticpy.whl}"
+
+.. note:: If you have an issue installing msticpy, you may have to install the dependencies first. You can also utilize 
+`install_all_whl_files.py
+<https://github.com/microsoft/msticpy/blob/main/tools/install_all_whl_files.py>`__
+to help.
+
+- Test the installation by running msticpy that suites your needs.
+
+- If you are installing within a Jupyter Notebooks, you will need to upload your zip file/directory containing all of the whl files.
+
+- Run the following in a cell:
+
+.. code-block:: python
+
+import os
+directory = "\path\to\whl\files\directory"
+files = [
+        os.path.join(directory, filename)
+        for filename in os.listdir(directory)
+        if filename.endswith(".whl")
+]
+
+for file in files:
+   filename = os.path.split(file)[-1]
+   print(f"\nAttempting to install {filename}")
+   %pip install --quiet --no-index --no-deps --find-links . {file}
+
