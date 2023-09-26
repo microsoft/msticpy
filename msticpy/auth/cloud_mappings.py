@@ -14,6 +14,7 @@ from .._version import VERSION
 from ..common import pkg_config as config
 from ..common.exceptions import MsticpyAzureConfigError
 from ..common.pkg_config import get_http_timeout
+from ..common.utility.package import unit_testing
 from .cloud_mappings_offline import cloud_mappings_offline
 
 __version__ = VERSION
@@ -138,6 +139,8 @@ def get_cloud_endpoints_by_resource_manager_url(
         Contains endpoints and suffixes for a specific cloud.
 
     """
+    if unit_testing():
+        return cloud_mappings_offline["global"]
     f_resource_manager_url = format_endpoint(resource_manager_url)
     endpoint_url = f"{f_resource_manager_url}metadata/endpoints?api-version=latest"
     try:
@@ -145,12 +148,16 @@ def get_cloud_endpoints_by_resource_manager_url(
         if resp.status_code == 200:
             return resp.json()
 
-    except httpx.ConnectError:
-        for key, val in CLOUD_MAPPING.items():
-            if val == f_resource_manager_url:
-                cloud = key
-                break
-        return cloud_mappings_offline[cloud or "global"]
+    except httpx.RequestError:
+        cloud = next(
+            (
+                key
+                for key, val in CLOUD_MAPPING.items()
+                if val == f_resource_manager_url
+            ),
+            "global",
+        )
+        return cloud_mappings_offline[cloud]
 
     return cloud_mappings_offline["global"]
 
