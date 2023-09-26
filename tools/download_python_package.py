@@ -14,6 +14,20 @@ __author__ = "Chris Cianelli"
 def download_python_package(
     python_version: str, module_name: str, module_version: str, host_directory: str
 ):
+    """
+    Download a Python package and its dependencies for local use
+
+    Parameters
+    ----------
+    python_version: str
+        Python version to use. Ex: "3.8.5" or "3.9"
+    module_name: str
+        Name of the module to download. Ex: "msticpy"
+    module_version: str
+        Version of the module to download. Ex: "1.0.0"
+    host_directory: str
+        Directory containing tar.gz files
+    """
     os.makedirs(host_directory, exist_ok=True)
     try:
         # Generate a unique tag based on the current timestamp

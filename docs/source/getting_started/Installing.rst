@@ -241,7 +241,19 @@ se, and choose the conda file saved earlier with the Spark session configuration
 Installing for isolated or semi-isolated environments
 -----------------------------------------------------
 
-There are instances in which you may want to utilize msticpy in an isolated or semi-isolated environment. Below are some examples on how to do this for certain platforms:
+There are instances in which you may want to utilize msticpy in an isolated or semi-isolated environment. It is recommended to utilize a virtual environment and the scripts provided within the steps. Also ensure you have the correct python version installed on your host machine as well as the isolated environment. In order to find the correct python version, you can run the following:
+
+.. code-block:: powershell
+
+    python --version
+
+You can also run:
+
+.. code-block:: python
+    import sys
+    print(sys.version)
+
+Below are some examples on how to do this for certain platforms:
 
 Windows -> Isolated Windows Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -334,4 +346,3 @@ for file in files:
    filename = os.path.split(file)[-1]
    print(f"\nAttempting to install {filename}")
    %pip install --quiet --no-index --no-deps --find-links . {file}
-

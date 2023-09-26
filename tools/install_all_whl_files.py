@@ -9,6 +9,14 @@ __author__ = "Chris Cianelli"
 
 
 def install_all_whl_files(directory: str):
+    """
+    Install all wheel files in a directory
+
+    Parameters
+    ----------
+    directory: str
+        Directory containing wheel files
+    """
     files = [
         os.path.join(directory, filename)
         for filename in os.listdir(directory)

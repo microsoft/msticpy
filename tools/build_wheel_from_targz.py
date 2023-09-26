@@ -9,6 +9,14 @@ __author__ = "Chris Cianelli"
 
 
 def build_wheel_from_targz(directory: str):
+    """
+    Build wheel files from tar.gz files in a directory
+
+    Parameters
+    ----------
+    directory: str
+        Directory containing tar.gz files
+    """
     files = [
         os.path.join(directory, filename)
         for filename in os.listdir(directory)
