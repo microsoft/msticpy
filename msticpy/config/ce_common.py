@@ -193,12 +193,14 @@ def get_subscription_metadata(sub_id: str) -> dict:
         return {}
 
     tenant_id = tenant_path[-1]
-    az_credentials = az_connect()
-    token = get_token(az_credentials, tenant_id)
-    headers["Authorization"] = f"Bearer {token}"
-    resp = httpx.get(sub_url, headers=headers)
-
-    return resp.json() if resp.status_code == 200 else {"tenantId": tenant_id}
+    try:
+        az_credentials = az_connect()
+        token = get_token(az_credentials, tenant_id)
+        headers["Authorization"] = f"Bearer {token}"
+        resp = httpx.get(sub_url, headers=headers)
+        return resp.json() if resp.status_code == 200 else {"tenantId": tenant_id}
+    except:
+        return {"tenantId": tenant_id}
 
 
 def get_def_tenant_id(sub_id: str) -> Optional[str]:
