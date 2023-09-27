@@ -32,7 +32,6 @@ class CEKeyVault(CESimpleSettings):
     <li>global (Commercial Azure cloud)</li>
     <li>usgov (US Government cloud)</li>
     <li>cn (China national cloud)</li>
-    <li>de (German national cloud)</li>
     </ul>
     The default is "global".<br>
     """

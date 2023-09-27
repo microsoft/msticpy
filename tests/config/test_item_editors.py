@@ -289,8 +289,10 @@ def test_tiproviders_editor(kv_sec, mp_conf_ctrl):
 
 
 @respx.mock
-def test_get_tenant_id():
+@patch("msticpy.config.ce_common.get_token")
+def test_get_tenant_id(get_token):
     """Test get tenantID function."""
+    get_token.return_value = "[PLACEHOLDER]"
     subs_uri = (
         r"https://management\.azure\.com//subscriptions/"
         r"40dcc8bf-0478-4f3b-b275-ed0a94f2c013.*"

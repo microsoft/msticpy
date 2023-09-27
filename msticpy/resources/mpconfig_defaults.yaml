@@ -48,11 +48,12 @@ AzureSentinel:
     Default:
       <<: *workspace
 Azure:
-  cloud: enum(required=False, options=[global; cn; usgov; de], default=global)
+  cloud: enum(required=False, options=[global; cn; usgov], default=global)
   auth_methods: m_enum(required=False,
     options=[env; msi; cli; devicecode; interactive; vscode; powershell; clientsecret; certificate],
     default=["cli"; "msi", "devicecode"]
     )
+  resource_manager_url: str(required=False)
 QueryDefinitions:
   # Add paths to folders containing custom query definitions here
   Custom: list(required=False)
@@ -222,7 +223,7 @@ KeyVault:
   AzureRegion: str(required=False)
   VaultName: str()
   UseKeyring: bool(default=True, required=False)
-  Authority: enum(options="global; usgov; de; cn", default=global)
+  Authority: enum(options="global; usgov; cn", default=global)
 UserDefaults:
   # List of query providers to load
   QueryProviders:

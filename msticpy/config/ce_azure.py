@@ -25,7 +25,6 @@ class CEAzure(CESimpleSettings):
     <li>global (Commercial Azure cloud)</li>
     <li>usgov (US Government cloud)</li>
     <li>cn (China national cloud)</li>
-    <li>de (German national cloud)</li>
     </ul>
     The default is "global".<br>
 
@@ -40,6 +39,12 @@ class CEAzure(CESimpleSettings):
     <li>powershell" - to use PowerShell credentials</li>
     <li>cache" - to use shared token cache credentials</li>
     </ul>
+    <br>
+
+    <b>resource_manager_url</b> setting allows you to specify the Azure Resource Manager Url to use.
+    This is only needed if you are using a cloud outside of global, usgov, cn, and de.
+    This will override the cloud and its associated Authority and API endpoint URLs.
+
     """
     _HELP_URI = {
         "MSTICPy Package Configuration": (

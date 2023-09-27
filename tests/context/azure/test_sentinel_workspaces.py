@@ -181,7 +181,7 @@ _TEST_URL_LOOKUP = [
 def test_ws_details_from_url(url, expected, wk_space, monkeypatch):
     """Testing retrieving workspace details from portal url."""
     del wk_space
-    login_endpoint = AzureCloudConfig().endpoints.active_directory
+    login_endpoint = AzureCloudConfig().authority_uri
     respx.get(re.compile(f"{login_endpoint}.*")).respond(200, json=_TENANT_LOOKUP_RESP)
 
     _patch_qry_prov(monkeypatch)
@@ -353,7 +353,7 @@ def test_get_resource_id_bad():
 @respx.mock
 def test_fail_tenantid_lookup(url, expected, wk_space, monkeypatch):
     """Test when tenant ID lookup fails."""
-    login_endpoint = AzureCloudConfig().endpoints.active_directory
+    login_endpoint = AzureCloudConfig().authority_uri
     respx.get(re.compile(f"{login_endpoint}.*")).respond(404, json={})
 
     _patch_qry_prov(monkeypatch)

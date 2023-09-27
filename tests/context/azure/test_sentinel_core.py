@@ -79,7 +79,7 @@ def test_azuresent_connect_token(get_token: Mock, az_data_connect: Mock):
         get_token.assert_called_once_with(
             sentinel_inst.credentials,
             tenant_id=tenant_id,
-            cloud=sentinel_inst.user_cloud,
+            cloud=sentinel_inst.cloud,
         )
 
 

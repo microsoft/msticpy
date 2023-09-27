@@ -26,7 +26,6 @@ sources:
         {table}
         {add_query_items}'
       uri: None
-    parameters:
   list_resources_by_type:
       description: Retrieves list of resources by type
       metadata:
@@ -51,7 +50,6 @@ sources:
         | order by name desc
         {add_query_items}'
       uri: None
-    parameters:
   list_public_ips:
     description: Retrieves list of resources with public IP addresses
     metadata:
@@ -62,7 +60,6 @@ sources:
         | project properties.ipAddress
         {add_query_items}'
       uri: None
-    parameters:
   list_resources_by_api_version:
     description: Retrieves list of resources for each API version
     metadata:
@@ -74,7 +71,6 @@ sources:
         | order by type asc
         {add_query_items}'
       uri: None
-    parameters:
   list_detailed_virtual_machines:
     description: Retrieves list of VMs with network details
     metadata:

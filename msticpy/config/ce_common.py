@@ -4,14 +4,16 @@
 # license information.
 # --------------------------------------------------------------------------
 """Component edit utility functions."""
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import httpx
 import ipywidgets as widgets
 
 from .._version import VERSION
+from ..auth.azure_auth import az_connect
 from ..auth.azure_auth_core import AzureCloudConfig
 from ..common.utility import mp_ua_header
+from ..context.azure.azure_data import get_token
 from .comp_edit import SettingsControl
 
 __version__ = VERSION
@@ -38,7 +40,6 @@ TEXT_AREA_LAYOUT = {
     "layout": widgets.Layout(width="70%"),
     "style": {"description_width": "100px"},
 }
-
 
 if _DEBUG:
 
@@ -154,6 +155,55 @@ def widget_to_py(ctrl: Union[widgets.Widget, SettingsControl]) -> Any:
 # pylint: enable=too-many-return-statements
 
 
+def get_subscription_metadata(sub_id: str) -> dict:
+    """
+    Get the subscription metadata for a subscription.
+
+    Parameters
+    ----------
+    sub_id : str
+        Subscription ID
+
+    Returns
+    -------
+    dict
+        Subscription metadata
+
+    """
+    az_cloud_config = AzureCloudConfig()
+    res_mgmt_uri = az_cloud_config.resource_manager
+    get_sub_url = (
+        f"{res_mgmt_uri}/subscriptions/{{subscriptionid}}?api-version=2021-04-01"
+    )
+    headers = mp_ua_header()
+    sub_url = get_sub_url.format(subscriptionid=sub_id)
+    resp = httpx.get(sub_url, headers=headers)
+    www_header = resp.headers.get("WWW-Authenticate")
+
+    if not www_header:
+        return {}
+
+    hdr_dict = {
+        item.split("=")[0]: item.split("=")[1].strip('"')
+        for item in www_header.split(", ")
+    }
+    tenant_path = hdr_dict.get("Bearer authorization_uri", "").split("/")
+
+    if not tenant_path:
+        return {}
+
+    tenant_id = tenant_path[-1]
+    try:
+        az_credentials = az_connect()
+        token = get_token(az_credentials, tenant_id)
+        headers["Authorization"] = f"Bearer {token}"
+        resp = httpx.get(sub_url, headers=headers)
+        return resp.json() if resp.status_code == 200 else {"tenantId": tenant_id}
+    except Exception as err:  # pylint: disable=broad-except
+        print("Error retrieving subscription metadata", err)
+        return {"tenantId": tenant_id}
+
+
 def get_def_tenant_id(sub_id: str) -> Optional[str]:
     """
     Get the tenant ID for a subscription.
@@ -171,27 +221,30 @@ def get_def_tenant_id(sub_id: str) -> Optional[str]:
     Notes
     -----
     This function returns the tenant ID that owns the subscription.
-    This may not be the correct ID to use if you are using delegated
-    authorization via Azure Lighthouse.
 
     """
-    res_mgmt_uri = AzureCloudConfig().endpoints.resource_manager
-    get_tenant_url = (
-        f"{res_mgmt_uri}/subscriptions/{{subscriptionid}}" + "?api-version=2015-01-01"
-    )
-    resp = httpx.get(
-        get_tenant_url.format(subscriptionid=sub_id), headers=mp_ua_header()
-    )
-    # Tenant ID is returned in the WWW-Authenticate header/Bearer authorization_uri
-    www_header = resp.headers.get("WWW-Authenticate")
-    if not www_header:
-        return None
-    hdr_dict = {
-        item.split("=")[0]: item.split("=")[1].strip('"')
-        for item in www_header.split(", ")
-    }
-    tenant_path = hdr_dict.get("Bearer authorization_uri", "").split("/")
-    return tenant_path[-1] if tenant_path else None
+    sub_metadata = get_subscription_metadata(sub_id)
+    return sub_metadata.get("tenantId", None)
+
+
+def get_managed_tenant_id(sub_id: str) -> Optional[List[str]]:  # type: ignore
+    """
+    Get the tenant IDs that are managing a subscription.
+
+    Parameters
+    ----------
+    sub_id :str
+        Subscription ID
+
+    Returns
+    -------
+    Optional[list[str]]
+        A list of tenant IDs or None if it could not be found.
+
+    """
+    sub_metadata = get_subscription_metadata(sub_id)
+    tenant_ids = sub_metadata.get("managedByTenants", None)
+    return tenant_ids if tenant_ids else None
 
 
 def txt_to_dict(txt_val: str) -> Dict[str, Any]:
@@ -382,7 +435,9 @@ def get_defn_or_default(defn: Union[Tuple[str, Any], Any]) -> Tuple[str, Dict]:
 
 # flake8: noqa: F821
 def get_or_create_mpc_section(
-    mp_controls: "MpConfigControls", section: str, subkey: Optional[str] = None  # type: ignore
+    mp_controls: "MpConfigControls",  # type: ignore[name-defined]
+    section: str,
+    subkey: Optional[str] = None,  # type: ignore
 ) -> Any:
     """
     Return (and create if it doesn't exist) a settings section.
