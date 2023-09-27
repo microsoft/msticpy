@@ -70,26 +70,12 @@ except ImportError as imp_err:
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-
-_KQL_CLOUD_MAP = {
-    "global": "public",
-    "cn": "china",
-    "usgov": "government",
-    "de": "germany",
-}
+_KQL_CLOUD_MAP = {"global": "public", "cn": "china", "usgov": "government"}
 
 _KQL_OPTIONS = ["timeout"]
 _KQL_ENV_OPTS = "KQLMAGIC_CONFIGURATION"
 
 _AZ_CLOUD_MAP = {kql_cloud: az_cloud for az_cloud, kql_cloud in _KQL_CLOUD_MAP.items()}
-
-_LOGANALYTICS_URL_BY_CLOUD = {
-    "global": "https://api.loganalytics.io/",
-    "cn": "https://api.loganalytics.azure.cn/",
-    "usgov": "https://api.loganalytics.us/",
-    "de": "https://api.loganalytics.de/",
-}
-
 
 # pylint: disable=too-many-instance-attributes
 
@@ -113,6 +99,7 @@ class KqlDriver(DriverBase):
             print out additional diagnostic information.
 
         """
+        self.az_cloud_config = AzureCloudConfig()
         self._ip = get_ipython()
         self._debug = kwargs.get("debug", False)
         super().__init__(**kwargs)
@@ -448,7 +435,7 @@ class KqlDriver(DriverBase):
             kql_cloud = self._get_kql_option("cloud")
             az_cloud = _AZ_CLOUD_MAP.get(kql_cloud, "public")
             return kql_cloud, az_cloud
-        az_cloud = AzureCloudConfig().cloud
+        az_cloud = self.az_cloud_config.cloud
         kql_cloud = _KQL_CLOUD_MAP.get(az_cloud, "public")
         if kql_cloud != self._get_kql_option("cloud"):
             self._set_kql_option("cloud", kql_cloud)
@@ -570,8 +557,7 @@ class KqlDriver(DriverBase):
 
         """
         # default to default auth methods
-        az_config = AzureCloudConfig()
-        auth_types = az_config.auth_methods
+        auth_types = self.az_cloud_config.auth_methods
         # override if user-supplied methods on command line
         if isinstance(mp_az_auth, str) and mp_az_auth != "default":
             auth_types = [mp_az_auth]
@@ -598,4 +584,4 @@ class KqlDriver(DriverBase):
             self._set_kql_option("try_token", endpoint_token)
 
     def _get_endpoint_uri(self):
-        return _LOGANALYTICS_URL_BY_CLOUD[self.az_cloud]
+        return self.az_cloud_config.log_analytics_uri

@@ -461,7 +461,7 @@ class SentinelIncidentsMixin:
         relations_id = uuid4()
         bookmark_url = incident_url + f"/relations/{relations_id}"
         bkmark_data_items = {
-            "relatedResourceId": mark_res_id.split("https://management.azure.com")[1]
+            "relatedResourceId": mark_res_id.split(self.base_url)[1]  # type: ignore
         }
         data = _build_sent_data(bkmark_data_items, props=True)
         params = {"api-version": "2021-04-01"}

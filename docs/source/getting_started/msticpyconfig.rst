@@ -241,6 +241,10 @@ Possible credential types (``auth_methods``) are:
    credentials will fail. We have found Azure CLI to be reliable
    and maintains authentication tokens between notebook sessions.
 
+The ``resource_manager_url`` setting allows you to specify the Azure Resource Manager Url to use. This is only needed if you are using a cloud outside of global, usgov, cn, and de. Example: https://management.azure.com
+
+.. warning:: Setting resource_manager_url  will overwrite the cloud setting. For example, if you set the cloud to be global and then set the resource_manager_url to be https://management.usgovcloudapi.net then the cloud will utilize the usgov endpoints which maybe incorrect for your needs.
+
 .. code:: yaml
 
     Azure:

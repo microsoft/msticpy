@@ -39,7 +39,6 @@ sources:
         | summarize arg_max(TimeGenerated, *) by IndicatorId
         {add_query_items}'
       uri: None
-    parameters:
   list_indicators_by_ip:
     description: Returns list of indicators by IP Address
     metadata:

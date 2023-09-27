@@ -21,21 +21,18 @@ sources:
       data_families: [Heartbeat]
     args:
       query: host_hb.csv
-    parameters:
   linux_events:
     description: List Linux Events
     metadata:
       data_families: [LinuxSyslog]
     args:
       query: linux_events.csv
-    parameters:
   linux_logons:
     description: List logons on host
     metadata:
       data_families: [LinuxSyslog]
     args:
       query: linux_logons.csv
-    parameters:
   list_host_logons:
     description: Retrieves the logon events on the host
     args:
