@@ -330,7 +330,24 @@ to help.
 
 - If you are installing within a Jupyter Notebooks, you will need to upload your zip file/directory containing all of the whl files.
 
-- Run the following in a cell:
+- If you need to unzip the zip file, run the following:
+
+.. code-block:: python
+
+import zipfile
+import os
+import shutil
+
+file_path =  "./{zip_file_name}"
+file_name = os.path.split(file_path)[-1]
+
+file_name_without_ext = os.path.splitext(file_name)[0]
+
+with zipfile.ZipFile(file_path, 'r') as zip_ref:
+    zip_ref.extractall(os.path.join(os.getcwd(), file_name_without_ext))
+
+
+- To install the whl files, run the following in a cell:
 
 .. code-block:: python
 

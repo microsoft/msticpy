@@ -59,7 +59,7 @@ def download_python_package(
                 done
             
 
-            RUN zip -j /{python_version}/$MODULE_NAME.zip /{python_version}/*.whl
+            RUN zip -j /{python_version}/py{python_version}_$MODULE_NAME.zip /{python_version}/*.whl
 
             # Remove the wheel files
             RUN rm -f /{python_version}/*.whl
