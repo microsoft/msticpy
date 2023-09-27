@@ -50,10 +50,10 @@ class OPR(HttpTIProvider):
         super().__init__(**kwargs)
 
         self._provider_name = self.__class__.__name__
-        print(
-            "Using Open PageRank.",
-            "See https://www.domcop.com/openpagerank/what-is-openpagerank",
-        )
+        # print(
+        #     "Using Open PageRank.",
+        #     "See https://www.domcop.com/openpagerank/what-is-openpagerank",
+        # )
 
     async def lookup_iocs_async(
         self,

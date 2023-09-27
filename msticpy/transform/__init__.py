@@ -15,8 +15,6 @@ _LAZY_IMPORTS = {
     "msticpy.context.geoip.IPStackLookup",
     "msticpy.context.geoip.geo_distance",
     "msticpy.context.tilookup.TILookup",
-    "msticpy.transform.base64unpack",
-    "msticpy.transform.process_tree_utils",
     "msticpy.transform.iocextract.IoCExtract",
 }
 

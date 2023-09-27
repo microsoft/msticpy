@@ -259,7 +259,7 @@ def _err_output(*args):
         )
 
 
-# pylint: disable=too-many-statements
+# pylint: disable=too-many-statements, too-many-branches
 def init_notebook(
     namespace: Optional[Dict[str, Any]] = None,
     def_imports: str = "all",
@@ -420,8 +420,9 @@ def init_notebook(
         with redirect_stdout(stdout_cap):
             check_version()
             output = stdout_cap.getvalue()
-            _pr_output(output)
-            logger.info("Check version failures: %s", output)
+            if output.strip():
+                _pr_output(output)
+                logger.info("Check version failures: %s", output)
 
     if _detect_env("synapse", **kwargs) and is_in_synapse():
         synapse_params = {
@@ -437,8 +438,9 @@ def init_notebook(
             namespace, additional_packages, user_install, extra_imports, def_imports
         )
         output = stdout_cap.getvalue()
-        _pr_output(output)
-        logger.info("Import failures: %s", output)
+        if output.strip():
+            _pr_output(output)
+            logger.info("Import failures: %s", output)
 
     # Configuration check
     if no_config_check:
@@ -467,8 +469,9 @@ def init_notebook(
         _pr_output("Loading pivots.")
         _load_pivots(namespace=namespace)
         output = stdout_cap.getvalue()
-        _pr_output(output)
-        logger.info("Pivot load failures: %s", output)
+        if output.strip():
+            _pr_output(output)
+            logger.info("Pivot load failures: %s", output)
 
     # User defaults
     stdout_cap = io.StringIO()
@@ -476,9 +479,10 @@ def init_notebook(
         _pr_output("Loading user defaults.")
         prov_dict = load_user_defaults()
         output = stdout_cap.getvalue()
-        _pr_output(output)
-        logger.info(output)
-        logger.info("User default load failures: %s", output)
+        if output.strip():
+            _pr_output(output)
+            logger.info(output)
+            logger.info("User default load failures: %s", output)
 
     if prov_dict:
         namespace.update(prov_dict)

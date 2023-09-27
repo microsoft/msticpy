@@ -62,15 +62,24 @@ def lazy_import(
             raise AttributeError(message)
         importing = import_mapping[name]
         mod_name, _, attrib_name = importing.rpartition(".")
+        if mod_name == importer_name:
+            # avoid infinite recursion
+            raise AttributeError(
+                f"Recursive import of name '[{mod_name}].{name}' from '{importer_name}'."
+            )
         # importlib.import_module() implicitly sets submodules on this module as
         # appropriate for direct imports.
-        imported = importlib.import_module(mod_name, module.__spec__.parent)  # type: ignore
+        try:
+            imported = importlib.import_module(mod_name, module.__spec__.parent)
+        except ImportError as imp_err:
+            message = f"cannot import name '{mod_name}' from '{importer_name}'"
+            raise ImportError(message) from imp_err
         mod_attrib = getattr(imported, attrib_name, None)
         setattr(module, name, mod_attrib)
         return mod_attrib
 
     def __dir__():
-        """Return module attribute list."""
+        """Return module attribute list combining static and dynamic attribs."""
         return sorted(set(import_mapping).union(static_attribs))
 
     return module, __getattr__, __dir__
