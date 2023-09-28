@@ -241,7 +241,12 @@ se, and choose the conda file saved earlier with the Spark session configuration
 Installing for isolated or semi-isolated environments
 -----------------------------------------------------
 
-There are instances in which you may want to utilize msticpy in an isolated or semi-isolated environment. It is recommended to utilize a virtual environment and the scripts provided within the steps. Also ensure you have the correct python version installed on your host machine as well as the isolated environment. In order to find the correct python version, you can run the following:
+There are instances in which you may want to utilize msticpy in an isolated or semi-isolated environment. 
+An isolated environment is an environment that does not have internet access or access or access to load PyPi dependencies.
+It is recommended to utilize a virtual environment and the scripts provided within the steps. 
+Also ensure you have matching python versions installed on your host machine as well as the isolated environment. 
+For example: if running python 3.8.5 on your host machine, ensure that your isolated environment python version is also 3.8.5. 
+In order to find the correct python version, you can run the following:
 
 .. code-block:: powershell
 
@@ -265,7 +270,9 @@ Windows -> Isolated Windows Environment
 
     pip download msticpy --no-deps --dest \path\to\destination
 
-- Within \path\to\destination you should see a .whl file for msticpy and the other dependencies. Some dependencies may not be .whl files, but tar.gz files. These files will need to be built into .whl files. To do this, run the following:
+- Within \path\to\destination you should see a .whl file for msticpy and the other dependencies. 
+Some dependencies may not be .whl files, but tar.gz files. 
+These files will need to be built into .whl files. To do this, run the following:
 
 .. code-block:: powershell
 
