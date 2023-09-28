@@ -178,14 +178,14 @@ _VERBOSITY: Callable[[Optional[int]], int] = _get_verbosity_setting()
 
 # pylint: disable=use-dict-literal
 _NB_IMPORTS = [
-    # dict(pkg="pandas", alias="pd"),
+    dict(pkg="pandas", alias="pd"),
     dict(pkg="IPython", tgt="get_ipython"),
     dict(pkg="IPython.display", tgt="display"),
     dict(pkg="IPython.display", tgt="HTML"),
     dict(pkg="IPython.display", tgt="Markdown"),
     # dict(pkg="ipywidgets", alias="widgets"),
     dict(pkg="pathlib", tgt="Path"),
-    # dict(pkg="numpy", alias="np"),
+    dict(pkg="numpy", alias="np"),
 ]
 if sns is not None:
     _NB_IMPORTS.append(dict(pkg="seaborn", alias="sns"))
@@ -230,36 +230,6 @@ current_providers: Dict[str, Any] = {}  # pylint: disable=invalid-name
 _SYNAPSE_KWARGS = ["identity_type", "storage_svc_name", "tenant_id", "cloud"]
 
 
-def _pr_output(*args):
-    """Output to IPython display or print."""
-    if not _VERBOSITY():
-        return
-    if is_ipython():
-        display(HTML(" ".join([*args, "<br>"]).replace("\n", "<br>")))
-    else:
-        print(*args)
-
-
-def _err_output(*args):
-    """Output to IPython display or print - always output regardless of verbosity."""
-    if is_ipython():
-        display(HTML(" ".join([*args, "<br>"]).replace("\n", "<br>")))
-        display(
-            HTML(
-                "For more info and options run:"
-                "<pre>import msticpy as mp\nhelp(mp.nbinit)</pre>"
-            )
-        )
-    else:
-        print(*args)
-        print(
-            "\nFor more info and options run:",
-            "\n    import msticpy as mp",
-            "\n    help(mp.nbinit)",
-        )
-
-
-# pylint: disable=too-many-statements, too-many-branches
 def init_notebook(
     namespace: Optional[Dict[str, Any]] = None,
     def_imports: str = "all",
@@ -383,8 +353,6 @@ def init_notebook(
     https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/ConfiguringNotebookEnvironment.ipynb
 
     """
-    global current_providers  # pylint: disable=global-statement, invalid-name
-
     if namespace is None and get_ipython():
         namespace = get_ipython().user_global_ns
     else:
@@ -416,13 +384,7 @@ def init_notebook(
         check_aml_settings(*_get_aml_globals(namespace))
     else:
         # If not in AML check and print version status
-        stdout_cap = io.StringIO()
-        with redirect_stdout(stdout_cap):
-            check_version()
-            output = stdout_cap.getvalue()
-            if output.strip():
-                _pr_output(output)
-                logger.info("Check version failures: %s", output)
+        _check_msticpy_version()
 
     if _detect_env("synapse", **kwargs) and is_in_synapse():
         synapse_params = {
@@ -432,15 +394,9 @@ def init_notebook(
 
     # Handle required packages and imports
     _pr_output("Processing imports....")
-    stdout_cap = io.StringIO()
-    with redirect_stdout(stdout_cap):
-        imp_ok = _global_imports(
-            namespace, additional_packages, user_install, extra_imports, def_imports
-        )
-        output = stdout_cap.getvalue()
-        if output.strip():
-            _pr_output(output)
-            logger.info("Import failures: %s", output)
+    imp_ok = _import_packages(
+        namespace, def_imports, additional_packages, extra_imports, user_install
+    )
 
     # Configuration check
     if no_config_check:
@@ -464,16 +420,49 @@ def init_notebook(
         )
 
     # load pivots
-    stdout_cap = io.StringIO()
-    with redirect_stdout(stdout_cap):
-        _pr_output("Loading pivots.")
-        _load_pivots(namespace=namespace)
-        output = stdout_cap.getvalue()
-        if output.strip():
-            _pr_output(output)
-            logger.info("Pivot load failures: %s", output)
+    _load_pivot_functions(namespace)
 
     # User defaults
+    _load_user_defaults(namespace)
+
+    # show any warnings
+    _show_init_warnings(imp_ok, conf_ok)
+    _pr_output("<h4>Notebook initialization complete</h4>")
+    logger.info("Notebook initialization complete")
+
+
+def _pr_output(*args):
+    """Output to IPython display or print."""
+    if not _VERBOSITY():
+        return
+    if is_ipython():
+        display(HTML(" ".join([*args, "<br>"]).replace("\n", "<br>")))
+    else:
+        print(*args)
+
+
+def _err_output(*args):
+    """Output to IPython display or print - always output regardless of verbosity."""
+    if is_ipython():
+        display(HTML(" ".join([*args, "<br>"]).replace("\n", "<br>")))
+        display(
+            HTML(
+                "For more info and options run:"
+                "<pre>import msticpy as mp\nhelp(mp.nbinit)</pre>"
+            )
+        )
+    else:
+        print(*args)
+        print(
+            "\nFor more info and options run:",
+            "\n    import msticpy as mp",
+            "\n    help(mp.nbinit)",
+        )
+
+
+def _load_user_defaults(namespace):
+    """Load user defaults, if defined."""
+    global current_providers  # pylint: disable=global-statement, invalid-name
     stdout_cap = io.StringIO()
     with redirect_stdout(stdout_cap):
         _pr_output("Loading user defaults.")
@@ -489,13 +478,48 @@ def init_notebook(
         current_providers = prov_dict
         _pr_output("Auto-loaded components:", ", ".join(prov_dict.keys()))
 
-    # show any warnings
-    _show_init_warnings(imp_ok, conf_ok)
-    _pr_output("<h4>Notebook initialization complete</h4>")
-    logger.info("Notebook initialization complete")
+
+def _load_pivot_functions(namespace):
+    """Load pivot functions."""
+    stdout_cap = io.StringIO()
+    with redirect_stdout(stdout_cap):
+        _pr_output("Loading pivots.")
+        _load_pivots(namespace=namespace)
+        output = stdout_cap.getvalue()
+        if output.strip():
+            _pr_output(output)
+            logger.info("Pivot load failures: %s", output)
+
+
+def _import_packages(
+    namespace, def_imports, additional_packages, extra_imports, user_install
+):
+    """Import packages from default set or supplied as parameters."""
+    stdout_cap = io.StringIO()
+    with redirect_stdout(stdout_cap):
+        imp_ok = _global_imports(
+            namespace, additional_packages, user_install, extra_imports, def_imports
+        )
+        output = stdout_cap.getvalue()
+        if output.strip():
+            _pr_output(output)
+            logger.info("Import failures: %s", output)
+    return imp_ok
+
+
+def _check_msticpy_version():
+    """Check msticpy version."""
+    stdout_cap = io.StringIO()
+    with redirect_stdout(stdout_cap):
+        check_version()
+        output = stdout_cap.getvalue()
+        if output.strip():
+            _pr_output(output)
+            logger.info("Check version failures: %s", output)
 
 
 def _show_init_warnings(imp_ok, conf_ok):
+    """Show any warnings from init_notebook."""
     if imp_ok and conf_ok:
         return True
     md("<font color='orange'><h3>Notebook setup completed with some warnings.</h3>")
@@ -584,6 +608,7 @@ def _global_imports(
     extra_imports: List[str] = None,
     def_imports: str = "all",
 ):
+    """Import packages from default set (defined statically)."""
     import_list = []
     imports, imports_all = _build_import_list(def_imports)
 
