@@ -146,7 +146,10 @@ def _build_certificate_client(
         )
         return None
     return CertificateCredential(
-        authority=aad_uri, tenant_id=tenant_id, client_id=client_id, **kwargs  # type: ignore
+        authority=aad_uri,
+        tenant_id=tenant_id,  # type: ignore
+        client_id=client_id,
+        **kwargs,  # type: ignore
     )
 
 
@@ -246,7 +249,7 @@ def _az_connect_core(
     # Create the auth methods with the specified cloud region
     cloud = cloud or kwargs.pop("region", AzureCloudConfig().cloud)
     az_config = AzureCloudConfig(cloud)
-    aad_uri = az_config.endpoints.active_directory
+    aad_uri = az_config.authority_uri
     logger.info("az_connect_core - using %s cloud and endpoint: %s", cloud, aad_uri)
 
     tenant_id = tenant_id or az_config.tenant_id
@@ -276,9 +279,7 @@ def _az_connect_core(
     azure_identity_logger.handlers = [handler]
 
     # Connect to the subscription client to validate
-    legacy_creds = CredentialWrapper(
-        creds, resource_id=AzureCloudConfig(cloud).token_uri
-    )
+    legacy_creds = CredentialWrapper(creds, resource_id=az_config.token_uri)
     if not creds:
         raise MsticpyAzureConfigError(
             "Cannot authenticate with specified credential types.",

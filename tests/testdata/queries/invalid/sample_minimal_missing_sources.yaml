@@ -1,0 +1,8 @@
+metadata:
+  version: 1
+  description: Fancy description for a sample query
+  data_environments:
+    - MyEnvironment
+  data_families:
+    - Data Family 1
+    - Data Family 2

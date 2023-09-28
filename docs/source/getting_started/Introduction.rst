@@ -5,7 +5,7 @@ Introduction
 investigations and hunting.
 Many of the tools originated as code Jupyter notebooks written to
 solve a problem as part of a security investigation. Some
-of tools them are only useful in notebooks (e.g. the widgets and
+of the tools are only useful in notebooks (e.g. the widgets and
 visualizations) but many others can be used from the Python commandline
 or imported into your code.
 
