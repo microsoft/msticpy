@@ -47,7 +47,6 @@ sources:
       | fieldformat lastTime=strftime(lastTime,"%Y/%m/%d %H:%M:%S")
       | sort by totalCount desc
       '
-    parameters:
   list_all_alerts:
     description: Retrieves all configured alerts
     metadata:
@@ -57,7 +56,6 @@ sources:
       | rest/servicesNS/-/search/saved/searches
       | search alert.track=1
       | fields title description search disabled triggered_alert_count actions action.script.filename alert.severity cron_schedule'
-    parameters:
   list_all_savedsearches:
     description: Retrieves all saved searches
     metadata:
@@ -67,7 +65,6 @@ sources:
       | rest /servicesNS/-/-/saved/searches splunk_server=local
       | fields title, description, eai:acl.app, alert.severity, alert.track, alert_type, author, auto_summarize.cron_schedule, cron_schedule, id, is_scheduled, is_visible, qualifiedSearch, realtime_schedule, updated
       '
-    parameters:
   list_all_audittrail:
     description: Retrieves all audit trail logs
     metadata:
@@ -77,7 +74,6 @@ sources:
       search index={index} source=audittrail timeformat={timeformat} earliest={start} latest={end}
       | table timestamp, user, roles, action, info, search_type,  is_realtime, savedsearch_name, search, total_run_time, event_count, result_count
       '
-    parameters:
   get_events_parameterized:
     description: Generic parameterized query from index/source
     metadata:
@@ -87,4 +83,3 @@ sources:
       search index={index} source={source} timeformat={timeformat} earliest={start} latest={end}
       {project_fields}
       {add_query_items}'
-    parameters:

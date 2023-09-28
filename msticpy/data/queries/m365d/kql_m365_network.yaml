@@ -37,7 +37,6 @@ sources:
         | where {time_column} <= datetime({end})
         {add_query_items}"
       uri: None
-    parameters:
   host_connections:
     description: Returns connections by a specified hostname
     metadata:

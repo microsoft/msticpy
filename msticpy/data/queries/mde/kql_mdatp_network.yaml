@@ -33,7 +33,6 @@ sources:
         | where Timestamp <= datetime({end})
         {add_query_items}"
       uri: None
-    parameters:
   host_connections:
     description: Returns network connections a specified hostname/device name
     metadata:

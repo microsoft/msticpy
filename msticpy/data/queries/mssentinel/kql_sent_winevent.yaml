@@ -106,7 +106,6 @@ sources:
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
         {add_query_items}'
-    parameters:
   list_events_by_id:
     description: Returns list of events on a host by EventID
     args:

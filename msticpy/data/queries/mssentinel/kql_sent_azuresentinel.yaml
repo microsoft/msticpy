@@ -43,7 +43,6 @@ sources:
         | project-away QryResults
         | where SoftDeleted == false
         {add_query_items}'
-    parameters:
   list_bookmarks_for_entity:
     description: Retrieves bookmarks for a host, account, ip address, domain, url or other entity identifier
     metadata:

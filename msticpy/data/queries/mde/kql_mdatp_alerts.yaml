@@ -33,7 +33,6 @@ sources:
         | where Timestamp <= datetime({end})
         {add_query_items}"
       uri: None
-    parameters:
   host_alerts:
     description: Lists alerts by for a specified hostname
     metadata:
