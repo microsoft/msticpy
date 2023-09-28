@@ -314,7 +314,11 @@ Similar to Windows to Isolated Windows Environment instructions above
 Windows -> Isolated Linux Environment including Jupyter Notebooks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- On your primary Windows machine with internet access download dockers for windows.
+- On your primary Windows machine with internet access download 
+`Docker for Windows
+<https://docs.docker.com/desktop/install/windows-install/>`__. 
+We are using docker to ensure that the wheels that we are downloading are meant for the Linux architecture. 
+
 - Run the  script 
 `download_python_package.py
 <https://github.com/microsoft/msticpy/blob/main/tools/download_python_package.py>`__
