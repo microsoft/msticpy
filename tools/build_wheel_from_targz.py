@@ -37,4 +37,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    download_python_package(args.directory)
+    build_wheel_from_targz(args.directory)

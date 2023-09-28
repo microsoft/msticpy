@@ -12,7 +12,7 @@ __author__ = "Chris Cianelli"
 
 
 def download_python_package(
-    python_version: str, module_name: str, module_version: str, host_directory: str
+    python_version: str, package_name: str, package_version: str, host_directory: str
 ):
     """
     Download a Python package and its dependencies for local use
@@ -21,9 +21,9 @@ def download_python_package(
     ----------
     python_version: str
         Python version to use. Ex: "3.8.5" or "3.9"
-    module_name: str
+    package_name: str
         Name of the module to download. Ex: "msticpy"
-    module_version: str
+    package_version: str
         Version of the module to download. Ex: "1.0.0"
     host_directory: str
         Directory containing tar.gz files
@@ -34,7 +34,11 @@ def download_python_package(
         image_tag = f"{python_version}:{int(time.time())}"
 
         # get base name if module name includes additional dependencies
-        module_base_name = module_name.split("[")[0]
+        module_base_name = package_name.split("[")[0]
+
+        pipstring = (
+            f"{package_name}=={package_version}" if package_version else package_name
+        )
 
         # Define Dockerfile content
         dockerfile_content = f"""
@@ -46,10 +50,10 @@ def download_python_package(
                 apt-get install -y zip && \\
                 rm -rf /var/lib/apt/lists/*
 
-            ENV MODULE_NAME="{module_name}"
-            ENV MODULE_VERSION="{module_version}"
+            ENV PACKAGE_NAME="{package_name}"
+            ENV PIP_STRING="{pipstring}"
 
-            RUN pip download "${{MODULE_NAME}}==${{MODULE_VERSION}}" -d /{python_version}
+            RUN pip download "$PIP_STRING" -d /{python_version}
 
             RUN for file in *.tar.gz; do \\
                     if [ -f "$file" ]; then \\
@@ -59,7 +63,7 @@ def download_python_package(
                 done
             
 
-            RUN zip -j /{python_version}/py{python_version}_$MODULE_NAME.zip /{python_version}/*.whl
+            RUN zip -j /{python_version}/py{python_version}_$PACKAGE_NAME.zip /{python_version}/*.whl
 
             # Remove the wheel files
             RUN rm -f /{python_version}/*.whl
@@ -109,17 +113,19 @@ def download_python_package(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Download Python modules for local use"
+        description="Download Python package for local use"
     )
     parser.add_argument("-v", "--python-version", help="Python version", required=True)
-    parser.add_argument("-m", "--module-name", help="Module name", required=True)
-    parser.add_argument("-mv", "--module-version", help="Module version", required=True)
     parser.add_argument(
         "-d", "--directory", help="Directory for saved zip file", required=True
+    )
+    parser.add_argument("-p", "--package-name", help="Package name", required=True)
+    parser.add_argument(
+        "-pv", "--package-version", help="Package version", required=False
     )
 
     args = parser.parse_args()
 
     download_python_package(
-        args.python_version, args.module_name, args.module_version, args.directory
+        args.python_version, args.package_name, args.package_version, args.directory
     )

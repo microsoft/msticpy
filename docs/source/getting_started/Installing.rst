@@ -243,9 +243,14 @@ Installing for isolated or semi-isolated environments
 
 There are instances in which you may want to utilize msticpy in an isolated or semi-isolated environment. 
 An isolated environment is an environment that does not have internet access or access or access to load PyPi dependencies.
-It is recommended to utilize a virtual environment and the scripts provided within the steps. 
-Also ensure you have matching python versions installed on your host machine as well as the isolated environment. 
-For example: if running python 3.8.5 on your host machine, ensure that your isolated environment python version is also 3.8.5. 
+It is recommended to utilize a virtual environment and the scripts referenced within the steps below. 
+
+There are two ways to download msticpy:
+- Using manual pip commands which is applicable when your source and target environment have the same python version as well as architecture. 
+For example: if running python 3.8.5 on your source machine, ensure that your target environment python version is also 3.8.5.
+
+- Using the scripts provided is simpler, more isolation and essential when building for cross-architecture. IE Windows to Linux.
+
 In order to find the correct python version, you can run the following:
 
 .. code-block:: powershell
@@ -268,7 +273,7 @@ Windows -> Isolated Windows Environment
 
 .. code-block:: powershell
 
-    pip download msticpy --no-deps --dest \path\to\destination
+    pip download msticpy --dest \path\to\destination
 
 - Within \path\to\destination you should see a .whl file for msticpy and the other dependencies. 
 Some dependencies may not be .whl files, but tar.gz files. 
@@ -278,27 +283,26 @@ These files will need to be built into .whl files. To do this, run the following
 
     pip wheel {file.tar.gz} -w \path\to\destination
 
-or use the tool here 
+or use the script from mstipcy repo "tools" folder
 `build_wheel_from_targz.py
 <https://github.com/microsoft/msticpy/blob/main/tools/build_wheel_from_targz.py>`__
 to build all the tar.gz files in a directory.
 
 - Zip and/or copy the directory folder to the isolated environment.
 
-- From the Isolated environment, unzip if needed and then run the following:
+- From the Isolated environment, unzip if needed and then you will need to run the following for each .whl file:
 
 .. code-block:: powershell
 
-    pip install "\path\to\destination\{msticpy.whl}"
+    pip install "\path\to\destination\{whl_file.whl}"
 
-.. note:: If you have an issue installing msticpy, you may have to install the dependencies first. You can also utilize 
+.. note:: If you have an issue installing any of the packages you can use the script from mstipcy repo "tools" folder
 `install_all_whl_files.py
 <https://github.com/microsoft/msticpy/blob/main/tools/install_all_whl_files.py>`__
 to help. 
 
 
-- Test the installation by running msticpy that suites your needs.
-
+- Test the installation by running msticpy that suits your needs.
 
 
 Linux -> Isolated Linux Environment
@@ -322,18 +326,18 @@ Example:
 
 - Zip and/or copy the directory folder to the isolated environment.
 
-- From the Isolated environment, unzip if needed and then run the following:
+- From the Isolated environment, unzip if needed and then you will need to run the following for each .whl file:
 
 .. code-block:: powershell
 
-    pip install "\path\to\destination\{msticpy.whl}"
+    pip install "\path\to\destination\{whl_file.whl}"
 
-.. note:: If you have an issue installing msticpy, you may have to install the dependencies first. You can also utilize 
+.. note:: If you have an issue installing any of the packages you can use the script from mstipcy repo "tools" folder
 `install_all_whl_files.py
 <https://github.com/microsoft/msticpy/blob/main/tools/install_all_whl_files.py>`__
-to help.
+to help. 
 
-- Test the installation by running msticpy that suites your needs.
+- Test the installation by running msticpy that suits your needs.
 
 - If you are installing within a Jupyter Notebooks, you will need to upload your zip file/directory containing all of the whl files.
 
@@ -344,12 +348,9 @@ to help.
 import zipfile
 import os
 import shutil
-
 file_path =  "./{zip_file_name}"
 file_name = os.path.split(file_path)[-1]
-
 file_name_without_ext = os.path.splitext(file_name)[0]
-
 with zipfile.ZipFile(file_path, 'r') as zip_ref:
     zip_ref.extractall(os.path.join(os.getcwd(), file_name_without_ext))
 
@@ -365,7 +366,6 @@ files = [
         for filename in os.listdir(directory)
         if filename.endswith(".whl")
 ]
-
 for file in files:
    filename = os.path.split(file)[-1]
    print(f"\nAttempting to install {filename}")
