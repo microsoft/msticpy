@@ -12,7 +12,7 @@ import warnings
 
 # flake8: noqa: F403, F401
 # pylint: disable=unused-import
-from ..context.azure import AzureData
+from ..context.azure.azure_data import AzureData
 
 WARN_MSSG = (
     "This module has moved to msticpy.context.azure.azure_data\n"

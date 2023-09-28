@@ -15,7 +15,7 @@ import pandas as pd
 from ..._version import VERSION
 from ...common.exceptions import MsticpyAzureConnectionError, MsticpyParameterError
 from ...common.pkg_config import get_config, get_http_timeout
-from ...data import QueryProvider
+from ...data.core.data_providers import QueryProvider
 from .azure_data import get_api_headers
 
 # pylint: disable=unused-import

@@ -70,7 +70,9 @@ def lazy_import(
         # importlib.import_module() implicitly sets submodules on this module as
         # appropriate for direct imports.
         try:
-            imported = importlib.import_module(mod_name, module.__spec__.parent)
+            imported = importlib.import_module(
+                mod_name, module.__spec__.parent  # type: ignore
+            )
         except ImportError as imp_err:
             message = f"cannot import name '{mod_name}' from '{importer_name}'"
             raise ImportError(message) from imp_err
