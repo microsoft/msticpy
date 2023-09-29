@@ -13,7 +13,6 @@ from ..common import pkg_config as config
 from ..common.exceptions import MsticpyKeyVaultConfigError
 from ..common.utility import export
 from .azure_auth_core import AzureCloudConfig
-from .cloud_mappings import create_cloud_ep_dict, create_cloud_suf_dict
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -42,18 +41,11 @@ class KeyVaultSettings:
     used when creating new vaults.
     `UseKeyring` instructs the `SecretsClient` to cache Keyvault
     secrets locally using Python keyring.
-    `Authority` is one of 'global', 'usgov', 'de', 'cn'
+    `Authority` is one of 'global', 'usgov', 'cn'
     Alternatively, you can specify `AuthorityURI` with the value
     pointing to the URI for logon requests.
 
     """
-
-    AAD_AUTHORITIES = create_cloud_ep_dict("active_directory")
-    RES_MGMT_URIS = create_cloud_ep_dict("resource_manager")
-    KV_SUFFIXES = create_cloud_suf_dict("keyvault_dns")
-    KV_URIS = {
-        cloud: f"https://{{vault}}{suffix}" for cloud, suffix in KV_SUFFIXES.items()
-    }
 
     # Azure CLI Client ID
     CLIENT_ID = "04b07795-8ddb-461a-bbee-02f9e1bf7b46"  # xplat
@@ -81,24 +73,13 @@ class KeyVaultSettings:
         norm_settings = {key.casefold(): val for key, val in kv_config.items()}
         self.__dict__.update(norm_settings)
 
+        self.az_cloud_config = AzureCloudConfig(self.authority)
         self._get_auth_methods_from_settings()
-        self._get_authority_from_settings()
+        self.authority = self.authority or self.az_cloud_config.cloud
 
     def _get_auth_methods_from_settings(self):
         """Retrieve authentication methods from settings."""
-        self.auth_methods = AzureCloudConfig().auth_methods
-
-    def _get_authority_from_settings(self):
-        """Get the authority (AAD) URI from settings."""
-        if "authorityuri" in self:
-            # For BlueHound compat - the "authority_uri" can be set directly
-            # as a property of the object
-            rev_lookup = {uri.casefold(): code for code, uri in self.AAD_AUTHORITIES}
-            self.authority = rev_lookup.get(
-                self["authorityuri"].casefold(), "global"
-            ).casefold()
-        elif not self.authority:
-            self.authority = AzureCloudConfig().cloud
+        self.auth_methods = self.az_cloud_config.auth_methods
 
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
@@ -136,14 +117,13 @@ class KeyVaultSettings:
         """
         if "authorityuri" in self:
             return self["authorityuri"]
-        if self.cloud in self.AAD_AUTHORITIES:
-            return self.AAD_AUTHORITIES[self.cloud]
-        return self.AAD_AUTHORITIES["global"]
+        return self.az_cloud_config.authority_uri
 
     @property
     def keyvault_uri(self) -> Optional[str]:
         """Return KeyVault URI template for current cloud."""
-        kv_uri = self.KV_URIS.get(self.cloud)
+        suffix = self.az_cloud_config.suffixes.get("keyVaultDns")
+        kv_uri = f"https://{{vault}}.{suffix}"
         if not kv_uri:
             mssg = f"Could not find a valid KeyVault endpoint for {self.cloud}"
             warnings.warn(mssg)
@@ -152,7 +132,7 @@ class KeyVaultSettings:
     @property
     def mgmt_uri(self) -> Optional[str]:
         """Return Azure management URI template for current cloud."""
-        mgmt_uri = self.RES_MGMT_URIS.get(self.cloud)
+        mgmt_uri = self.az_cloud_config.resource_manager
         if not mgmt_uri:
             mssg = f"Could not find a valid KeyVault endpoint for {self.cloud}"
             warnings.warn(mssg)
@@ -186,8 +166,7 @@ class KeyVaultSettings:
 
         """
         auth = authority_uri or self.authority_uri.strip()
-        if not tenant:
-            tenant = self.get("tenantid")
+        tenant = tenant or self.get("tenantid") or self.az_cloud_config.tenant_id
         if not tenant:
             raise MsticpyKeyVaultConfigError(
                 "Could not get TenantId from function parameters or configuration.",
@@ -225,8 +204,7 @@ class KeyVaultSettings:
             If tenant is not defined.
 
         """
-        if not tenant:
-            tenant = self.get("tenantid")
+        tenant = tenant or self.get("tenantid") or self.az_cloud_config.tenant_id
         if not tenant:
             raise MsticpyKeyVaultConfigError(
                 "Could not get TenantId from function parameters or configuration.",

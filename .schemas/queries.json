@@ -1,0 +1,270 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "type": "object",
+    "properties": {
+        "metadata": {
+            "$ref": "#/$defs/metadata"
+        },
+        "defaults": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "type": "object",
+                    "properties": {
+                        "data_source": {
+                            "type": "string"
+                        },
+                        "data_families": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "pivot": {
+                            "type": "object",
+                            "patternProperties": {
+                                ".*": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "top": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "parameters": {
+                    "$ref": "#/$defs/parameter"
+                }
+            }
+        },
+        "sources": {
+            "type": "object",
+            "patternProperties": {
+                ".*": {
+                    "$ref": "#/$defs/query"
+                }
+            }
+        }
+    },
+    "required": [
+        "metadata",
+        "sources"
+    ],
+    "$defs": {
+        "description": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 1024
+        },
+        "metadata": {
+            "type": "object",
+            "properties": {
+                "version": {
+                    "type": "integer"
+                },
+                "description": {
+                    "$ref": "#/$defs/description"
+                },
+                "data_environments": {
+                    "type": "array",
+                    "items": {
+                        "anyOf": [
+                            {
+                                "enum": [
+                                    "AzureSecurityCenter",
+                                    "AzureSentinel",
+                                    "Cybereason",
+                                    "Elastic",
+                                    "Kusto",
+                                    "LocalData",
+                                    "LogAnalytics",
+                                    "M365D",
+                                    "MDATP",
+                                    "MDE",
+                                    "Mordor",
+                                    "MSGraph",
+                                    "MSSentinel",
+                                    "OSQueryLogs",
+                                    "OTRF",
+                                    "ResourceGraph",
+                                    "SecurityGraph",
+                                    "Splunk",
+                                    "Sumologic"
+                                ]
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    }
+                },
+                "data_families": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "aliases": {
+                    "oneOf": [
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "cluster": {
+                    "type": "string"
+                },
+                "clusters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "cluster_groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "database": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "version",
+                "description",
+                "data_environments",
+                "data_families"
+            ]
+        },
+        "parameter": {
+            "type": "object",
+            "patternProperties": {
+                ".*": {
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "$ref": "#/$defs/description"
+                        },
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "str",
+                                "datetime",
+                                "int",
+                                "float",
+                                "list"
+                            ]
+                        },
+                        "default": {
+                            "oneOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "array"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "aliases": {
+                            "oneOf": [
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                        "description",
+                        "type"
+                    ]
+                }
+            }
+        },
+        "query": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "$ref": "#/$defs/description"
+                },
+                "metadata": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/metadata"
+                        },
+                        true
+                    ]
+                },
+                "parameters": {
+                    "$ref": "#/$defs/parameter"
+                },
+                "args": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string"
+                        },
+                        "uri": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "query"
+                    ]
+                },
+                "query_macros": {
+                    "patternProperties": {
+                        ".*": {
+                            "type": "object",
+                            "properties": {
+                                "description": {
+                                    "$ref": "#/$defs/description"
+                                },
+                                "value": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": [
+                                "description",
+                                "value"
+                            ]
+                        }
+                    }
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "description",
+                "args"
+            ]
+        }
+    }
+}

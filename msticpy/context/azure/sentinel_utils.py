@@ -202,7 +202,7 @@ class SentinelUtilsMixin:
 
         """
         if not base_url:
-            base_url = AzureCloudConfig(self.cloud).endpoints.resource_manager  # type: ignore
+            base_url = AzureCloudConfig(self.cloud).resource_manager  # type: ignore
         res_info = {
             "subscription_id": res_id.split("/")[2],
             "resource_group": res_id.split("/")[4],

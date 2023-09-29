@@ -55,7 +55,6 @@ sources:
         | project-away extendedProps
         {add_query_items}'
       uri: None
-    parameters:
   query2:
     description: Retrieves summary count of alerts by type
     metadata:
@@ -71,7 +70,6 @@ sources:
             lastAlert=max(TimeGenerated) by AlertName
         | order by alertCount desc
         {add_query_items}'
-    parameters:
   query3:
     description: Retrieves a single alert by SystemAlertId
     metadata:

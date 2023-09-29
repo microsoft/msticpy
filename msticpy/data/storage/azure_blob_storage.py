@@ -117,7 +117,9 @@ class AzureBlobStorage:
             Details of the blobs.
 
         """
-        container_client = self.abs_client.get_container_client(container_name)  # type: ignore
+        container_client = self.abs_client.get_container_client(  # type: ignore[union-attr]
+            container_name
+        )  # type: ignore
         blobs = list(container_client.list_blobs())
         return _parse_returned_items(blobs) if blobs else None
 
@@ -250,7 +252,7 @@ class AzureBlobStorage:
             expiry=end,
             start=start,
         )
-        suffix = AzureCloudConfig().suffixes.storage_endpoint
+        suffix = AzureCloudConfig().suffixes.get("storage")
         return f"https://{abs_name}.blob.{suffix}/{container_name}/{blob_name}?{sast}"
 
 
