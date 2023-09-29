@@ -50,13 +50,94 @@ _CR_RESULT = {
                     }
                 },
             }
-        }
+        },
+        "paginationToken": None,
+        "totalResults": 1,
     },
     "status": "SUCCESS",
     "message": "",
     "expectedResults": 0,
     "failures": 0,
 }
+
+_CR_PAGINATED_RESULT = [
+    {
+        "data": {
+            "resultIdToElementDataMap": {
+                "id1": {
+                    "simpleValues": {
+                        "osType": {"totalValues": 1, "values": ["WINDOWS"]},
+                        "totalMemory": {
+                            "totalValues": 1,
+                            "values": ["8589463552"],
+                        },
+                        "group": {
+                            "totalValues": 1,
+                            "values": ["00000000-0000-0000-0000-000000000000"],
+                        },
+                        "osVersionType": {
+                            "totalValues": 1,
+                            "values": ["Windows_10"],
+                        },
+                    },
+                    "elementValues": {
+                        "users": {
+                            "totalValues": 5,
+                            "elementValues": [],
+                            "totalSuspicious": 0,
+                            "totalMalicious": 0,
+                            "guessedTotal": 0,
+                        }
+                    },
+                }
+            },
+            "paginationToken": None,
+            "totalResults": 2,
+        },
+        "status": "SUCCESS",
+        "message": "",
+        "expectedResults": 0,
+        "failures": 0,
+    },
+    {
+        "data": {
+            "resultIdToElementDataMap": {
+                "id2": {
+                    "simpleValues": {
+                        "osType": {"totalValues": 1, "values": ["WINDOWS"]},
+                        "totalMemory": {
+                            "totalValues": 1,
+                            "values": ["8589463552"],
+                        },
+                        "group": {
+                            "totalValues": 1,
+                            "values": ["00000000-0000-0000-0000-000000000000"],
+                        },
+                        "osVersionType": {
+                            "totalValues": 1,
+                            "values": ["Windows_10"],
+                        },
+                    },
+                    "elementValues": {
+                        "users": {
+                            "totalValues": 5,
+                            "elementValues": [],
+                            "totalSuspicious": 0,
+                            "totalMalicious": 0,
+                            "guessedTotal": 0,
+                        }
+                    },
+                }
+            },
+            "paginationToken": None,
+            "totalResults": 2,
+        },
+        "status": "SUCCESS",
+        "message": "",
+        "expectedResults": 0,
+        "failures": 0,
+    },
+]
 
 _CR_QUERY = {
     "query": """
@@ -132,9 +213,9 @@ def _cr_pre_checks(driver: CybereasonDriver):
 @respx.mock
 def test_connect(driver):
     """Test connect."""
-    connect = respx.post(re.compile(r"https://.*.cybereason.net/login.html")).respond(
-        200
-    )
+    connect = respx.post(
+        re.compile(r"^https://[a-zA-Z0-9\-]+\.cybereason\.net/login\.html")
+    ).respond(200)
     with custom_mp_config(MP_PATH):
         driver.connect()
         check.is_true(connect.called)
@@ -144,16 +225,46 @@ def test_connect(driver):
 @respx.mock
 def test_query(driver):
     """Test query calling returns data in expected format."""
-    connect = respx.post(re.compile(r"https://.*.cybereason.net/login.html")).respond(
-        200
-    )
+    connect = respx.post(
+        re.compile(r"^https://[a-zA-Z0-9\-]+\.cybereason\.net/login\.html")
+    ).respond(200)
     query = respx.post(
-        re.compile(r"https://.*.cybereason.net/rest/visualsearch/query/simple")
+        re.compile(
+            r"^https://[a-zA-Z0-9\-]+\.cybereason\.net/rest/visualsearch/query/simple"
+        )
     ).respond(200, json=_CR_RESULT)
     with custom_mp_config(MP_PATH):
+        driver.connect()
         data = driver.query('{"test": "test"}')
         check.is_true(connect.called or driver.connected)
         check.is_true(query.called)
+        check.is_instance(data, pd.DataFrame)
+
+
+@respx.mock
+def test_paginated_query(driver):
+    """Test query calling returns data in expected format."""
+    connect = respx.post(
+        re.compile(r"^https://[a-zA-Z0-9\-]+\.cybereason\.net/login.html")
+    ).respond(200)
+    query1 = respx.post(
+        re.compile(
+            r"^https://[a-zA-Z0-9\-]+\.cybereason\.net/rest/visualsearch/query/simple"
+        ),
+        params={"page": 0},
+    ).respond(200, json=_CR_PAGINATED_RESULT[0])
+    query2 = respx.post(
+        re.compile(
+            r"^https://[a-zA-Z0-9\-]+\.cybereason\.net/rest/visualsearch/query/simple"
+        ),
+        params={"page": 1},
+    ).respond(200, json=_CR_PAGINATED_RESULT[1])
+    with custom_mp_config(MP_PATH):
+        driver.connect()
+        data = driver.query('{"test": "test"}', page_size=1)
+        check.is_true(connect.called or driver.connected)
+        check.is_true(query1.called)
+        check.is_true(query2.called)
         check.is_instance(data, pd.DataFrame)
 
 
