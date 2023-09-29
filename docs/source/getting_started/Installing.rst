@@ -252,7 +252,7 @@ We have included a set of scripts to simplify some of this process. These
 are available in the `tools folder <https://github.com/microsoft/msticpy/tree/main/tools>`__
 of the MSTICPy repo.
 
-- ``build_wheel_from_targz.py`` - builds a wheel files from source tar.gz files
+- ``build_wheel_from_targz.py`` - builds wheel files from source tar.gz files
 - ``install_all_whl_files.py`` - installs all .whl files in a directory to the target environment
 - ``download_python_package.py`` - downloads a python package and its dependencies to a directory.
   This script uses docker to perform the download and allows you to build an install
