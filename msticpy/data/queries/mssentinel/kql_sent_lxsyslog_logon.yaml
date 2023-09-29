@@ -305,7 +305,6 @@ sources:
     description: All failed user logon events on any host
     args:
       query: *logon_failures
-    parameters:
     query_macros:
       query_condition:
         description: Null where clause

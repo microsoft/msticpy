@@ -172,8 +172,8 @@ class DomainValidator:
             True if valid public TLD, False if not.
 
         """
-        _, _, tld = tldextract.extract(url_domain.lower())
-        return bool(tld)
+        extract_result = tldextract.extract(url_domain.lower())
+        return bool(extract_result.suffix)
 
     @staticmethod
     def is_resolvable(url_domain: str) -> bool:
