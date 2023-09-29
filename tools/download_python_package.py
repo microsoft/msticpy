@@ -1,9 +1,13 @@
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
+"""Create MSTICPy install archive using docker."""
+import argparse
 import os
 import subprocess
 import time
-import shutil
-import sys
-import argparse
 
 VERSION = "1.0.0"
 
@@ -11,11 +15,14 @@ __version__ = VERSION
 __author__ = "Chris Cianelli"
 
 
+# pylint: disable=subprocess-run-check
+
+
 def download_python_package(
     python_version: str, package_name: str, package_version: str, host_directory: str
 ):
     """
-    Download a Python package and its dependencies for local use
+    Download a Python package and its dependencies for local use.
 
     Parameters
     ----------
@@ -27,6 +34,7 @@ def download_python_package(
         Version of the module to download. Ex: "1.0.0"
     host_directory: str
         Directory containing tar.gz files
+
     """
     os.makedirs(host_directory, exist_ok=True)
     try:
@@ -61,7 +69,7 @@ def download_python_package(
                         rm -f "$file"; \\
                     fi; \\
                 done
-            
+
 
             RUN zip -j /{python_version}/py{python_version}_$PACKAGE_NAME.zip /{python_version}/*.whl
 
@@ -73,12 +81,12 @@ def download_python_package(
         """
 
         # Write Dockerfile content to a file
-        with open("Dockerfile", "w") as dockerfile:
+        with open("Dockerfile", "w", encoding="utf-8") as dockerfile:
             dockerfile.write(dockerfile_content)
 
         # Build Docker image with a unique tag
         docker_build_cmd = ["docker", "build", "-t", image_tag, "."]
-        subprocess.run(docker_build_cmd, check=True)
+        subprocess.run(docker_build_cmd, check=True)  # nosec
 
         # Run Docker container, copy files to temporary directory, and remove it after it's done
         docker_run_cmd = [
@@ -94,7 +102,7 @@ def download_python_package(
 
         print("copying files")
 
-        subprocess.run(
+        subprocess.run(  # nosec
             ["docker", "cp", f"{module_base_name}:/{python_version}", host_directory],
             check=True,
         )
@@ -103,12 +111,12 @@ def download_python_package(
 
     finally:
         # Delete the Docker volume
-        subprocess.run(["docker", "rm", f"{module_base_name}"])
+        subprocess.run(["docker", "rm", f"{module_base_name}"])  # nosec
 
-        subprocess.run(["docker", "volume", "rm", f"{python_version}"])
+        subprocess.run(["docker", "volume", "rm", f"{python_version}"])  # nosec
 
         # Delete the Docker image
-        subprocess.run(["docker", "rmi", image_tag])
+        subprocess.run(["docker", "rmi", image_tag])  # nosec
 
 
 if __name__ == "__main__":
