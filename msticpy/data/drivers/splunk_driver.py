@@ -80,6 +80,7 @@ class SplunkDriver(DriverBase):
         self._connected = False
         if kwargs.get("debug", False):
             logger.setLevel(logging.DEBUG)
+        self._required_params = self._SPLUNK_REQD_ARGS
 
         self.set_driver_property(
             DriverProps.PUBLIC_ATTRS,
@@ -173,19 +174,19 @@ class SplunkDriver(DriverBase):
         elif isinstance(verify_opt, bool):
             cs_dict["verify"] = verify_opt
 
-        # Judge the REST API authentification method 
-        #   between user/pass and authorization bearer token
+        # Different required parameters for the REST API authentication method
+        # between user/pass and authorization bearer token
         if "username" in cs_dict:
-            self._SPLUNK_REQD_ARGS = ["host", "username", "password"]
+            self._required_params = ["host", "username", "password"]
         else:
-            self._SPLUNK_REQD_ARGS = ["host", "splunkToken"]
+            self._required_params = ["host", "splunkToken"]
 
-        missing_args = set(self._SPLUNK_REQD_ARGS) - cs_dict.keys()
+        missing_args = set(self._required_params) - cs_dict.keys()
         if missing_args:
             raise MsticpyUserConfigError(
                 "One or more connection parameters missing for Splunk connector",
                 ", ".join(missing_args),
-                f"Required parameters are {', '.join(self._SPLUNK_REQD_ARGS)}",
+                f"Required parameters are {', '.join(self._required_params)}",
                 "All parameters:",
                 *[f"{arg}: {desc}" for arg, desc in SPLUNK_CONNECT_ARGS.items()],
                 title="no Splunk connection parameters",
