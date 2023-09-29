@@ -51,7 +51,7 @@ created and activated in the prompt.
 Installation
 ------------
 
-Run the following command to install the base configuation of *MSTICPy*.
+Run the following command to install the base configuration of *MSTICPy*.
 
 
 ``pip install msticpy``
@@ -71,7 +71,7 @@ known as extras. The syntax for this is:
 
 As of version 0.9.0 *MSTICPy* has its dependencies split into
 extras. This allows you to install only the packages that you
-need and avoid the overhead of time and diskspace of dependencies
+need and avoid the overhead of time and disk space of dependencies
 that you do not need.
 
 .. note:: extras do not affect the which code from *MSTICPy* is
@@ -191,7 +191,7 @@ exception message:
 
 .. code:: bash
 
-    pip install msticpy[ml]
+    python -m pip install msticpy[ml]
 
 .. note:: In some cases you many not get an informative error. We've
    tried to trap all of the cases but if
@@ -237,3 +237,148 @@ se, and choose the conda file saved earlier with the Spark session configuration
     - numpy
     - pip:
         - msticpy[azure]>=2.3.1
+
+Installing for isolated or semi-isolated environments
+-----------------------------------------------------
+
+There are instances in which you may want to use msticpy in an isolated
+or semi-isolated environment (e.g. an environment that does not have internet
+PyPI access to install packages and dependencies).
+
+To do this you need to build a transportable archive of MSTICPy and its
+dependencies and use that as the source to install from in your target environment.
+
+We have included a set of scripts to simplify some of this process. These
+are available in the `tools folder <https://github.com/microsoft/msticpy/tree/main/tools>`__
+of the MSTICPy repo.
+
+- ``build_wheel_from_targz.py`` - builds wheel files from source tar.gz files
+- ``install_all_whl_files.py`` - installs all .whl files in a directory to the target environment
+- ``download_python_package.py`` - downloads a python package and its dependencies to a directory.
+  This script uses docker to perform the download and allows you to build an install
+  package for a Linux environment from a Windows environment.
+
+In the instructions below we give both the manual steps and the script-based steps.
+The latter are recommended to avoid repetitious typing and to avoid missing files.
+
+For either manual or script-based installation it is **essential** that you
+use the same Python version for both source and target environments, since
+pip will download the correct version of the package for the Python version
+that it is executing in. We recommend creating a virtual Python or Conda
+environment for this purpose (this isn't required for the docker-based
+script).
+
+In order to find the correct python version, you can run the following:
+
+.. code-block:: powershell
+
+    python --version
+
+
+Windows Source to Isolated Windows Environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. On your primary Windows machine with internet access create a virtual environment
+   for the python version you want to use in the target environment.
+2. Download msticpy by running the following:
+
+.. code-block:: powershell
+
+    python -m pip download msticpy --dest \path\to\destination
+
+Within ``\path\to\destination`` you should see a .whl file for msticpy and the other dependencies.
+Some dependencies may not be .whl files, but tar.gz files.
+These files will need to be built into .whl files. To do this, run the following
+for each tar.gz file:
+
+.. code-block:: powershell
+
+    python -m pip wheel {file.tar.gz} -w \path\to\destination
+
+or use the script from MSTICPy repo "tools" folder to process all files
+`build_wheel_from_targz.py <https://github.com/microsoft/msticpy/blob/main/tools/build_wheel_from_targz.py>`__
+to build all the tar.gz files in a directory.
+
+3. Zip and copy the directory folder to your target environment.
+
+4. From the Isolated environment, unzip if needed and then run the following for each .whl file:
+
+.. code-block:: powershell
+
+    python -m pip install "\path\to\destination\{whl_file.whl}"
+
+.. note:: If you have an issue installing any of the packages you can use the script from
+    the MSTICPy repo "tools" folder `install_all_whl_files.py <https://github.com/microsoft/msticpy/blob/main/tools/install_all_whl_files.py>`__
+    to help.
+
+5. Test the installation by running msticpy that suits your needs.
+
+
+Linux Source to Isolated Linux Environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Follow the *Windows Source to Isolated Windows Environment* instructions above.
+
+
+Windows Source to Isolated Linux Environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. On your source Windows machine with internet access, download
+   `Docker for Windows <https://docs.docker.com/desktop/install/windows-install/>`__.
+   We are using docker to ensure that the wheels that we are downloading are meant for the Linux architecture.
+
+2. Run the `download_python_package.py
+   <https://github.com/microsoft/msticpy/blob/main/tools/download_python_package.py>`__ script.
+
+Example:
+.. code-block:: powershell
+
+    python \path\to\python\file --python-version "3.8.5" --module-name "msticpy[sentinel]" --module-version "2.7.0" --directory \path\to\destination
+
+3. Zip and copy the directory folder to the isolated environment.
+
+4. From the isolated environment, unzip if needed and then you will need to run the following for each .whl file:
+
+.. code-block:: powershell
+
+    python -m pip install "\path\to\destination\{whl_file.whl}"
+
+.. note:: If you have an issue installing any of the packages you can use the script
+    from MSTICPy repo "tools" folder
+    `install_all_whl_files.py <https://github.com/microsoft/msticpy/blob/main/tools/install_all_whl_files.py>`__
+    to help.
+
+5. Test the installation by running some MSTICPy operations in a Jupyter notebook.
+
+If you are installing within a Jupyter Notebooks, you will need to upload your zip file/directory
+containing all of the whl files.
+
+If you zipped your transfer archive and need to unzip source files, run the following:
+
+.. code-block:: python
+
+    import zipfile
+    import os
+    import shutil
+    file_path =  "./{zip_file_name}"
+    file_name = os.path.split(file_path)[-1]
+    file_name_without_ext = os.path.splitext(file_name)[0]
+    with zipfile.ZipFile(file_path, 'r') as zip_ref:
+        zip_ref.extractall(os.path.join(os.getcwd(), file_name_without_ext))
+
+
+- To install the whl files, run the following in a cell:
+
+.. code-block:: python
+
+    import os
+    directory = "/path/to/whl/files/directory" # edit this to match your directory
+    files = [
+        os.path.join(directory, filename)
+        for filename in os.listdir(directory)
+        if filename.endswith(".whl")
+    ]
+    for file in files:
+        filename = os.path.split(file)[-1]
+        print(f"\nAttempting to install {filename}")
+        %pip install --quiet --no-index --no-deps --find-links . {file}
