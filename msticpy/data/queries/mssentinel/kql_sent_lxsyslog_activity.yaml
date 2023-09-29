@@ -86,7 +86,6 @@ sources:
         | where ProcessName == "CRON" or Facility == "cron"
         | extend CMD=extract("CMD(.*)",1,SyslogMessage), User=extract("for user ([[:alpha:]]*)",1,SyslogMessage), CronUser=extract("^[(]([[:alpha:]]*)",1,SyslogMessage),EditStatus=extract("[A-Z]+ EDIT",0,SyslogMessage)
         {add_query_items}'
-    parameters:
   user_group_activity:
     description: Returns all user/group additions, deletions, and modifications for a host
     args:
@@ -105,7 +104,6 @@ sources:
         | extend User=extract("(user: name=|user '')([[:alnum:]]+)",2,SyslogMessage), Group=extract("(group: name=|group '')([[:alnum:]]+)",2,SyslogMessage), UID=extract("UID=([0-9]+)",1,SyslogMessage), GID=extract("GID=([0-9]+)",1,SyslogMessage)
         | where UserGroupAction != ""
         {add_query_items}'
-    parameters:
   all_syslog:
     description: Returns all syslog activity for a host
     args:
@@ -116,7 +114,6 @@ sources:
         | where TimeGenerated <= datetime({end})
         | where Computer {host_op} "{host_name}"
         {add_query_items}'
-    parameters:
   summarize_events:
     description: Returns summarized syslog activity for a host
     args:
@@ -128,7 +125,6 @@ sources:
         | where Computer {host_op} "{host_name}"
         | summarize count() by Facility, SeverityLevel, ProcessName
         {add_query_items}'
-    parameters:
   notable_events:
     description: Returns all 'alert' and 'crit' syslog activity for a host
     args:
@@ -140,4 +136,3 @@ sources:
         | where Computer {host_op} "{host_name}"
         | where SeverityLevel in ("alert", "crit")
         {add_query_items}'
-    parameters:

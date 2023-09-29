@@ -46,42 +46,42 @@ class IntSights(HttpTIProvider):
 
     _QUERIES = {
         "ipv4": _IntSightsParams(
-            path="/public/v2/iocs/ioc-by-value",
+            path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
             headers=_DEF_HEADERS,
         ),
         "ipv6": _IntSightsParams(
-            path="/public/v2/iocs/ioc-by-value",
+            path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
             headers=_DEF_HEADERS,
         ),
         "dns": _IntSightsParams(
-            path="/public/v2/iocs/ioc-by-value",
+            path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
             headers=_DEF_HEADERS,
         ),
         "url": _IntSightsParams(
-            path="/public/v2/iocs/ioc-by-value",
+            path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
             headers=_DEF_HEADERS,
         ),
         "md5_hash": _IntSightsParams(
-            path="/public/v2/iocs/ioc-by-value",
+            path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
             headers=_DEF_HEADERS,
         ),
         "sha1_hash": _IntSightsParams(
-            path="/public/v2/iocs/ioc-by-value",
+            path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
             headers=_DEF_HEADERS,
         ),
         "sha256_hash": _IntSightsParams(
-            path="/public/v2/iocs/ioc-by-value",
+            path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
             headers=_DEF_HEADERS,
         ),
         "email": _IntSightsParams(
-            path="/public/v2/iocs/ioc-by-value",
+            path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
             headers=_DEF_HEADERS,
         ),
@@ -111,27 +111,28 @@ class IntSights(HttpTIProvider):
         ):
             return False, ResultSeverity.information, "Not found."
 
-        if response["RawResult"]["Whitelist"] == "True":
+        if response["RawResult"].get("whitelisted", False):
             return False, ResultSeverity.information, "Whitelisted."
 
-        sev = response["RawResult"]["Severity"]
+        sev = response["RawResult"].get("severity", "Low")
         result_dict = {
-            "threat_actors": response["RawResult"]["RelatedThreatActors"],
-            "geolocation": response["RawResult"].get("Geolocation", ""),
+            "threat_actors": response["RawResult"].get("relatedThreatActors", ""),
+            "geolocation": response["RawResult"].get("geolocation", None),
             "response_code": response["Status"],
-            "tags": response["RawResult"]["Tags"] + response["RawResult"]["SystemTags"],
-            "malware": response["RawResult"]["RelatedMalware"],
-            "campaigns": response["RawResult"]["RelatedCampaigns"],
-            "sources": response["RawResult"]["Sources"],
-            "score": response["RawResult"]["Score"],
+            "tags": response["RawResult"].get("tags", [])
+            + response["RawResult"].get("SystemTags", []),
+            "malware": response["RawResult"].get("relatedMalware", []),
+            "campaigns": response["RawResult"].get("relatedCampaigns", []),
+            "score": response["RawResult"].get("score", 0),
             "first_seen": dt.datetime.strptime(
-                response["RawResult"]["FirstSeen"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                response["RawResult"].get("firstSeen", None), "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
             "last_seen": dt.datetime.strptime(
-                response["RawResult"]["LastSeen"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                response["RawResult"].get("lastSeen", None), "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
             "last_update": dt.datetime.strptime(
-                response["RawResult"]["LastUpdate"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                response["RawResult"].get("lastUpdateDate", None),
+                "%Y-%m-%dT%H:%M:%S.%fZ",
             ),
         }
 

@@ -240,6 +240,8 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         query_source = kwargs.pop("query_source", None)
 
         logger.info("Executing query '%s...'", query[:40])
+        logger.debug("Full query: %s", query)
+        logger.debug("Query options: %s", query_options)
         if not self._additional_connections:
             return self._query_provider.query(
                 query, query_source=query_source, **query_options
@@ -274,6 +276,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             return None
 
         params, missing = extract_query_params(query_source, *args, **kwargs)
+        logger.debug("Template query: %s", query_source.query)
         logger.info("Parameters for query: %s", params)
         query_options = {
             "default_time_params": self._check_for_time_params(params, missing)
