@@ -38,7 +38,7 @@ The settings in the file should look like the following:
       Splunk:
           Args:
             host: splunk_host
-            port: 8089
+            port: '8089'
             username: splunk_user
             password: [PLACEHOLDER]
 
@@ -54,7 +54,7 @@ to a Key Vault secret using the MSTICPy configuration editor.
       Splunk:
           Args:
             host: splunk_host
-            port: 8089
+            port: '8089'
             username: splunk_user
             password:
               KeyVault:
@@ -67,7 +67,12 @@ Parameter    Description
 host         (string) The host name (the default is 'localhost').
 username     (string) The Splunk account username, which is used to authenticate the Splunk instance.
 password     (string) The password for the Splunk account.
+splunkToken  (string) The Authorization Bearer Token <JWT> created in the Splunk.
 ===========  ===========================================================================================================================
+
+The username and password are needed for user account authentication.
+On the other hand, splunkToken is needed for Token authentication.
+The user auth method has a priority to token auth method if both username and splunkToken are set.
 
 
 Optional configuration parameters:
@@ -106,11 +111,11 @@ in msticpy config file.
 For more information on how to create new user with appropriate roles
 and permissions, follow the Splunk documents:
 
-`Securing the Spunk platform <https://docs.splunk.com/Documentation/Splunk/8.0.5/Security/Addandeditusers>`__
+`Securing the Spunk platform <https://docs.splunk.com/Documentation/Splunk/9.1.1/Security/Addandeditusers>`__
 
 and
 
-`About users and roles <https://docs.splunk.com/Documentation/Splunk/8.0.5/Security/Aboutusersandroles>`__.
+`About users and roles <https://docs.splunk.com/Documentation/Splunk/9.1.1/Security/Aboutusersandroles>`__
 
 The user should have permission to at least run its own searches or more
 depending upon the actions to be performed by user.
@@ -120,9 +125,19 @@ require the following details to specify while connecting:
 
 - host = "localhost" (Splunk server FQDN hostname to connect, for locally
   installed splunk, you can specify localhost)
-- port = 8089 (Splunk REST API )
+- port = "8089" (Splunk REST API)
 - username = "admin" (username to connect to Splunk instance)
 - password = "yourpassword" (password of the user specified in username)
+
+On the other hand, you can use the authentification token to connect.
+
+`Create authentication token <https://docs.splunk.com/Documentation/Splunk/9.1.1/Security/CreateAuthTokens>`__
+
+- host = "localhost" (Splunk server FQDN hostname to connect, for locally
+  installed splunk, you can specify localhost)
+- port = "8089" (Splunk REST API)
+- splunkToken = "<Authorization Bearer Token>" (token can be used instead of username/password)
+
 
 Once you have details, you can specify it in ``msticpyconfig.yaml`` as
 described earlier.
@@ -146,6 +161,11 @@ as parameters to connect.
 
     qry_prov.connect(host=<hostname>, username=<username>, password=<password>)
 
+OR
+
+.. code:: ipython3
+
+    qry_prov.connect(host=<hostname>, splunkToken=<token_string>)
 
 
 Listing available queries
@@ -217,7 +237,7 @@ For more information, see
         (default value is: | head 100)
     end: datetime (optional)
         Query end time
-        (default value is: 08/26/2017:00:00:00)
+        (default value is: current time + 1 day)
     index: str (optional)
         Splunk index name
         (default value is: \*)
@@ -229,7 +249,7 @@ For more information, see
         (default value is: \*)
     start: datetime (optional)
         Query start time
-        (default value is: 08/25/2017:00:00:00)
+        (default value is: current time - 1 day)
     timeformat: str (optional)
         Datetime format to use in Splunk query
         (default value is: "%Y-%m-%d %H:%M:%S.%6N")
