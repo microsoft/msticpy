@@ -93,8 +93,7 @@ class MailboxConfiguration(Entity):
     def description_str(self):
         """Return Entity Description."""
         return (
-            f"{self.MailboxPrimaryAddress} - {self.RiskLevel}"
-            or self.__class__.__name__
+            f"{self.MailboxPrimaryAddress} - {self.ConfigId}" or self.__class__.__name__
         )
 
     @property

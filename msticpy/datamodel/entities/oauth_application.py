@@ -80,12 +80,12 @@ class OAuthApplication(Entity):
     @property
     def description_str(self):
         """Return Entity Description."""
-        return self.DistinguishedName or self.__class__.__name__
+        return self.Name or self.OAuthAppId or self.__class__.__name__
 
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
-        return self.__class__.__name__
+        return self.Name or self.OAuthAppId or self.__class__.__name__
 
     _entity_schema = {
         # OAuthAppId (type System.String)

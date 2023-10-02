@@ -307,7 +307,9 @@ class Entity(ABC, Node):
         """Return the hash of the entity based on non-empty property values."""
         return hash(
             " ".join(
-                f"{prop}:{val}" for prop, val in self.properties.items() if str(val)
+                f"{prop}:{val}"
+                for prop, val in self.properties.items()
+                if str(val) and prop not in ("edges", "TimeGenerated")
             )
         )
 
@@ -343,6 +345,7 @@ class Entity(ABC, Node):
             and self.__dict__[prop]
             and other.__dict__[prop]
             for prop in self.__dict__  # pylint: disable=consider-using-dict-items
+            if prop not in ("edges", "TimeGenerated") and not prop.startswith("_")
         )
 
     def merge(self, other: Any) -> "Entity":
