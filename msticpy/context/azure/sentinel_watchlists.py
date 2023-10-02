@@ -328,5 +328,7 @@ class SentinelWatchlistsMixin:
 
         """
         # Check requested watchlist actually exists
-        existing_watchlists = self.list_watchlists()["name"].values
-        return watchlist_name in existing_watchlists
+        existing_watchlists = self.list_watchlists()
+        if existing_watchlists.empty:
+            return False
+        return watchlist_name in existing_watchlists["name"].values
