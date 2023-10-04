@@ -103,6 +103,11 @@ _WS_IDS = [
     "a927809c-8142-43e1-96b3-4ad87cfe95a4",
 ]
 
+_VALID_CONN_STR = (
+    f"loganalytics://tenant='{_WS_IDS[0]}';workspace='{_WS_IDS[1]}'"
+    f";alias='wksp';clientid='{_WS_IDS[0]}';client_secret='{_WS_IDS[1]}'"
+)
+
 _TEST_CONNECT_PARAMS = (
     (
         {"auth_types": ["cli", "environment", "msi"]},
@@ -110,6 +115,7 @@ _TEST_CONNECT_PARAMS = (
     ),
     ({"auth_types": "cli"}, [("_connect_auth_types", ["cli"])]),
     ({"tenant_id": "test"}, [("_az_tenant_id", "test")]),
+    ({"connection_str": _VALID_CONN_STR}, [("_workspace_id", _WS_IDS[1])]),
     ({"connection_str": "test"}, [(None, MsticpyKqlConnectionError)]),
     (
         {"mp_az_auth": ["cli", "environment", "msi"]},
