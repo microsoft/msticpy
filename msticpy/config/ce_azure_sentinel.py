@@ -9,7 +9,7 @@ from datetime import datetime
 import ipywidgets as widgets
 
 from .._version import VERSION
-from ..common.utility.package import lazy_import
+from ..common.utility.package import delayed_import
 
 # from ..context.azure.sentinel_core import MicrosoftSentinel
 from .ce_common import (
@@ -24,7 +24,7 @@ from .mp_config_control import MpConfigControls
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-ms_sentinel = lazy_import("msticpy.context.azure.sentinel_core", "MicrosoftSentinel")
+ms_sentinel = delayed_import("msticpy.context.azure.sentinel_core", "MicrosoftSentinel")
 
 
 # pylint: disable=too-many-ancestors

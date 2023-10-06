@@ -6,9 +6,16 @@
 """MSTICPy Data Processing Tools."""
 
 from .._version import VERSION
-
-# flake8: noqa: F401
-from . import base64unpack, process_tree_utils
-from .iocextract import IoCExtract
+from ..lazy_importer import lazy_import
 
 __version__ = VERSION
+
+_LAZY_IMPORTS = {
+    "msticpy.context.geoip.GeoLiteLookup",
+    "msticpy.context.geoip.IPStackLookup",
+    "msticpy.context.geoip.geo_distance",
+    "msticpy.context.tilookup.TILookup",
+    "msticpy.transform.iocextract.IoCExtract",
+}
+
+module, __getattr__, __dir__ = lazy_import(__name__, _LAZY_IMPORTS)

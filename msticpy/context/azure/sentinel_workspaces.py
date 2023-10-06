@@ -18,7 +18,7 @@ from ...auth.azure_auth_core import AzureCloudConfig
 from ...common.data_utils import df_has_data
 from ...common.pkg_config import get_http_timeout
 from ...common.utility import mp_ua_header
-from ...data import QueryProvider
+from ...data.core.data_providers import QueryProvider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
