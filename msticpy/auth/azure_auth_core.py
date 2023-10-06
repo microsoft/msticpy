@@ -63,7 +63,9 @@ class AzureCredEnvNames:
     AZURE_CLIENT_CERTIFICATE_PATH = "AZURE_CLIENT_CERTIFICATE_PATH"
     # (Optional) The password protecting the certificate file
     # (for PFX (PKCS12) certificates).
-    AZURE_CLIENT_CERTIFICATE_PASSWORD = "AZURE_CLIENT_CERTIFICATE_PASSWORD"
+    AZURE_CLIENT_CERTIFICATE_PASSWORD = (
+        "AZURE_CLIENT_CERTIFICATE_PASSWORD"  # nosec  # noqa
+    )
     # (Optional) Specifies whether an authentication request will include an x5c
     # header to support subject name / issuer based authentication.
     # When set to `true` or `1`, authentication requests include the x5c header.
@@ -72,7 +74,7 @@ class AzureCredEnvNames:
     # Username and password:
     AZURE_USERNAME = "AZURE_USERNAME"  # The username/upn of an AAD user account.
     # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="This is an enum of env variable names")]
-    AZURE_PASSWORD = "AZURE_PASSWORD"  # User password
+    AZURE_PASSWORD = "AZURE_PASSWORD"  # User password  # nosec  # noqa
 
 
 _VALID_ENV_VAR_COMBOS = (
