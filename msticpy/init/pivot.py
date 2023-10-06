@@ -426,9 +426,11 @@ class Pivot:
             for attr in dir(entity_cls):
                 attr_obj = getattr(entity_cls, attr)
                 if type(attr_obj).__name__ == "PivotContainer":
-                    delattr(entity_cls, attr)
+                    with contextlib.suppress(AttributeError):
+                        delattr(entity_cls, attr)
                 if callable(attr_obj) and hasattr(attr_obj, "pivot_properties"):
-                    delattr(entity_cls, attr)
+                    with contextlib.suppress(AttributeError):
+                        delattr(entity_cls, attr)
 
     @staticmethod
     def browse():

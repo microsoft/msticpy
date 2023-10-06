@@ -331,11 +331,12 @@ Windows Source to Isolated Linux Environment
    <https://github.com/microsoft/msticpy/blob/main/tools/download_python_package.py>`__ script.
 
 Example:
+
 .. code-block:: powershell
 
     python \path\to\python\file --python-version "3.8.5" --module-name "msticpy[sentinel]" --module-version "2.7.0" --directory \path\to\destination
 
-3. Zip and copy the directory folder to the isolated environment.
+3. Copy the directory folder to the isolated environment.
 
 4. From the isolated environment, unzip if needed and then you will need to run the following for each .whl file:
 
