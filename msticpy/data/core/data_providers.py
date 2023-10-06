@@ -14,7 +14,7 @@ import pandas as pd
 from ..._version import VERSION
 from ...common.pkg_config import get_config
 from ...common.utility import export, valid_pyname
-from ...nbwidgets import QueryTime
+from ...nbwidgets.query_time import QueryTime
 from .. import drivers
 from ..drivers.driver_base import DriverBase, DriverProps
 from .param_extractor import extract_query_params
