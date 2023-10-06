@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Entity sub-package."""
 import difflib
+from typing import List
 
 from .account import Account
 from .alert import Alert
@@ -29,12 +30,15 @@ from .ip_address import IpAddress
 from .mail_cluster import MailCluster
 from .mail_message import MailMessage
 from .mailbox import Mailbox
+from .mailbox_configuration import MailboxConfiguration
 from .malware import Malware
 from .network_connection import NetworkConnection
+from .oauth_application import OAuthApplication
 from .process import Process
 from .registry_key import RegistryKey
 from .registry_value import RegistryValue
 from .security_group import SecurityGroup
+from .service_principal import ServicePrincipal
 from .submission_mail import SubmissionMail
 from .threat_intelligence import Threatintelligence
 from .unknown_entity import UnknownEntity
@@ -42,49 +46,69 @@ from .url import Url
 
 from ..soc.incident import Incident  # isort: skip
 
+
+# Defender class equivalents
+class User(Account):
+    """Alias for Account."""
+
+
+class Ip(IpAddress):
+    """Alias for IpAddress."""
+
+
+class Machine(Host):
+    """Alias for Host."""
+
+
 # Dictionary to map text names of types to the class.
 Entity.ENTITY_NAME_MAP.update(
     {
         "account": Account,
-        "azureresource": AzureResource,
+        "alert": Alert,
+        "alerts": Alert,
         "azure-resource": AzureResource,
-        "host": Host,
-        "process": Process,
-        "file": File,
-        "cloudapplication": CloudApplication,
+        "azureresource": AzureResource,
         "cloud-application": CloudApplication,
+        "cloud-logon-session": CloudLogonSession,
+        "cloudapplication": CloudApplication,
+        "cloudlogonsession": CloudLogonSession,
         "dns": Dns,
         "dnsresolve": Dns,
-        "ipaddress": IpAddress,
+        "file": File,
+        "filehash": FileHash,
+        "geolocation": GeoLocation,
+        "host-logon-session": HostLogonSession,
+        "host": Host,
+        "hostlogonsession": HostLogonSession,
+        "incident": Incident,
         "iotdevice": IoTDevice,
         "ip": IpAddress,
-        "networkconnection": NetworkConnection,
-        "network-connection": NetworkConnection,
-        "mailbox": Mailbox,
-        "mail-message": MailMessage,
-        "mailmessage": MailMessage,
+        "ipaddress": IpAddress,
+        "location": GeoLocation,
+        "machine": Machine,
         "mail-cluster": MailCluster,
+        "mail-message": MailMessage,
+        "mailbox": Mailbox,
         "mailcluster": MailCluster,
+        "mailboxconfiguration": MailboxConfiguration,
+        "mailmessage": MailMessage,
         "malware": Malware,
+        "network-connection": NetworkConnection,
+        "networkconnection": NetworkConnection,
+        "oauthapplication": OAuthApplication,
+        "process": Process,
         "registry-key": RegistryKey,
-        "registrykey": RegistryKey,
         "registry-value": RegistryValue,
+        "registrykey": RegistryKey,
         "registryvalue": RegistryValue,
-        "host-logon-session": HostLogonSession,
-        "hostlogonsession": HostLogonSession,
-        "filehash": FileHash,
         "security-group": SecurityGroup,
         "securitygroup": SecurityGroup,
+        "ServicePrincipal": ServicePrincipal,
         "SubmissionMail": SubmissionMail,
-        "alerts": Alert,
-        "alert": Alert,
         "threatintelligence": Threatintelligence,
-        "url": Url,
         "unknown": UnknownEntity,
-        "geolocation": GeoLocation,
-        "location": GeoLocation,
-        "incident": Incident,
-        "cloud-logon-session": CloudLogonSession,
+        "url": Url,
+        "user": User,
     }
 )
 
@@ -92,29 +116,39 @@ Entity.ENTITY_NAME_MAP.update(
 def find_entity(entity):
     """Find entity name."""
     entity_cf = entity.casefold()
-    entity_classes = {
+    entity_cls_dict = {
         cls.__name__.casefold(): cls for cls in Entity.ENTITY_NAME_MAP.values()
     }
     if entity_cf in Entity.ENTITY_NAME_MAP:
         print(f"Match found '{Entity.ENTITY_NAME_MAP[entity].__name__}'")
         return Entity.ENTITY_NAME_MAP[entity]
-    if entity_cf in entity_classes:
-        print(f"Match found '{entity_classes[entity_cf].__name__}'")
-        return entity_classes[entity_cf]
+    if entity_cf in entity_cls_dict:
+        print(f"Match found '{entity_cls_dict[entity_cf].__name__}'")
+        return entity_cls_dict[entity_cf]
     # Try to find the closest matches
-    closest = difflib.get_close_matches(entity, entity_classes.keys(), cutoff=0.4)
+    closest = difflib.get_close_matches(entity, entity_cls_dict.keys(), cutoff=0.4)
     mssg = [f"No exact match found for '{entity}'. "]
     if len(closest) == 1:
-        mssg.append(f"Closest match is '{entity_classes[closest[0]].__name__}'")
+        mssg.append(f"Closest match is '{entity_cls_dict[closest[0]].__name__}'")
     elif closest:
-        match_list = [f"'{entity_classes[mtch].__name__}'" for mtch in closest]
+        match_list = [f"'{entity_cls_dict[match].__name__}'" for match in closest]
         mssg.append(f"Closest matches are {', '.join(match_list)}")
     else:
         mssg.extend(
             [
                 "No close match found. Entities available:",
-                *(cls.__name__ for cls in entity_classes.values()),
+                *(cls.__name__ for cls in entity_cls_dict.values()),
             ]
         )
     print("\n".join(mssg))
     return None
+
+
+def list_entities() -> List[str]:
+    """List entities."""
+    return sorted([cls.__name__ for cls in set(Entity.ENTITY_NAME_MAP.values())])
+
+
+def entity_classes() -> List[type]:
+    """Return a list of all entity classes."""
+    return list(set(Entity.ENTITY_NAME_MAP.values()))

@@ -25,7 +25,7 @@ class CloudLogonSession(Entity):
     Attributes
     ----------
     SessionId : str
-        The loggon session ID
+        The logon session ID
     Account : str
         The Account
     UserAgent : str
