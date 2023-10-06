@@ -14,6 +14,7 @@ Azure SDK docs: https://learn.microsoft.com/python/api/overview/
 azure/monitor-query-readme?view=azure-python
 
 """
+import contextlib
 import logging
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, cast
@@ -61,20 +62,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_KQL_CLOUD_MAP = {
-    "global": "public",
-    "cn": "china",
-    "usgov": "government",
-    "de": "germany",
-}
-
-_LOGANALYTICS_URL_BY_CLOUD = {
-    "global": "https://api.loganalytics.io/",
-    "cn": "https://api.loganalytics.azure.cn/",
-    "usgov": "https://api.loganalytics.us/",
-    "de": "https://api.loganalytics.de/",
-}
-
+_KQL_CLOUD_MAP = {"global": "public", "cn": "china", "usgov": "government"}
 
 _HELP_URL = (
     "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProv-MSSentinel.html"
@@ -148,6 +136,7 @@ class AzureMonitorDriver(DriverBase):
         self.set_driver_property(
             DriverProps.MAX_PARALLEL, value=kwargs.get("max_threads", 4)
         )
+        self.az_cloud_config = AzureCloudConfig()
         logger.info(
             "AzureMonitorDriver loaded. connect_str  %s, kwargs: %s",
             connection_str,
@@ -157,9 +146,7 @@ class AzureMonitorDriver(DriverBase):
     @property
     def url_endpoint(self) -> str:
         """Return the current URL endpoint for Azure Monitor."""
-        base_url = _LOGANALYTICS_URL_BY_CLOUD.get(
-            AzureCloudConfig().cloud, _LOGANALYTICS_URL_BY_CLOUD["global"]
-        )
+        base_url = self.az_cloud_config.log_analytics_uri
         # post v1.1.0 of azure-monitor-query, the API version requires a 'v1' suffix
         if parse_version(az_monitor_version) > parse_version("1.1.0"):
             return f"{base_url}v1"
@@ -423,10 +410,11 @@ class AzureMonitorDriver(DriverBase):
             )
         elif isinstance(connection_str, str):
             self._def_connection_str = connection_str
-            ws_config = WorkspaceConfig.from_connection_string(connection_str)
-            logger.info(
-                "WorkspaceConfig created from connection_str %s", connection_str
-            )
+            with contextlib.suppress(ValueError):
+                ws_config = WorkspaceConfig.from_connection_string(connection_str)
+                logger.info(
+                    "WorkspaceConfig created from connection_str %s", connection_str
+                )
         elif isinstance(connection_str, WorkspaceConfig):
             logger.info("WorkspaceConfig as parameter %s", connection_str.workspace_id)
             ws_config = connection_str
@@ -553,7 +541,7 @@ class AzureMonitorDriver(DriverBase):
         if not self._ws_config:
             logger.info("No workspace config - cannot get schema")
             return {}
-        mgmt_endpoint = AzureCloudConfig().endpoints.resource_manager
+        mgmt_endpoint = self.az_cloud_config.resource_manager
 
         url_tables = (
             "{endpoint}subscriptions/{sub_id}/resourcegroups/"

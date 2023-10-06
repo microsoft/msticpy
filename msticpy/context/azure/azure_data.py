@@ -23,7 +23,6 @@ from ...auth.azure_auth import (
     fallback_devicecode_creds,
     only_interactive_cred,
 )
-from ...auth.cloud_mappings import get_all_endpoints
 from ...common.exceptions import (
     MsticpyAzureConfigError,
     MsticpyImportExtraError,
@@ -130,8 +129,8 @@ class AzureData:
         self.network_client: Optional[NetworkManagementClient] = None
         self.monitoring_client: Optional[MonitorManagementClient] = None
         self.compute_client: Optional[ComputeManagementClient] = None
-        self.cloud = cloud or AzureCloudConfig().cloud
-        self.endpoints = get_all_endpoints(self.cloud)  # type: ignore
+        self.cloud = cloud or self.az_cloud_config.cloud
+        self.endpoints = self.az_cloud_config.endpoints
         logger.info("Initialized AzureData")
         if connect:
             self.connect()
@@ -175,7 +174,7 @@ class AzureData:
         if kwargs.get("cloud"):
             logger.info("Setting cloud to %s", kwargs["cloud"])
             self.cloud = kwargs["cloud"]
-            self.azure_cloud_config = AzureCloudConfig(self.cloud)
+            self.az_cloud_config = AzureCloudConfig(self.cloud)
         auth_methods = auth_methods or self.az_cloud_config.auth_methods
         tenant_id = tenant_id or self.az_cloud_config.tenant_id
         self.credentials = az_connect(
@@ -189,7 +188,7 @@ class AzureData:
 
         self.sub_client = SubscriptionClient(
             credential=self.credentials.modern,
-            base_url=self.endpoints.resource_manager,
+            base_url=self.az_cloud_config.resource_manager,
             credential_scopes=[self.az_cloud_config.token_uri],
         )
         if not self.sub_client:
@@ -360,7 +359,9 @@ class AzureData:
 
         resources = []  # type: List
         if rgroup is None:
-            resources.extend(iter(self.resource_client.resources.list()))  # type: ignore
+            resources.extend(
+                iter(self.resource_client.resources.list())  # type: ignore
+            )
         else:
             resources.extend(
                 iter(
@@ -870,7 +871,7 @@ class AzureData:
                     client_name,
                     client(
                         self.credentials.modern,  # type: ignore
-                        base_url=self.endpoints.resource_manager,
+                        base_url=self.az_cloud_config.resource_manager,
                         credential_scopes=[self.az_cloud_config.token_uri],
                     ),
                 )
@@ -881,7 +882,7 @@ class AzureData:
                     client(
                         self.credentials.modern,  # type: ignore
                         sub_id,
-                        base_url=self.endpoints.resource_manager,
+                        base_url=self.az_cloud_config.resource_manager,
                         credential_scopes=[self.az_cloud_config.token_uri],
                     ),
                 )
@@ -908,7 +909,7 @@ class AzureData:
                 client_name,
                 client(
                     self.credentials.legacy,  # type: ignore
-                    base_url=self.endpoints.resource_manager,
+                    base_url=self.az_cloud_config.resource_manager,
                     credential_scopes=[self.az_cloud_config.token_uri],
                 ),
             )
@@ -919,7 +920,7 @@ class AzureData:
                 client(
                     self.credentials.legacy,  # type: ignore
                     sub_id,
-                    base_url=self.endpoints.resource_manager,
+                    base_url=self.az_cloud_config.resource_manager,
                     credential_scopes=[self.az_cloud_config.token_uri],
                 ),
             )
@@ -969,6 +970,8 @@ def get_token(
         A token to be used in API calls.
 
     """
+    az_cloud_config = AzureCloudConfig(cloud)
+    tenant_id = tenant_id or az_cloud_config.tenant_id
     if tenant_id:
         try:
             token = credential.modern.get_token(AzureCloudConfig().token_uri)

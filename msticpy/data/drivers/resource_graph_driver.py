@@ -83,12 +83,12 @@ class ResourceGraphDriver(DriverBase):
             print("Check your default browser for interactive sign-in prompt.")
         self.client = ResourceGraphClient(
             credential=credentials.modern,
-            base_url=self.az_cloud_config.endpoints.resource_manager,
+            base_url=self.az_cloud_config.resource_manager,
             credential_scopes=[self.az_cloud_config.token_uri],
         )
         self.sub_client = SubscriptionClient(
             credential=credentials.modern,
-            base_url=self.az_cloud_config.endpoints.resource_manager,
+            base_url=self.az_cloud_config.resource_manager,
             credential_scopes=[self.az_cloud_config.token_uri],
         )
         self.subscription_ids = [

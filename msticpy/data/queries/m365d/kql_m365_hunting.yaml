@@ -8,12 +8,6 @@ defaults:
   metadata:
     data_source: 'hunting_queries'
   parameters:
-      start:
-        description: Query start time
-        type: datetime
-      end:
-        description: Query end time
-        type: datetime
       add_query_items:
         description: Additional query clauses
         type: str
@@ -37,15 +31,15 @@ sources:
         let docAttachments =
           DeviceFileEvents
           | where {time_column} > minTimeRange
-			    // Query for common document file extensions
+          // Query for common document file extensions
             and (FileName endswith ".docx" or FileName endswith ".docm" or FileName endswith ".doc")
-			    // Query for files saved from email clients such as the Office Outlook app or the Windows Mail app
+          // Query for files saved from email clients such as the Office Outlook app or the Windows Mail app
             and InitiatingProcessFileName in~ ("outlook.exe", "hxoutlook.exe")
           | summarize AttachmentSaveTime=min({time_column}) by AttachmentName=FileName, DeviceId;
         let browserDownloads =
           DeviceFileEvents
           | where {time_column} > minTimeRange
-			    // Query for files created by common browsers
+          // Query for files created by common browsers
             and InitiatingProcessFileName in~ ("browser_broker.exe", "chrome.exe", "iexplore.exe", "firefox.exe")
             // Exclude JS files that are used for loading sites (but still query for JS files that are known to be downloaded)
             and not (FileName endswith ".js" and isempty(FileOriginUrl))
@@ -61,7 +55,6 @@ sources:
         by bin({time_column}, 1tick), FileName, FileOriginUrl, ClickUrl, SHA1, DeviceName, DeviceId
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Delivery/Doc%20attachment%20with%20link%20to%20download.txt"
-    parameters:
   dropbox_link:
     description: Looks for user content downloads from dropbox that originate from a link/redirect from a 3rd party site.
     metadata:
@@ -76,7 +69,6 @@ sources:
         | project FileOriginReferrerUrl, FileName
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Delivery/Dropbox%20downloads%20linked%20from%20other%20site.txt"
-    parameters:
   email_smartscreen:
     description: Look for links opened from outlook.exe, followed by a browser download and then a SmartScreen app warning
     metadata:
@@ -112,7 +104,6 @@ sources:
         | distinct *
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Delivery/Email%20link%20%2B%20download%20%2B%20SmartScreen%20warning.txt"
-    parameters:
   email_link:
     description: Look for links opened from mail apps – if a detection occurred right afterwards
     metadata:
@@ -146,7 +137,6 @@ sources:
         | summarize FirstDetectedActivity=min(FirstDetectedActivity), AlertTitles=makeset(Title) by OpenedLink, InitiatingProcessFileName, {time_column}=bin({time_column}, 1tick), DeviceName, DeviceId, WasOutlookSafeLink
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Delivery/Open%20email%20link.txt"
-    parameters:
   av_sites:
     description: Pivot from downloads detected by Windows Defender Antivirus to other files downloaded from the same sites
     metadata:
@@ -190,7 +180,6 @@ sources:
         | order by MachineCount desc
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Delivery/Pivot%20from%20detections%20to%20related%20downloads.txt"
-    parameters:
   tor:
     description: Looks for Tor client, or for a common Tor plugin called Meek.
     metadata:
@@ -204,7 +193,6 @@ sources:
         | order by MachineCount desc
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Command%20and%20Control/Tor.txt"
-    parameters:
   network_scans:
     description: Looking for high volume queries against a given RemoteIP, per ComputerName, RemotePort and Process
     metadata:
@@ -219,7 +207,6 @@ sources:
         | where RemotePortCount > remotePortCountThreshold
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Command%20and%20Control/Tor.txt"
-    parameters:
   user_enumeration:
     description: The query finds attempts to list users or groups using Net commands
     metadata:
@@ -234,7 +221,6 @@ sources:
         | sort by AccountName, Target
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Discovery/Enumeration%20of%20users%20%26%20groups%20for%20lateral%20movement.txt"
-    parameters:
   smb_discovery:
     description: Query for processes that accessed more than 10 IP addresses over port 445 (SMB) - possibly scanning for network shares.
     metadata:
@@ -248,7 +234,6 @@ sources:
         | where RemoteIPCount > 10
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Discovery/SMB%20shares%20discovery.txt"
-    parameters:
   b64_pe:
     description: Finding base64 encoded PE files header seen in the command line parameters
     metadata:
@@ -260,7 +245,6 @@ sources:
         | top 1000 by {time_column}
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Execution/Base64encodePEFile.txt"
-    parameters:
   malware_recycle:
     description: Finding attackers hiding malware in the recycle bin.
     metadata:
@@ -273,7 +257,6 @@ sources:
         | project {time_column}, DeviceName, ProcessCommandLine, InitiatingProcessFileName
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Execution/Malware_In_recyclebin.txt"
-    parameters:
   powershell_downloads:
     description: Finds PowerShell execution events that could involve a download.
     metadata:
@@ -294,7 +277,6 @@ sources:
         | top 100 by {time_column}
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Execution/PowerShell%20downloads.txt"
-    parameters:
   uncommon_powershell:
     description: Find which uncommon Powershell Cmdlets were executed on that machine in a certain time period.
     metadata:
@@ -336,7 +318,6 @@ sources:
         | summarize FirstEvent=min({time_column}), LastEvent=max({time_column}) by DeviceName, ProcessCommandLine, FileName, InitiatingProcessFileName
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Exploits/Electron-CVE-2018-1000006.txt"
-    parameters:
   cve_2018_4878:
     description: This query checks for specific processes and domain TLD used in the CVE-2018-4878
     metadata:
@@ -350,7 +331,6 @@ sources:
         | top 100 by {time_column}
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Exploits/Flash-CVE-2018-4848.txt"
-    parameters:
   cve_2018_1111:
     description: Looks for CVE-2018-1111 exploitation
     metadata:
@@ -364,7 +344,6 @@ sources:
         | project {time_column}, DeviceName , FileName, ProcessCommandLine, InitiatingProcessCommandLine
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Exploits/Linux-DynoRoot-CVE-2018-1111.txt"
-    parameters:
   brute_force:
     description: Look for public IP addresses that failed to logon to a computer multiple times, using multiple accounts, and eventually succeeded.
     metadata:
@@ -386,7 +365,6 @@ sources:
         | where Failed > 10 and Successful > 0 and FailedAccountsCount > 2 and SuccessfulAccountsCount == 1
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Lateral%20Movement/Account%20brute%20force.txt"
-    parameters:
   service_account_powershell:
     description: Service Accounts Performing Remote PowerShell
     metadata:
@@ -429,10 +407,9 @@ sources:
             makeset(Command), count(), min({time_column}) by
             AccountName, DeviceName, DeviceId
         | order by AccountName asc
-        | where min_Timestamp > ago(1d)
+        | where min_{time_column} > ago(1d)
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Lateral%20Movement/ServiceAccountsPerformingRemotePS.txt"
-    parameters:
   accessibility_persistence:
     description: This query looks for persistence or privilege escalation done using Windows Accessibility features.
     metadata:
@@ -478,7 +455,6 @@ sources:
         | union kind=outer executedProcessIsPowershellOrCmd
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Persistence/Accessibility%20Features.txt"
-    parameters:
   smartscreen_ignored:
     description: Query for SmartScreen URL blocks, where the user has decided to run the malware nontheless.
     metadata:
@@ -510,4 +486,3 @@ sources:
         | project-away DeviceName1
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Protection%20events/SmartScreen%20URL%20block%20ignored%20by%20user.txt"
-    parameters:

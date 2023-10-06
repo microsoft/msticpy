@@ -82,6 +82,7 @@ def az_connect(
     # Use auth_methods param or configuration defaults
     data_provs = get_provider_settings(config_section="DataProviders")
     auth_methods = auth_methods or az_cloud_config.auth_methods
+    tenant_id = tenant_id or az_cloud_config.tenant_id
 
     # Ignore AzCLI settings except for authentication creds for EnvCred
     az_cli_config = data_provs.get("AzureCLI")
@@ -105,7 +106,7 @@ def az_connect(
     )
     sub_client = SubscriptionClient(
         credential=credentials.modern,
-        base_url=az_cloud_config.endpoints.resource_manager,  # type: ignore
+        base_url=az_cloud_config.resource_manager,  # type: ignore
         credential_scopes=[az_cloud_config.token_uri],
     )
     if not sub_client:
@@ -169,12 +170,10 @@ def fallback_devicecode_creds(
     """
     cloud = cloud or kwargs.pop("region", AzureCloudConfig().cloud)
     az_config = AzureCloudConfig(cloud)
-    aad_uri = az_config.endpoints.active_directory
-    tenant_id = tenant_id or AzureCloudConfig().tenant_id
+    aad_uri = az_config.authority_uri
+    tenant_id = tenant_id or az_config.tenant_id
     creds = DeviceCodeCredential(authority=aad_uri, tenant_id=tenant_id)
-    legacy_creds = CredentialWrapper(
-        creds, resource_id=AzureCloudConfig(cloud).token_uri
-    )
+    legacy_creds = CredentialWrapper(creds, resource_id=az_config.token_uri)
     if not creds:
         raise CloudError("Could not obtain credentials.")
 
