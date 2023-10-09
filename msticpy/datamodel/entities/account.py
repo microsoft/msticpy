@@ -7,6 +7,7 @@
 from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
+from ...common.data_types import SplitProperty
 from ...common.utility import export
 from .entity import Entity
 from .host import Host
@@ -49,10 +50,14 @@ class Account(Entity):
         Account DisplayName
     ObjectGuid : str
         The object ID of the user account
+    Upn : str
+        The User principal name of the account
 
     """
 
     ID_PROPERTIES = ["QualifiedName", "Sid", "AadUserId", "PUID", "ObjectGuid"]
+    Upn = SplitProperty("Name", "UPNSuffix", "@")
+    UPN = Upn
 
     def __init__(
         self,
@@ -92,12 +97,15 @@ class Account(Entity):
         self.LogonId: Optional[str] = None
         self.Sid: Optional[str] = None
         self.AadTenantId: Optional[str] = None
-        self.AadUserId: Optional[str] = None
+        self._AadUserId: Optional[str] = None
         self.PUID: Optional[str] = None
         self.IsDomainJoined: bool = False
         self.DisplayName: Optional[str] = None
         self.ObjectGuid: Optional[str] = None
-
+        if "Upn" in kwargs:
+            self.Upn = kwargs.pop("Upn")
+        if "AadUserId" in kwargs:
+            self.AadUserId = kwargs.pop("AadUserId")
         super().__init__(src_entity=src_entity, **kwargs)
         if src_event is not None:
             self._create_from_event(src_event, role)
@@ -111,6 +119,16 @@ class Account(Entity):
     def name_str(self) -> str:
         """Return Entity Name."""
         return self.Name or self.DisplayName or "Unknown Account"
+
+    @property
+    def AadUserId(self) -> Optional[str]:  # noqa: N802
+        """Return the Azure AD user ID or the ObjectGuid."""
+        return self._AadUserId or self.ObjectGuid
+
+    @AadUserId.setter
+    def AadUserId(self, value: str):  # noqa: N802
+        """Set the Azure AD user ID."""
+        self._AadUserId = value
 
     @property
     def qualified_name(self) -> str:
@@ -176,6 +194,10 @@ class Account(Entity):
             self.UPNSuffix = src_event["UpnSuffix"]
         else:
             self.UPNSuffix = None
+        if "Upn" in src_event:
+            self.Upn = src_event["Upn"]
+        if "UPN" in src_event:
+            self.Upn = src_event["UPN"]
 
     _entity_schema = {
         # Name (type System.String)
@@ -202,6 +224,7 @@ class Account(Entity):
         # DisplayName (type System.String)
         "DisplayName": None,
         "ObjectGuid": None,
+        "Upn": None,
         "TimeGenerated": None,
         "StartTime": None,
         "EndTime": None,
