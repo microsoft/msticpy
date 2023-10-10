@@ -333,7 +333,7 @@ Windows Source to Isolated Linux Environment
 Example:
 .. code-block:: powershell
 
-    python \path\to\python\file --python-version "3.8.5" --module-name "msticpy[sentinel]" --module-version "2.7.0" --directory \path\to\destination
+    python \path\to\python\file --python-version "3.8.5" --python-name "msticpy[sentinel]" --python-version "2.7.0" --directory \path\to\destination
 
 3. Zip and copy the directory folder to the isolated environment.
 
