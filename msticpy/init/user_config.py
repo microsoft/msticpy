@@ -238,7 +238,7 @@ def _load_azure_data(comp_settings=None, **kwargs):
 
 def _load_azsent_api(comp_settings=None, **kwargs):
     del kwargs
-    from ..context.azure import MicrosoftSentinel
+    from ..context.azure.sentinel_core import MicrosoftSentinel
 
     res_id = comp_settings.pop("res_id", None)
     if res_id:

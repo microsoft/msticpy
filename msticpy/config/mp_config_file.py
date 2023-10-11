@@ -25,15 +25,12 @@ try:
 except ImportError:
     _KEYVAULT = False
 
-try:
-    from ..context.azure.sentinel_core import MicrosoftSentinel
-
-    _SENTINEL = True
-except ImportError:
-    _SENTINEL = False
 from ..common.pkg_config import current_config_path, refresh_config, validate_config
+from ..common.utility.package import delayed_import
 from .comp_edit import CompEditDisplayMixin, CompEditStatusMixin
 from .file_browser import FileBrowser
+
+ms_sentinel = delayed_import("msticpy.context.azure.sentinel_core", "MicrosoftSentinel")
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -306,7 +303,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
             workspace.
 
         """
-        return MicrosoftSentinel.get_workspace_details_from_url(url)
+        return ms_sentinel().get_workspace_details_from_url(url)
 
     def _show_sentinel_workspace(self, show: bool = True):
         """Fetch settings from Sentinel Portal URL."""

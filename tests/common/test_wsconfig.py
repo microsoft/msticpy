@@ -157,3 +157,45 @@ def test_wsconfig_single_ws():
             and _NAMED_WS["WorkspaceId"] in wstest_config.code_connect_str
             and _NAMED_WS["TenantId"] in wstest_config.code_connect_str
         )
+
+
+_TENANT = "d8d9d2f2-5d2d-4d7e-9c5c-5d6d9d1d8d9d"
+_WS_ID = "f8d9d2f2-5d2d-4d7e-9c5c-5d6d9d1d8d9e"
+_CLI_ID = "18d9d2f2-5d2d-4d7e-9c5c-5d6d9d1d8d9f"
+_WS_NAME = "Workspace"
+_CONFIG_STR_TEST_CASES = (
+    (
+        f"loganalytics://code;workspace='{_WS_ID}';alias='{_WS_NAME}';tenant='{_TENANT}'",
+        True,
+    ),
+    (
+        f"loganalytics://tenant='{_TENANT}';clientid='{_CLI_ID}';clientsecret='[PLACEHOLDER]';workspace='{_WS_ID}';alias='{_WS_NAME}'",
+        True,
+    ),
+    (
+        f"loganalytics://username='User';password='[PLACEHOLDER]';workspace='{_WS_ID}';alias='{_WS_NAME}';tenant='{_TENANT}'",
+        True,
+    ),
+    (
+        f"loganalytics://anonymous;workspace='{_WS_ID}';alias='{_WS_NAME}';tenant='{_TENANT}'",
+        True,
+    ),
+    (f"loganalytics://code;workspace='{_WS_ID}';alias='{_WS_NAME}'", False),
+    (f"loganalytics://code;alias='{_WS_NAME}';tenant='{_TENANT}'", False),
+)
+
+
+@pytest.mark.parametrize("config_str, is_valid", _CONFIG_STR_TEST_CASES)
+def test_wsconfig_config_str(config_str, is_valid):
+    """Test capture of config from connections strings."""
+    if is_valid:
+        ws = WorkspaceConfig.from_connection_string(config_str)
+        if "workspace" in config_str:
+            check.equal(ws["workspace_id"], _WS_ID)
+        if "tenant" in config_str:
+            check.equal(ws["tenant_id"], _TENANT)
+        if "alias" in config_str:
+            check.equal(ws["workspace_name"], _WS_NAME)
+    else:
+        with pytest.raises(ValueError):
+            WorkspaceConfig.from_connection_string(config_str)

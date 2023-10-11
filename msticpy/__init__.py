@@ -133,6 +133,7 @@ from .common.exceptions import (
 )
 from .common.utility import search_name as search
 from .init.logging import set_logging_level, setup_logging
+from .lazy_importer import lazy_import
 
 __version__ = VERSION
 __author__ = "Ian Hellen, Pete Bryan, Ashwin Patil"
@@ -144,71 +145,25 @@ setup_logging()
 if not os.environ.get("KQLMAGIC_EXTRAS_REQUIRES"):
     os.environ["KQLMAGIC_EXTRAS_REQUIRES"] = "jupyter-basic"
 
-_STATIC_ATTRIBS = list(locals().keys())
-
-_DEFAULT_IMPORTS = {
-    "az_connect": "msticpy.auth.azure_auth",
-    "current_providers": "msticpy.init.nbinit",
-    "ContextLookup": "msticpy.context.contextlookup",
-    "GeoLiteLookup": "msticpy.context.geoip",
-    "init_notebook": "msticpy.init.nbinit",
-    "reset_ipython_exception_handler": "msticpy.init.nbinit",
-    "MicrosoftSentinel": "msticpy.context.azure",
-    "MpConfigEdit": "msticpy.config.mp_config_edit",
-    "MpConfigFile": "msticpy.config.mp_config_file",
-    "QueryProvider": "msticpy.data",
-    "TILookup": "msticpy.context.tilookup",
-    "TimeSpan": "msticpy.common.timespan",
-    "WorkspaceConfig": "msticpy.common.wsconfig",
-    "entities": "msticpy.datamodel",
-    "Pivot": "msticpy.init.pivot",
+_LAZY_IMPORTS = {
+    "msticpy.auth.azure_auth.az_connect",
+    "msticpy.common.timespan.TimeSpan",
+    "msticpy.common.wsconfig.WorkspaceConfig",
+    "msticpy.config.mp_config_edit.MpConfigEdit",
+    "msticpy.config.mp_config_file.MpConfigFile",
+    "msticpy.context.azure.MicrosoftSentinel",
+    "msticpy.context.contextlookup.ContextLookup",
+    "msticpy.context.geoip.GeoLiteLookup",
+    "msticpy.context.tilookup.TILookup",
+    "msticpy.data.QueryProvider",
+    "msticpy.datamodel.entities",
+    "msticpy.init.nbinit.current_providers",
+    "msticpy.init.nbinit.init_notebook",
+    "msticpy.init.nbinit.reset_ipython_exception_handler",
+    "msticpy.init.pivot.Pivot",
 }
 
-
-def __getattr__(attrib: str) -> Any:
-    """
-    Import and return an attribute of MSTICPy.
-
-    Parameters
-    ----------
-    attrib : str
-        The attribute name
-
-    Returns
-    -------
-    Any
-        The attribute value.
-
-    Raises
-    ------
-    AttributeError
-        No attribute found.
-
-    """
-    if attrib in _DEFAULT_IMPORTS:
-        try:
-            return getattr(importlib.import_module(_DEFAULT_IMPORTS[attrib]), attrib)
-        except (MsticpyImportExtraError, MsticpyImportExtraError):
-            raise
-        except (ImportError, MsticpyException) as err:
-            warnings.warn(f"Unable to import module for 'msticpy.{attrib}'")
-            print(
-                f"WARNING. The msticpy attribute '{attrib}' is not loadable.",
-                "You may need to install one or more additional dependencies.\n",
-                "Please check the exception details below for more information.",
-                "\n".join(
-                    traceback.format_exception(
-                        type(err), value=err, tb=err.__traceback__
-                    )
-                ),
-            )
-            raise AttributeError(f"msticpy failed to load '{attrib}'") from err
-    raise AttributeError(f"msticpy has no attribute '{attrib}'")
-
-
-def __dir__():
-    """Return attribute list."""
-    return sorted(set(_STATIC_ATTRIBS + list(_DEFAULT_IMPORTS)))
+module, __getattr__, __dir__ = lazy_import(__name__, _LAZY_IMPORTS)
 
 
 def load_plugins(plugin_paths: Union[str, Iterable[str]]):
