@@ -262,7 +262,7 @@ def dns_components(domain: str) -> dict:
         Returns subdomain and TLD components from a domain.
 
     """
-    result = return tldextract.extract(domain.lower())
+    result = tldextract.extract(domain.lower())
     if isinstance(result, tuple)
         result._asdict()
     return asdict(result)
