@@ -9,7 +9,7 @@ from collections import abc
 from typing import Dict, Iterable, List, NamedTuple, Optional, Pattern, Protocol, Union
 
 from ..._version import VERSION
-from ...common.utility.package import lazy_import
+from ...common.utility.package import delayed_import
 from ..drivers.driver_base import DriverBase
 from .query_defns import DataEnvironment
 from .query_source import QuerySource
@@ -18,7 +18,7 @@ from .query_store import QueryStore
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-query_browser = lazy_import("msticpy.vis.query_browser", "browse_queries")
+query_browser = delayed_import("msticpy.vis.query_browser", "browse_queries")
 
 
 # pylint: disable=too-few-public-methods

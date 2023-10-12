@@ -6,10 +6,8 @@
 """Context Providers Subpackage."""
 from typing import Any
 
-# flake8: noqa: F403
 from ..common.utility import ImportPlaceholder
-from .geoip import GeoLiteLookup, IPStackLookup
-from .tilookup import TILookup
+from ..lazy_importer import lazy_import
 from .vtlookupv3 import VT3_AVAILABLE
 
 vtlookupv3: Any
@@ -20,3 +18,12 @@ else:
     vtlookupv3 = ImportPlaceholder(  # type: ignore
         "vtlookupv3", ["vt-py", "vt-graph-api", "nest_asyncio"]
     )
+
+
+_LAZY_IMPORTS = {
+    "msticpy.context.geoip.GeoLiteLookup",
+    "msticpy.context.geoip.IPStackLookup",
+    "msticpy.context.tilookup.TILookup",
+}
+
+module, __getattr__, __dir__ = lazy_import(__name__, _LAZY_IMPORTS)

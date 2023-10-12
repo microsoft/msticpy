@@ -31,20 +31,18 @@ MSTICPy sectools.
 The sectools sub-package will be removed in version 2.0.0
 
 """
-import contextlib
-
-# from . import process_tree_utils as ptree
 from .._version import VERSION
-from ..context.geoip import GeoLiteLookup, IPStackLookup, geo_distance
-from ..context.tilookup import TILookup
-from ..transform import base64unpack as base64
+from ..lazy_importer import lazy_import
 
-# flake8: noqa: F403
-# pylint: disable=W0401
-from ..transform.iocextract import IoCExtract
-
-with contextlib.suppress(ImportError):
-    from IPython import get_ipython
-
-    from ..init import nbmagics as sectool_magics
 __version__ = VERSION
+
+_LAZY_IMPORTS = {
+    "msticpy.context.geoip.GeoLiteLookup",
+    "msticpy.context.geoip.IPStackLookup",
+    "msticpy.context.geoip.geo_distance",
+    "msticpy.context.tilookup.TILookup",
+    "msticpy.transform.base64unpack as base64",
+    "msticpy.transform.iocextract.IoCExtract",
+}
+
+module, __getattr__, __dir__ = lazy_import(__name__, _LAZY_IMPORTS)

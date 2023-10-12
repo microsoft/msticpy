@@ -31,7 +31,11 @@ __author__ = "Ian Hellen"
 
 @export
 class OPR(HttpTIProvider):
-    """Open PageRank Lookup."""
+    """
+    Open PageRank Lookup.
+
+    See https://www.domcop.com/openpagerank/what-is-openpagerank
+    """
 
     _BASE_URL = "https://openpagerank.com"
 
@@ -50,10 +54,6 @@ class OPR(HttpTIProvider):
         super().__init__(**kwargs)
 
         self._provider_name = self.__class__.__name__
-        print(
-            "Using Open PageRank.",
-            "See https://www.domcop.com/openpagerank/what-is-openpagerank",
-        )
 
     async def lookup_iocs_async(
         self,

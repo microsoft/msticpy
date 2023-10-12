@@ -15,7 +15,6 @@ from typing import Any, Dict, Generator, Iterable, Optional, Union
 import nbformat
 import yaml
 from filelock import FileLock
-import yaml
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 from msticpy.common import pkg_config
@@ -30,7 +29,9 @@ def get_test_data_path():
 
 def get_queries_schema():
     """Get queries schema."""
-    queries_schema_path = Path(__file__).parent.parent.joinpath(".schemas").joinpath("queries.json")
+    queries_schema_path = (
+        Path(__file__).parent.parent.joinpath(".schemas").joinpath("queries.json")
+    )
     with queries_schema_path.open(mode="r", encoding="utf-8") as queries_schema:
         return yaml.safe_load(queries_schema)
 
