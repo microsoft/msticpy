@@ -263,7 +263,7 @@ def dns_components(domain: str) -> dict:
 
     """
     result = tldextract.extract(domain.lower())
-    if isinstance(result, tuple)
+    if isinstance(result, tuple):
         result._asdict()
     return asdict(result)
 
