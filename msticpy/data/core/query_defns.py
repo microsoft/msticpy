@@ -96,6 +96,7 @@ class DataEnvironment(Enum):
     Kusto_New = 2  # alias of Kusto
     MSGraph = 4
     SecurityGraph = 4
+    GraphHunting = 5
     MDE = 5
     MDATP = 5  # alias of MDE
     LocalData = 6
