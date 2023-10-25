@@ -27,8 +27,8 @@ class Dns(Entity):
     ----------
     DomainName : str
         DnsResolve DomainName
-    IpAdresses : List[str]
-        DnsResolve IpAdresses
+    IpAddresses : List[str]
+        DnsResolve IpAddresses
     DnsServerIp : IPAddress
         DnsResolve DnsServerIp
     HostIpAddress : IPAddress
@@ -57,7 +57,7 @@ class Dns(Entity):
 
         """
         self.DomainName: Optional[str] = None
-        self.IpAdresses: List[IpAddress] = []
+        self.IpAddresses: List[IpAddress] = []
         self.DnsServerIp: Optional[IpAddress] = None
         self.HostIpAddress: Optional[IpAddress] = None
         super().__init__(src_entity=src_entity, **kwargs)
@@ -65,7 +65,7 @@ class Dns(Entity):
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return f"{self.DomainName}: IPs: {repr(self.IpAdresses)}"
+        return f"{self.DomainName}: IPs: {repr(self.IpAddresses)}"
 
     @property
     def name_str(self) -> str:
@@ -75,9 +75,9 @@ class Dns(Entity):
     _entity_schema = {
         # DomainName (type System.String)
         "DomainName": None,
-        # IpAdresses (type System.Collections.Generic.List`1
+        # IpAddresses (type System.Collections.Generic.List`1
         # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.IP])
-        "IpAdresses": (List, "IpAddress"),
+        "IpAddresses": (List, "IpAddress"),
         # DnsServerIp (type Microsoft.Azure.Security.Detection
         # .AlertContracts.V3.Entities.IP)
         "DnsServerIp": "IpAddress",

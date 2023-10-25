@@ -49,7 +49,7 @@ class DataViewer:
         show_index : bool, optional
             If True show the DataFrame index as a column, by default  True.
         show_tenant_id : bool, optional
-            If True show the TenantId column, by default  True.
+            If True show the TenantId column, by default False.
         max_col_width : int, optional
             Sets the maximum column width to display, by default 500
         detail_cols : List[str]
@@ -85,16 +85,22 @@ class DataViewer:
         # Drop empty columns
         self.data = data.dropna(axis="columns", how="all")
         # Set up hidden columns
-        self._hidden_columns = self._default_hidden_cols(selected_cols, **kwargs)
-        if kwargs.pop("hide_tenantid", False) and "TenantId" in self._hidden_columns:
+        hidden_cols = kwargs.pop("hidden_cols", None)
+        self._hidden_columns = self._default_hidden_cols(selected_cols, hidden_cols)
+
+        if (
+            not kwargs.pop("show_tenant_id", False)
+            and "TenantId" in self._hidden_columns
+        ):
             self._hidden_columns.remove("TenantId")
+
         # Create the tabulator control
         self.data_table = pn.widgets.Tabulator(
             self.data,
             header_filters=kwargs.pop("header_filters", True),
             selectable=kwargs.pop("selectable", "checkbox"),
             show_index=kwargs.pop("show_index", False),
-            configuration=self._create_configuration(),
+            configuration=self._create_configuration(kwargs),
             pagination="local",
             row_content=self._create_row_formatter(kwargs.pop("detail_cols", None)),
             embed_content=False,
@@ -147,7 +153,7 @@ class DataViewer:
         row_view_cols = set(detail_columns) & set(self.data.columns)
         return partial(_display_column_details, columns=row_view_cols)
 
-    def _create_configuration(self, **kwargs) -> Dict[str, Any]:
+    def _create_configuration(self, kwargs) -> Dict[str, Any]:
         """Create Tabulator configuration dict to pass to JS Tabulator."""
         return {
             "columnDefaults": {"maxWidth": kwargs.pop("max_col_width", 500)},
@@ -162,7 +168,7 @@ class DataViewer:
             },
         }
 
-    def _default_hidden_cols(self, selected_cols, **kwargs) -> List[str]:
+    def _default_hidden_cols(self, selected_cols, hidden_cols) -> List[str]:
         """Return list of of columns hidden by default."""
         return [
             hidden_col
@@ -172,7 +178,7 @@ class DataViewer:
                 and selected_cols
                 and hidden_col not in selected_cols
             )
-        ] + (kwargs.pop("hidden_cols", None) or [])
+        ] + (hidden_cols or [])
 
 
 class DataTableColumnChooser:
