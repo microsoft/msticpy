@@ -9,6 +9,7 @@ from typing import Any, Optional, Union
 import pandas as pd
 
 from ..._version import VERSION
+from ...auth.azure_auth_core import AzureCloudConfig
 from ...auth.cloud_mappings import (
     get_defender_endpoint,
     get_m365d_endpoint,
@@ -18,7 +19,6 @@ from ...common.data_utils import ensure_df_datetimes
 from ...common.utility import export
 from ..core.query_defns import DataEnvironment
 from .odata_driver import OData, QuerySource, _get_driver_settings
-from ...auth.azure_auth_core import AzureCloudConfig
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -57,7 +57,9 @@ class MDATPDriver(OData):
         api_uri, oauth_uri, api_suffix = _select_api_uris(
             self.data_environment, self.cloud
         )
-        self.add_query_filter("data_environments", ("MDE", "M365D", "MDATP", "GraphHunting"))
+        self.add_query_filter(
+            "data_environments", ("MDE", "M365D", "MDATP", "GraphHunting")
+        )
 
         self.req_body = {
             "client_id": None,
@@ -71,14 +73,14 @@ class MDATPDriver(OData):
         self.api_suffix = api_suffix
         if self.data_environment == DataEnvironment.M365D:
             self.scopes = [f"{api_uri}/AdvancedHunting.Read"]
-        elif self.data_environment == DataEnvironment.GraphHunting:
+        elif self.data_environment == DataEnvironment.M365DGraph:
             self.api_ver = kwargs.get("api_ver", "v1.0")
             self.req_body = {
-                    "client_id": None,
-                    "client_secret": None,
-                    "grant_type": "client_credentials",
-                    "scope": f"{self.api_root}.default",
-                }
+                "client_id": None,
+                "client_secret": None,
+                "grant_type": "client_credentials",
+                "scope": f"{self.api_root}.default",
+            }
             self.scopes = [f"{api_uri}/ThreatHunting.Read.All"]
         else:
             self.scopes = [f"{api_uri}/AdvancedQuery.Read"]
@@ -116,13 +118,13 @@ class MDATPDriver(OData):
             if ("Schema" or "schema") not in response:
                 return data
 
-            if self.data_environment == DataEnvironment.GraphHunting:
+            if self.data_environment == DataEnvironment.M365DGraph:
                 date_fields = [
-                        field["name"]
-                        for field in response["schema"]
-                        if field["type"] == "DateTime"
-                    ]
-            else:    
+                    field["name"]
+                    for field in response["schema"]
+                    if field["type"] == "DateTime"
+                ]
+            else:
                 date_fields = [
                     field["Name"]
                     for field in response["Schema"]
@@ -142,18 +144,17 @@ def _select_api_uris(data_environment, cloud):
             f"{login_uri}{{tenantId}}/oauth2/token",
             "/advancedhunting/run",
         )
-    elif data_environment == DataEnvironment.GraphHunting:
+    if data_environment == DataEnvironment.M365DGraph:
         az_cloud_config = AzureCloudConfig(cloud=cloud)
         api_uri = az_cloud_config.endpoints.get("microsoftGraphResourceId")
         graph_login = az_cloud_config.authority_uri
         return (
             api_uri,
-             f"{graph_login}{{tenantId}}/oauth2/v2.0/token",
+            f"{graph_login}{{tenantId}}/oauth2/v2.0/token",
             "/security/runHuntingQuery",
         )
-    else:
-        return (
-            get_defender_endpoint(cloud),
-            f"{login_uri}{{tenantId}}/oauth2/token",
-            "/advancedqueries/run",
-        )
+    return (
+        get_defender_endpoint(cloud),
+        f"{login_uri}{{tenantId}}/oauth2/token",
+        "/advancedqueries/run",
+    )
