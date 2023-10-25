@@ -442,8 +442,6 @@ DS_PREFIX = "https://raw.githubusercontent.com/OTRF/Security-Datasets/master/dat
 
 
 # pylint: disable=not-an-iterable, no-member, too-many-instance-attributes
-
-
 @attr.s(auto_attribs=True)
 class MordorEntry:
     """Mordor data set metadata."""

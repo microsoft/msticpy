@@ -446,10 +446,10 @@ class AzureKustoDriver(DriverBase):
             status = _parse_query_status(response)
             logger.info("Query completed: %s", str(status))
         except KustoApiError as err:
-            logger.exception("Query failed: %s", err)
+            logger.error("Query failed: %s", err)
             _raise_kusto_error(err)
         except KustoServiceError as err:
-            logger.exception("Query failed: %s", err)
+            logger.error("Query failed: %s", err)
             _raise_unknown_query_error(err)
         return data, status
 

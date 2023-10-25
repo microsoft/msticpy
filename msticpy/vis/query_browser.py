@@ -10,7 +10,7 @@ from typing import Any, Generator
 from IPython.display import HTML
 
 from .._version import VERSION
-from ..nbwidgets import SelectItem
+from ..nbwidgets.select_item import SelectItem
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

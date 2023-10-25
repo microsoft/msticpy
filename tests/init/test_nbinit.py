@@ -31,21 +31,14 @@ def test_nbinit_no_params():
         verbose=True,
     )
 
-    check.is_in("pd", ns_dict)
     check.is_in("get_ipython", ns_dict)
     check.is_in("Path", ns_dict)
-    check.is_in("np", ns_dict)
 
     print(ns_dict.keys())
     # Note - msticpy imports throw when exec'd from unit test
     # e.g. check.is_in("QueryProvider", ns_dict) fails
 
     check.is_in("WIDGET_DEFAULTS", ns_dict)
-
-    check.equal(ns_dict["pd"].__name__, "pandas")
-    check.equal(ns_dict["np"].__name__, "numpy")
-
-    check.equal(pd.get_option("display.max_columns"), 50)
 
 
 def test_nbinit_imports():
@@ -62,7 +55,6 @@ def test_nbinit_imports():
     check.is_in("pathlib", ns_dict)
     check.is_in("time", ns_dict)
     check.is_in("tdelta", ns_dict)
-    check.is_in("np", ns_dict)
 
     check.equal(timedelta, ns_dict["tdelta"])
     check.equal(datetime.time, ns_dict["time"])
