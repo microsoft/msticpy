@@ -145,7 +145,9 @@ class Alert(Entity):
     @property
     def AlertId(self) -> Optional[str]:  # noqa: N802
         """Return the system alert ID."""
-        return self.SystemAlertId or self.SystemAlertIds[0]
+        return self.SystemAlertId or (
+            self.SystemAlertIds[0] if self.SystemAlertIds else None
+        )
 
     @AlertId.setter
     def AlertId(self, value: str):  # noqa: N802
