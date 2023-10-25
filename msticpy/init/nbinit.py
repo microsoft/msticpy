@@ -259,7 +259,7 @@ def _err_output(*args):
         )
 
 
-# pylint: disable=too-many-statements
+# pylint: disable=too-many-statements, too-many-branches
 def init_notebook(
     namespace: Optional[Dict[str, Any]] = None,
     def_imports: str = "all",
@@ -413,7 +413,12 @@ def init_notebook(
     logger.info("Starting Notebook initialization")
     # Check Azure ML environment
     if _detect_env("aml", **kwargs) and is_in_aml():
-        check_aml_settings(*_get_aml_globals(namespace))
+        try:
+            check_aml_settings(*_get_aml_globals(namespace))
+        except Exception as err:  # pylint: disable=broad-except
+            logger.warning(
+                "Error initializing Azure ML environment: %s", err, exc_info=True
+            )
     else:
         # If not in AML check and print version status
         stdout_cap = io.StringIO()
@@ -427,7 +432,12 @@ def init_notebook(
         synapse_params = {
             key: val for key, val in kwargs.items() if key in _SYNAPSE_KWARGS
         }
-        init_synapse(**synapse_params)
+        try:
+            init_synapse(**synapse_params)
+        except Exception as err:  # pylint: disable=broad-except
+            logger.warning(
+                "Error initializing Synapse environment: %s", err, exc_info=True
+            )
 
     # Handle required packages and imports
     _pr_output("Processing imports....")
