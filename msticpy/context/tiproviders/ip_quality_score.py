@@ -56,23 +56,26 @@ class IPQualityScore(HttpTIProvider):
         ):
             return False, ResultSeverity.information, "Not found."
         result = True
-        result_dict = {} | {
-            "FraudScore": response["RawResult"].get("fraud_score"),
-            "ISP": response["RawResult"].get("ISP"),
-            "ASN": response["RawResult"].get("ASN"),
-            "Country": response["RawResult"].get("country_code"),
-            "Region": response["RawResult"].get("city"),
-            "City": response["RawResult"].get("region"),
-            "Organization": response["RawResult"].get("organization"),
-            "Latitude": response["RawResult"].get("latitude"),
-            "Longitude": response["RawResult"].get("longitude"),
-            "IsMobile": response["RawResult"].get("mobile"),
-            "IsProxy": response["RawResult"].get("proxy"),
-            "IsTor": response["RawResult"].get("active_tor"),
-            "IsVPN": response["RawResult"].get("active_vpn"),
-            "IsBot": response["RawResult"].get("bot_status"),
-            "AbuseStatus": response["RawResult"].get("recent_abuse"),
-        }
+        result_dict = {}
+        result_dict.update(
+            {
+                "FraudScore": response["RawResult"].get("fraud_score"),
+                "ISP": response["RawResult"].get("ISP"),
+                "ASN": response["RawResult"].get("ASN"),
+                "Country": response["RawResult"].get("country_code"),
+                "Region": response["RawResult"].get("city"),
+                "City": response["RawResult"].get("region"),
+                "Organization": response["RawResult"].get("organization"),
+                "Latitude": response["RawResult"].get("latitude"),
+                "Longitude": response["RawResult"].get("longitude"),
+                "IsMobile": response["RawResult"].get("mobile"),
+                "IsProxy": response["RawResult"].get("proxy"),
+                "IsTor": response["RawResult"].get("active_tor"),
+                "IsVPN": response["RawResult"].get("active_vpn"),
+                "IsBot": response["RawResult"].get("bot_status"),
+                "AbuseStatus": response["RawResult"].get("recent_abuse"),
+            }
+        )
 
         severity = ResultSeverity.information
         if (
