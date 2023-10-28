@@ -39,6 +39,7 @@ _ENVIRONMENT_DRIVERS = {
     ),
     DataEnvironment.MSSentinel_Legacy: ("kql_driver", "KqlDriver"),
     DataEnvironment.Kusto_Legacy: ("kusto_driver", "KustoDriver"),
+    DataEnvironment.M365DGraph: ("mdatp_driver", "MDATPDriver"),
 }
 
 CUSTOM_PROVIDERS: Dict[str, type] = {}
