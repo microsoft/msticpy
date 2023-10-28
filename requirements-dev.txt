@@ -33,5 +33,5 @@ readthedocs-sphinx-ext==2.2.3
 responses>=0.13.2
 respx>=0.20.1
 sphinx-rtd-theme>=1.0.0
-sphinx>=5.0.1
+sphinx>=5.0.1,<8.0.0
 types-attrs>=19.0.0
