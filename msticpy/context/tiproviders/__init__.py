@@ -26,4 +26,5 @@ TI_PROVIDERS: Dict[str, Tuple[str, str]] = {
     "RiskIQ": ("riskiq", "RiskIQ"),
     "Pulsedive": ("pulsedive", "Pulsedive"),
     "AbuseIPDB": ("abuseipdb", "AbuseIPDB"),
+    "IPQualityScore": ("ip_quality_score", "IPQualityScore"),
 }
