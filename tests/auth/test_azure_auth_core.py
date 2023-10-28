@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Module docstring."""
 from datetime import datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import pytest_check as check
@@ -14,6 +14,7 @@ from msrestazure import azure_cloud
 from msticpy.auth.azure_auth_core import (
     AzureCliStatus,
     AzureCloudConfig,
+    _build_env_client,
     check_cli_credentials,
     default_auth_methods,
 )
@@ -22,7 +23,7 @@ from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 __author__ = "Ian Hellen"
 
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name, protected-access
 
 
 @pytest.fixture(scope="module")
@@ -96,12 +97,13 @@ class CliProfile:
 
     def get_raw_token(self):
         """Return raw token"""
-        return (tuple([*_TOKEN_WRAPPER, self.token]), None, None)
+        return (*_TOKEN_WRAPPER, self.token), None, None
 
 
 @patch(check_cli_credentials.__module__ + ".get_cli_profile")
 @pytest.mark.parametrize("test, expected", _CLI_TESTS, ids=_test_ids(_CLI_TESTS))
 def test_check_cli_credentials(get_cli_profile, test, expected):
+    # sourcery skip: use-fstring-for-concatenation
     """Test checking Azure CLI credentials."""
     test_tok = {**_TOKEN}
     test_tok.update(test[0])
@@ -111,3 +113,70 @@ def test_check_cli_credentials(get_cli_profile, test, expected):
         get_cli_profile.side_effect = test[1]
 
     check.equal(check_cli_credentials()[0], expected)
+
+
+_CLI_ID = "d8d9d2f2-5d2d-4d7e-9c5c-5d6d9d1d8d9d"
+_TENANT_ID = "f8d9d2f2-5d2d-4d7e-9c5c-5d6d9d1d8d9e"
+
+_TEST_ENV_VARS = (
+    (
+        {
+            "AZURE_CLIENT_ID": _CLI_ID,
+            "AZURE_CLIENT_SECRET": "[PLACEHOLDER]",  # nosec
+            "AZURE_TENANT_ID": _TENANT_ID,
+        },
+        True,
+    ),
+    (
+        {
+            "AZURE_CLIENT_ID": _CLI_ID,
+            "AZURE_CLIENT_CERTIFICATE_PATH": "test_cert_path",
+            "AZURE_TENANT_ID": _TENANT_ID,
+        },
+        True,
+    ),
+    (
+        {
+            "AZURE_CLIENT_ID": _CLI_ID,
+            "AZURE_USERNAME": "test_user_name",
+            "AZURE_PASSWORD": "[PLACEHOLDER]",  # nosec
+            "AZURE_TENANT_ID": _TENANT_ID,
+        },
+        True,
+    ),
+    (
+        {
+            "AZURE_CLIENT_ID": _CLI_ID,
+            "AZURE_TENANT_ID": _TENANT_ID,
+        },
+        False,
+    ),
+    (
+        {
+            "AZURE_CLIENT_CERTIFICATE_PATH": "test_cert_path",
+            "AZURE_TENANT_ID": _TENANT_ID,
+        },
+        False,
+    ),
+    ({}, False),
+)
+
+
+@pytest.mark.parametrize("env_vars, expected", _TEST_ENV_VARS)
+def test_build_env_client(env_vars, expected, monkeypatch):
+    """Test with different environment variables."""
+    # sourcery skip: no-loop-in-tests
+    for env_var, env_val in env_vars.items():
+        monkeypatch.setenv(env_var, env_val)
+
+    mock_credential = MagicMock()
+    with patch(
+        "msticpy.auth.azure_auth_core.EnvironmentCredential",
+        return_value=mock_credential,
+    ) as mock_env_cred:
+        credential = _build_env_client(aad_uri="test_aad_uri")
+
+        check.is_true((credential is not None) == expected)
+        check.is_true(
+            mock_env_cred.called_once_with(authority="test_aad_uri") or not expected
+        )

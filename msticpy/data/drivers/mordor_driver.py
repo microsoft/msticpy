@@ -441,9 +441,7 @@ def _to_datetime(date_val) -> datetime:
 DS_PREFIX = "https://raw.githubusercontent.com/OTRF/Security-Datasets/master/datasets/"
 
 
-# pylint: disable=not-an-iterable, no-member
-
-
+# pylint: disable=not-an-iterable, no-member, too-many-instance-attributes
 @attr.s(auto_attribs=True)
 class MordorEntry:
     """Mordor data set metadata."""

@@ -35,14 +35,14 @@ except ImportError as imp_err:
     ) from imp_err
 
 __version__ = VERSION
-__author__ = "Ashwin Patil"
+__author__ = "Ashwin Patil, Tatsuya Hasegawa"
 
 logger = logging.getLogger(__name__)
 
 
 SPLUNK_CONNECT_ARGS = {
     "host": "(string) The host name (the default is 'localhost').",
-    "port": "(integer) The port number (the default is 8089).",
+    "port": "(string) The port number (the default is '8089').",
     "http_scheme": "('https' or 'http') The scheme for accessing the service "
     + "(the default is 'https').",
     "verify": "(Boolean) Enable (True) or disable (False) SSL verrification for "
@@ -60,6 +60,7 @@ SPLUNK_CONNECT_ARGS = {
     "username": "(string) The Splunk account username, which is used to "
     + "authenticate the Splunk instance.",
     "password": "(string) The password for the Splunk account.",
+    "splunkToken": "(string) The Authorization Bearer Token <JWT> created in the Splunk.",
 }
 
 
@@ -67,8 +68,8 @@ SPLUNK_CONNECT_ARGS = {
 class SplunkDriver(DriverBase):
     """Driver to connect and query from Splunk."""
 
-    _SPLUNK_REQD_ARGS = ["host", "username", "password"]
-    _CONNECT_DEFAULTS: Dict[str, Any] = {"port": 8089}
+    _SPLUNK_REQD_ARGS = ["host"]
+    _CONNECT_DEFAULTS: Dict[str, Any] = {"port": "8089"}
     _TIME_FORMAT = '"%Y-%m-%d %H:%M:%S.%6N"'
 
     def __init__(self, **kwargs):
@@ -79,6 +80,7 @@ class SplunkDriver(DriverBase):
         self._connected = False
         if kwargs.get("debug", False):
             logger.setLevel(logging.DEBUG)
+        self._required_params = self._SPLUNK_REQD_ARGS
 
         self.set_driver_property(
             DriverProps.PUBLIC_ATTRS,
@@ -142,7 +144,7 @@ class SplunkDriver(DriverBase):
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
             ) from err
         self._connected = True
-        print("connected")
+        print("Connected.")
 
     def _get_connect_args(
         self, connection_str: Optional[str], **kwargs
@@ -172,12 +174,19 @@ class SplunkDriver(DriverBase):
         elif isinstance(verify_opt, bool):
             cs_dict["verify"] = verify_opt
 
-        missing_args = set(self._SPLUNK_REQD_ARGS) - cs_dict.keys()
+        # Different required parameters for the REST API authentication method
+        # between user/pass and authorization bearer token
+        if "username" in cs_dict:
+            self._required_params = ["host", "username", "password"]
+        else:
+            self._required_params = ["host", "splunkToken"]
+
+        missing_args = set(self._required_params) - cs_dict.keys()
         if missing_args:
             raise MsticpyUserConfigError(
                 "One or more connection parameters missing for Splunk connector",
                 ", ".join(missing_args),
-                f"Required parameters are {', '.join(self._SPLUNK_REQD_ARGS)}",
+                f"Required parameters are {', '.join(self._required_params)}",
                 "All parameters:",
                 *[f"{arg}: {desc}" for arg, desc in SPLUNK_CONNECT_ARGS.items()],
                 title="no Splunk connection parameters",

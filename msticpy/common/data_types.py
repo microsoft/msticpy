@@ -76,3 +76,99 @@ def _get_dot_attrib(obj, elem_path: str) -> Any:
         if cur_node is None:
             raise KeyError(f"{elem} value of {elem_path} is not a valid path")
     return cur_node
+
+
+# Descriptors
+
+
+class SharedProperty:
+    """Descriptor to share property between instances of a class."""
+
+    def __init__(self, instance_name: str):
+        """
+        Initialize the descriptor.
+
+        Parameters
+        ----------
+        instance_name : str
+            Name of the instance attribute to use to store the value.
+
+        """
+        self.instance_name = instance_name
+
+    def __get__(self, instance, owner):
+        """Return the value of the instance attribute."""
+        return getattr(instance, self.instance_name, None)
+
+    def __set__(self, instance, value):
+        """Set the value of the instance attribute."""
+        setattr(instance, self.instance_name, value)
+
+
+class FallbackProperty:
+    """Descriptor for aliased property with fallback property."""
+
+    def __init__(self, instance_name: str, default_name: str):
+        """
+        Initialize the descriptor.
+
+        Parameters
+        ----------
+        instance_name : str
+            Name of the instance attribute to use to store the value.
+        default_name : str
+            Name of the instance attribute to use as a fallback value.
+
+        """
+        self.instance_name = instance_name
+        self.default_name = default_name
+
+    def __get__(self, instance, owner):
+        """Return the value of the instance (or default) attribute."""
+        return getattr(
+            instance, self.instance_name, getattr(instance, self.default_name, None)
+        )
+
+    def __set__(self, instance, value):
+        """Set the value of the instance attribute."""
+        setattr(instance, self.instance_name, value)
+
+
+class SplitProperty:
+    """Descriptor for property that is stored as two delimited attributes."""
+
+    def __init__(self, inst_left_name: str, inst_right_name: str, split_char: str):
+        """
+        Initialize the descriptor.
+
+        Parameters
+        ----------
+        inst_left_name : str
+            Name of the instance attribute to use to store the left value.
+        inst_right_name : str
+            Name of the instance attribute to use to store the right value.
+        split_char : str
+            Character to use to split the value.
+        """
+        self.inst_left_name = inst_left_name
+        self.inst_right_name = inst_right_name
+        self.split_char = split_char
+
+    def __get__(self, instance, owner):
+        """Return the value of the instance attribute."""
+        left_part = getattr(instance, self.inst_left_name, None)
+        right_part = getattr(instance, self.inst_right_name, None)
+        if left_part and right_part:
+            return f"{left_part}{self.split_char}{right_part}"
+        return None
+
+    def __set__(self, instance, value):
+        """Set the value of the instance attribute."""
+        if value is None:
+            return
+        if self.split_char not in value:
+            setattr(instance, self.inst_left_name, value)
+            return
+        left, right = value.split(self.split_char, maxsplit=1)
+        setattr(instance, self.inst_left_name, left)
+        setattr(instance, self.inst_right_name, right)

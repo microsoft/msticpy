@@ -14,6 +14,7 @@ Azure SDK docs: https://learn.microsoft.com/python/api/overview/
 azure/monitor-query-readme?view=azure-python
 
 """
+import contextlib
 import logging
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, cast
@@ -409,10 +410,11 @@ class AzureMonitorDriver(DriverBase):
             )
         elif isinstance(connection_str, str):
             self._def_connection_str = connection_str
-            ws_config = WorkspaceConfig.from_connection_string(connection_str)
-            logger.info(
-                "WorkspaceConfig created from connection_str %s", connection_str
-            )
+            with contextlib.suppress(ValueError):
+                ws_config = WorkspaceConfig.from_connection_string(connection_str)
+                logger.info(
+                    "WorkspaceConfig created from connection_str %s", connection_str
+                )
         elif isinstance(connection_str, WorkspaceConfig):
             logger.info("WorkspaceConfig as parameter %s", connection_str.workspace_id)
             ws_config = connection_str
@@ -475,11 +477,9 @@ class AzureMonitorDriver(DriverBase):
         """Return the timespan for the query API call."""
         default_time_params = kwargs.get("default_time_params", False)
         time_params = kwargs.get("time_span", {})
-        if (
-            default_time_params
-            or "start" not in time_params
-            or "end" not in time_params
-        ):
+        start = time_params.get("start")
+        end = time_params.get("end")
+        if default_time_params or start is None or end is None:
             time_span_value = None
             logger.info("No time parameters supplied.")
         else:

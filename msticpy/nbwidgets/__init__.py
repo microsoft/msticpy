@@ -6,18 +6,23 @@
 """Widgets sub-package."""
 
 from .._version import VERSION
-
-# pylint: disable=unused-import
-from .core import IPyDisplayMixin, RegisteredWidget  # noqa: F401
-from .get_environment_key import GetEnvironmentKey  # noqa: F401
-from .get_text import GetText  # noqa: F401
-from .lookback import Lookback  # noqa: F401
-from .option_buttons import OptionButtons  # noqa: F401
-from .progress import Progress  # noqa: F401
-from .query_time import QueryTime  # noqa: F401
-from .select_alert import SelectAlert  # noqa: F401
-from .select_item import SelectItem  # noqa: F401
-from .select_subset import SelectSubset  # noqa: F401
+from ..lazy_importer import lazy_import
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+_LAZY_IMPORTS = {
+    "msticpy.nbwidgets.core.IPyDisplayMixin",
+    "msticpy.nbwidgets.core.RegisteredWidget",
+    "msticpy.nbwidgets.get_environment_key.GetEnvironmentKey",
+    "msticpy.nbwidgets.get_text.GetText",
+    "msticpy.nbwidgets.lookback.Lookback",
+    "msticpy.nbwidgets.option_buttons.OptionButtons",
+    "msticpy.nbwidgets.progress.Progress",
+    "msticpy.nbwidgets.query_time.QueryTime",
+    "msticpy.nbwidgets.select_alert.SelectAlert",
+    "msticpy.nbwidgets.select_item.SelectItem",
+    "msticpy.nbwidgets.select_subset.SelectSubset",
+}
+
+module, __getattr__, __dir__ = lazy_import(__name__, _LAZY_IMPORTS)

@@ -96,6 +96,7 @@ class DataEnvironment(Enum):
     Kusto_New = 2  # alias of Kusto
     MSGraph = 4
     SecurityGraph = 4
+
     MDE = 5
     MDATP = 5  # alias of MDE
     LocalData = 6
@@ -115,6 +116,7 @@ class DataEnvironment(Enum):
     Kusto_KQLM = 17
     VelociraptorLogs = 18
     Velociraptor = 18
+    M365DGraph = 20
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataEnvironment":

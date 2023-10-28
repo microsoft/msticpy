@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Mailbox Entity class."""
+"""MailboxConfiguration Entity class."""
 from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
@@ -18,26 +18,31 @@ __author__ = "Ian Hellen"
 
 
 @export
-class Mailbox(Entity):
+class MailboxConfiguration(Entity):
     """
-    Mailbox Entity class.
+    MailboxConfiguration Entity class.
 
     Attributes
     ----------
+    ConfigType : str
+        The	MailboxConfigurationType represented by this entity.
+        Could be of type: MailForwardingRule, OwaSettings, EWSSettings MailDelegation
+        or UserInboxRule
     MailboxPrimaryAddress : str
         PrimaryAddress of the Mailbox
     DisplayName : str
         DisplayName of the Mailbox
     Upn : str
         Upn of the Mailbox
+    ConfigId : str
+        A mailbox can have more than one configuration entity of same configurationType.
+        This unique id equivalent to URN.
     ExternalDirectoryObjectId : str
         ExternalDirectoryObjectId of the Mailbox
-    RiskLevel : str
-        RiskLevel of the Mailbox
 
     """
 
-    ID_PROPERTIES = ["MailboxPrimaryAddress"]
+    ID_PROPERTIES = ["ConfigId"]
 
     def __init__(
         self,
@@ -69,7 +74,8 @@ class Mailbox(Entity):
         self.DisplayName: Optional[str] = None
         self.Upn: Optional[str] = None
         self.ExternalDirectoryObjectId: Optional[str] = None
-        self.RiskLevel: Optional[str] = None
+        self.ConfigType: Optional[str] = None
+        self.ConfigId: Optional[str] = None
 
         super().__init__(src_entity=src_entity, **kwargs)
         if src_event:
@@ -79,15 +85,15 @@ class Mailbox(Entity):
         self.MailboxPrimaryAddress = src_event.get("MailboxPrimaryAddress")
         self.Upn = src_event.get("Upn")
         self.DisplayName = src_event.get("DisplayName")
+        self.ConfigId = src_event.get("ConfigId")
         self.ExternalDirectoryObjectId = src_event.get("ExternalDirectoryObjectId")
-        self.RiskLevel = src_event.get("RiskLevel")
+        self.ConfigType = src_event.get("ConfigType")
 
     @property
     def description_str(self):
         """Return Entity Description."""
         return (
-            f"{self.MailboxPrimaryAddress} - {self.RiskLevel}"
-            or self.__class__.__name__
+            f"{self.MailboxPrimaryAddress} - {self.ConfigId}" or self.__class__.__name__
         )
 
     @property
