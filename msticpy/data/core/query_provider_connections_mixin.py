@@ -351,7 +351,8 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                     results.append(result)
                 except Exception:  # pylint: disable=broad-except
                     logger.warning(
-                        "Query task '%s' failed with exception", query_id, exc_info=True
+                        "Query task '%s' failed with exception",
+                        query_id,
                     )
                     failed_tasks[query_id] = thread_task
 

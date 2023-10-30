@@ -58,20 +58,57 @@ class AzureCredEnvNames:
     # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="This is an enum of env variable names")]
     AZURE_CLIENT_SECRET = "AZURE_CLIENT_SECRET"  # nosec  # noqa
 
+    # Certificate auth:
+    # A path to certificate and private key pair in PEM or PFX format
+    AZURE_CLIENT_CERTIFICATE_PATH = "AZURE_CLIENT_CERTIFICATE_PATH"
+    # (Optional) The password protecting the certificate file
+    # (for PFX (PKCS12) certificates).
+    AZURE_CLIENT_CERTIFICATE_PASSWORD = (
+        "AZURE_CLIENT_CERTIFICATE_PASSWORD"  # nosec  # noqa
+    )
+    # (Optional) Specifies whether an authentication request will include an x5c
+    # header to support subject name / issuer based authentication.
+    # When set to `true` or `1`, authentication requests include the x5c header.
+    AZURE_CLIENT_SEND_CERTIFICATE_CHAIN = "AZURE_CLIENT_SEND_CERTIFICATE_CHAIN"
+
+    # Username and password:
+    AZURE_USERNAME = "AZURE_USERNAME"  # The username/upn of an AAD user account.
+    # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="This is an enum of env variable names")]
+    AZURE_PASSWORD = "AZURE_PASSWORD"  # User password  # nosec  # noqa
+
+
+_VALID_ENV_VAR_COMBOS = (
+    (
+        AzureCredEnvNames.AZURE_CLIENT_ID,
+        AzureCredEnvNames.AZURE_CLIENT_SECRET,
+        AzureCredEnvNames.AZURE_TENANT_ID,
+    ),
+    (
+        AzureCredEnvNames.AZURE_CLIENT_ID,
+        AzureCredEnvNames.AZURE_TENANT_ID,
+        AzureCredEnvNames.AZURE_CLIENT_CERTIFICATE_PATH,
+    ),
+    (
+        AzureCredEnvNames.AZURE_CLIENT_ID,
+        AzureCredEnvNames.AZURE_USERNAME,
+        AzureCredEnvNames.AZURE_PASSWORD,
+        AzureCredEnvNames.AZURE_TENANT_ID,
+    ),
+)
+
 
 def _build_env_client(
     aad_uri: Optional[str] = None, **kwargs
 ) -> Optional[EnvironmentCredential]:
     """Build a credential from environment variables."""
     del kwargs
-    if (
-        AzureCredEnvNames.AZURE_CLIENT_ID not in os.environ
-        and AzureCredEnvNames.AZURE_CLIENT_SECRET not in os.environ
-    ):
-        # avoid creating env credential if require envs not set.
-        logger.info("'env' credential requested but required env vars not set")
-        return None
-    return EnvironmentCredential(authority=aad_uri)  # type: ignore
+    for env_vars in _VALID_ENV_VAR_COMBOS:
+        if all(var in os.environ for var in env_vars):
+            return EnvironmentCredential(authority=aad_uri)  # type: ignore
+
+    # avoid creating env credential if require envs not set.
+    logger.info("'env' credential requested but required env vars not set")
+    return None
 
 
 def _build_cli_client(**kwargs) -> AzureCliCredential:

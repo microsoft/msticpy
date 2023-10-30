@@ -21,10 +21,16 @@ It is split into the following sub-packages:
 
 """
 from .._version import VERSION
-from ..common.exceptions import MsticpyImportExtraError
 
-# flake8: noqa: F403
-from .core.data_providers import QueryProvider
-from .core.query_defns import DataEnvironment, DataFamily
+# from ..common.exceptions import MsticpyImportExtraError
+from ..lazy_importer import lazy_import
 
 __version__ = VERSION
+
+_LAZY_IMPORTS = {
+    "msticpy.data.core.data_providers.QueryProvider",
+    "msticpy.data.core.query_defns.DataEnvironment",
+    "msticpy.data.core.query_defns.DataFamily",
+}
+
+module, __getattr__, __dir__ = lazy_import(__name__, _LAZY_IMPORTS)

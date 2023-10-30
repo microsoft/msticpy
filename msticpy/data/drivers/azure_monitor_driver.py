@@ -477,11 +477,9 @@ class AzureMonitorDriver(DriverBase):
         """Return the timespan for the query API call."""
         default_time_params = kwargs.get("default_time_params", False)
         time_params = kwargs.get("time_span", {})
-        if (
-            default_time_params
-            or "start" not in time_params
-            or "end" not in time_params
-        ):
+        start = time_params.get("start")
+        end = time_params.get("end")
+        if default_time_params or start is None or end is None:
             time_span_value = None
             logger.info("No time parameters supplied.")
         else:

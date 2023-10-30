@@ -15,12 +15,10 @@ from typing import Any, Callable, Dict, Iterable, Optional, Type
 
 import pkg_resources
 
-# pylint: disable=unused-import
-from .. import datamodel  # noqa:F401
 from .._version import VERSION
 from ..common.timespan import TimeSpan
 from ..context.tilookup import TILookup
-from ..data import QueryProvider
+from ..data.core.data_providers import QueryProvider
 from ..datamodel import entities
 
 with warnings.catch_warnings():
@@ -28,7 +26,7 @@ with warnings.catch_warnings():
     from ..datamodel import pivot as legacy_pivot
 
 from ..common.utility.types import SingletonClass
-from ..nbwidgets import QueryTime
+from ..nbwidgets.query_time import QueryTime
 from . import pivot_init
 
 # pylint: disable=unused-import, no-name-in-module
@@ -428,9 +426,11 @@ class Pivot:
             for attr in dir(entity_cls):
                 attr_obj = getattr(entity_cls, attr)
                 if type(attr_obj).__name__ == "PivotContainer":
-                    delattr(entity_cls, attr)
+                    with contextlib.suppress(AttributeError):
+                        delattr(entity_cls, attr)
                 if callable(attr_obj) and hasattr(attr_obj, "pivot_properties"):
-                    delattr(entity_cls, attr)
+                    with contextlib.suppress(AttributeError):
+                        delattr(entity_cls, attr)
 
     @staticmethod
     def browse():

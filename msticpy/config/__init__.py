@@ -12,21 +12,12 @@ for interactively managing settings in Jupyter notebooks.
 It use the ipywidgets package.
 
 """
-from ..common.utility.package import init_dir, init_getattr
+from ..lazy_importer import lazy_import
 
-_STATIC_ATTRIBS = list(locals().keys())
-_DEFAULT_IMPORTS = {
-    "MpConfigControls": "msticpy.config.mp_config_control",
-    "MpConfigEdit": "msticpy.config.mp_config_edit",
-    "MpConfigFile": "msticpy.config.mp_config_file",
+_LAZY_IMPORTS = {
+    "msticpy.config.mp_config_control.MpConfigControls",
+    "msticpy.config.mp_config_edit.MpConfigEdit",
+    "msticpy.config.mp_config_file.MpConfigFile",
 }
 
-
-def __getattr__(attrib: str):
-    """Import and a dynamic attribute of module."""
-    return init_getattr(__name__, _DEFAULT_IMPORTS, attrib)
-
-
-def __dir__():
-    """Return attribute list."""
-    return init_dir(_STATIC_ATTRIBS, _DEFAULT_IMPORTS)
+module, __getattr__, __dir__ = lazy_import(__name__, _LAZY_IMPORTS)
