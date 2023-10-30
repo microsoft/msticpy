@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Splunk Uploader class."""
+import logging
 from pathlib import Path
 from typing import Any, Optional
 
@@ -19,6 +20,7 @@ from .uploader_base import UploaderBase
 __version__ = VERSION
 __author__ = "Pete Bryan, Tatsuya Hasegawa"
 
+logger = logging.getLogger(__name__)
 
 class SplunkUploader(UploaderBase):
     """Uploader class for Splunk."""
@@ -30,7 +32,7 @@ class SplunkUploader(UploaderBase):
         self.host = kwargs.get("host")
         self.password = kwargs.get("password")
         self.username = kwargs.get("username")
-        self.splunkToken = kwargs.get("splunkToken")
+        self.bearer_token = kwargs.get("bearer_token")
         self.driver = SplunkDriver()
         self.port = kwargs.get("port", 8089)
         self._debug = kwargs.get("debug", False)
@@ -49,18 +51,18 @@ class SplunkUploader(UploaderBase):
                     password=self.password,
                     port=self.port,
                 )
-            elif self.splunkToken:
+            elif self.bearer_token:
                 self.driver.connect(
                     host=self.host,
-                    splunkToken=self.splunkToken,
+                    bearer_token=self.bearer_token,
                     port=self.port,
                 )
             else:
-                print("username and splunkToken are missing.")
-                print("Credential loading from config file.")
+                logger.info("username/bearer_token are missing.")
+                logger.info("Credential loading from config file.")
                 self.driver.connect()
         else:
-            print("Credential loading from config file.")
+            logger.info("Credential loading from config file.")
             self.driver.connect()
 
         self.connected = True

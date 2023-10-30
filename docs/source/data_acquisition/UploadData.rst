@@ -81,7 +81,7 @@ Instantiating the Splunk uploader
 The first step in uploading data is to instantiate an uploader for the location we wish to upload data to.
 For Splunk there are three parameters that need to be passed at this stage, the Splunk host name, a username,
 and a password. You can also pass a parameter for ``port``, by default this value is 8089.
-In addition, The security auth token of ``splunkToken`` can be also passed instead of username and password as same as Splunk QueryProvider.
+In addition, The security auth token of ``bearer_token`` can be also passed instead of username and password as same as Splunk QueryProvider.
 
 .. code:: ipython3
 
