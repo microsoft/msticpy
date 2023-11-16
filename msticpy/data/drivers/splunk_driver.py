@@ -128,7 +128,7 @@ class SplunkDriver(DriverBase):
         # Replace to Splunk python sdk's parameter name of sp_client.connect()
         if arg_dict["bearer_token"]:
             arg_dict["splunkToken"] = arg_dict.pop("bearer_token")
-            
+
         try:
             self.service = sp_client.connect(**arg_dict)
         except AuthenticationError as err:
@@ -197,7 +197,7 @@ class SplunkDriver(DriverBase):
                 *[f"{arg}: {desc}" for arg, desc in SPLUNK_CONNECT_ARGS.items()],
                 title="no Splunk connection parameters",
             )
-        
+
         return cs_dict
 
     def query(
