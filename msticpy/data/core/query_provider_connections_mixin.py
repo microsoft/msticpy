@@ -12,8 +12,11 @@ from functools import partial
 from itertools import tee
 from typing import Any, Dict, List, Optional, Protocol, Tuple, Union
 
+import nest_asyncio
 import pandas as pd
 from tqdm.auto import tqdm
+
+from msticpy.common.utility.ipython import is_ipython
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyDataQueryError
@@ -154,6 +157,8 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         # Run the queries threaded if supported
         if self._query_provider.get_driver_property(DriverProps.SUPPORTS_THREADING):
             logger.info("Running threaded queries.")
+            if is_ipython():
+                nest_asyncio.apply()
             event_loop = _get_event_loop()
             return event_loop.run_until_complete(
                 self._exec_queries_threaded(query_tasks, progress, retry)
@@ -233,6 +238,8 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         # Run the queries threaded if supported
         if self._query_provider.get_driver_property(DriverProps.SUPPORTS_THREADING):
             logger.info("Running threaded queries.")
+            if is_ipython():
+                nest_asyncio.apply()
             event_loop = _get_event_loop()
             return event_loop.run_until_complete(
                 self._exec_queries_threaded(query_tasks, progress, retry)
