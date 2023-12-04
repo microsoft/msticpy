@@ -16,10 +16,10 @@ import nest_asyncio
 import pandas as pd
 from tqdm.auto import tqdm
 
-from msticpy.common.utility.ipython import is_ipython
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyDataQueryError
+from ...common.utility.ipython import is_ipython
 from ..drivers.driver_base import DriverBase, DriverProps
 from .query_source import QuerySource
 
