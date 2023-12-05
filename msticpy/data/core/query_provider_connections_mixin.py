@@ -157,8 +157,6 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         # Run the queries threaded if supported
         if self._query_provider.get_driver_property(DriverProps.SUPPORTS_THREADING):
             logger.info("Running threaded queries.")
-            if is_ipython():
-                nest_asyncio.apply()
             event_loop = _get_event_loop()
             return event_loop.run_until_complete(
                 self._exec_queries_threaded(query_tasks, progress, retry)
@@ -384,6 +382,8 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
 def _get_event_loop() -> asyncio.AbstractEventLoop:
     """Return the current event loop, or create a new one."""
     try:
+        if is_ipython():
+            nest_asyncio.apply()
         loop = asyncio.get_running_loop()
     except RuntimeError:
         loop = asyncio.new_event_loop()
