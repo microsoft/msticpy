@@ -118,6 +118,11 @@ TIProviders:
       AuthKey: *cred_key
     Primary: bool(default=False)
     Provider: "Pulsedive"
+  IPQualityScore:
+    Args:
+      AuthKey: *cred_key
+    Primary: bool(default=False)
+    Provider: "IPQualityScore"
 OtherProviders:
   GeoIPLite:
     Args:
