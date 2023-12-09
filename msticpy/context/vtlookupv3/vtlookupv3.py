@@ -389,7 +389,7 @@ class VTLookupV3:
         observable: str,
         vt_type: str,
         relationship: str,
-        limit: int = None,
+        limit: Optional[int] = None,
         all_props: bool = False,
         full_objects: bool = False,
     ):
@@ -509,7 +509,7 @@ class VTLookupV3:
         observable: str,
         vt_type: str,
         relationship: str,
-        limit: int = None,
+        limit: Optional[int] = None,
         all_props: bool = False,
     ) -> pd.DataFrame:
         """
@@ -604,7 +604,7 @@ class VTLookupV3:
         relationship: str,
         observable_column: str = ColumnNames.TARGET.value,
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,
-        limit: int = None,
+        limit: Optional[int] = None,
         all_props: bool = False,
     ) -> pd.DataFrame:
         """
@@ -678,7 +678,7 @@ class VTLookupV3:
         relationship: str,
         observable_column: str = ColumnNames.TARGET.value,
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,
-        limit: int = None,
+        limit: Optional[int] = None,
         all_props: bool = False,
     ) -> pd.DataFrame:
         """
@@ -720,7 +720,10 @@ class VTLookupV3:
             self._vt_client.close()
 
     def create_vt_graph(
-        self, relationship_dfs: List[pd.DataFrame], name: str, private: bool
+        self,
+        relationship_dfs: List[pd.DataFrame],
+        name: str,
+        private: bool
     ) -> str:
         """
         Create a VirusTotal Graph with a set of Relationship DataFrames.
@@ -774,7 +777,9 @@ class VTLookupV3:
 
         return graph.graph_id
 
-    def get_object(self, vt_id: str, vt_type: str) -> pd.DataFrame:
+    def get_object(self,
+                   vt_id: str,
+                   vt_type: str) -> pd.DataFrame:
         """
         Return the full VT object as a DataFrame.
 
@@ -871,7 +876,9 @@ class VTLookupV3:
         return vt_behavior
 
 
-    def search(self, query: str, limit: Optional[int] = _DEFAULT_SEARCH_LIMIT) -> pd.DataFrame:
+    def search(self,
+               query: str,
+               limit: Optional[int] = _DEFAULT_SEARCH_LIMIT) -> pd.DataFrame:
         """
         Return results of a VT search query as a DataFrame
 
@@ -902,7 +909,13 @@ class VTLookupV3:
         return timestamps_to_utcdate(response_df)
     
 
-    def iterator(self, path, *path_args, params = None, cursor = None, limit = None, batch_size = 0 ):
+    def iterator(self,
+                 path,
+                 *path_args,
+                 params = None,
+                 cursor = None,
+                 limit = None,
+                 batch_size = 0 ) -> vt.Iterator:
         """
         Returns an iterator for the collection specified by the given path.
 
@@ -937,7 +950,8 @@ class VTLookupV3:
         return self._vt_client.iterator(path, path_args, params, cursor, limit, batch_size)
 
 
-    def _extract_response(self, response_list: list) -> pd.DataFrame:
+    def _extract_response(self,
+                          response_list: list) -> pd.DataFrame:
         """
         Converts list of dictionaries from search() function to DataFrame
 
