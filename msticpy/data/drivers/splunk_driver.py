@@ -126,7 +126,7 @@ class SplunkDriver(DriverBase):
         }
 
         # Replace to Splunk python sdk's parameter name of sp_client.connect()
-        if arg_dict["bearer_token"]:
+        if arg_dict.get("bearer_token"):
             arg_dict["splunkToken"] = arg_dict.pop("bearer_token")
 
         try:

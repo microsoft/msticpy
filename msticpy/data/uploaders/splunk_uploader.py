@@ -22,6 +22,7 @@ __author__ = "Pete Bryan, Tatsuya Hasegawa"
 
 logger = logging.getLogger(__name__)
 
+
 class SplunkUploader(UploaderBase):
     """Uploader class for Splunk."""
 
