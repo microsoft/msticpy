@@ -12,11 +12,14 @@ from functools import partial
 from itertools import tee
 from typing import Any, Dict, List, Optional, Protocol, Tuple, Union
 
+import nest_asyncio
 import pandas as pd
 from tqdm.auto import tqdm
 
+
 from ..._version import VERSION
 from ...common.exceptions import MsticpyDataQueryError
+from ...common.utility.ipython import is_ipython
 from ..drivers.driver_base import DriverBase, DriverProps
 from .query_source import QuerySource
 
@@ -377,6 +380,8 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
 def _get_event_loop() -> asyncio.AbstractEventLoop:
     """Return the current event loop, or create a new one."""
     try:
+        if is_ipython():
+            nest_asyncio.apply()
         loop = asyncio.get_running_loop()
     except RuntimeError:
         loop = asyncio.new_event_loop()

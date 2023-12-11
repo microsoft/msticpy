@@ -100,6 +100,11 @@ TIProviders:
       AuthKey: "[PLACEHOLDER]"
     Primary: True
     Provider: AbuseIPDB
+  IPQualityScore:
+    Args:
+      AuthKey: "[PLACEHOLDER]"
+    Primary: True
+    Provider: IPQualityScore
 ContextProviders:
   ServiceNow:
     Primary: True
