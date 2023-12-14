@@ -120,6 +120,9 @@ class VTLookupV3:
         VTEntityType.DOMAIN: {"id", "creation_date", "last_update_date", "country"},
     }
 
+    _DEFAULT_SEARCH_LIMIT = 1000  # prevents vague queries from pulling 1M+ files
+    _SEARCH_API_ENDPOINT = "/intelligence/search"
+
     @property
     def supported_vt_types(self) -> List[str]:
         """
@@ -508,7 +511,6 @@ class VTLookupV3:
         relationship: str,
         limit: Optional[int] = None,
         all_props: bool = False,
-        full_objects: bool = False,
     ) -> pd.DataFrame:
         """
         Look up single IoC observable relationship links.
@@ -525,8 +527,6 @@ class VTLookupV3:
             Relations limit
         all_props : bool, optional
             If True, return all properties, by default False
-        full_objects : bool, optional
-            If True, return the full object rather than just ID links.
 
         Returns
         -------
@@ -546,23 +546,14 @@ class VTLookupV3:
         try:
             return _make_sync(
                 self._lookup_ioc_relationships_async(
-                    observable,
-                    vt_type,
-                    relationship,
-                    limit,
-                    all_props=all_props,
-                    full_objects=full_objects,
+                    observable, vt_type, relationship, limit, all_props=all_props
                 )
             )
         finally:
             self._vt_client.close()
 
     def lookup_ioc_related(
-        self,
-        observable: str,
-        vt_type: str,
-        relationship: str,
-        limit: Optional[int] = None,
+        self, observable: str, vt_type: str, relationship: str, limit: int = None
     ) -> pd.DataFrame:
         """
         Look single IoC observable related items.
@@ -613,7 +604,7 @@ class VTLookupV3:
         relationship: str,
         observable_column: str = ColumnNames.TARGET.value,
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,
-        limit: int = None,
+        limit: Optional[int] = None,
         all_props: bool = False,
     ) -> pd.DataFrame:
         """
@@ -878,6 +869,112 @@ class VTLookupV3:
         )
         vt_behavior.get_file_behavior(sandbox=sandbox)
         return vt_behavior
+
+    def search(
+        self, query: str, limit: Optional[int] = _DEFAULT_SEARCH_LIMIT
+    ) -> pd.DataFrame:
+        """
+        Return results of a VT search query as a DataFrame.
+
+        Parameters
+        ----------
+        query : str
+            Virus Total Intelligence Search string
+        limit : int (default: 1,000)
+            Number of intended results
+
+        Returns
+        -------
+        pd.DataFrame
+            Search query results.
+
+        """
+        # run virus total intelligence search using iterator
+        try:
+            response_itr = self._vt_client.iterator(
+                self._SEARCH_API_ENDPOINT, params={"query": query}, limit=limit
+            )
+            response_list = list(map(lambda item: item.to_dict(), response_itr))
+        except vt.APIError as api_err:
+            raise MsticpyVTNoDataError(
+                f"The provided query returned 0 results because of an APIError: {api_err}"
+            ) from api_err
+
+        if len(response_list) == 0:
+            raise MsticpyVTNoDataError("The provided query returned 0 results")
+
+        response_df = self._extract_response(response_list)
+        return timestamps_to_utcdate(response_df)
+
+    def iterator(
+        self, path, *path_args, params=None, cursor=None, limit=None, batch_size=0
+    ) -> vt.Iterator:
+        """
+        Return an iterator for the collection specified by the given path.
+
+        The endpoint specified by path must return a collection of objects. An
+        example of such an endpoint are /comments and /intelligence/search.
+
+        SOURCE: https://github.com/VirusTotal/vt-py/blob/
+        6bf4decb5bbd80bfc60e74ee3caa4c9073cea38c/vt/client.py
+
+        Parameters
+        ----------
+        path : str
+            Path to API endpoint returning a collection.
+        path_args: dict
+            A variable number of arguments that are put into any placeholders used in path.
+        params: dict
+            Additional parameters passed to the endpoint.
+        cursor: str
+            Cursor for resuming the iteration at the point it was left previously.
+            A cursor can be obtained with Iterator.cursor(). This
+            cursor is not the same one returned by the VirusTotal API.
+        limit: int
+            Maximum number of objects that will be returned by the iterator.
+            If a limit is not provided the iterator continues until it reaches the
+            last object in the collection.
+        batch_size: int
+            Maximum number of objects retrieved on each call to the endpoint.
+            If not provided the server will decide how many objects to return.
+
+        Returns
+        -------
+        vt.Iterator
+            An instance of vt.Iterator
+
+        """
+        return self._vt_client.iterator(
+            path, path_args, params, cursor, limit, batch_size
+        )
+
+    def _extract_response(self, response_list: list) -> pd.DataFrame:
+        """
+        Convert list of dictionaries from search() function to DataFrame.
+
+        Parameters
+        ----------
+        response_list : list
+            A list of dictionaries representing a virus total object
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame with the attributes of the virus total object
+
+        """
+        # loop to convert from list of vt.Object to pd.DataFrame
+        response_rows = []
+        for response_item in response_list:
+            # flatten nested dictionary and append id, type values
+            response_item_df = pd.json_normalize(response_item["attributes"])
+            response_item_df["id"] = response_item["id"]
+            response_item_df["type"] = response_item["type"]
+
+            response_rows.append(response_item_df)
+
+        response_df = pd.concat(response_rows, axis=0, ignore_index=True)
+        return timestamps_to_utcdate(response_df)
 
     @staticmethod
     def relationships_to_graph(
