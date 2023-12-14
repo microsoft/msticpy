@@ -144,7 +144,10 @@ class VTClient:
         del path_args, cursor, limit, batch_size
         if "/intelligence/search" in path:
             query = params.get("query")
-            return iter(VtObject.from_dict(search_item) for search_item in self._SEARCH_OBJS[query])
+            return iter(
+                VtObject.from_dict(search_item)
+                for search_item in self._SEARCH_OBJS[query]
+            )
             # if query == "engines:trojan and tag:signed and p:60+ and microsoft:clean and not tag:invalid-signature and ls:2d+":
             #     raise MsticpyVTNoDataError("0 Results")
             # elif query == "engines:trojan and tag:signed and p:60+ and microsoft:clean and not tag:invalid-signature and ls:30d+":
@@ -153,12 +156,9 @@ class VTClient:
             return iter(VtObject.from_dict(url_data) for url_data in self._URL_LINKS)
         return iter(VtObject.from_dict(url_data) for url_data in self._URL_OBJS)
 
-
     def close(self):
         """Close the client connection."""
         return None
-
-
 
 
 def test_init_vt_lookup_class():
@@ -417,16 +417,23 @@ def test_vt_search(vt_client: VTLookupV3):
     """Test search API."""
 
     with pytest.raises(MsticpyVTNoDataError):
-        result_df = vt_client.search(query="engines:trojan and tag:signed and p:60+ and microsoft:clean and not tag:invalid-signature and ls:2d+")
+        result_df = vt_client.search(
+            query="engines:trojan and tag:signed and p:60+ and microsoft:clean and not tag:invalid-signature and ls:2d+"
+        )
 
-    result_df = vt_client.search(query="engines:trojan and tag:signed and p:60+ and microsoft:clean and not tag:invalid-signature and ls:30d+")
+    result_df = vt_client.search(
+        query="engines:trojan and tag:signed and p:60+ and microsoft:clean and not tag:invalid-signature and ls:30d+"
+    )
     rows, cols = result_df.shape
-    
+
     # check integrity of shape
     check.equal(rows, 5)
     check.equal(cols, 613)
 
     # check integrity of content
-    check.is_true( 'crowdsourced_ids_stats.medium' in result_df.columns )
-    check.is_true( 'sigma_analysis_stats.medium' in result_df.columns )
-    check.is_true( result_df.loc[3, 'last_analysis_results.FireEye.result'] == 'Application.Bundler.GL' )
+    check.is_true("crowdsourced_ids_stats.medium" in result_df.columns)
+    check.is_true("sigma_analysis_stats.medium" in result_df.columns)
+    check.is_true(
+        result_df.loc[3, "last_analysis_results.FireEye.result"]
+        == "Application.Bundler.GL"
+    )
