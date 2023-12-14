@@ -94,6 +94,7 @@ class VTClient:
     _FB_SUM_FILE = "vt3_behavior_summary.json"
     _FB_MS_FILE = "vt3_behavior_ms_sysinternals.json"
     _FILE_SUMMARY = "vt3_file_1.json"
+    _SEARCH_FILE = "vt3_search.json"
 
     _URL_OBJS = [
         json.loads(_D_ROOT.joinpath(url_file).read_text()) for url_file in _OBJ_FILES
@@ -102,6 +103,7 @@ class VTClient:
     _VT_FB_SUMMARY = json.loads(_D_ROOT.joinpath(_FB_SUM_FILE).read_text())
     _VT_FB_MSSYS = json.loads(_D_ROOT.joinpath(_FB_MS_FILE).read_text())
     _VT_FILE_SUMMARY = json.loads(_D_ROOT.joinpath(_FILE_SUMMARY).read_text())
+    _SEARCH_OBJS = json.loads(_D_ROOT.joinpath(_SEARCH_FILE).read_text())
 
     def __init__(self, apikey: Optional[str] = None):
         """Initialize the class."""
@@ -139,7 +141,17 @@ class VTClient:
         self, path: str, *path_args, params=None, cursor=None, limit=0, batch_size=0
     ) -> Iterator:
         """Return an iterator of VT objects."""
-        del path_args, params, cursor, limit, batch_size
+        del path_args, cursor, limit, batch_size
+        if "/intelligence/search" in path:
+            query = params.get("query")
+            return iter(
+                VtObject.from_dict(search_item)
+                for search_item in self._SEARCH_OBJS[query]
+            )
+            # if query == "engines:trojan and tag:signed and p:60+ and microsoft:clean and not tag:invalid-signature and ls:2d+":
+            #     raise MsticpyVTNoDataError("0 Results")
+            # elif query == "engines:trojan and tag:signed and p:60+ and microsoft:clean and not tag:invalid-signature and ls:30d+":
+            #     return iter(VtObject.from_dict(search_item) for search_item in self._SEARCH_OBJS[query])
         if "relationships" in path:
             return iter(VtObject.from_dict(url_data) for url_data in self._URL_LINKS)
         return iter(VtObject.from_dict(url_data) for url_data in self._URL_OBJS)
@@ -397,4 +409,31 @@ def test_get_object_browser(vt_client: VTLookupV3):
     check.equal(
         vt_browser._current_data.iloc[0].id,
         "03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b",
+    )
+
+
+@pytest.mark.filterwarnings("ignore::UserWarning")
+def test_vt_search(vt_client: VTLookupV3):
+    """Test search API."""
+
+    with pytest.raises(MsticpyVTNoDataError):
+        result_df = vt_client.search(
+            query="engines:trojan and tag:signed and p:60+ and microsoft:clean and not tag:invalid-signature and ls:2d+"
+        )
+
+    result_df = vt_client.search(
+        query="engines:trojan and tag:signed and p:60+ and microsoft:clean and not tag:invalid-signature and ls:30d+"
+    )
+    rows, cols = result_df.shape
+
+    # check integrity of shape
+    check.equal(rows, 5)
+    check.equal(cols, 613)
+
+    # check integrity of content
+    check.is_true("crowdsourced_ids_stats.medium" in result_df.columns)
+    check.is_true("sigma_analysis_stats.medium" in result_df.columns)
+    check.is_true(
+        result_df.loc[3, "last_analysis_results.FireEye.result"]
+        == "Application.Bundler.GL"
     )
