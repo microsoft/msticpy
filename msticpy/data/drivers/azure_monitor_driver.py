@@ -524,14 +524,18 @@ class AzureMonitorDriver(DriverBase):
 
     @staticmethod
     def _get_query_status(result) -> Dict[str, Any]:
-        status = {
-            "status": result.status.name,
-            "tables": len(result.tables) if result.tables else 0,
-        }
+        status = {}
 
         if isinstance(result, LogsQueryPartialResult):
             status["partial"] = "partial results returned"
-            status["tables"] = (len(result.partial_data) if result.partial_data else 0,)
+            status["tables"] = (len(result.partial_data) if result.partial_data else 0,) 
+            return status
+
+        status = { 
+            "status": result.status.name,
+            "tables": len(result.tables) if result.tables else 0,
+        }   
+
         return status
 
     def _get_schema(self) -> Dict[str, Dict]:
