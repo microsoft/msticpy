@@ -67,12 +67,12 @@ Parameter    Description
 host         (string) The host name (the default is 'localhost').
 username     (string) The Splunk account username, which is used to authenticate the Splunk instance.
 password     (string) The password for the Splunk account.
-splunkToken  (string) The Authorization Bearer Token <JWT> created in the Splunk.
+bearer_token  (string) The Authorization Bearer Token <JWT> created in the Splunk.
 ===========  ===========================================================================================================================
 
 The username and password are needed for user account authentication.
-On the other hand, splunkToken is needed for Token authentication.
-The user auth method has a priority to token auth method if both username and splunkToken are set.
+On the other hand, bearer_token is needed for Token authentication.
+The user auth method has a priority to token auth method if both username and bearer_token are set.
 
 
 Optional configuration parameters:
@@ -136,7 +136,7 @@ On the other hand, you can use the authentification token to connect.
 - host = "localhost" (Splunk server FQDN hostname to connect, for locally
   installed splunk, you can specify localhost)
 - port = "8089" (Splunk REST API)
-- splunkToken = "<Authorization Bearer Token>" (token can be used instead of username/password)
+- bearer_token = "<Authorization Bearer Token>" (token can be used instead of username/password)
 
 
 Once you have details, you can specify it in ``msticpyconfig.yaml`` as
@@ -165,7 +165,7 @@ OR
 
 .. code:: ipython3
 
-    qry_prov.connect(host=<hostname>, splunkToken=<token_string>)
+    qry_prov.connect(host=<hostname>, bearer_token=<token_string>)
 
 
 Listing available queries

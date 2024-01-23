@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Splunk Uploader class."""
+import logging
 from pathlib import Path
 from typing import Any, Optional
 
@@ -17,19 +18,22 @@ from ..drivers.splunk_driver import SplunkDriver
 from .uploader_base import UploaderBase
 
 __version__ = VERSION
-__author__ = "Pete Bryan"
+__author__ = "Pete Bryan, Tatsuya Hasegawa"
+
+logger = logging.getLogger(__name__)
 
 
 class SplunkUploader(UploaderBase):
     """Uploader class for Splunk."""
 
-    def __init__(self, username: str, host: str, password: str, **kwargs):
+    def __init__(self, **kwargs):
         """Initialize a Splunk Uploader instance."""
         super().__init__()
         self._kwargs = kwargs
-        self.workspace = host
-        self.workspace_secret = password
-        self.user = username
+        self.host = kwargs.get("host")
+        self.password = kwargs.get("password")
+        self.username = kwargs.get("username")
+        self.bearer_token = kwargs.get("bearer_token")
         self.driver = SplunkDriver()
         self.port = kwargs.get("port", 8089)
         self._debug = kwargs.get("debug", False)
@@ -40,12 +44,28 @@ class SplunkUploader(UploaderBase):
 
     def connect(self):
         """Connect to Splunk host."""
-        self.driver.connect(
-            host=self.workspace,
-            username=self.user,
-            password=self.workspace_secret,
-            port=self.port,
-        )
+        if self._kwargs:
+            if self.username:
+                self.driver.connect(
+                    host=self.host,
+                    username=self.username,
+                    password=self.password,
+                    port=self.port,
+                )
+            elif self.bearer_token:
+                self.driver.connect(
+                    host=self.host,
+                    bearer_token=self.bearer_token,
+                    port=self.port,
+                )
+            else:
+                logger.info("username/bearer_token are missing.")
+                logger.info("Credential loading from config file.")
+                self.driver.connect()
+        else:
+            logger.info("Credential loading from config file.")
+            self.driver.connect()
+
         self.connected = True
 
     def _post_data(
