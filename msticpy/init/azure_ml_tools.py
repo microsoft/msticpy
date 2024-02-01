@@ -7,18 +7,14 @@
 import logging
 import os
 import sys
+import warnings
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Tuple, Union
 
 import yaml
 from IPython import get_ipython
 from IPython.display import HTML, display
-from pkg_resources import (  # type: ignore
-    DistInfoDistribution,
-    Requirement,
-    WorkingSet,
-    parse_version,
-)
+from pkg_resources import Requirement, WorkingSet, parse_version  # type: ignore
 
 from .._version import VERSION
 from ..common.pkg_config import _HOME_PATH, refresh_config
@@ -73,10 +69,6 @@ MSTICPY_REQ_VERSION = __version__
 VER_RGX = r"(?P<maj>\d+)\.(?P<min>\d+).(?P<pnt>\d+)(?P<suff>.*)"
 MP_ENV_VAR = "MSTICPYCONFIG"
 MP_FILE = "msticpyconfig.yaml"
-NB_CHECK_URI = (
-    "https://raw.githubusercontent.com/Azure/Azure-Sentinel-"
-    "Notebooks/master/utils/nb_check.py"
-)
 
 
 def is_in_aml():
@@ -117,7 +109,7 @@ def check_aml_settings(
     del kwargs
     _disp_html("<h4>Starting AML notebook pre-checks...</h4>")
     if isinstance(min_py_ver, str):
-        min_py_ver = _get_pkg_version(min_py_ver).release
+        min_py_ver = _get_pkg_version(min_py_ver).release  # type: ignore
     check_python_ver(min_py_ver=min_py_ver)
 
     _check_mp_install(min_mp_ver, mp_release, extras)
@@ -148,7 +140,7 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
         If the Python version does not support the notebook.
 
     """
-    min_py_ver = _get_pkg_version(min_py_ver)
+    min_py_ver = _get_pkg_version(min_py_ver)  # type: ignore
     sys_ver = _get_pkg_version(sys.version_info[:3])
     _disp_html("Checking Python kernel version...")
     if sys_ver < min_py_ver:
@@ -302,7 +294,7 @@ def _set_kql_env_vars(extras: Optional[List[str]]):
         os.environ["KQLMAGIC_AZUREML_COMPUTE"] = _get_vm_fqdn()
 
 
-def _get_pkg_version(version: Union[str, Tuple]) -> DistInfoDistribution:
+def _get_pkg_version(version: Union[str, Tuple]):
     """Return pkg_resources parsed version from string or tuple."""
     if isinstance(version, str):
         return parse_version(version)
@@ -311,7 +303,7 @@ def _get_pkg_version(version: Union[str, Tuple]) -> DistInfoDistribution:
     raise TypeError(f"Version {version} no parseable.")
 
 
-def _get_installed_mp_version() -> Optional[DistInfoDistribution]:
+def _get_installed_mp_version():
     """Return the installed version of MSTICPY."""
     working_set = WorkingSet()
     mp_installed = working_set.find(Requirement("msticpy"))  # type: ignore
@@ -343,8 +335,9 @@ def _run_user_settings():
     """Import nbuser_settings.py, if it exists."""
     user_folder = get_aml_user_folder()
     if user_folder and user_folder.joinpath("nbuser_settings.py").is_file():
-        sys.path.append(str(user_folder))
-        import nbuser_settings  # noqa: F401
+        warnings.warn(
+            "Automatic processing of nbuser_settings.py is no longer supported in MSTICPy."
+        )
 
 
 # pylint: enable=import-outside-toplevel, unused-import, import-error
