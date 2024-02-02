@@ -193,7 +193,7 @@ def test_lookup_ioc(vt_client):
 
     # all properties
     result_df = vt_client.lookup_ioc(url, vt_type="url", all_props=True)
-    check.equal(result_df.shape, (1, 287))
+    check.equal(result_df.shape, (1, 19))
 
     # Invalid type
     with pytest.raises(ValueError) as vt_error:
@@ -241,7 +241,7 @@ def test_lookup_iocs(vt_client):
         observable_type_column="type",
         all_props=True,
     )
-    check.equal(result_df.shape, (3, 399))
+    check.equal(result_df.shape, (3, 19))
     check.equal(
         result_df.iloc[0].id,
         "380269259e1f607fb07769fee779f0dc3144924f865e76a3c05c8898295d02f8",
@@ -299,7 +299,7 @@ def test_lookup_ioc_related(vt_client: VTLookupV3):
     result_df = vt_client.lookup_ioc_related(
         file, vt_type="file", relationship="contacted_urls"
     )
-    check.equal(result_df.shape, (3, 403))
+    check.equal(result_df.shape, (3, 23))
     result_df_noidx = result_df.reset_index()
     check.equal(
         result_df_noidx.iloc[0].target,
@@ -342,7 +342,7 @@ def test_lookup_iocs_relationships(vt_client: VTLookupV3):
 def test_get_object(vt_client: VTLookupV3):
     """Test simple get_object api."""
     result_df = vt_client.get_object(_TEST_URLS[0], vt_type="url")
-    check.equal(result_df.shape, (1, 286))
+    check.equal(result_df.shape, (1, 18))
     check.equal(
         result_df.iloc[0].id,
         "380269259e1f607fb07769fee779f0dc3144924f865e76a3c05c8898295d02f8",
@@ -395,7 +395,7 @@ def test_get_object_browser(vt_client: VTLookupV3):
     vt_browser.txt_file_id.value = "file"
     vt_browser.btn_lookup.click()
 
-    check.equal(vt_browser._current_data.shape, (1, 584))
+    check.equal(vt_browser._current_data.shape, (1, 42))
     check.equal(
         vt_browser._current_data.iloc[0].id,
         "03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b",
@@ -405,7 +405,7 @@ def test_get_object_browser(vt_client: VTLookupV3):
 
     # Check that it auto-loads from init
     vt_browser = VTObjectBrowser("file")
-    check.equal(vt_browser._current_data.shape, (1, 584))
+    check.equal(vt_browser._current_data.shape, (1, 42))
     check.equal(
         vt_browser._current_data.iloc[0].id,
         "03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b",
@@ -428,12 +428,12 @@ def test_vt_search(vt_client: VTLookupV3):
 
     # check integrity of shape
     check.equal(rows, 5)
-    check.equal(cols, 613)
+    check.equal(cols, 48)
 
     # check integrity of content
-    check.is_true("crowdsourced_ids_stats.medium" in result_df.columns)
-    check.is_true("sigma_analysis_stats.medium" in result_df.columns)
+    check.is_true("crowdsourced_ids_stats" in result_df.columns)
+    check.is_true("sigma_analysis_stats" in result_df.columns)
     check.is_true(
-        result_df.loc[3, "last_analysis_results.FireEye.result"]
+        result_df.loc[3].last_analysis_results["FireEye"]["result"]
         == "Application.Bundler.GL"
     )
