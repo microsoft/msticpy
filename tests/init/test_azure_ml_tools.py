@@ -25,22 +25,6 @@ _MIN_MP_VER = "1.0.0"
 _MIN_PY_VER_T = (3, 6, 0)
 _MIN_MP_VER_T = (1, 0, 0)
 
-# Mocked nb_check.py
-_NB_CHECK_TXT = """
-import os
-
-__version__ = "1.5.0"
-
-def some_func(foo):
-    print("hello")
-
-"""
-
-# Mocked nbuser_settings.py
-_NBUSER_SETTINGS = """
-TEST_FLAG = True
-"""
-
 _MP_CONFIG = "msticpyconfig-test.yaml"
 
 
@@ -56,8 +40,6 @@ def aml_file_sys(tmpdir_factory):
 
     user_dir.join("msticpyconfig.yaml").write_text(mp_text, encoding="utf-8")
     user_dir.join("msticpyconfig.save").write_text(mp_text, encoding="utf-8")
-    nb_check = user_dir.join("utils").join("nb_check.py")
-    nb_check.write_text(_NB_CHECK_TXT, encoding="utf-8")
     yield users, user_dir
 
 
@@ -196,27 +178,3 @@ def test_check_versions_mpconfig(monkeypatch, aml_file_sys, test_case):
         check.is_in(env, _os.environ)
         check.is_true(mp_path.samefile(_os.environ.get(env)))
     mp_backup.copy(mp_path)
-
-
-def test_check_versions_nbuser_settings(monkeypatch, aml_file_sys):
-    """Test nb_check update."""
-    _, user_dir = aml_file_sys
-
-    # monkeypatch for various test cases
-    _os = _PyOs()
-    monkeypatch.setattr(aml, "os", _os)
-    monkeypatch.setattr(aml, "_get_vm_fqdn", lambda: "myhost")
-
-    # Set an env var to emulate AML
-    _os.environ["APPSETTING_WEBSITE_SITE_NAME"] = "AMLComputeInstance"
-
-    # Create an old version of nb_check
-    nb_user_settings = user_dir.join("nbuser_settings.py")
-    nb_user_settings.write_text(_NBUSER_SETTINGS, encoding="utf-8")
-
-    with change_directory(str(user_dir)):
-        aml.check_aml_settings(min_py_ver=_MIN_PY_VER, min_mp_ver=_MIN_MP_VER)
-
-    check.is_in("nbuser_settings", sys.modules)
-    nbus_import = sys.modules["nbuser_settings"]
-    check.is_true(nbus_import.TEST_FLAG)
