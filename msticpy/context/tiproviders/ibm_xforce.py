@@ -107,13 +107,9 @@ class XForce(HttpTIProvider):
                 {
                     "score": report.get("score", 0),
                     "cats": report.get("cats"),
-                    "categoryDescriptions": report.get(
-                        "categoryDescriptions"
-                    ),
+                    "categoryDescriptions": report.get("categoryDescriptions"),
                     "reason": report.get("reason"),
-                    "reasonDescription": report.get(
-                        "reasonDescription", 0
-                    ),
+                    "reasonDescription": report.get("reasonDescription", 0),
                     "tags": report.get("tags", 0),
                 }
             )
