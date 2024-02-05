@@ -46,7 +46,7 @@ class SentinelUtilsMixin:
             params = {"api-version": "2020-01-01"}
         return httpx.get(
             url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             timeout=get_http_timeout(),
         )
@@ -165,6 +165,7 @@ class SentinelUtilsMixin:
             The formatted resource ID.
 
         """
+        print("_build_sent_res_id", sub_id, res_grp, ws_name)
         if not sub_id or not res_grp or not ws_name:
             config = self._check_config(
                 workspace_name=ws_name,
@@ -201,7 +202,7 @@ class SentinelUtilsMixin:
 
         """
         if not base_url:
-            base_url = AzureCloudConfig(self.cloud).endpoints.resource_manager  # type: ignore
+            base_url = AzureCloudConfig(self.cloud).resource_manager  # type: ignore
         res_info = {
             "subscription_id": res_id.split("/")[2],
             "resource_group": res_id.split("/")[4],

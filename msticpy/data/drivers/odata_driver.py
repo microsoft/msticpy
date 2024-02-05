@@ -18,7 +18,7 @@ from ...common.exceptions import MsticpyConnectionError, MsticpyUserConfigError
 from ...common.pkg_config import get_config
 from ...common.provider_settings import get_provider_settings
 from ...common.utility import mp_ua_header
-from .driver_base import DriverBase, QuerySource
+from .driver_base import DriverBase, DriverProps, QuerySource
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -66,6 +66,11 @@ class OData(DriverBase):
         self.scopes = None
         self.msal_auth = None
 
+        self.set_driver_property(DriverProps.SUPPORTS_THREADING, value=True)
+        self.set_driver_property(
+            DriverProps.MAX_PARALLEL, value=kwargs.get("max_threads", 4)
+        )
+
     @abc.abstractmethod
     def query(
         self, query: str, query_source: QuerySource = None, **kwargs
@@ -83,7 +88,7 @@ class OData(DriverBase):
         Returns
         -------
         Union[pd.DataFrame, Any]
-            A DataFrame (if successfull) or
+            A DataFrame (if successful) or
             the underlying provider result if an error.
 
         """
@@ -150,47 +155,9 @@ class OData(DriverBase):
 
         # Default to using application based authentication
         if not delegated_auth:
-            _check_config(cs_dict, "client_secret", "application authentication")
-            # self.oauth_url and self.req_body are correctly set in concrete
-            # instances __init__
-            req_url = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
-            req_body = dict(self.req_body)  # type: ignore
-            req_body["client_id"] = cs_dict["client_id"]
-            req_body["client_secret"] = cs_dict["client_secret"]
-
-            # Authenticate and obtain AAD Token for future calls
-            data = urllib.parse.urlencode(req_body).encode("utf-8")
-            response = httpx.post(
-                url=req_url,
-                content=data,
-                timeout=self.get_http_timeout(**kwargs),
-                headers=mp_ua_header(),
-            )
-            json_response = response.json()
-            self.aad_token = json_response.get("access_token", None)
-            if not self.aad_token:
-                raise MsticpyConnectionError(
-                    f"Could not obtain access token - {json_response['error_description']}"
-                )
+            json_response = self._get_token_standard_auth(kwargs, cs_dict)
         else:
-            _check_config(cs_dict, "username", "delegated authentication")
-            authority = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
-            if authority.startswith("https://login.microsoftonline.com/"):
-                authority = re.split(
-                    r"(https:\/\/login\.microsoftonline\.com\/[^\/]*)", authority
-                )[1]
-            self.msal_auth = MSALDelegatedAuth(
-                client_id=cs_dict["client_id"],
-                authority=authority,
-                username=cs_dict["username"],
-                scopes=self.scopes,
-                auth_type=kwargs.get("auth_type", "device"),
-                location=cs_dict.get("location", "token_cache.bin"),
-                connect=True,
-            )
-            self.aad_token = self.msal_auth.token
-            json_response = {}
-            self.token_type = "MSAL"  # nosec
+            json_response = self._get_token_delegate_auth(kwargs, cs_dict)
 
         self.req_headers["Authorization"] = f"Bearer {self.aad_token}"
         self.api_root = cs_dict.get("apiRoot", self.api_root)
@@ -206,6 +173,52 @@ class OData(DriverBase):
 
         json_response["access_token"] = None
         return json_response
+
+    def _get_token_standard_auth(self, kwargs, cs_dict) -> Dict[str, Any]:
+        _check_config(cs_dict, "client_secret", "application authentication")
+        # self.oauth_url and self.req_body are correctly set in concrete
+        # instances __init__
+        req_url = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
+        req_body = dict(self.req_body)  # type: ignore
+        req_body["client_id"] = cs_dict["client_id"]
+        req_body["client_secret"] = cs_dict["client_secret"]
+
+        # Authenticate and obtain AAD Token for future calls
+        data = urllib.parse.urlencode(req_body).encode("utf-8")
+        response = httpx.post(
+            url=req_url,
+            content=data,
+            timeout=self.get_http_timeout(**kwargs),
+            headers=mp_ua_header(),
+        )
+        json_response = response.json()
+        self.aad_token = json_response.get("access_token", None)
+        if not self.aad_token:
+            raise MsticpyConnectionError(
+                f"Could not obtain access token - {json_response['error_description']}"
+            )
+        return json_response
+
+    def _get_token_delegate_auth(self, kwargs, cs_dict) -> Dict[str, Any]:
+        _check_config(cs_dict, "username", "delegated authentication")
+        authority = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
+        if authority.startswith("https://login"):
+            auth_url = urllib.parse.urlparse(authority)
+            authority = f"{auth_url.scheme}://{auth_url.netloc}/{{tenantId}}".format(
+                tenantId=cs_dict["tenant_id"]
+            )
+        self.msal_auth = MSALDelegatedAuth(
+            client_id=cs_dict["client_id"],
+            authority=authority,
+            username=cs_dict["username"],
+            scopes=self.scopes,
+            auth_type=kwargs.get("auth_type", "device"),
+            location=cs_dict.get("location", "token_cache.bin"),
+            connect=True,
+        )
+        self.aad_token = self.msal_auth.token
+        self.token_type = "MSAL"  # nosec
+        return {}
 
     # pylint: disable=too-many-branches
     def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:

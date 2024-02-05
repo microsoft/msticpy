@@ -16,10 +16,12 @@ See :py:meth:`list_incidents <msticpy.context.azure_sentinel.MicrosoftSentinel.l
 
 This returns a DataFrame with details of incidents. By default this will return the 50 latest incidents.
 It is possible to pass a set of parameters to `.list_incidents` to adjust the incidents returned via the `params` parameter.
-These parameters follow the format of the [Microsoft Sentinel API](https://learn.microsoft.com/rest/api/securityinsights/stable/incidents/list) 
+These parameters follow the format of the
+`Microsoft Sentinel API <https://learn.microsoft.com/rest/api/securityinsights/stable/incidents/list>`__
 and include the following key items:
+
  - $top: this controls how many incidents are returned
- - $filter: this accepts an OData query that filters the returned item. https://learn.microsoft.com/graph/filter-query-parameter 
+ - $filter: this accepts an OData query that filters the returned item. https://learn.microsoft.com/graph/filter-query-parameter
  - $orderby: this allows for sorting results by a specific column
 
 .. code:: ipython3

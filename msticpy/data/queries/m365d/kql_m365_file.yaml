@@ -1,0 +1,95 @@
+metadata:
+  version: 1
+  description: M365D Queries
+  data_environments: [MDATP, MDE, M365D, LogAnalytics]
+  data_families: [M365D]
+  tags: ["file", "process"]
+defaults:
+  metadata:
+    data_source: "file_events"
+  parameters:
+    table:
+      description: Table name
+      type: str
+      default: "DeviceFileEvents"
+    start:
+      description: Query start time
+      type: datetime
+    end:
+      description: Query end time
+      type: datetime
+    add_query_items:
+      description: Additional query clauses
+      type: str
+      default: ""
+    time_column:
+      description: The name of the column detailing the time the event was generated.
+      type: str
+      default: "Timestamp"
+sources:
+  list_file_events_for_filename:
+    description: Lists all file events by filename
+    metadata:
+    args:
+      query: '
+        {table}
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
+        | where FileName has "{file_name}"
+        {add_query_items}'
+      uri: None
+    parameters:
+      file_name:
+        description: Name of file
+        type: str
+  list_file_events_for_path:
+    description: Lists all file events from files in a certain path
+    metadata:
+    args:
+      query: '
+        {table}
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
+        | where FolderPath contains "{path}"
+        {add_query_items}'
+    parameters:
+      path:
+        description: Full or partial path to search in
+        type: str
+  list_file_events_for_hash:
+    description: Lists all file events by hash
+    metadata:
+    args:
+      query: '
+        {table}
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
+        | where SHA1 == "{file_hash}" or SHA256 == "{file_hash}" or MD5 == "{file_hash}"
+        {add_query_items}'
+      uri: None
+    parameters:
+      file_hash:
+        description: Hash of file
+        type: str
+        aliases:
+          - hash
+  list_file_events_for_host:
+    description: Lists all file events for a host/device
+    metadata:
+    args:
+      query: '
+        {table}
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
+        | where DeviceName == "{host_name}" or DeviceID == "{device_id}"
+        {add_query_items}'
+      uri: None
+    parameters:
+      host_name:
+        description: The name of the host/device
+        type: str
+        default: ""
+      device_id:
+        description: The device ID of the host/device
+        type: str
+        default: ""

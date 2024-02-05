@@ -67,7 +67,8 @@ class CEAutoLoadQProvs(CEItemsBase):
 
         """
         super().__init__(mp_controls)
-        from ..data import DataEnvironment  # pylint: disable=import-outside-toplevel
+        # pylint: disable=import-outside-toplevel
+        from ..data.core.query_defns import DataEnvironment
 
         self._data_env_enum = DataEnvironment
 

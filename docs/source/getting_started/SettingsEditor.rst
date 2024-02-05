@@ -598,11 +598,14 @@ to the Azure global cloud.
 The Azure clouds supported are:
 
 - **cn** - China
-- **de** - Germany
 - **usgov** - US Government
+
+de - Germany has been deprecated and is no longer supported.
 
 Configuring MSTICPy to use one of these clouds will cause the following
 components to use the Authority and API endpoint URLs specific to that cloud.
+
+The ``resource_manager_url`` setting allows you to specify the Azure Resource Manager Url to use. This is only needed if you are using a cloud outside of global, usgov, and cn. This will override the cloud and its associated Authority and API endpoint URLs.
 
 These components include:
 
@@ -865,6 +868,11 @@ show here.
 Autoload Query Providers
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. warning:: This feature is being deprecated. Please avoid using
+  this. If you have a use case that requires this, please contact
+  the MSTICPy team - msticpy@microsoft.com. We'd love to hear
+  how you are using it and how we might be able to improve it.
+
 This section controls which, if any, query providers you want to load
 automatically when you run ``nbinit.init_notebook``.
 
@@ -919,6 +927,11 @@ There are two options for each of these:
 Autoload Component
 ~~~~~~~~~~~~~~~~~~
 
+.. warning:: This feature is being deprecated. Please avoid using
+  this. If you have a use case that requires this, please contact
+  the MSTICPy team - msticpy@microsoft.com. We'd love to hear
+  how you are using it and how we might be able to improve it.
+
 This section controls which, if other components you want to load
 automatically when you run ``nbinit.init_notebook()``.
 
@@ -936,7 +949,7 @@ and other providers loaded in order to find the pivot functions that it
 will attach to entities. For more information see `pivot
 functions <https://msticpy.readthedocs.io/en/latest/data_analysis/PivotFunctions.html>`__
 
-Some components do not require any parameters (e.g. TILookup and Pivot).
+Some components do not require any parameters (e.g. TILookup and Pivot).
 Others do support or require additional settings:
 
 **GeoIpLookup**

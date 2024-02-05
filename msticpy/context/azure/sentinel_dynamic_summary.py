@@ -15,7 +15,7 @@ import pandas as pd
 from ..._version import VERSION
 from ...common.exceptions import MsticpyAzureConnectionError, MsticpyParameterError
 from ...common.pkg_config import get_config, get_http_timeout
-from ...data import QueryProvider
+from ...data.core.data_providers import QueryProvider
 from .azure_data import get_api_headers
 
 # pylint: disable=unused-import
@@ -123,7 +123,7 @@ class SentinelDynamicSummaryMixin:
         params = {"api-version": _DYN_SUM_API_VERSION}
         response = httpx.get(
             dyn_sum_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             timeout=get_http_timeout(),
         )
@@ -219,7 +219,7 @@ class SentinelDynamicSummaryMixin:
         params = {"api-version": _DYN_SUM_API_VERSION}
         response = httpx.put(
             dyn_sum_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             content=summary.to_json_api(),
             timeout=get_http_timeout(),
@@ -325,7 +325,7 @@ class SentinelDynamicSummaryMixin:
         params = {"api-version": _DYN_SUM_API_VERSION}
         response = httpx.delete(
             dyn_sum_url,
-            headers=get_api_headers(self.token),  # type: ignore
+            headers=get_api_headers(self._token),  # type: ignore
             params=params,
             timeout=get_http_timeout(),
         )

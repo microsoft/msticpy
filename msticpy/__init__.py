@@ -116,7 +116,9 @@ initialization and checks are performed.
 """
 import importlib
 import os
-from typing import Any
+import traceback
+import warnings
+from typing import Any, Iterable, Union
 
 from . import nbwidgets
 
@@ -124,66 +126,64 @@ from . import nbwidgets
 from ._version import VERSION
 from .common import pkg_config as settings
 from .common.check_version import check_version
+from .common.exceptions import (
+    MsticpyException,
+    MsticpyImportExtraError,
+    MsticpyMissingDependencyError,
+)
 from .common.utility import search_name as search
 from .init.logging import set_logging_level, setup_logging
+from .lazy_importer import lazy_import
 
 __version__ = VERSION
 __author__ = "Ian Hellen, Pete Bryan, Ashwin Patil"
 
 refresh_config = settings.refresh_config
+get_config = settings.get_config
 setup_logging()
 
 if not os.environ.get("KQLMAGIC_EXTRAS_REQUIRES"):
     os.environ["KQLMAGIC_EXTRAS_REQUIRES"] = "jupyter-basic"
 
-_STATIC_ATTRIBS = list(locals().keys())
-
-_DEFAULT_IMPORTS = {
-    "az_connect": "msticpy.auth.azure_auth",
-    "current_providers": "msticpy.init.nbinit",
-    "ContextLookup": "msticpy.context.contextlookup",
-    "GeoLiteLookup": "msticpy.context.geoip",
-    "init_notebook": "msticpy.init.nbinit",
-    "reset_ipython_exception_handler": "msticpy.init.nbinit",
-    "IPStackLookup": "msticpy.context.geoip",
-    "MicrosoftSentinel": "msticpy.context.azure",
-    "MpConfigEdit": "msticpy.config.mp_config_edit",
-    "MpConfigFile": "msticpy.config.mp_config_file",
-    "QueryProvider": "msticpy.data",
-    "TILookup": "msticpy.context.tilookup",
-    "TimeSpan": "msticpy.common.timespan",
-    "WorkspaceConfig": "msticpy.common.wsconfig",
-    "entities": "msticpy.datamodel",
-    "Pivot": "msticpy.init.pivot",
+_LAZY_IMPORTS = {
+    "msticpy.auth.azure_auth.az_connect",
+    "msticpy.common.timespan.TimeSpan",
+    "msticpy.common.wsconfig.WorkspaceConfig",
+    "msticpy.config.mp_config_edit.MpConfigEdit",
+    "msticpy.config.mp_config_file.MpConfigFile",
+    "msticpy.context.azure.MicrosoftSentinel",
+    "msticpy.context.contextlookup.ContextLookup",
+    "msticpy.context.geoip.GeoLiteLookup",
+    "msticpy.context.tilookup.TILookup",
+    "msticpy.data.QueryProvider",
+    "msticpy.datamodel.entities",
+    "msticpy.init.nbinit.current_providers",
+    "msticpy.init.nbinit.init_notebook",
+    "msticpy.init.nbinit.reset_ipython_exception_handler",
+    "msticpy.init.pivot.Pivot",
 }
 
+module, __getattr__, __dir__ = lazy_import(__name__, _LAZY_IMPORTS)
 
-def __getattr__(attrib: str) -> Any:
+
+def load_plugins(plugin_paths: Union[str, Iterable[str]]):
     """
-    Import and return an attribute of MSTICPy.
+    Load plugins from specified paths or configuration.
 
     Parameters
     ----------
-    attrib : str
-        The attribute name
+    plugin_paths : Union[str, Iterable[str]]
+        A path or collection of paths from which to
+        load plugins. If not supplied, msticpyconfig is checked for
+        a PluginFolders key and list of paths are read from there.
 
-    Returns
-    -------
-    Any
-        The attribute value.
-
-    Raises
-    ------
-    AttributeError
-        No attribute found.
+    Notes
+    -----
+    No attempt to load plugins is made if both parameter and
+    configuration are empty.
 
     """
-    if attrib in _DEFAULT_IMPORTS:
-        module = importlib.import_module(_DEFAULT_IMPORTS[attrib])
-        return getattr(module, attrib)
-    raise AttributeError(f"msticpy has no attribute {attrib}")
+    # pylint: disable=import-outside-toplevel
+    from .init.mp_plugins import read_plugins
 
-
-def __dir__():
-    """Return attribute list."""
-    return sorted(set(_STATIC_ATTRIBS + list(_DEFAULT_IMPORTS)))
+    read_plugins(plugin_paths)

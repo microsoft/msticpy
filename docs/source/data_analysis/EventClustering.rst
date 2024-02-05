@@ -262,9 +262,10 @@ Timeline showing clustered vs. original data
 .. code:: ipython3
 
     # Show timeline of events - clustered events
-    nbdisplay.display_timeline(data=clus_events,
-                              overlay_data=processes_on_host,
-                              title='Distinct Host Processes (bottom) and All Proceses (top)')
+    clus_events.mp_plot.timeline(
+        overlay_data=processes_on_host,
+        title='Distinct Host Processes (bottom) and All Processes (top)'
+    )
 
 
 
@@ -393,10 +394,11 @@ Comparing All Logons with Clustered results relative to Alert time line
     # ref marker indicates
     logon_data = {"Clustered": {"data": clus_logons},
                   "All Logons": {"data": host_logons}}
-    nbdisplay.display_timeline(data=logon_data,
-                               source_columns=['Account', 'LogonType'],
-                               ref_event=clus_logons.iloc[0],
-                               title='All Host Logons', legend="inline")
+    logon_data.mp_plot.timeline(
+        source_columns=['Account', 'LogonType'],
+        ref_event=clus_logons.iloc[0],
+        title='All Host Logons', legend="inline"
+    )
 
 
 .. image:: _static/EventClustering_5.png
@@ -418,14 +420,15 @@ alert timeline.
 .. code:: ipython3
 
     # Show timeline of events - all events
-    nbdisplay.display_timeline(data=clus_logons,
-                               source_columns=['Account', 'LogonType'],
-                               title='Clustered Host Logons', height=200)
+    clus_logons.mp_plot.timeline(
+        source_columns=['Account', 'LogonType'],
+        title='Clustered Host Logons',
+        height=200
+    )
     process_tree = pd.read_csv('data/process_tree.csv',
                                parse_dates=["TimeGenerated"],
                                infer_datetime_format=True)
-    nbdisplay.display_timeline(data=process_tree,
-                               title='Alert Process Session', height=200)
+    process_tree.mp_plot.timeline(title='Alert Process Session', height=200)
 
 
 
@@ -435,12 +438,13 @@ alert timeline.
 
 .. code:: ipython3
 
-    nbdisplay.display_timeline(data=clus_logons,
-                               group_by="Account",
-                               source_columns=['Account', 'LogonType'],
-                               title='Clustered Host Logons',
-                               legend="right",
-                               yaxis=True)
+    clus_logons.mp_plot.timeline(
+        group_by="Account",
+        source_columns=['Account', 'LogonType'],
+        title='Clustered Host Logons',
+        legend="right",
+        yaxis=True
+    )
 
 
 

@@ -31,7 +31,11 @@ __author__ = "Ian Hellen"
 
 @export
 class OPR(HttpTIProvider):
-    """Open PageRank Lookup."""
+    """
+    Open PageRank Lookup.
+
+    See https://www.domcop.com/openpagerank/what-is-openpagerank
+    """
 
     _BASE_URL = "https://openpagerank.com"
 
@@ -39,21 +43,17 @@ class OPR(HttpTIProvider):
         "dns": APILookupParams(
             path="/api/v1.0/getPageRank",
             params={"domains[0]": "{observable}"},
-            headers={"API-OPR": "{API_KEY}"},
+            headers={"API-OPR": "{AuthKey}"},
         )
     }
 
-    _REQUIRED_PARAMS = ["API_KEY"]
+    _REQUIRED_PARAMS = ["AuthKey"]
 
     def __init__(self, **kwargs):
         """Initialize a new instance of the class."""
         super().__init__(**kwargs)
 
         self._provider_name = self.__class__.__name__
-        print(
-            "Using Open PageRank.",
-            "See https://www.domcop.com/openpagerank/what-is-openpagerank",
-        )
 
     async def lookup_iocs_async(
         self,

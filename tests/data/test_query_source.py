@@ -16,7 +16,6 @@ import pytest_check as check
 
 from msticpy.data.core.data_providers import DriverBase, QueryProvider
 from msticpy.data.core.query_source import QuerySource
-from msticpy.data.drivers import kql_driver
 
 _SPLUNK_IMP_OK = False
 try:
@@ -181,46 +180,6 @@ class TestQuerySource(unittest.TestCase):
         int_list = [1, 2, 3, 4]
         query = q_src.create_query(
             ip_address_list=int_list, start=test_start, end=test_end
-        )
-        check_list = ", ".join([str(i) for i in int_list])
-        self.assertIn(check_list, query)
-
-    def test_cust_formatters_kql(self):
-        """Test KqlDriver formatting."""
-        kql_fmt = {
-            "datetime": kql_driver.KqlDriver._format_datetime,
-            "list": kql_driver.KqlDriver._format_list,
-        }
-
-        test_end = datetime.utcnow()
-        test_start = test_end - timedelta(days=1)
-        ip_address_list = "192.168.0.1, 192.168.0.2, 192.168.0.3"
-
-        check_dt_str = test_start.isoformat(sep="T") + "Z"
-        q_src = self.query_sources["Azure"]["list_azure_activity_for_ip"]
-        query = q_src.create_query(
-            formatters=kql_fmt,
-            start=test_start,
-            end=test_end,
-            ip_address_list=ip_address_list,
-        )
-        self.assertIn(check_dt_str, query)
-
-        query = q_src.create_query(
-            formatters=kql_fmt,
-            ip_address_list=ip_address_list,
-            start=test_start,
-            end=test_end,
-        )
-        check_list = ", ".join([f"'{ip.strip()}'" for ip in ip_address_list.split(",")])
-        self.assertIn(check_list, query)
-
-        int_list = [1, 2, 3, 4]
-        query = q_src.create_query(
-            formatters=kql_fmt,
-            ip_address_list=int_list,
-            start=test_start,
-            end=test_end,
         )
         check_list = ", ".join([str(i) for i in int_list])
         self.assertIn(check_list, query)

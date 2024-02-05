@@ -30,6 +30,8 @@ Features
    -  **IBM XForce**
    -  **MS Sentinel TI**
    -  **GreyNoise**
+   -  **CrowdSec**
+   -  **AbuseIPDB**
 
 -  Other pseudo-TI providers are also included:
 
@@ -268,6 +270,16 @@ fictitious - the format of the keys may differ from what is shown
           TenantID: 228d7b5f-4920-4f8e-872f-52072b92b651
         Primary: True
         Provider: "AzSTI"
+      CrowdSec:
+        Args:
+          AuthKey: [PLACEHOLDER]
+        Primary: True
+        Provider: "CrowdSec"
+      AbuseIPDB:
+        Args:
+          AuthKey: 1234567890
+        Primary: True
+        Provider: "AbuseIPDB"
 
 You need to tell `TILookup` to refresh its configuration.
 
@@ -281,12 +293,14 @@ of providers loaded.
 
 .. parsed-literal::
 
+
   ['OTX - AlientVault OTX Lookup. (primary)',
   'VirusTotal - VirusTotal Lookup. (primary)',
   'XForce - IBM XForce Lookup. (primary)',
   'GreyNoise - GreyNoise Lookup. (primary)',
-  'AzSTI - Azure Sentinel TI provider class. (primary)',
-  'OPR - Open PageRank Lookup. (secondary)']
+  'AzSTI - Microsoft Sentinel TI provider class. (primary)',
+  'CrowdSec - CrowdSec CTI Smoke Lookup. (primary)',
+  'AbuseIPDB - AbuseIPDB Lookup. (primary)']
 
 .. warning:: Depending on the type of account that you
   have with a provider, they will typically impose a limit
@@ -459,6 +473,8 @@ class method shows the current set of providers.
     VirusTotal
     XForce
     Intsights
+    CrowdSec
+    AbuseIPDB
 
 You can view the list of supported query types for each provider
 with the ``show_query_types=True`` parameter.
@@ -637,19 +653,19 @@ TILookup syntax
     result = ti_lookup.lookup_ioc(observable="38.75.137.9")
     ti_lookup.result_to_df(result)
 
-+-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
-|             | IoC          | IoCType  | QuerySubtype  | Result  | Details                                                                                              | RawResult                                                                                            | Reference                                                              | Status  |
-+=============+==============+==========+===============+=========+======================================================================================================+======================================================================================================+========================================================================+=========+
-| OTX         | 38.75.137.9  | ipv4     | None          | True    | {'pulse_count': 1, 'names': ['Underminer EK'], 'tags': [[]], 'references': [['\https://blog.malw...  | {'sections': ['general', 'geo', 'reputation', 'url_list', 'passive_dns', 'malware', 'nids_list',...  | \https://otx.alienvault.com/api/v1/indicators/IPv4/38.75.137.9/general | 200     |
-+-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
-| VirusTotal  | 38.75.137.9  | ipv4     | None          | True    | {'verbose_msg': 'IP address in dataset', 'response_code': 1, 'detected_urls': ['\http://38.75.13...  | {'asn': 63023, 'undetected_urls': [['\http://38.75.137.9:9088/', '3d5edb0e0bb726e414a9b76dac619c...  | \https://www.virustotal.com/vtapi/v2/ip-address/report                 | 200     |
-+-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
-| XForce      | 38.75.137.9  | ipv4     | None          | True    | {'score': 1, 'cats': {}, 'categoryDescriptions': {}, 'reason': 'Regional Internet Registry', 're...  | {'ip': '38.75.137.9', 'history': [{'created': '2012-03-22T07:26:00.000Z', 'reason': 'Regional In...  | \https://api.xforce.ibmcloud.com/ipr/38.75.137.9                       | 200     |
-+-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
-| AzSTI       | 38.75.137.9  | ipv4     | None          | False   | 0 rows returned.                                                                                     | None                                                                                                 | None                                                                   | -1      |
-+-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
-| GreyNoise   | 38.75.137.9  | ipv4     | None          | False   | Not found.                                                                                           | <Response [404]>                                                                                     | https://api.greynoise.io/v3/community/38.75.137.9                      | 404     |
-+-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
+
++------------+-------------+--------------+---------+--------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+--------+
+|            | IoC         | IoCType      | Result  | Details                                                                                                | RawResult                                                                                            | Reference                                                              | Status |
++============+=============+==============+=========+========================================================================================================+======================================================================================================+========================================================================+========+
+| OTX        | 38.75.137.9 | ipv4         | True    | "{'pulse_count': 1, 'names': ['Underminer EK'], 'tags': [[]], 'references': [['\https://blog.malw..."  | {'sections': ['general', 'geo', 'reputation', 'url_list', 'passive_dns', 'malware', 'nids_list',...} | \https://otx.alienvault.com/api/v1/indicators/IPv4/38.75.137.9/general | 200    |
+| VirusTotal | 38.75.137.9 | ipv4         | True    | "{'verbose_msg': 'IP address in dataset', 'response_code': 1, 'detected_urls': ['\http://38.75.13..."  | {'asn': 63023, 'undetected_urls': [['\http://38.75.137.9:9088/', '3d5edb0e0bb726e414a9b76dac619c...} | \https://www.virustotal.com/vtapi/v2/ip-address/report                 | 200    |
+| XForce     | 38.75.137.9 | ipv4         | True    | "{'score': 1, 'cats': {}, 'categoryDescriptions': {}, 'reason': 'Regional Internet Registry', 're..."  | {'ip': '38.75.137.9', 'history': [{'created': '2012-03-22T07:26:00.000Z', 'reason': 'Regional In...} | \https://api.xforce.ibmcloud.com/ipr/38.75.137.9                       | 200    |
+| AzSTI      | 38.75.137.9 | ipv4         | False   | "0 rows returned."                                                                                     | None                                                                                                 | None                                                                   | -1     |
+| GreyNoise  | 38.75.137.9 | ipv4         | False   | "Not found."                                                                                           | &lt;Response [404]&gt;                                                                               | https://api.greynoise.io/v3/community/38.75.137.9                      | 404    |
+| CrowdSec   | 38.75.137.9 | ipv4         | False   | "{'Background Noise': 0, 'Overall Score': 0, 'First Seen': '2021-12-26T18:45:00+00:00', 'Last See..."  | {'ip_range_score': 0, 'ip': '38.75.137.9', 'ip_range': '38.75.136.0/23', 'as_name': 'AS-GLOBALTE...} | https://cti.api.crowdsec.net/v2/smoke/38.75.137.9                      | 200    |
+| AbuseIPDB  | 38.75.137.9 | ipv4         | True    | "{'countryCode': 'US', 'usage': 'Data Center/Web Hosting/Transit', 'isp': 'GlobalTeleHost Corp.',...}" | {'data': {'ipAddress': '38.75.137.9', 'isPublic': True, 'ipVersion': 4, 'isWhitelisted': None, ...}} | https://api.abuseipdb.com/api/v2/check                                 | 200    |
++------------+-------------+--------------+---------+--------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+--------+
+
 
 Pivot function syntax
 
@@ -755,15 +771,15 @@ Example.
 +---+-----------------+----------+---------------+----------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
 |   | IoC             | IoCType  | QuerySubtype  | Reference                              | Result  | Status  | Details                                                                                              | RawResult                                                                                            | Provider  |
 +===+=================+==========+===============+========================================+=========+=========+======================================================================================================+======================================================================================================+===========+
-| 0 | 213.159.214.86  | ipv4     | None          | ThreatIntelligenceIndicator  | whe...  | True    | 0.0     | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': '0164ADB4A6CB7A79FBAE7BE90A43050B090A18364E3855048AC86B9DA5E0A92B', 'TimeGenerat...  | AzSTI     |
+| 0 | 213.159.214.86  | ipv4     | None          | ThreatIntelligenceIndicator \| whe...  | True    | 0.0     | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': '0164ADB4A6CB7A79FBAE7BE90A43050B090A18364E3855048AC86B9DA5E0A92B', 'TimeGenerat...  | AzSTI     |
 +---+-----------------+----------+---------------+----------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
-| 1 | 40.113.200.201  | ipv4     | None          | ThreatIntelligenceIndicator  | whe...  | False   | -1.0    | 0 rows returned.                                                                                     | NaN                                                                                                  | AzSTI     |
+| 1 | 40.113.200.201  | ipv4     | None          | ThreatIntelligenceIndicator \| whe...  | False   | -1.0    | 0 rows returned.                                                                                     | NaN                                                                                                  | AzSTI     |
 +---+-----------------+----------+---------------+----------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
-| 2 | 91.219.29.81    | ipv4     | None          | ThreatIntelligenceIndicator  | whe...  | True    | 0.0     | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': '3F458D91A21866C9037B99D997379A6906573766C0C2F8FB45327A6A15676A0D', 'TimeGenerat...  | AzSTI     |
+| 2 | 91.219.29.81    | ipv4     | None          | ThreatIntelligenceIndicator \| whe...  | True    | 0.0     | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': '3F458D91A21866C9037B99D997379A6906573766C0C2F8FB45327A6A15676A0D', 'TimeGenerat...  | AzSTI     |
 +---+-----------------+----------+---------------+----------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
-| 3 | 89.108.83.196   | ipv4     | None          | ThreatIntelligenceIndicator  | whe...  | True    | 0.0     | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': 'C3CA82D5B30A34F4BD6188C9DCFAD9E46D3C0CC45CC4FD969DA3A398DC34B1AE', 'TimeGenerat...  | AzSTI     |
+| 3 | 89.108.83.196   | ipv4     | None          | ThreatIntelligenceIndicator \| whe...  | True    | 0.0     | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': 'C3CA82D5B30A34F4BD6188C9DCFAD9E46D3C0CC45CC4FD969DA3A398DC34B1AE', 'TimeGenerat...  | AzSTI     |
 +---+-----------------+----------+---------------+----------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
-| 4 | 192.42.116.41   | ipv4     | None          | ThreatIntelligenceIndicator  | whe...  | True    | 0.0     | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': '2F321C9D2593B6EF59DEB64B6CB209F375529C429F0DF463D639784E7353AA5D', 'TimeGenerat...  | AzSTI     |
+| 4 | 192.42.116.41   | ipv4     | None          | ThreatIntelligenceIndicator \| whe...  | True    | 0.0     | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': '2F321C9D2593B6EF59DEB64B6CB209F375529C429F0DF463D639784E7353AA5D', 'TimeGenerat...  | AzSTI     |
 +---+-----------------+----------+---------------+----------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
 
 

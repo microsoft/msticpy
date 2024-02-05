@@ -12,9 +12,12 @@ for interactively managing settings in Jupyter notebooks.
 It use the ipywidgets package.
 
 """
+from ..lazy_importer import lazy_import
 
-from .mp_config_control import MpConfigControls
+_LAZY_IMPORTS = {
+    "msticpy.config.mp_config_control.MpConfigControls",
+    "msticpy.config.mp_config_edit.MpConfigEdit",
+    "msticpy.config.mp_config_file.MpConfigFile",
+}
 
-# flake8: noqa: F403
-from .mp_config_edit import MpConfigEdit
-from .mp_config_file import MpConfigFile
+module, __getattr__, __dir__ = lazy_import(__name__, _LAZY_IMPORTS)

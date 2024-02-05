@@ -14,6 +14,7 @@ import respx
 
 from msticpy.auth.azure_auth_core import AzureCloudConfig
 from msticpy.context.azure import MicrosoftSentinel
+from msticpy.data import QueryProvider
 
 # pylint: disable=protected-access
 
@@ -180,7 +181,7 @@ _TEST_URL_LOOKUP = [
 def test_ws_details_from_url(url, expected, wk_space, monkeypatch):
     """Testing retrieving workspace details from portal url."""
     del wk_space
-    login_endpoint = AzureCloudConfig().endpoints.active_directory
+    login_endpoint = AzureCloudConfig().authority_uri
     respx.get(re.compile(f"{login_endpoint}.*")).respond(200, json=_TENANT_LOOKUP_RESP)
 
     _patch_qry_prov(monkeypatch)
@@ -352,7 +353,7 @@ def test_get_resource_id_bad():
 @respx.mock
 def test_fail_tenantid_lookup(url, expected, wk_space, monkeypatch):
     """Test when tenant ID lookup fails."""
-    login_endpoint = AzureCloudConfig().endpoints.active_directory
+    login_endpoint = AzureCloudConfig().authority_uri
     respx.get(re.compile(f"{login_endpoint}.*")).respond(404, json={})
 
     _patch_qry_prov(monkeypatch)
@@ -380,7 +381,8 @@ def test_param_checks():
 
 
 def _patch_qry_prov(patcher):
-    qry_prov = getattr(MicrosoftSentinel, "_RES_GRAPH_PROV")
+    qry_prov = QueryProvider("ResourceGraph")
+    setattr(MicrosoftSentinel, "_RES_GRAPH_PROV", qry_prov)
     qry_prov._query_provider._loaded = True
     qry_prov._query_provider._connected = True
     patcher.setattr(qry_prov, "connect", lambda: True)

@@ -4,13 +4,16 @@
 # license information.
 # --------------------------------------------------------------------------
 """MDATP OData Driver class."""
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import pandas as pd
 
 from ..._version import VERSION
-from ...auth.azure_auth import AzureCloudConfig
-from ...auth.cloud_mappings import get_defender_endpoint, get_m365d_endpoint
+from ...auth.cloud_mappings import (
+    get_defender_endpoint,
+    get_m365d_endpoint,
+    get_m365d_login_endpoint,
+)
 from ...common.data_utils import ensure_df_datetimes
 from ...common.utility import export
 from ..core.query_defns import DataEnvironment
@@ -22,12 +25,14 @@ __author__ = "Pete Bryan"
 
 @export
 class MDATPDriver(OData):
-    """KqlDriver class to retreive date from MS Defender APIs."""
+    """KqlDriver class to retrieve date from MS Defender APIs."""
 
     CONFIG_NAME = "MicrosoftDefender"
     _ALT_CONFIG_NAMES = ["MDATPApp"]
 
-    def __init__(self, connection_str: str = None, instance: str = "Default", **kwargs):
+    def __init__(
+        self, connection_str: Optional[str] = None, instance: str = "Default", **kwargs
+    ):
         """
         Instantiate MSDefenderDriver and optionally connect.
 
@@ -50,9 +55,7 @@ class MDATPDriver(OData):
         api_uri, oauth_uri, api_suffix = _select_api_uris(
             self.data_environment, self.cloud
         )
-        self.add_query_filter("data_environments", "MDE")
-        self.add_query_filter("data_environments", "M365D")
-        self.add_query_filter("data_environments", "MDATP")
+        self.add_query_filter("data_environments", ("MDE", "M365D", "MDATP"))
 
         self.req_body = {
             "client_id": None,
@@ -65,18 +68,16 @@ class MDATPDriver(OData):
         self.api_ver = "api"
         self.api_suffix = api_suffix
         if self.data_environment == DataEnvironment.M365D:
-            self.scopes = ["https://api.security.microsoft.com/AdvancedHunting.Read"]
+            self.scopes = [f"{api_uri}/AdvancedHunting.Read"]
         else:
-            self.scopes = [
-                "https://api.securitycenter.microsoft.com/AdvancedQuery.Read"
-            ]
+            self.scopes = [f"{api_uri}/AdvancedQuery.Read"]
 
         if connection_str:
             self.current_connection = connection_str
             self.connect(connection_str)
 
     def query(
-        self, query: str, query_source: QuerySource = None, **kwargs
+        self, query: str, query_source: Optional[QuerySource] = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
@@ -91,7 +92,7 @@ class MDATPDriver(OData):
         Returns
         -------
         Union[pd.DataFrame, results.ResultSet]
-            A DataFrame (if successfull) or
+            A DataFrame (if successful) or
             the underlying provider result if an error.
 
         """
@@ -115,18 +116,15 @@ class MDATPDriver(OData):
 
 def _select_api_uris(data_environment, cloud):
     """Return API and login URIs for selected provider type."""
-    cloud_config = AzureCloudConfig()
-    login_uri = cloud_config.endpoints.active_directory
+    login_uri = get_m365d_login_endpoint(cloud)
     if data_environment == DataEnvironment.M365D:
-        base_url = get_m365d_endpoint(cloud)
         return (
-            base_url,
-            f"{login_uri}/{{tenantId}}/oauth2/token",
+            get_m365d_endpoint(cloud),
+            f"{login_uri}{{tenantId}}/oauth2/token",
             "/advancedhunting/run",
         )
-    base_url = get_defender_endpoint(cloud)
     return (
-        base_url,
-        f"{login_uri}/{{tenantId}}/oauth2/token",
+        get_defender_endpoint(cloud),
+        f"{login_uri}{{tenantId}}/oauth2/token",
         "/advancedqueries/run",
     )

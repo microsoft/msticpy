@@ -54,7 +54,7 @@ defaults:
             VMRegion = Region_s'
 sources:
   az_net_analytics:
-    description: All Azure Network Analytics Data
+    description: Returns all Azure Network Flow (NSG) Data for a given host
     metadata:
       pivot:
         short_name: net_flows_depr

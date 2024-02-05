@@ -13,7 +13,7 @@ from ...common.exceptions import MsticpyParameterError, MsticpyUserConfigError
 from ...common.provider_settings import ProviderArgs, get_provider_settings
 from ...common.utility import export
 from ..core.query_defns import DataEnvironment
-from .kql_driver import KqlDriver, QuerySource
+from .kql_driver import DriverProps, KqlDriver, QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -46,6 +46,7 @@ class KustoDriver(KqlDriver):
         """
         super().__init__(connection_str=connection_str, **kwargs)
         self.environment = kwargs.get("data_environment", DataEnvironment.Kusto)
+        self.set_driver_property(DriverProps.EFFECTIVE_ENV, DataEnvironment.Kusto.name)
         self._connected = True
         self._kusto_settings: KustoClusterSettings = _get_kusto_settings()
         self._cluster_uri = None
@@ -134,7 +135,7 @@ class KustoDriver(KqlDriver):
         Returns
         -------
         Union[pd.DataFrame, results.ResultSet]
-            A DataFrame (if successfull) or
+            A DataFrame (if successful) or
             the underlying provider result if an error.
 
         """
@@ -214,12 +215,12 @@ class KustoDriver(KqlDriver):
                 "of your msticyconfig.yaml",
                 "Expected format:",
                 "Kusto[-instance_name]:",
-                "  args:",
+                "  Args:",
                 "    Cluster: cluster_uri",
                 "    Integrated: True",
                 "or",
                 "Kusto[-instance_name]:",
-                "  args:",
+                "  Args:",
                 "    Cluster: cluster_uri",
                 "    TenantId: tenant_uuid",
                 "    ClientId: tenant_uuid",

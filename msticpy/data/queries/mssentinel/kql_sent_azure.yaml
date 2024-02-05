@@ -20,7 +20,7 @@ defaults:
       default: ""
 sources:
   list_aad_signins_for_account:
-    description: Lists Azure AD Signins for Account
+    description: Returns Azure AD Signins for Account
     metadata:
       pivot:
         short_name: signins
@@ -57,7 +57,7 @@ sources:
         type: str
         default: "!!DEFAULT!!"
   list_aad_signins_for_ip:
-    description: Lists Azure AD Signins for an IP Address
+    description: Returns Azure AD Signins for an IP Address
     metadata:
       pivot:
         short_name: signins
@@ -79,7 +79,7 @@ sources:
         description: The IP Address or list of Addresses
         type: list
   list_azure_activity_for_account:
-    description: Lists Azure Activity for Account
+    description: Returns Azure Activity for Account
     metadata:
       pivot:
         short_name: activity
@@ -107,7 +107,7 @@ sources:
         description: The account name to find
         type: str
   list_azure_activity_for_ip:
-    description: Lists Azure Activity for Caller IP Address(es)
+    description: Returns Azure Activity for Caller IP Address(es)
     metadata:
       pivot:
         short_name: activity
@@ -129,7 +129,7 @@ sources:
         description: The IP Address or list of Addresses
         type: list
   list_azure_activity_for_resource:
-    description: Lists Azure Activity for a Resource
+    description: Returns Azure Activity for an Azure Resource ID
     metadata:
       pivot:
         short_name: activity
@@ -170,7 +170,7 @@ sources:
         type: str
         default: SigninLogs
   list_storage_ops_for_ip:
-    description:
+    description: Returns Storage Operations for an IP Address
     metadata:
       pivot:
         short_name: storage_ops
@@ -203,7 +203,7 @@ sources:
         description: Client IP Address
         type: str
   list_storage_ops_for_hash:
-    description:
+    description: Returns Azure Storage Operations for an MD5 file hash
     args:
       query: '
         union
@@ -233,7 +233,7 @@ sources:
         description: MD5 hash of file
         type: str
   get_vmcomputer_for_ip:
-    description: Gets latest VMComputer record for IPAddress
+    description: Returns most recent VMComputer record for IPAddress
     metadata:
       pivot:
         short_name: vmcomputer
@@ -254,7 +254,7 @@ sources:
         description: The IP Address of the VM
         type: str
   get_vmcomputer_for_host:
-    description: Gets latest VMComputer record for Host
+    description: Returns most recent VMComputer record for Host
     metadata:
       pivot:
         short_name: vmcomputer

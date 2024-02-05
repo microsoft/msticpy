@@ -7,7 +7,7 @@ The ``OSQuery`` data provider can read OSQuery log files
 and provide convenient query functions for each OSQuery "table"
 (or event type) contained in the logs.
 
-The provide can read in one or more log files, or multiple log files
+The provider can read in one or more log files, or multiple log files
 in multiple folders. The files are read, converted to pandas
 DataFrames and grouped by table/event. In addition, date fields
 within the data are converted to pandas Timestamp format.
@@ -16,7 +16,7 @@ within the data are converted to pandas Timestamp format.
 
     qry_prov = mp.QueryProvider("OSQueryLogs", data_paths=["~/my_logs"])
     qry_prov.connect()
-    df_processes = qry_prov.processes()
+    df_processes = qry_prov.os_query.processes()
 
 The query provider query functions will ignore parameters and do
 no further filtering. You can use pandas to do additional filtering
@@ -152,7 +152,7 @@ from the logs.
     qry_prov.osquery.processes()
 
 ==================================  ================  =========================  =====  ==========  =========  ======  ========  ========  =====  ==========
-name                                hostIdentifier    unixTime                    ...   username    cmdline      euid  name_       parent    uid  username
+name                                hostIdentifier    unixTime                    ...   username    cmdline      euid  tname\_     parent    uid  username
 ==================================  ================  =========================  =====  ==========  =========  ======  ========  ========  =====  ==========
 pack_osquery-custom-pack_processes  jumpvm            2023-03-16 03:08:58+00:00   ...   LOGIN                       0  kthreadd         2      0  root
 pack_osquery-custom-pack_processes  jumpvm            2023-03-16 03:08:58+00:00   ...   LOGIN                       0  kthreadd         2      0  root

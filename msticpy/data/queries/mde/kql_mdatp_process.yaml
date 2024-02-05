@@ -2,7 +2,7 @@ metadata:
   version: 1
   description: MDATP Queries
   data_environments: [MDATP, MDE, M365D, LogAnalytics]
-  data_families: [MDATP, MDE]
+  data_families: [MDE, MDATP]
   tags: ["process"]
 defaults:
   metadata:
@@ -24,7 +24,7 @@ defaults:
       default: ""
 sources:
   list_host_processes:
-    description: Lists all process creations for a host
+    description: Return all process creations for a host for the specified time range
     metadata:
       pivot:
         short_name: processes
@@ -41,7 +41,7 @@ sources:
         description: Name of host
         type: str
   process_creations:
-    description: Lists all processes created by name or hash
+    description: Return all processes with matching name or hash (all hosts)
     metadata:
     args:
       query: '
@@ -55,7 +55,7 @@ sources:
         description: Identifier for the process, filename, or hash
         type: str
   process_for_hash:
-    description: Lists all processes created for a file hash
+    description: Return all processes with a matching hash (all hosts)
     metadata:
       pivot:
         short_name: processes_by_hash
@@ -71,7 +71,7 @@ sources:
         description: File hash of the process
         type: str
   process_paths:
-    description: Lists all processes created from a path
+    description: Return all processes with a matching path (part path) (all hosts)
     metadata:
       pivot:
         short_name: processes_by_path
@@ -87,7 +87,7 @@ sources:
         description: full or partial path
         type: str
   process_cmd_line:
-    description: Lists all processes with a command line containing a string
+    description: Lists all processes with a command line containing a string (all hosts)
     metadata:
       pivot:
         short_name: processes_by_cmdline

@@ -79,6 +79,8 @@ class Mailbox(Entity):
         self.MailboxPrimaryAddress = src_event.get("MailboxPrimaryAddress")
         self.Upn = src_event.get("Upn")
         self.DisplayName = src_event.get("DisplayName")
+        self.ExternalDirectoryObjectId = src_event.get("ExternalDirectoryObjectId")
+        self.RiskLevel = src_event.get("RiskLevel")
 
     @property
     def description_str(self):

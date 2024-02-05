@@ -27,6 +27,9 @@ Individual Data Environments
    data_acquisition/DataProv-Kusto
    data_acquisition/DataProv-Cybereason
    data_acquisition/DataProv-OSQuery
+   data_acquisition/DataProv-Velociraptor
+   data_acquisition/DataProv-MSSentinel-Legacy
+   data_acquisition/DataProv-Kusto-Legacy
 
 
 Built-in Data Queries
@@ -54,4 +57,4 @@ Contributing a Data Provider
 .. toctree::
    :maxdepth: 2
 
-   data_acquisition/WritingADataProvider
+   extending/WritingDataProviders

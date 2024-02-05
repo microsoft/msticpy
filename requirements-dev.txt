@@ -8,12 +8,13 @@ docutils<0.20.0
 filelock>=3.0.0
 flake8>=3.8.4
 isort>=5.10.1
+jsonschema>=4.17.3
 markdown>=3.3.4
 mccabe>=0.6.1
 mypy>=0.812
 nbdime>=2.1.0
 nbconvert>=6.1.0
-pandas>=1.4.0, <2.0.0
+pandas>=1.4.0, <3.0.0
 pep8-naming>=0.10.0
 pep8>=1.7.1
 pipreqs>=0.4.9
@@ -28,7 +29,7 @@ pytest-check>=1.0.1
 pytest-cov>=2.11.1
 pytest-xdist>=2.5.0
 pytest>=5.0.1
-readthedocs-sphinx-ext==2.2.0
+readthedocs-sphinx-ext==2.2.2
 responses>=0.13.2
 respx>=0.20.1
 sphinx-rtd-theme>=1.0.0

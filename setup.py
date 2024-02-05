@@ -4,13 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Setup script for msticpy."""
+
 import re
 
 import setuptools
 
 with open("msticpy/_version.py", "r", encoding="utf-8") as fd:
     v_match = re.search(r'^VERSION\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE)
-    __version__ = v_match.group(1) if v_match else "no version"
+    __version__ = v_match[1] if v_match else "no version"
 
 with open("requirements.txt", "r", encoding="utf-8") as fh:
     INSTALL_REQUIRES = fh.readlines()
@@ -41,12 +42,14 @@ EXTRAS = {
         "azure-storage-blob>=12.5.0",
         "azure-mgmt-resourcegraph>=8.0.0",
     ],
-    "keyvault": [
-        "azure-keyvault-secrets>=4.0.0",
-        "azure-mgmt-keyvault>=2.0.0",
-        "keyring>=13.2.1",  # needed by Key Vault package
+    "azure_query": [],
+    "keyvault": [],
+    "ml": [
+        "scikit-learn>=1.0.0",
+        "scipy>=1.1.0",
+        "statsmodels>=0.11.1",
+        "matplotlib>=3.0.0",
     ],
-    "ml": ["scikit-learn>=1.0.0", "scipy>=1.1.0", "statsmodels>=0.11.1"],
     "sql2kql": ["mo-sql-parsing>=8, <9.0.0"],
     "riskiq": ["passivetotal>=2.5.3"],
     "panel": ["panel>=0.14.4"],
@@ -61,7 +64,7 @@ EXTRAS["all"] = sorted(
     _combine_extras(list({name for name in EXTRAS if name != "dev"}))
 )
 
-EXTRAS["azure"] = sorted(_combine_extras(["_azure_core", "keyvault"]))
+EXTRAS["azure"] = sorted(_combine_extras(["_azure_core", "keyvault", "azure_query"]))
 EXTRAS["test"] = sorted(_combine_extras(["all", "dev"]))
 EXTRAS["azsentinel"] = sorted(_combine_extras(["azure", "kql", "keyvault"]))
 EXTRAS["azuresentinel"] = sorted(_combine_extras(["azure", "kql", "keyvault"]))

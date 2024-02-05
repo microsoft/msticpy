@@ -386,7 +386,7 @@ class VTLookupV3:
         observable: str,
         vt_type: str,
         relationship: str,
-        limit: int = None,
+        limit: Optional[int] = None,
         all_props: bool = False,
         full_objects: bool = False,
     ):
@@ -506,8 +506,9 @@ class VTLookupV3:
         observable: str,
         vt_type: str,
         relationship: str,
-        limit: int = None,
+        limit: Optional[int] = None,
         all_props: bool = False,
+        full_objects: bool = False,
     ) -> pd.DataFrame:
         """
         Look up single IoC observable relationship links.
@@ -524,6 +525,8 @@ class VTLookupV3:
             Relations limit
         all_props : bool, optional
             If True, return all properties, by default False
+        full_objects : bool, optional
+            If True, return the full object rather than just ID links.
 
         Returns
         -------
@@ -543,14 +546,23 @@ class VTLookupV3:
         try:
             return _make_sync(
                 self._lookup_ioc_relationships_async(
-                    observable, vt_type, relationship, limit, all_props=all_props
+                    observable,
+                    vt_type,
+                    relationship,
+                    limit,
+                    all_props=all_props,
+                    full_objects=full_objects,
                 )
             )
         finally:
             self._vt_client.close()
 
     def lookup_ioc_related(
-        self, observable: str, vt_type: str, relationship: str, limit: int = None
+        self,
+        observable: str,
+        vt_type: str,
+        relationship: str,
+        limit: Optional[int] = None,
     ) -> pd.DataFrame:
         """
         Look single IoC observable related items.
@@ -675,7 +687,7 @@ class VTLookupV3:
         relationship: str,
         observable_column: str = ColumnNames.TARGET.value,
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,
-        limit: int = None,
+        limit: Optional[int] = None,
         all_props: bool = False,
     ) -> pd.DataFrame:
         """

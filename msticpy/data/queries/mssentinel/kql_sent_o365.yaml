@@ -3,7 +3,7 @@ metadata:
   description: Kql Sentinel Azure
   data_environments: [LogAnalytics]
   data_families: [Office365]
-  tags: ['office', 'o365']
+  tags: ['office', 'o365', 'sharepoint', 'exchange', 'onedrive', 'teams']
 defaults:
   metadata:
     data_source: 'OfficeActivity'
@@ -20,7 +20,7 @@ defaults:
         default: ''
 sources:
   list_activity_for_account:
-    description: Lists Office Activity for Account
+    description: Lists Office/O365 Activity for Account
     metadata:
       pivot:
         short_name: activity
@@ -48,7 +48,7 @@ sources:
         description: The account name to find
         type: str
   list_activity_for_ip:
-    description: Lists Office Activity for Caller IP Address(es)
+    description: Lists Office/O365 Activity for Caller IP Address(es)
     metadata:
       pivot:
         short_name: activity
@@ -70,7 +70,7 @@ sources:
         description: The IP Address or list of Addresses
         type: list
   list_activity_for_resource:
-    description: Lists Office Activity for a Resource
+    description: Lists Office/O365 Activity for a Resource (OfficeObjectId)
     metadata:
       pivot:
         short_name: activity

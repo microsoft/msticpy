@@ -1,0 +1,5 @@
+sources:
+  query1:
+    description: Description for the first query
+    args:
+      query: MyQuery

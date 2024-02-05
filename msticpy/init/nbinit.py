@@ -59,7 +59,6 @@ import pandas as pd
 from IPython import get_ipython
 from IPython.core.interactiveshell import InteractiveShell
 from IPython.display import HTML, display
-from matplotlib import MatplotlibDeprecationWarning
 
 try:
     import seaborn as sns
@@ -67,10 +66,15 @@ except ImportError:
     sns = None
 
 from .._version import VERSION
-from ..auth.azure_auth_core import AzureCliStatus, check_cli_credentials
 from ..common.check_version import check_version
 from ..common.exceptions import MsticpyException, MsticpyUserError
-from ..common.pkg_config import _HOME_PATH, get_config, refresh_config, validate_config
+from ..common.pkg_config import _HOME_PATH
+from ..common.settings import (
+    current_config_path,
+    get_config,
+    refresh_config,
+    validate_config,
+)
 from ..common.utility import (
     check_and_install_missing_packages,
     check_kwargs,
@@ -79,8 +83,7 @@ from ..common.utility import (
     search_for_file,
     unit_testing,
 )
-from .azure_ml_tools import check_versions as check_versions_aml
-from .azure_ml_tools import is_in_aml, populate_config_to_mp_config
+from .azure_ml_tools import check_aml_settings, is_in_aml, populate_config_to_mp_config
 from .azure_synapse_tools import init_synapse, is_in_synapse
 from .pivot import Pivot
 from .user_config import load_user_defaults
@@ -180,10 +183,8 @@ _NB_IMPORTS = [
     dict(pkg="IPython.display", tgt="display"),
     dict(pkg="IPython.display", tgt="HTML"),
     dict(pkg="IPython.display", tgt="Markdown"),
-    dict(pkg="ipywidgets", alias="widgets"),
+    # dict(pkg="ipywidgets", alias="widgets"),
     dict(pkg="pathlib", tgt="Path"),
-    dict(pkg="matplotlib.pyplot", alias="plt"),
-    dict(pkg="matplotlib", tgt="MatplotlibDeprecationWarning"),
     dict(pkg="numpy", alias="np"),
 ]
 if sns is not None:
@@ -192,28 +193,26 @@ if sns is not None:
 _MP_IMPORTS = [
     dict(pkg="msticpy"),
     dict(pkg="msticpy.data", tgt="QueryProvider"),
-    dict(pkg="msticpy.vis.foliummap", tgt="FoliumMap"),
-    dict(pkg="msticpy.context", tgt="TILookup"),
-    dict(pkg="msticpy.context", tgt="GeoLiteLookup"),
-    dict(pkg="msticpy.context", tgt="IPStackLookup"),
-    dict(pkg="msticpy.transform", tgt="IoCExtract"),
+    # dict(pkg="msticpy.vis.foliummap", tgt="FoliumMap"),
+    # dict(pkg="msticpy.context", tgt="TILookup"),
+    # dict(pkg="msticpy.context", tgt="GeoLiteLookup"),
+    # dict(pkg="msticpy.context", tgt="IPStackLookup"),
+    # dict(pkg="msticpy.transform", tgt="IoCExtract"),
     dict(pkg="msticpy.common.utility", tgt="md"),
     dict(pkg="msticpy.common.utility", tgt="md_warn"),
     dict(pkg="msticpy.common.wsconfig", tgt="WorkspaceConfig"),
     dict(pkg="msticpy.init.pivot", tgt="Pivot"),
     dict(pkg="msticpy.datamodel", tgt="entities"),
     dict(pkg="msticpy.init", tgt="nbmagics"),
-    dict(pkg="msticpy.nbtools", tgt="SecurityAlert"),
+    # dict(pkg="msticpy.nbtools", tgt="SecurityAlert"),
     dict(pkg="msticpy.vis", tgt="mp_pandas_plot"),
-    dict(pkg="msticpy.vis", tgt="nbdisplay"),
+    # dict(pkg="msticpy.vis", tgt="nbdisplay"),
     dict(pkg="msticpy.init", tgt="mp_pandas_accessors"),
-    dict(pkg="msticpy", tgt="nbwidgets"),
+    # dict(pkg="msticpy", tgt="nbwidgets"),
 ]
 
 _MP_IMPORT_ALL: List[Dict[str, str]] = [
     dict(module_name="msticpy.datamodel.entities"),
-    dict(module_name="msticpy.nbtools"),
-    dict(module_name="msticpy.sectools"),
 ]
 # pylint: enable=use-dict-literal
 
@@ -225,53 +224,12 @@ _AZNB_GUIDE = (
     "Please run the <i>Getting Started Guide for Azure Sentinel "
     + "ML Notebooks</i> notebook."
 )
-_AZ_CLI_WIKI_URI = (
-    "https://github.com/Azure/Azure-Sentinel-Notebooks/wiki/"
-    "Caching-credentials-with-Azure-CLI"
-)
-_CLI_WIKI_MSSG_GEN = (
-    f"For more information see <a href='{_AZ_CLI_WIKI_URI}'>"
-    "Caching credentials with Azure CLI</>"
-)
-_CLI_WIKI_MSSG_SHORT = (
-    f"see <a href='{_AZ_CLI_WIKI_URI}'>Caching credentials with Azure CLI</>"
-)
 
 current_providers: Dict[str, Any] = {}  # pylint: disable=invalid-name
 
 _SYNAPSE_KWARGS = ["identity_type", "storage_svc_name", "tenant_id", "cloud"]
 
 
-def _pr_output(*args):
-    """Output to IPython display or print."""
-    if not _VERBOSITY():
-        return
-    if is_ipython():
-        display(HTML(" ".join([*args, "<br>"]).replace("\n", "<br>")))
-    else:
-        print(*args)
-
-
-def _err_output(*args):
-    """Output to IPython display or print - always output regardless of verbosity."""
-    if is_ipython():
-        display(HTML(" ".join([*args, "<br>"]).replace("\n", "<br>")))
-        display(
-            HTML(
-                "For more info and options run:"
-                "<pre>import msticpy as mp\nhelp(mp.nbinit)</pre>"
-            )
-        )
-    else:
-        print(*args)
-        print(
-            "\nFor more info and options run:",
-            "\n    import msticpy as mp",
-            "\n    help(mp.nbinit)",
-        )
-
-
-# pylint: disable=too-many-statements
 def init_notebook(
     namespace: Optional[Dict[str, Any]] = None,
     def_imports: str = "all",
@@ -395,8 +353,6 @@ def init_notebook(
     https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/ConfiguringNotebookEnvironment.ipynb
 
     """
-    global current_providers  # pylint: disable=global-statement, invalid-name
-
     if namespace is None and get_ipython():
         namespace = get_ipython().user_global_ns
     else:
@@ -425,15 +381,10 @@ def init_notebook(
     logger.info("Starting Notebook initialization")
     # Check Azure ML environment
     if _detect_env("aml", **kwargs) and is_in_aml():
-        check_versions_aml(*_get_aml_globals(namespace))
+        check_aml_settings(*_get_aml_globals(namespace))
     else:
         # If not in AML check and print version status
-        stdout_cap = io.StringIO()
-        with redirect_stdout(stdout_cap):
-            check_version()
-            output = stdout_cap.getvalue()
-            _pr_output(output)
-            logger.info(output)
+        _check_msticpy_version()
 
     if _detect_env("synapse", **kwargs) and is_in_synapse():
         synapse_params = {
@@ -443,14 +394,9 @@ def init_notebook(
 
     # Handle required packages and imports
     _pr_output("Processing imports....")
-    stdout_cap = io.StringIO()
-    with redirect_stdout(stdout_cap):
-        imp_ok = _global_imports(
-            namespace, additional_packages, user_install, extra_imports, def_imports
-        )
-        output = stdout_cap.getvalue()
-        _pr_output(output)
-        logger.info(output)
+    imp_ok = _import_packages(
+        namespace, def_imports, additional_packages, extra_imports, user_install
+    )
 
     # Configuration check
     if no_config_check:
@@ -458,7 +404,6 @@ def init_notebook(
     else:
         _pr_output("Checking configuration....")
         conf_ok = _get_or_create_config()
-        _check_azure_cli_status()
 
     # Notebook options
     _pr_output("Setting notebook options....")
@@ -475,27 +420,10 @@ def init_notebook(
         )
 
     # load pivots
-    stdout_cap = io.StringIO()
-    with redirect_stdout(stdout_cap):
-        _pr_output("Loading pivots.")
-        _load_pivots(namespace=namespace)
-        output = stdout_cap.getvalue()
-        _pr_output(output)
-        logger.info(output)
+    _load_pivot_functions(namespace)
 
     # User defaults
-    stdout_cap = io.StringIO()
-    with redirect_stdout(stdout_cap):
-        _pr_output("Loading user defaults.")
-        prov_dict = load_user_defaults()
-        output = stdout_cap.getvalue()
-        _pr_output(output)
-        logger.info(output)
-
-    if prov_dict:
-        namespace.update(prov_dict)
-        current_providers = prov_dict
-        _pr_output("Auto-loaded components:", ", ".join(prov_dict.keys()))
+    _load_user_defaults(namespace)
 
     # show any warnings
     _show_init_warnings(imp_ok, conf_ok)
@@ -503,7 +431,95 @@ def init_notebook(
     logger.info("Notebook initialization complete")
 
 
+def _pr_output(*args):
+    """Output to IPython display or print."""
+    if not _VERBOSITY():
+        return
+    if is_ipython():
+        display(HTML(" ".join([*args, "<br>"]).replace("\n", "<br>")))
+    else:
+        print(*args)
+
+
+def _err_output(*args):
+    """Output to IPython display or print - always output regardless of verbosity."""
+    if is_ipython():
+        display(HTML(" ".join([*args, "<br>"]).replace("\n", "<br>")))
+        display(
+            HTML(
+                "For more info and options run:"
+                "<pre>import msticpy as mp\nhelp(mp.nbinit)</pre>"
+            )
+        )
+    else:
+        print(*args)
+        print(
+            "\nFor more info and options run:",
+            "\n    import msticpy as mp",
+            "\n    help(mp.nbinit)",
+        )
+
+
+def _load_user_defaults(namespace):
+    """Load user defaults, if defined."""
+    global current_providers  # pylint: disable=global-statement, invalid-name
+    stdout_cap = io.StringIO()
+    with redirect_stdout(stdout_cap):
+        _pr_output("Loading user defaults.")
+        prov_dict = load_user_defaults()
+        output = stdout_cap.getvalue()
+        if output.strip():
+            _pr_output(output)
+            logger.info(output)
+            logger.info("User default load failures: %s", output)
+
+    if prov_dict:
+        namespace.update(prov_dict)
+        current_providers = prov_dict
+        _pr_output("Auto-loaded components:", ", ".join(prov_dict.keys()))
+
+
+def _load_pivot_functions(namespace):
+    """Load pivot functions."""
+    stdout_cap = io.StringIO()
+    with redirect_stdout(stdout_cap):
+        _pr_output("Loading pivots.")
+        _load_pivots(namespace=namespace)
+        output = stdout_cap.getvalue()
+        if output.strip():
+            _pr_output(output)
+            logger.info("Pivot load failures: %s", output)
+
+
+def _import_packages(
+    namespace, def_imports, additional_packages, extra_imports, user_install
+):
+    """Import packages from default set or supplied as parameters."""
+    stdout_cap = io.StringIO()
+    with redirect_stdout(stdout_cap):
+        imp_ok = _global_imports(
+            namespace, additional_packages, user_install, extra_imports, def_imports
+        )
+        output = stdout_cap.getvalue()
+        if output.strip():
+            _pr_output(output)
+            logger.info("Import failures: %s", output)
+    return imp_ok
+
+
+def _check_msticpy_version():
+    """Check msticpy version."""
+    stdout_cap = io.StringIO()
+    with redirect_stdout(stdout_cap):
+        check_version()
+        output = stdout_cap.getvalue()
+        if output.strip():
+            _pr_output(output)
+            logger.info("Check version failures: %s", output)
+
+
 def _show_init_warnings(imp_ok, conf_ok):
+    """Show any warnings from init_notebook."""
     if imp_ok and conf_ok:
         return True
     md("<font color='orange'><h3>Notebook setup completed with some warnings.</h3>")
@@ -592,6 +608,7 @@ def _global_imports(
     extra_imports: List[str] = None,
     def_imports: str = "all",
 ):
+    """Import packages from default set (defined statically)."""
     import_list = []
     imports, imports_all = _build_import_list(def_imports)
 
@@ -670,6 +687,7 @@ def _use_custom_config(config_file: str):
 
 def _get_or_create_config() -> bool:
     # Cases
+    # 0. Current config file exists -> return ok
     # 1. Env var set and mpconfig exists -> goto 4
     # 2. Env var set and mpconfig file not exists - warn and continue
     # 3. search_for_file finds mpconfig -> goto 4
@@ -677,6 +695,8 @@ def _get_or_create_config() -> bool:
     # 5. search_for_file(config.json)
     # 6. If aml user try to import config.json into mpconfig and save
     # 7. Error - no Microsoft Sentinel config
+    if current_config_path() is not None:
+        return True
     mp_path = os.environ.get("MSTICPYCONFIG")
     if mp_path and not Path(mp_path).is_file():
         _err_output(_MISSING_MPCONFIG_ENV_ERR)
@@ -727,9 +747,6 @@ def _set_nb_options(namespace):
         "style": {"description_width": "initial"},
     }
 
-    # Some of our dependencies (networkx) still use deprecated Matplotlib
-    # APIs - we can't do anything about it, so suppress them from view
-    warnings.simplefilter("ignore", category=MatplotlibDeprecationWarning)
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     if sns:
         sns.set()
@@ -896,17 +913,3 @@ def reset_ipython_exception_handler():
     """Remove MSTICPy custom exception handler."""
     if hasattr(InteractiveShell.showtraceback, "__wrapped__"):
         InteractiveShell.showtraceback = InteractiveShell.showtraceback.__wrapped__
-
-
-def _check_azure_cli_status():
-    """Check for Azure CLI credentials."""
-    if not unit_testing():
-        status, message = check_cli_credentials()
-        if status == AzureCliStatus.CLI_OK:
-            _pr_output(message)
-        elif status == AzureCliStatus.CLI_NOT_INSTALLED:
-            _pr_output(
-                "Azure CLI credentials not detected." f" ({_CLI_WIKI_MSSG_SHORT})"
-            )
-        elif message:
-            _pr_output("\n".join([message, _CLI_WIKI_MSSG_GEN]))

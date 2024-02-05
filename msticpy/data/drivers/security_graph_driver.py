@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Security Graph OData Driver class."""
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import pandas as pd
 
@@ -24,7 +24,7 @@ class SecurityGraphDriver(OData):
     CONFIG_NAME = "MicrosoftGraph"
     _ALT_CONFIG_NAMES = ["SecurityGraphApp"]
 
-    def __init__(self, connection_str: str = None, **kwargs):
+    def __init__(self, connection_str: Optional[str] = None, **kwargs):
         """
         Instantiate MSGraph driver and optionally connect.
 
@@ -35,18 +35,17 @@ class SecurityGraphDriver(OData):
 
         """
         super().__init__(**kwargs)
-        azure_cloud = AzureCloudConfig()
+        az_cloud_config = AzureCloudConfig(cloud=kwargs.pop("cloud", None))
         self.scopes = ["User.Read"]
+        self.api_root = az_cloud_config.endpoints.get("microsoftGraphResourceId")
         self.req_body = {
             "client_id": None,
             "client_secret": None,
             "grant_type": "client_credentials",
-            "scope": f"{azure_cloud.endpoints.microsoft_graph_resource_id}/.default",
+            "scope": f"{self.api_root}.default",
         }
-        self.oauth_url = (
-            f"{azure_cloud.endpoints.active_directory}/{{tenantId}}/oauth2/v2.0/token"
-        )
-        self.api_root = azure_cloud.endpoints.microsoft_graph_resource_id
+        login_endpoint = az_cloud_config.authority_uri
+        self.oauth_url = f"{login_endpoint}{{tenantId}}/oauth2/v2.0/token"
         self.api_ver = kwargs.get("api_ver", "v1.0")
 
         if connection_str:
@@ -54,7 +53,7 @@ class SecurityGraphDriver(OData):
             self.connect(connection_str)
 
     def query(
-        self, query: str, query_source: QuerySource = None, **kwargs
+        self, query: str, query_source: Optional[QuerySource] = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
@@ -69,7 +68,7 @@ class SecurityGraphDriver(OData):
         Returns
         -------
         Union[pd.DataFrame, results.ResultSet]
-            A DataFrame (if successfull) or
+            A DataFrame (if successful) or
             the underlying provider result if an error.
 
         """

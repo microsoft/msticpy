@@ -32,17 +32,17 @@ class GreyNoise(HttpTIProvider):
         # Community API
         "ipv4": APILookupParams(
             path="/v3/community/{observable}",
-            headers={"key": "{API_KEY}"},
+            headers={"key": "{AuthKey}"},
         ),
         # Enterprise API Quick Lookup
         "ipv4-quick": APILookupParams(
             path="/v2/noise/quick/{observable}",
-            headers={"key": "{API_KEY}"},
+            headers={"key": "{AuthKey}"},
         ),
         # Enterprise API Full Lookup
         "ipv4-full": APILookupParams(
             path="/v2/noise/context/{observable}",
-            headers={"key": "{API_KEY}"},
+            headers={"key": "{AuthKey}"},
         ),
     }
 

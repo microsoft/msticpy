@@ -31,21 +31,14 @@ def test_nbinit_no_params():
         verbose=True,
     )
 
-    check.is_in("pd", ns_dict)
     check.is_in("get_ipython", ns_dict)
     check.is_in("Path", ns_dict)
-    check.is_in("np", ns_dict)
 
     print(ns_dict.keys())
     # Note - msticpy imports throw when exec'd from unit test
     # e.g. check.is_in("QueryProvider", ns_dict) fails
 
     check.is_in("WIDGET_DEFAULTS", ns_dict)
-
-    check.equal(ns_dict["pd"].__name__, "pandas")
-    check.equal(ns_dict["np"].__name__, "numpy")
-
-    check.equal(pd.get_option("display.max_columns"), 50)
 
 
 def test_nbinit_imports():
@@ -62,7 +55,6 @@ def test_nbinit_imports():
     check.is_in("pathlib", ns_dict)
     check.is_in("time", ns_dict)
     check.is_in("tdelta", ns_dict)
-    check.is_in("np", ns_dict)
 
     check.equal(timedelta, ns_dict["tdelta"])
     check.equal(datetime.time, ns_dict["time"])
@@ -220,25 +212,16 @@ def test_check_config(conf_file, expected, tmp_path, monkeypatch):
         else:
             os.chdir(str(tmp_path))
 
-        with custom_mp_config(settings_file, path_check=False):
-            monkeypatch.setattr(nbinit, "is_in_aml", lambda: True)
-            monkeypatch.setattr(azure_ml_tools, "get_aml_user_folder", lambda: tmp_path)
-            result = _get_or_create_config()
+        # with custom_mp_config(settings_file, path_check=False):
+        monkeypatch.setenv("MSTICPYCONFIG", str(settings_file))
+        monkeypatch.setattr(nbinit, "current_config_path", lambda: None)
+        monkeypatch.setattr(nbinit, "is_in_aml", lambda: True)
+        monkeypatch.setattr(azure_ml_tools, "get_aml_user_folder", lambda: tmp_path)
+        result = _get_or_create_config()
 
-            print("result=", result)
-            # print("errs=", "\n".join(errs) if errs else "no errors")
-            # print("warnings=", "\n".join(warns) if warns else "no warnings")
-            check.equal(result, expected, "Result")
-            # reported_errs = 0 if not errs else len(errs)
-            # reported_warns = 0 if not warns else len(warns)
-            # if isinstance(expected.errs, tuple):
-            #     check.is_in(reported_errs, expected.errs, "Num errors")
-            # else:
-            #     check.equal(reported_errs, expected.errs, "Num errors")
-            # if isinstance(expected.wrns, tuple):
-            #     check.is_in(reported_warns, expected.wrns, "Num errors")
-            # else:
-            #     check.equal(reported_warns, expected.wrns, "Num warnings")
+        print("result=", result)
+        check.equal(result, expected, "Result")
+
     finally:
         os.chdir(init_cwd)
 

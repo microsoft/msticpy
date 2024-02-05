@@ -7,6 +7,7 @@
 from typing import Any, List, Mapping, Optional
 
 from ..._version import VERSION
+from ...common.data_types import SharedProperty
 from ...common.utility import export
 from .entity import Entity
 from .entity_enums import Algorithm, OSFamily
@@ -49,6 +50,7 @@ class File(Entity):
     """
 
     ID_PROPERTIES = ["FullPath", "Sha1", "Sha256", "Sha256ac", "Md5"]
+    FolderPath = SharedProperty("Directory")
 
     def __init__(
         self,

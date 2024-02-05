@@ -1,34 +1,57 @@
 Microsoft Sentinel Provider
 ===========================
 
+Th MS Sentinel QueryProvider uses
+the
+`azure-monitor-query SDK <https://learn.microsoft.com/python/api/overview/azure/monitor-query-readme?view=azure-python>`__
+to connect to Microsoft Sentinel workspaces.
+
+.. note:: This provider replaces an earlier version,
+   which used KqlMagic as the underlying data connector.
+   The previous driver is still available but to use it you must
+   specify ``MSSentinel_Legacy`` as the provider name when creating
+   the QueryProvider instance.
+
+   For more information about the previous driver see
+   :doc:`./DataProv-MSSentinel-Legacy`
+
+
+Changes from the previous implementation
+----------------------------------------
+
+* Uses the *MSTICPy* built-in Azure authentication by
+  default - you do not have to specify parameters to enable this.
+* Supports simultaneous queries against multiple workspaces (see below).
+* Supports user-specified timeout for queries.
+* Supports proxies (via MSTICPy config or the ``proxies`` parameter to
+  the ``connect`` method)
+* The driver supports asynchronous execution of queries. This is used
+  when you create a Query provider with multiple connections (e.g.
+  to different clusters) and when you split queries into time chunks.
+  See :ref:`multiple_connections` and :ref:`splitting_query_execution` for
+  for more details. This is independent of the ability to specify
+  multiple workspaces in a single connection as described above.
+* Some of the previous parameters have been deprecated:
+
+  * ``mp_az_auth`` is replaced by ``auth_types`` (the former still works
+    but will be removed in a future release).
+  * ``mp_az_auth_tenant_id`` is replaced by ``tenant_id`` (the former
+    is no longer supported
+
+
 Sentinel Configuration
 ----------------------
 
-You can store configuration for your workspace (or workspaces) in either
-your ``msticpyconfig.yaml`` or a ``config.json`` file. The latter
-file is auto-created in your Azure Machine Learning (AML) workspace when
-you launch a notebook from the Sentinel portal. It can however, only
-store details for a single workspace.
-
-Sentinel Configuration in *msticpyconfig.yaml*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This is the simplest place to store your workspace details.
-
-You likely need to use a *msticpyconfig.yaml* anyway. If you are using other
-*msticpy* features such as Threat Intelligence Providers, GeoIP Lookup, Azure Data,
-etc., these all have their own configuration settings, so using a single
-configuration file makes managing your settings easier. If you are running
-notebooks in an AML workspace and you do not have a *msticpyconfig.yaml*
-*MSTICPy* will create one and import settings from a *config.json*, if it can find
-one.
+You store configuration for your workspace (or workspaces) in
+your ``msticpyconfig.yaml``.
 
 For more information on using and configuring *msticpyconfig.yaml* see
 :doc:`msticpy Package Configuration <../getting_started/msticpyconfig>`
 and :doc:`MSTICPy Settings Editor<../getting_started/SettingsEditor>`
 
 The MS Sentinel connection settings are stored in the
-``AzureSentinel\\Workspaces`` section of the file. Here is an example.
+``AzureSentinel\\Workspaces`` section of the file.
+Here is an example.
 
 .. code:: yaml
 
@@ -59,42 +82,14 @@ The MS Sentinel connection settings are stored in the
 
 If you only use a single workspace, you only need to create a ``Default`` entry and
 add the values for your *WorkspaceID* and *TenantID*. You can add other entries here,
-for example, SubscriptionID, ResourceGroup. These are recommended but not required
-for the QueryProvider (they may be used by other *MSTICPy* components however).
+for example, SubscriptionID, ResourceGroup. These are not required for the data
+queries but are recommended since they are used by other *MSTICPy* components.
 
-.. note:: The property names are spelled differently to the values in the
-   *config.json* so be sure to enter these as shown in the example. These
-   names are case-sensitive.
-
-.. note:: The section names (Default, Workspace1 and TestWorkspace) do
-   not have to be the same as the workspace name - you can choose friendlier
-   aliases, if you wish.
-
-If you use multiple workspaces, you can add further entries here. Each
-workspace entry is normally the name of the Azure Sentinel workspace but
-you can use any name you prefer.
-
-Sentinel Configuration in *config.json*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-When you load a notebook from the MS Sentinel UI a configuration file *config.json*
-is provisioned for you with the details of the source workspace populated in
-the file. An example is shown here.
-
-.. code:: json
-
-    {
-        "tenant_id": "335b56ab-67a2-4118-ac14-6eb454f350af",
-        "subscription_id": "b8f250f8-1ba5-4b2c-8e74-f7ea4a1df8a6",
-        "resource_group": "ExampleWorkspaceRG",
-        "workspace_id": "271f17d3-5457-4237-9131-ae98a6f55c37",
-        "workspace_name": "ExampleWorkspace"
-    }
-
-If no *msticpyconfig.yaml* is found *MSTICPy* will automatically look for a
-*config.json* file in the current
-directory. If not found here, it will search the parent directory and in all
-its subdirectories. It will use the first *config.json* file found.
+If you use multiple workspaces, you can add further entries here. The key for
+each entry (e.g. ``Workspace1`` or ``TestWorkspace`` in the example above)
+is normally the name of the Azure Sentinel workspace but
+you can use any name you prefer. You use this entry name when connecting
+to a workspace.
 
 
 Loading a QueryProvider for Microsoft Sentinel
@@ -103,96 +98,68 @@ Loading a QueryProvider for Microsoft Sentinel
 .. code:: ipython3
 
     qry_prov = QueryProvider(
-        data_environment="MSSentinel",
+        data_environment="MSSentinel_New",
     )
 
-.. note::"LogAnalytics" and "AzureSentinel" are also aliases
-   for "MSSentinel"
+    # or just
+    qry_prov = QueryProvider("MSSentinel_New")
 
+Optional parameters for the Sentinel QueryProvider
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``timeout`` : int (seconds)
+
+Specify a timeout for queries. Default is 300 seconds,
+the maximum is 600 seconds (10 minutes).
+This parameter can be set here or in the ``connect`` method
+and overridden for individual queries.
+
+``proxies`` : Dict[str, str]
+
+Proxy settings for log analytics queries.
+If proxies are configured in *msticpyconfig.yaml* this is used by default.
+If specified as a parameter, specify proxies as a dictionary of the form
+``{protocol: proxy_url}``
+
+The only protocol supported by the driver is "https" (other protocols
+can be set in *msticpyconfig.yaml* but only https is used here).
+The proxy_url can contain
+optional authentication information in the format
+"https://username:password@proxy_host:port"
+
+If you have a proxy configuration set in *msticpyconfig.yaml* and
+you do not want to use it, set ``proxies`` to None or an empty dictionary.
+This parameter can be overridden in connect method.
 
 Connecting to a MS Sentinel Workspace
 -------------------------------------
 
-Once we have instantiated the QueryProvider we need to authenticate to Sentinel
+Once you've created a QueryProvider you need to authenticate to Sentinel
 Workspace. This is done by calling the connect() function of the Query
-Provider.
+Provider. See
+:py:meth:`connect() <msticpy.data.drivers.azure_monitor_driver.AzureMonitorDriver.connect>`
 
-connect() requires a connection string as its parameter. For MS Sentinel
-we can use the ``WorkspaceConfig`` class.
+This function takes an initial parameter (called ``connection_str`` for
+historical reasons) that can be one of the following:
 
-WorkspaceConfig
-~~~~~~~~~~~~~~~
+* A WorkspaceConfig instance
+* A connection string (this is option is being deprecated)
+* None - in this case it will connect with the ``Default`` entry from
+  your *msticpyconfig.yaml* file.
 
-.. note:: From v2.0.0 of MSTICPy the MS Sentinel QueryProvider
-   will automatically create a WorkspaceConfig from your settings.
-   Simply call ``connect`` with a ``workspace="YourWorkspace"`` parameter
-
-
-``WorkspaceConfig`` handles loading your workspace configuration and generating a
-connection string from your configuration.
-See :py:mod:`WorkspaceConfig API documentation<msticpy.common.wsconfig>`
-
-``WorkspaceConfig`` works with workspace configuration stored in *msticpyconfig.yaml*
-or *config.json* (although the former takes precedence).
-
-To use ``WorkspaceConfig``, simple create an instance of it. It will automatically build
-your connection string for use with the query provider library.
-
-.. code:: IPython
-
-    >>> ws_config = WorkspaceConfig()
-    >>> ws_config.code_connect_str
-
-    "loganalytics://code().tenant('335b56ab-67a2-4118-ac14-6eb454f350af').workspace('271f17d3-5457-4237-9131-ae98a6f55c37')"
-
-You can use this connection string in the call to ``QueryProvider.connect()``
-
-When called without parameters, *WorkspaceConfig* loads the "Default"
-entry in your *msticpyconfig.yaml* (or falls back to loading the settings
-in *config.json*). To specify a different workspace pass the ``workspace`` parameter
-with the name of your workspace entry. This value is the name of
-the section in the *msticpyconfig* ``Workspaces`` section, which may
-not necessarily be the same as your workspace name.
-
-.. code:: IPython
-
-    >>> ws_config = WorkspaceConfig(workspace="TestWorkspace")
+If you omit this parameter you use the ``workspace`` parameter
+to specify the workspace entry from ``msticpyconfig.yaml`` to use.
 
 
-To see which workspaces are configured in your *msticpyconfig.yaml* use
-the ``list_workspaces()`` function.
-
-.. tip:: ``list_workspaces`` is a class function, so you do not need to
-   instantiate a WorkspaceConfig to call this function.
-
-.. code:: IPython
-
-    >>> WorkspaceConfig.list_workspaces()
-
-    {'Default': {'WorkspaceId': '271f17d3-5457-4237-9131-ae98a6f55c37',
-      'TenantId': '335b56ab-67a2-4118-ac14-6eb454f350af'},
-     'Workspace1': {'WorkspaceId': 'c88dd3c2-d657-4eb3-b913-58d58d811a41',
-       'TenantId': '335b56ab-67a2-4118-ac14-6eb454f350af'},
-     'TestWorkspace': {'WorkspaceId': '17e64332-19c9-472e-afd7-3629f299300c',
-       'TenantId': '4ea41beb-4546-4fba-890b-55553ce6003a'}}
-
-Entries in msticpyconfig always take precedence over settings in your
-config.json. If you want to force use of the config.json, specify the path
-to the config.json file in the ``config_file`` parameter to ``WorkspaceConfig``.
-
-If you need use a specific instance of a config.json you can specify a full
-path to the file you want to use when you create your ``WorkspaceConfig``
-instance.
-
-
-Connecting to the workspace
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Connecting to a Sentinel workspace
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When connecting you can just pass the name of your workspace or
 an instance of WorkspaceConfig to the query provider's ``connect`` method.
 
 .. code:: IPython
 
+    qry_prov.connect("Default")
     qry_prov.connect(workspace="Default")
     qry_prov.connect(workspace="MyOtherWorkspace")
 
@@ -202,43 +169,144 @@ an instance of WorkspaceConfig to the query provider's ``connect`` method.
     qry_prov.connect(WorkspaceConfig(workspace="MyOtherWorkspace"))
 
 
-
 MS Sentinel Authentication options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, the data provider tries to use chained authentication,
-attempting to use existing Azure credentials, if they are available.
+By default, the data provider will use Azure authentication
+following the parameters defined in your ``msticpyconfig.yaml`` file
+(or the default values if you have not configured them in this file).
 
-- If you are running in an AML workspace, it will attempt to use
-  integrated MSI authentication, using the identity that you used to
-  authenticate to AML.
-- If you have logged in to Azure CLI, the Sentinel provider will
-  try to use your AzureCLI credentials
-- If you have your credentials stored as environment variables, it
-  will try to use those
-- Finally, it will fall back on using interactive browser-based
-  device authentication.
+To read more about Azure authentication see
+:doc:`Azure Authentication <../getting_started/AzureAuthentication>`
+
+You can override several authentication parameters including:
+
+* auth_types - a list of authentication types to try in order
+* tenant_id - the Azure tenant ID to use for authentication
 
 If you are using a Sovereign cloud rather than the Azure global cloud,
-you should select the appropriate cloud in the Azure section of
-the *msticpyconfig*.
+you should follow the guidance in
+:doc:`Azure Authentication <../getting_started/AzureAuthentication>`
+to configure the correct cloud.
 
-.. warning:: Although msticpy allows you to configure multiple entries for
-   workspaces in different tenants, you cannot currently authenticate to workspaces
-   that span multiple tenants in the same notebook. If you need to do this, you
-   should investigate
-   `Azure Lighthouse <https://azure.microsoft.com/services/azure-lighthouse/>`__.
-   This allows delegated access to workspaces in multiple tenants from a single
-   tenant.
 
-For more details on Azure authentication see :doc:`../getting_started/AzureAuthentication`.
+Connecting to multiple Sentinel workspaces
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are two mechanisms for querying multiple MS Sentinel workspaces.
+One is a generic method common to all data providers. For more
+information on this see :ref:`multiple_connections` in the main
+Data Providers documentation.
+
+The other is specific to the Sentinel data provider and is provided
+by the underlying Azure Monitor client. This latter capability is described in
+this section.
+
+The Sentinel data provider supports connecting to multiple workspaces by
+passing a list of workspace names or workspace IDs to the ``connect`` method.
+using the ``workspaces`` or ``workspace_ids`` parameters respectively.
+
+``workspace_ids`` should be a list or tuple of workspace IDs.
+
+``workspaces`` should be a list or tuple of workspace names. In order
+to use this parameter you must have these workspaces configured in
+your *msticpyconfig.yaml*.
+
+These parameters override the ``workspace`` parameter.
+
+Connecting to multiple workspaces allows you to run queries across these
+workspaces and return the combined results as a single Pandas DataFrame.
+The workspaces must use common authentication credentials and are
+expected to have the same data schema.
+
+.. code:: ipython3
+
+    qry_prov.connect(workspaces=["Default", "MyOtherWorkspace"])
+
+    qry_prov.SecurityAlert.list_alerts()
+
+This will return a DataFrame containing the results of the query,
+the results from each workspace will be indicated by the
+``TenantId`` column, which will contain the workspace ID of
+each workspace.
+
+.. note:: This is a mechanism implemented by the underlying
+  **azure-monitor-query**
+  client library. It is independent of the MSTICPy capability to
+  add multiple connections to a query provider (and run parallel
+  queries against each workspace). You can use either of these
+  but we recommended using
+  one or the other and not both simultaneously.
+
+.. warning:: Connecting to multiple workspaces like this means
+  that the ``schema`` property will not return anything. This
+  only works if you connect to a single workspace. In this case,
+  it will return the schema of this workspace.
+
+
+Other parameters for Sentinel ``connect()`` method
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For ``timeout`` and ``proxies`` see the section above.
+
+
+The WorkspaceConfig class
+-------------------------
+
+You do not need to know the details of this class but it is used
+behind the scenes to provide workspace configuration information
+to the Sentinel data provider.
+
+``WorkspaceConfig`` handles loading your workspace configuration
+and generating a connection string from your configuration.
+See :py:mod:`WorkspaceConfig API documentation<msticpy.common.wsconfig>`
+
+``WorkspaceConfig`` works with workspace configuration stored in *msticpyconfig.yaml*.
+
+To use ``WorkspaceConfig``, simple create an instance of it. It will automatically build
+your connection string for use with the query provider library.
+
+.. code:: python3
+
+    ws_config = WorkspaceConfig()
+
+When called without parameters, *WorkspaceConfig* loads the "Default"
+entry in your *msticpyconfig.yaml*. To specify a different workspace pass the ``workspace`` parameter
+with the name of your workspace entry. This value is the name of
+the section in the ``msticpyconfig.yaml`` ``Workspaces`` section.
+
+.. note:: the ``workspace`` parameter value is the entry heading in
+  your ``msticpyconfig.yaml``. As mentioned above, this may
+  not necessarily be the same as your workspace name.
+
+.. code:: python3
+
+    ws_config = WorkspaceConfig(workspace="TestWorkspace")
+
+
+To see which workspaces are configured in your *msticpyconfig.yaml* use
+the ``list_workspaces()`` function.
+
+.. tip:: ``list_workspaces`` is a class function, so you do not need to
+   instantiate a WorkspaceConfig to call this function.
+
+.. code:: python3
+
+    WorkspaceConfig.list_workspaces()
+
+.. parsed-literal::
+
+    {'Default': {'WorkspaceId': '271f17d3-5457-4237-9131-ae98a6f55c37',
+      'TenantId': '335b56ab-67a2-4118-ac14-6eb454f350af'},
+     'Workspace1': {'WorkspaceId': 'c88dd3c2-d657-4eb3-b913-58d58d811a41',
+       'TenantId': '335b56ab-67a2-4118-ac14-6eb454f350af'},
+     'TestWorkspace': {'WorkspaceId': '17e64332-19c9-472e-afd7-3629f299300c',
+       'TenantId': '4ea41beb-4546-4fba-890b-55553ce6003a'}}
+
 
 Other MS Sentinel Documentation
 -------------------------------
 
-For examples of using the MS Defender provider, see the sample
-`M365 Defender Notebook<https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Data_Queries.ipynb>`
-
 Built-in :ref:`data_acquisition/DataQueries:Queries for Microsoft Sentinel`.
 
-:py:mod:`Sentinel KQL driver API documentation<msticpy.data.drivers.kql_driver>`
+See also: :py:mod:`Sentinel KQL driver API documentation <msticpy.data.drivers.azure_kusto_driver>`
