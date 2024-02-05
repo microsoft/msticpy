@@ -1,0 +1,314 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "msticpyconfig-schema",
+    "definitions": {
+        "SentinelWorkspace": {
+            "type": "object",
+            "properties": {
+                "TenantId": {
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "WorkspaceId": {
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "SubscriptionId": {
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "ResourceGroup": {
+                    "type": "string"
+                },
+                "WorkspaceName": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "TenantId",
+                "WorkspaceId"
+            ]
+        },
+        "ProtectedValue": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "EnvironmentVar": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "EnvironmentVar"
+                    ]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "KeyVault": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        }
+                    },
+                    "required": [
+                        "KeyVault"
+                    ]
+                }
+            ]
+        },
+        "Args": {
+            "type": "object",
+            "properties": {
+                "AuthKey": {
+                    "$ref": "#/definitions/ProtectedValue"
+                },
+                "AuthId": {
+                    "$ref": "#/definitions/ProtectedValue"
+                },
+                "ClientId": {
+                    "$ref": "#/definitions/ProtectedValue"
+                },
+                "TenantId": {
+                    "$ref": "#/definitions/ProtectedValue"
+                },
+                "ClientSecret": {
+                    "$ref": "#/definitions/ProtectedValue"
+                },
+                "Cluster": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "IntegratedAuth": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "Database": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": true
+        },
+        "KustoCluster": {
+            "type": "object",
+            "properties": {
+                "ClusterGroups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "Args": {
+                    "$ref": "#/definitions/Args"
+                }
+            },
+            "required": [
+                "Args"
+            ]
+        },
+        "TIProvider": {
+            "type": "object",
+            "properties": {
+                "Args": {
+                    "$ref": "#/definitions/Args"
+                },
+                "Primary": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "Provider": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "Args",
+                "Primary",
+                "Provider"
+            ]
+        },
+        "DataProvider": {
+            "type": "object",
+            "properties": {
+                "Args": {
+                    "$ref": "#/definitions/Args"
+                },
+                "Primary": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "Provider": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "Args",
+                "Primary",
+                "Provider"
+            ],
+            "additionalProperties": {
+                "type": "string"
+            }
+        },
+        "Azure": {
+            "type": "object",
+            "properties": {
+                "cloud": {
+                    "type": "string",
+                    "enum": [
+                        "global",
+                        "cn",
+                        "de",
+                        "usgov"
+                    ],
+                    "default": "global"
+                },
+                "auth_methods": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "env",
+                            "cli",
+                            "msi",
+                            "vscode",
+                            "powershell",
+                            "interactive",
+                            "interactive_browser",
+                            "devicecode",
+                            "device_code",
+                            "device",
+                            "environment",
+                            "managedidentity",
+                            "managed_identity",
+                            "clientsecret",
+                            "client_secret",
+                            "certificate",
+                            "cert"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "auth_methods"
+            ]
+        },
+        "KeyVault": {
+            "type": "object",
+            "properties": {
+                "VaultName": {
+                    "type": "string"
+                },
+                "ResourceGroup": {
+                    "type": "string"
+                },
+                "SubscriptionId": {
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "TenantId": {
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "AzureRegion": {
+                    "type": "string"
+                },
+                "UseKeyring": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "Authority": {
+                    "type": "string",
+                    "enum": [
+                        "global",
+                        "usgov",
+                        "de",
+                        "cn",
+                        "ppe",
+                        "us"
+                    ],
+                    "default": "global"
+                }
+            },
+            "required": [
+                "VaultName",
+                "TenantId"
+            ]
+        },
+        "QueryDefinitions": {
+            "type": "object",
+            "properties": {
+                "Custom": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "file-path"
+                    }
+                }
+            }
+        }
+    },
+    "AzureSentinel": {
+        "type": "object",
+        "properties": {
+            "Workspaces": {
+                "type": "object",
+                "patternProperties": {
+                    "^[A-Z][a-zA-Z0-9\\-_]+$": {
+                        "$ref": "#/definitions/SentinelWorkspace"
+                    }
+                }
+            }
+        }
+    },
+    "TIProviders": {
+        "type": "object",
+        "patternProperties": {
+            "^[A-Z][a-zA-Z0-9\\-_]+$": {
+                "$ref": "#/definitions/TIProvider"
+            }
+        }
+    },
+    "DataProviders": {
+        "type": "object",
+        "patternProperties": {
+            "^[A-Z][a-zA-Z0-9\\-_]+$": {
+                "$ref": "#/definitions/DataProvider"
+            }
+        }
+    },
+    "OtherProviders": {
+        "type": "object",
+        "patternProperties": {
+            "^[A-Z][a-zA-Z0-9\\-_]+$": {
+                "$ref": "#/definitions/DataProvider"
+            }
+        }
+    },
+    "ContextProviders": {
+        "type": "object",
+        "patternProperties": {
+            "^[A-Z][a-zA-Z0-9\\-_]+$": {
+                "$ref": "#/definitions/TIProvider"
+            }
+        }
+    },
+    "KustoClusters": {
+        "type": "object",
+        "patternProperties": {
+            "^[A-Z][a-zA-Z0-9\\-_]+$": {
+                "$ref": "#/definitions/KustoCluster"
+            }
+        }
+    },
+    "Azure": { "$ref": "#/definitions/Azure" },
+    "KeyVault": { "$ref": "#/definitions/KeyVau"},
+    "QueryDefinitions": { $ref: "#/definitions/QueryDefinitions" }
+}
