@@ -60,7 +60,8 @@ SPLUNK_CONNECT_ARGS = {
     "username": "(string) The Splunk account username, which is used to "
     + "authenticate the Splunk instance.",
     "password": "(string) The password for the Splunk account.",
-    "splunkToken": "(string) The Authorization Bearer Token <JWT> created in the Splunk.",
+    "bearer_token": "(string) The Authorization Bearer Token <JWT> created in the Splunk."
+    + " (Named as 'splunkToken' in Splunk Python SDK)",
 }
 
 
@@ -123,6 +124,11 @@ class SplunkDriver(DriverBase):
         arg_dict = {
             key: val for key, val in cs_dict.items() if key in SPLUNK_CONNECT_ARGS
         }
+
+        # Replace to Splunk python sdk's parameter name of sp_client.connect()
+        if arg_dict.get("bearer_token"):
+            arg_dict["splunkToken"] = arg_dict.pop("bearer_token")
+
         try:
             self.service = sp_client.connect(**arg_dict)
         except AuthenticationError as err:
@@ -179,7 +185,7 @@ class SplunkDriver(DriverBase):
         if "username" in cs_dict:
             self._required_params = ["host", "username", "password"]
         else:
-            self._required_params = ["host", "splunkToken"]
+            self._required_params = ["host", "bearer_token"]
 
         missing_args = set(self._required_params) - cs_dict.keys()
         if missing_args:
@@ -191,6 +197,7 @@ class SplunkDriver(DriverBase):
                 *[f"{arg}: {desc}" for arg, desc in SPLUNK_CONNECT_ARGS.items()],
                 title="no Splunk connection parameters",
             )
+
         return cs_dict
 
     def query(

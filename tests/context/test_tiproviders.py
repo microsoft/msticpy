@@ -175,6 +175,7 @@ _TI_PROVIDER_TESTS = [
     TiTestCase("IntSights"),
     TiTestCase("CrowdSec"),
     TiTestCase("AbuseIPDB", exp_responses=20),
+    TiTestCase("IPQualityScore", exp_responses=20),
 ]
 
 
@@ -246,6 +247,7 @@ def verify_result(result, ti_lookup):
                 "IntSights",
                 "CrowdSec",
                 "AbuseIPDB",
+                "IPQualityScore",
             ],
         )
         check.is_not_none(lu_result["Ioc"])
@@ -707,6 +709,37 @@ _PROVIDER_RESPONSES = {
             "link": "https://viz.greynoise.io/ip/51.91.185.74",
             "last_seen": "2021-03-18",
             "message": "Success",
+        },
+    },
+    "https://www.ipqualityscore.com": {
+        "ioc_param": "ipv4",
+        "response": {
+            "success": True,
+            "message": "Success",
+            "fraud_score": 100,
+            "country_code": "US",
+            "region": "New York",
+            "city": "Long Island City",
+            "ISP": "Data Room",
+            "ASN": 19624,
+            "organization": "Data Room",
+            "is_crawler": False,
+            "timezone": "America/New_York",
+            "mobile": False,
+            "host": "162.244.80.235",
+            "proxy": True,
+            "vpn": True,
+            "tor": False,
+            "active_vpn": False,
+            "active_tor": False,
+            "recent_abuse": True,
+            "bot_status": True,
+            "connection_type": "Premium required.",
+            "abuse_velocity": "Premium required.",
+            "zip_code": "N/A",
+            "latitude": 40.75,
+            "longitude": -73.93,
+            "request_id": "I4lkaunzTE",
         },
     },
     "https://www.virustotal.com/": {

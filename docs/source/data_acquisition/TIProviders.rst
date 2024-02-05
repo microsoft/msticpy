@@ -37,6 +37,7 @@ Features
 
    -  TOR exit nodes
    -  Open Page Rank
+   -  IP Quality Score
 
 -  Supports common IoC Types
 

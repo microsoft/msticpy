@@ -206,7 +206,7 @@ def _extract_inferred_parents(
 ) -> pd.DataFrame:
     """Find any inferred parents and creates rows for them."""
     tz_aware = merged_procs.iloc[0][schema.time_stamp].tz
-    time_zero = pd.Timestamp(0) if tz_aware is None else pd.Timestamp(0, tz=0)
+    time_zero = pd.Timestamp(0) if tz_aware is None else pd.Timestamp(0, tz=tz_aware)
 
     # Fill in missing values for root processes
     root_procs_crit = merged_procs[Col.source_index_par].isna()

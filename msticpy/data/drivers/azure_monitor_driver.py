@@ -477,11 +477,9 @@ class AzureMonitorDriver(DriverBase):
         """Return the timespan for the query API call."""
         default_time_params = kwargs.get("default_time_params", False)
         time_params = kwargs.get("time_span", {})
-        if (
-            default_time_params
-            or "start" not in time_params
-            or "end" not in time_params
-        ):
+        start = time_params.get("start")
+        end = time_params.get("end")
+        if default_time_params or start is None or end is None:
             time_span_value = None
             logger.info("No time parameters supplied.")
         else:
@@ -526,15 +524,17 @@ class AzureMonitorDriver(DriverBase):
 
     @staticmethod
     def _get_query_status(result) -> Dict[str, Any]:
-        status = {
-            "status": result.status.name,
-            "tables": len(result.tables) if result.tables else 0,
-        }
-
+        if isinstance(result, LogsQueryResult):
+            return {
+                "status": result.status.name,
+                "tables": len(result.tables),
+            }
         if isinstance(result, LogsQueryPartialResult):
-            status["partial"] = "partial results returned"
-            status["tables"] = (len(result.partial_data) if result.partial_data else 0,)
-        return status
+            return {
+                "status": result.status.name,
+                "tables": len(result.partial_data),
+            }
+        return {"status": "unknown failure", "tables": 0, "result": result}
 
     def _get_schema(self) -> Dict[str, Dict]:
         """Return the workspace schema."""

@@ -87,6 +87,10 @@ class HttpTIProvider(TIProvider, HttpProvider):
                 response = self._httpx_client.get(
                     **req_params, timeout=get_http_timeout(**kwargs)
                 )
+            elif verb == "POST":
+                response = self._httpx_client.post(
+                    **req_params, timeout=get_http_timeout(**kwargs)
+                )
             else:
                 raise NotImplementedError(f"Unsupported verb {verb}")
 

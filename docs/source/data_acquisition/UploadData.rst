@@ -81,6 +81,7 @@ Instantiating the Splunk uploader
 The first step in uploading data is to instantiate an uploader for the location we wish to upload data to.
 For Splunk there are three parameters that need to be passed at this stage, the Splunk host name, a username,
 and a password. You can also pass a parameter for ``port``, by default this value is 8089.
+In addition, The security auth token of ``bearer_token`` can be also passed instead of username and password as same as Splunk QueryProvider.
 
 .. code:: ipython3
 
@@ -88,6 +89,13 @@ and a password. You can also pass a parameter for ``port``, by default this valu
 	spup = SplunkUploader(username=USERNAME, host=HOST, password=PASSWORD)
 
 You can also set a ``debug`` flag when instantiating which will provide additional progress messages during an upload process.
+
+On the other hand, You can use the stored credentials in msticpyconfig.yaml to SplunkUploader.
+
+.. code:: ipython3
+
+	from msticpy.data.uploaders.splunk_uploader import SplunkUploader
+	spup = SplunkUploader()
 
 *Note: Due to the way Splunk API's work the time taken to upload a file to Splunk can be significantly longer than
 with Log Analytics.*
