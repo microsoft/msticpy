@@ -62,13 +62,26 @@ _CLI_WIKI_MSSG_GEN = (
 _CLI_WIKI_MSSG_SHORT = (
     f"see <a href='{_AZ_CLI_WIKI_URI}'>Caching credentials with Azure CLI</>"
 )
+PYSPARK_KERNEL_NOT_SUPPORTED = """
+    <h4><font color='red'>WARNING: This notebook may not run correctly with the Azure Machine
+    Learning PySpark kernel.</font></h4> Please create a standard Azure Machine Learning
+    Compute instance and select the Python 3.10 or later kernel.
+    Please see the <a href="{nbk_uri}">
+    Getting Started Guide For Azure Sentinel ML Notebooks</a></b>
+    for more information<br><hr>
+"""
 
-MIN_PYTHON_VER_DEF = "3.6"
+MIN_PYTHON_VER_DEF = "3.10.0"
 MSTICPY_REQ_VERSION = __version__
 
 VER_RGX = r"(?P<maj>\d+)\.(?P<min>\d+).(?P<pnt>\d+)(?P<suff>.*)"
 MP_ENV_VAR = "MSTICPYCONFIG"
 MP_FILE = "msticpyconfig.yaml"
+
+
+def is_in_aml_pyspark():
+    """Return True if running in Spark on Azure Machine Learning."""
+    return os.environ.get("AZUREML_FRAMEWORK") == "PySpark"
 
 
 def is_in_aml():
@@ -108,6 +121,7 @@ def check_aml_settings(
     """
     del kwargs
     _disp_html("<h4>Starting AML notebook pre-checks...</h4>")
+    _check_pyspark()
     if isinstance(min_py_ver, str):
         min_py_ver = _get_pkg_version(min_py_ver).release  # type: ignore
     check_python_ver(min_py_ver=min_py_ver)
@@ -125,6 +139,14 @@ def check_aml_settings(
 check_versions = check_aml_settings
 
 
+def _check_pyspark():
+    """Check if we are running in PySpark kernel."""
+    if not is_in_aml_pyspark():
+        return
+
+    _disp_html(PYSPARK_KERNEL_NOT_SUPPORTED.format(nb_uri=AZ_GET_STARTED))
+
+
 def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
     """
     Check the current version of the Python kernel.
@@ -140,17 +162,19 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
         If the Python version does not support the notebook.
 
     """
-    min_py_ver = _get_pkg_version(min_py_ver)  # type: ignore
+    minimum_py_version = max(
+        _get_pkg_version(min_py_ver), _get_pkg_version(MIN_PYTHON_VER_DEF)
+    )
     sys_ver = _get_pkg_version(sys.version_info[:3])
     _disp_html("Checking Python kernel version...")
-    if sys_ver < min_py_ver:
+    if sys_ver < minimum_py_version:
         # Bandit SQL inject error found here
         _disp_html(  # nosec
             f"""
             <h4><font color='red'>This notebook requires a later
             (Python) kernel version.</h4></font>
             Select a kernel from the notebook toolbar (above), that is Python
-            {min_py_ver} or later (Python 3.8 recommended)<br>
+            {minimum_py_version} or later (Python 3.10 recommended)<br>
             """
         )
         _disp_html(
@@ -160,13 +184,10 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
             """
         )
         # Bandit SQL inject error found here
-        raise RuntimeError(f"Python {min_py_ver} or later kernel is required.")  # nosec
+        raise RuntimeError(
+            f"Python {minimum_py_version} or later kernel is required."
+        )  # nosec
 
-    if sys_ver < _get_pkg_version("3.8"):
-        _disp_html(
-            "Recommended: switch to using the 'Python 3.8 - AzureML' notebook kernel"
-            " if this is available."
-        )
     _disp_html(f"Info: Python kernel version {sys_ver} - OK<br>")
 
 
@@ -300,7 +321,7 @@ def _get_pkg_version(version: Union[str, Tuple]):
         return parse_version(version)
     if isinstance(version, tuple):
         return parse_version(".".join(str(ver) for ver in version))
-    raise TypeError(f"Version {version} no parseable.")
+    raise TypeError(f"Version {version} not cannot be parsed.")
 
 
 def _get_installed_mp_version():
@@ -464,13 +485,24 @@ def _check_azure_cli_status():
     # pylint: disable=import-outside-toplevel
     from ..auth.azure_auth_core import AzureCliStatus, check_cli_credentials
 
-    if not unit_testing():
-        status, message = check_cli_credentials()
-        if status == AzureCliStatus.CLI_OK:
-            _disp_html(message)
-        elif status == AzureCliStatus.CLI_NOT_INSTALLED:
-            _disp_html(
-                "Azure CLI credentials not detected." f" ({_CLI_WIKI_MSSG_SHORT})"
-            )
-        elif message:
-            _disp_html("\n".join([message, _CLI_WIKI_MSSG_GEN]))
+    if unit_testing():
+        return
+
+    status, message = check_cli_credentials()
+    if status == AzureCliStatus.CLI_OK:
+        _disp_html(message)
+        return
+
+    _disp_html(
+        "<h4>Azure CLI authentication recommended</h4>"
+        "Azure CLI gives the most seamless authentication experience for "
+        "authenticating to Azure Resources from Azure Machine Learning.<br>"
+        "Create a new notebook cell and enter the following command:<br>"
+        "<pre>!az login</pre>"
+        "You will be prompted to authenticate to Azure. Once you have "
+        "completed this, return to this notebook and continue.<br>"
+    )
+    if status == AzureCliStatus.CLI_NOT_INSTALLED:
+        _disp_html("Azure CLI not installed." f" ({_CLI_WIKI_MSSG_SHORT})")
+    elif message:
+        _disp_html("\n".join([message, _CLI_WIKI_MSSG_GEN]))
