@@ -20,12 +20,14 @@ __author__ = "Ian Hellen"
 
 # pylint: disable=redefined-outer-name
 
-_MIN_PY_VER = "3.6"
-_MIN_MP_VER = "1.0.0"
-_MIN_PY_VER_T = (3, 6, 0)
-_MIN_MP_VER_T = (1, 0, 0)
+_MIN_PY_VER = "3.10"
+_MIN_MP_VER = "2.0.0"
+_MIN_PY_VER_T = (3, 10, 0)
+_MIN_MP_VER_T = (2, 0, 0)
 
 _MP_CONFIG = "msticpyconfig-test.yaml"
+
+VersionInfo = namedtuple("VersionInfo", "major, minor, micro, releaselevel, serial")
 
 
 @pytest.fixture(scope="module")
@@ -83,6 +85,7 @@ CHECK_VERS = [
     CheckVers(_MIN_PY_VER, _MIN_MP_VER, ["azsentinel"], True, None, _EXP_ENV_JPX),
     CheckVers("9.9", _MIN_MP_VER, None, True, RuntimeError, _EXP_ENV),
     CheckVers(_MIN_PY_VER, _MP_FUT_VER, None, True, ImportError, _EXP_ENV),
+    CheckVers("5.12", _MIN_MP_VER, None, True, RuntimeError, _EXP_ENV),
     # is_aml == False
     CheckVers(_MIN_PY_VER, _MIN_MP_VER, None, False, None, _EXP_ENV),
     CheckVers(_MIN_PY_VER, _MIN_MP_VER, ["azsentinel"], False, None, _EXP_ENV_JPX),
@@ -111,6 +114,8 @@ def test_check_versions(monkeypatch, aml_file_sys, check_vers):
     monkeypatch.setattr(aml, "os", _os)
     monkeypatch.setattr(aml, "get_ipython", _ipython)
     monkeypatch.setattr(aml, "_get_vm_fqdn", lambda: "myhost")
+    if sys.version_info[:3] < (3, 10):
+        monkeypatch.setattr(sys, "version_info", VersionInfo(3, 10, 0, "final", 0))
 
     if check_vers.is_aml:
         # Set an env var to emulate AML
@@ -166,6 +171,8 @@ def test_check_versions_mpconfig(monkeypatch, aml_file_sys, test_case):
     _os = _PyOs()
     monkeypatch.setattr(aml, "os", _os)
     monkeypatch.setattr(aml, "_get_vm_fqdn", lambda: "myhost")
+    if sys.version_info[:3] < (3, 10):
+        monkeypatch.setattr(sys, "version_info", VersionInfo(3, 10, 0, "final", 0))
 
     # Set an env var to emulate AML
     _os.environ["APPSETTING_WEBSITE_SITE_NAME"] = "AMLComputeInstance"
