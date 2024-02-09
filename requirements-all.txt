@@ -58,5 +58,5 @@ tldextract>=2.2.2
 tqdm>=4.36.1
 typing-extensions>=4.2.0
 urllib3>=1.23
-vt-py>=0.6.1
+vt-py>=0.18.0
 vt-graph-api>=2.0

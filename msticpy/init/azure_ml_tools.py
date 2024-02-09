@@ -353,7 +353,7 @@ def get_aml_user_folder() -> Optional[Path]:
 
 # pylint: disable=import-outside-toplevel, unused-import, import-error
 def _run_user_settings():
-    """Import nbuser_settings.py, if it exists."""
+    """Check for nbuser_settings.py and warn that it is no longer used."""
     user_folder = get_aml_user_folder()
     if user_folder and user_folder.joinpath("nbuser_settings.py").is_file():
         warnings.warn(
