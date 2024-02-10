@@ -17,7 +17,7 @@ from IPython.display import HTML, display
 from pkg_resources import Requirement, WorkingSet, parse_version  # type: ignore
 
 from .._version import VERSION
-from ..common.pkg_config import _HOME_PATH, refresh_config
+from ..common.pkg_config import _HOME_PATH, get_config, refresh_config
 from ..common.utility import search_for_file, unit_testing
 from ..config import MpConfigFile  # pylint: disable=no-name-in-module
 
@@ -62,7 +62,7 @@ _CLI_WIKI_MSSG_GEN = (
 _CLI_WIKI_MSSG_SHORT = (
     f"see <a href='{_AZ_CLI_WIKI_URI}'>Caching credentials with Azure CLI</>"
 )
-PYSPARK_KERNEL_NOT_SUPPORTED = """
+_PYSPARK_KERNEL_NOT_SUPPORTED = """
     <h4><font color='red'>WARNING: This notebook may not run correctly with the Azure Machine
     Learning PySpark kernel.</font></h4> Please create a standard Azure Machine Learning
     Compute instance and select the Python 3.10 or later kernel.
@@ -127,11 +127,13 @@ def check_aml_settings(
     check_python_ver(min_py_ver=min_py_ver)
 
     _check_mp_install(min_mp_ver, mp_release, extras)
-    _check_kql_prereqs()
-    _set_kql_env_vars(extras)
+    if _kql_magic_installed():
+        _check_kql_prereqs()
+        _set_kql_env_vars(extras)
     _run_user_settings()
     _set_mpconfig_var()
     _check_azure_cli_status()
+    _check_aml_auth_method_order()
     _disp_html("<h4>Notebook pre-checks complete.</h4>")
 
 
@@ -144,7 +146,17 @@ def _check_pyspark():
     if not is_in_aml_pyspark():
         return
 
-    _disp_html(PYSPARK_KERNEL_NOT_SUPPORTED.format(nb_uri=AZ_GET_STARTED))
+    _disp_html(_PYSPARK_KERNEL_NOT_SUPPORTED.format(nb_uri=AZ_GET_STARTED))
+
+
+def _kql_magic_installed():
+    try:
+        # pylint: disable=import-outside-toplevel, unused-import
+        from Kqlmagic import kql  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
 
 
 def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
@@ -506,3 +518,42 @@ def _check_azure_cli_status():
         _disp_html("Azure CLI not installed." f" ({_CLI_WIKI_MSSG_SHORT})")
     elif message:
         _disp_html("\n".join([message, _CLI_WIKI_MSSG_GEN]))
+
+
+_MSI_WARNING = """
+<h4><font color='red'>WARNING: MSI authentication to MS Sentinel not supported</font></h4>
+Your have MSI authentication as higher priority than CLI or DeviceCode.
+This may cause authentication to MS Sentinel to fail since MSI authentication from
+Azure Machine Learning is no longer supported.<br>
+We recommend that you change your msticpyconfig.yaml so that
+you either remove MSI or place it below CLI and device code methods.<br>
+Example:<br>
+<pre>
+Azure:
+    auth_methods:
+        - cli
+        - devicecode
+        - msi
+</pre>
+"""
+
+
+def _check_aml_auth_method_order():
+    """Reorder the auth methods to put Azure CLI first."""
+    current_methods = get_config("Azure.auth_methods")
+    if not current_methods:
+        return
+    auth_index = {meth: idx for idx, meth in enumerate(current_methods)}
+    msi_lower_than_cli = auth_index.get("msi", 99) > auth_index.get("cli", 99)
+    msi_lower_than_devcode = auth_index.get("msi", 99) > auth_index.get(
+        "devicecode", auth_index.get("device_code", 99)
+    )
+    if msi_lower_than_cli or msi_lower_than_devcode:
+        return
+    _disp_html(_MSI_WARNING)
+    logging.warning("MSI authentication is higher priority than CLI or DeviceCode.")
+    if "msi" in current_methods:
+        _disp_html("Reordering auth_methods to move MSI to lowest priority.")
+        current_methods.remove("msi")
+        current_methods.append("msi")
+        logging.info("Reordering auth_methods to move MSI to the end.")
