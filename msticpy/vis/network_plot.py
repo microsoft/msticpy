@@ -129,9 +129,11 @@ def plot_nx_graph(
     node_attrs = {
         node: attrs.get(
             "color",
-            source_color
-            if attrs.get("node_role", "source") == "source"
-            else target_color,
+            (
+                source_color
+                if attrs.get("node_role", "source") == "source"
+                else target_color
+            ),
         )
         for node, attrs in nx_graph.nodes(data=True)
     }

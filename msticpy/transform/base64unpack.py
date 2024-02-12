@@ -219,7 +219,7 @@ def unpack_items(
 @export
 def unpack(
     input_string: str, trace: bool = False, utf16: bool = False
-) -> Tuple[str, Optional[List[BinaryRecord]]]:
+) -> Tuple[str, pd.DataFrame]:
     """
     Base64 decode an input string.
 
@@ -234,7 +234,7 @@ def unpack(
 
     Returns
     -------
-    Tuple[str, Optional[List[BinaryRecord]]]
+    Tuple[str, pd.DataFrame]
         Decoded string and additional metadata
 
     Notes

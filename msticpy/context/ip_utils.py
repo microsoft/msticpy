@@ -463,13 +463,13 @@ def ip_whois(
         for ip_addr in ip:
             if rate_limit:
                 sleep(query_rate)
-            whois_results[ip_addr] = _whois_lookup(
+            whois_results[ip_addr] = _whois_lookup(  # type: ignore
                 ip_addr, raw=raw, retry_count=retry_count
             ).properties
         return _whois_result_to_pandas(whois_results)
     if isinstance(ip, (str, IpAddress)):
         return _whois_lookup(ip, raw=raw)
-    return {}
+    return pd.DataFrame()
 
 
 def get_asn_details(asns: Union[str, List]) -> Union[pd.DataFrame, Dict]:

@@ -139,11 +139,13 @@ class IntSights(HttpTIProvider):
         severity = (
             ResultSeverity.information
             if sev == "Low"
-            else ResultSeverity.warning
-            if sev == "Medium"
-            else ResultSeverity.high
-            if sev == "High"
-            else ResultSeverity.unknown
+            else (
+                ResultSeverity.warning
+                if sev == "Medium"
+                else ResultSeverity.high
+                if sev == "High"
+                else ResultSeverity.unknown
+            )
         )
 
         return True, severity, result_dict

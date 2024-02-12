@@ -105,7 +105,9 @@ class DataViewerBokeh:
     @property
     def filtered_data(self) -> pd.DataFrame:
         """Return filtered dataframe."""
-        return self.data_filter.filtered_dataframe[self.column_chooser.selected_columns]
+        return self.data_filter.filtered_dataframe[  # type: ignore
+            self.column_chooser.selected_columns
+        ]  # type: ignore
 
     @property
     def filters(self) -> Dict[str, FilterExpr]:
@@ -478,7 +480,7 @@ class DataTableFilter:
                 for item in expr.split(",")
             ]
         elif pd.api.types.is_datetime64_any_dtype(self.data[col]):
-            test_expr = [pd.Timestamp(item.strip()) for item in expr.split(",")]
+            test_expr = [pd.Timestamp(item.strip()) for item in expr.split(",")]  # type: ignore
         else:
             raise TypeError(
                 f"Unsupported column type {self.data[col].dtype}",
@@ -499,7 +501,7 @@ class DataTableFilter:
         if pd.api.types.is_numeric_dtype(self.data[col]):
             test_expr = int(expr) if "." not in expr else float(expr)
         elif pd.api.types.is_datetime64_any_dtype(self.data[col]):
-            test_expr = pd.Timestamp(expr.strip())
+            test_expr = pd.Timestamp(expr.strip())  # type: ignore
         elif pd.api.types.is_string_dtype(self.data[col]):
             test_expr = expr.strip("\"' ")
         else:

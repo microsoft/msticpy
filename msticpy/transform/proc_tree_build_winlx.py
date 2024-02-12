@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree builder for Windows security and Linux auditd events."""
+from typing import Tuple
+
 import attr
 import pandas as pd
 
@@ -51,10 +53,10 @@ def extract_process_tree(
 
     """
     # Clean data
-    procs_cln, schema = _clean_proc_data(procs, schema)
+    procs_cln, schema = _clean_proc_data(procs, schema)  # type: ignore
 
     # Merge parent-child
-    merged_procs = _merge_parent_by_time(procs_cln, schema)
+    merged_procs = _merge_parent_by_time(procs_cln, schema)  # type: ignore
     if debug:
         _check_merge_status(procs_cln, merged_procs, schema)
 
@@ -84,7 +86,7 @@ def extract_process_tree(
 def _clean_proc_data(
     procs: pd.DataFrame,
     schema: "ProcSchema",  # type: ignore  # noqa: F821
-) -> pd.DataFrame:
+) -> Tuple[pd.DataFrame, ProcSchema]:
     """Return cleaned process data."""
     procs = ensure_df_datetimes(procs, columns=schema.time_stamp)
     procs_cln = (
@@ -119,7 +121,7 @@ def _clean_proc_data(
     if schema.parent_name:
         no_pproc = procs_cln[schema.parent_name] == ""
         procs_cln.loc[no_pproc, schema.parent_name] = "unknown"
-        procs_cln[Col.parent_proc_lc] = procs_cln[schema.parent_name].str.lower()
+        procs_cln[Col.parent_proc_lc] = procs_cln[schema.parent_name].str.lower()  # type: ignore
     procs_cln[Col.source_index] = procs_cln.index
     return procs_cln, schema
 

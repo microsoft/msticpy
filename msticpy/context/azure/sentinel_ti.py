@@ -419,9 +419,11 @@ class SentinelTIMixin:
 def _build_additional_indicator_items(**kwargs) -> dict:
     """Add in additional data items for indicators."""
     data_items = {
-        "validFrom": kwargs["valid_from"].isoformat()
-        if "valid_from" in kwargs
-        else datetime.now().isoformat()
+        "validFrom": (
+            kwargs["valid_from"].isoformat()
+            if "valid_from" in kwargs
+            else datetime.now().isoformat()
+        )
     }
     for item, value in kwargs.items():
         if item in _INDICATOR_ITEMS:
