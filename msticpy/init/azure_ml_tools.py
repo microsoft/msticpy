@@ -181,14 +181,14 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
     _disp_html("Checking Python kernel version...")
     if sys_ver < minimum_py_version:
         # Bandit SQL inject error found here
-        _disp_html(  # nosec
+        _disp_html(
             f"""
             <h4><font color='red'>This notebook requires a later
             (Python) kernel version.</h4></font>
             Select a kernel from the notebook toolbar (above), that is Python
             {minimum_py_version} or later (Python 3.10 recommended)<br>
             """
-        )
+        )  # nosec
         _disp_html(
             f"""
             Please see the <a href="{TROUBLE_SHOOTING}">TroubleShootingNotebooks</a>
@@ -540,7 +540,10 @@ Azure:
 
 def _check_aml_auth_method_order():
     """Reorder the auth methods to put Azure CLI first."""
-    current_methods = get_config("Azure.auth_methods")
+    try:
+        current_methods = get_config("Azure.auth_methods")
+    except KeyError:
+        return
     if not current_methods:
         return
     auth_index = {meth: idx for idx, meth in enumerate(current_methods)}

@@ -226,10 +226,11 @@ class TestDataQuery(unittest.TestCase):
     def test_load_yaml_def(self):
         """Test query loader rejecting badly formed query files."""
         la_provider = self.la_provider
-        with self.assertRaises((MsticpyException, ValueError, KeyError)) as cm:
-            file_path = Path(_TEST_DATA, "data_q_meta_fail.yaml")
-            la_provider.import_query_file(query_file=file_path)
-            self.assertIn("no data families defined", str(cm.exception))
+        before_queries = len(la_provider.all_queries)
+
+        file_path = Path(_TEST_DATA, "data_q_meta_fail.yaml")
+        la_provider.import_query_file(query_file=file_path)
+        self.assertEqual(len(la_provider.all_queries), before_queries)
 
         with self.assertRaises((MsticpyException, ValueError)) as cm:
             file_path = Path(_TEST_DATA, "data_q_source_fail_param.yaml")
@@ -241,11 +242,11 @@ class TestDataQuery(unittest.TestCase):
             la_provider.import_query_file(query_file=file_path)
             self.assertIn("Parameters with missing types", str(cm.exception))
 
-        before_queries = len(list(la_provider.list_queries()))
+        self.assertEqual(len(la_provider.all_queries), before_queries)
         file_path = Path(_TEST_DATA, "data_q_success.yaml")
         la_provider.import_query_file(query_file=file_path)
 
-        self.assertEqual(before_queries + 3, len(list(la_provider.list_queries())))
+        self.assertEqual(before_queries + 5, len(la_provider.all_queries))
 
     def test_load_hierarchical_q_paths(self):
         """Test use of hierarchical query paths."""
