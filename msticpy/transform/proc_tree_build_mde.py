@@ -273,8 +273,7 @@ def _remove_col_prefix(data: pd.DataFrame, prefix: str) -> Dict[str, str]:
     return {
         col.replace(prefix, ""): col
         for col in data.columns
-        if col.startswith(prefix)
-        if isinstance(col, str)
+        if isinstance(col, str) and col.startswith(prefix)
     }
 
 

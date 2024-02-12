@@ -1127,7 +1127,7 @@ def timestamps_to_utcdate(data: pd.DataFrame):
     """Replace Unix timestamps in VT data with Py/pandas Timestamp."""
     columns = data.columns
     for date_col in (
-        col for col in columns if col.endswith("_date") if isinstance(col, str)
+        col for col in columns if isinstance(col, str) and col.endswith("_date")
     ):
         data = (
             data.assign(pd_data=pd.to_datetime(data[date_col], unit="s", utc=True))  # type: ignore
