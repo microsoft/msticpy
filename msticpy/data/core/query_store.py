@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """QueryStore class - holds a collection of QuerySources."""
+import logging
 from collections import defaultdict
 from functools import cached_property
 from os import path
@@ -17,6 +18,8 @@ from .query_source import QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+logger = logging.getLogger(__name__)
 
 
 def _get_dot_path(elem_path: str, data_map: dict) -> Any:
@@ -215,7 +218,13 @@ class QueryStore:
             the source file.
 
         """
-        sources, defaults, metadata = read_query_def_file(query_file)
+        try:
+            sources, defaults, metadata = read_query_def_file(query_file)
+        except ValueError:
+            logger.warning(
+                "%sis not a valid query definition file - skipping.", query_file
+            )
+            return
 
         for source_name, source in sources.items():
             new_source = QuerySource(source_name, source, defaults, metadata)
@@ -284,7 +293,7 @@ class QueryStore:
                     )
                     continue
 
-                for env_value in metadata["data_environments"]:
+                for env_value in metadata.get("data_environments", []):
                     if "." in env_value:
                         env_value = env_value.split(".")[1]
                     environment = DataEnvironment.parse(env_value)
