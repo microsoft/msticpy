@@ -14,15 +14,10 @@ from typing import Any, List, Mapping, Optional, Tuple, Union
 import yaml
 from IPython import get_ipython
 from IPython.display import HTML, display
-from pkg_resources import (  # type: ignore
-    DistInfoDistribution,
-    Requirement,
-    WorkingSet,
-    parse_version,
-)
+from pkg_resources import Requirement, WorkingSet, parse_version  # type: ignore
 
 from .._version import VERSION
-from ..common.pkg_config import _HOME_PATH, refresh_config
+from ..common.pkg_config import _HOME_PATH, get_config, refresh_config
 from ..common.utility import search_for_file, unit_testing
 from ..config import MpConfigFile  # pylint: disable=no-name-in-module
 
@@ -67,17 +62,26 @@ _CLI_WIKI_MSSG_GEN = (
 _CLI_WIKI_MSSG_SHORT = (
     f"see <a href='{_AZ_CLI_WIKI_URI}'>Caching credentials with Azure CLI</>"
 )
+_PYSPARK_KERNEL_NOT_SUPPORTED = """
+    <h4><font color='red'>WARNING: This notebook may not run correctly with the Azure Machine
+    Learning PySpark kernel.</font></h4> Please create a standard Azure Machine Learning
+    Compute instance and select the Python 3.10 or later kernel.
+    Please see the <a href="{nbk_uri}">
+    Getting Started Guide For Azure Sentinel ML Notebooks</a></b>
+    for more information<br><hr>
+"""
 
-MIN_PYTHON_VER_DEF = "3.6"
+MIN_PYTHON_VER_DEF = "3.10.0"
 MSTICPY_REQ_VERSION = __version__
 
 VER_RGX = r"(?P<maj>\d+)\.(?P<min>\d+).(?P<pnt>\d+)(?P<suff>.*)"
 MP_ENV_VAR = "MSTICPYCONFIG"
 MP_FILE = "msticpyconfig.yaml"
-NB_CHECK_URI = (
-    "https://raw.githubusercontent.com/Azure/Azure-Sentinel-"
-    "Notebooks/master/utils/nb_check.py"
-)
+
+
+def is_in_aml_pyspark():
+    """Return True if running in Spark on Azure Machine Learning."""
+    return os.environ.get("AZUREML_FRAMEWORK") == "PySpark"
 
 
 def is_in_aml():
@@ -117,21 +121,42 @@ def check_aml_settings(
     """
     del kwargs
     _disp_html("<h4>Starting AML notebook pre-checks...</h4>")
+    _check_pyspark()
     if isinstance(min_py_ver, str):
-        min_py_ver = _get_pkg_version(min_py_ver).release
+        min_py_ver = _get_pkg_version(min_py_ver).release  # type: ignore
     check_python_ver(min_py_ver=min_py_ver)
 
     _check_mp_install(min_mp_ver, mp_release, extras)
-    _check_kql_prereqs()
-    _set_kql_env_vars(extras)
+    if _kql_magic_installed():
+        _check_kql_prereqs()
+        _set_kql_env_vars(extras)
     _run_user_settings()
     _set_mpconfig_var()
     _check_azure_cli_status()
+    _check_aml_auth_method_order()
     _disp_html("<h4>Notebook pre-checks complete.</h4>")
 
 
 # retain previous name for backward compatibility
 check_versions = check_aml_settings
+
+
+def _check_pyspark():
+    """Check if we are running in PySpark kernel."""
+    if not is_in_aml_pyspark():
+        return
+
+    _disp_html(_PYSPARK_KERNEL_NOT_SUPPORTED.format(nb_uri=AZ_GET_STARTED))
+
+
+def _kql_magic_installed():
+    try:
+        # pylint: disable=import-outside-toplevel, unused-import
+        from Kqlmagic import kql  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
 
 
 def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
@@ -149,19 +174,21 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
         If the Python version does not support the notebook.
 
     """
-    min_py_ver = _get_pkg_version(min_py_ver)
+    minimum_py_version = max(
+        _get_pkg_version(min_py_ver), _get_pkg_version(MIN_PYTHON_VER_DEF)
+    )
     sys_ver = _get_pkg_version(sys.version_info[:3])
     _disp_html("Checking Python kernel version...")
-    if sys_ver < min_py_ver:
+    if sys_ver < minimum_py_version:
         # Bandit SQL inject error found here
-        _disp_html(  # nosec
+        _disp_html(
             f"""
             <h4><font color='red'>This notebook requires a later
             (Python) kernel version.</h4></font>
             Select a kernel from the notebook toolbar (above), that is Python
-            {min_py_ver} or later (Python 3.8 recommended)<br>
+            {minimum_py_version} or later (Python 3.10 recommended)<br>
             """
-        )
+        )  # nosec
         _disp_html(
             f"""
             Please see the <a href="{TROUBLE_SHOOTING}">TroubleShootingNotebooks</a>
@@ -169,13 +196,10 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
             """
         )
         # Bandit SQL inject error found here
-        raise RuntimeError(f"Python {min_py_ver} or later kernel is required.")  # nosec
+        raise RuntimeError(
+            f"Python {minimum_py_version} or later kernel is required."
+        )  # nosec
 
-    if sys_ver < _get_pkg_version("3.8"):
-        _disp_html(
-            "Recommended: switch to using the 'Python 3.8 - AzureML' notebook kernel"
-            " if this is available."
-        )
     _disp_html(f"Info: Python kernel version {sys_ver} - OK<br>")
 
 
@@ -303,16 +327,16 @@ def _set_kql_env_vars(extras: Optional[List[str]]):
         os.environ["KQLMAGIC_AZUREML_COMPUTE"] = _get_vm_fqdn()
 
 
-def _get_pkg_version(version: Union[str, Tuple]) -> DistInfoDistribution:
+def _get_pkg_version(version: Union[str, Tuple]):
     """Return pkg_resources parsed version from string or tuple."""
     if isinstance(version, str):
         return parse_version(version)
     if isinstance(version, tuple):
         return parse_version(".".join(str(ver) for ver in version))
-    raise TypeError(f"Version {version} no parseable.")
+    raise TypeError(f"Version {version} not cannot be parsed.")
 
 
-def _get_installed_mp_version() -> Optional[DistInfoDistribution]:
+def _get_installed_mp_version():
     """Return the installed version of MSTICPY."""
     working_set = WorkingSet()
     mp_installed = working_set.find(Requirement("msticpy"))  # type: ignore
@@ -473,13 +497,66 @@ def _check_azure_cli_status():
     # pylint: disable=import-outside-toplevel
     from ..auth.azure_auth_core import AzureCliStatus, check_cli_credentials
 
-    if not unit_testing():
-        status, message = check_cli_credentials()
-        if status == AzureCliStatus.CLI_OK:
-            _disp_html(message)
-        elif status == AzureCliStatus.CLI_NOT_INSTALLED:
-            _disp_html(
-                "Azure CLI credentials not detected." f" ({_CLI_WIKI_MSSG_SHORT})"
-            )
-        elif message:
-            _disp_html("\n".join([message, _CLI_WIKI_MSSG_GEN]))
+    if unit_testing():
+        return
+
+    status, message = check_cli_credentials()
+    if status == AzureCliStatus.CLI_OK:
+        _disp_html(message)
+        return
+
+    _disp_html(
+        "<h4>Azure CLI authentication recommended</h4>"
+        "Azure CLI gives the most seamless authentication experience for "
+        "authenticating to Azure Resources from Azure Machine Learning.<br>"
+        "Create a new notebook cell and enter the following command:<br>"
+        "<pre>!az login</pre>"
+        "You will be prompted to authenticate to Azure. Once you have "
+        "completed this, return to this notebook and continue.<br>"
+    )
+    if status == AzureCliStatus.CLI_NOT_INSTALLED:
+        _disp_html("Azure CLI not installed." f" ({_CLI_WIKI_MSSG_SHORT})")
+    elif message:
+        _disp_html("\n".join([message, _CLI_WIKI_MSSG_GEN]))
+
+
+_MSI_WARNING = """
+<h4><font color='red'>WARNING: MSI authentication to MS Sentinel not supported</font></h4>
+Your have MSI authentication as higher priority than CLI or DeviceCode.
+This may cause authentication to MS Sentinel to fail since MSI authentication from
+Azure Machine Learning is no longer supported.<br>
+We recommend that you change your msticpyconfig.yaml so that
+you either remove MSI or place it below CLI and device code methods.<br>
+Example:<br>
+<pre>
+Azure:
+    auth_methods:
+        - cli
+        - devicecode
+        - msi
+</pre>
+"""
+
+
+def _check_aml_auth_method_order():
+    """Reorder the auth methods to put Azure CLI first."""
+    try:
+        current_methods = get_config("Azure.auth_methods")
+    except KeyError:
+        return
+    if not current_methods:
+        return
+    auth_index = {meth: idx for idx, meth in enumerate(current_methods)}
+    msi_lower_than_cli = auth_index.get("msi", 99) > auth_index.get("cli", 99)
+    msi_lower_than_devcode = auth_index.get("msi", 99) > auth_index.get(
+        "devicecode", auth_index.get("device_code", 99)
+    )
+    if msi_lower_than_cli or msi_lower_than_devcode:
+        return
+    _disp_html(_MSI_WARNING)
+    logging.warning("MSI authentication is higher priority than CLI or DeviceCode.")
+    if "msi" in current_methods:
+        _disp_html("Reordering auth_methods to move MSI to lowest priority.")
+        current_methods.remove("msi")
+        current_methods.append("msi")
+        logging.info("Reordering auth_methods to move MSI to the end.")
