@@ -476,7 +476,9 @@ TEST_TOKEN = {
     "isUserIdDisplayable": True,
     "isMRRT": True,
     "_clientId": "04b07795-8ddb-461a-bbee-02f9e1bf7b46",
-    "_authority": "https://login.microsoftonline.com/ffffffff-8888-4444-aaaa-2d2d2d2d2d2d",
+    "_authority": (
+        "https://login.microsoftonline.com/ffffffff-8888-4444-aaaa-2d2d2d2d2d2d"
+    ),
 }
 
 DEV_CODE = {

@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 from pandas.core.dtypes.dtypes import DatetimeTZDtype
 
+# mypy: ignore-errors
+
 
 def sessionize_data(
     data: pd.DataFrame,

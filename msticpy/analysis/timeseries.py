@@ -360,8 +360,8 @@ def extract_anomaly_periods(
         if not end_period:
             # If we're not already in an anomaly period
             # create start/end for a new one
-            start_period = time - pd.Timedelta(period)
-            end_period = time + pd.Timedelta(period)
+            start_period = time - pd.Timedelta(period)  # type: ignore
+            end_period = time + pd.Timedelta(period)  # type: ignore
             periods[start_period] = end_period
         elif (time - end_period) <= pd.Timedelta(
             period

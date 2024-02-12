@@ -372,7 +372,7 @@ class KqlTIProvider(TIProvider):
         }
         columns_to_drop = columns_to_drop - colums_to_keep
 
-        cleaned_results_df = results_df.copy().drop(columns=columns_to_drop)
+        cleaned_results_df = results_df.copy().drop(columns=columns_to_drop)  # type: ignore
         combined_df = input_df.copy()
         combined_df["IoCKey"] = input_df["Ioc"].str.lower()
         cleaned_results_df = cleaned_results_df.rename(

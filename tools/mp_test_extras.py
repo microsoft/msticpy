@@ -1,4 +1,5 @@
 """Test runs for different extras."""
+
 import argparse
 import os
 import subprocess  # nosec

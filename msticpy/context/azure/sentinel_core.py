@@ -321,8 +321,9 @@ class MicrosoftSentinel(
             res_id_parts = parse_resource_id(ws_res_id)
             self.workspace_config = WorkspaceConfig.from_settings(
                 {
-                    "WorkspaceName": self._default_workspace
-                    or res_id_parts["workspace_name"],
+                    "WorkspaceName": (
+                        self._default_workspace or res_id_parts["workspace_name"]
+                    ),
                     "SubscriptionId": res_id_parts["subscription_id"],
                     "ResourceGroup": res_id_parts["resource_group"],
                 }

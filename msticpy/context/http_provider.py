@@ -237,9 +237,11 @@ class HttpProvider(Provider):
         # substitute any parameter value from our req_params dict
         req_dict: Dict[str, Any] = {
             "headers": {},
-            "url": src.path.format(**req_params)
-            if src.full_url
-            else (self._BASE_URL + src.path).format(**req_params),
+            "url": (
+                src.path.format(**req_params)
+                if src.full_url
+                else (self._BASE_URL + src.path).format(**req_params)
+            ),
         }
 
         if src.headers:

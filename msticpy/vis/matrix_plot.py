@@ -281,7 +281,7 @@ def _prep_data(data: pd.DataFrame, param: PlotParams):
             count_col = data.index.name or "index"
             data = data.reset_index()
         count_rows_df = (
-            data[[param.x_column, param.y_column, count_col]]
+            data[[param.x_column, param.y_column, count_col]]  # type: ignore
             .groupby([param.x_column, param.y_column])
             .count()
             .rename(columns={count_col: "row_count"})
@@ -295,14 +295,14 @@ def _prep_data(data: pd.DataFrame, param: PlotParams):
     if param.dist_count:
         # If distinct count of values required, get nunique
         tmp_df = (
-            data[[param.x_column, param.y_column, param.value_col]]
+            data[[param.x_column, param.y_column, param.value_col]]  # type: ignore
             .groupby([param.x_column, param.y_column])
             .nunique()
             .reset_index()
         )
     else:
         tmp_df = (
-            data[[param.x_column, param.y_column, param.value_col]]
+            data[[param.x_column, param.y_column, param.value_col]]  # type: ignore
             .groupby([param.x_column, param.y_column])
             .sum()
             .reset_index()

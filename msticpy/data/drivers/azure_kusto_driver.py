@@ -348,9 +348,11 @@ class AzureKustoDriver(DriverBase):
         if proxy_url:
             logger.info(
                 "Using proxy: %s",
-                proxy_url
-                if "@" not in proxy_url  # don't log proxy credentials
-                else "****" + proxy_url.split("@")[-1],
+                (
+                    proxy_url
+                    if "@" not in proxy_url  # don't log proxy credentials
+                    else "****" + proxy_url.split("@")[-1]
+                ),
             )
             self.client.set_proxy(proxy_url)
         self._connected = True
@@ -388,7 +390,7 @@ class AzureKustoDriver(DriverBase):
         )
         return data if data is not None else result
 
-    def query_with_results(
+    def query_with_results(  # type: ignore
         self, query: str, **kwargs
     ) -> Tuple[Optional[pd.DataFrame], Any]:
         """
@@ -866,12 +868,14 @@ def _section_or_default(settings: Dict[str, Any], default: Dict[str, Any]):
 def _create_protected_args(args: Dict[str, Any], path: str) -> ProviderArgs:
     """Return a dictionary of protected settings for Kusto args config."""
     args_dict = {
-        key_name: partial(
-            get_protected_setting, config_path=f"{path}.Args", setting_name=key_name
+        key_name: (
+            partial(
+                get_protected_setting, config_path=f"{path}.Args", setting_name=key_name
+            )
+            if isinstance(value, dict)
+            and (value.get("EnvironmentVar") or value.get("KeyVault"))
+            else value
         )
-        if isinstance(value, dict)
-        and (value.get("EnvironmentVar") or value.get("KeyVault"))
-        else value
         for key_name, value in args.items()
     }
     return ProviderArgs(**args_dict)

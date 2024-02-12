@@ -390,7 +390,7 @@ def _try_match_commandlines(
                 and row["name"] in cmd
             ):
                 # print("Found match:", row["name"], "==", cmd)
-                procs_cmd.loc[idx, "cmd_line"] = cmd
+                procs_cmd.loc[idx, "cmd_line"] = cmd  # type: ignore
                 break
     for cmd in command_executions:
         for idx, row in procs_cmd.iterrows():
@@ -402,7 +402,7 @@ def _try_match_commandlines(
             ):
                 weak_matches += 1
                 # print("Found weak match:", row["name"], "~=", cmd)
-                procs_cmd.loc[idx, "cmd_line"] = cmd
+                procs_cmd.loc[idx, "cmd_line"] = cmd  # type: ignore
                 break
 
     if weak_matches:

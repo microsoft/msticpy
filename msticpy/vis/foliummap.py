@@ -790,7 +790,7 @@ def plot_map(
             def_layer_color = _get_icon_layer_color(index)
             feature_group = _create_feature_group(
                 data=layer_df,
-                layer_name=layer,
+                layer_name=layer,  # type: ignore
                 def_layer_color=def_layer_color,
                 **static_kwargs,  # type: ignore
             )
@@ -891,9 +891,9 @@ def _create_mapped_icon(
     """Return folium Icon from mapping or defaults."""
     icon_kwargs: Dict[str, str] = {}
     if isinstance(icon_map, dict):
-        icon_kwargs = icon_map.get(row[icon_column], icon_map.get("default", {}))
+        icon_kwargs = icon_map.get(row[icon_column], icon_map.get("default", {}))  # type: ignore
     elif callable(icon_map):
-        icon_kwargs = icon_map(row[icon_column])
+        icon_kwargs = icon_map(row[icon_column])  # type: ignore
     elif icon_column:
         icon_kwargs = {"icon": row[icon_column]}
     if "color" not in icon_kwargs:

@@ -221,7 +221,7 @@ def display_timeline_duration(
     )
 
     # Set grid parameters
-    set_axes_and_grids(None, plot, param.yaxis, param.ygrid, param.xgrid)
+    set_axes_and_grids(None, plot, param.yaxis, param.ygrid, param.xgrid)  # type: ignore
 
     # Create plot bar to act as as range selector
     rng_select = create_range_tool(
