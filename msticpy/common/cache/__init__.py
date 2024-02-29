@@ -16,9 +16,6 @@ if TYPE_CHECKING:
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
-# Define the maximum size of data that can be cached within a notebook.
-MAX_INLINE_CACHE_SIZE = 10000
-
 
 def write_cache(  # noqa: PLR0913
     data: pd.DataFrame,
@@ -38,17 +35,11 @@ def write_cache(  # noqa: PLR0913
         arguments=search_params,
     )
     if is_ipython() and display:
-        if len(data) < MAX_INLINE_CACHE_SIZE:
-            cell.write_cache(
-                cache,
-                name,
-                cache_digest,
-            )
-        else:
-            LOGGER.warning(
-                "Too much data (%d rows) to write to cache inline",
-                len(data),
-            )
+        cell.write_cache(
+            cache,
+            name,
+            cache_digest,
+        )
     if cache_path:
         LOGGER.info("Writing cache to %s", cache_path)
         cache_file.write_cache(

@@ -12,7 +12,6 @@ from ...datamodel.result import QueryResult
 from .codec import decode_base64_as_pickle, encode_as_base64_pickle
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
-MAX_DISPLAY_SIZE: int = 5
 
 
 def write_cache(
@@ -37,7 +36,7 @@ def write_cache(
         )
     LOGGER.debug("Data %s written to Notebook cache", name)
     display(
-        data.raw_results.head(MAX_DISPLAY_SIZE),
+        data.raw_results,
         metadata=metadata,
         exclude=["text/plain"],
     )
