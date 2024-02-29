@@ -326,13 +326,13 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
                 )
             except (ValueError, FileNotFoundError):
                 logger.info("Data not found in cache.")
-                return None
-            logger.info(
-                "Data found in cache, returning result from past execution %s.",
-                result.timestamp.isoformat(sep=" ", timespec="seconds"),
-            )
-            if result.raw_results is not None:
-                return result.raw_results
+            else:
+                logger.info(
+                    "Data found in cache, returning result from past execution %s.",
+                    result.timestamp.isoformat(sep=" ", timespec="seconds"),
+                )
+                if result.raw_results is not None:
+                    return result.raw_results
 
         query_result: pd.DataFrame = self.exec_query(
             query_str, query_source=query_source, **query_options
