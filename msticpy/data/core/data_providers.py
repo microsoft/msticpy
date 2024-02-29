@@ -11,11 +11,11 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
 
-from msticpy.datamodel.result import QueryResult
-
 from ..._version import VERSION
+from ...common.cache import read_cache, write_cache
 from ...common.pkg_config import get_config
 from ...common.utility import export, valid_pyname
+from ...datamodel.result import QueryResult
 from ...nbwidgets.query_time import QueryTime
 from .. import drivers
 from ..drivers.driver_base import DriverBase, DriverProps
@@ -25,7 +25,6 @@ from .query_defns import DataEnvironment
 from .query_provider_connections_mixin import QueryProviderConnectionsMixin
 from .query_provider_utils_mixin import QueryProviderUtilsMixin
 from .query_store import QueryStore
-from ...common.cache import read_cache, write_cache
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -271,7 +270,6 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         query_name = kwargs.pop("query_name")
         family = kwargs.pop("query_path")
         cache_path: Optional[str] = kwargs.pop("cache_path", None)
-        display: bool = kwargs.pop("display", True)
 
         query_source = self.query_store.get_query(
             query_path=family, query_name=query_name
@@ -344,7 +342,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             search_params=query_options,
             cache_path=cache_path,
             name=query_source.name,
-            display=display,
+            display=kwargs.pop("display", True),
         )
         return query_result
 

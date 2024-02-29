@@ -35,6 +35,7 @@ CONDA_PKG_EXCEPTIONS = {
     "KqlmagicCustom[jupyter-extended]",
     "sumologic-sdk",
     "openpyxl",
+    "compress-pickle",
 }
 
 
