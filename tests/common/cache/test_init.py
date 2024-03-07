@@ -144,7 +144,13 @@ def test_read_cache_file(
     """Test method to read cache from a file."""
     params: dict[str, Any] = {"key": "digest"}
 
-    with patch.object(file, "read_cache", return_value=simple_dataframeresult):
+    with patch.object(
+        file, "read_cache", return_value=simple_dataframeresult
+    ), patch.object(
+        cache,
+        "is_ipython",
+        return_value=False,
+    ):
         # "Real" tests are managed in the file.read_cache test"
         read_cache(search_params=params, cache_path=str(tmp_path), name="name")
 
