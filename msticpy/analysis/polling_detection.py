@@ -23,6 +23,12 @@ from scipy import signal, special
 
 from ..common.utility import export
 
+_PD_VERSION = tuple(int(v) for v in pd.__version__.split("."))
+if _PD_VERSION <= (2, 2, 1):
+    GROUP_APPLY_PARAMS = {"include_groups": False}
+else:
+    GROUP_APPLY_PARAMS = {}
+
 
 @export
 class PeriodogramPollingDetector:
@@ -212,7 +218,7 @@ class PeriodogramPollingDetector:
                 lambda x: self._detect_polling_arr(  # type: ignore
                     x[time_column], min(x[time_column]), max(x[time_column])  # type: ignore
                 ),
-                include_groups=False,
+                **GROUP_APPLY_PARAMS,
             )
 
             grouped_results_df = pd.DataFrame(
