@@ -98,11 +98,11 @@ Loading a QueryProvider for Microsoft Sentinel
 .. code:: ipython3
 
     qry_prov = QueryProvider(
-        data_environment="MSSentinel_New",
+        data_environment="MSSentinel",
     )
 
     # or just
-    qry_prov = QueryProvider("MSSentinel_New")
+    qry_prov = QueryProvider("MSSentinel")
 
 Optional parameters for the Sentinel QueryProvider
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -249,6 +249,20 @@ Other parameters for Sentinel ``connect()`` method
 
 For ``timeout`` and ``proxies`` see the section above.
 
+Other parameters for query method
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+These parameters can be passed to either exec_query or to the built-in
+template queries (e.g. ``list_alerts``).
+
+``timeout`` : int (seconds) - override the default timeout (or timeout
+specified for the driver) for this query.
+
+``fail_on_partial``: bool - if True, raise an exception if only
+a partial result is returned. If False, return the partial result.
+The default is False.
+
+``chunk_size``: int - split the query into chunks of this size and
 
 The WorkspaceConfig class
 -------------------------

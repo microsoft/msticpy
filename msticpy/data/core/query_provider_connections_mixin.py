@@ -297,6 +297,8 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
     ) -> Dict[Tuple[datetime, datetime], str]:
         """Return separate queries for split time ranges."""
         try:
+            if split_by.strip().endswith("H"):
+                split_by = split_by.replace("H", "h")
             split_delta = pd.Timedelta(split_by)
         except ValueError:
             split_delta = pd.Timedelta("1D")

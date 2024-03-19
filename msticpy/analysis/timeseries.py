@@ -224,7 +224,7 @@ def ts_anomalies_stl(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     Parameters
     ----------
     data : pd.DataFrame
-        DataFrame as a time series data set retrived from data connector or
+        DataFrame as a time series data set retrieved from data connector or
         external data source. Dataframe must have 2 columns with time column
         set as index and other numeric value.
 
@@ -310,7 +310,7 @@ timeseries_anomalies_stl = ts_anomalies_stl
 def extract_anomaly_periods(
     data: pd.DataFrame,
     time_column: str = "TimeGenerated",
-    period: str = "1H",
+    period: str = "1h",
     pos_only: bool = True,
     anomalies_column: str = "anomalies",
 ) -> Dict[datetime, datetime]:
@@ -325,7 +325,7 @@ def extract_anomaly_periods(
         The name of the time column
     period : str, optional
         pandas-compatible time period designator,
-        by default "1H"
+        by default "1h"
     pos_only : bool, optional
         If True only extract positive anomaly periods,
         else extract both positive and negative.
@@ -380,7 +380,7 @@ def extract_anomaly_periods(
 def find_anomaly_periods(
     data: pd.DataFrame,
     time_column: str = "TimeGenerated",
-    period: str = "1H",
+    period: str = "1h",
     pos_only: bool = True,
     anomalies_column: str = "anomalies",
 ) -> List[TimeSpan]:
@@ -395,7 +395,7 @@ def find_anomaly_periods(
         The name of the time column
     period : str, optional
         pandas-compatible time period designator,
-        by default "1H"
+        by default "1h"
     pos_only : bool, optional
         If True only extract positive anomaly periods,
         else extract both positive and negative.
