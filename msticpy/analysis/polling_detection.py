@@ -211,7 +211,8 @@ class PeriodogramPollingDetector:
             grouped_results = self.data.groupby(groupby).apply(
                 lambda x: self._detect_polling_arr(  # type: ignore
                     x[time_column], min(x[time_column]), max(x[time_column])  # type: ignore
-                )
+                ),
+                include_groups=False,
             )
 
             grouped_results_df = pd.DataFrame(
