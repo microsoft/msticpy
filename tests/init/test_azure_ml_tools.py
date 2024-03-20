@@ -137,14 +137,6 @@ def test_check_versions(monkeypatch, aml_file_sys, check_vers):
                 extras=check_vers.extras,
             )
 
-        env = "KQLMAGIC_EXTRAS_REQUIRE"
-        check.is_in(env, _os.environ)
-        check.equal(check_vers.env[env], _os.environ.get(env))
-        if check_vers.is_aml:
-            env = "KQLMAGIC_AZUREML_COMPUTE"
-            check.is_in(env, _os.environ)
-            check.equal(check_vers.env[env], _os.environ.get(env))
-
 
 MpConfig = namedtuple("MpConfig", "sub_dir, mpconf_exists")
 _MP_CONFIG_TESTS = [

@@ -354,9 +354,9 @@ class TestDataQuery(unittest.TestCase):
 
     def test_split_ranges(self):
         """Test time range split logic."""
-        start = datetime.utcnow() - pd.Timedelta("5H")
+        start = datetime.utcnow() - pd.Timedelta("5h")
         end = datetime.utcnow() + pd.Timedelta("5min")
-        delta = pd.Timedelta("1H")
+        delta = pd.Timedelta("1h")
 
         ranges = _calc_split_ranges(start, end, delta)
         self.assertEqual(len(ranges), 5)
@@ -377,9 +377,9 @@ class TestDataQuery(unittest.TestCase):
         """Test queries split into time segments."""
         la_provider = self.la_provider
 
-        start = datetime.utcnow() - pd.Timedelta("5H")
+        start = datetime.utcnow() - pd.Timedelta("5h")
         end = datetime.utcnow() + pd.Timedelta("5min")
-        delta = pd.Timedelta("1H")
+        delta = pd.Timedelta("1h")
 
         ranges = _calc_split_ranges(start, end, delta)
         result_queries = la_provider.all_queries.list_alerts(
