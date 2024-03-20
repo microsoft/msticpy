@@ -57,7 +57,7 @@ See :py:meth:`add_watchlist_item <msticpy.context.azure.MicrosoftSentinel.add_wa
 .. code:: ipython3
 
     sentinel.add_watchlist_item(watchlist_name="Custom Watchlist",
-        item={"IPAddress": ", "13.107.6.152", "Location": "USA"}
+        item={"IPAddress": "13.107.6.152", "Location": "USA"}
     )
 
 An error will be raised if the item you are trying to add already exists in the Watchlist.

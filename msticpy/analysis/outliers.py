@@ -126,7 +126,7 @@ def plot_outlier_results(
 
     plt.title(plt_title)
     # pylint: disable=no-member
-    plt.contourf(xx, yy, z, cmap=plt.cm.Blues_r)
+    plt.contourf(xx, yy, z, cmap=plt.cm.Blues_r)  # type: ignore
 
     b1 = plt.scatter(x[:, 0], x[:, 1], c="white", s=20, edgecolor="k")
     b2 = plt.scatter(x_predict[:, 0], x_predict[:, 1], c="green", s=40, edgecolor="k")
@@ -142,8 +142,8 @@ def plot_outlier_results(
 
     plt.xlim((xp_min_x, xp_max_x))
     plt.ylim((xp_min_y, xp_max_y))
-    plt.xlabel(feature_columns[0])
-    plt.ylabel(feature_columns[1])
+    plt.xlabel(feature_columns[0])  # type: ignore
+    plt.ylabel(feature_columns[1])  # type: ignore
 
     plt.legend(
         [b1, b2, c],
@@ -178,7 +178,7 @@ def remove_common_items(data: pd.DataFrame, columns: List[str]) -> pd.DataFrame:
     # pylint: disable=cell-var-from-loop
     for col in columns:
         filtered_df = filtered_df.filter(
-            lambda x: (x[col].std() == 0 and x[col].count() > 10)
+            lambda x: (x[col].std() == 0 and x[col].count() > 10)  # type: ignore
         )
 
     return filtered_df

@@ -23,6 +23,12 @@ from scipy import signal, special
 
 from ..common.utility import export
 
+_PD_VERSION = tuple(int(v) for v in pd.__version__.split("."))
+if _PD_VERSION >= (2, 2, 1):
+    GROUP_APPLY_PARAMS = {"include_groups": False}
+else:
+    GROUP_APPLY_PARAMS = {}
+
 
 @export
 class PeriodogramPollingDetector:
@@ -202,16 +208,17 @@ class PeriodogramPollingDetector:
         end = max(ts_col)
 
         if not groupby:
-            p_value, freq, interval = self._detect_polling_arr(ts_col, start, end)
+            p_value, freq, interval = self._detect_polling_arr(ts_col, start, end)  # type: ignore
 
             self.data["p_value"] = p_value
             self.data["dominant_frequency"] = freq
             self.data["dominant_interval"] = interval
         else:
             grouped_results = self.data.groupby(groupby).apply(
-                lambda x: self._detect_polling_arr(
-                    x[time_column], min(x[time_column]), max(x[time_column])
-                )
+                lambda x: self._detect_polling_arr(  # type: ignore
+                    x[time_column], min(x[time_column]), max(x[time_column])  # type: ignore
+                ),
+                **GROUP_APPLY_PARAMS,
             )
 
             grouped_results_df = pd.DataFrame(

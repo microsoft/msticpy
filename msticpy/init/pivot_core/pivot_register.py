@@ -310,7 +310,7 @@ def join_result(
             result_df,
             left_on=left_on,
             right_on=right_on,
-            how=how,
+            how=how,  # type: ignore
             suffixes=("_src", "_res"),
         )
 
@@ -323,7 +323,7 @@ def join_result(
         result_df,
         left_on=left_on,
         right_on=right_on,
-        how=how,
+        how=how,  # type: ignore
         suffixes=("_src", "_res"),
     ).drop(columns=[left_on, right_on])
 

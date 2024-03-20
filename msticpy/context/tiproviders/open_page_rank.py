@@ -121,7 +121,7 @@ class OPR(HttpTIProvider):
         results: List[pd.Series] = []
         if not domain_list:
             return pd.DataFrame()
-        results.extend(self._lookup_bulk_request(domain_list))
+        results.extend(self._lookup_bulk_request(domain_list))  # type: ignore
 
         all_results = results + bad_requests
         return pd.DataFrame(all_results)

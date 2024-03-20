@@ -1,7 +1,7 @@
 metadata:
   version: 1
   description: M365D User Queries
-  data_environments: [MDATP, MDE, M365D, LogAnalytics]
+  data_environments: [MDATP, MDE, M365D, M365DGraph, LogAnalytics]
   data_families: [M365D]
   tags: ["user", "account"]
 defaults:

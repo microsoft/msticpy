@@ -181,7 +181,7 @@ class MordorDriver(DriverBase):
         result = self.query(query, **kwargs)
         if isinstance(result, pd.DataFrame):
             return result, "OK"
-        return pd.DataFrame, result
+        return pd.DataFrame(), result
 
     @property
     def driver_queries(self) -> Iterable[Dict[str, Any]]:

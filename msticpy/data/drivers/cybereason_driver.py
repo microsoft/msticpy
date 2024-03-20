@@ -8,7 +8,7 @@ import datetime as dt
 import json
 import logging
 import re
-from asyncio import as_completed, Future
+from asyncio import Future, as_completed
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial, singledispatch
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -148,7 +148,7 @@ class CybereasonDriver(DriverBase):
 
         logger.debug("Retrieved %d/%d results", len(results), total_results)
 
-        df_result: pd.DataFrame = None
+        df_result: pd.DataFrame = None  # type: ignore
 
         if len(results) < total_results:
             df_result = self._exec_paginated_queries(
@@ -328,9 +328,11 @@ class CybereasonDriver(DriverBase):
                 return result
             result[name] = list(
                 {
-                    CybereasonDriver._format_to_datetime(int(value))
-                    if "Time" in name
-                    else value.strip().rstrip("\x00")
+                    (
+                        CybereasonDriver._format_to_datetime(int(value))
+                        if "Time" in name
+                        else value.strip().rstrip("\x00")
+                    )
                     for value in values["values"]
                 }
             )

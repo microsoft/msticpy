@@ -43,25 +43,41 @@ logger = logging.getLogger(__name__)
 SPLUNK_CONNECT_ARGS = {
     "host": "(string) The host name (the default is 'localhost').",
     "port": "(string) The port number (the default is '8089').",
-    "http_scheme": "('https' or 'http') The scheme for accessing the service "
-    + "(the default is 'https').",
-    "verify": "(Boolean) Enable (True) or disable (False) SSL verrification for "
-    + "https connections. (optional, the default is True)",
+    "http_scheme": (
+        "('https' or 'http') The scheme for accessing the service "
+        + "(the default is 'https')."
+    ),
+    "verify": (
+        "(Boolean) Enable (True) or disable (False) SSL verrification for "
+        + "https connections. (optional, the default is True)"
+    ),
     "owner": "(string) The owner context of the namespace (optional).",
     "app": "(string) The app context of the namespace (optional).",
-    "sharing": "('global', 'system', 'app', or 'user') "
-    + "The sharing mode for the namespace (the default is 'user').",
-    "token": "(string) The current session token (optional). Session tokens can be"
-    + " shared across multiple service instances.",
-    "cookie": "(string) A session cookie. When provided, you don’t need to call"
-    + " login(). This parameter is only supported for Splunk 6.2+.",
-    "autologin": "(boolean) When True, automatically tries to log in again if"
-    + " the session terminates.",
-    "username": "(string) The Splunk account username, which is used to "
-    + "authenticate the Splunk instance.",
+    "sharing": (
+        "('global', 'system', 'app', or 'user') "
+        + "The sharing mode for the namespace (the default is 'user')."
+    ),
+    "token": (
+        "(string) The current session token (optional). Session tokens can be"
+        + " shared across multiple service instances."
+    ),
+    "cookie": (
+        "(string) A session cookie. When provided, you don’t need to call"
+        + " login(). This parameter is only supported for Splunk 6.2+."
+    ),
+    "autologin": (
+        "(boolean) When True, automatically tries to log in again if"
+        + " the session terminates."
+    ),
+    "username": (
+        "(string) The Splunk account username, which is used to "
+        + "authenticate the Splunk instance."
+    ),
     "password": "(string) The password for the Splunk account.",
-    "bearer_token": "(string) The Authorization Bearer Token <JWT> created in the Splunk."
-    + " (Named as 'splunkToken' in Splunk Python SDK)",
+    "bearer_token": (
+        "(string) The Authorization Bearer Token <JWT> created in the Splunk."
+        + " (Named as 'splunkToken' in Splunk Python SDK)"
+    ),
 }
 
 

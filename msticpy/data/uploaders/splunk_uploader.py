@@ -101,11 +101,11 @@ class SplunkUploader(UploaderBase):
         index = self._load_index(index_name, kwargs.get("create_index", False))
         progress = tqdm(total=len(data.index), desc="Rows", position=0)
         for row in data.iterrows():
-            data = row[1].to_csv()
+            data = row[1].to_csv()  # type: ignore
             try:
-                data.encode(encoding="latin-1")
+                data.encode(encoding="latin-1")  # type: ignore
             except UnicodeEncodeError:
-                data = data.encode(encoding="utf-8")
+                data = data.encode(encoding="utf-8")  # type: ignore
             index.submit(data, sourcetype=table_name, host=host)
             progress.update(1)
         progress.close()

@@ -688,7 +688,7 @@ def plot_cluster(  # noqa: C901, MC0001
 
     # pylint: disable=no-member
     # Spectral color map does exist
-    colors = [cm.Spectral(each) for each in np.linspace(0, 1, len(unique_labels))]
+    colors = [cm.Spectral(each) for each in np.linspace(0, 1, len(unique_labels))]  # type: ignore
     # Number of clusters in labels, ignoring noise if present.
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
     n_noise_ = list(labels).count(-1)
@@ -747,8 +747,8 @@ def plot_cluster(  # noqa: C901, MC0001
                 except IndexError:
                     pass
 
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
+    plt.xlabel(xlabel)  # type: ignore
+    plt.ylabel(ylabel)  # type: ignore
     plt.title(f"Estimated number of clusters: {n_clusters_}")
     plt.show()
     return plt

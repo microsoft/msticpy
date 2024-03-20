@@ -92,9 +92,9 @@ def test_split_queries_sync():
     prov_args = dict(query_paths=_LOCAL_DATA_PATHS, data_paths=_LOCAL_DATA_PATHS)
     local_prov = QueryProvider("LocalData", **prov_args)
 
-    start = datetime.now(timezone.utc) - pd.Timedelta("5H")
+    start = datetime.now(timezone.utc) - pd.Timedelta("5h")
     end = datetime.now(timezone.utc) + pd.Timedelta("5min")
-    delta = pd.Timedelta("1H")
+    delta = pd.Timedelta("1h")
 
     ranges = _calc_split_ranges(start, end, delta)
     local_prov.WindowsSecurity.list_host_logons(
@@ -132,9 +132,9 @@ def test_split_queries_async():
         DriverProps.SUPPORTS_THREADING, value=True
     )
 
-    start = datetime.now(timezone.utc) - pd.Timedelta("5H")
+    start = datetime.now(timezone.utc) - pd.Timedelta("5h")
     end = datetime.now(timezone.utc) + pd.Timedelta("5min")
-    delta = pd.Timedelta("1H")
+    delta = pd.Timedelta("1h")
 
     ranges = _calc_split_ranges(start, end, delta)
     local_prov.WindowsSecurity.list_host_logons(

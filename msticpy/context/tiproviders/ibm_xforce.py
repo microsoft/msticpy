@@ -98,19 +98,19 @@ class XForce(HttpTIProvider):
             response["IocType"] in ["ipv4", "ipv6", "url", "dns"]
             and not response["QuerySubtype"]
         ):
-            score = response["RawResult"].get("score", 0)
+            # For some IocTypes "dns" and "url", the response structure differs
+            report = response["RawResult"].get("result", response["RawResult"])
+            score = report.get("score", 0)
+            if score is None:
+                score = 0
             result_dict.update(
                 {
-                    "score": response["RawResult"].get("score", 0),
-                    "cats": response["RawResult"].get("cats"),
-                    "categoryDescriptions": response["RawResult"].get(
-                        "categoryDescriptions"
-                    ),
-                    "reason": response["RawResult"].get("reason"),
-                    "reasonDescription": response["RawResult"].get(
-                        "reasonDescription", 0
-                    ),
-                    "tags": response["RawResult"].get("tags", 0),
+                    "score": report.get("score", 0),
+                    "cats": report.get("cats"),
+                    "categoryDescriptions": report.get("categoryDescriptions"),
+                    "reason": report.get("reason"),
+                    "reasonDescription": report.get("reasonDescription", 0),
+                    "tags": report.get("tags", 0),
                 }
             )
             severity = (
