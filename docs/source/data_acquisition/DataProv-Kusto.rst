@@ -454,7 +454,7 @@ If no match is found, the query will not be added to the query provider.
 .. code:: python3
 
         import msticpy as mp
-        kql_prov = mp.QueryProvider("Kusto_New", strict_query_match=True)
+        kql_prov = mp.QueryProvider("Kusto", strict_query_match=True)
 
 
 The following examples show the different ways of configuring

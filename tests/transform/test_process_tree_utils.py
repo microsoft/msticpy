@@ -284,7 +284,8 @@ def test_tree_utils_win():
 
     assert isinstance(pt_util.get_parent(p_tree, bottom_desc), pd.Series)
     assert (
-        pt_util.get_process(p_tree, bottom_desc.name).dropna() == bottom_desc.dropna()
+        pt_util.get_process(p_tree, bottom_desc.name).dropna()
+        == bottom_desc.dropna().reindex()
     ).all()
     assert (
         pt_util.get_process(p_tree, bottom_desc).dropna() == bottom_desc.dropna()

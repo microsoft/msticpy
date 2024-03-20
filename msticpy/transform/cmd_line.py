@@ -83,7 +83,7 @@ def risky_cmd_line(
             .joinpath("cmd_line_rules.json")
         )
 
-    events[cmd_field].replace("", np.nan, inplace=True)
+    events[cmd_field] = events[cmd_field].replace("", np.nan)
     activity = (
         events[["TimeGenerated", cmd_field]]
         .dropna()
@@ -157,7 +157,7 @@ def cmd_speed(
         raise MsticpyException("TimeGenerated is not a datetime format")
 
     suspicious_actions = []
-    cmd_events[cmd_field].replace("", np.nan, inplace=True)
+    cmd_events[cmd_field] = cmd_events[cmd_field].replace("", np.nan)
     # Only focus on logs that contain comand line activity
     actions = cmd_events.dropna(subset=[cmd_field]).reset_index()
     df_len = len(actions.index) - (events + 1)
