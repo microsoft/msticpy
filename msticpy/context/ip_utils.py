@@ -659,7 +659,7 @@ def _find_address(
         return None
     for vcard in [vcard for vcard in entity["vcardArray"] if isinstance(vcard, list)]:
         for vcard_sub in vcard:
-            if vcard_sub[0] == "adr":
+            if len(vcard) >= 2 and vcard_sub[0] == "adr" and "label" in vcard_sub[1]:
                 return vcard_sub[1]["label"]
     return None
 

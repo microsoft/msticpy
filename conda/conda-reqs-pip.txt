@@ -1,7 +1,8 @@
-azure-mgmt-monitor>=2.0.0
 azure-mgmt-resourcegraph>=8.0.0
-azure-mgmt-subscription>=3.0.0
-KqlmagicCustom[jupyter-basic,auth_code_clipboard]>=0.1.114.post22
+azure-monitor-query>=1.0.0, <=2.0.0
+# KqlmagicCustom[jupyter-basic,auth_code_clipboard]>=0.1.114.post22
 mo-sql-parsing>=8, <9.0.0
+nest_asyncio>=1.4.0
 passivetotal>=2.5.3
+sumologic-sdk>=0.1.11
 splunk-sdk>=1.6.0

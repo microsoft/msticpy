@@ -21,23 +21,20 @@ an up-to-date version of Anaconda these versions should be
 compatible with *msticpy*.
 
 ### Create your Conda environment
-Python 3.7.6 was the latest Python 3.7 release at the time of
-writing. Some wheels are not yet available for Windows for
-Python 3.8, so you may have problems installing some of the
-*msticpy* dependencies on Windows. *msticpy* should, however,
-work fine with Python 3.8.
+
 
 ```shell
-conda create --name my_env_name python=3.7.6
+conda create --name my_env_name python=3.10
 conda activate my_env_name
 ```
 
-## Append the Conda-Forge channel
+## Append the Microsoft and Conda-Forge channels
+
 Some of the Conda packages are only available from
-Conda-Forge.
+Microsoft or Conda-Forge.
 
 ```shell
-conda config --add channels conda-forge
+conda config --append channels Microsoft conda-forge
 ```
 
 ## Install the Conda packages
