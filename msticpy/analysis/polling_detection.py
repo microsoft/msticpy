@@ -24,7 +24,7 @@ from scipy import signal, special
 from ..common.utility import export
 
 _PD_VERSION = tuple(int(v) for v in pd.__version__.split("."))
-if _PD_VERSION <= (2, 2, 1):
+if _PD_VERSION >= (2, 2, 1):
     GROUP_APPLY_PARAMS = {"include_groups": False}
 else:
     GROUP_APPLY_PARAMS = {}
