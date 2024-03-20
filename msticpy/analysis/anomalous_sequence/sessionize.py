@@ -12,6 +12,9 @@ import pandas as pd
 from pandas.core.dtypes.dtypes import DatetimeTZDtype
 
 # mypy: ignore-errors
+_PD_VERSION = tuple(int(v) for v in pd.__version__.split("."))
+if _PD_VERSION >= (2, 2, 0):
+    pd.set_option("future.no_silent_downcasting", True)
 
 
 def sessionize_data(
@@ -97,7 +100,6 @@ def sessionize_data(
         agg_df = agg_df.drop("index", axis=1)
 
     # replace dummy_str with nan values
-    pd.set_option("future.no_silent_downcasting", True)
     for col in user_identifier_cols:
         agg_df[col] = agg_df[col].replace("dummy_str", np.nan)
 
@@ -199,7 +201,6 @@ def create_session_col(
             df_with_sesind.loc[i, "session_ind"] = ses_ind
 
     # replace dummy_str with nan values
-    pd.set_option("future.no_silent_downcasting", True)
     for col in user_identifier_cols:
         df_with_sesind[col] = df_with_sesind[col].replace("dummy_str", np.nan)
 
