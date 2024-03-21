@@ -486,7 +486,7 @@ to see all of the current connections.
 
     qry_prov = QueryProvider("MSSentinel")
     qry_prov.connect(workspace="Workspace1")
-    qry_prov.add_connection(workspace="Workspace2, alias="Workspace2")
+    qry_prov.add_connection(workspace="Workspace2", alias="Workspace2")
     qry_prov.list_connections()
 
 When you now run a query for this provider, the query will be run on

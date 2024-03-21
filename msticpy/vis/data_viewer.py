@@ -77,7 +77,6 @@ class DataViewerBokeh:
         self.data_table = DataTable(
             source=self.cds,
             columns=self._dt_columns,
-            view=CDSView(source=self.cds),
             height=self._calc_df_height(data),
             width_policy="max",
             auto_edit=True,
@@ -167,7 +166,7 @@ class DataViewerBokeh:
         if self._debug:
             print("_apply_filter")
         self.data_table.view = CDSView(
-            source=self.cds, filters=[BooleanFilter(self.data_filter.bool_filters)]
+            filter=BooleanFilter(self.data_filter.bool_filters)
         )
         self.data_table.height = self._calc_df_height(
             self.data_filter.filtered_dataframe

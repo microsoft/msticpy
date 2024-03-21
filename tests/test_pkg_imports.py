@@ -33,6 +33,7 @@ CONDA_PKG_EXCEPTIONS = {
     "vt-graph-api",
     "nest_asyncio",
     "KqlmagicCustom[jupyter-extended]",
+    "kqlmagiccustom",
     "sumologic-sdk",
     "openpyxl",
     "compress-pickle",
