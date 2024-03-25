@@ -12,8 +12,10 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 import pandas as pd
 
 from ..._version import VERSION
+from ...common.cache import read_cache, write_cache
 from ...common.pkg_config import get_config
 from ...common.utility import export, valid_pyname
+from ...datamodel.result import QueryResult
 from ...nbwidgets.query_time import QueryTime
 from .. import drivers
 from ..drivers.driver_base import DriverBase, DriverProps
@@ -267,6 +269,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             )
         query_name = kwargs.pop("query_name")
         family = kwargs.pop("query_path")
+        cache_path: Optional[str] = kwargs.pop("cache_path", None)
 
         query_source = self.query_store.get_query(
             query_path=family, query_name=query_name
@@ -299,6 +302,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             if split_result is not None:
                 return split_result
             # if split queries could not be created, fall back to default
+
         query_str = query_source.create_query(
             formatters=self._query_provider.formatters, **params
         )
@@ -311,7 +315,36 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         logger.info(
             "Running query '%s...' with params: %s", query_str[:40], query_options
         )
-        return self.exec_query(query_str, query_source=query_source, **query_options)
+        if cache_path:
+            try:
+                result: QueryResult = read_cache(
+                    query_options,
+                    cache_path,
+                    query_source.name,
+                )
+            except (ValueError, FileNotFoundError):
+                logger.info("Data not found in cache.")
+            else:
+                logger.info(
+                    "Data found in cache, returning result from past execution %s.",
+                    result.timestamp.isoformat(sep=" ", timespec="seconds"),
+                )
+                if result.raw_results is not None:
+                    return result.raw_results
+
+        query_result: pd.DataFrame = self.exec_query(
+            query_str, query_source=query_source, **query_options
+        )
+
+        write_cache(
+            data=query_result,
+            query=query_str,
+            search_params=query_options,
+            cache_path=cache_path,
+            name=query_source.name,
+            display=kwargs.pop("display", True),
+        )
+        return query_result
 
     def _check_for_time_params(self, params, missing) -> bool:
         """Fall back on builtin query time if no time parameters were supplied."""

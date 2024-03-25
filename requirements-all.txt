@@ -16,7 +16,9 @@ azure-monitor-query>=1.0.0, <=2.0.0
 azure-storage-blob>=12.5.0
 beautifulsoup4>=4.0.0
 bokeh>=1.4.0, <4.0.0
+compress-pickle >= 2.1.0
 cryptography>=3.1
+dataclasses-json >= 0.5.7
 deprecated>=1.2.4
 dnspython>=2.0.0, <3.0.0
 folium>=0.9.0
@@ -35,6 +37,7 @@ msal>=1.12.0
 msal_extensions>=0.3.0
 msrest>=0.6.0
 msrestazure>=0.6.0
+nbformat>=5.9.2
 nest_asyncio>=1.4.0
 networkx>=2.2
 numpy>=1.15.4  # pandas
