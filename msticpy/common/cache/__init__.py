@@ -44,7 +44,7 @@ def write_cache(  # noqa: PLR0913
         LOGGER.info("Writing cache to %s", cache_path)
         cache_file.write_cache(
             data=cache,
-            file_name=cache_digest,
+            file_name=f"{name}_{cache_digest}",
             export_folder=cache_path,
         )
 
@@ -70,7 +70,7 @@ def read_cache(
             pass
     try:
         cache: QueryResult = cache_file.read_cache(
-            cache_digest,
+            f"{name}_{cache_digest}",
             cache_path,
         )
     except FileNotFoundError as exc:
