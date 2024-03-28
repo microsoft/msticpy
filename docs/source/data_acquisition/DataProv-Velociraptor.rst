@@ -30,8 +30,6 @@ functionality.
     provided by Blue Team Village at Defcon 30. You can find
     this data at the
     `Project-Obsidian-DC30 GitHub <https://github.com/blueteamvillage/Project-Obsidian-DC30>`__
-    and more about
-    `Project Obsidian <https://media.blueteamvillage.org/DC30/Obsidian/>`__
     here.
 
 Velociraptor Configuration

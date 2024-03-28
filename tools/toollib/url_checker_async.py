@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Python file import analyzer."""
 import asyncio
+import re
 from collections import defaultdict, namedtuple
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Set, Union
@@ -230,9 +231,7 @@ def remove_ignored_uris(links_to_check, ignore_uris):
     return {
         link: pages
         for link, pages in links_to_check.items()
-        if not any(
-            link.casefold().startswith(ignore.casefold()) for ignore in ignore_uris
-        )
+        if not any(re.match(ignore, link, re.IGNORECASE) for ignore in ignore_uris)
     }
 
 

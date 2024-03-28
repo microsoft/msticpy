@@ -6,7 +6,7 @@ Azure Machine Learning studio hosted environment.
 
 If you have a local installation of Python 3.8 or later, you can also
 download the notebooks and run these locally. Our recommendation
-is to use the `Anaconda <https://www.anaconda.com/distribution/>`__
+is to use the `Anaconda <https://www.anaconda.com>`__
 distribution since it contains the Jupyter packages and many others
 needed for the Microsoft Sentinel notebooks.
 

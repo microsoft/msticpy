@@ -316,7 +316,7 @@ a dictionary or tuple of individual timeout components:
 
 You can also specify as a Tuple or of (default_timeout, connect_timeout).
 For more details on httpx timeouts see the
-`HTTPX documentation <https://www.python-httpx.org/advanced/#setting-and-disabling-timeouts>`__.
+`HTTPX documentation <https://www.python-httpx.org/advanced/timeouts/>`__.
 
 **Proxies** is a dictionary of proxy settings. You can specify
 different proxies for different protocols (although only the https
