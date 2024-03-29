@@ -12,7 +12,7 @@ import pandas as pd
 
 from .._version import VERSION
 from ..context.vtlookupv3.vtlookupv3 import VTLookupV3, timestamps_to_utcdate
-from ..nbwidgets import IPyDisplayMixin
+from ..nbwidgets.core import IPyDisplayMixin
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -30,6 +30,7 @@ _BORDER_LAYOUT = widgets.Layout(
 )
 
 
+# pylint: disable=too-few-public-methods
 class VTObjectBrowser(IPyDisplayMixin):
     """VirusTotal object attributes browser."""
 

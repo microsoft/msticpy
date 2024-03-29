@@ -334,7 +334,7 @@ Example:
 
 .. code-block:: powershell
 
-    python \path\to\python\file --python-version "3.8.5" --module-name "msticpy[sentinel]" --module-version "2.7.0" --directory \path\to\destination
+    python [path]\download_python_package.py --python-version "3.8.5" --package-name "msticpy[sentinel]" --package-version "2.7.0" --directory \path\to\destination
 
 3. Copy the directory folder to the isolated environment.
 

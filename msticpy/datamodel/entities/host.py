@@ -7,6 +7,7 @@
 from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
+from ...common.data_types import SplitProperty
 from ...common.utility import export
 from .entity import Entity
 from .entity_enums import OSFamily
@@ -46,7 +47,8 @@ class Host(Entity):
 
     """
 
-    ID_PROPERTIES = ["fqdn", "AzureID", "OMSAgentID"]
+    ID_PROPERTIES = ["fqdn", "AzureID", "OMSAgentID", "DeviceId"]
+    DeviceName = SplitProperty("HostName", "DnsDomain", ".")
 
     def __init__(
         self,
@@ -83,6 +85,7 @@ class Host(Entity):
         self.OSFamily: OSFamily = OSFamily.Windows
         self.OSVersion: Optional[str] = None
         self.IsDomainJoined: bool = False
+        self.DeviceId: Optional[str] = None
 
         super().__init__(src_entity=src_entity, **kwargs)
         self._computer = None
@@ -133,6 +136,9 @@ class Host(Entity):
             if "DnsDomain" in src_event:
                 self.DnsDomain = src_event["DnsDomain"]
         self.NetBiosName = self.HostName
+        self.AzureID = src_event.get("AzureID")
+        self.DeviceId = src_event.get("DeviceId")
+        self.DeviceName = src_event.get("DeviceName")
 
     _entity_schema = {
         # DnsDomain (type System.String)
@@ -152,6 +158,8 @@ class Host(Entity):
         "OSFamily": "OSFamily",
         # IsDomainJoined (type System.Nullable`1[System.Boolean])
         "IsDomainJoined": None,
+        "DeviceId": None,
+        "DeviceName": None,
         "TimeGenerated": None,
         "StartTime": None,
         "EndTime": None,

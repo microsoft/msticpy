@@ -26,7 +26,7 @@ from ..._version import VERSION
 from ...common.exceptions import MsticpyConfigError
 from ...common.utility import export
 from ...common.wsconfig import WorkspaceConfig
-from ...data import QueryProvider
+from ...data.core.data_providers import QueryProvider
 from ..lookup_result import LookupStatus
 from ..provider_base import generate_items
 from .ti_provider_base import ResultSeverity, TIProvider

@@ -86,11 +86,13 @@ class Alert(Entity):
         self.StartTimeUtc: Optional[datetime] = None
         self.EndTimeUtc: Optional[datetime] = None
         self.Severity: Any = None
+        self.SystemAlertId: Optional[str] = None
         self.SystemAlertIds: List[str] = []
         self.AlertType: Optional[str] = None
         self.VendorName: Optional[str] = None
         self.ProviderName: Optional[str] = None
         self.Entities: Optional[List] = None
+        self.Version = "3.0"
         super().__init__(src_entity=src_entity, **kwargs)
         if src_entity is not None:
             self._create_from_ent(src_entity)
@@ -132,13 +134,25 @@ class Alert(Entity):
         if self.StartTime and self.CompromisedEntity:
             return f"{self.DisplayName} ({self.StartTime}) {self.CompromisedEntity}"
         else:
-            return f"{self.DisplayName} - {self.SystemAlertIds}"
+            return f"{self.DisplayName} - {self.AlertId}"
 
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
         alert_name = self.AlertDisplayName or self.DisplayName or None
         return f"Alert: {alert_name}" or self.__class__.__name__
+
+    @property
+    def AlertId(self) -> Optional[str]:  # noqa: N802
+        """Return the system alert ID."""
+        return self.SystemAlertId or (
+            self.SystemAlertIds[0] if self.SystemAlertIds else None
+        )
+
+    @AlertId.setter
+    def AlertId(self, value: str):  # noqa: N802
+        """Set the system alert ID."""
+        self.SystemAlertId = value
 
     def _add_additional_data(self, src_entity: Mapping[str, Any]):
         """Populate additional alert properties."""

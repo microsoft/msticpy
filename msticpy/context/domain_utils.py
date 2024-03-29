@@ -13,6 +13,7 @@ with a domain or url, such as getting a screenshot or validating the TLD.
 import json
 import ssl
 import time
+from dataclasses import asdict
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, Optional, Tuple
@@ -261,7 +262,10 @@ def dns_components(domain: str) -> dict:
         Returns subdomain and TLD components from a domain.
 
     """
-    return tldextract.extract(domain.lower())._asdict()
+    result = tldextract.extract(domain.lower())
+    if isinstance(result, tuple):
+        return result._asdict()  # type: ignore
+    return asdict(result)
 
 
 def url_components(url: str) -> Dict[str, str]:

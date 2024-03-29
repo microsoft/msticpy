@@ -77,6 +77,11 @@ TIProviders:
       AuthKey: "[PLACEHOLDER]"
     Primary: True
     Provider: AbuseIPDB
+  IPQualityScore:
+    Args:
+      AuthKey: "[PLACEHOLDER]"
+    Primary: True
+    Provider: IPQualityScore
 OtherProviders:
   GeoIPLite:
     Args:

@@ -277,7 +277,8 @@ class OData(DriverBase):
             )
             return None, json_response  # type: ignore
 
-        result = json_response.get("Results", json_response)
+        results_key = "Results" if "Results" in json_response else "results"
+        result = json_response.get(results_key, json_response)
 
         if not result:
             print("Warning - query did not return any results.")
