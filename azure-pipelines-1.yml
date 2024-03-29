@@ -21,24 +21,24 @@ extends:
   parameters:
     pool:
       name: MSSecurity-1ES-Build-Agents-Pool
-      #image: MSSecurity-1ES-Ubuntu-2204
-      #os: linux
       image: MSSecurity-1ES-Windows-2022
       os: windows
     stages:
-    - stage: hello
-      displayName: helloWorld
+    - stage: buildTasks
+      displayName: BuildTasks
       jobs:
-      - job: part1
-        displayName: Part1
+      - job: additionalChecks
+        displayName: AdditionalChecks
         steps:
-        - script: echo Hello, world!
-          displayName: 'Run a one-line script'
-
-        - script: |
-            echo Add other tasks to build, test, and deploy your project.
-            echo See https://aka.ms/yaml
-          displayName: 'Run a multi-line script'
+        - task: notice@0
+          displayName: NOTICE File Generator
+          # This fails for external forks
+          condition: not(variables['System.PullRequest.IsFork'])
     sdl:
       apiScan:
         enabled: false
+      policheck:
+        enabled: true
+      sbom:
+        enabled: true
+
