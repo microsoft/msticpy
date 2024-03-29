@@ -39,6 +39,7 @@ extends:
         enabled: false
       policheck:
         enabled: true
-      sbom:
+      bandit:
         enabled: true
+
 
