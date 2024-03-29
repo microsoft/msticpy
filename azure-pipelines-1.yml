@@ -4,7 +4,7 @@
 # https://aka.ms/yaml
 
 trigger: none
-name: 1ES MSTICPy $(date:yyyyMMdd)$(rev:.r)
+name: 1ES-MSTICPy-$(date:yyyyMMdd)$(rev:.r)
 
 resources:
   repositories:
@@ -20,15 +20,17 @@ extends:
   template: v1/1ES.Unofficial.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
     pool:
-      name: --agendPoolName--
-      image: --imageName--
-      os: --operatingSystem
+      name: MSSecurity-1ES-Build-Agents-Pool
+      #image: MSSecurity-1ES-Ubuntu-2204
+      #os: linux
+      image: MSSecurity-1ES-Windows-2022
+      os: windows
     stages:
     - stage: hello
       displayName: helloWorld
       jobs:
       - job: part1
-        name: Part1
+        displayName: Part1
         steps:
         - script: echo Hello, world!
           displayName: 'Run a one-line script'
