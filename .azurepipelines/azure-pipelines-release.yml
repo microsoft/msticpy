@@ -1,4 +1,4 @@
-# MSTICPy PR pipeline
+# MSTICPy Release pipeline
 
 trigger: none
 name: 1ES-MSTICPy-Rel-$(date:yyyyMMdd)$(rev:.r)
