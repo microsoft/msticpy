@@ -1,0 +1,39 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger: none
+name: 1ES MSTICPy $(date:yyyyMMdd)$(rev:.r)
+
+resources:
+  repositories:
+  - repository: self
+    type: git
+    ref: main
+  - repository: 1ESPipelineTemplates
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
+
+extends:
+  template: v1/1ES.Unofficial.PipelineTemplate.yml@1ESPipelineTemplates
+  parameters:
+    pool:
+      name: --agendPoolName--
+      image: --imageName--
+      os: --operatingSystem
+    stages:
+    - stage: hello
+      displayName: helloWorld
+      jobs:
+      - job: part1
+        name: Part1
+        steps:
+        - script: echo Hello, world!
+          displayName: 'Run a one-line script'
+
+        - script: |
+            echo Add other tasks to build, test, and deploy your project.
+            echo See https://aka.ms/yaml
+          displayName: 'Run a multi-line script'
