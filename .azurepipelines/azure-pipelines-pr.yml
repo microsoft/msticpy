@@ -1,7 +1,7 @@
 # MSTICPy PR pipeline
 
 trigger: none
-name: 1ES-MSTICPy-$(date:yyyyMMdd)$(rev:.r)
+name: 1ES-MSTICPy-PR-$(date:yyyyMMdd)$(rev:.r)
 
 resources:
   repositories:
