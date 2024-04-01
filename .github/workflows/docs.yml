@@ -1,0 +1,41 @@
+name: MSTICPy Docs build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, release/*]
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    permissions: read-all
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          # This path is specific to Ubuntu
+          path: ~/.cache/pip
+          # Look to see if there is a cache hit for the corresponding requirements file
+          key: ${{ runner.os }}-pip-docs-${{ hashFiles('docs/requirements-all.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-docs-${{ hashFiles('docs/requirements-all.txt') }}
+            ${{ runner.os }}-pip-docs
+            ${{ runner.os }}-pip
+      - name: Sphinx Read the Docs build
+        working-directory: docs
+        run: |
+          echo "Building docs from $$(Build.SourcesDirectory)/docs"
+          python -m pip install sphinx readthedocs-sphinx-ext>=2.1.4 sphinx-rtd-theme>=1.0.0
+          python -m pip install -r $(Build.SourcesDirectory)/docs/requirements.txt
+          make html
+        env:
+          SPHINX_NOGEN: "true"
