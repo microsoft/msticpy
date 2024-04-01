@@ -33,9 +33,9 @@ jobs:
       - name: Sphinx Read the Docs build
         working-directory: docs
         run: |
-          echo "Building docs from $(Build.SourcesDirectory)/docs"
+          echo "Building docs from ${{ github.workspace }}/docs"
           python -m pip install sphinx readthedocs-sphinx-ext>=2.1.4 sphinx-rtd-theme>=1.0.0
-          python -m pip install -r docs/requirements.txt
+          python -m pip install -r ${{ github.workspace }}/docs/requirements.txt
           make html
         env:
           SPHINX_NOGEN: "true"
