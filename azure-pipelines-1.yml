@@ -1,0 +1,45 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger: none
+name: 1ES-MSTICPy-$(date:yyyyMMdd)$(rev:.r)
+
+resources:
+  repositories:
+  - repository: self
+    type: git
+    ref: main
+  - repository: 1ESPipelineTemplates
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
+
+extends:
+  template: v1/1ES.Unofficial.PipelineTemplate.yml@1ESPipelineTemplates
+  parameters:
+    pool:
+      name: MSSecurity-1ES-Build-Agents-Pool
+      image: MSSecurity-1ES-Windows-2022
+      os: windows
+    stages:
+    - stage: buildTasks
+      displayName: BuildTasks
+      jobs:
+      - job: additionalChecks
+        displayName: AdditionalChecks
+        steps:
+        - task: notice@0
+          displayName: NOTICE File Generator
+          # This fails for external forks
+          condition: not(variables['System.PullRequest.IsFork'])
+    sdl:
+      apiScan:
+        enabled: false
+      policheck:
+        enabled: true
+      bandit:
+        enabled: true
+
+

@@ -16,8 +16,8 @@ import yaml
 from msticpy.common import pkg_config
 from msticpy.context.geoip import GeoLiteLookup, IPStackLookup
 
-from ..unit_test_lib import custom_mp_config, get_test_data_path
 from ..data.queries.test_query_files import validate_queries_file_structure
+from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 _TEST_DATA = get_test_data_path()
 
@@ -112,6 +112,7 @@ def test_geo_ip_settings():
 
         ipstack = IPStackLookup()
         ipstack._check_initialized()
+        # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
         check.equal(ipstack._api_key, "987654321-222")
 
 
