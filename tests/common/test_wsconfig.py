@@ -180,6 +180,10 @@ _CONFIG_STR_TEST_CASES = (
         f"loganalytics://anonymous;workspace='{_WS_ID}';alias='{_WS_NAME}';tenant='{_TENANT}'",
         True,
     ),
+    (
+        f"loganalytics://code().tenant('{_TENANT}').workspace('{_WS_ID}').alias('{_WS_NAME}')",
+        True,
+    ),
     (f"loganalytics://code;workspace='{_WS_ID}';alias='{_WS_NAME}'", False),
     (f"loganalytics://code;alias='{_WS_NAME}';tenant='{_TENANT}'", False),
 )
