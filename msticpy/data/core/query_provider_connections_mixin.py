@@ -16,7 +16,6 @@ import nest_asyncio
 import pandas as pd
 from tqdm.auto import tqdm
 
-
 from ..._version import VERSION
 from ...common.exceptions import MsticpyDataQueryError
 from ...common.utility.ipython import is_ipython
@@ -42,11 +41,13 @@ class QueryProviderProtocol(Protocol):
         """Execute a query against the provider."""
         ...
 
+    # fmt: off
     @staticmethod
     def _get_query_options(
         params: Dict[str, Any], kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
         ...
+    # fmt: on
 
 
 # pylint: disable=super-init-not-called
@@ -296,6 +297,8 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
     ) -> Dict[Tuple[datetime, datetime], str]:
         """Return separate queries for split time ranges."""
         try:
+            if split_by.strip().endswith("H"):
+                split_by = split_by.replace("H", "h")
             split_delta = pd.Timedelta(split_by)
         except ValueError:
             split_delta = pd.Timedelta("1D")
@@ -352,7 +355,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                     result = await thread_task
                     logger.info("Query task '%s' completed successfully.", query_id)
                     results.append(result)
-                except Exception:  # pylint: disable=broad-except
+                except Exception:  # pylint: disable=broad-exception-caught
                     logger.warning(
                         "Query task '%s' failed with exception",
                         query_id,

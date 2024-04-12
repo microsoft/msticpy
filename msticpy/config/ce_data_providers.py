@@ -29,9 +29,7 @@ class CEDataProviders(CEProviders):
         "Data Providers": (
             "https://msticpy.readthedocs.io/en/latest/" + "DataAcquisition.html"
         ),
-        "Spunk": (
-            "https://msticpy.readthedocs.io/en/latest/data_acquisition/SplunkProvider.html"
-        ),
+        "Spunk": "https://msticpy.readthedocs.io/en/latest/data_acquisition/SplunkProvider.html",
         "Sumologic": (
             "https://github.com/microsoft/msticpy/blob/main/docs/notebooks/"
             "Sumologic-DataConnector.ipynb"

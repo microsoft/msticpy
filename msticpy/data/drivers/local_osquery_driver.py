@@ -345,7 +345,13 @@ def _rename_columns(data: pd.DataFrame):
     rename_cols = {}
     for prefix in _PREFIXES:
         source_cols = data.filter(regex=f"{prefix}.*").columns
-        rename_cols.update({col: col.replace(prefix, "") for col in source_cols})
+        rename_cols.update(
+            {
+                col: col.replace(prefix, "")
+                for col in source_cols
+                if isinstance(col, str)
+            }
+        )
     rename_cols = {
         col: ren_col if ren_col not in df_cols else f"{ren_col}_"
         for col, ren_col in rename_cols.items()

@@ -145,9 +145,9 @@ class CEProviders(CEItemsBase, ABC):
             prov_name=control_name or self._prov_ctrl_name,
             mp_controls=self.mp_controls,
             conf_path=self._COMP_PATH,
-            prov_instance_name=self._select_prov_instance_name
-            if not new_provider
-            else "",
+            prov_instance_name=(
+                self._select_prov_instance_name if not new_provider else ""
+            ),
         )
         self.edit_frame.children = [self.edit_ctrls]
 

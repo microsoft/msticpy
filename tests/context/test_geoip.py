@@ -54,7 +54,7 @@ def test_geoiplite_download(tmp_path):
     tgt_folder = Path(test_folder).resolve()
     try:
         tgt_folder.mkdir(exist_ok=True)
-        with pytest.warns(None) as warning_record:
+        with pytest.warns(UserWarning) as warning_record:
             with custom_mp_config(_MP_CONFIG_PATH):
                 ip_location = GeoLiteLookup(
                     db_folder=str(tgt_folder), force_update=True, debug=True

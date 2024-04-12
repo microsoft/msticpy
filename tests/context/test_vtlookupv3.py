@@ -94,6 +94,7 @@ class VTClient:
     _FB_SUM_FILE = "vt3_behavior_summary.json"
     _FB_MS_FILE = "vt3_behavior_ms_sysinternals.json"
     _FILE_SUMMARY = "vt3_file_1.json"
+    _SEARCH_FILE = "vt3_search.json"
 
     _URL_OBJS = [
         json.loads(_D_ROOT.joinpath(url_file).read_text()) for url_file in _OBJ_FILES
@@ -102,6 +103,7 @@ class VTClient:
     _VT_FB_SUMMARY = json.loads(_D_ROOT.joinpath(_FB_SUM_FILE).read_text())
     _VT_FB_MSSYS = json.loads(_D_ROOT.joinpath(_FB_MS_FILE).read_text())
     _VT_FILE_SUMMARY = json.loads(_D_ROOT.joinpath(_FILE_SUMMARY).read_text())
+    _SEARCH_OBJS = json.loads(_D_ROOT.joinpath(_SEARCH_FILE).read_text())
 
     def __init__(self, apikey: Optional[str] = None):
         """Initialize the class."""
@@ -139,7 +141,17 @@ class VTClient:
         self, path: str, *path_args, params=None, cursor=None, limit=0, batch_size=0
     ) -> Iterator:
         """Return an iterator of VT objects."""
-        del path_args, params, cursor, limit, batch_size
+        del path_args, cursor, limit, batch_size
+        if "/intelligence/search" in path:
+            query = params.get("query")
+            return iter(
+                VtObject.from_dict(search_item)
+                for search_item in self._SEARCH_OBJS[query]
+            )
+            # if query == "engines:trojan and tag:signed and p:60+ and microsoft:clean and not tag:invalid-signature and ls:2d+":
+            #     raise MsticpyVTNoDataError("0 Results")
+            # elif query == "engines:trojan and tag:signed and p:60+ and microsoft:clean and not tag:invalid-signature and ls:30d+":
+            #     return iter(VtObject.from_dict(search_item) for search_item in self._SEARCH_OBJS[query])
         if "relationships" in path:
             return iter(VtObject.from_dict(url_data) for url_data in self._URL_LINKS)
         return iter(VtObject.from_dict(url_data) for url_data in self._URL_OBJS)
@@ -181,7 +193,7 @@ def test_lookup_ioc(vt_client):
 
     # all properties
     result_df = vt_client.lookup_ioc(url, vt_type="url", all_props=True)
-    check.equal(result_df.shape, (1, 287))
+    check.equal(result_df.shape, (1, 19))
 
     # Invalid type
     with pytest.raises(ValueError) as vt_error:
@@ -229,7 +241,7 @@ def test_lookup_iocs(vt_client):
         observable_type_column="type",
         all_props=True,
     )
-    check.equal(result_df.shape, (3, 399))
+    check.equal(result_df.shape, (3, 19))
     check.equal(
         result_df.iloc[0].id,
         "380269259e1f607fb07769fee779f0dc3144924f865e76a3c05c8898295d02f8",
@@ -287,7 +299,7 @@ def test_lookup_ioc_related(vt_client: VTLookupV3):
     result_df = vt_client.lookup_ioc_related(
         file, vt_type="file", relationship="contacted_urls"
     )
-    check.equal(result_df.shape, (3, 403))
+    check.equal(result_df.shape, (3, 23))
     result_df_noidx = result_df.reset_index()
     check.equal(
         result_df_noidx.iloc[0].target,
@@ -330,7 +342,7 @@ def test_lookup_iocs_relationships(vt_client: VTLookupV3):
 def test_get_object(vt_client: VTLookupV3):
     """Test simple get_object api."""
     result_df = vt_client.get_object(_TEST_URLS[0], vt_type="url")
-    check.equal(result_df.shape, (1, 286))
+    check.equal(result_df.shape, (1, 18))
     check.equal(
         result_df.iloc[0].id,
         "380269259e1f607fb07769fee779f0dc3144924f865e76a3c05c8898295d02f8",
@@ -383,7 +395,7 @@ def test_get_object_browser(vt_client: VTLookupV3):
     vt_browser.txt_file_id.value = "file"
     vt_browser.btn_lookup.click()
 
-    check.equal(vt_browser._current_data.shape, (1, 584))
+    check.equal(vt_browser._current_data.shape, (1, 42))
     check.equal(
         vt_browser._current_data.iloc[0].id,
         "03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b",
@@ -393,8 +405,35 @@ def test_get_object_browser(vt_client: VTLookupV3):
 
     # Check that it auto-loads from init
     vt_browser = VTObjectBrowser("file")
-    check.equal(vt_browser._current_data.shape, (1, 584))
+    check.equal(vt_browser._current_data.shape, (1, 42))
     check.equal(
         vt_browser._current_data.iloc[0].id,
         "03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b",
+    )
+
+
+@pytest.mark.filterwarnings("ignore::UserWarning")
+def test_vt_search(vt_client: VTLookupV3):
+    """Test search API."""
+
+    with pytest.raises(MsticpyVTNoDataError):
+        result_df = vt_client.search(
+            query="engines:trojan and tag:signed and p:60+ and microsoft:clean and not tag:invalid-signature and ls:2d+"
+        )
+
+    result_df = vt_client.search(
+        query="engines:trojan and tag:signed and p:60+ and microsoft:clean and not tag:invalid-signature and ls:30d+"
+    )
+    rows, cols = result_df.shape
+
+    # check integrity of shape
+    check.equal(rows, 5)
+    check.equal(cols, 48)
+
+    # check integrity of content
+    check.is_true("crowdsourced_ids_stats" in result_df.columns)
+    check.is_true("sigma_analysis_stats" in result_df.columns)
+    check.is_true(
+        result_df.loc[3].last_analysis_results["FireEye"]["result"]
+        == "Application.Bundler.GL"
     )

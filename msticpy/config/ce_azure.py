@@ -46,8 +46,9 @@ class CEAzure(CESimpleSettings):
     This will override the cloud and its associated Authority and API endpoint URLs.
 
     """
+    # fmt: off
     _HELP_URI = {
-        "MSTICPy Package Configuration": (
-            "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html"
-        )
+        "MSTICPy Package Configuration":
+        "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html"
     }
+    # fmt: on

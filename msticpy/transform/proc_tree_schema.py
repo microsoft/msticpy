@@ -152,9 +152,11 @@ class ProcSchema:
     def blank_schema_dict(cls) -> Dict[str, Any]:
         """Return blank schema dictionary."""
         return {
-            field: "required"
-            if (attrib.default or attrib.default == attr.NOTHING)
-            else None
+            field: (
+                "required"
+                if (attrib.default or attrib.default == attr.NOTHING)
+                else None
+            )
             for field, attrib in attr.fields_dict(cls).items()
         }
 

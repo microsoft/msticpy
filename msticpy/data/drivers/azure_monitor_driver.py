@@ -16,6 +16,7 @@ azure/monitor-query-readme?view=azure-python
 """
 import contextlib
 import logging
+import warnings
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, cast
 
@@ -272,6 +273,8 @@ class AzureMonitorDriver(DriverBase):
         ----------------
         timeout : int (seconds)
             Specify a timeout for the query. Default is 300 seconds.
+        fail_on_partial: bool
+            Fail the query if only partial results are returned.
 
         Returns
         -------
@@ -319,6 +322,7 @@ class AzureMonitorDriver(DriverBase):
                 help_uri=_HELP_URL,
             )
         time_span_value = self._get_time_span_value(**kwargs)
+        fail_on_partial = kwargs.get("fail_if_partial", False)
         server_timeout = kwargs.pop("timeout", self._def_timeout)
 
         workspace_id = next(iter(self._workspace_ids), None) or self._workspace_id
@@ -353,6 +357,16 @@ class AzureMonitorDriver(DriverBase):
         logger.info("query status %s", repr(status))
 
         if isinstance(result, LogsQueryPartialResult):
+            if fail_on_partial:
+                raise MsticpyDataQueryError(
+                    "Partial results returned. This may indicate a query timeout.",
+                    title="Partial results returned",
+                    help_uri=_HELP_URL,
+                )
+            warnings.warn(
+                "Partial results returned. This may indicate a query timeout.",
+                RuntimeWarning,
+            )
             table = result.partial_data[0]  # type: ignore[attr-defined]
         else:
             table = result.tables[0]  # type: ignore[attr-defined]
@@ -524,15 +538,17 @@ class AzureMonitorDriver(DriverBase):
 
     @staticmethod
     def _get_query_status(result) -> Dict[str, Any]:
-        status = {
-            "status": result.status.name,
-            "tables": len(result.tables) if result.tables else 0,
-        }
-
+        if isinstance(result, LogsQueryResult):
+            return {
+                "status": result.status.name,
+                "tables": len(result.tables),
+            }
         if isinstance(result, LogsQueryPartialResult):
-            status["partial"] = "partial results returned"
-            status["tables"] = (len(result.partial_data) if result.partial_data else 0,)
-        return status
+            return {
+                "status": result.status.name,
+                "tables": len(result.partial_data),
+            }
+        return {"status": "unknown failure", "tables": 0, "result": result}
 
     def _get_schema(self) -> Dict[str, Dict]:
         """Return the workspace schema."""

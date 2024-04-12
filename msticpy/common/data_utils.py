@@ -42,7 +42,7 @@ def ensure_df_datetimes(
 
     """
     if not columns:
-        columns = list(data.filter(regex=".*[Tt]ime.*").columns)
+        columns = list(data.filter(regex=".*[Tt]ime.*").columns)  # type: ignore
     if isinstance(columns, str):
         columns = [columns]
     col_map = {

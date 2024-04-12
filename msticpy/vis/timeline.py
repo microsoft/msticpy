@@ -293,11 +293,11 @@ def _display_timeline_dict(
         width=param.width,
     )
 
-    set_axes_and_grids(data, plot, param.yaxis, param.ygrid, param.xgrid)
+    set_axes_and_grids(data, plot, param.yaxis, param.ygrid, param.xgrid)  # type: ignore
 
     # Create plot bar to act as as range selector
     rng_select = create_range_tool(
-        data=data,
+        data=data,  # type: ignore
         min_time=min_time,
         max_time=max_time,
         plot_range=plot.x_range,  # type: ignore[arg-type]

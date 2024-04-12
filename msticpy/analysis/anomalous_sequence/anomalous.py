@@ -60,7 +60,7 @@ def score_sessions(
         raise MsticpyException(f'"{session_column}" should be a column in the `data`')
 
     sessions_df = data.copy()
-    sessions = sessions_df[session_column].values.tolist()
+    sessions = sessions_df[session_column].values.tolist()  # type: ignore
 
     model = Model(sessions=sessions)
     model.train()

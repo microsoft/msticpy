@@ -36,7 +36,7 @@ class SecurityEvent(SecurityBase):
 
             :param src_row: Pandas series containing single security event
         """
-        self._source_data = src_row
+        self._source_data = src_row  # type: ignore
 
         super().__init__(src_row=src_row)
 

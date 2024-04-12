@@ -904,13 +904,17 @@ _PROVIDER_RESPONSES = {
                     "collectionDate": "2021-01-01",
                     "sample": "36190e9c66c801bc393b8189a5aeaf22",
                     "source": "Malsource Info",
-                    "sourceUrl": "https://mocked.url/md5/36190e9c66c801bc393b8189a5aeaf22",
+                    "sourceUrl": (
+                        "https://mocked.url/md5/36190e9c66c801bc393b8189a5aeaf22"
+                    ),
                 },
                 {
                     "collectionDate": "2020-09-25",
                     "sample": "1c1033f184cc33c87cb6aa54a955d034",
                     "source": "Malsource Info",
-                    "sourceUrl": "https://mocked.url/md5/1c1033f184cc33c87cb6aa54a955d034",
+                    "sourceUrl": (
+                        "https://mocked.url/md5/1c1033f184cc33c87cb6aa54a955d034"
+                    ),
                 },
             ],
         },
@@ -964,11 +968,15 @@ _PROVIDER_RESPONSES = {
                 {
                     "name": "tcp:scan",
                     "label": "TCP Scan",
-                    "description": "IP has been reported for performing TCP port scanning.",
+                    "description": (
+                        "IP has been reported for performing TCP port scanning."
+                    ),
                 },
             ],
             "history": {
-                "first_seen": f"{dt.datetime.now().isoformat(timespec='seconds')}+00:00",
+                "first_seen": (
+                    f"{dt.datetime.now().isoformat(timespec='seconds')}+00:00"
+                ),
                 "last_seen": f"{dt.datetime.now().isoformat(timespec='seconds')}+00:00",
                 "full_age": 490,
                 "days_age": 489,
@@ -979,12 +987,16 @@ _PROVIDER_RESPONSES = {
                     {
                         "name": "scanner:legit",
                         "label": "Legit scanner",
-                        "description": "IP belongs to a company that scans the internet",
+                        "description": (
+                            "IP belongs to a company that scans the internet"
+                        ),
                     },
                     {
                         "name": "scanner:censys",
                         "label": "Known Security Company",
-                        "description": "IP belongs to a company that scans the internet: Censys.",
+                        "description": (
+                            "IP belongs to a company that scans the internet: Censys."
+                        ),
                     },
                     {
                         "name": "community-blocklist",

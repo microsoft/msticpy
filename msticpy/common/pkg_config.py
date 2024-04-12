@@ -15,12 +15,12 @@ a file `msticpyconfig.yaml` in the current directory.
 import contextlib
 import numbers
 import os
+from importlib.resources import path
 from importlib.util import find_spec
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Union
 
 import httpx
-import pkg_resources
 import yaml
 from yaml.error import YAMLError
 
@@ -218,7 +218,7 @@ def _del_config(setting_path: str, settings_dict) -> Any:
     return current_value
 
 
-def _read_config_file(config_file: str) -> Dict[str, Any]:
+def _read_config_file(config_file: Union[str, Path]) -> Dict[str, Any]:
     """
     Read a yaml config definition file.
 
@@ -270,10 +270,11 @@ def _override_config(base_config: Dict[str, Any], new_config: Dict[str, Any]):
 
 def _get_default_config():
     """Return the package default config file."""
-    conf_file = None
+    config_path = None
     package = "msticpy"
     try:
-        conf_file = pkg_resources.resource_filename(package, _CONFIG_FILE)
+        with path(package, _CONFIG_FILE) as config_path:
+            return _read_config_file(config_path) if config_path else {}
     except ModuleNotFoundError as mod_err:
         # if all else fails we try to find the package default config somewhere
         # in the package tree - we use the first one we find
@@ -284,8 +285,8 @@ def _get_default_config():
                 "msticpy package may be corrupted.",
                 title=f"Package {_CONFIG_FILE} missing.",
             ) from mod_err
-        conf_file = next(iter(pkg_root.glob(f"**/{_CONFIG_FILE}")))
-    return _read_config_file(conf_file) if conf_file else {}
+        config_path = next(iter(pkg_root.glob(f"**/{_CONFIG_FILE}")))
+    return _read_config_file(config_path) if config_path else {}
 
 
 def _get_custom_config():

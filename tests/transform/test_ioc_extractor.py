@@ -42,7 +42,9 @@ TEST_CASES = {
     "sha1_hash_test": "00236a2ae558018ed13b5222ef1bd98700000001hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000002hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000003",
     "sha256_hash_test": """00236a2ae558018ed13b5222ef1bd98700000001424246789042424678901234hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000001424246789042424678901235hash -something
 -hash=00236a2ae558018ed13b5222ef1bd98700000001424246789042424678901236""",
-    "url2_test": "curl 'https://www.virustotal.com/en/ip-address/90.156.201.27/information/'",
+    "url2_test": (
+        "curl 'https://www.virustotal.com/en/ip-address/90.156.201.27/information/'"
+    ),
     "domain1_test": "some text with a domain.like.uk in it",
     "domain_neg_test": "some text with a bad domain.like.iandom in it",
     "domain_short_test": "some text with a microsoft.com in it",
