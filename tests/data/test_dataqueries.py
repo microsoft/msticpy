@@ -359,7 +359,7 @@ class TestDataQuery(unittest.TestCase):
         delta = pd.Timedelta("1h")
 
         ranges = _calc_split_ranges(start, end, delta)
-        self.assertEqual(len(ranges), 5)
+        self.assertEqual(len(ranges), 6)
         self.assertEqual(ranges[0][0], start)
         self.assertEqual(ranges[-1][1], end)
 
@@ -369,7 +369,7 @@ class TestDataQuery(unittest.TestCase):
 
         end = end + pd.Timedelta("20min")
         ranges = _calc_split_ranges(start, end, delta)
-        self.assertEqual(len(ranges), 5)
+        self.assertEqual(len(ranges), 6)
         self.assertEqual(ranges[0][0], start)
         self.assertEqual(ranges[-1][1], end)
 
@@ -386,7 +386,7 @@ class TestDataQuery(unittest.TestCase):
             "print", start=start, end=end, split_query_by="1H"
         )
         queries = result_queries.split("\n\n")
-        self.assertEqual(len(queries), 5)
+        self.assertEqual(len(queries), 6)
 
         for idx, (st_time, e_time) in enumerate(ranges):
             self.assertIn(st_time.isoformat(sep="T") + "Z", queries[idx])
@@ -416,7 +416,7 @@ class TestDataQuery(unittest.TestCase):
             "print", start=start, end=end, split_query_by="Invalid"
         )
         queries = result_queries.split("\n\n")
-        self.assertEqual(len(queries), 5)
+        self.assertEqual(len(queries), 6)
 
 
 _LOCAL_DATA_PATHS = [str(get_test_data_path().joinpath("localdata"))]
