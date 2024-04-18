@@ -7,10 +7,6 @@
 import re
 from typing import List, Tuple
 
-# pylint: disable=unused-import
-# flake8: noqa: F403
-import pandas as pd
-
 # pylint: enable=unused-import
 from IPython import get_ipython
 from IPython.core import magic_arguments

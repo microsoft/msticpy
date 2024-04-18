@@ -59,6 +59,21 @@ from ..transform.process_tree_utils import (
 )
 from .figure_dimension import bokeh_figure
 
+__all__ = [
+    "get_ancestors",
+    "get_children",
+    "get_descendents",
+    "get_parent",
+    "get_process",
+    "get_process_key",
+    "get_root",
+    "get_root_tree",
+    "get_roots",
+    "get_siblings",
+    "get_summary_info",
+    "get_tree_depth",
+]
+
 # pylint: enable=unused-import
 
 __version__ = VERSION

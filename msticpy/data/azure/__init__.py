@@ -15,12 +15,10 @@ from ..._version import VERSION
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
-from ...context.azure.azure_data import AzureData
-from ...context.azure.sentinel_core import MicrosoftSentinel
-
 # pylint: disable=unused-import
-# flake8: noqa: F401
-from ..storage.azure_blob_storage import AzureBlobStorage
+from ...context.azure.azure_data import AzureData  # noqa: F401
+from ...context.azure.sentinel_core import MicrosoftSentinel  # noqa: F401
+
 
 WARN_MSSG = (
     "This module has moved to msticpy.context.azure\n"
