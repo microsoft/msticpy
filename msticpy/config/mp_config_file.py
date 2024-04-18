@@ -25,7 +25,12 @@ try:
 except ImportError:
     _KEYVAULT = False
 
-from ..common.pkg_config import current_config_path, refresh_config, validate_config
+from ..common.pkg_config import (
+    SettingsDict,
+    current_config_path,
+    refresh_config,
+    validate_config,
+)
 from ..common.utility.package import delayed_import
 from .comp_edit import CompEditDisplayMixin, CompEditStatusMixin
 from .file_browser import FileBrowser
@@ -143,17 +148,17 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         # set the default location even if user supplied file parameter
         self.mp_config_def_path = current_config_path() or self.current_file
 
-        if settings is not None:
+        if settings is not None and isinstance(settings, dict):
             # If caller has supplied settings, we don't want to load
             # anything from a file
-            self.settings = settings
+            self.settings = SettingsDict(settings)
             return
         # otherwise load settings from the current config file.
         if self.current_file and Path(self.current_file).is_file():
             self.load_from_file(self.current_file)
         else:
             # no file so set default empty settings
-            self.settings = {}
+            self.settings = SettingsDict()
             self.set_status(f"Filename does not exist: '{self.current_file}'.")
 
     @property
@@ -328,7 +333,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         """Import sentinel settings from portal URL."""
         if not self._last_workspace:
             return
-        curr_workspaces = self.settings.get("AzureSentinel", {}).get("Workspaces")
+        curr_workspaces = self.settings.get("MSSentinel", {}).get("Workspaces")
         curr_workspaces.update(self._last_workspace)
         self.view_settings()
 
@@ -336,7 +341,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         if Path(file).is_file():
             with open(file, "r", encoding="utf-8") as mp_hdl:
                 try:
-                    return yaml.safe_load(mp_hdl)
+                    return SettingsDict(yaml.safe_load(mp_hdl))
                 except yaml.scanner.ScannerError as err:
                     self.set_status(str(err))
         raise FileNotFoundError(f"Cannot read file {file}")
@@ -348,7 +353,9 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
                 config: self.settings[entry] for entry, config in _CONFIG_MAP.items()
             }
             workspace = self.settings.get("workspace_name", "Default")
-            self.settings = {"AzureSentinel": {"Workspaces": {workspace: ws_settings}}}
+            self.settings = SettingsDict(
+                {"MSSentinel": {"Workspaces": {workspace: ws_settings}}}
+            )
             return self.settings
         return {}
 

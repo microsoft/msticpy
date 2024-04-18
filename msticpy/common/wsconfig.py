@@ -181,7 +181,12 @@ class WorkspaceConfig:
     def __contains__(self, key: str):
         """Allow property in test."""
         # In operator overload
-        return key == "Type" or key in self._config or key in self.__dict__
+        return (
+            key == "Type"
+            or key in self._config
+            or self._CONFIG_TO_SETTINGS_NAME_MAP.get(key) in self._config
+            or key in self.__dict__
+        )
 
     def __repr__(self):
         """Return contents of current config."""

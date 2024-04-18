@@ -409,7 +409,7 @@ def validate_config(mp_config: SettingsDict = None, config_file: str = None):
 
     Parameters
     ----------
-    mp_config : Dict[str, Any], optional
+    mp_config : SettingsDict, optional
         The settings dictionary, by default it will
         check the currently loaded settings.
     config_file : str
