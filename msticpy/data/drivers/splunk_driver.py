@@ -231,7 +231,7 @@ class SplunkDriver(DriverBase):
             )
             token_idp = decoded_token.get("idp")
 
-            if token_idp == "Splunk":
+            if token_idp == "Splunk":  # nosec
                 epoch_issued_at = decoded_token["iat"]
                 epoch_expiration = decoded_token["exp"]
                 token_exp = datetime.fromtimestamp(epoch_expiration, timezone.utc)
