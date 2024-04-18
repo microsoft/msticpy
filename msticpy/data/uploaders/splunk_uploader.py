@@ -59,9 +59,10 @@ class SplunkUploader(UploaderBase):
                     port=self.port,
                 )
             else:
-                logger.warning("Both 'username' and 'bearer_token' are missing.")
-                logger.info("Either param is necessary.")
-                self.driver.connect()
+                raise MsticpyConnectionError(
+                    "One of these parameters must be supplied.",
+                    title="Both 'username' and 'bearer_token' are missing.",
+                )
         else:
             self.driver.connect()
 

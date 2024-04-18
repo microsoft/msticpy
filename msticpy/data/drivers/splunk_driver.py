@@ -236,11 +236,11 @@ class SplunkDriver(DriverBase):
                 epoch_expiration = decoded_token["exp"]
                 token_exp = datetime.fromtimestamp(epoch_expiration, timezone.utc)
                 if epoch_issued_at < epoch_now < epoch_expiration:
-                    print(f"This bear_token is active until {token_exp}")
+                    print(f"This bearer_token is active until {token_exp}")
                 else:
-                    raise MsticpyUserConfigError(
-                        f"This bear_token has been expired on {token_exp}",
-                        "Recreate new bear_token in your target Splunk and set it on.",
+                    raise MsticpyConnectionError(
+                        f"This bearer_token has been expired on {token_exp}",
+                        "Recreate new bearer_token in your target Splunk and set it on.",
                         title="expired Splunk auth token",
                     )
         return cs_dict
