@@ -323,7 +323,9 @@ class AzureMonitorDriver(DriverBase):
                 help_uri=_HELP_URL,
             )
         time_span_value = self._get_time_span_value(**kwargs)
-        fail_on_partial = kwargs.get("fail_if_partial", False)
+        fail_on_partial = kwargs.get(
+            "fail_if_partial", kwargs.get("fail_on_partial", False)
+        )
         server_timeout = kwargs.pop("timeout", self._def_timeout)
 
         workspace_id = next(iter(self._workspace_ids), None) or self._workspace_id

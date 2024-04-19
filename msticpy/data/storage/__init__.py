@@ -9,6 +9,6 @@ from ..._version import VERSION
 
 # pylint: disable=unused-import
 # flake8: noqa: F403
-from .azure_blob_storage import AzureBlobStorage
+from .azure_blob_storage import AzureBlobStorage  # noqa: F401
 
 __version__ = VERSION
