@@ -10,7 +10,7 @@ import pprint
 from contextlib import redirect_stdout, suppress
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Union
 
 import ipywidgets as widgets
 import yaml
@@ -70,7 +70,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
     def __init__(
         self,
         file: Union[str, Path, None] = None,
-        settings: Optional[Dict[str, Any]] = None,
+        settings: Union[Dict[str, Any], SettingsDict, None] = None,
     ):
         """
         Create an instance of the MSTICPy Configuration helper class.
@@ -148,7 +148,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         # set the default location even if user supplied file parameter
         self.mp_config_def_path = current_config_path() or self.current_file
 
-        if settings is not None and isinstance(settings, dict):
+        if settings is not None and isinstance(settings, (dict, SettingsDict)):
             # If caller has supplied settings, we don't want to load
             # anything from a file
             self.settings = SettingsDict(settings)
@@ -243,7 +243,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         if backup and Path(file).is_file():
             Path(file).replace(f"{file}.save_{datetime.now().strftime('%H%M%S')}")
         with open(file, "w", encoding="utf-8") as mp_hdl:
-            yaml.safe_dump(self.settings, mp_hdl)
+            yaml.safe_dump(dict(self.settings), mp_hdl)
 
     def show_kv_secrets(self, show: bool = True):
         """Show secrets from currently configured Key Vault."""

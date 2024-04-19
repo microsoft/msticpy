@@ -403,13 +403,15 @@ def _valid_timeout(timeout_val) -> Union[float, None]:
 refresh_config()
 
 
-def validate_config(mp_config: SettingsDict = None, config_file: str = None):
+def validate_config(
+    mp_config: Union[SettingsDict, Dict[str, Any], None] = None, config_file: str = None
+):
     """
     Validate msticpy config settings.
 
     Parameters
     ----------
-    mp_config : SettingsDict, optional
+    mp_config : Union[SettingsDict, Dict[str, Any], None], optional
         The settings dictionary, by default it will
         check the currently loaded settings.
     config_file : str
