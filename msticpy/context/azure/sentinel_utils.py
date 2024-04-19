@@ -276,7 +276,7 @@ def _build_sent_data(items: dict, props: bool = False, **kwargs) -> dict:
     """
     data_body = {"properties": {}}  # type: Dict[str, Dict[str, str]]
     for key in items:
-        if key in ["severity", "status", "title", "message", "searchResults"] or props:
+        if key in ["severity", "status", "title", "message", "searchResults", "labels"] or props:
             data_body["properties"].update({key: items[key]})  # type:ignore
         else:
             data_body[key] = items[key]
