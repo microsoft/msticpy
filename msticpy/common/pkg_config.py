@@ -15,6 +15,7 @@ a file `msticpyconfig.yaml` in the current directory.
 import contextlib
 import numbers
 import os
+from collections import UserDict
 from importlib.resources import path
 from importlib.util import find_spec
 from pathlib import Path
@@ -36,13 +37,36 @@ _CONFIG_FILE: str = "msticpyconfig.yaml"
 _CONFIG_ENV_VAR: str = "MSTICPYCONFIG"
 _DP_KEY = "DataProviders"
 _AZ_SENTINEL = "AzureSentinel"
+_MS_SENTINEL = "MSSentinel"
 _AZ_CLI = "AzureCLI"
 _HOME_PATH = "~/.msticpy/"
 
+
+class SettingsDict(UserDict):
+    """Dictionary class for settings with aliasing."""
+
+    _ALIASES = {_AZ_SENTINEL: _MS_SENTINEL}
+
+    def __getitem__(self, key):
+        """Get item with aliasing."""
+        key = self._ALIASES.get(key, key)
+        return super().__getitem__(key)
+
+    def __setitem__(self, key, value):
+        """Set item with aliasing."""
+        key = self._ALIASES.get(key, key)
+        super().__setitem__(key, value)
+
+    def get(self, key, default=None):
+        """Get item with aliasing."""
+        key = self._ALIASES.get(key, key)
+        return super().get(key, default)
+
+
 # pylint: disable=invalid-name
-_default_settings: Dict[str, Any] = {}
-_custom_settings: Dict[str, Any] = {}
-_settings: Dict[str, Any] = {}
+_default_settings = SettingsDict()
+_custom_settings = SettingsDict()
+_settings = SettingsDict()
 
 
 def _get_current_config() -> Callable[[Any], Optional[str]]:
@@ -135,7 +159,7 @@ def get_config(
         raise
 
 
-def _get_config(setting_path: str, settings_dict: Dict[str, Any]) -> Any:
+def _get_config(setting_path: str, settings_dict: SettingsDict) -> Any:
     """Return value from setting_path."""
     path_elems = setting_path.split(".")
     cur_node = settings_dict
@@ -175,7 +199,7 @@ def set_config(setting_path: str, value: Any, create_path: bool = False):
 
 
 def _set_config(
-    setting_path: str, settings_dict: Dict[str, Any], value: Any, create_path: bool
+    setting_path: str, settings_dict: SettingsDict, value: Any, create_path: bool
 ) -> Any:
     """Set `setting_path` in `settings_dict` to `value`."""
     path_elems = setting_path.split(".")
@@ -202,7 +226,7 @@ def _set_config(
     return cur_node[key_name]
 
 
-def _del_config(setting_path: str, settings_dict) -> Any:
+def _del_config(setting_path: str, settings_dict: SettingsDict) -> Any:
     """Delete `setting_path` from `settings_dict`."""
     path_elems = setting_path.split(".")
     cur_node = settings_dict
@@ -218,7 +242,7 @@ def _del_config(setting_path: str, settings_dict) -> Any:
     return current_value
 
 
-def _read_config_file(config_file: Union[str, Path]) -> Dict[str, Any]:
+def _read_config_file(config_file: Union[str, Path]) -> SettingsDict:
     """
     Read a yaml config definition file.
 
@@ -237,7 +261,7 @@ def _read_config_file(config_file: Union[str, Path]) -> Dict[str, Any]:
         with open(config_file, "r", encoding="utf-8") as f_handle:
             # use safe_load instead of load
             try:
-                return yaml.safe_load(f_handle)
+                return SettingsDict(yaml.safe_load(f_handle))
             except YAMLError as yml_err:
                 raise MsticpyUserConfigError(
                     f"Check that your {config_file} is valid YAML.",
@@ -245,24 +269,24 @@ def _read_config_file(config_file: Union[str, Path]) -> Dict[str, Any]:
                     str(yml_err),
                     title="config file could not be read",
                 ) from yml_err
-    return {}
+    return SettingsDict()
 
 
 def _consolidate_configs(
-    def_config: Dict[str, Any], cust_config: Dict[str, Any]
-) -> Dict[str, Any]:
-    resultant_config = {}
+    def_config: SettingsDict, cust_config: SettingsDict
+) -> SettingsDict:
+    resultant_config = SettingsDict()
     resultant_config.update(def_config)
 
     _override_config(resultant_config, cust_config)
     return resultant_config
 
 
-def _override_config(base_config: Dict[str, Any], new_config: Dict[str, Any]):
+def _override_config(base_config: SettingsDict, new_config: SettingsDict):
     for c_key, c_item in new_config.items():
         if c_item is None:
             continue
-        if isinstance(base_config.get(c_key), dict):
+        if isinstance(base_config.get(c_key), (dict, SettingsDict)):
             _override_config(base_config[c_key], new_config[c_key])
         else:
             base_config[c_key] = new_config[c_key]
@@ -333,17 +357,6 @@ def _create_data_providers(mp_config: Dict[str, Any]) -> Dict[str, Any]:
     return mp_config
 
 
-def _translate_legacy_settings(
-    mp_config: Dict[str, Any], translate: Dict[str, str]
-) -> Dict[str, Any]:
-    """Map legacy settings to new location."""
-    for src, target in translate.items():
-        src_value = _get_config(src, mp_config)
-        _set_config(target, mp_config, src_value, True)
-        _del_config(src, mp_config)
-    return mp_config
-
-
 #############################
 # Specialized settings
 
@@ -390,13 +403,15 @@ def _valid_timeout(timeout_val) -> Union[float, None]:
 refresh_config()
 
 
-def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
+def validate_config(
+    mp_config: Union[SettingsDict, Dict[str, Any], None] = None, config_file: str = None
+):
     """
     Validate msticpy config settings.
 
     Parameters
     ----------
-    mp_config : Dict[str, Any], optional
+    mp_config : Union[SettingsDict, Dict[str, Any], None], optional
         The settings dictionary, by default it will
         check the currently loaded settings.
     config_file : str
@@ -408,7 +423,7 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
     if not mp_config and not config_file:
         mp_config = _settings
 
-    if not isinstance(mp_config, dict):
+    if not isinstance(mp_config, (dict, SettingsDict)):
         raise TypeError("Unknown format for configuration settings.")
 
     mp_errors, mp_warn = _validate_azure_sentinel(mp_config=mp_config)

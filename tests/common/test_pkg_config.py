@@ -186,6 +186,13 @@ _TEST_GET_SETTINGS = (
     ),
     (("AzureSentinel.Workspaces.NotExist.WorkspaceId", None), KeyError),
     (("AzureSentinel.Workspaces.NotExist.WorkspaceId", "testval"), "testval"),
+    (("MSSentinel", None), dict),
+    (
+        ("MSSentinel.Workspaces.Default.WorkspaceId", None),
+        "52b1ab41-869e-4138-9e40-2a4457f09bf3",
+    ),
+    (("MSSentinel.Workspaces.NotExist.WorkspaceId", None), KeyError),
+    (("MSSentinel.Workspaces.NotExist.WorkspaceId", "testval"), "testval"),
 )
 
 
@@ -225,6 +232,19 @@ _TEST_SET_SETTINGS = (
         True,
         "{TEST-GUID}",
     ),
+    (
+        "MSSentinel.Workspaces.Default.WorkspaceId",
+        "{TEST-GUID}",
+        False,
+        "{TEST-GUID}",
+    ),
+    ("MSSentinel.Workspaces.NotExist.WorkspaceId", "{TEST-GUID}", False, KeyError),
+    (
+        "MSSentinel.Workspaces.NotExist.WorkspaceId",
+        "{TEST-GUID}",
+        True,
+        "{TEST-GUID}",
+    ),
 )
 
 
@@ -241,3 +261,41 @@ def test_set_config(key, value, create, expected):
             result = pkg_config.set_config(key, value, create)
     if result:
         check.equal(result, expected)
+
+
+def test_settings_dict_getitem():
+    """Test __getitem__ method."""
+    settings = pkg_config.SettingsDict()
+    settings["test_key"] = "test_value"
+    settings["AzureSentinel"] = "test_value"
+    assert settings["test_key"] == "test_value"
+    assert settings["AzureSentinel"] == settings["MSSentinel"]
+    settings = pkg_config.SettingsDict()
+    settings["MSSentinel"] = "test_value"
+    assert settings["AzureSentinel"] == settings["MSSentinel"]
+
+
+def test_settings_dict_setitem():
+    """Test __setitem__ method."""
+    settings = pkg_config.SettingsDict()
+    settings["test_key"] = "test_value"
+    assert settings["test_key"] == "test_value"
+    settings["AzureSentinel"] = "new_value"
+    assert settings["MSSentinel"] == "new_value"
+
+
+def test_settings_dict_get():
+    """Test get method."""
+    settings = pkg_config.SettingsDict()
+    settings["test_key"] = "test_value"
+    assert settings.get("test_key") == "test_value"
+    assert settings.get("non_existent_key") is None
+    assert settings.get("non_existent_key", "default_value") == "default_value"
+    settings = pkg_config.SettingsDict()
+    settings["AzureSentinel"] = "test_value"
+    assert settings.get("MSSentinel") == "test_value"
+    assert settings.get("AzureSentinel") == settings.get("MSSentinel")
+    settings = pkg_config.SettingsDict()
+    settings["MSSentinel"] = "test_value"
+    assert settings.get("AzureSentinel") == "test_value"
+    assert settings.get("AzureSentinel") == settings.get("MSSentinel")
