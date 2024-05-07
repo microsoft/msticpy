@@ -16,7 +16,7 @@ import contextlib
 import numbers
 import os
 from collections import UserDict
-from importlib.resources import path
+from importlib.resources import files
 from importlib.util import find_spec
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Union
@@ -297,7 +297,7 @@ def _get_default_config():
     config_path = None
     package = "msticpy"
     try:
-        with path(package, _CONFIG_FILE) as config_path:
+        with files(package).joinpath(_CONFIG_FILE) as config_path:
             return _read_config_file(config_path) if config_path else {}
     except ModuleNotFoundError as mod_err:
         # if all else fails we try to find the package default config somewhere

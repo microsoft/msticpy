@@ -15,7 +15,6 @@ except ImportError:
     Figure = LayoutDOM
 
 from msticpy.datamodel.entities import Alert, Entity, Incident
-from msticpy.nbtools.security_alert import SecurityAlert
 
 # pylint: disable=unused-import
 from msticpy.vis import mp_pandas_plot  # noqa: F401
@@ -94,7 +93,7 @@ inc = {
 
 incident = Incident(inc)
 alert = Alert(sample_alert)
-sec_alert = SecurityAlert(pd.Series(sample_alert))
+sec_alert = Alert(pd.Series(sample_alert))
 entity = Entity.instantiate_entity(
     {
         "$id": "10",
