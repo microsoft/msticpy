@@ -62,41 +62,19 @@ as loading any built-in queries available for that environment.
 
 .. code:: ipython3
 
-    qry_prov = QueryProvider(
-        data_environment=DATA_ENVIRONMENT,
-    )
+    qry_prov = QueryProvider("MSSentinel")
+    qry_prov2 = QueryProvider(data_environment="Splunk")
 
-There are two other optional parameters we can pass when initializing
-our Query Providers to further customize it:
+.. note:: The use of the parameter name `data_environment` is optional
+    as long as the data environment is the first parameter passed.
 
-1. You can also chose to
-initialize our Query Provider with a driver other than the default one
-for the chosen environment with:
-
-.. code:: ipython3
-
-    qry_prov = QueryProvider(
-        data_environment=DATA_ENVIRONMENT,
-        driver=DRIVER_CLASS_NAME,
-    )
-
-TThe class must be imported before it can be used in this way. You
-would only use this parameter if you were building your own
-data driver backend, which is not common.
-
-2. You can choose to import additional queries from a custom
-query directory (see :doc:`../extending/Queries` for more
-details) with:
-
-.. code:: ipython3
-
-    qry_prov = QueryProvider(
-        data_environment=DATA_ENVIRONMENT,
-        query_paths=QUERY_DIRECTORY_PATH
-    )
+There are other optional parameters we can pass when initializing
+our Query Providers to further customize them. If these are relevant to the
+provider, they are detailed in the provider-specific documentation.
+:ref:`DataAcquisition:Individual Data Environments`.
 
 
-For more details see :py:class:`QueryProvider API <msticpy.data.data_providers.QueryProvider>`.
+For details of this class see :py:class:`QueryProvider API <msticpy.data.data_providers.QueryProvider>`.
 
 
 Connecting to a Data Environment
@@ -108,32 +86,9 @@ Environment. This is done by calling the connect() function of the Query
 Provider we just initialized and passing it a connection string
 or authentication parameters to use.
 
-Documentation string
+For usage with a specific data provider please see the documentation
+for each provider :ref:`DataAcquisition:Individual Data Environments`.
 
-::
-
-   connect(self, connection_str: str, **kwargs):
-
-       Connect to data source.
-
-       Parameters
-       ----------
-       connection_string : str
-           Connection string for the data source
-
-
-Example
-
-.. code:: ipython3
-
-    la_connection_string = f'loganalytics://code().tenant("{ten_id}").workspace("{ws_id}")'
-    qry_prov.connect(connection_str=la_connection_string)
-
-
-The format of the parameters supplied to the ``connect`` function varies
-by the environment/driver you are trying to use. Please check
-the details for the environment you are using in the
-:ref:`DataAcquisition:Individual Data Environments` section.
 
 List of current built-in queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
