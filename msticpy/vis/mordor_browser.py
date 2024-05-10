@@ -75,7 +75,7 @@ class MordorBrowser:
         )
 
         self.datasets: Dict[str, pd.DataFrame] = {}
-        self.current_dataset: pd.DataFrame = None
+        self.current_dataset: pd.DataFrame = None  # type: ignore
         display(widgets.VBox([browse_ctrls, fields_ctrls]))
         self._df_disp = display(HTML("<p>"), display_id=True)
 

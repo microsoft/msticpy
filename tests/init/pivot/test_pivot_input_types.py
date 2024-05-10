@@ -50,11 +50,17 @@ _IP_LIST = {
 
 # pylint: disable=line-too-long
 _B64_ENCODINGS = {
-    "VGhpcyBpcyBhIHRlc3Qgb2YgYmFzZTY0IGVuY29kZWQgc3RyaW5n": "This is a test of base64 encoded string",
+    "VGhpcyBpcyBhIHRlc3Qgb2YgYmFzZTY0IGVuY29kZWQgc3RyaW5n": (
+        "This is a test of base64 encoded string"
+    ),
     "QSBLdXN0byBxdWVyeSBpcyBhIHJlYWQtb25seSByZXF1ZXN0IHRvIHByb2Nlc3MgZGF0YS"
-    + "BhbmQgcmV0dXJuIHJlc3VsdHMu": "A Kusto query is a read-only request to process data and return results.",
+    + "BhbmQgcmV0dXJuIHJlc3VsdHMu": (
+        "A Kusto query is a read-only request to process data and return results."
+    ),
     "VGhpcyBpcyBhbiBlbWJlZGRlZCBCNjQgVkdocGN5QnBjeUJoSUhSbGMzUWdiMllnWW1GelpU"
-    + "WTBJR1Z1WTI5a1pXUWdjM1J5YVc1bg==": "This is an embedded B64 VGhpcyBpcyBhIHRlc3Qgb2YgYmFzZTY0IGVuY29kZWQgc3RyaW5n",
+    + "WTBJR1Z1WTI5a1pXUWdjM1J5YVc1bg==": (
+        "This is an embedded B64 VGhpcyBpcyBhIHRlc3Qgb2YgYmFzZTY0IGVuY29kZWQgc3RyaW5n"
+    ),
 }
 # pylint: enable=line-too-long
 

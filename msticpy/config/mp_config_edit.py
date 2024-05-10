@@ -4,12 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module docstring."""
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, cast
 
 import ipywidgets as widgets
 from IPython.display import display
 
 from .._version import VERSION
+from ..common.pkg_config import SettingsDict
 from .ce_azure import CEAzure
 from .ce_azure_sentinel import CEAzureSentinel
 from .ce_data_providers import CEDataProviders
@@ -76,7 +77,7 @@ class MpConfigEdit(CompEditDisplayMixin):
             self.mp_conf_file = MpConfigFile(
                 settings=settings.settings, file=conf_filepath
             )
-        elif isinstance(settings, dict):
+        elif isinstance(settings, (dict, SettingsDict)):
             self.mp_conf_file = MpConfigFile(settings=settings, file=conf_filepath)
         elif isinstance(settings, str):
             self.mp_conf_file = MpConfigFile(file=settings)
@@ -89,7 +90,9 @@ class MpConfigEdit(CompEditDisplayMixin):
 
         # Get the settings definitions and Config controls object
         mp_def_dict = get_mpconfig_definitions()
-        self.mp_controls = MpConfigControls(mp_def_dict, self.mp_conf_file.settings)
+        self.mp_controls = MpConfigControls(
+            mp_def_dict, cast(Dict[str, Any], self.mp_conf_file.settings)
+        )
         self._inc_loading_label()
 
         # Set up the tabs
@@ -139,7 +142,7 @@ class MpConfigEdit(CompEditDisplayMixin):
         return self.tab_ctrl.tab_controls
 
     def set_tab(self, tab_name: Optional[str], index: int = 0):
-        """Programatically set the tab by name or index."""
+        """Programmatically set the tab by name or index."""
         self.tab_ctrl.set_tab(tab_name, index)
 
     def _save_file(self, btn):

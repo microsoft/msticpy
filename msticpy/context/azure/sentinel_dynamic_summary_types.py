@@ -265,9 +265,9 @@ class DynamicSummary:
             ) from json_err
         for raw_item in raw_content:
             summary_item_props = {
-                _API_TO_CLS_MAP.get(name, name): pd.to_datetime(value)
-                if name == "eventTimeUTC"
-                else value
+                _API_TO_CLS_MAP.get(name, name): (
+                    pd.to_datetime(value) if name == "eventTimeUTC" else value
+                )
                 for name, value in raw_item.items()
             }
             summary_items.append(DynamicSummaryItem(**summary_item_props))
@@ -462,7 +462,8 @@ class DynamicSummary:
             self.summary_items.append(
                 DynamicSummaryItem(
                     packed_content={
-                        key: _convert_data_types(value) for key, value in row.items()
+                        key: _convert_data_types(value)  # type: ignore
+                        for key, value in row.items()  # type: ignore
                     },
                     **summary_params,
                     **kwargs,  # pass remaining kwargs as summary item properties

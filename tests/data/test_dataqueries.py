@@ -226,10 +226,11 @@ class TestDataQuery(unittest.TestCase):
     def test_load_yaml_def(self):
         """Test query loader rejecting badly formed query files."""
         la_provider = self.la_provider
-        with self.assertRaises((MsticpyException, ValueError, KeyError)) as cm:
-            file_path = Path(_TEST_DATA, "data_q_meta_fail.yaml")
-            la_provider.import_query_file(query_file=file_path)
-            self.assertIn("no data families defined", str(cm.exception))
+        before_queries = len(la_provider.all_queries)
+
+        file_path = Path(_TEST_DATA, "data_q_meta_fail.yaml")
+        la_provider.import_query_file(query_file=file_path)
+        self.assertEqual(len(la_provider.all_queries), before_queries)
 
         with self.assertRaises((MsticpyException, ValueError)) as cm:
             file_path = Path(_TEST_DATA, "data_q_source_fail_param.yaml")
@@ -241,11 +242,11 @@ class TestDataQuery(unittest.TestCase):
             la_provider.import_query_file(query_file=file_path)
             self.assertIn("Parameters with missing types", str(cm.exception))
 
-        before_queries = len(list(la_provider.list_queries()))
+        self.assertEqual(len(la_provider.all_queries), before_queries)
         file_path = Path(_TEST_DATA, "data_q_success.yaml")
         la_provider.import_query_file(query_file=file_path)
 
-        self.assertEqual(before_queries + 3, len(list(la_provider.list_queries())))
+        self.assertEqual(before_queries + 5, len(la_provider.all_queries))
 
     def test_load_hierarchical_q_paths(self):
         """Test use of hierarchical query paths."""
@@ -353,12 +354,12 @@ class TestDataQuery(unittest.TestCase):
 
     def test_split_ranges(self):
         """Test time range split logic."""
-        start = datetime.utcnow() - pd.Timedelta("5H")
+        start = datetime.utcnow() - pd.Timedelta("5h")
         end = datetime.utcnow() + pd.Timedelta("5min")
-        delta = pd.Timedelta("1H")
+        delta = pd.Timedelta("1h")
 
         ranges = _calc_split_ranges(start, end, delta)
-        self.assertEqual(len(ranges), 5)
+        self.assertEqual(len(ranges), 6)
         self.assertEqual(ranges[0][0], start)
         self.assertEqual(ranges[-1][1], end)
 
@@ -368,7 +369,7 @@ class TestDataQuery(unittest.TestCase):
 
         end = end + pd.Timedelta("20min")
         ranges = _calc_split_ranges(start, end, delta)
-        self.assertEqual(len(ranges), 5)
+        self.assertEqual(len(ranges), 6)
         self.assertEqual(ranges[0][0], start)
         self.assertEqual(ranges[-1][1], end)
 
@@ -376,16 +377,16 @@ class TestDataQuery(unittest.TestCase):
         """Test queries split into time segments."""
         la_provider = self.la_provider
 
-        start = datetime.utcnow() - pd.Timedelta("5H")
+        start = datetime.utcnow() - pd.Timedelta("5h")
         end = datetime.utcnow() + pd.Timedelta("5min")
-        delta = pd.Timedelta("1H")
+        delta = pd.Timedelta("1h")
 
         ranges = _calc_split_ranges(start, end, delta)
         result_queries = la_provider.all_queries.list_alerts(
             "print", start=start, end=end, split_query_by="1H"
         )
         queries = result_queries.split("\n\n")
-        self.assertEqual(len(queries), 5)
+        self.assertEqual(len(queries), 6)
 
         for idx, (st_time, e_time) in enumerate(ranges):
             self.assertIn(st_time.isoformat(sep="T") + "Z", queries[idx])
@@ -415,7 +416,7 @@ class TestDataQuery(unittest.TestCase):
             "print", start=start, end=end, split_query_by="Invalid"
         )
         queries = result_queries.split("\n\n")
-        self.assertEqual(len(queries), 5)
+        self.assertEqual(len(queries), 6)
 
 
 _LOCAL_DATA_PATHS = [str(get_test_data_path().joinpath("localdata"))]

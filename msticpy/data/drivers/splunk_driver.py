@@ -5,10 +5,11 @@
 #  --------------------------------------------------------------------------
 """Splunk Driver class."""
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from time import sleep
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
+import jwt
 import pandas as pd
 from tqdm import tqdm
 
@@ -43,24 +44,41 @@ logger = logging.getLogger(__name__)
 SPLUNK_CONNECT_ARGS = {
     "host": "(string) The host name (the default is 'localhost').",
     "port": "(string) The port number (the default is '8089').",
-    "http_scheme": "('https' or 'http') The scheme for accessing the service "
-    + "(the default is 'https').",
-    "verify": "(Boolean) Enable (True) or disable (False) SSL verrification for "
-    + "https connections. (optional, the default is True)",
+    "http_scheme": (
+        "('https' or 'http') The scheme for accessing the service "
+        + "(the default is 'https')."
+    ),
+    "verify": (
+        "(Boolean) Enable (True) or disable (False) SSL verrification for "
+        + "https connections. (optional, the default is True)"
+    ),
     "owner": "(string) The owner context of the namespace (optional).",
     "app": "(string) The app context of the namespace (optional).",
-    "sharing": "('global', 'system', 'app', or 'user') "
-    + "The sharing mode for the namespace (the default is 'user').",
-    "token": "(string) The current session token (optional). Session tokens can be"
-    + " shared across multiple service instances.",
-    "cookie": "(string) A session cookie. When provided, you don’t need to call"
-    + " login(). This parameter is only supported for Splunk 6.2+.",
-    "autologin": "(boolean) When True, automatically tries to log in again if"
-    + " the session terminates.",
-    "username": "(string) The Splunk account username, which is used to "
-    + "authenticate the Splunk instance.",
+    "sharing": (
+        "('global', 'system', 'app', or 'user') "
+        + "The sharing mode for the namespace (the default is 'user')."
+    ),
+    "token": (
+        "(string) The current session token (optional). Session tokens can be"
+        + " shared across multiple service instances."
+    ),
+    "cookie": (
+        "(string) A session cookie. When provided, you don’t need to call"
+        + " login(). This parameter is only supported for Splunk 6.2+."
+    ),
+    "autologin": (
+        "(boolean) When True, automatically tries to log in again if"
+        + " the session terminates."
+    ),
+    "username": (
+        "(string) The Splunk account username, which is used to "
+        + "authenticate the Splunk instance."
+    ),
     "password": "(string) The password for the Splunk account.",
-    "splunkToken": "(string) The Authorization Bearer Token <JWT> created in the Splunk.",
+    "bearer_token": (
+        "(string) The Authorization Bearer Token <JWT> created in the Splunk."
+        + " (Named as 'splunkToken' in Splunk Python SDK)"
+    ),
 }
 
 
@@ -123,6 +141,11 @@ class SplunkDriver(DriverBase):
         arg_dict = {
             key: val for key, val in cs_dict.items() if key in SPLUNK_CONNECT_ARGS
         }
+
+        # Replace to Splunk python sdk's parameter name of sp_client.connect()
+        if arg_dict.get("bearer_token"):
+            arg_dict["splunkToken"] = arg_dict.pop("bearer_token")
+
         try:
             self.service = sp_client.connect(**arg_dict)
         except AuthenticationError as err:
@@ -155,6 +178,7 @@ class SplunkDriver(DriverBase):
         cs_dict.update(self._get_config_settings("Splunk"))
         # If a connection string - parse this and add to config
         if connection_str:
+            print("Credential loading from connection_str tied with ';'.")
             cs_items = connection_str.split(";")
             cs_dict.update(
                 {
@@ -163,9 +187,12 @@ class SplunkDriver(DriverBase):
                 }
             )
         elif kwargs:
+            print("Credential loading from connect() method's args.")
             # if connection args supplied as kwargs
             cs_dict.update(kwargs)
             check_kwargs(cs_dict, list(SPLUNK_CONNECT_ARGS.keys()))
+        else:
+            print("Credential loading from msticpyconfig.yaml file.")
 
         cs_dict["port"] = int(cs_dict["port"])
         verify_opt = cs_dict.get("verify")
@@ -178,8 +205,10 @@ class SplunkDriver(DriverBase):
         # between user/pass and authorization bearer token
         if "username" in cs_dict:
             self._required_params = ["host", "username", "password"]
+            print("username/password method is selected.")
         else:
-            self._required_params = ["host", "splunkToken"]
+            self._required_params = ["host", "bearer_token"]
+            print("bearer_token method is selected.")
 
         missing_args = set(self._required_params) - cs_dict.keys()
         if missing_args:
@@ -191,6 +220,29 @@ class SplunkDriver(DriverBase):
                 *[f"{arg}: {desc}" for arg, desc in SPLUNK_CONNECT_ARGS.items()],
                 title="no Splunk connection parameters",
             )
+
+        if "bearer_token" in self._required_params:
+            epoch_now = datetime.now().timestamp()
+            alg = jwt.get_unverified_header(cs_dict["bearer_token"])["alg"]
+            decoded_token = jwt.decode(
+                cs_dict["bearer_token"],
+                algorithms=[alg],
+                options={"verify_signature": False},
+            )
+            token_idp = decoded_token.get("idp")
+
+            if token_idp == "Splunk":  # nosec
+                epoch_issued_at = decoded_token["iat"]
+                epoch_expiration = decoded_token["exp"]
+                token_exp = datetime.fromtimestamp(epoch_expiration, timezone.utc)
+                if epoch_issued_at < epoch_now < epoch_expiration:
+                    print(f"This bearer_token is active until {token_exp}")
+                else:
+                    raise MsticpyConnectionError(
+                        f"This bearer_token has been expired on {token_exp}",
+                        "Recreate new bearer_token in your target Splunk and set it on.",
+                        title="expired Splunk auth token",
+                    )
         return cs_dict
 
     def query(

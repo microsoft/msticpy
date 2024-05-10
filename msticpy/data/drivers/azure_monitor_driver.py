@@ -16,6 +16,7 @@ azure/monitor-query-readme?view=azure-python
 """
 import contextlib
 import logging
+import warnings
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, cast
 
@@ -34,6 +35,7 @@ from ...common.exceptions import (
     MsticpyNoDataSourceError,
     MsticpyNotConnectedError,
 )
+from ...common.provider_settings import get_protected_setting
 from ...common.settings import get_http_proxies, get_http_timeout
 from ...common.timespan import TimeSpan
 from ...common.utility import export, mp_ua_header
@@ -272,6 +274,8 @@ class AzureMonitorDriver(DriverBase):
         ----------------
         timeout : int (seconds)
             Specify a timeout for the query. Default is 300 seconds.
+        fail_on_partial: bool
+            Fail the query if only partial results are returned.
 
         Returns
         -------
@@ -319,6 +323,9 @@ class AzureMonitorDriver(DriverBase):
                 help_uri=_HELP_URL,
             )
         time_span_value = self._get_time_span_value(**kwargs)
+        fail_on_partial = kwargs.get(
+            "fail_if_partial", kwargs.get("fail_on_partial", False)
+        )
         server_timeout = kwargs.pop("timeout", self._def_timeout)
 
         workspace_id = next(iter(self._workspace_ids), None) or self._workspace_id
@@ -353,6 +360,16 @@ class AzureMonitorDriver(DriverBase):
         logger.info("query status %s", repr(status))
 
         if isinstance(result, LogsQueryPartialResult):
+            if fail_on_partial:
+                raise MsticpyDataQueryError(
+                    "Partial results returned. This may indicate a query timeout.",
+                    title="Partial results returned",
+                    help_uri=_HELP_URL,
+                )
+            warnings.warn(
+                "Partial results returned. This may indicate a query timeout.",
+                RuntimeWarning,
+            )
             table = result.partial_data[0]  # type: ignore[attr-defined]
         else:
             table = result.tables[0]  # type: ignore[attr-defined]
@@ -362,20 +379,24 @@ class AzureMonitorDriver(DriverBase):
 
     def _create_query_client(self, connection_str, **kwargs):
         """Create the query client."""
-        az_auth_types = kwargs.get("auth_types", kwargs.get("mp_az_auth"))
+        az_auth_types = kwargs.pop("auth_types", kwargs.get("mp_az_auth"))
         if isinstance(az_auth_types, bool):
             az_auth_types = None
         if isinstance(az_auth_types, str):
             az_auth_types = [az_auth_types]
         self._connect_auth_types = az_auth_types
 
-        self._def_timeout = kwargs.get("timeout", self._DEFAULT_TIMEOUT)
-        self._def_proxies = kwargs.get("proxies", self._def_proxies)
+        self._def_timeout = kwargs.pop("timeout", self._DEFAULT_TIMEOUT)
+        self._def_proxies = kwargs.pop("proxies", self._def_proxies)
         self._get_workspaces(connection_str, **kwargs)
 
-        credentials = az_connect(
-            auth_methods=az_auth_types, tenant_id=self._az_tenant_id
+        # check for additional Args in settings but allow kwargs to override
+        connect_args = self._get_workspace_settings_args()
+        connect_args.update(kwargs)
+        connect_args.update(
+            {"auth_methods": az_auth_types, "tenant_id": self._az_tenant_id}
         )
+        credentials = az_connect(**connect_args)
         logger.info(
             "Created query client. Auth type: %s, Url: %s, Proxies: %s",
             type(credentials.modern) if credentials else "None",
@@ -387,6 +408,17 @@ class AzureMonitorDriver(DriverBase):
             endpoint=self.url_endpoint,
             proxies=kwargs.get("proxies", self._def_proxies),
         )
+
+    def _get_workspace_settings_args(self) -> Dict[str, Any]:
+        """Return any Args settings for the current workspace."""
+        if not self._ws_config or not self._ws_config.settings_path:
+            return {}
+        args_path = f"{self._ws_config.settings_path}.Args"
+        args_settings = self._ws_config.settings.get("Args", {})
+        return {
+            name: get_protected_setting(args_path, name)
+            for name in args_settings.keys()
+        }
 
     def _get_workspaces(self, connection_str: Optional[str] = None, **kwargs):
         """Get workspace or workspaces to connect to."""
@@ -438,9 +470,9 @@ class AzureMonitorDriver(DriverBase):
             )
         self._ws_config = ws_config
         self._ws_name = workspace_name or ws_config.workspace_id
-        if not self._az_tenant_id and WorkspaceConfig.CONF_TENANT_ID_KEY in ws_config:
-            self._az_tenant_id = ws_config[WorkspaceConfig.CONF_TENANT_ID_KEY]
-        self._workspace_id = ws_config[WorkspaceConfig.CONF_WS_ID_KEY]
+        if not self._az_tenant_id and WorkspaceConfig.CONF_TENANT_ID in ws_config:
+            self._az_tenant_id = ws_config[WorkspaceConfig.CONF_TENANT_ID]
+        self._workspace_id = ws_config[WorkspaceConfig.CONF_WS_ID]
 
     def _get_workspaces_by_id(self, workspace_ids):
         if not self._az_tenant_id:
@@ -458,9 +490,9 @@ class AzureMonitorDriver(DriverBase):
 
     def _get_workspaces_by_name(self, workspaces):
         workspace_configs = {
-            WorkspaceConfig(workspace)[WorkspaceConfig.CONF_WS_ID_KEY]: WorkspaceConfig(
+            WorkspaceConfig(workspace)[WorkspaceConfig.CONF_WS_ID]: WorkspaceConfig(
                 workspace
-            )[WorkspaceConfig.CONF_TENANT_ID_KEY]
+            )[WorkspaceConfig.CONF_TENANT_ID]
             for workspace in workspaces
         }
         if len(set(workspace_configs.values())) > 1:
@@ -524,15 +556,17 @@ class AzureMonitorDriver(DriverBase):
 
     @staticmethod
     def _get_query_status(result) -> Dict[str, Any]:
-        status = {
-            "status": result.status.name,
-            "tables": len(result.tables) if result.tables else 0,
-        }
-
+        if isinstance(result, LogsQueryResult):
+            return {
+                "status": result.status.name,
+                "tables": len(result.tables),
+            }
         if isinstance(result, LogsQueryPartialResult):
-            status["partial"] = "partial results returned"
-            status["tables"] = (len(result.partial_data) if result.partial_data else 0,)
-        return status
+            return {
+                "status": result.status.name,
+                "tables": len(result.partial_data),
+            }
+        return {"status": "unknown failure", "tables": 0, "result": result}
 
     def _get_schema(self) -> Dict[str, Dict]:
         """Return the workspace schema."""

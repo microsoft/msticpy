@@ -1,4 +1,5 @@
 """VirusTotal v3 API."""
+
 import asyncio
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -71,14 +72,22 @@ class VTObjectProperties(Enum):
     MALICIOUS = "malicious"
 
 
-def _make_sync(future):
-    """Wait for an async call, making it sync."""
+def _ensure_eventloop(force_nest_asyncio: bool = False):
+    """Ensure that we have an event loop available."""
     try:
         event_loop = asyncio.get_event_loop()
     except RuntimeError:
         # Generate an event loop if there isn't any.
         event_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(event_loop)
+    if is_ipython() or force_nest_asyncio:
+        nest_asyncio.apply()
+    return event_loop
+
+
+def _make_sync(future):
+    """Wait for an async call, making it sync."""
+    event_loop = _ensure_eventloop()
     return event_loop.run_until_complete(future)
 
 
@@ -119,6 +128,9 @@ class VTLookupV3:
         VTEntityType.IP_ADDRESS: {"date", "country", "asn", "as_owner"},
         VTEntityType.DOMAIN: {"id", "creation_date", "last_update_date", "country"},
     }
+
+    _DEFAULT_SEARCH_LIMIT = 1000  # prevents vague queries from pulling 1M+ files
+    _SEARCH_API_ENDPOINT = "/intelligence/search"
 
     @property
     def supported_vt_types(self) -> List[str]:
@@ -190,7 +202,7 @@ class VTLookupV3:
             [vt_df, add_columns_df], axis="columns"
         )  # .set_index([ColumnNames.ID.value])
 
-    def __init__(self, vt_key: Optional[str] = None):
+    def __init__(self, vt_key: Optional[str] = None, force_nestasyncio: bool = False):
         """
         Create a new instance of VTLookupV3 class.
 
@@ -199,12 +211,14 @@ class VTLookupV3:
         vt_key: str, optional
             VirusTotal API key, if not supplied, this is read from
             user configuration.
+        force_nestasyncio: bool, optional
+            To force use of nest_asyncio, by default nest_asyncio
+            is used in Jupyter notebooks, otherwise this defaults to False
 
         """
+        _ensure_eventloop(force_nestasyncio)
         self._vt_key = vt_key or _get_vt_api_key()
         self._vt_client = vt.Client(apikey=self._vt_key)
-        if is_ipython():
-            nest_asyncio.apply()
 
     async def _lookup_ioc_async(
         self, observable: str, vt_type: str, all_props: bool = False
@@ -508,7 +522,6 @@ class VTLookupV3:
         relationship: str,
         limit: Optional[int] = None,
         all_props: bool = False,
-        full_objects: bool = False,
     ) -> pd.DataFrame:
         """
         Look up single IoC observable relationship links.
@@ -525,8 +538,6 @@ class VTLookupV3:
             Relations limit
         all_props : bool, optional
             If True, return all properties, by default False
-        full_objects : bool, optional
-            If True, return the full object rather than just ID links.
 
         Returns
         -------
@@ -546,23 +557,14 @@ class VTLookupV3:
         try:
             return _make_sync(
                 self._lookup_ioc_relationships_async(
-                    observable,
-                    vt_type,
-                    relationship,
-                    limit,
-                    all_props=all_props,
-                    full_objects=full_objects,
+                    observable, vt_type, relationship, limit, all_props=all_props
                 )
             )
         finally:
             self._vt_client.close()
 
     def lookup_ioc_related(
-        self,
-        observable: str,
-        vt_type: str,
-        relationship: str,
-        limit: Optional[int] = None,
+        self, observable: str, vt_type: str, relationship: str, limit: int = None
     ) -> pd.DataFrame:
         """
         Look single IoC observable related items.
@@ -613,7 +615,7 @@ class VTLookupV3:
         relationship: str,
         observable_column: str = ColumnNames.TARGET.value,
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,
-        limit: int = None,
+        limit: Optional[int] = None,
         all_props: bool = False,
     ) -> pd.DataFrame:
         """
@@ -879,6 +881,112 @@ class VTLookupV3:
         vt_behavior.get_file_behavior(sandbox=sandbox)
         return vt_behavior
 
+    def search(
+        self, query: str, limit: Optional[int] = _DEFAULT_SEARCH_LIMIT
+    ) -> pd.DataFrame:
+        """
+        Return results of a VT search query as a DataFrame.
+
+        Parameters
+        ----------
+        query : str
+            Virus Total Intelligence Search string
+        limit : int (default: 1,000)
+            Number of intended results
+
+        Returns
+        -------
+        pd.DataFrame
+            Search query results.
+
+        """
+        # run virus total intelligence search using iterator
+        try:
+            response_itr = self._vt_client.iterator(
+                self._SEARCH_API_ENDPOINT, params={"query": query}, limit=limit
+            )
+            response_list = list(map(lambda item: item.to_dict(), response_itr))
+        except vt.APIError as api_err:
+            raise MsticpyVTNoDataError(
+                f"The provided query returned 0 results because of an APIError: {api_err}"
+            ) from api_err
+
+        if len(response_list) == 0:
+            raise MsticpyVTNoDataError("The provided query returned 0 results")
+
+        response_df = self._extract_response(response_list)
+        return timestamps_to_utcdate(response_df)
+
+    def iterator(
+        self, path, *path_args, params=None, cursor=None, limit=None, batch_size=0
+    ) -> vt.Iterator:
+        """
+        Return an iterator for the collection specified by the given path.
+
+        The endpoint specified by path must return a collection of objects. An
+        example of such an endpoint are /comments and /intelligence/search.
+
+        SOURCE: https://github.com/VirusTotal/vt-py/blob/
+        6bf4decb5bbd80bfc60e74ee3caa4c9073cea38c/vt/client.py
+
+        Parameters
+        ----------
+        path : str
+            Path to API endpoint returning a collection.
+        path_args: dict
+            A variable number of arguments that are put into any placeholders used in path.
+        params: dict
+            Additional parameters passed to the endpoint.
+        cursor: str
+            Cursor for resuming the iteration at the point it was left previously.
+            A cursor can be obtained with Iterator.cursor(). This
+            cursor is not the same one returned by the VirusTotal API.
+        limit: int
+            Maximum number of objects that will be returned by the iterator.
+            If a limit is not provided the iterator continues until it reaches the
+            last object in the collection.
+        batch_size: int
+            Maximum number of objects retrieved on each call to the endpoint.
+            If not provided the server will decide how many objects to return.
+
+        Returns
+        -------
+        vt.Iterator
+            An instance of vt.Iterator
+
+        """
+        return self._vt_client.iterator(
+            path, path_args, params, cursor, limit, batch_size
+        )
+
+    def _extract_response(self, response_list: list) -> pd.DataFrame:
+        """
+        Convert list of dictionaries from search() function to DataFrame.
+
+        Parameters
+        ----------
+        response_list : list
+            A list of dictionaries representing a virus total object
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame with the attributes of the virus total object
+
+        """
+        # loop to convert from list of vt.Object to pd.DataFrame
+        response_rows = []
+        for response_item in response_list:
+            # flatten nested dictionary and append id, type values
+            response_item_df = pd.json_normalize(response_item["attributes"])
+            response_item_df["id"] = response_item["id"]
+            response_item_df["type"] = response_item["type"]
+
+            response_rows.append(response_item_df)
+
+        response_df = pd.concat(response_rows, axis=0, ignore_index=True)
+        return timestamps_to_utcdate(response_df)
+
     @staticmethod
     def relationships_to_graph(
         relationship_dfs: List[pd.DataFrame],
@@ -1028,9 +1136,11 @@ def _get_vt_api_key() -> Optional[str]:
 def timestamps_to_utcdate(data: pd.DataFrame):
     """Replace Unix timestamps in VT data with Py/pandas Timestamp."""
     columns = data.columns
-    for date_col in (col for col in columns if col.endswith("_date")):
+    for date_col in (
+        col for col in columns if isinstance(col, str) and col.endswith("_date")
+    ):
         data = (
-            data.assign(pd_data=pd.to_datetime(data[date_col], unit="s", utc=True))
+            data.assign(pd_data=pd.to_datetime(data[date_col], unit="s", utc=True))  # type: ignore
             .drop(columns=date_col)
             .rename(columns={"pd_data": date_col})
         )

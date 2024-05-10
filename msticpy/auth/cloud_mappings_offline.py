@@ -42,7 +42,9 @@ cloud_mappings_offline = {
         "sqlManagement": "https://management.core.windows.net:8443/",
         "microsoftGraphResourceId": "https://graph.microsoft.com/",
         "appInsightsResourceId": "https://api.applicationinsights.io",
-        "appInsightsTelemetryChannelResourceId": "https://dc.applicationinsights.azure.com/v2/track",
+        "appInsightsTelemetryChannelResourceId": (
+            "https://dc.applicationinsights.azure.com/v2/track"
+        ),
         "attestationResourceId": "https://attest.azure.net",
         "synapseAnalyticsResourceId": "https://dev.azuresynapse.net",
         "logAnalyticsResourceId": "https://api.loganalytics.io",
@@ -81,7 +83,9 @@ cloud_mappings_offline = {
         "sqlManagement": "https://management.core.usgovcloudapi.net:8443",
         "microsoftGraphResourceId": "https://graph.microsoft.us/",
         "appInsightsResourceId": "https://api.applicationinsights.us",
-        "appInsightsTelemetryChannelResourceId": "https://dc.applicationinsights.us/v2/track",
+        "appInsightsTelemetryChannelResourceId": (
+            "https://dc.applicationinsights.us/v2/track"
+        ),
         "synapseAnalyticsResourceId": "https://dev.azuresynapse.usgovcloudapi.net",
         "logAnalyticsResourceId": "https://api.loganalytics.us",
         "ossrDbmsResourceId": "https://ossrdbms-aad.database.usgovcloudapi.net",
@@ -117,7 +121,9 @@ cloud_mappings_offline = {
         "sqlManagement": "https://management.core.chinacloudapi.cn:8443",
         "microsoftGraphResourceId": "https://microsoftgraph.chinacloudapi.cn",
         "appInsightsResourceId": "https://api.applicationinsights.azure.cn",
-        "appInsightsTelemetryChannelResourceId": "https://dc.applicationinsights.azure.cn/v2/track",
+        "appInsightsTelemetryChannelResourceId": (
+            "https://dc.applicationinsights.azure.cn/v2/track"
+        ),
         "synapseAnalyticsResourceId": "https://dev.azuresynapse.azure.cn",
         "logAnalyticsResourceId": "https://api.loganalytics.azure.cn",
         "ossrDbmsResourceId": "https://ossrdbms-aad.database.chinacloudapi.cn",

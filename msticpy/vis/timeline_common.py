@@ -75,7 +75,7 @@ def check_df_columns(
         If one or more columns not found in `data`
 
     """
-    missing_cols = set(req_columns) - set(data.columns)
+    missing_cols = set(req_columns) - set(data.columns)  # type: ignore
     if missing_cols:
         raise MsticpyParameterError(
             title="Columns not found in DataFrame",
@@ -145,7 +145,7 @@ def create_data_grouping(
         graph_df["y_index"] = 1
         series_count = 1
         group_count_df = None
-    return graph_df, group_count_df, tool_tip_columns, series_count
+    return graph_df, group_count_df, tool_tip_columns, series_count  # type: ignore
 
 
 def get_def_source_cols(data: pd.DataFrame, source_columns: Iterable[str]) -> Set[str]:
@@ -199,8 +199,8 @@ def get_time_bounds(
         start_range = min_time - ((max_time - min_time) * 0.1)
         end_range = max_time + ((max_time - min_time) * 0.1)
     except OutOfBoundsDatetime:
-        min_time = min_time.to_pydatetime()
-        max_time = max_time.to_pydatetime()
+        min_time = min_time.to_pydatetime()  # type: ignore
+        max_time = max_time.to_pydatetime()  # type: ignore
         start_range = min_time - ((max_time - min_time) * 0.1)
         end_range = max_time + ((max_time - min_time) * 0.1)
     return start_range, end_range, min_time, max_time
@@ -216,9 +216,9 @@ def create_tool_tips(
     if isinstance(data, dict):
         tool_tip_dict = {}
         for data_set in data.values():
-            data_df = data_set.get("data", {})
+            data_df = data_set.get("data", {})  # type: ignore
             for col in columns:
-                disp_col, col_tooltip, col_fmt = _get_datetime_tooltip(col, data_df)
+                disp_col, col_tooltip, col_fmt = _get_datetime_tooltip(col, data_df)  # type: ignore
                 tool_tip_dict[disp_col] = col_tooltip
                 formatters.update(col_fmt)
         return {"tooltips": list(tool_tip_dict.items()), "formatters": formatters}

@@ -199,9 +199,7 @@ class MicrosoftSentinel(
                 "and specify the new cloud name using the `cloud` parameter.",
                 title="Cannot switch cloud at connect time",
             )
-        tenant_id = (
-            tenant_id or self.workspace_config[WorkspaceConfig.CONF_TENANT_ID_KEY]
-        )
+        tenant_id = tenant_id or self.workspace_config[WorkspaceConfig.CONF_TENANT_ID]
         logger.info("Using tenant id %s", tenant_id)
         self._token = kwargs.pop("token", None)
         super().connect(
@@ -321,8 +319,9 @@ class MicrosoftSentinel(
             res_id_parts = parse_resource_id(ws_res_id)
             self.workspace_config = WorkspaceConfig.from_settings(
                 {
-                    "WorkspaceName": self._default_workspace
-                    or res_id_parts["workspace_name"],
+                    "WorkspaceName": (
+                        self._default_workspace or res_id_parts["workspace_name"]
+                    ),
                     "SubscriptionId": res_id_parts["subscription_id"],
                     "ResourceGroup": res_id_parts["resource_group"],
                 }

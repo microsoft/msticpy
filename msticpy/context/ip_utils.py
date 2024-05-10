@@ -18,7 +18,7 @@ import socket
 import warnings
 from functools import lru_cache
 from time import sleep
-from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
 import httpx
 import pandas as pd
@@ -56,7 +56,7 @@ _POTAROO_ASNS_URL = "https://bgp.potaroo.net/cidr/autnums.html"
 
 
 # Closure to cache ASN dictionary from Potaroo
-def _fetch_asns():
+def _fetch_asns() -> Callable[[], Dict[str, str]]:
     """Create closure for ASN fetching."""
     asns_dict: Dict[str, str] = {}
 
@@ -463,13 +463,13 @@ def ip_whois(
         for ip_addr in ip:
             if rate_limit:
                 sleep(query_rate)
-            whois_results[ip_addr] = _whois_lookup(
+            whois_results[ip_addr] = _whois_lookup(  # type: ignore
                 ip_addr, raw=raw, retry_count=retry_count
             ).properties
         return _whois_result_to_pandas(whois_results)
     if isinstance(ip, (str, IpAddress)):
         return _whois_lookup(ip, raw=raw)
-    return {}
+    return pd.DataFrame()
 
 
 def get_asn_details(asns: Union[str, List]) -> Union[pd.DataFrame, Dict]:
@@ -659,7 +659,7 @@ def _find_address(
         return None
     for vcard in [vcard for vcard in entity["vcardArray"] if isinstance(vcard, list)]:
         for vcard_sub in vcard:
-            if vcard_sub[0] == "adr":
+            if len(vcard) >= 2 and vcard_sub[0] == "adr" and "label" in vcard_sub[1]:
                 return vcard_sub[1]["label"]
     return None
 

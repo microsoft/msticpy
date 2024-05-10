@@ -142,7 +142,9 @@ RDAP_RESPONSE = {
                     [
                         "adr",
                         {
-                            "label": "One Microsoft Way\nRedmond\nWA\n98052\nUnited States"
+                            "label": (
+                                "One Microsoft Way\nRedmond\nWA\n98052\nUnited States"
+                            )
                         },
                         "text",
                         ["", "", "", "", "", "", ""],

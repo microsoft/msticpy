@@ -204,12 +204,12 @@ class SentinelWatchlistsMixin:
             current_df, item_series = current_items_values.align(
                 pd.Series(new_item), axis=1, copy=False  # type: ignore
             )
-            if (current_df == item_series).all(axis=1).any() and overwrite:
+            if (current_df == item_series).all(axis=1).any() and overwrite:  # type: ignore
                 watchlist_id = current_items[
                     current_items.isin(list(new_item.values())).any(axis=1)
                 ]["properties.watchlistItemId"].iloc[0]
             # If not in watchlist already generate new ID
-            elif not (current_df == item_series).all(axis=1).any():
+            elif not (current_df == item_series).all(axis=1).any():  # type: ignore
                 watchlist_id = str(uuid4())
             else:
                 raise MsticpyUserError(

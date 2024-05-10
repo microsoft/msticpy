@@ -671,9 +671,11 @@ class AzureData:
                     id=network_id,
                     private_ip=ip_addr.private_ip_address,
                     private_ip_allocation=str(ip_addr.private_ip_allocation_method),
-                    public_ip=ip_addr.public_ip_address.ip_address
-                    if ip_addr.public_ip_address
-                    else None,
+                    public_ip=(
+                        ip_addr.public_ip_address.ip_address
+                        if ip_addr.public_ip_address
+                        else None
+                    ),
                     public_ip_allocation=(
                         ip_addr.public_ip_address.public_ip_allocation_method
                         if ip_addr.public_ip_address

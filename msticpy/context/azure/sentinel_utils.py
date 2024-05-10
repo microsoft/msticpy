@@ -165,15 +165,18 @@ class SentinelUtilsMixin:
             The formatted resource ID.
 
         """
-        print("_build_sent_res_id", sub_id, res_grp, ws_name)
         if not sub_id or not res_grp or not ws_name:
             config = self._check_config(
                 workspace_name=ws_name,
-                items=["subscription_id", "resource_group", "workspace_name"],
+                items=[
+                    WorkspaceConfig.CONF_SUB_ID,
+                    WorkspaceConfig.CONF_RES_GROUP,
+                    WorkspaceConfig.CONF_WS_NAME,
+                ],
             )
-            sub_id = config["subscription_id"]
-            res_grp = config["resource_group"]
-            ws_name = config["workspace_name"]
+            sub_id = config[WorkspaceConfig.CONF_SUB_ID]
+            res_grp = config[WorkspaceConfig.CONF_RES_GROUP]
+            ws_name = config[WorkspaceConfig.CONF_WS_NAME]
         return "".join(
             [
                 f"/subscriptions/{sub_id}/resourcegroups/{res_grp}",
