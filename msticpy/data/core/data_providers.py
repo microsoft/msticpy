@@ -93,7 +93,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         # pylint: enable=import-outside-toplevel
         setattr(self.__class__, "_add_pivots", add_data_queries_to_entities)
 
-        data_environment, self.environment_name = self._check_environment(
+        data_environment, self.environment_name = QueryProvider._check_environment(
             data_environment
         )
 
@@ -139,8 +139,9 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         self._query_time = QueryTime(units="day")
         logger.info("Initialization complete.")
 
+    @classmethod
     def _check_environment(
-        self, data_environment
+        cls, data_environment
     ) -> Tuple[Union[str, DataEnvironment], str]:
         """Check environment against known names."""
         if isinstance(data_environment, str):
