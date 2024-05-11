@@ -9,7 +9,7 @@ import io
 import unittest
 import warnings
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import partial
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
@@ -354,8 +354,8 @@ class TestDataQuery(unittest.TestCase):
 
     def test_split_ranges(self):
         """Test time range split logic."""
-        start = datetime.utcnow() - pd.Timedelta("5h")
-        end = datetime.utcnow() + pd.Timedelta("5min")
+        start = datetime.now(tz=timezone.utc) - pd.Timedelta("5h")
+        end = datetime.now(tz=timezone.utc) + pd.Timedelta("5min")
         delta = pd.Timedelta("1h")
 
         ranges = _calc_split_ranges(start, end, delta)
@@ -377,8 +377,8 @@ class TestDataQuery(unittest.TestCase):
         """Test queries split into time segments."""
         la_provider = self.la_provider
 
-        start = datetime.utcnow() - pd.Timedelta("5h")
-        end = datetime.utcnow() + pd.Timedelta("5min")
+        start = datetime.now(tz=timezone.utc) - pd.Timedelta("5h")
+        end = datetime.now(tz=timezone.utc) + pd.Timedelta("5min")
         delta = pd.Timedelta("1h")
 
         ranges = _calc_split_ranges(start, end, delta)
@@ -409,8 +409,8 @@ class TestDataQuery(unittest.TestCase):
         self.assertIn("Cannot split a query", mssg.getvalue())
 
         # With invalid split_query_by value it will default to 1D
-        start = datetime.utcnow() - pd.Timedelta("5D")
-        end = datetime.utcnow() + pd.Timedelta("5min")
+        start = datetime.now(tz=timezone.utc) - pd.Timedelta("5D")
+        end = datetime.now(tz=timezone.utc) + pd.Timedelta("5min")
 
         result_queries = la_provider.all_queries.list_alerts(
             "print", start=start, end=end, split_query_by="Invalid"
