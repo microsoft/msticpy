@@ -6,13 +6,14 @@
 """dataprovider query test class."""
 import contextlib
 import io
-import unittest
 import warnings
 from copy import deepcopy
 from datetime import datetime, timezone
 from functools import partial
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from unittest import TestCase
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
@@ -25,6 +26,7 @@ from msticpy.data.core.query_container import QueryContainer
 from msticpy.data.core.query_provider_connections_mixin import _calc_split_ranges
 from msticpy.data.core.query_source import QuerySource
 from msticpy.data.drivers.driver_base import DriverBase, DriverProps
+from msticpy.data.query_defns import DataEnvironment
 
 from ..unit_test_lib import get_test_data_path
 
@@ -91,7 +93,7 @@ _TEST_QUERIES = [
 ]
 
 
-class TestDataQuery(unittest.TestCase):
+class TestDataQuery(TestCase):
     """Unit test class."""
 
     provider = None
@@ -468,6 +470,36 @@ class TestDataQuery(unittest.TestCase):
         """Test default implementation of method query_usable."""
         self.assertTrue(self.provider.query_usable(query_source=None))
 
+    def test_execute_query_provider_not_loaded(self) -> None:
+        """Test method _execute_query when driver is not loaded."""
+        self.la_provider._query_provider._loaded = False
+        with pytest.raises(ValueError, match="Provider is not loaded."):
+            self.la_provider._execute_query()
+
+    def test_execute_query_provider_not_connected(self) -> None:
+        """Test method _execute_query when driver is not connected."""
+        self.la_provider._query_provider._connected = False
+        with pytest.raises(ValueError, match="No connection to a data source."):
+            self.la_provider._execute_query()
+
+    def test_check_for_time_params_missing_start(self) -> None:
+        """Test method _check_for_time_params when start is missing."""
+        missing: list[str] = ["start"]
+        params: dict = {}
+        changes: bool = self.la_provider._check_for_time_params(params, missing)
+        self.assertTrue(changes)
+        self.assertIn("start", params)
+        self.assertFalse(missing)
+
+    def test_check_for_time_params_missing_end(self) -> None:
+        """Test method _check_for_time_params when end is missing."""
+        missing: list[str] = ["end"]
+        params: dict = {}
+        changes: bool = self.la_provider._check_for_time_params(params, missing)
+        self.assertTrue(changes)
+        self.assertIn("end", params)
+        self.assertFalse(missing)
+
 
 _LOCAL_DATA_PATHS = [str(get_test_data_path().joinpath("localdata"))]
 
@@ -661,3 +693,66 @@ def test_driver_queries() -> None:
     check.equal(len(driver_queries), 1)
     check.is_instance(driver_queries[0], dict)
     check.is_false(driver_queries[0])
+
+
+def test_init_invalid_driver() -> None:
+    """Test QueryProvider method __init__ with invalid driver."""
+    data_environment: str = "Kusto"
+    with patch(
+        "msticpy.data.drivers.import_driver", return_value=QueryProvider
+    ) as mocked_import_driver, pytest.raises(
+        LookupError,
+        match=f"Could not find suitable data provider for",
+    ):
+        QueryProvider(
+            data_environment=data_environment,
+            driver=None,
+        )
+        check.is_true(mocked_import_driver.called)
+        check.equal(mocked_import_driver.call_count, 1)
+
+
+def test_check_environment_unknown_str_env() -> None:
+    """Test method _check_environment with unknown str environment."""
+    invalid_data_environment: str = "invalid_env"
+    with pytest.raises(
+        TypeError, match=f"Unknown data environment {invalid_data_environment}"
+    ):
+        QueryProvider._check_environment(invalid_data_environment)
+
+
+def test_check_environment_unknown_env_type() -> None:
+    """Test method _check_environment with invalid environment type."""
+    invalid_data_environment: int = 42
+    with pytest.raises(
+        TypeError,
+        match=f"Unknown data environment type {invalid_data_environment} \({type(invalid_data_environment)}\)",
+    ):
+        QueryProvider._check_environment(invalid_data_environment)
+
+
+def test_check_environment_str_custom_provider() -> None:
+    """Test method _check_environment with a custom provider as a string."""
+    data_environment: str = "Custom"
+    with patch(
+        "msticpy.data.drivers.CUSTOM_PROVIDERS",
+    ) as mocked_custom_providers:
+        # We only need to overwrite the __contains__ method to ensure the check
+        # value in drivers.CUSTOM_PROVIDERS
+        # always returns True.
+        mocked_custom_providers.__contains__.return_value = True
+        data_env, env_name = QueryProvider._check_environment(data_environment)
+        check.is_true(mocked_custom_providers.__contains__.called)
+        check.equal(mocked_custom_providers.__contains__.call_count, 1)
+        check.is_instance(data_env, str)
+        check.equal(data_env, data_environment)
+        check.equal(env_name, data_environment)
+
+
+def test_check_environment_as_data_environment() -> None:
+    """Test method _check_environment with a DataEnvironment object."""
+    data_environment: DataEnvironment = DataEnvironment.MSSentinel
+    data_env, env_name = QueryProvider._check_environment(data_environment)
+    check.is_instance(data_env, DataEnvironment)
+    check.equal(data_env, data_environment)
+    check.equal(env_name, data_environment.name)
