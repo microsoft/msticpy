@@ -418,6 +418,56 @@ class TestDataQuery(unittest.TestCase):
         queries = result_queries.split("\n\n")
         self.assertEqual(len(queries), 5)
 
+    def test_getattr_invalid_attribute(self) -> None:
+        """Test method get_attr when attribute is not a supported attribute."""
+        with pytest.raises(
+            AttributeError, match=f"UTDataDriver has no attribute 'test'"
+        ):
+            self.provider.test
+
+    def test_schema(self) -> None:
+        """Test default implementation of property schema."""
+        schema: dict = self.provider.schema
+        self.assertIsInstance(schema, dict)
+        self.assertFalse(schema)
+
+    def test_service_queries(self) -> None:
+        """Test default implementation of property service_queries."""
+        service_queries: tuple[dict, str] = self.provider.service_queries
+        self.assertIsInstance(service_queries, tuple)
+        self.assertIsInstance(service_queries[0], dict)
+        self.assertIsInstance(service_queries[1], str)
+        self.assertFalse(service_queries[0])
+        self.assertFalse(service_queries[1])
+
+    def test_add_query_filter_invalid_parameter(self) -> None:
+        """Test default implementation of method add_query_filter with invalid name."""
+        with pytest.raises(ValueError, match="'name' test must be one of:.*"):
+            self.provider.add_query_filter(name="test", query_filter="")
+
+    def test_add_query_filter_as_str(self) -> None:
+        """Test default implementation of method add_query_filter with invalid name."""
+        my_filter: str = "test_filter"
+        filter_name: str = "data_sources"
+        self.assertNotIn(filter_name, self.provider._query_filter)
+        self.provider.add_query_filter(name=filter_name, query_filter=my_filter)
+        self.assertIn(filter_name, self.provider._query_filter)
+        self.assertIn(my_filter, self.provider._query_filter[filter_name])
+
+    def test_set_driver_property(self) -> None:
+        """Test default implementation of method set_driver_property with invalid property."""
+        with pytest.raises(
+            TypeError,
+            match="Property 'supports_threading' is not the correct type.",
+        ):
+            self.provider.set_driver_property(
+                name=DriverProps.SUPPORTS_THREADING, value=42
+            )
+
+    def test_query_usable(self) -> None:
+        """Test default implementation of method query_usable."""
+        self.assertTrue(self.provider.query_usable(query_source=None))
+
 
 _LOCAL_DATA_PATHS = [str(get_test_data_path().joinpath("localdata"))]
 
@@ -581,3 +631,33 @@ def test_query_paths(mode):
     ):
         check.is_true(hasattr(qry_prov, data_family))
     pkg_config._settings["QueryDefinitions"] = current_settings
+
+
+def test_driver_props_valid_type_invalid_property_name() -> None:
+    """Test method valid_type when input property is not in the predefined properties."""
+    valid: bool = DriverProps.valid_type(
+        property_name="random_property",
+        value=0,
+    )
+    check.is_true(valid)
+
+
+def test_driver_queries() -> None:
+    """Test default implementation of property driver_queries."""
+
+    class MinimalDriver(DriverBase):
+        def connect():
+            pass
+
+        def query():
+            pass
+
+        def query_with_results():
+            pass
+
+    driver = MinimalDriver()
+    driver_queries: list[dict] = driver.driver_queries
+    check.is_instance(driver_queries, list)
+    check.equal(len(driver_queries), 1)
+    check.is_instance(driver_queries[0], dict)
+    check.is_false(driver_queries[0])
