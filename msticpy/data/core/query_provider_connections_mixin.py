@@ -354,7 +354,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                 for query_id, query_func in query_tasks.items()
             }
             results: List[pd.DataFrame] = []
-            failed_tasks: Dict[str, asyncio.Future] = {}
+            failed_tasks_ids: list[str] = []
             if progress:
                 task_iter = tqdm(
                     asyncio.as_completed(thread_tasks.values()),
@@ -374,22 +374,28 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                         "Query task '%s' failed with exception",
                         query_id,
                     )
-                    failed_tasks[query_id] = thread_task
+                    # Reusing thread task would result in:
+                    # RuntimeError: cannot reuse already awaited coroutine
+                    # A new task should be queued
+                    failed_tasks_ids.append(query_id)
 
-            if retry and failed_tasks:
-                for query_id, thread_task in failed_tasks.items():
-                    try:
-                        logger.info("Retrying query task '%s'", query_id)
-                        result = await thread_task
-                        results.append(result)
-                    except Exception:  # pylint: disable=broad-except
-                        logger.warning(
-                            "Retried query task '%s' failed with exception",
-                            query_id,
-                            exc_info=True,
-                        )
-            # Sort the results by the order of the tasks
-            results = [result for _, result in sorted(zip(thread_tasks, results))]
+        # Sort the results by the order of the tasks
+        results = [result for _, result in sorted(zip(thread_tasks, results))]
+
+        if retry and failed_tasks_ids:
+            failed_results: pd.DataFrame = (
+                await QueryProviderConnectionsMixin._exec_queries_threaded(
+                    {
+                        failed_tasks_id: query_tasks[failed_tasks_id]
+                        for failed_tasks_id in failed_tasks_ids
+                    },
+                    progress=progress,
+                    retry=False,
+                    max_workers=max_workers,
+                )
+            )
+            if not failed_results.empty:
+                results.append(failed_results)
         if results:
             return pd.concat(results, ignore_index=True)
 
