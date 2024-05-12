@@ -6,6 +6,7 @@
 """Query Provider additional connection methods."""
 import asyncio
 import logging
+from abc import abstractmethod
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from functools import partial
@@ -39,11 +40,11 @@ class QueryProviderProtocol(Protocol):
 
     # fmt: off
     @staticmethod
+    @abstractmethod
     def _get_query_options(
         params: Dict[str, Any], kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
-        ...
-    # fmt: on
+        """Return any kwargs not already in params."""
 
 
 # pylint: disable=super-init-not-called
