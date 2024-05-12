@@ -156,8 +156,16 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         if self._query_provider.get_driver_property(DriverProps.SUPPORTS_THREADING):
             logger.info("Running threaded queries.")
             event_loop = _get_event_loop()
+            max_workers: int = self._query_provider.get_driver_property(
+                DriverProps.MAX_PARALLEL
+            )
             return event_loop.run_until_complete(
-                self._exec_queries_threaded(query_tasks, progress, retry)
+                self._exec_queries_threaded(
+                    query_tasks,
+                    progress,
+                    retry,
+                    max_workers,
+                )
             )
 
         # standard synchronous execution
@@ -235,8 +243,16 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         if self._query_provider.get_driver_property(DriverProps.SUPPORTS_THREADING):
             logger.info("Running threaded queries.")
             event_loop = _get_event_loop()
+            max_workers: int = self._query_provider.get_driver_property(
+                DriverProps.MAX_PARALLEL
+            )
             return event_loop.run_until_complete(
-                self._exec_queries_threaded(query_tasks, progress, retry)
+                self._exec_queries_threaded(
+                    query_tasks,
+                    progress,
+                    retry,
+                    max_workers,
+                )
             )
 
         # or revert to standard synchronous execution
@@ -315,22 +331,19 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         logger.info("Split query into %s chunks", len(split_queries))
         return split_queries
 
+    @staticmethod
     async def _exec_queries_threaded(
-        self,
         query_tasks: Dict[str, partial],
         progress: bool = True,
         retry: bool = False,
+        max_workers: int = 4,
     ) -> pd.DataFrame:
         """Return results of multiple queries run as threaded tasks."""
         logger.info("Running threaded queries for %d connections.", len(query_tasks))
 
         event_loop = _get_event_loop()
 
-        with ThreadPoolExecutor(
-            max_workers=self._query_provider.get_driver_property(
-                DriverProps.MAX_PARALLEL
-            )
-        ) as executor:
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # add the additional connections
             thread_tasks = {
                 query_id: event_loop.run_in_executor(executor, query_func)
