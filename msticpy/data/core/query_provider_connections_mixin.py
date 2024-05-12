@@ -435,12 +435,12 @@ def _calc_split_ranges(start: datetime, end: datetime, split_delta: pd.Timedelta
     # If the difference between the calculated last range end and
     # the query 'end' that the user requested is small (< 10% of a delta),
     # we just replace the last "end" time with our query end time.
-    if (ranges[-1][1] - end) < (split_delta / 10):
+    if abs(end - ranges[-1][1]) < (split_delta / 10):
         ranges[-1] = ranges[-1][0], end
     else:
         # otherwise append a new range starting after the last range
         # in ranges and ending in 'end"
         # note - we need to add back our subtracted 1 nanosecond
-        ranges.append((ranges[-1][0] + pd.Timedelta("1ns"), end))
+        ranges.append((ranges[-1][1] + pd.Timedelta("1ns"), end))
 
     return ranges
