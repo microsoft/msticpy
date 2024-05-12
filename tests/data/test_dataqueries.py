@@ -354,26 +354,44 @@ class TestDataQuery(TestCase):
         q_src = q_store.get_query("Saved.Searches.test.query3")
         self.assertEqual(q_src.query, dotted_container_qs[2]["query"])
 
+    def validate_time_ranges(
+        self,
+        ranges: list[tuple[datetime, datetime]],
+        delta: pd.Timedelta,
+    ) -> None:
+        self.assertIsInstance(ranges, list)
+
+        for index, range in enumerate(ranges):
+            self.assertIsInstance(range, tuple)
+            start_range = range[0]
+            self.assertIsInstance(start_range, datetime)
+            end_range = range[1]
+            self.assertIsInstance(end_range, datetime)
+
+            self.assertGreater(end_range, start_range)
+            if index > 0:
+                previous_end_range = ranges[index - 1][1]
+                # Ensure the new start range starts after the former end_range
+                self.assertGreater(start_range, previous_end_range)
+                # Ensure we don't have more than 1ns between 2 ranges
+                self.assertEqual(start_range - previous_end_range, pd.Timedelta("1ns"))
+            # Ensure a given time range is not longer than the configured delta + 10%
+            self.assertLess(end_range - start_range, delta + (delta / 10))
+
     def test_split_ranges(self):
         """Test time range split logic."""
         start = datetime.now(tz=timezone.utc) - pd.Timedelta("5h")
-        end = datetime.now(tz=timezone.utc) + pd.Timedelta("5min")
         delta = pd.Timedelta("1h")
+        # Case where the last range has less than 10% of delta of difference
+        end = datetime.now(tz=timezone.utc) + delta / 12
 
         ranges = _calc_split_ranges(start, end, delta)
-        self.assertEqual(len(ranges), 5)
-        self.assertEqual(ranges[0][0], start)
-        self.assertEqual(ranges[-1][1], end)
+        self.validate_time_ranges(ranges=ranges, delta=delta)
 
-        st_times = [start_tm[0] for start_tm in ranges]
-        for end_time in (end_tm[1] for end_tm in ranges):
-            self.assertNotIn(end_time, st_times)
-
-        end = end + pd.Timedelta("20min")
+        # Case where the last range has more than 10% of delta of difference
+        end = datetime.now(tz=timezone.utc) + delta / 9
         ranges = _calc_split_ranges(start, end, delta)
-        self.assertEqual(len(ranges), 5)
-        self.assertEqual(ranges[0][0], start)
-        self.assertEqual(ranges[-1][1], end)
+        self.validate_time_ranges(ranges=ranges, delta=delta)
 
     def test_split_queries(self):
         """Test queries split into time segments."""
