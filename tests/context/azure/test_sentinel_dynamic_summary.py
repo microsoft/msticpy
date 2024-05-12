@@ -18,8 +18,9 @@ import respx
 import yaml
 
 from msticpy.common.exceptions import MsticpyAzureConnectionError
+from msticpy.common.pkg_config import SettingsDict
 from msticpy.common.wsconfig import WorkspaceConfig
-from msticpy.context.azure import MicrosoftSentinel
+from msticpy.context.azure.sentinel_core import MicrosoftSentinel
 from msticpy.context.azure.sentinel_dynamic_summary import SentinelQueryProvider
 from msticpy.context.azure.sentinel_dynamic_summary_types import (
     _API_TO_CLS_MAP,
@@ -236,7 +237,7 @@ def list_responses():
 def _get_test_ws_settings():
     """Get test workspace settings from config file."""
     test_config = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
-    settings = yaml.safe_load(test_config.read_text(encoding="utf-8"))
+    settings = SettingsDict(yaml.safe_load(test_config.read_text(encoding="utf-8")))
     az_ws_settings = settings.get("AzureSentinel", {}).get("Workspaces", {})
     return next(
         iter((key, val) for key, val in az_ws_settings.items() if key != "Default")

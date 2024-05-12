@@ -9,7 +9,7 @@ from typing import Any, Optional, Tuple, Union
 import pandas as pd
 
 from msticpy.data.core.query_source import QuerySource
-from msticpy.data.drivers import DriverBase
+from msticpy.data.drivers.driver_base import DriverBase
 
 __author__ = "Ian Hellen"
 

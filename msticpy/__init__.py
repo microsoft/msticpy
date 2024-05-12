@@ -114,25 +114,17 @@ In the Azure ML and Azure Synapse environments, some additional
 initialization and checks are performed.
 
 """
-import importlib
 import os
-import traceback
-import warnings
-from typing import Any, Iterable, Union
+from typing import Iterable, Union
 
-from . import nbwidgets
+from . import nbwidgets  # noqa: F401
 
 # flake8: noqa: F403
 from ._version import VERSION
 from .common import pkg_config as settings
-from .common.check_version import check_version
-from .common.exceptions import (
-    MsticpyException,
-    MsticpyImportExtraError,
-    MsticpyMissingDependencyError,
-)
-from .common.utility import search_name as search
-from .init.logging import set_logging_level, setup_logging
+from .common.check_version import check_version  # noqa: F401
+from .common.utility import search_name as search  # noqa: F401
+from .init.logging import set_logging_level, setup_logging  # noqa: F401
 from .lazy_importer import lazy_import
 
 __version__ = VERSION

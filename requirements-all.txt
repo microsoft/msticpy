@@ -15,7 +15,7 @@ azure-mgmt-subscription>=3.0.0
 azure-monitor-query>=1.0.0, <=2.0.0
 azure-storage-blob>=12.5.0
 beautifulsoup4>=4.0.0
-bokeh>=1.4.0, <4.0.0
+bokeh>=1.4.0, <3.4.0
 cryptography>=3.1
 deprecated>=1.2.4
 dnspython>=2.0.0, <3.0.0
@@ -51,7 +51,7 @@ pyyaml>=3.13
 scikit-learn>=1.0.0
 scipy>=1.1.0
 setuptools>=40.6.3
-splunk-sdk>=1.6.0
+splunk-sdk>=1.6.0,!=2.0.0
 statsmodels>=0.11.1
 sumologic-sdk>=0.1.11
 tldextract>=2.2.2

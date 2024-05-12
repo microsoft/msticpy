@@ -5,4 +5,4 @@ mo-sql-parsing>=8, <9.0.0
 nest_asyncio>=1.4.0
 passivetotal>=2.5.3
 sumologic-sdk>=0.1.11
-splunk-sdk>=1.6.0
+splunk-sdk>=1.6.0,!=2.0.0

@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 from azure.core.exceptions import ClientAuthenticationError
 
+from msticpy.common.wsconfig import WorkspaceConfig
 from msticpy.context.azure import AzureData, MicrosoftSentinel
 
 from ...unit_test_lib import custom_mp_config, get_test_data_path
@@ -61,7 +62,9 @@ def test_azuresent_connect_token(get_token: Mock, az_data_connect: Mock):
         setattr(sentinel_inst, "set_default_workspace", MagicMock())
         sentinel_inst.connect(auth_methods=["env"], token=token)
 
-        tenant_id = sentinel_inst._check_config(["tenant_id"])["tenant_id"]
+        tenant_id = sentinel_inst._check_config([WorkspaceConfig.CONF_TENANT_ID])[
+            WorkspaceConfig.CONF_TENANT_ID
+        ]
         assert sentinel_inst._token == token
         az_data_connect.assert_called_once_with(
             auth_methods=["env"], tenant_id=tenant_id, silent=False

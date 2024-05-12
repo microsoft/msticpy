@@ -383,14 +383,18 @@ class TestDataQuery(TestCase):
         start = datetime.now(tz=timezone.utc) - pd.Timedelta("5h")
         delta = pd.Timedelta("1h")
         # Case where the last range has less than 10% of delta of difference
-        end = datetime.now(tz=timezone.utc) + delta / 12
+        end = datetime.now(tz=timezone.utc) + delta / 1001
 
         ranges = _calc_split_ranges(start, end, delta)
+        self.assertEqual(ranges[0][0], start)
+        self.assertEqual(ranges[-1][1], end)
         self.validate_time_ranges(ranges=ranges, delta=delta)
 
         # Case where the last range has more than 10% of delta of difference
-        end = datetime.now(tz=timezone.utc) + delta / 9
+        end = datetime.now(tz=timezone.utc) + delta / 999
         ranges = _calc_split_ranges(start, end, delta)
+        self.assertEqual(ranges[0][0], start)
+        self.assertEqual(ranges[-1][1], end)
         self.validate_time_ranges(ranges=ranges, delta=delta)
 
     def test_split_queries(self):
@@ -406,7 +410,7 @@ class TestDataQuery(TestCase):
             "print", start=start, end=end, split_query_by="1H"
         )
         queries = result_queries.split("\n\n")
-        self.assertEqual(len(queries), 5)
+        self.assertEqual(len(queries), 6)
 
         for idx, (st_time, e_time) in enumerate(ranges):
             self.assertIn(st_time.isoformat(sep="T") + "Z", queries[idx])
@@ -436,7 +440,7 @@ class TestDataQuery(TestCase):
             "print", start=start, end=end, split_query_by="Invalid"
         )
         queries = result_queries.split("\n\n")
-        self.assertEqual(len(queries), 5)
+        self.assertEqual(len(queries), 6)
 
     def test_getattr_invalid_attribute(self) -> None:
         """Test method get_attr when attribute is not a supported attribute."""

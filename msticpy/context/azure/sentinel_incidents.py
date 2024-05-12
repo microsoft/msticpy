@@ -249,7 +249,9 @@ class SentinelIncidentsMixin:
             update_items["title"] = incident_dets.iloc[0]["properties.title"]
         if "status" not in update_items.keys():
             update_items["status"] = incident_dets.iloc[0]["properties.status"]
-        data = _build_sent_data(update_items, etag=incident_dets.iloc[0]["etag"])
+        data = _build_sent_data(
+            update_items, props=True, etag=incident_dets.iloc[0]["etag"]
+        )
         response = httpx.put(
             incident_url,
             headers=get_api_headers(self._token),  # type: ignore
