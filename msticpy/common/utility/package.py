@@ -10,13 +10,14 @@ import re
 import subprocess  # nosec
 import sys
 import warnings
+from importlib.metadata import version, PackageNotFoundError
 from pathlib import Path
 from platform import python_version
 from typing import Dict, List, Optional, Tuple, Union
 
-import pkg_resources
 from IPython import get_ipython
 from IPython.display import HTML, display
+from packaging.requirements import Requirement
 from tqdm.auto import tqdm
 from tqdm.notebook import tqdm as tqdm_notebook
 
@@ -126,12 +127,13 @@ def check_and_install_missing_packages(  # noqa: MC0001
             required_packages = [required_packages]
     # Check package requirements against installed set
     for req in required_packages:
-        pkg_req = pkg_resources.Requirement.parse(req)
+        pkg_req = Requirement(req)
         try:
-            found_pkg = pkg_resources.working_set.find(pkg_req)
-        except pkg_resources.VersionConflict:
-            found_pkg = None
-        if found_pkg is None:
+            pkg_version = version(pkg_req.name)
+            found_pkg: bool = True
+        except PackageNotFoundError:
+            found_pkg = False
+        if not (found_pkg and pkg_version in pkg_req.specifier):
             missing_packages.append(req)
 
     if not missing_packages:
