@@ -38,7 +38,6 @@ class QueryProviderProtocol(Protocol):
     _additional_connections: Dict[str, Any]
     _query_provider: DriverBase
 
-    # fmt: off
     @staticmethod
     @abstractmethod
     def _get_query_options(
@@ -50,6 +49,13 @@ class QueryProviderProtocol(Protocol):
 # pylint: disable=super-init-not-called
 class QueryProviderConnectionsMixin(QueryProviderProtocol):
     """Mixin additional connection handling QueryProvider class."""
+
+    @staticmethod
+    @abstractmethod
+    def _get_query_options(
+        params: Dict[str, Any], kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Return any kwargs not already in params."""
 
     def add_connection(
         self,
