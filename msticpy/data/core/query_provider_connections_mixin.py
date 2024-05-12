@@ -37,10 +37,6 @@ class QueryProviderProtocol(Protocol):
     _additional_connections: Dict[str, Any]
     _query_provider: DriverBase
 
-    def exec_query(self, query: str, **kwargs) -> Union[pd.DataFrame, Any]:
-        """Execute a query against the provider."""
-        ...
-
     # fmt: off
     @staticmethod
     def _get_query_options(
