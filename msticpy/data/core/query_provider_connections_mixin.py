@@ -360,7 +360,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                 for query_id, query_func in query_tasks.items()
             }
             results: List[pd.DataFrame] = []
-            failed_tasks_ids: list[str] = []
+            failed_tasks_ids: List[str] = []
             if progress:
                 task_iter = tqdm(
                     asyncio.as_completed(thread_tasks.values()),

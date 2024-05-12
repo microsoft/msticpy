@@ -11,7 +11,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from functools import partial
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -356,7 +356,7 @@ class TestDataQuery(TestCase):
 
     def validate_time_ranges(
         self,
-        ranges: list[tuple[datetime, datetime]],
+        ranges: List[Tuple[datetime, datetime]],
         delta: pd.Timedelta,
     ) -> None:
         self.assertIsInstance(ranges, list)
@@ -457,7 +457,7 @@ class TestDataQuery(TestCase):
 
     def test_service_queries(self) -> None:
         """Test default implementation of property service_queries."""
-        service_queries: tuple[dict, str] = self.provider.service_queries
+        service_queries: Tuple[dict, str] = self.provider.service_queries
         self.assertIsInstance(service_queries, tuple)
         self.assertIsInstance(service_queries[0], dict)
         self.assertIsInstance(service_queries[1], str)
@@ -506,7 +506,7 @@ class TestDataQuery(TestCase):
 
     def test_check_for_time_params_missing_start(self) -> None:
         """Test method _check_for_time_params when start is missing."""
-        missing: list[str] = ["start"]
+        missing: List[str] = ["start"]
         params: dict = {}
         changes: bool = self.la_provider._check_for_time_params(params, missing)
         self.assertTrue(changes)
@@ -515,7 +515,7 @@ class TestDataQuery(TestCase):
 
     def test_check_for_time_params_missing_end(self) -> None:
         """Test method _check_for_time_params when end is missing."""
-        missing: list[str] = ["end"]
+        missing: List[str] = ["end"]
         params: dict = {}
         changes: bool = self.la_provider._check_for_time_params(params, missing)
         self.assertTrue(changes)
@@ -710,7 +710,7 @@ def test_driver_queries() -> None:
             pass
 
     driver = MinimalDriver()
-    driver_queries: list[dict] = driver.driver_queries
+    driver_queries: List[dict] = driver.driver_queries
     check.is_instance(driver_queries, list)
     check.equal(len(driver_queries), 1)
     check.is_instance(driver_queries[0], dict)
