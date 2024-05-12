@@ -298,7 +298,11 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                 results.append(query_task())
             except MsticpyDataQueryError:
                 print(f"Query {con_name} failed.")
-        return pd.concat(results)
+        if results:
+            return pd.concat(results)
+
+        logger.warning("All queries failed.")
+        return pd.DataFrame()
 
     def _create_split_queries(
         self,
@@ -386,8 +390,11 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                         )
             # Sort the results by the order of the tasks
             results = [result for _, result in sorted(zip(thread_tasks, results))]
+        if results:
+            return pd.concat(results, ignore_index=True)
 
-        return pd.concat(results, ignore_index=True)
+        logger.warning("All queries failed.")
+        return pd.DataFrame()
 
 
 def _get_event_loop() -> asyncio.AbstractEventLoop:
