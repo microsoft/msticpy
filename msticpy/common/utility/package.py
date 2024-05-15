@@ -15,8 +15,9 @@ from pathlib import Path
 from platform import python_version
 from typing import Dict, List, Optional, Tuple, Union
 
-from IPython import get_ipython
-from IPython.display import HTML, display
+from IPython.core.getipython import get_ipython
+from IPython.core.display import HTML
+from IPython.display import display
 from packaging.requirements import Requirement
 from tqdm.auto import tqdm
 from tqdm.notebook import tqdm as tqdm_notebook
