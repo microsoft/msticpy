@@ -81,7 +81,8 @@ Instantiating the Splunk uploader
 The first step in uploading data is to instantiate an uploader for the location we wish to upload data to.
 For Splunk there are three parameters that need to be passed at this stage, the Splunk host name, a username,
 and a password. You can also pass a parameter for ``port``, by default this value is 8089.
-In addition, The security auth token of ``bearer_token`` can be also passed instead of username and password as same as Splunk QueryProvider.
+In addition, The security auth token of ``bearer_token`` can be also passed
+instead of username and password as same as Splunk QueryProvider.
 
 .. code:: ipython3
 
@@ -97,35 +98,43 @@ On the other hand, You can use the stored credentials in msticpyconfig.yaml to S
 	from msticpy.data.uploaders.splunk_uploader import SplunkUploader
 	spup = SplunkUploader()
 
-*Note: Due to the way Splunk API's work the time taken to upload a file to Splunk can be significantly longer than
-with Log Analytics.*
+*Note: Due to the way Splunk API's work the time taken to upload a file to
+Splunk can be significantly longer than with Log Analytics.*
 
 Uploading a DataFrame to Splunk
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To upload a Pandas DataFrame to Splunk you simply pass the DataFrame to ``.upload_df()`` along with the name of a table,
-and index you wish the data to be uploaded to.
-As the ``sourcetype`` parameter, csv, json or others can be input and then passed to df.to_csv(), df.to_json(), df.to_string() styles respectively.
+To upload a Pandas DataFrame to Splunk you simply pass the DataFrame to ``.upload_df()`` along with index you wish the data to be uploaded to.
+As the ``source_type`` parameter, csv, json or others can be input and then passed to
+ df.to_csv(), df.to_json(), df.to_string() styles respectively and **json** is by default.
+``table_name`` parameter remains for the backward compatibility.
 If the index provided does not exist and you want it to be created,
 you can pass the parameter ``create_index = True``.
 
-.. Note – table name for Splunk refers to sourcetype.
+.. Note – table name for Splunk refers to source type.
 
 .. code:: ipython3
 
-	spup.upload_df(data=DATAFRAME, sourcetype=SOURCETYPE, index_name=INDEX_NAME)
+	spup.upload_df(data=DATAFRAME, index_name=INDEX_NAME)
 
 During upload a progress bar will be shown showing the upload process of the upload.
 
 Uploading a File to Splunk
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To upload a file to Splunk pass the path to the file to ``.upload_file()`` along with the name of the index you
-want the data uploaded to. By default a comma separated value file is expected but if your file has some other separator
-value you can pass this with the ``delim`` parameter. You can specify the sourcetype to upload the data to with that ``table_name`` parameter but by default the uploader will upload to the sourcetype with the same name as the file.
-As the ``table_name`` parameter, csv, json or others can be input and then passed to df.to_csv(), df.to_json(), df.to_string() styles respectively.
+To upload a file to Splunk pass the path to the file to ``.upload_file()`` along with the name of
+the index you want the data uploaded to.
+By default, a comma separated value file is expected but if your file has
+some other separator value you can pass this with the ``delim`` parameter.
+You can specify the sourcetype to upload the data to with that ``source_type`` parameter
+but by default the uploader will upload to the sourcetype with the same name as the file.
+As the ``source_type`` parameter, csv, json or others can be input and then passed to
+ df.to_csv(), df.to_json(), df.to_string() styles respectively.
+The default is **json** if without ``table_name`` parameter, because ``table_name`` remains
+ only for the backward compatibility.
 As with uploading a DataFrame
-if the index provided does not exist and you want it to be created, you can pass the parameter ``create_index = True``.
+if the index provided does not exist and you want it to be created, you can pass
+the parameter ``create_index = True``.
 
 .. code:: ipython3
 
@@ -134,18 +143,24 @@ if the index provided does not exist and you want it to be created, you can pass
 Uploading a Folder to Splunk
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can also upload a whole folder of files. To do this simply pass the folder path to ``.upload_folder()`` along with the
+You can also upload a whole folder of files. To do this simply pass the folder path to
+ ``.upload_folder()`` along with the
 name of the index you want the data uploaded to. By default this will upload all csv files in that folder to Splunk,
 with each file being uploaded to a sourcetype with a name corresponding to the file name. Alternatively you can also
-specify single a sourcetype which all files will be uploaded with the ``table_name`` parameter.
-As the ``table_name`` parameter, csv, json or others can be input and then passed to df.to_csv(), df.to_json(), df.to_string() styles respectively.
+specify single a sourcetype which all files will be uploaded with the ``source_type`` parameter.
+As the ``source_type`` parameter, csv, json or others can be input and then passed to
+ df.to_csv(), df.to_json(), df.to_string() styles respectively.
+The default is **json** if without ``table_name`` parameter, because ``table_name`` remains
+ only for the backward compatibility.
 If your files have some
 other separated value file type you can pass ``delim``, and the specified delimiter value, however currently there is
 only support for a single delim type across files. By default this method attempts to upload all files in the specified
-folders, if you want to only process certain file extensions you can pass the ``glob`` keyword parameter with the a pattern
-for files to attempt to upload. The pattern format required follows the ``pathlib.glob()`` pattern - more details are
+folders, if you want to only process certain file extensions you can pass the ``glob`` keyword parameter
+with the a pattern for files to attempt to upload.
+The pattern format required follows the ``pathlib.glob()`` pattern - more details are
 avaliable `here <"https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob>`_
-As with the other methods if the index provided does not exist and you want it to be created, you can pass the parameter ``create_index = True``.
+As with the other methods if the index provided does not exist and you want it to be created,
+ you can pass the parameter ``create_index = True``.
 
 .. code:: ipython3
 
