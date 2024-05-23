@@ -22,7 +22,6 @@ from msticpy.common.exceptions import (
     MsticpyParameterError,
 )
 from msticpy.data.core.data_providers import QueryProvider
-from msticpy.data.core.query_defns import DataEnvironment
 from msticpy.data.core.query_source import QuerySource
 from msticpy.data.drivers import azure_kusto_driver
 from msticpy.data.drivers.azure_kusto_driver import AzureKustoDriver
