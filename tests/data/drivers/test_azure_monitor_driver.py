@@ -234,11 +234,13 @@ def test_query_not_connected():
 
 QUERY_SOURCE = {
     "args": {
-        "query": " let start = datetime({start}); let end = datetime({end}); "
-        "{table} {event_filter} {query_project} | where "
-        "{subscription_filter} | where Computer {host_op} "
-        '"{host_name}" | where TimeGenerated >= start | where '
-        "TimeGenerated <= end {add_query_items}"
+        "query": (
+            " let start = datetime({start}); let end = datetime({end}); "
+            "{table} {event_filter} {query_project} | where "
+            "{subscription_filter} | where Computer {host_op} "
+            '"{host_name}" | where TimeGenerated >= start | where '
+            "TimeGenerated <= end {add_query_items}"
+        )
     },
     "description": "Retrieves list of processes on a host",
     "metadata": {

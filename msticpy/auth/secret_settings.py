@@ -159,7 +159,7 @@ class SecretsClient:
                 return def_vault_name, secret_name
             if "/" in kv_val:
                 # '/' delimited string means VaultName/Secret
-                vault_name, secret_name = kv_val.split("/")
+                vault_name, secret_name = kv_val.split("/", maxsplit=1)
                 return vault_name, self.format_kv_name(secret_name)
             if not def_vault_name:
                 raise MsticpyKeyVaultConfigError(

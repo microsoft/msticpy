@@ -20,28 +20,14 @@ __author__ = "Ian Hellen"
 
 # pylint: disable=redefined-outer-name
 
-_MIN_PY_VER = "3.6"
-_MIN_MP_VER = "1.0.0"
-_MIN_PY_VER_T = (3, 6, 0)
-_MIN_MP_VER_T = (1, 0, 0)
-
-# Mocked nb_check.py
-_NB_CHECK_TXT = """
-import os
-
-__version__ = "1.5.0"
-
-def some_func(foo):
-    print("hello")
-
-"""
-
-# Mocked nbuser_settings.py
-_NBUSER_SETTINGS = """
-TEST_FLAG = True
-"""
+_MIN_PY_VER = "3.10"
+_MIN_MP_VER = "2.0.0"
+_MIN_PY_VER_T = (3, 10, 0)
+_MIN_MP_VER_T = (2, 0, 0)
 
 _MP_CONFIG = "msticpyconfig-test.yaml"
+
+VersionInfo = namedtuple("VersionInfo", "major, minor, micro, releaselevel, serial")
 
 
 @pytest.fixture(scope="module")
@@ -56,8 +42,6 @@ def aml_file_sys(tmpdir_factory):
 
     user_dir.join("msticpyconfig.yaml").write_text(mp_text, encoding="utf-8")
     user_dir.join("msticpyconfig.save").write_text(mp_text, encoding="utf-8")
-    nb_check = user_dir.join("utils").join("nb_check.py")
-    nb_check.write_text(_NB_CHECK_TXT, encoding="utf-8")
     yield users, user_dir
 
 
@@ -101,6 +85,7 @@ CHECK_VERS = [
     CheckVers(_MIN_PY_VER, _MIN_MP_VER, ["azsentinel"], True, None, _EXP_ENV_JPX),
     CheckVers("9.9", _MIN_MP_VER, None, True, RuntimeError, _EXP_ENV),
     CheckVers(_MIN_PY_VER, _MP_FUT_VER, None, True, ImportError, _EXP_ENV),
+    CheckVers("5.12", _MIN_MP_VER, None, True, RuntimeError, _EXP_ENV),
     # is_aml == False
     CheckVers(_MIN_PY_VER, _MIN_MP_VER, None, False, None, _EXP_ENV),
     CheckVers(_MIN_PY_VER, _MIN_MP_VER, ["azsentinel"], False, None, _EXP_ENV_JPX),
@@ -129,6 +114,8 @@ def test_check_versions(monkeypatch, aml_file_sys, check_vers):
     monkeypatch.setattr(aml, "os", _os)
     monkeypatch.setattr(aml, "get_ipython", _ipython)
     monkeypatch.setattr(aml, "_get_vm_fqdn", lambda: "myhost")
+    if sys.version_info[:3] < (3, 10):
+        monkeypatch.setattr(sys, "version_info", VersionInfo(3, 10, 0, "final", 0))
 
     if check_vers.is_aml:
         # Set an env var to emulate AML
@@ -149,14 +136,6 @@ def test_check_versions(monkeypatch, aml_file_sys, check_vers):
                 min_mp_ver=check_vers.mp_req,
                 extras=check_vers.extras,
             )
-
-        env = "KQLMAGIC_EXTRAS_REQUIRE"
-        check.is_in(env, _os.environ)
-        check.equal(check_vers.env[env], _os.environ.get(env))
-        if check_vers.is_aml:
-            env = "KQLMAGIC_AZUREML_COMPUTE"
-            check.is_in(env, _os.environ)
-            check.equal(check_vers.env[env], _os.environ.get(env))
 
 
 MpConfig = namedtuple("MpConfig", "sub_dir, mpconf_exists")
@@ -184,6 +163,8 @@ def test_check_versions_mpconfig(monkeypatch, aml_file_sys, test_case):
     _os = _PyOs()
     monkeypatch.setattr(aml, "os", _os)
     monkeypatch.setattr(aml, "_get_vm_fqdn", lambda: "myhost")
+    if sys.version_info[:3] < (3, 10):
+        monkeypatch.setattr(sys, "version_info", VersionInfo(3, 10, 0, "final", 0))
 
     # Set an env var to emulate AML
     _os.environ["APPSETTING_WEBSITE_SITE_NAME"] = "AMLComputeInstance"
@@ -196,27 +177,3 @@ def test_check_versions_mpconfig(monkeypatch, aml_file_sys, test_case):
         check.is_in(env, _os.environ)
         check.is_true(mp_path.samefile(_os.environ.get(env)))
     mp_backup.copy(mp_path)
-
-
-def test_check_versions_nbuser_settings(monkeypatch, aml_file_sys):
-    """Test nb_check update."""
-    _, user_dir = aml_file_sys
-
-    # monkeypatch for various test cases
-    _os = _PyOs()
-    monkeypatch.setattr(aml, "os", _os)
-    monkeypatch.setattr(aml, "_get_vm_fqdn", lambda: "myhost")
-
-    # Set an env var to emulate AML
-    _os.environ["APPSETTING_WEBSITE_SITE_NAME"] = "AMLComputeInstance"
-
-    # Create an old version of nb_check
-    nb_user_settings = user_dir.join("nbuser_settings.py")
-    nb_user_settings.write_text(_NBUSER_SETTINGS, encoding="utf-8")
-
-    with change_directory(str(user_dir)):
-        aml.check_aml_settings(min_py_ver=_MIN_PY_VER, min_mp_ver=_MIN_MP_VER)
-
-    check.is_in("nbuser_settings", sys.modules)
-    nbus_import = sys.modules["nbuser_settings"]
-    check.is_true(nbus_import.TEST_FLAG)

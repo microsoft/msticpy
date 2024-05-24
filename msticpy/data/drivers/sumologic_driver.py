@@ -29,10 +29,14 @@ __author__ = "juju4"
 
 
 SUMOLOGIC_CONNECT_ARGS = {
-    "connection_str": "(string) The url endpoint (the default is"
-    + " 'https://api.us2.sumologic.com/api').",
-    "accessid": "(string) The Sumologic accessid, which is used to "
-    + "authenticate on Sumologic instance.",
+    "connection_str": (
+        "(string) The url endpoint (the default is"
+        + " 'https://api.us2.sumologic.com/api')."
+    ),
+    "accessid": (
+        "(string) The Sumologic accessid, which is used to "
+        + "authenticate on Sumologic instance."
+    ),
     "accesskey": "(string) The matching Sumologic accesskey.",
 }
 
@@ -481,7 +485,7 @@ class SumologicDriver(DriverBase):
         if verbosity >= 3:
             print("DEBUG: {results}")
         if normalize:
-            dataframe_res = pd.json_normalize(results)
+            dataframe_res = pd.json_normalize(results)  # type: ignore
         else:
             dataframe_res = pd.DataFrame(results)
 

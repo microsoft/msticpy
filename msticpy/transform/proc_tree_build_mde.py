@@ -147,7 +147,7 @@ def _extract_missing_parents(
     merged_parents = data.filter(
         regex="Initiating.*|parent_key|src_index"
     ).merge(  # parents
-        data.filter(non_par_cols),  # created_procs
+        data.filter(non_par_cols),  # type: ignore
         left_on=Col.parent_key,
         right_on=Col.proc_key,
         suffixes=("_child", "_par"),
@@ -271,7 +271,9 @@ def _get_par_child_col_mapping(data: pd.DataFrame) -> Dict[str, str]:
 def _remove_col_prefix(data: pd.DataFrame, prefix: str) -> Dict[str, str]:
     """Return a mapping of column stems and columns with `prefix`."""
     return {
-        col.replace(prefix, ""): col for col in data.columns if col.startswith(prefix)
+        col.replace(prefix, ""): col
+        for col in data.columns
+        if isinstance(col, str) and col.startswith(prefix)
     }
 
 
@@ -353,8 +355,8 @@ def convert_mde_schema_to_internal(
     data["CreatedProcessParentId"] = data[schema.parent_id]
 
     # Put a value in parent procs with no name
-    null_proc_parent = data[schema.parent_name] == ""
-    data.loc[null_proc_parent, schema.parent_name] = "unknown"
+    null_proc_parent = data[schema.parent_name] == ""  # type: ignore
+    data.loc[null_proc_parent, schema.parent_name] = "unknown"  # type: ignore
 
     # Extract InitiatingProc folder path - remove stem
     data["InitiatingProcessFolderPath"] = data.InitiatingProcessFolderPath.apply(

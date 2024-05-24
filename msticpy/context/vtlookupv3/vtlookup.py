@@ -765,7 +765,7 @@ class VTLookup:
         new_row["IoCType"] = ioc_type
         new_row["Status"] = status
         new_row["SourceIndex"] = source_idx
-        new_results = self.results.append(new_row.to_dict(), ignore_index=True)
+        new_results = self.results.append(new_row.to_dict(), ignore_index=True)  # type: ignore
 
         self.results = new_results
 

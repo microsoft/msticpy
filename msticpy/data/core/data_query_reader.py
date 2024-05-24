@@ -74,7 +74,13 @@ def read_query_def_file(query_file: str) -> Tuple[Dict, Dict, Dict]:
     try:
         validate_query_defs(query_def_dict=data_map)
     except ValueError as err:
-        logger.warning("Validation failed for %s\n%s", query_file, err, exc_info=True)
+        logger.warning(
+            "Validation failed for query template file %s\n%s",
+            query_file,
+            err,
+            exc_info=True,
+        )
+        raise
 
     defaults = data_map.get("defaults", {})
     sources = data_map.get("sources", {})

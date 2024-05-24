@@ -135,16 +135,16 @@ class ServiceNow(HttpContextProvider):
                 "sys_tags": result.get("sys_tags", ""),
                 "company": result.get("company", None),
                 "location": result.get("location", ""),
-                "sys_updated_on": dt.datetime.strptime(
-                    result["sys_updated_on"], "%Y-%m-%d %H:%M:%S"
-                )
-                if "sys_updated_on" in result and result["sys_updated_on"]
-                else "",
-                "sys_created_on": dt.datetime.strptime(
-                    result["sys_created_on"], "%Y-%m-%d %H:%M:%S"
-                )
-                if "sys_created_on" in result and result["sys_created_on"]
-                else "",
+                "sys_updated_on": (
+                    dt.datetime.strptime(result["sys_updated_on"], "%Y-%m-%d %H:%M:%S")
+                    if "sys_updated_on" in result and result["sys_updated_on"]
+                    else ""
+                ),
+                "sys_created_on": (
+                    dt.datetime.strptime(result["sys_created_on"], "%Y-%m-%d %H:%M:%S")
+                    if "sys_created_on" in result and result["sys_created_on"]
+                    else ""
+                ),
                 **(
                     getattr(self, f"_parse_result_{response['ObservableType']}")(result)
                 ),
@@ -183,21 +183,21 @@ class ServiceNow(HttpContextProvider):
             "subcategory": result.get("subcategory", None),
             "support_group": result.get("support_group", None),
             "sys_class_name": result.get("sys_class_name", ""),
-            "last_discovered": dt.datetime.strptime(
-                result["last_discovered"], "%Y-%m-%d %H:%M:%S"
-            )
-            if "last_discovered" in result and result["last_discovered"]
-            else "",
-            "install_date": dt.datetime.strptime(
-                result["install_date"], "%Y-%m-%d %H:%M:%S"
-            )
-            if "install_date" in result and result["install_date"]
-            else "",
-            "created_on": dt.datetime.strptime(
-                result["created_on"], "%Y-%m-%d %H:%M:%S"
-            )
-            if "created_on" in result and result["created_on"]
-            else "",
+            "last_discovered": (
+                dt.datetime.strptime(result["last_discovered"], "%Y-%m-%d %H:%M:%S")
+                if "last_discovered" in result and result["last_discovered"]
+                else ""
+            ),
+            "install_date": (
+                dt.datetime.strptime(result["install_date"], "%Y-%m-%d %H:%M:%S")
+                if "install_date" in result and result["install_date"]
+                else ""
+            ),
+            "created_on": (
+                dt.datetime.strptime(result["created_on"], "%Y-%m-%d %H:%M:%S")
+                if "created_on" in result and result["created_on"]
+                else ""
+            ),
         }
 
     def _parse_result_user(self, result: Dict[str, Any]) -> Dict[str, Any]:
@@ -234,14 +234,16 @@ class ServiceNow(HttpContextProvider):
             "title": result.get("title", ""),
             "user_name": result.get("user_name", ""),
             "vip": result.get("vip", "false"),
-            "last_login": dt.datetime.strptime(result["last_login"], "%Y-%m-%d")
-            if "last_login" in result and result["last_login"]
-            else "",
-            "last_login_time": dt.datetime.strptime(
-                result["last_login_time"], "%Y-%m-%d %H:%M:%S"
-            )
-            if "last_login_time" in result and result["last_login_time"]
-            else "",
+            "last_login": (
+                dt.datetime.strptime(result["last_login"], "%Y-%m-%d")
+                if "last_login" in result and result["last_login"]
+                else ""
+            ),
+            "last_login_time": (
+                dt.datetime.strptime(result["last_login_time"], "%Y-%m-%d %H:%M:%S")
+                if "last_login_time" in result and result["last_login_time"]
+                else ""
+            ),
         }
 
     # Define aliases

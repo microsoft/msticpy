@@ -92,9 +92,9 @@ def test_split_queries_sync():
     prov_args = dict(query_paths=_LOCAL_DATA_PATHS, data_paths=_LOCAL_DATA_PATHS)
     local_prov = QueryProvider("LocalData", **prov_args)
 
-    start = datetime.now(timezone.utc) - pd.Timedelta("5H")
+    start = datetime.now(timezone.utc) - pd.Timedelta("5h")
     end = datetime.now(timezone.utc) + pd.Timedelta("5min")
-    delta = pd.Timedelta("1H")
+    delta = pd.Timedelta("1h")
 
     ranges = _calc_split_ranges(start, end, delta)
     local_prov.WindowsSecurity.list_host_logons(
@@ -104,7 +104,7 @@ def test_split_queries_sync():
         "print", host_name="DESKTOP-12345", start=start, end=end, split_query_by="1H"
     )
     queries = result_queries.split("\n\n")
-    check.equal(len(queries), 5)
+    check.equal(len(queries), 6)
 
     for idx, (st_time, e_time) in enumerate(ranges):
         check.is_in(st_time.isoformat(sep=" "), queries[idx])
@@ -119,7 +119,7 @@ def test_split_queries_sync():
         host_name="DESKTOP-12345", start=start, end=end, split_query_by="1H"
     )
     # verify len of result is 2x single_result
-    check.equal(single_results.shape[0] * 5, result_queries.shape[0])
+    check.equal(single_results.shape[0] * 6, result_queries.shape[0])
     # verify columns/schema is the same.
     check.equal(list(single_results.columns), list(result_queries.columns))
 
@@ -132,9 +132,9 @@ def test_split_queries_async():
         DriverProps.SUPPORTS_THREADING, value=True
     )
 
-    start = datetime.now(timezone.utc) - pd.Timedelta("5H")
+    start = datetime.now(timezone.utc) - pd.Timedelta("5h")
     end = datetime.now(timezone.utc) + pd.Timedelta("5min")
-    delta = pd.Timedelta("1H")
+    delta = pd.Timedelta("1h")
 
     ranges = _calc_split_ranges(start, end, delta)
     local_prov.WindowsSecurity.list_host_logons(
@@ -144,7 +144,7 @@ def test_split_queries_async():
         "print", host_name="DESKTOP-12345", start=start, end=end, split_query_by="1H"
     )
     queries = result_queries.split("\n\n")
-    check.equal(len(queries), 5)
+    check.equal(len(queries), 6)
 
     for idx, (st_time, e_time) in enumerate(ranges):
         check.is_in(st_time.isoformat(sep=" "), queries[idx])
@@ -159,6 +159,6 @@ def test_split_queries_async():
         host_name="DESKTOP-12345", start=start, end=end, split_query_by="1H"
     )
     # verify len of result is 2x single_result
-    check.equal(single_results.shape[0] * 5, result_queries.shape[0])
+    check.equal(single_results.shape[0] * 6, result_queries.shape[0])
     # verify columns/schema is the same.
     check.equal(list(single_results.columns), list(result_queries.columns))

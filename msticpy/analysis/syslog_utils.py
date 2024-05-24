@@ -58,7 +58,7 @@ def create_host_record(
         Details of the host data collected
 
     """
-    host_entity = Host(src_event=syslog_df.iloc[0])
+    host_entity = Host(src_event=syslog_df.iloc[0])  # type: ignore
     # Produce list of processes on the host that are not
     # part of a 'standard' linux distro
     _apps = syslog_df["ProcessName"].unique().tolist()
@@ -186,7 +186,7 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> pd.DataFrame:
         if ses_start <= ses_close_time and ses_opened != 0:
             ses_opened += 1
             continue
-        if ses_end < ses_start:
+        if ses_end < ses_start:  # type: ignore
             ses_closed += 1
             continue
         users.append(user)

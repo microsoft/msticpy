@@ -111,7 +111,7 @@ class DataViewer:
         self.column_chooser = DataTableColumnChooser(
             data,
             selected_cols=selected_cols
-            or list(set(data.columns) - set(self._hidden_columns)),
+            or list(set(data.columns) - set(self._hidden_columns)),  # type: ignore
         )
         self.column_chooser.apply_button.on_click(self._update_columns)
         self.accordion = pn.layout.Accordion(

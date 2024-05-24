@@ -11,6 +11,11 @@ import numpy as np
 import pandas as pd
 from pandas.core.dtypes.dtypes import DatetimeTZDtype
 
+# mypy: ignore-errors
+_PD_VERSION = tuple(int(v) for v in pd.__version__.split("."))
+if _PD_VERSION >= (2, 2, 0):
+    pd.set_option("future.no_silent_downcasting", True)
+
 
 def sessionize_data(
     data: pd.DataFrame,

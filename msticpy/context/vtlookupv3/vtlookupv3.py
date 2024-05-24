@@ -1,4 +1,5 @@
 """VirusTotal v3 API."""
+
 import asyncio
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -71,14 +72,22 @@ class VTObjectProperties(Enum):
     MALICIOUS = "malicious"
 
 
-def _make_sync(future):
-    """Wait for an async call, making it sync."""
+def _ensure_eventloop(force_nest_asyncio: bool = False):
+    """Ensure that we have an event loop available."""
     try:
         event_loop = asyncio.get_event_loop()
     except RuntimeError:
         # Generate an event loop if there isn't any.
         event_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(event_loop)
+    if is_ipython() or force_nest_asyncio:
+        nest_asyncio.apply()
+    return event_loop
+
+
+def _make_sync(future):
+    """Wait for an async call, making it sync."""
+    event_loop = _ensure_eventloop()
     return event_loop.run_until_complete(future)
 
 
@@ -193,7 +202,7 @@ class VTLookupV3:
             [vt_df, add_columns_df], axis="columns"
         )  # .set_index([ColumnNames.ID.value])
 
-    def __init__(self, vt_key: Optional[str] = None):
+    def __init__(self, vt_key: Optional[str] = None, force_nestasyncio: bool = False):
         """
         Create a new instance of VTLookupV3 class.
 
@@ -202,12 +211,14 @@ class VTLookupV3:
         vt_key: str, optional
             VirusTotal API key, if not supplied, this is read from
             user configuration.
+        force_nestasyncio: bool, optional
+            To force use of nest_asyncio, by default nest_asyncio
+            is used in Jupyter notebooks, otherwise this defaults to False
 
         """
+        _ensure_eventloop(force_nestasyncio)
         self._vt_key = vt_key or _get_vt_api_key()
         self._vt_client = vt.Client(apikey=self._vt_key)
-        if is_ipython():
-            nest_asyncio.apply()
 
     async def _lookup_ioc_async(
         self, observable: str, vt_type: str, all_props: bool = False
@@ -1125,9 +1136,11 @@ def _get_vt_api_key() -> Optional[str]:
 def timestamps_to_utcdate(data: pd.DataFrame):
     """Replace Unix timestamps in VT data with Py/pandas Timestamp."""
     columns = data.columns
-    for date_col in (col for col in columns if col.endswith("_date")):
+    for date_col in (
+        col for col in columns if isinstance(col, str) and col.endswith("_date")
+    ):
         data = (
-            data.assign(pd_data=pd.to_datetime(data[date_col], unit="s", utc=True))
+            data.assign(pd_data=pd.to_datetime(data[date_col], unit="s", utc=True))  # type: ignore
             .drop(columns=date_col)
             .rename(columns={"pd_data": date_col})
         )

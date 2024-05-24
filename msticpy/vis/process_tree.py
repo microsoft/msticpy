@@ -59,6 +59,21 @@ from ..transform.process_tree_utils import (
 )
 from .figure_dimension import bokeh_figure
 
+__all__ = [
+    "get_ancestors",
+    "get_children",
+    "get_descendents",
+    "get_parent",
+    "get_process",
+    "get_process_key",
+    "get_root",
+    "get_root_tree",
+    "get_roots",
+    "get_siblings",
+    "get_summary_info",
+    "get_tree_depth",
+]
+
 # pylint: enable=unused-import
 
 __version__ = VERSION
@@ -375,7 +390,7 @@ def _pre_process_tree(
     levels = proc_tree["Level"].unique()
 
     proc_tree[schema.process_name] = proc_tree[schema.process_name].fillna("unknown")
-    proc_tree["__proc_name$$"] = proc_tree.apply(
+    proc_tree["__proc_name$$"] = proc_tree.apply(  # type: ignore
         lambda x: x[schema.process_name].split(schema.path_separator)[-1], axis=1
     )
     proc_tree[schema.process_id] = proc_tree[schema.process_id].fillna("unknown")
@@ -504,7 +519,7 @@ def _create_fill_map(
             key_column, palette=viridis(max(3, len(values))), factors=values
         )
     elif col_kind in ["i", "u", "f", "M"]:
-        values = [val for val in source.data[key_column] if not np.isnan(val)]
+        values = [val for val in source.data[key_column] if not np.isnan(val)]  # type: ignore
         fill_map = linear_cmap(
             field_name=key_column,
             palette=viridis(256),

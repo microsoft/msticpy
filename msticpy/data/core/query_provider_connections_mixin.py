@@ -16,7 +16,6 @@ import nest_asyncio
 import pandas as pd
 from tqdm.auto import tqdm
 
-
 from ..._version import VERSION
 from ...common.exceptions import MsticpyDataQueryError
 from ...common.utility.ipython import is_ipython
@@ -42,11 +41,13 @@ class QueryProviderProtocol(Protocol):
         """Execute a query against the provider."""
         ...
 
+    # fmt: off
     @staticmethod
     def _get_query_options(
         params: Dict[str, Any], kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
         ...
+    # fmt: on
 
 
 # pylint: disable=super-init-not-called
@@ -296,6 +297,8 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
     ) -> Dict[Tuple[datetime, datetime], str]:
         """Return separate queries for split time ranges."""
         try:
+            if split_by.strip().endswith("H"):
+                split_by = split_by.replace("H", "h")
             split_delta = pd.Timedelta(split_by)
         except ValueError:
             split_delta = pd.Timedelta("1D")
@@ -352,7 +355,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                     result = await thread_task
                     logger.info("Query task '%s' completed successfully.", query_id)
                     results.append(result)
-                except Exception:  # pylint: disable=broad-except
+                except Exception:  # pylint: disable=broad-exception-caught
                     logger.warning(
                         "Query task '%s' failed with exception",
                         query_id,
@@ -407,14 +410,14 @@ def _calc_split_ranges(start: datetime, end: datetime, split_delta: pd.Timedelta
     # Since the generated time ranges are based on deltas from 'start'
     # we need to adjust the end time on the final range.
     # If the difference between the calculated last range end and
-    # the query 'end' that the user requested is small (< 10% of a delta),
+    # the query 'end' that the user requested is small (< 0.1% of a delta),
     # we just replace the last "end" time with our query end time.
-    if (ranges[-1][1] - end) < (split_delta / 10):
-        ranges[-1] = ranges[-1][0], end
+    if (end - ranges[-1][1]) < (split_delta / 1000):
+        ranges[-1] = ranges[-1][0], pd.Timestamp(end)
     else:
         # otherwise append a new range starting after the last range
         # in ranges and ending in 'end"
         # note - we need to add back our subtracted 1 nanosecond
-        ranges.append((ranges[-1][0] + pd.Timedelta("1ns"), end))
+        ranges.append((ranges[-1][1] + pd.Timedelta("1ns"), pd.Timestamp(end)))
 
     return ranges

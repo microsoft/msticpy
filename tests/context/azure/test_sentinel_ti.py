@@ -127,8 +127,12 @@ _TI_RESULT = {
         "externalLastUpdatedTimeUtc": "2022-09-30T21:16:51.7325435Z",
         "externalReferences": [
             {
-                "description": "This STIX Object was created from a Microsoft OneIndicator Object.",
-                "externalId": "7604154ebd9bebb76c538fb7fae5969f9ac0cfdb15308567d1177890e6dc7b22",
+                "description": (
+                    "This STIX Object was created from a Microsoft OneIndicator Object."
+                ),
+                "externalId": (
+                    "7604154ebd9bebb76c538fb7fae5969f9ac0cfdb15308567d1177890e6dc7b22"
+                ),
                 "sourceName": "Interflow",
             }
         ],

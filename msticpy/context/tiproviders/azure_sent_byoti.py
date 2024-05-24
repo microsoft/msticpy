@@ -124,8 +124,10 @@ class AzSTI(KqlTIProvider):
     def _get_severity(data_result: pd.DataFrame) -> pd.Series:
         # For the input frame return severity in a series
         return data_result.apply(
-            lambda x: ResultSeverity.high.name
-            if x.Action.lower() in ["alert", "block"]
-            else ResultSeverity.warning.name,
+            lambda x: (
+                ResultSeverity.high.name
+                if x.Action.lower() in ["alert", "block"]
+                else ResultSeverity.warning.name
+            ),
             axis=1,
         )
