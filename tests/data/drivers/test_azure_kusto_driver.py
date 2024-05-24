@@ -543,7 +543,6 @@ _TEST_QUERY_ARGS = (
         connect_args={"cluster": "help"},
         query_args={
             "query": "test",
-            "cluster": "https://ignore.kusto.windows.net",
             "query_source": {
                 "database": "test_db",
                 "cluster": "https://help.kusto.windows.net",
