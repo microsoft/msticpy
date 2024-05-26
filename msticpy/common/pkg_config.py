@@ -17,16 +17,9 @@ import numbers
 import os
 from collections import UserDict
 
-try:
-    from importlib.resources import files
-
-    path = None  # pylint: disable = invalid-name
-except ImportError:
-    files = None
-    from importlib.resources import path
 from importlib.util import find_spec
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional, Tuple, Union, List
 
 import httpx
 import yaml
@@ -301,19 +294,16 @@ def _override_config(base_config: SettingsDict, new_config: SettingsDict):
 
 def _get_default_config():
     """Return the package default config file."""
-    config_path = None
     package = "msticpy"
     try:
-        if files:
-            config_path: Path = files(package).joinpath(_CONFIG_FILE)
-            return _read_config_file(config_path) if config_path.exists() else {}
-        if path:
-            with path(package, _CONFIG_FILE) as config_path:
-                return _read_config_file(config_path) if config_path else {}
+        from importlib.resources import files  # pylint: disable=import-outside-toplevel
+
+        config_path: Path = Path(str(files(package).joinpath(_CONFIG_FILE)))
+        return _read_config_file(config_path) if config_path.exists() else {}
     except ModuleNotFoundError as mod_err:
         # if all else fails we try to find the package default config somewhere
         # in the package tree - we use the first one we find
-        pkg_root = _get_pkg_path("msticpy")
+        pkg_root: Optional[Path] = _get_pkg_path("msticpy")
         if not pkg_root:
             raise MsticpyUserConfigError(
                 f"Unable to locate the package default {_CONFIG_FILE}",
@@ -321,6 +311,11 @@ def _get_default_config():
                 title=f"Package {_CONFIG_FILE} missing.",
             ) from mod_err
         config_path = next(iter(pkg_root.glob(f"**/{_CONFIG_FILE}")))
+    except ImportError:
+        from importlib.resources import path  # pylint: disable=import-outside-toplevel
+
+        with path(package, _CONFIG_FILE) as config_path:
+            return _read_config_file(config_path) if config_path else {}
     return _read_config_file(config_path) if config_path else {}
 
 
@@ -373,15 +368,17 @@ def _create_data_providers(mp_config: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_http_timeout(
-    **kwargs,
+    *,
+    timeout: Optional[int] = None,
+    def_timeout: Optional[int] = None,
 ) -> httpx.Timeout:
     """Return timeout from settings or overridden in `kwargs`."""
-    config_timeout = get_config(
+    config_timeout: Union[int, Dict, httpx.Timeout, List, Tuple] = get_config(
         "msticpy.http_timeout", get_config("http_timeout", None)
     )
-    timeout_params = kwargs.get(
-        "timeout", kwargs.get("def_timeout", config_timeout)  # type: ignore
-    )  # type: ignore
+    timeout_params: Union[int, Dict, httpx.Timeout, List[Union[float, None]], Tuple] = (
+        timeout or def_timeout or config_timeout
+    )
     if isinstance(timeout_params, dict):
         timeout_params = {
             name: _valid_timeout(val) for name, val in timeout_params.items()
@@ -400,7 +397,9 @@ def get_http_timeout(
     return httpx.Timeout(None)
 
 
-def _valid_timeout(timeout_val) -> Union[float, None]:
+def _valid_timeout(
+    timeout_val: Optional[Union[float, numbers.Real]]
+) -> Union[float, None]:
     """Return float in valid range or None."""
     if isinstance(timeout_val, numbers.Real) and float(timeout_val) >= 0.0:
         return float(timeout_val)
