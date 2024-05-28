@@ -93,7 +93,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         # pylint: enable=import-outside-toplevel
         setattr(self.__class__, "_add_pivots", add_data_queries_to_entities)
 
-        data_environment, self.environment_name = self._check_environment(
+        data_environment, self.environment_name = QueryProvider._check_environment(
             data_environment
         )
 
@@ -139,8 +139,9 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         self._query_time = QueryTime(units="day")
         logger.info("Initialization complete.")
 
+    @classmethod
     def _check_environment(
-        self, data_environment
+        cls, data_environment
     ) -> Tuple[Union[str, DataEnvironment], str]:
         """Check environment against known names."""
         if isinstance(data_environment, str):
@@ -211,42 +212,6 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         # Since we're now connected, add Pivot functions
         logger.info("Adding query pivot functions")
         self._add_pivots(lambda: self._query_time.timespan)
-
-    def exec_query(self, query: str, **kwargs) -> Union[pd.DataFrame, Any]:
-        """
-        Execute simple query string.
-
-        Parameters
-        ----------
-        query : str
-            [description]
-        use_connections : Union[str, List[str]]
-
-        Other Parameters
-        ----------------
-        query_options : Dict[str, Any]
-            Additional options passed to query driver.
-        kwargs : Dict[str, Any]
-            Additional options passed to query driver.
-
-        Returns
-        -------
-        Union[pd.DataFrame, Any]
-            Query results - a DataFrame if successful
-            or a KqlResult if unsuccessful.
-
-        """
-        query_options = kwargs.pop("query_options", {}) or kwargs
-        query_source = kwargs.pop("query_source", None)
-
-        logger.info("Executing query '%s...'", query[:40])
-        logger.debug("Full query: %s", query)
-        logger.debug("Query options: %s", query_options)
-        if not self._additional_connections:
-            return self._query_provider.query(
-                query, query_source=query_source, **query_options
-            )
-        return self._exec_additional_connections(query, **kwargs)
 
     @property
     def query_time(self):

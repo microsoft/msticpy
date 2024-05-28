@@ -7,7 +7,7 @@
 import os
 import unittest
 import warnings
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional, Tuple, Union
 
 import pandas as pd
@@ -86,7 +86,7 @@ class TestQuerySource(unittest.TestCase):
     def test_date_formatters_datetime(self):
         """Test date formatting standard date."""
         # standard date
-        test_end = datetime.utcnow()
+        test_end = datetime.now(tz=timezone.utc)
         test_start = test_end - timedelta(days=1)
         check_dt_str = test_start.isoformat(sep="T") + "Z"
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
@@ -95,7 +95,7 @@ class TestQuerySource(unittest.TestCase):
 
     def test_date_formatters_datestring(self):
         """Test date formatting ISO date string."""
-        test_end = datetime.utcnow()
+        test_end = datetime.now(tz=timezone.utc)
         test_start = test_end - timedelta(days=1)
         check_dt_str = test_start.isoformat(sep="T") + "Z"
         start = test_start.isoformat()
@@ -109,7 +109,7 @@ class TestQuerySource(unittest.TestCase):
 
     def test_date_formatters_off_1day(self):
         """Test date formatting Offset -1 day."""
-        test_end = datetime.utcnow()
+        test_end = datetime.now(tz=timezone.utc)
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
         query = q_src.create_query(start=-1, end=0)
         check_date = test_end - timedelta(1)
@@ -120,7 +120,7 @@ class TestQuerySource(unittest.TestCase):
 
     def test_date_formatters_off_1day_str(self):
         """Test date formatting Offset -1 day as string."""
-        test_dt = datetime.utcnow()
+        test_dt = datetime.now(tz=timezone.utc)
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
         query = q_src.create_query(start="-1d", end=test_dt)
         check_date = test_dt - timedelta(1)
@@ -130,7 +130,7 @@ class TestQuerySource(unittest.TestCase):
 
     def test_date_formatters_off_1week_str(self):
         """Test date formatting Offset -1 week."""
-        test_dt = datetime.utcnow()
+        test_dt = datetime.now(tz=timezone.utc)
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
         query = q_src.create_query(start="-1w", end=test_dt)
         check_date = test_dt - timedelta(7)
@@ -140,7 +140,7 @@ class TestQuerySource(unittest.TestCase):
 
     def test_date_formatters_off_1wk_rnd_dn(self):
         """Test date formatting Offset -1 week rounded to day."""
-        test_dt = datetime.utcnow()
+        test_dt = datetime.now(tz=timezone.utc)
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
         query = q_src.create_query(start="-1w@d", end=test_dt)
         check_date = test_dt - timedelta(7)
@@ -150,7 +150,7 @@ class TestQuerySource(unittest.TestCase):
 
     def test_date_formatters_off_1wk_rnd_up(self):
         """Test date formatting Offset +1 week rounded to day."""
-        test_dt = datetime.utcnow()
+        test_dt = datetime.now(tz=timezone.utc)
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
         query = q_src.create_query(start="1w@d", end=test_dt)
         check_date = test_dt + timedelta(7 + 1)
@@ -160,7 +160,7 @@ class TestQuerySource(unittest.TestCase):
 
     def test_list_formatter(self):
         """Test for default list formatting."""
-        test_end = datetime.utcnow()
+        test_end = datetime.now(tz=timezone.utc)
         test_start = test_end - timedelta(days=1)
         q_src = self.query_sources["Azure"]["list_azure_activity_for_ip"]
         ip_address_list = ["192.168.0.1", "192.168.0.2", "192.168.0.3"]
@@ -201,7 +201,7 @@ def test_cust_formatters_splunk():
         "list": splunk_driver.SplunkDriver._format_list,
     }
 
-    test_end = datetime.utcnow()
+    test_end = datetime.now(tz=timezone.utc)
     test_start = test_end - timedelta(days=1)
     ip_address_list = "192.168.0.1, 192.168.0.2, 192.168.0.3"
 
