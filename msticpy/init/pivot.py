@@ -283,6 +283,8 @@ class Pivot:
             timespan = value
         elif value is not None:
             timespan = TimeSpan(value)
+        else:
+            return
         self._query_time.set_time(timespan)
 
     def set_timespan(self, value: Optional[Any] = None, **kwargs):

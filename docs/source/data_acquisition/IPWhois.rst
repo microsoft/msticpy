@@ -7,18 +7,18 @@ Lookups are possible against IPs and ASNs (Autonomous System Number).
 IP Lookups
 ----------
 
-Whois lookups can be performed against a single IP address or a as a bulk lookup against a list or
+Whois lookups can be performed against a single IP address or as a bulk lookup against a list or
 DataFrame column.
 
 WhoIs Lookup of single IP Address
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``ip_whois`` function looks an single IP Address and returns a results
+The :py:func:`ip_whois<msticpy.context.ip_utils.ip_whois>` function looks up an single IP Address and returns a results
 as a Python dictionary.
 
 .. code:: ipython3
 
-    >>> from msticpy.iptools import ip_whois
+    >>> from msticpy.context.ip_utils import ip_whois
     >>> ip_whois("65.55.44.109")
 
 .. parsed-literal::
@@ -76,11 +76,11 @@ ASN Lookup by IP
 ^^^^^^^^^^^^^^^^
 
 It is also possible to lookup details of the ASN that an IP address belongs to.
-This is done with the `get_asn_from_ip` function.
+This is done with the :py:func:`get_asn_from_ip<msticpy.context.ip_utils.get_asn_from_ip>` function.
 
 .. code:: ipython3
 
-    >>> from msticpy.iptools import get_asn_from_ip
+    >>> from msticpy.context.ip_utils import get_asn_from_ip
     >>> get_asn_from_ip("65.55.44.109")
 
 .. parsed-literal::
@@ -93,7 +93,7 @@ This is done with the `get_asn_from_ip` function.
     'Allocated': '2001-02-14',
     'AS Name': 'MICROSOFT-CORP-MSN-AS-BLOCK, US'}
 
-The same function is also accessible via the ``IpAddress.whois_as`` pivot function:
+The same function is also accessible via the ``IpAddress.whois_asn`` pivot function:
 
 .. code:: ipython3
 
@@ -108,12 +108,13 @@ ASN Lookup by Number or Name
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can get details of a specific to look up against an ASN.
-`get_asn_details` can be used to get details based on an ASN, along with details of the IP ranges
+:py:func:`get_asn_details<msticpy.context.ip_utils.get_asn_details>` can
+be used to get details based on an ASN, along with details of the IP ranges
 belonging to that ASN.
 
 .. code:: ipython3
 
-    >>> from msticpy.iptools import get_asn_details
+    >>> from msticpy.context.ip_utils import get_asn_details
     >>> get_asn_details("AS3598")
 
 .. parsed-literal::
@@ -132,7 +133,8 @@ belonging to that ASN.
     ...
 
 It is also possible to search ASNs based on the AS Name. For example, you can search for "Microsoft"
-to see a list of all ASNs that are associated with Microsoft with `get_asns_from_name`.
+to see a list of all ASNs that are associated with Microsoft with
+:py:func:`get_asns_from_name<msticpy.context.ip_utils.get_asns_from_name>`.
 
 .. code:: ipython3
 

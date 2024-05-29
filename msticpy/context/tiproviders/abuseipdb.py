@@ -62,11 +62,11 @@ class AbuseIPDB(HttpTIProvider):
 
         score = data.get("abuseConfidenceScore", None)
 
-        if score == 0:
-            result_severity = ResultSeverity.information
-        elif score <= 50:
-            result_severity = ResultSeverity.warning
-        elif score > 50:
+        if score > 50:
             result_severity = ResultSeverity.high
+        elif score > 0:
+            result_severity = ResultSeverity.warning
+        else:
+            result_severity = ResultSeverity.information
 
         return (True, result_severity, result_dict)
