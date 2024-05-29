@@ -82,24 +82,35 @@ class WorkspaceConfig:
     WORKSPACE_ID = "{{cookiecutter.workspace_id}}"
     WORKSPACE_NAME = "{{cookiecutter.workspace_name}}"
 
+    CONF_TENANT_ID = "TenantId"
+    CONF_WS_ID = "WorkspaceId"
+    CONF_SUB_ID = "SubscriptionId"
+    CONF_RES_GROUP = "ResourceGroup"
+    CONF_WS_NAME = "WorkspaceName"
+    CONF_ARGS = "Args"
+
+    # Legacy key names / constants
     PKG_CONF_TENANT_KEY = "TenantId"
     PKG_CONF_WS_KEY = "WorkspaceId"
     PKG_CONF_SUB_KEY = "SubscriptionId"
     PKG_CONF_RES_GROUP_KEY = "ResourceGroup"
     PKG_CONF_NAME_KEY = "WorkspaceName"
+    PKG_CONF_ARGS_KEY = "Args"
 
     CONF_WS_ID_KEY = "workspace_id"
     CONF_TENANT_ID_KEY = "tenant_id"
     CONF_SUB_ID_KEY = "subscription_id"
     CONF_RES_GROUP_KEY = "resource_group"
     CONF_WS_NAME_KEY = "workspace_name"
+    CONF_ARGS_KEY = "args"
 
     _SETTINGS_TO_CONFIG_NAME_MAP = {
-        PKG_CONF_TENANT_KEY: CONF_TENANT_ID_KEY,
-        PKG_CONF_WS_KEY: CONF_WS_ID_KEY,
-        PKG_CONF_SUB_KEY: CONF_SUB_ID_KEY,
-        PKG_CONF_RES_GROUP_KEY: CONF_RES_GROUP_KEY,
-        PKG_CONF_NAME_KEY: CONF_WS_NAME_KEY,
+        CONF_TENANT_ID: CONF_TENANT_ID_KEY,
+        CONF_WS_ID: CONF_WS_ID_KEY,
+        CONF_SUB_ID: CONF_SUB_ID_KEY,
+        CONF_RES_GROUP: CONF_RES_GROUP_KEY,
+        CONF_WS_NAME: CONF_WS_NAME_KEY,
+        CONF_ARGS: CONF_ARGS_KEY,
     }
     _CONFIG_TO_SETTINGS_NAME_MAP = {
         val: key for key, val in _SETTINGS_TO_CONFIG_NAME_MAP.items()
@@ -133,10 +144,12 @@ class WorkspaceConfig:
             Workspace configuration as dictionary.
 
         """
-        self._config: Dict[str, str] = {}
+        self._config: Dict[str, Any] = {}
         self._interactive = interactive
         self._config_file = config_file
         self.workspace_key = workspace or "Default"
+        self.settings_key: Optional[str] = None
+
         # If config file specified, use that
         if config:
             self._config.update(config)
@@ -156,9 +169,9 @@ class WorkspaceConfig:
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
         if key in self._SETTINGS_TO_CONFIG_NAME_MAP:
-            return self._config.get(self._SETTINGS_TO_CONFIG_NAME_MAP[key])
-        if key in self._CONFIG_TO_SETTINGS_NAME_MAP:
             return self._config.get(key)
+        if key in self._CONFIG_TO_SETTINGS_NAME_MAP:
+            return self._config.get(self._CONFIG_TO_SETTINGS_NAME_MAP[key])
         raise KeyError(f"{self.__class__.__name__} has no attribute '{key}'")
 
     def __setitem__(self, key: str, value: Any):
@@ -168,7 +181,12 @@ class WorkspaceConfig:
     def __contains__(self, key: str):
         """Allow property in test."""
         # In operator overload
-        return key == "Type" or key in self._config or key in self.__dict__
+        return (
+            key == "Type"
+            or key in self._config
+            or self._CONFIG_TO_SETTINGS_NAME_MAP.get(key) in self._config
+            or key in self.__dict__
+        )
 
     def __repr__(self):
         """Return contents of current config."""
@@ -192,8 +210,8 @@ class WorkspaceConfig:
             True if configuration loaded.
 
         """
-        ws_value = self._config.get(self.CONF_WS_ID_KEY, None)
-        ten_value = self._config.get(self.CONF_TENANT_ID_KEY, None)
+        ws_value = self._config.get(self.CONF_WS_ID, None)
+        ten_value = self._config.get(self.CONF_TENANT_ID, None)
         return is_valid_uuid(ws_value) and is_valid_uuid(ten_value)  # type: ignore
 
     @property
@@ -207,17 +225,16 @@ class WorkspaceConfig:
             Connection string
 
         """
-        ten_id = self._config.get(self.CONF_TENANT_ID_KEY, None)
-        ws_id = self._config.get(self.CONF_WS_ID_KEY, None)
+        ten_id = self[self.CONF_TENANT_ID]
+        ws_id = self[self.CONF_WS_ID]
         if not ten_id:
             raise KeyError(
-                f"Configuration setting for {self.CONF_TENANT_ID_KEY} "
+                f"Configuration setting for {self.CONF_TENANT_ID} "
                 + "could not be found."
             )
         if not ws_id:
             raise KeyError(
-                f"Configuration setting for {self.CONF_WS_ID_KEY} "
-                + "could not be found."
+                f"Configuration setting for {self.CONF_WS_ID} " + "could not be found."
             )
         return f"loganalytics://code().tenant('{ten_id}').workspace('{ws_id}')"
 
@@ -225,23 +242,41 @@ class WorkspaceConfig:
     def mp_settings(self):
         """Return the equivalent MSTICPY settings dictionary."""
         return {
-            self.PKG_CONF_NAME_KEY: self._config.get(self.CONF_WS_NAME_KEY),
-            self.PKG_CONF_SUB_KEY: self._config.get(self.CONF_SUB_ID_KEY),
-            self.PKG_CONF_WS_KEY: self._config.get(self.CONF_WS_ID_KEY),
-            self.PKG_CONF_TENANT_KEY: self._config.get(self.CONF_TENANT_ID_KEY),
-            self.PKG_CONF_RES_GROUP_KEY: self._config.get(self.CONF_RES_GROUP_KEY),
+            self.CONF_WS_NAME: self._config.get(self.CONF_WS_NAME),
+            self.CONF_SUB_ID: self._config.get(self.CONF_SUB_ID),
+            self.CONF_WS_ID: self._config.get(self.CONF_WS_ID),
+            self.CONF_TENANT_ID: self._config.get(self.CONF_TENANT_ID),
+            self.CONF_RES_GROUP: self._config.get(self.CONF_RES_GROUP),
+            self.CONF_ARGS: self._config.get(self.CONF_ARGS),
         }
+
+    @property
+    def args(self) -> Dict[str, str]:
+        """Return any additional arguments."""
+        return self._config.get(self.CONF_ARGS, {})
+
+    @property
+    def settings_path(self) -> Optional[str]:
+        """Return the path to the settings in the MSTICPY config."""
+        if self.settings_key:
+            return f"AzureSentinel.Workspaces.{self.settings_key}"
+        return None
+
+    @property
+    def settings(self) -> Dict[str, Any]:
+        """Return the current settings dictionary."""
+        return get_config(self.settings_path, {})
 
     @classmethod
     def from_settings(cls, settings: Dict[str, Any]) -> "WorkspaceConfig":
         """Create a WorkstationConfig from MSTICPY Workspace settings."""
         return cls(
             config={  # type: ignore
-                cls.CONF_WS_NAME_KEY: settings.get(cls.PKG_CONF_NAME_KEY),  # type: ignore
-                cls.CONF_SUB_ID_KEY: settings.get(cls.PKG_CONF_SUB_KEY),  # type: ignore
-                cls.CONF_WS_ID_KEY: settings.get(cls.PKG_CONF_WS_KEY),  # type: ignore
-                cls.CONF_TENANT_ID_KEY: settings.get(cls.PKG_CONF_TENANT_KEY),  # type: ignore
-                cls.CONF_RES_GROUP_KEY: settings.get(cls.PKG_CONF_RES_GROUP_KEY),  # type: ignore
+                cls.CONF_WS_NAME: settings.get(cls.CONF_WS_NAME),  # type: ignore
+                cls.CONF_SUB_ID: settings.get(cls.CONF_SUB_ID),  # type: ignore
+                cls.CONF_WS_ID: settings.get(cls.CONF_WS_ID),  # type: ignore
+                cls.CONF_TENANT_ID: settings.get(cls.CONF_TENANT_ID),  # type: ignore
+                cls.CONF_RES_GROUP: settings.get(cls.CONF_RES_GROUP),  # type: ignore
             }
         )
 
@@ -249,14 +284,14 @@ class WorkspaceConfig:
     def from_connection_string(cls, connection_str: str) -> "WorkspaceConfig":
         """Create a WorkstationConfig from a connection string."""
         tenant_regex = r"""
-        .*tenant\s?=\s?['\"]\{?
+        .*tenant\s?[=\(]\s?['\"]\{?
         (?P<tenant_id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})
         \}?['\"].*"""
         workspace_regex = r"""
-        .*workspace\s?=\s?['\"]\{?
+        .*workspace\s?[=\(]\s?['\"]\{?
         (?P<workspace_id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})
         \}?['\"].*"""
-        ws_name_regex = r".*alias\s?=\s?['\"]\{?(?P<workspace_name>\w+)['\"].*"
+        ws_name_regex = r".*alias\s?[=\(]\s?['\"]\{?(?P<workspace_name>\w+)['\"].*"
 
         tenant_id = workspace_id = workspace_name = None
         if match := re.match(tenant_regex, connection_str, re.IGNORECASE | re.VERBOSE):
@@ -273,21 +308,26 @@ class WorkspaceConfig:
             workspace_name = match.groupdict()["workspace_name"]
         return cls(
             config={
-                cls.CONF_WS_ID_KEY: workspace_id,  # type: ignore[dict-item]
-                cls.CONF_TENANT_ID_KEY: tenant_id,  # type: ignore[dict-item]
-                cls.CONF_WS_NAME_KEY: workspace_name,  # type: ignore[dict-item]
+                cls.CONF_WS_ID: workspace_id,  # type: ignore[dict-item]
+                cls.CONF_TENANT_ID: tenant_id,  # type: ignore[dict-item]
+                cls.CONF_WS_NAME: workspace_name,  # type: ignore[dict-item]
             }
         )
 
-    @staticmethod
-    def _read_config_values(file_path: str) -> Dict[str, str]:
+    @classmethod
+    def _read_config_values(cls, file_path: str) -> Dict[str, str]:
         """Read configuration file."""
         if not file_path:
             return {}
         with contextlib.suppress(json.JSONDecodeError):
             with open(file_path, "r", encoding="utf-8") as json_file:
                 if json_file:
-                    return json.load(json_file)
+                    config_ws = json.load(json_file)
+                    return {
+                        cls._CONFIG_TO_SETTINGS_NAME_MAP[key]: value
+                        for key, value in config_ws.items()
+                        if key in cls._CONFIG_TO_SETTINGS_NAME_MAP
+                    }
         return {}
 
     @classmethod
@@ -305,8 +345,8 @@ class WorkspaceConfig:
         return (
             {
                 ws_name: {
-                    cls.PKG_CONF_WS_KEY: ws.get(cls.PKG_CONF_WS_KEY),
-                    cls.PKG_CONF_TENANT_KEY: ws.get(cls.PKG_CONF_TENANT_KEY),
+                    cls.CONF_WS_ID: ws.get(cls.CONF_WS_ID),
+                    cls.CONF_TENANT_ID: ws.get(cls.CONF_TENANT_ID),
                 }
                 for ws_name, ws in ws_settings.items()
             }
@@ -385,33 +425,29 @@ class WorkspaceConfig:
             return
         selected_workspace: Dict[str, str] = {}
         if workspace_name:
-            selected_workspace = self._lookup_ws_name_and_id(
+            selected_workspace, self.settings_key = self._lookup_ws_name_and_id(
                 workspace_name, ws_settings
             )
         elif "Default" in ws_settings:
             selected_workspace = ws_settings["Default"]
+            self.settings_key = "Default"
         elif len(ws_settings) == 1:
-            selected_workspace = next(iter(ws_settings.values()))
+            # If only one workspace, use that
+            self.settings_key, selected_workspace = next(iter(ws_settings.items()))
 
         if selected_workspace:
             self._config = {}
-            for name, value in selected_workspace.items():
-                tgt_name = self._SETTINGS_TO_CONFIG_NAME_MAP.get(name)
-                if tgt_name and value:
-                    self._config[tgt_name] = value
+            self._config.update(selected_workspace)
 
     def _lookup_ws_name_and_id(self, ws_name: str, ws_configs: dict):
         for name, ws_config in ws_configs.items():
             if ws_name.casefold() == name.casefold():
-                return ws_config
-            if ws_config.get(self.PKG_CONF_WS_KEY, "").casefold() == ws_name.casefold():
-                return ws_config
-            if (
-                ws_config.get(self.PKG_CONF_NAME_KEY, "").casefold()
-                == ws_name.casefold()
-            ):
-                return ws_config
-        return {}
+                return ws_config, name
+            if ws_config.get(self.CONF_WS_ID, "").casefold() == ws_name.casefold():
+                return ws_config, name
+            if ws_config.get(self.CONF_WS_NAME, "").casefold() == ws_name.casefold():
+                return ws_config, name
+        return {}, None
 
     def _search_for_file(self, pattern: str) -> Optional[str]:
         config_file = None

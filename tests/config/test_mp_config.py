@@ -117,7 +117,7 @@ def test_mp_config_file_convert():
     config_json = Path(TEST_DATA_PATH).joinpath("config.json")
     mpc_file = MpConfigFile(file=config_json)
     mpc_file.buttons["convert"].click()
-    check.is_in("AzureSentinel", mpc_file.settings)
+    check.is_in("MSSentinel", mpc_file.settings)
 
 
 _KV_SECS = {"url/Item1": "Value1", "url/Item2": "Value2"}

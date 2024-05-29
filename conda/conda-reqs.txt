@@ -13,7 +13,7 @@ azure-mgmt-resource>=16.1.0
 azure-storage-blob>=12.5.0
 azure-mgmt-subscription
 beautifulsoup4>=4.0.0
-bokeh>=1.4.0, <4.0.0
+bokeh>=1.4.0, <3.4.0
 cryptography>=3.1
 deprecated>=1.2.4
 dnspython>=2.0.0, <3.0.0

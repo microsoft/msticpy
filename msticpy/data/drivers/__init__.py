@@ -6,13 +6,13 @@
 """Data provider sub-package."""
 import importlib
 from functools import singledispatch
-from typing import Dict, Union
+from typing import Dict
 
 from ..._version import VERSION
 from ..core.query_defns import DataEnvironment
 
 # flake8: noqa: F403
-from .driver_base import DriverBase
+from .driver_base import DriverBase  # noqa: F401
 
 __version__ = VERSION
 

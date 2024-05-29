@@ -98,7 +98,7 @@ Loading a QueryProvider for Splunk
 
 .. code:: ipython3
 
-        qry_prov = QueryProvider("Splunk")
+        splunk_prov = QueryProvider("Splunk")
 
 
 Connecting to Splunk
@@ -147,7 +147,7 @@ in *msticpyconfig.yaml*
 
 .. code:: ipython3
 
-    qry_prov.connect()
+    splunk_prov.connect()
 
 Or provide connection parameters explicitly. You can also have some
 of the required parameters stored in your configuration and
@@ -159,13 +159,13 @@ as parameters to connect.
 
 .. code:: ipython3
 
-    qry_prov.connect(host=<hostname>, username=<username>, password=<password>)
+    splunk_prov.connect(host=<hostname>, username=<username>, password=<password>)
 
 OR
 
 .. code:: ipython3
 
-    qry_prov.connect(host=<hostname>, bearer_token=<token_string>)
+    splunk_prov.connect(host=<hostname>, bearer_token=<token_string>)
 
 
 Listing available queries

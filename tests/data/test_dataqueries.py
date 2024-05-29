@@ -6,13 +6,14 @@
 """dataprovider query test class."""
 import contextlib
 import io
-import unittest
 import warnings
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import partial
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from unittest import TestCase
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
@@ -25,6 +26,7 @@ from msticpy.data.core.query_container import QueryContainer
 from msticpy.data.core.query_provider_connections_mixin import _calc_split_ranges
 from msticpy.data.core.query_source import QuerySource
 from msticpy.data.drivers.driver_base import DriverBase, DriverProps
+from msticpy.data.query_defns import DataEnvironment
 
 from ..unit_test_lib import get_test_data_path
 
@@ -91,7 +93,7 @@ _TEST_QUERIES = [
 ]
 
 
-class TestDataQuery(unittest.TestCase):
+class TestDataQuery(TestCase):
     """Unit test class."""
 
     provider = None
@@ -352,33 +354,55 @@ class TestDataQuery(unittest.TestCase):
         q_src = q_store.get_query("Saved.Searches.test.query3")
         self.assertEqual(q_src.query, dotted_container_qs[2]["query"])
 
+    def validate_time_ranges(
+        self,
+        ranges: List[Tuple[datetime, datetime]],
+        delta: pd.Timedelta,
+    ) -> None:
+        self.assertIsInstance(ranges, list)
+
+        for index, range in enumerate(ranges):
+            self.assertIsInstance(range, tuple)
+            start_range = range[0]
+            self.assertIsInstance(start_range, datetime)
+            end_range = range[1]
+            self.assertIsInstance(end_range, datetime)
+
+            self.assertGreater(end_range, start_range)
+            if index > 0:
+                previous_end_range = ranges[index - 1][1]
+                # Ensure the new start range starts after the former end_range
+                self.assertGreater(start_range, previous_end_range)
+                # Ensure we don't have more than 1ns between 2 ranges
+                self.assertEqual(start_range - previous_end_range, pd.Timedelta("1ns"))
+            # Ensure a given time range is not longer than the configured delta + 10%
+            self.assertLess(end_range - start_range, delta + (delta / 10))
+
     def test_split_ranges(self):
         """Test time range split logic."""
-        start = datetime.utcnow() - pd.Timedelta("5h")
-        end = datetime.utcnow() + pd.Timedelta("5min")
+        start = datetime.now(tz=timezone.utc) - pd.Timedelta("5h")
         delta = pd.Timedelta("1h")
+        # Case where the last range has less than 10% of delta of difference
+        end = datetime.now(tz=timezone.utc) + delta / 1001
 
         ranges = _calc_split_ranges(start, end, delta)
-        self.assertEqual(len(ranges), 5)
         self.assertEqual(ranges[0][0], start)
         self.assertEqual(ranges[-1][1], end)
+        self.validate_time_ranges(ranges=ranges, delta=delta)
 
-        st_times = [start_tm[0] for start_tm in ranges]
-        for end_time in (end_tm[1] for end_tm in ranges):
-            self.assertNotIn(end_time, st_times)
-
-        end = end + pd.Timedelta("20min")
+        # Case where the last range has more than 10% of delta of difference
+        end = datetime.now(tz=timezone.utc) + delta / 999
         ranges = _calc_split_ranges(start, end, delta)
-        self.assertEqual(len(ranges), 5)
         self.assertEqual(ranges[0][0], start)
         self.assertEqual(ranges[-1][1], end)
+        self.validate_time_ranges(ranges=ranges, delta=delta)
 
     def test_split_queries(self):
         """Test queries split into time segments."""
         la_provider = self.la_provider
 
-        start = datetime.utcnow() - pd.Timedelta("5h")
-        end = datetime.utcnow() + pd.Timedelta("5min")
+        start = datetime.now(tz=timezone.utc) - pd.Timedelta("5h")
+        end = datetime.now(tz=timezone.utc) + pd.Timedelta("5min")
         delta = pd.Timedelta("1h")
 
         ranges = _calc_split_ranges(start, end, delta)
@@ -386,7 +410,7 @@ class TestDataQuery(unittest.TestCase):
             "print", start=start, end=end, split_query_by="1H"
         )
         queries = result_queries.split("\n\n")
-        self.assertEqual(len(queries), 5)
+        self.assertEqual(len(queries), 6)
 
         for idx, (st_time, e_time) in enumerate(ranges):
             self.assertIn(st_time.isoformat(sep="T") + "Z", queries[idx])
@@ -409,14 +433,94 @@ class TestDataQuery(unittest.TestCase):
         self.assertIn("Cannot split a query", mssg.getvalue())
 
         # With invalid split_query_by value it will default to 1D
-        start = datetime.utcnow() - pd.Timedelta("5D")
-        end = datetime.utcnow() + pd.Timedelta("5min")
+        start = datetime.now(tz=timezone.utc) - pd.Timedelta("5D")
+        end = datetime.now(tz=timezone.utc) + pd.Timedelta("5min")
 
         result_queries = la_provider.all_queries.list_alerts(
             "print", start=start, end=end, split_query_by="Invalid"
         )
         queries = result_queries.split("\n\n")
-        self.assertEqual(len(queries), 5)
+        self.assertEqual(len(queries), 6)
+
+    def test_getattr_invalid_attribute(self) -> None:
+        """Test method get_attr when attribute is not a supported attribute."""
+        with pytest.raises(
+            AttributeError, match=f"UTDataDriver has no attribute 'test'"
+        ):
+            self.provider.test
+
+    def test_schema(self) -> None:
+        """Test default implementation of property schema."""
+        schema: dict = self.provider.schema
+        self.assertIsInstance(schema, dict)
+        self.assertFalse(schema)
+
+    def test_service_queries(self) -> None:
+        """Test default implementation of property service_queries."""
+        service_queries: Tuple[dict, str] = self.provider.service_queries
+        self.assertIsInstance(service_queries, tuple)
+        self.assertIsInstance(service_queries[0], dict)
+        self.assertIsInstance(service_queries[1], str)
+        self.assertFalse(service_queries[0])
+        self.assertFalse(service_queries[1])
+
+    def test_add_query_filter_invalid_parameter(self) -> None:
+        """Test default implementation of method add_query_filter with invalid name."""
+        with pytest.raises(ValueError, match="'name' test must be one of:.*"):
+            self.provider.add_query_filter(name="test", query_filter="")
+
+    def test_add_query_filter_as_str(self) -> None:
+        """Test default implementation of method add_query_filter with invalid name."""
+        my_filter: str = "test_filter"
+        filter_name: str = "data_sources"
+        self.assertNotIn(filter_name, self.provider._query_filter)
+        self.provider.add_query_filter(name=filter_name, query_filter=my_filter)
+        self.assertIn(filter_name, self.provider._query_filter)
+        self.assertIn(my_filter, self.provider._query_filter[filter_name])
+
+    def test_set_driver_property(self) -> None:
+        """Test default implementation of method set_driver_property with invalid property."""
+        with pytest.raises(
+            TypeError,
+            match="Property 'supports_threading' is not the correct type.",
+        ):
+            self.provider.set_driver_property(
+                name=DriverProps.SUPPORTS_THREADING, value=42
+            )
+
+    def test_query_usable(self) -> None:
+        """Test default implementation of method query_usable."""
+        self.assertTrue(self.provider.query_usable(query_source=None))
+
+    def test_execute_query_provider_not_loaded(self) -> None:
+        """Test method _execute_query when driver is not loaded."""
+        self.la_provider._query_provider._loaded = False
+        with pytest.raises(ValueError, match="Provider is not loaded."):
+            self.la_provider._execute_query()
+
+    def test_execute_query_provider_not_connected(self) -> None:
+        """Test method _execute_query when driver is not connected."""
+        self.la_provider._query_provider._connected = False
+        with pytest.raises(ValueError, match="No connection to a data source."):
+            self.la_provider._execute_query()
+
+    def test_check_for_time_params_missing_start(self) -> None:
+        """Test method _check_for_time_params when start is missing."""
+        missing: List[str] = ["start"]
+        params: dict = {}
+        changes: bool = self.la_provider._check_for_time_params(params, missing)
+        self.assertTrue(changes)
+        self.assertIn("start", params)
+        self.assertFalse(missing)
+
+    def test_check_for_time_params_missing_end(self) -> None:
+        """Test method _check_for_time_params when end is missing."""
+        missing: List[str] = ["end"]
+        params: dict = {}
+        changes: bool = self.la_provider._check_for_time_params(params, missing)
+        self.assertTrue(changes)
+        self.assertIn("end", params)
+        self.assertFalse(missing)
 
 
 _LOCAL_DATA_PATHS = [str(get_test_data_path().joinpath("localdata"))]
@@ -581,3 +685,96 @@ def test_query_paths(mode):
     ):
         check.is_true(hasattr(qry_prov, data_family))
     pkg_config._settings["QueryDefinitions"] = current_settings
+
+
+def test_driver_props_valid_type_invalid_property_name() -> None:
+    """Test method valid_type when input property is not in the predefined properties."""
+    valid: bool = DriverProps.valid_type(
+        property_name="random_property",
+        value=0,
+    )
+    check.is_true(valid)
+
+
+def test_driver_queries() -> None:
+    """Test default implementation of property driver_queries."""
+
+    class MinimalDriver(DriverBase):
+        def connect():
+            pass
+
+        def query():
+            pass
+
+        def query_with_results():
+            pass
+
+    driver = MinimalDriver()
+    driver_queries: List[dict] = driver.driver_queries
+    check.is_instance(driver_queries, list)
+    check.equal(len(driver_queries), 1)
+    check.is_instance(driver_queries[0], dict)
+    check.is_false(driver_queries[0])
+
+
+def test_init_invalid_driver() -> None:
+    """Test QueryProvider method __init__ with invalid driver."""
+    data_environment: str = "Kusto"
+    with patch(
+        "msticpy.data.drivers.import_driver", return_value=QueryProvider
+    ) as mocked_import_driver, pytest.raises(
+        LookupError,
+        match=f"Could not find suitable data provider for",
+    ):
+        QueryProvider(
+            data_environment=data_environment,
+            driver=None,
+        )
+        check.is_true(mocked_import_driver.called)
+        check.equal(mocked_import_driver.call_count, 1)
+
+
+def test_check_environment_unknown_str_env() -> None:
+    """Test method _check_environment with unknown str environment."""
+    invalid_data_environment: str = "invalid_env"
+    with pytest.raises(
+        TypeError, match=f"Unknown data environment {invalid_data_environment}"
+    ):
+        QueryProvider._check_environment(invalid_data_environment)
+
+
+def test_check_environment_unknown_env_type() -> None:
+    """Test method _check_environment with invalid environment type."""
+    invalid_data_environment: int = 42
+    with pytest.raises(
+        TypeError,
+        match=f"Unknown data environment type {invalid_data_environment} \({type(invalid_data_environment)}\)",
+    ):
+        QueryProvider._check_environment(invalid_data_environment)
+
+
+def test_check_environment_str_custom_provider() -> None:
+    """Test method _check_environment with a custom provider as a string."""
+    data_environment: str = "Custom"
+    with patch(
+        "msticpy.data.drivers.CUSTOM_PROVIDERS",
+    ) as mocked_custom_providers:
+        # We only need to overwrite the __contains__ method to ensure the check
+        # value in drivers.CUSTOM_PROVIDERS
+        # always returns True.
+        mocked_custom_providers.__contains__.return_value = True
+        data_env, env_name = QueryProvider._check_environment(data_environment)
+        check.is_true(mocked_custom_providers.__contains__.called)
+        check.equal(mocked_custom_providers.__contains__.call_count, 1)
+        check.is_instance(data_env, str)
+        check.equal(data_env, data_environment)
+        check.equal(env_name, data_environment)
+
+
+def test_check_environment_as_data_environment() -> None:
+    """Test method _check_environment with a DataEnvironment object."""
+    data_environment: DataEnvironment = DataEnvironment.MSSentinel
+    data_env, env_name = QueryProvider._check_environment(data_environment)
+    check.is_instance(data_env, DataEnvironment)
+    check.equal(data_env, data_environment)
+    check.equal(env_name, data_environment.name)

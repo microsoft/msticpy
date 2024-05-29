@@ -4,8 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """WorkspaceConfig test class."""
-import io
-from contextlib import redirect_stdout
 from pathlib import Path
 from typing import NamedTuple
 
@@ -27,20 +25,20 @@ def test_wsconfig_default_ws():
     test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
     with custom_mp_config(test_config1):
         # Default workspace
-        _DEF_WS = {
+        _default_ws = {
             "WorkspaceId": "52b1ab41-869e-4138-9e40-2a4457f09bf3",
             "TenantId": "72f988bf-86f1-41af-91ab-2d7cd011db49",
         }
         ws_config = WorkspaceConfig()
-        check.is_in("workspace_id", ws_config)
-        check.equal(ws_config["workspace_id"], _DEF_WS["WorkspaceId"])
-        check.is_in("tenant_id", ws_config)
-        check.equal(ws_config["tenant_id"], _DEF_WS["TenantId"])
+        check.is_in(WorkspaceConfig.CONF_WS_ID, ws_config)
+        check.equal(ws_config[WorkspaceConfig.CONF_WS_ID], _default_ws["WorkspaceId"])
+        check.is_in(WorkspaceConfig.CONF_TENANT_ID, ws_config)
+        check.equal(ws_config[WorkspaceConfig.CONF_TENANT_ID], _default_ws["TenantId"])
         check.is_not_none(ws_config.code_connect_str)
         check.is_true(
             ws_config.code_connect_str.startswith("loganalytics://code().tenant(")
-            and _DEF_WS["WorkspaceId"] in ws_config.code_connect_str
-            and _DEF_WS["TenantId"] in ws_config.code_connect_str
+            and _default_ws["WorkspaceId"] in ws_config.code_connect_str
+            and _default_ws["TenantId"] in ws_config.code_connect_str
         )
 
 
@@ -81,40 +79,15 @@ def test_wsconfig_named_ws(name, expected):
         # Named workspace
 
         wstest_config = WorkspaceConfig(workspace=name)
-        check.is_in("workspace_id", wstest_config)
-        check.equal(wstest_config["workspace_id"], expected.ws_id)
-        check.equal(wstest_config["tenant_id"], expected.tenant_id)
-        check.equal(wstest_config["workspace_name"], expected.ws_name)
+        check.is_in(WorkspaceConfig.CONF_WS_ID, wstest_config)
+        check.equal(wstest_config[WorkspaceConfig.CONF_WS_ID], expected.ws_id)
+        check.equal(wstest_config[WorkspaceConfig.CONF_TENANT_ID], expected.tenant_id)
+        check.equal(wstest_config[WorkspaceConfig.CONF_WS_NAME], expected.ws_name)
         check.is_not_none(wstest_config.code_connect_str)
         check.is_true(
             wstest_config.code_connect_str.startswith("loganalytics://code().tenant(")
             and expected.ws_id in wstest_config.code_connect_str
             and expected.tenant_id in wstest_config.code_connect_str
-        )
-
-
-def test_wsconfig_config_json_fallback():
-    """Test fallback to config.json if no AzSent settings in config.yaml."""
-    test_config2 = Path(_TEST_DATA).joinpath("msticpyconfig-noAzSentSettings.yaml")
-    with custom_mp_config(test_config2):
-        _NAMED_WS = {
-            "WorkspaceId": "9997809c-8142-43e1-96b3-4ad87cfe95a3",
-            "TenantId": "99928fd7-42a5-48bc-a619-af56397b9f28",
-        }
-        wrn_mssg = io.StringIO()
-        with redirect_stdout(wrn_mssg):
-            wstest_config = WorkspaceConfig()
-        check.is_in("Could not find Microsoft Sentinel settings", wrn_mssg.getvalue())
-        check.is_in("workspace_id", wstest_config)
-        check.is_not_none(wstest_config["workspace_id"])
-        check.equal(wstest_config["workspace_id"], _NAMED_WS["WorkspaceId"])
-        check.is_in("tenant_id", wstest_config)
-        check.equal(wstest_config["tenant_id"], _NAMED_WS["TenantId"])
-        check.is_not_none(wstest_config.code_connect_str)
-        check.is_true(
-            wstest_config.code_connect_str.startswith("loganalytics://code().tenant(")
-            and _NAMED_WS["WorkspaceId"] in wstest_config.code_connect_str
-            and _NAMED_WS["TenantId"] in wstest_config.code_connect_str
         )
 
 
@@ -141,21 +114,23 @@ def test_wsconfig_single_ws():
     test_config3 = Path(_TEST_DATA).joinpath("msticpyconfig-SingleAzSentSettings.yaml")
     with custom_mp_config(test_config3):
         # Single workspace
-        _NAMED_WS = {
+        _named_ws = {
             "WorkspaceId": "a927809c-8142-43e1-96b3-4ad87cfe95a3",
             "TenantId": "69d28fd7-42a5-48bc-a619-af56397b9f28",
         }
         wstest_config = WorkspaceConfig()
-        check.is_in("workspace_id", wstest_config)
-        check.is_not_none(wstest_config["workspace_id"])
-        check.equal(wstest_config["workspace_id"], _NAMED_WS["WorkspaceId"])
-        check.is_in("tenant_id", wstest_config)
-        check.equal(wstest_config["tenant_id"], _NAMED_WS["TenantId"])
+        check.is_in(WorkspaceConfig.CONF_WS_ID, wstest_config)
+        check.is_not_none(wstest_config[WorkspaceConfig.CONF_WS_ID])
+        check.equal(wstest_config[WorkspaceConfig.CONF_WS_ID], _named_ws["WorkspaceId"])
+        check.is_in(WorkspaceConfig.CONF_TENANT_ID, wstest_config)
+        check.equal(
+            wstest_config[WorkspaceConfig.CONF_TENANT_ID], _named_ws["TenantId"]
+        )
         check.is_not_none(wstest_config.code_connect_str)
         check.is_true(
             wstest_config.code_connect_str.startswith("loganalytics://code().tenant(")
-            and _NAMED_WS["WorkspaceId"] in wstest_config.code_connect_str
-            and _NAMED_WS["TenantId"] in wstest_config.code_connect_str
+            and _named_ws["WorkspaceId"] in wstest_config.code_connect_str
+            and _named_ws["TenantId"] in wstest_config.code_connect_str
         )
 
 
@@ -169,15 +144,25 @@ _CONFIG_STR_TEST_CASES = (
         True,
     ),
     (
-        f"loganalytics://tenant='{_TENANT}';clientid='{_CLI_ID}';clientsecret='[PLACEHOLDER]';workspace='{_WS_ID}';alias='{_WS_NAME}'",
+        (
+            f"loganalytics://tenant='{_TENANT}';clientid='{_CLI_ID}';"
+            f"clientsecret='[PLACEHOLDER]';workspace='{_WS_ID}';alias='{_WS_NAME}'"
+        ),
         True,
     ),
     (
-        f"loganalytics://username='User';password='[PLACEHOLDER]';workspace='{_WS_ID}';alias='{_WS_NAME}';tenant='{_TENANT}'",
+        (
+            "loganalytics://username='User';password='[PLACEHOLDER]';"
+            f"workspace='{_WS_ID}';alias='{_WS_NAME}';tenant='{_TENANT}'"
+        ),
         True,
     ),
     (
         f"loganalytics://anonymous;workspace='{_WS_ID}';alias='{_WS_NAME}';tenant='{_TENANT}'",
+        True,
+    ),
+    (
+        f"loganalytics://code().tenant('{_TENANT}').workspace('{_WS_ID}').alias('{_WS_NAME}')",
         True,
     ),
     (f"loganalytics://code;workspace='{_WS_ID}';alias='{_WS_NAME}'", False),
