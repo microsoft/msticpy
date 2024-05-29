@@ -61,14 +61,14 @@ to a Key Vault secret using the MSTICPy configuration editor.
 
 Required connection parameters:
 
-===========  ===========================================================================================================================
-Parameter    Description
-===========  ===========================================================================================================================
-host         (string) The host name (the default is 'localhost').
-username     (string) The Splunk account username, which is used to authenticate the Splunk instance.
-password     (string) The password for the Splunk account.
+============  ===========================================================================================================================
+Parameter     Description
+============  ===========================================================================================================================
+host          (string) The host name (the default is 'localhost').
+username      (string) The Splunk account username, which is used to authenticate the Splunk instance.
+password      (string) The password for the Splunk account.
 bearer_token  (string) The Authorization Bearer Token <JWT> created in the Splunk.
-===========  ===========================================================================================================================
+============  ===========================================================================================================================
 
 The username and password are needed for user account authentication.
 On the other hand, bearer_token is needed for Token authentication.

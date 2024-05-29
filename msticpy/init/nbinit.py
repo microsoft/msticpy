@@ -330,7 +330,7 @@ def init_notebook(
 
     If you are having trouble with this, you should do the following:
     1. Run `init_notebook` again using the `verbosity=2` parameter
-       This will print out additional status and debugging information
+    This will print out additional status and debugging information
 
     2. Run mp.MpConfigEdit() to edit (or create) a msticpyconfig file.
 
