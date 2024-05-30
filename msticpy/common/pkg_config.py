@@ -13,6 +13,7 @@ a file `msticpyconfig.yaml` in the current directory.
 
 """
 import contextlib
+from contextlib import AbstractContextManager
 import numbers
 import os
 from collections import UserDict
@@ -296,10 +297,22 @@ def _get_default_config():
     """Return the package default config file."""
     package = "msticpy"
     try:
-        from importlib.resources import files  # pylint: disable=import-outside-toplevel
+        from importlib.resources import (  # pylint: disable=import-outside-toplevel
+            files,
+            as_file,
+        )
 
-        config_path: Path = Path(str(files(package).joinpath(_CONFIG_FILE)))
-        return _read_config_file(config_path) if config_path.exists() else {}
+        package_path: AbstractContextManager = as_file(
+            files(package).joinpath(_CONFIG_FILE)
+        )
+    except ImportError:
+        from importlib.resources import path  # pylint: disable=import-outside-toplevel
+
+        package_path = path(package, _CONFIG_FILE)
+
+    try:
+        with package_path as config_path:
+            return _read_config_file(config_path) if config_path.exists() else {}
     except ModuleNotFoundError as mod_err:
         # if all else fails we try to find the package default config somewhere
         # in the package tree - we use the first one we find
@@ -311,11 +324,6 @@ def _get_default_config():
                 title=f"Package {_CONFIG_FILE} missing.",
             ) from mod_err
         config_path = next(iter(pkg_root.glob(f"**/{_CONFIG_FILE}")))
-    except ImportError:
-        from importlib.resources import path  # pylint: disable=import-outside-toplevel
-
-        with path(package, _CONFIG_FILE) as config_path:
-            return _read_config_file(config_path) if config_path else {}
     return _read_config_file(config_path) if config_path else {}
 
 
@@ -371,8 +379,10 @@ def get_http_timeout(
     *,
     timeout: Optional[int] = None,
     def_timeout: Optional[int] = None,
+    **kwargs,
 ) -> httpx.Timeout:
     """Return timeout from settings or overridden in `kwargs`."""
+    del kwargs
     config_timeout: Union[int, Dict, httpx.Timeout, List, Tuple] = get_config(
         "msticpy.http_timeout", get_config("http_timeout", None)
     )

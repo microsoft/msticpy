@@ -19,6 +19,7 @@ import pandas as pd
 from IPython.core.display import HTML
 from IPython.core.getipython import get_ipython
 from IPython.display import display
+from packaging.version import parse as parse_version
 
 from ..._version import VERSION
 
