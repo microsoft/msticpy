@@ -38,6 +38,7 @@ Features
    -  TOR exit nodes
    -  Open Page Rank
    -  IP Quality Score
+   -  BinaryEdge
 
 -  Supports common IoC Types
 

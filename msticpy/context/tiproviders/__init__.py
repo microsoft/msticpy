@@ -27,4 +27,5 @@ TI_PROVIDERS: Dict[str, Tuple[str, str]] = {
     "Pulsedive": ("pulsedive", "Pulsedive"),
     "AbuseIPDB": ("abuseipdb", "AbuseIPDB"),
     "IPQualityScore": ("ip_quality_score", "IPQualityScore"),
+    "BinaryEdge": ("binaryedge", "BinaryEdge"),
 }
