@@ -6,7 +6,6 @@
 """IP Utils test class."""
 import os
 import re
-from pathlib import Path
 from unittest.mock import patch
 
 import pandas as pd
@@ -482,7 +481,6 @@ def test_get_whois_df(mock_asn_whois_query, net_df):
 @respx.mock
 @pytest.fixture(scope="module")
 @patch("msticpy.context.ip_utils._asn_whois_query")
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_whois_pdext(net_df, mock_asn_whois_query):
     """Test IP Whois."""
     net_df = net_df.head(25)
