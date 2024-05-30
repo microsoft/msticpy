@@ -13,8 +13,8 @@ from typing import Any, Dict, Iterable, List, Optional, Union
 import pandas as pd
 import yaml
 
-from msticpy.data import QueryProvider
-from msticpy.data.data_providers import QueryContainer
+from msticpy.data.data_providers import QueryProvider
+from msticpy.data.query_container import QueryContainer
 
 
 # pylint: disable=too-few-public-methods
