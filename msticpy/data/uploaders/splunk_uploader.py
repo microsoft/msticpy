@@ -125,8 +125,8 @@ class SplunkUploader(UploaderBase):
     def upload_df(  # type: ignore
         self,
         data: pd.DataFrame,
-        table_name: Optional[str],
-        index_name: str,
+        table_name: Optional[str] = None,
+        index_name: Optional[str] = None,
         create_index: bool = False,
         source_type: Optional[str] = None,
         **kwargs,
@@ -178,7 +178,7 @@ class SplunkUploader(UploaderBase):
     def upload_file(  # type: ignore
         self,
         file_path: str,
-        table_name: Optional[str],
+        table_name: Optional[str] = None,
         delim: str = ",",
         index_name: Optional[str] = None,
         create_index: bool = False,
@@ -223,7 +223,9 @@ class SplunkUploader(UploaderBase):
             ) from parse_err
 
         if not source_type:
-            if not table_name:
+            if table_name:
+                source_type = table_name
+            else:
                 source_type = path.stem
 
         self._post_data(
@@ -237,7 +239,7 @@ class SplunkUploader(UploaderBase):
     def upload_folder(  # type: ignore
         self,
         folder_path: str,
-        table_name: Optional[str],
+        table_name: Optional[str] = None,
         delim: str = ",",
         index_name: Optional[str] = None,
         create_index=False,
@@ -282,9 +284,13 @@ class SplunkUploader(UploaderBase):
                     "The file specified is not a seperated value file.",
                     title="Incorrect file type.",
                 ) from parse_err
+
             if not source_type:
-                if not table_name:
+                if table_name:
+                    source_type = table_name
+                else:
                     source_type = path.stem
+
             self._post_data(
                 data=data,
                 index_name=index_name,
