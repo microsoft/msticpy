@@ -615,7 +615,7 @@ class AzureKustoDriver(DriverBase):
             encryption_algorithm=serialization.NoEncryption(),
         )
         public_cert = certificate.public_bytes(encoding=serialization.Encoding.PEM)
-        thumbprint = certificate.fingerprint(hashes.SHA1())
+        thumbprint = certificate.fingerprint(hashes.SHA256())
         return KustoConnectionStringBuilder.with_aad_application_certificate_sni_authentication(
             connection_string=self.cluster_uri,
             aad_app_id=auth_params.params["client_id"],

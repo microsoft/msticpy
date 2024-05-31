@@ -6,6 +6,7 @@
 """Query Provider additional connection methods."""
 import asyncio
 import logging
+from abc import abstractmethod
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from functools import partial
@@ -37,22 +38,60 @@ class QueryProviderProtocol(Protocol):
     _additional_connections: Dict[str, Any]
     _query_provider: DriverBase
 
-    def exec_query(self, query: str, **kwargs) -> Union[pd.DataFrame, Any]:
-        """Execute a query against the provider."""
-        ...
-
-    # fmt: off
     @staticmethod
+    @abstractmethod
     def _get_query_options(
         params: Dict[str, Any], kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
-        ...
-    # fmt: on
+        """Return any kwargs not already in params."""
 
 
 # pylint: disable=super-init-not-called
 class QueryProviderConnectionsMixin(QueryProviderProtocol):
     """Mixin additional connection handling QueryProvider class."""
+
+    @staticmethod
+    @abstractmethod
+    def _get_query_options(
+        params: Dict[str, Any], kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Return any kwargs not already in params."""
+
+    def exec_query(self, query: str, **kwargs) -> Union[pd.DataFrame, Any]:
+        """
+        Execute simple query string.
+
+        Parameters
+        ----------
+        query : str
+            [description]
+        use_connections : Union[str, List[str]]
+
+        Other Parameters
+        ----------------
+        query_options : Dict[str, Any]
+            Additional options passed to query driver.
+        kwargs : Dict[str, Any]
+            Additional options passed to query driver.
+
+        Returns
+        -------
+        Union[pd.DataFrame, Any]
+            Query results - a DataFrame if successful
+            or a KqlResult if unsuccessful.
+
+        """
+        query_options = kwargs.pop("query_options", {}) or kwargs
+        query_source = kwargs.pop("query_source", None)
+
+        logger.info("Executing query '%s...'", query[:40])
+        logger.debug("Full query: %s", query)
+        logger.debug("Query options: %s", query_options)
+        if not self._additional_connections:
+            return self._query_provider.query(
+                query, query_source=query_source, **query_options
+            )
+        return self._exec_additional_connections(query, **kwargs)
 
     def add_connection(
         self,
@@ -159,8 +198,16 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         if self._query_provider.get_driver_property(DriverProps.SUPPORTS_THREADING):
             logger.info("Running threaded queries.")
             event_loop = _get_event_loop()
+            max_workers: int = self._query_provider.get_driver_property(
+                DriverProps.MAX_PARALLEL
+            )
             return event_loop.run_until_complete(
-                self._exec_queries_threaded(query_tasks, progress, retry)
+                self._exec_queries_threaded(
+                    query_tasks,
+                    progress,
+                    retry,
+                    max_workers,
+                )
             )
 
         # standard synchronous execution
@@ -238,8 +285,16 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         if self._query_provider.get_driver_property(DriverProps.SUPPORTS_THREADING):
             logger.info("Running threaded queries.")
             event_loop = _get_event_loop()
+            max_workers: int = self._query_provider.get_driver_property(
+                DriverProps.MAX_PARALLEL
+            )
             return event_loop.run_until_complete(
-                self._exec_queries_threaded(query_tasks, progress, retry)
+                self._exec_queries_threaded(
+                    query_tasks,
+                    progress,
+                    retry,
+                    max_workers,
+                )
             )
 
         # or revert to standard synchronous execution
@@ -285,7 +340,11 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                 results.append(query_task())
             except MsticpyDataQueryError:
                 print(f"Query {con_name} failed.")
-        return pd.concat(results)
+        if results:
+            return pd.concat(results)
+
+        logger.warning("All queries failed.")
+        return pd.DataFrame()
 
     def _create_split_queries(
         self,
@@ -318,29 +377,26 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         logger.info("Split query into %s chunks", len(split_queries))
         return split_queries
 
+    @staticmethod
     async def _exec_queries_threaded(
-        self,
         query_tasks: Dict[str, partial],
         progress: bool = True,
         retry: bool = False,
+        max_workers: int = 4,
     ) -> pd.DataFrame:
         """Return results of multiple queries run as threaded tasks."""
         logger.info("Running threaded queries for %d connections.", len(query_tasks))
 
         event_loop = _get_event_loop()
 
-        with ThreadPoolExecutor(
-            max_workers=self._query_provider.get_driver_property(
-                DriverProps.MAX_PARALLEL
-            )
-        ) as executor:
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # add the additional connections
             thread_tasks = {
                 query_id: event_loop.run_in_executor(executor, query_func)
                 for query_id, query_func in query_tasks.items()
             }
             results: List[pd.DataFrame] = []
-            failed_tasks: Dict[str, asyncio.Future] = {}
+            failed_tasks_ids: List[str] = []
             if progress:
                 task_iter = tqdm(
                     asyncio.as_completed(thread_tasks.values()),
@@ -360,24 +416,33 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                         "Query task '%s' failed with exception",
                         query_id,
                     )
-                    failed_tasks[query_id] = thread_task
+                    # Reusing thread task would result in:
+                    # RuntimeError: cannot reuse already awaited coroutine
+                    # A new task should be queued
+                    failed_tasks_ids.append(query_id)
 
-            if retry and failed_tasks:
-                for query_id, thread_task in failed_tasks.items():
-                    try:
-                        logger.info("Retrying query task '%s'", query_id)
-                        result = await thread_task
-                        results.append(result)
-                    except Exception:  # pylint: disable=broad-except
-                        logger.warning(
-                            "Retried query task '%s' failed with exception",
-                            query_id,
-                            exc_info=True,
-                        )
-            # Sort the results by the order of the tasks
-            results = [result for _, result in sorted(zip(thread_tasks, results))]
+        # Sort the results by the order of the tasks
+        results = [result for _, result in sorted(zip(thread_tasks, results))]
 
-        return pd.concat(results, ignore_index=True)
+        if retry and failed_tasks_ids:
+            failed_results: pd.DataFrame = (
+                await QueryProviderConnectionsMixin._exec_queries_threaded(
+                    {
+                        failed_tasks_id: query_tasks[failed_tasks_id]
+                        for failed_tasks_id in failed_tasks_ids
+                    },
+                    progress=progress,
+                    retry=False,
+                    max_workers=max_workers,
+                )
+            )
+            if not failed_results.empty:
+                results.append(failed_results)
+        if results:
+            return pd.concat(results, ignore_index=True)
+
+        logger.warning("All queries failed.")
+        return pd.DataFrame()
 
 
 def _get_event_loop() -> asyncio.AbstractEventLoop:
