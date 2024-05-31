@@ -124,11 +124,11 @@ class SplunkUploader(UploaderBase):
     # pylint: disable=arguments-differ
     def upload_df(  # type: ignore
         self,
-        index_name: str,
         data: pd.DataFrame,
-        source_type: Optional[str] = None,
-        table_name: Optional[str] = None,
+        table_name: Optional[str],
+        index_name: str,
         create_index: bool = False,
+        source_type: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -153,7 +153,6 @@ class SplunkUploader(UploaderBase):
             Set this to true to create the index if it doesn't already exist. Default is False.
 
         """
-
         if not source_type:
             if not table_name:
                 source_type = "json"
@@ -170,20 +169,20 @@ class SplunkUploader(UploaderBase):
             )
         self._post_data(
             data=data,
-            source_type=source_type,
             index_name=index_name,
-            create_index=create_index,
             host=host,
+            source_type=source_type,
+            create_index=create_index,
         )
 
     def upload_file(  # type: ignore
         self,
         file_path: str,
-        source_type: Optional[str] = None,
-        table_name: Optional[str] = None,
+        table_name: Optional[str],
         delim: str = ",",
         index_name: Optional[str] = None,
         create_index: bool = False,
+        source_type: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -229,20 +228,20 @@ class SplunkUploader(UploaderBase):
 
         self._post_data(
             data=data,
-            source_type=source_type,
             index_name=index_name,
             host=host,
+            source_type=source_type,
             create_index=create_index,
         )
 
     def upload_folder(  # type: ignore
         self,
         folder_path: str,
-        source_type: Optional[str] = None,
-        table_name: Optional[str] = None,
+        table_name: Optional[str],
         delim: str = ",",
         index_name: Optional[str] = None,
         create_index=False,
+        source_type: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -288,9 +287,9 @@ class SplunkUploader(UploaderBase):
                     source_type = path.stem
             self._post_data(
                 data=data,
-                source_type=source_type,
                 index_name=index_name,
                 host=host,
+                source_type=source_type,
                 create_index=create_index,
             )
             f_progress.update(1)
