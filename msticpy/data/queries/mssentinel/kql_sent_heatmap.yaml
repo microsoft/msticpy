@@ -1,0 +1,76 @@
+metadata:
+  version: 1
+  description: Heatmap - Query to return weekly data of various data sources which can be used to plot heatmap
+  data_environments: [LogAnalytics]
+  data_families: ['MultiDataSource']
+  tags: ['Heatmap','host','ip','alert','network']
+defaults:
+  parameters:
+      table:
+        description: Table name
+        type: str
+      end:
+        description: Query end time
+        type: datetime
+      where_clause:
+        description: Optional additional filter clauses
+        type: str
+        default: ''
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+      timestampcolumn:
+        description: Timestamp field to use from source dataset
+        type: str
+        default: 'TimeGenerated'
+      aggregatefunction:
+        description: Aggregation functions to use - count(), sum(), avg() etc
+        type: str
+        default: 'count()'
+sources:
+  get_weekly_heatmap_unpivot:
+      description: Retrieves data across the week of a given table in 4 column unpivot view which can also be used to plot heatmap
+      args:
+        query: '
+            let end = datetime({end});
+            let start = end - 7d;
+            {table}
+            {where_clause}
+            | where {timestampcolumn} >= startofday(start)
+            | where {timestampcolumn} <= startofday(end)
+            | extend HourOfLogin = hourofday({timestampcolumn}), DayNumberofWeek = dayofweek({timestampcolumn}) , Date = format_datetime(TimeGenerated, "yyyy-MM-dd") 
+            | extend DayofWeek = case(
+              DayNumberofWeek == "00:00:00", "Sunday", 
+              DayNumberofWeek == "1.00:00:00", "Monday", 
+              DayNumberofWeek == "2.00:00:00", "Tuesday", 
+              DayNumberofWeek == "3.00:00:00", "Wednesday", 
+              DayNumberofWeek == "4.00:00:00", "Thursday", 
+              DayNumberofWeek == "5.00:00:00", "Friday", 
+              DayNumberofWeek == "6.00:00:00", "Saturday","InvalidTimeStamp")
+            | summarize Total={aggregatefunction} by Date, DayofWeek, HourOfLogin
+            | sort by Date asc, HourOfLogin asc
+            {add_query_items}'
+  get_weekly_heatmap_pivot:
+    description: Retrieves data across the week of a given table in Pivot view which can be used to plot heatmap
+    args:
+      query: '
+            let end = datetime({end});
+            let start = end - 7d;
+            {table}
+            {where_clause}
+            | where {timestampcolumn} >= startofday(start)
+            | where {timestampcolumn} <= startofday(end)
+            | extend HourOfLogin = toint(hourofday({timestampcolumn})), DayNumberofWeek = dayofweek({timestampcolumn}) , Date = format_datetime(TimeGenerated, "yyyy-MM-dd") 
+            | extend DayofWeek = case(
+              DayNumberofWeek == "00:00:00", "Sunday", 
+              DayNumberofWeek == "1.00:00:00", "Monday", 
+              DayNumberofWeek == "2.00:00:00", "Tuesday", 
+              DayNumberofWeek == "3.00:00:00", "Wednesday", 
+              DayNumberofWeek == "4.00:00:00", "Thursday", 
+              DayNumberofWeek == "5.00:00:00", "Friday", 
+              DayNumberofWeek == "6.00:00:00", "Saturday","InvalidTimeStamp")
+            | evaluate pivot(HourOfLogin, {aggregatefunction}, DayofWeek, Date)
+            | project-reorder Date, DayofWeek, * granny-asc
+            | sort by Date asc
+            {add_query_items}'
