@@ -10,7 +10,7 @@ import pytest
 import pytest_check as check
 
 from msticpy.common.exceptions import MsticpyParameterError, MsticpyUserConfigError
-from msticpy.data import QueryProvider
+from msticpy.data.core.data_providers import QueryProvider
 from msticpy.data.drivers.kql_driver import KqlDriver
 from msticpy.data.drivers.kusto_driver import KustoDriver
 
