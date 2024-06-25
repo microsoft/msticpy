@@ -13,8 +13,6 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, Dict, Iterable, Optional, Type
 
-import pkg_resources
-
 from .._version import VERSION
 from ..common.timespan import TimeSpan
 from ..context.tilookup import TILookup
@@ -186,7 +184,14 @@ class Pivot:
 
     @staticmethod
     def _get_def_pivot_reg():
-        return pkg_resources.resource_filename("msticpy", _DEF_PIVOT_REG_FILE)
+        try:
+            from importlib.resources import (  # pylint: disable=import-outside-toplevel
+                files,  # noqa=attr_defined
+            )
+
+            return files("msticpy").joinpath(_DEF_PIVOT_REG_FILE)
+        except ImportError:
+            return Path(__file__).parent.parent.joinpath(_DEF_PIVOT_REG_FILE)
 
     @property
     def providers(self) -> Dict[str, Any]:
@@ -283,6 +288,8 @@ class Pivot:
             timespan = value
         elif value is not None:
             timespan = TimeSpan(value)
+        else:
+            return
         self._query_time.set_time(timespan)
 
     def set_timespan(self, value: Optional[Any] = None, **kwargs):
