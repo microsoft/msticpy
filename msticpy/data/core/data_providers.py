@@ -34,6 +34,7 @@ _COMPATIBLE_DRIVER_MAPPINGS = {
     "mde": ["m365d"],
     "mssentinel_new": ["mssentinel", "m365d"],
     "kusto_new": ["kusto"],
+    "m365dgraph": ["mde", "m365d"],
 }
 
 logger = logging.getLogger(__name__)

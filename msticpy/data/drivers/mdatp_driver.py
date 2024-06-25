@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """MDATP OData Driver class."""
 from dataclasses import dataclass, field
-from typing import Any, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 
@@ -92,10 +92,10 @@ class MDATPDriver(OData):
         self.scopes = m365d_params.scopes
 
         self.add_query_filter(
-            "data_environments", ("MDE", "M365D", "MDATP", "GraphHunting")
+            "data_environments", ("MDE", "M365D", "MDATP", "M365DGraph", "GraphHunting")
         )
 
-        self.req_body = {}
+        self.req_body: Dict[str, Any] = {}
         if "username" in cs_dict:
             delegated_auth = True
 
