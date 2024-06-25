@@ -178,7 +178,7 @@ def _select_api(data_environment, cloud) -> M365DConfiguration:
     if data_environment == DataEnvironment.M365DGraph:
         az_cloud_config = AzureCloudConfig(cloud=cloud)
         login_uri = f"{az_cloud_config.authority_uri}{{tenantId}}/oauth2/v2.0/token"
-        resource_uri = az_cloud_config.endpoints.get("microsoftGraphResourceId")
+        resource_uri = az_cloud_config.endpoints["microsoftGraphResourceId"]
         api_version = "v1.0"
         api_endpoint = "/security/runHuntingQuery"
         scopes = [f"{resource_uri}ThreatHunting.Read.All"]
