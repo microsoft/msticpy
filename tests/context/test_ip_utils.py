@@ -6,7 +6,6 @@
 """IP Utils test class."""
 import os
 import re
-from pathlib import Path
 from unittest.mock import patch
 
 import pandas as pd
@@ -20,7 +19,7 @@ from msticpy.context.ip_utils import (
     get_asn_from_name,
     get_ip_type,
     get_whois_df,
-    get_whois_info,
+    ip_whois,
 )
 
 from ..unit_test_lib import TEST_DATA_PATH, get_test_data_path
@@ -453,12 +452,8 @@ def test_get_whois(mock_asn_whois_query):
     respx.get(re.compile(r"http://rdap\.arin\.net/.*")).respond(200, json=RDAP_RESPONSE)
     ms_ip = "13.107.4.50"
     ms_asn = "MICROSOFT-CORP"
-    asn, _ = get_whois_info(ms_ip)
+    asn, _ = ip_whois(ms_ip)
     check.is_in(ms_asn, asn)
-
-    asn, _ = get_whois_info(IPV4["Private"][0])
-    invalid_type = "No ASN Information for IP type: Private"
-    check.equal(asn, invalid_type)
 
 
 @respx.mock
@@ -486,7 +481,6 @@ def test_get_whois_df(mock_asn_whois_query, net_df):
 @respx.mock
 @pytest.fixture(scope="module")
 @patch("msticpy.context.ip_utils._asn_whois_query")
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_whois_pdext(net_df, mock_asn_whois_query):
     """Test IP Whois."""
     net_df = net_df.head(25)

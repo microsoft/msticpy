@@ -327,7 +327,7 @@ def _fetch_secret_setting(
     if isinstance(config_setting, str):
         return config_setting
     if not isinstance(config_setting, dict):
-        return NotImplementedError(
+        raise NotImplementedError(
             "Configuration setting format not recognized.",
             f"'{setting_path}' should be a string or dictionary",
             "with either 'EnvironmentVar' or 'KeyVault' entry.",

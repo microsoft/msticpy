@@ -21,8 +21,8 @@ from ...auth.azure_auth import (
     AzureCloudConfig,
     az_connect,
     fallback_devicecode_creds,
-    only_interactive_cred,
 )
+from ...auth.azure_auth_core import only_interactive_cred
 from ...common.exceptions import (
     MsticpyAzureConfigError,
     MsticpyImportExtraError,

@@ -16,7 +16,8 @@ from msticpy.context.contextlookup import ContextLookup
 from msticpy.context.contextproviders.context_provider_base import ContextProvider
 from msticpy.context.tilookup import TILookup
 from msticpy.context.tiproviders.ti_provider_base import TIProvider
-from msticpy.data import QueryProvider, drivers
+from msticpy.data import drivers
+from msticpy.data.core.data_providers import QueryProvider
 from msticpy.data.drivers import DriverBase
 from msticpy.init.mp_plugins import read_plugins
 

@@ -17,14 +17,11 @@ from .._version import VERSION
 from ..common.provider_settings import get_provider_settings
 
 # importing only_interactive_cred for client use.
-# pylint: disable=unused-import
 from .azure_auth_core import (  # noqa: F401
     AzCredentials,
     AzureCloudConfig,
     AzureCredEnvNames,
     az_connect_core,
-    list_auth_methods,
-    only_interactive_cred,
 )
 from .cred_wrapper import CredentialWrapper
 
