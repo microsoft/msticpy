@@ -12,6 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+from __future__ import annotations
 
 from typing import Dict, Iterable, List, Mapping, Optional, Union
 
@@ -185,7 +186,7 @@ class TILookup(Lookup):
                 default_providers=default_providers,
                 prov_scope=prov_scope,
                 **kwargs,
-            )
+            ),
         )
 
     # pylint: disable=too-many-locals

@@ -425,7 +425,10 @@ class VTLookup:
                     status = f"Failed submission: http error {status_code}"
                     for failed_obs in obs_batch:
                         self._add_invalid_input_result(
-                            failed_obs, ioc_type, status, source_row_index[failed_obs]
+                            failed_obs,
+                            ioc_type,
+                            status,
+                            source_row_index[failed_obs],
                         )
                         self._print_status(
                             "Error in response submitting observables: "
@@ -438,7 +441,12 @@ class VTLookup:
                 else:
                     # parse the results from the response
                     self._parse_vt_results(
-                        results, obs_submit, ioc_type, idx, source_row_index, vt_param
+                        results,
+                        obs_submit,
+                        ioc_type,
+                        idx,
+                        source_row_index,
+                        vt_param,
                     )
 
                 # reset index of batch
@@ -446,7 +454,7 @@ class VTLookup:
                 obs_batch = []
 
     # pylint: disable=too-many-branches
-    def _parse_vt_results(  # noqa: C901 MC0001
+    def _parse_vt_results(
         self,
         vt_results: Any,
         observable: str,
@@ -454,7 +462,7 @@ class VTLookup:
         source_idx: Any = 0,
         source_row_index: Any = None,
         vt_param: VTParams = None,
-    ):  # noqa: C901 MC0001
+    ):
         """
         Parse VirusTotal results based on IoCType.
 
@@ -502,7 +510,8 @@ class VTLookup:
         # pylint: disable=consider-using-enumerate
         for result_idx in range(len(results_to_parse)):
             df_dict_vtresults = self._parse_single_result(
-                results_to_parse[result_idx], ioc_type
+                results_to_parse[result_idx],
+                ioc_type,
             )
 
             # Add remaining fields from source
@@ -536,14 +545,18 @@ class VTLookup:
                 ]
 
             new_results = pd.concat(
-                objs=[self.results, df_dict_vtresults], ignore_index=True, axis=0
+                objs=[self.results, df_dict_vtresults],
+                ignore_index=True,
+                axis=0,
             )
 
             self.results = new_results
         # pylint enable=locally-disabled, C0200
 
     def _parse_single_result(
-        self, results_dict: Mapping[str, Any], ioc_type: str
+        self,
+        results_dict: Mapping[str, Any],
+        ioc_type: str,
     ) -> pd.DataFrame:
         """
         Parse VirusTotal single result based on IoCType.
@@ -618,11 +631,16 @@ class VTLookup:
                 df_dict_vtresults["Positives"] = positives
 
         return pd.DataFrame(
-            data=df_dict_vtresults, columns=self._RESULT_COLUMNS, index=[0]
+            data=df_dict_vtresults,
+            columns=self._RESULT_COLUMNS,
+            index=[0],
         )
 
     def _validate_observable(
-        self, observable: str, ioc_type: str, idx: Any
+        self,
+        observable: str,
+        ioc_type: str,
+        idx: Any,
     ) -> SanitizedObservable:
         """
         Validate observable for format and duplicates of existing results.
@@ -686,7 +704,10 @@ class VTLookup:
         return pp_observable
 
     def _check_duplicate_submission(
-        self, observable: str, ioc_type: str, source_index: Any
+        self,
+        observable: str,
+        ioc_type: str,
+        source_index: Any,
     ) -> DuplicateStatus:
         """
         Check for a duplicate value in existing results.
@@ -734,7 +755,10 @@ class VTLookup:
             duplicate["SourceIndex"] = source_index
             duplicate["Status"] = "Duplicate"
             new_results = pd.concat(
-                objs=[self.results, duplicate], ignore_index=True, sort=False, axis=0
+                objs=[self.results, duplicate],
+                ignore_index=True,
+                sort=False,
+                axis=0,
             )
             self.results = new_results
 
@@ -743,7 +767,11 @@ class VTLookup:
         return DuplicateStatus(False, "ok")
 
     def _add_invalid_input_result(
-        self, observable: str, ioc_type: str, status: str, source_idx: Any
+        self,
+        observable: str,
+        ioc_type: str,
+        status: str,
+        source_idx: Any,
     ):
         """
         Add a result row to indicate an invalid submission.
@@ -770,7 +798,9 @@ class VTLookup:
         self.results = new_results
 
     def _vt_submit_request(
-        self, submission_string: str, vt_param: VTParams
+        self,
+        submission_string: str,
+        vt_param: VTParams,
     ) -> Tuple[Optional[Dict[Any, Any]], int]:
         """
         Submit the request to VT.

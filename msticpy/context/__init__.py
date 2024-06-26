@@ -16,7 +16,8 @@ if VT3_AVAILABLE:
 else:
     # vtlookup3 will not load if vt package not installed
     vtlookupv3 = ImportPlaceholder(  # type: ignore
-        "vtlookupv3", ["vt-py", "vt-graph-api", "nest_asyncio"]
+        "vtlookupv3",
+        ["vt-py", "vt-graph-api", "nest_asyncio"],
     )
 
 

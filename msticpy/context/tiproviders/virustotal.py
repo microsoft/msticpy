@@ -12,8 +12,12 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+from __future__ import annotations
+
 import datetime as dt
-from typing import Any, Dict, Tuple
+from typing import Any, ClassVar
+
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -33,10 +37,10 @@ _GZIP_HEADERS = {"Accept-Encoding": "gzip, deflate"}
 class VirusTotal(HttpTIProvider):
     """VirusTotal Lookup."""
 
-    _BASE_URL = "https://www.virustotal.com/"
+    _BASE_URL: ClassVar[str] = "https://www.virustotal.com/"
 
-    _PARAMS = {"apikey": "{AuthKey}"}
-    _QUERIES = {
+    _PARAMS: ClassVar[dict[str, str]] = {"apikey": "{AuthKey}"}
+    _QUERIES: ClassVar[dict[str, APILookupParams]] = {
         "ipv4": APILookupParams(
             path="vtapi/v2/ip-address/report",
             params={**_PARAMS, "ip": "{observable}"},
@@ -64,15 +68,15 @@ class VirusTotal(HttpTIProvider):
     _QUERIES["sha1_hash"] = _QUERIES["file_hash"]
     _QUERIES["sha256_hash"] = _QUERIES["file_hash"]
 
-    _REQUIRED_PARAMS = ["AuthKey"]
+    _REQUIRED_PARAMS: ClassVar[list[str]] = ["AuthKey"]
 
-    _VT_DETECT_RESULTS = {
+    _VT_DETECT_RESULTS: ClassVar[dict[str, tuple[str, str]]] = {
         "detected_urls": ("url", "scan_date"),
         "detected_downloaded_samples": ("sha256", "date"),
         "detected_communicating_samples": ("sha256", "date"),
     }
 
-    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -83,14 +87,15 @@ class VirusTotal(HttpTIProvider):
 
         Returns
         -------
-        Tuple[bool, ResultSeverity, Any]
+        tuple[bool, ResultSeverity, Any]
             bool = positive or negative hit
             ResultSeverity = enumeration of severity
             Object with match details
 
         """
         if self._failed_response(response) or not isinstance(
-            response["RawResult"], dict
+            response["RawResult"],
+            dict,
         ):
             return False, ResultSeverity.information, "Not found."
 
@@ -138,20 +143,23 @@ class VirusTotal(HttpTIProvider):
 
     @staticmethod
     def _extract_url_results(
-        response: Dict,
-        result_dict: Dict[str, Any],
+        response: dict,
+        result_dict: dict[str, Any],
         hit_type: str,
         item_type: str,
         date_name: str,
-    ):
+    ) -> None:
         if not isinstance(response["RawResult"], dict):
             return
-        time_scope = dt.datetime.now() - dt.timedelta(days=30)
+        time_scope = dt.datetime.now(tz=dt.timezone.utc) - dt.timedelta(days=30)
         result_dict[hit_type] = [
             item[item_type]
             for item in response["RawResult"][hit_type]
             if item_type in item
-            and dt.datetime.strptime(item[date_name], "%Y-%m-%d %H:%M:%S") > time_scope
+            and dt.datetime.strptime(item[date_name], "%Y-%m-%d %H:%M:%S").replace(
+                tzinfo=dt.timezone.utc,
+            )
+            > time_scope
         ]
         # positives are listed per detected_url so we need to
         # pull those our and sum them.
@@ -159,6 +167,9 @@ class VirusTotal(HttpTIProvider):
             item["positives"]
             for item in response["RawResult"][hit_type]
             if "positives" in item
-            and dt.datetime.strptime(item[date_name], "%Y-%m-%d %H:%M:%S") > time_scope
+            and dt.datetime.strptime(item[date_name], "%Y-%m-%d %H:%M:%S").replace(
+                tzinfo=dt.timezone.utc,
+            )
+            > time_scope
         )
         result_dict["positives"] += positives

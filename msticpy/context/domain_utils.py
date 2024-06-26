@@ -10,6 +10,7 @@ Includes functions to conduct common investigation steps when dealing
 with a domain or url, such as getting a screenshot or validating the TLD.
 
 """
+from __future__ import annotations
 import json
 import ssl
 import time
@@ -41,7 +42,7 @@ __author__ = "Pete Bryan"
 
 
 @export
-def screenshot(url: str, api_key: str = None) -> httpx.Response:
+def screenshot(url: str, api_key: str | None = None) -> httpx.Response:
     """
     Get a screenshot of a url with Browshot.
 
@@ -62,7 +63,9 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
     if api_key is not None:
         bs_api_key: Optional[str] = api_key
     else:
-        bs_conf = get_config("DataProviders.Browshot", {}) or get_config("Browshot", {})
+        bs_conf: dict[str, Any] = get_config(
+            "DataProviders.Browshot", {}
+        ) or get_config("Browshot", {})
         bs_api_key = None
         if bs_conf is not None:
             bs_api_key = bs_conf.get("Args", {}).get("AuthKey")  # type: ignore
@@ -101,7 +104,9 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
     while not ready and progress.value < 100:
         progress.value += 1
         status_data = httpx.get(
-            status_string, timeout=get_http_timeout(), headers=mp_ua_header()
+            status_string,
+            timeout=get_http_timeout(),
+            headers=mp_ua_header(),
         )
         status = json.loads(status_data.content)["status"]
         if status == "finished":
@@ -115,7 +120,7 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
 
     if image_data.status_code != 200:
         print(
-            "There was a problem with the request, please check the status code for details"
+            "There was a problem with the request, please check the status code for details",
         )
 
     return image_data
@@ -126,9 +131,9 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
 # otherwise use "query"
 _dns_resolver = Resolver()
 if hasattr(_dns_resolver, "resolve"):
-    _dns_resolve = getattr(_dns_resolver, "resolve")
+    _dns_resolve = _dns_resolver.resolve
 else:
-    _dns_resolve = getattr(_dns_resolver, "query")
+    _dns_resolve = _dns_resolver.query
 
 
 @export
@@ -141,7 +146,7 @@ class DomainValidator:
     def _check_and_load_abuselist(cls):
         """Pull IANA TLD list and save to internal attribute."""
         if cls._ssl_abuse_list is None or cls._ssl_abuse_list.empty:
-            cls._ssl_abuse_list: pd.DataFrame = cls._get_ssl_abuselist()
+            cls._ssl_abuse_list = cls._get_ssl_abuselist()
 
     @property
     def ssl_abuse_list(self) -> pd.DataFrame:
@@ -218,15 +223,15 @@ class DomainValidator:
         try:
             cert = ssl.get_server_certificate((url_domain, 443))
             x509 = crypto.x509.load_pem_x509_certificate(  # type: ignore
-                cert.encode("ascii")
+                cert.encode("ascii"),
             )
             cert_sha1 = x509.fingerprint(
-                crypto.hazmat.primitives.hashes.SHA1()  # type: ignore # nosec
+                crypto.hazmat.primitives.hashes.SHA1(),  # type: ignore # nosec
             )
             result = bool(
                 self.ssl_abuse_list["SHA1"]
                 .str.contains(cert_sha1.hex())
-                .any()  # type: ignore
+                .any(),  # type: ignore
             )
         except Exception:  # pylint: disable=broad-except
             result = False
@@ -239,7 +244,8 @@ class DomainValidator:
         """Download and load abuse.ch SSL Abuse List."""
         try:
             ssl_ab_list = pd.read_csv(
-                "https://sslbl.abuse.ch/blacklist/sslblacklist.csv", skiprows=8
+                "https://sslbl.abuse.ch/blacklist/sslblacklist.csv",
+                skiprows=8,
             )
         except (ConnectionError, HTTPError, URLError):
             ssl_ab_list = pd.DataFrame({"SHA1": []})

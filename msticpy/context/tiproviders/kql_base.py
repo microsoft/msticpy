@@ -12,26 +12,17 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+from __future__ import annotations
 
 import abc
 import contextlib
 import warnings
 from collections import defaultdict
 from functools import lru_cache
-from typing import (
-    Any,
-    Callable,
-    DefaultDict,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable
 
 import pandas as pd
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyConfigError
@@ -42,6 +33,11 @@ from ..lookup_result import LookupStatus
 from ..provider_base import generate_items
 from .ti_provider_base import ResultSeverity, TIProvider
 
+if TYPE_CHECKING:
+    import datetime as dt
+
+    from msticpy.context.tiproviders.result_severity import LookupResult
+
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
@@ -50,42 +46,48 @@ __author__ = "Ian Hellen"
 class KqlTIProvider(TIProvider):
     """KQL TI provider base class."""
 
-    _QUERIES: Dict[str, tuple] = {}
+    _QUERIES: ClassVar[dict[str, tuple]] = {}
 
-    _CONNECT_STR = (
-        "loganalytics://code().tenant('{TENANT_ID}').workspace('{WORKSPACE_ID}')"
-    )
+    _CONNECT_STR: ClassVar[
+        str
+    ] = "loganalytics://code().tenant('{TENANT_ID}').workspace('{WORKSPACE_ID}')"
 
-    _REQUIRED_TABLES: List[str] = []
+    _REQUIRED_TABLES: ClassVar[list[str]] = []
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(
+        self: KqlTIProvider,
+        query_provider: QueryProvider | None = None,
+        connect_str: str | None = None,
+        **kwargs: str,
+    ) -> None:
         """Initialize a new instance of the class."""
         super().__init__()
 
-        if "query_provider" in kwargs and isinstance(
-            kwargs["query_provider"], QueryProvider
+        if isinstance(
+            query_provider,
+            QueryProvider,
         ):
-            self._query_provider = kwargs.pop("query_provider")
-            self._connect_str = kwargs.pop("connect_str", WorkspaceConfig())
+            self._query_provider = query_provider
+            self._connect_str: str = connect_str or WorkspaceConfig().code_connect_str
         else:
             self._query_provider, self._connect_str = self._create_query_provider(
-                **kwargs
+                **kwargs,
             )
 
         if not self._query_provider:
-            raise MsticpyConfigError("Query provider for KQL could not be created.")
+            err_msg: str = "Query provider for KQL could not be created."
+            raise MsticpyConfigError(err_msg)
 
     @property
-    def _connected(self):
+    def _connected(self: Self) -> bool:
         return self._query_provider.connected
 
     @lru_cache(maxsize=256)
-    def lookup_ioc(  # type: ignore
-        self,
+    def lookup_ioc(
+        self: Self,
         ioc: str,
-        ioc_type: Optional[str] = None,
-        query_type: Optional[str] = None,
-        **kwargs,
+        ioc_type: str | None = None,
+        query_type: str | None = None,
     ) -> pd.DataFrame:
         """
         Lookup from a value.
@@ -122,24 +124,22 @@ class KqlTIProvider(TIProvider):
         return self.lookup_iocs(
             data={ioc: ioc_type},
             query_type=query_type,
-            **kwargs,
         )
 
     # pylint: disable=too-many-locals
     def lookup_iocs(
-        self,
-        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        ioc_col: Optional[str] = None,
-        ioc_type_col: Optional[str] = None,
-        query_type: Optional[str] = None,
-        **kwargs,
+        self: Self,
+        data: pd.DataFrame | dict[str, str] | Iterable[str],
+        ioc_col: str | None = None,
+        ioc_type_col: str | None = None,
+        query_type: str | None = None,
     ) -> pd.DataFrame:
         """
         Lookup collection of IoC observables.
 
         Parameters
         ----------
-        data : Union[pd.DataFrame, Dict[str, str], Iterable[str]]
+        data : Union[pd.DataFrame, dict[str, str], Iterable[str]]
             Data input in one of three formats:
             1. Pandas dataframe (you must supply the column name in
             `obs_col` parameter)
@@ -168,7 +168,7 @@ class KqlTIProvider(TIProvider):
             return pd.DataFrame()
 
         # We need to partition the IoC types to invoke separate queries
-        ioc_groups: DefaultDict[str, Set[str]] = defaultdict(set)
+        ioc_groups: defaultdict[str, set[str]] = defaultdict(set)
         for ioc, ioc_type in generate_items(data, ioc_col, ioc_type_col):
             if not ioc:
                 continue
@@ -177,30 +177,31 @@ class KqlTIProvider(TIProvider):
             if result["Status"] != LookupStatus.NOT_SUPPORTED.value:
                 ioc_groups[result["IocType"]].add(result["Ioc"])
 
-        all_results: List[pd.DataFrame] = []
+        all_results: list[pd.DataFrame] = []
         for ioc_type, obs_set in ioc_groups.items():
-            kwargs.pop("ioc_type", None)  # we want to use locally-determine type
             query_obj = None
             with contextlib.suppress(LookupError):
                 query_obj, query_params = self._get_query_and_params(
                     ioc=list(obs_set),
                     ioc_type=ioc_type,
                     query_type=query_type,
-                    **kwargs,
                 )
             if not query_obj:
-                warnings.warn(f"Could not find query for {ioc_type}, {query_type}")
+                warnings.warn(
+                    f"Could not find query for {ioc_type}, {query_type}",
+                    stacklevel=1,
+                )
                 continue
 
             # run the query
-            data_result = query_obj(**query_params)
+            data_result: pd.DataFrame = query_obj(**query_params)
 
             src_ioc_frame: pd.DataFrame = pd.DataFrame(obs_set, columns=["Ioc"])
             src_ioc_frame["IocType"] = ioc_type
             src_ioc_frame["QuerySubtype"] = query_type
             src_ioc_frame["Reference"] = query_obj("print_query", **query_params)
 
-            lookup_status = self._check_result_status(data_result)
+            lookup_status: LookupStatus = self._check_result_status(data_result)
             # If no results, add the empty dataframe to the combined results
             # and continue
             if lookup_status in {LookupStatus.QUERY_FAILED, LookupStatus.NO_DATA}:
@@ -218,7 +219,9 @@ class KqlTIProvider(TIProvider):
             data_result["RawResult"] = data_result.apply(lambda x: x.to_dict(), axis=1)
 
             combined_results_df: pd.DataFrame = self._combine_results(
-                input_df=src_ioc_frame, results_df=data_result, reslt_ioc_key="IoC"
+                input_df=src_ioc_frame,
+                results_df=data_result,
+                reslt_ioc_key="IoC",
             )
             all_results.append(combined_results_df)
 
@@ -227,7 +230,10 @@ class KqlTIProvider(TIProvider):
         return pd.DataFrame()
 
     @staticmethod
-    def _add_failure_status(src_ioc_frame: pd.DataFrame, lookup_status: LookupStatus):
+    def _add_failure_status(
+        src_ioc_frame: pd.DataFrame,
+        lookup_status: LookupStatus,
+    ) -> None:
         """Add status info, if query produced no results."""
         src_ioc_frame["Result"] = False
         src_ioc_frame["Details"] = (
@@ -239,7 +245,7 @@ class KqlTIProvider(TIProvider):
         src_ioc_frame["Severity"] = ResultSeverity.information.name
 
     @staticmethod
-    def _check_result_status(data_result):
+    def _check_result_status(data_result: pd.DataFrame | LookupResult) -> LookupStatus:
         """Check the return value from the query."""
         if isinstance(data_result, pd.DataFrame):
             return LookupStatus.NO_DATA if data_result.empty else LookupStatus.OK
@@ -253,14 +259,14 @@ class KqlTIProvider(TIProvider):
         if data_result and hasattr(data_result, "completion_query_info"):
             print(
                 "No results returned from data provider. "
-                + str(data_result.completion_query_info)
+                + str(data_result.completion_query_info),
             )
         else:
-            print(f"Unknown response from provider: {str(data_result)}")
+            print(f"Unknown response from provider: {data_result!s}")
         return LookupStatus.QUERY_FAILED
 
     @abc.abstractmethod
-    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -271,7 +277,7 @@ class KqlTIProvider(TIProvider):
 
         Returns
         -------
-        Tuple[bool, ResultSeverity, Any]
+        tuple[bool, ResultSeverity, Any]
             bool = positive or negative hit
             ResultSeverity = enumeration of severity
             Object with match details
@@ -288,96 +294,104 @@ class KqlTIProvider(TIProvider):
     def _get_severity(data_result: pd.DataFrame) -> pd.Series:
         pass
 
-    def _create_query_provider(self, **kwargs):
-        workspace_id = None
-        tenant_id = None
-        workspace_id = self._get_spelled_variants("workspaceid", **kwargs)
-        tenant_id = self._get_spelled_variants("tenantid", **kwargs)
+    def _create_query_provider(self: Self, **kwargs: str) -> tuple[QueryProvider, str]:
+        workspace_id: str | None = self._get_spelled_variants("workspaceid", **kwargs)
+        tenant_id: str | None = self._get_spelled_variants("tenantid", **kwargs)
 
         if not workspace_id or not tenant_id:
             # If there are no TI-Provider specific kwargs
             # WorkspaceConfig should be able to get these global values
             # If a config file or a workspace name is passed we'll use
             # those in case there are multiple workspaces set globally.
-            config_file = kwargs.get("config_file")
-            workspace = kwargs.get("workspace")
-            ws_config = WorkspaceConfig(config_file=config_file, workspace=workspace)
+            config_file: str | None = kwargs.get("config_file")
+            workspace: str | None = kwargs.get("workspace")
+            ws_config: WorkspaceConfig = WorkspaceConfig(
+                config_file=config_file,
+                workspace=workspace,
+            )
             workspace_id = ws_config["workspace_id"]
             tenant_id = ws_config["tenant_id"]
         # Either the format or connect() call will fail if these values are
         # not set or invalid.
-        connect_str = self._CONNECT_STR.format(
-            TENANT_ID=tenant_id, WORKSPACE_ID=workspace_id
+        connect_str: str = self._CONNECT_STR.format(
+            TENANT_ID=tenant_id,
+            WORKSPACE_ID=workspace_id,
         )
-        query_provider = QueryProvider("LogAnalytics")
+        query_provider: QueryProvider = QueryProvider("LogAnalytics")
         return query_provider, connect_str
 
-    def _connect(self):
+    def _connect(self: Self) -> None:
         """Connect to query provider."""
         print("MS Sentinel TI query provider needs authenticated connection.")
         self._query_provider.connect(self._connect_str)
 
     @staticmethod
-    def _get_spelled_variants(name: str, **kwargs) -> Any:
+    def _get_spelled_variants(name: str, **kwargs: str) -> str | None:
         """Return value with matching variant spelling key."""
-        variant_dict = {
+        variant_dict: dict[str, list[str]] = {
             "workspaceid": ["workspace_id", "workspaceid"],
             "tenantid": ["tenant_id", "tenantid"],
         }
-        variants = variant_dict.get(name, [name.casefold()])
+        variants: list[str] = variant_dict.get(name, [name.casefold()])
         return next(
-            (val for key, val in kwargs.items() if key.casefold() in variants), None
+            (val for key, val in kwargs.items() if key.casefold() in variants),
+            None,
         )
 
     def _get_query_and_params(
-        self,
-        ioc: Union[str, List[str]],
+        self: Self,
+        ioc: str | list[str],
         ioc_type: str,
-        query_type: Optional[str] = None,
-        **kwargs,
-    ) -> Tuple[Callable, Dict[str, Any]]:
-        ioc_key = f"{ioc_type}-{query_type}" if query_type else ioc_type
-        query_def = self._QUERIES.get(ioc_key, None)
+        query_type: str | None = None,
+        *,
+        start: dt.datetime | None = None,
+        end: dt.datetime | None = None,
+    ) -> tuple[Callable, dict[str, Any]]:
+        ioc_key: str = f"{ioc_type}-{query_type}" if query_type else ioc_type
+        query_def: tuple | None = self._QUERIES.get(ioc_key, None)
         if not query_def:
-            raise LookupError(f"Provider does not support IoC type {ioc_key}.")
+            err_msg: str = f"Provider does not support IoC type {ioc_key}."
+            raise LookupError(err_msg)
 
-        query_name = query_def[0]
-        query_def_params = query_def[1]
+        query_name: str = query_def[0]
+        query_def_params: dict[str, str] = query_def[1]
         if "ioc" not in query_def_params:
-            raise ValueError(
+            err_msg = (
                 f"No parameter name defined for observable for {ioc_type}. "
-                + f"Referenced query: {query_name}"
+                f"Referenced query: {query_name}"
             )
+            raise ValueError(err_msg)
 
-        query_params = {query_def_params["ioc"]: ioc}
-        if "start" in kwargs:
-            query_params["start"] = kwargs["start"]
-        if "end" in kwargs:
-            query_params["end"] = kwargs["end"]
+        query_params: dict[str, Any] = {query_def_params["ioc"]: ioc}
+        if start:
+            query_params["start"] = start
+        if end:
+            query_params["end"] = end
 
-        query_obj = getattr(self._query_provider, query_name, None)
+        query_obj: Callable | None = getattr(self._query_provider, query_name, None)
         if not query_obj:
-            raise ValueError(
-                f"No query object name for {query_name} found in provider."
-            )
+            err_msg = f"No query object name for {query_name} found in provider."
+            raise ValueError(err_msg)
 
         return query_obj, query_params
 
     @staticmethod
-    def _series_to_list(series: pd.Series) -> List[Any]:
+    def _series_to_list(series: pd.Series) -> list[Any]:
         return list(series.dropna().unique())
 
     @staticmethod
     def _combine_results(
-        input_df: pd.DataFrame, results_df: pd.DataFrame, reslt_ioc_key: str
+        input_df: pd.DataFrame,
+        results_df: pd.DataFrame,
+        reslt_ioc_key: str,
     ) -> pd.DataFrame:
         # Clean out unwanted columns from the results and merge with
         # the original IoCList
         # If we have results, we need to create our summary columns
         # merge the results with our original IoC set
         # and drop all of the columns that we are not interested in
-        columns_to_drop: Set[str] = set(results_df.columns.to_list())
-        colums_to_keep: Set[str] = {
+        columns_to_drop: set[str] = set(results_df.columns.to_list())
+        colums_to_keep: set[str] = {
             reslt_ioc_key,
             "Result",
             "Status",
@@ -388,21 +402,23 @@ class KqlTIProvider(TIProvider):
         columns_to_drop = columns_to_drop - colums_to_keep
 
         cleaned_results_df: pd.DataFrame = results_df.copy().drop(
-            columns=columns_to_drop  # type: ignore
+            columns=list(columns_to_drop),
         )
         combined_df: pd.DataFrame = input_df.copy()
         combined_df["IoCKey"] = input_df["Ioc"].str.lower()
         cleaned_results_df = cleaned_results_df.rename(
-            columns={reslt_ioc_key: "IoCKey"}
+            columns={reslt_ioc_key: "IoCKey"},
         )
         combined_df = combined_df.merge(
-            right=cleaned_results_df, how="left", on="IoCKey"
+            right=cleaned_results_df,
+            how="left",
+            on="IoCKey",
         ).drop(columns="IoCKey")
         # Fill in any NaN values from the merge
-        combined_df["Result"] = combined_df["Result"].fillna(False)
+        combined_df["Result"] = combined_df["Result"].fillna(value=False)
         combined_df["Details"] = combined_df["Details"].fillna("Not found.")
         combined_df["Status"] = combined_df["Status"].fillna(LookupStatus.OK.value)
         combined_df["Severity"] = combined_df["Severity"].fillna(
-            ResultSeverity.information.value
+            ResultSeverity.information.value,
         )
         return combined_df

@@ -118,7 +118,8 @@ class Lookup:
         secondary_providers = kwargs.pop("secondary_providers", None)
         if secondary_providers:
             warnings.warn(
-                "'secondary_providers' is a deprecated parameter", DeprecationWarning
+                "'secondary_providers' is a deprecated parameter",
+                DeprecationWarning,
             )
             for prov in secondary_providers:
                 self.add_provider(prov, primary=False)
@@ -252,7 +253,10 @@ class Lookup:
 
     @classmethod
     def browse_results(
-        cls, data: pd.DataFrame, severities: Optional[List[str]] = None, **kwargs
+        cls,
+        data: pd.DataFrame,
+        severities: Optional[List[str]] = None,
+        **kwargs,
     ) -> Optional[SelectItem]:
         """
         Return TI Results list browser.
@@ -452,7 +456,7 @@ class Lookup:
                 default_providers=default_providers,
                 prov_scope=prov_scope,
                 **kwargs,
-            )
+            ),
         )
 
     @staticmethod
@@ -494,7 +498,8 @@ class Lookup:
         """Lookup items async."""
         item_col = item_col or col or column
         selected_providers = self._select_providers(
-            providers or default_providers, prov_scope
+            providers or default_providers,
+            prov_scope,
         )
         if not selected_providers:
             raise MsticpyUserConfigError(
@@ -508,7 +513,7 @@ class Lookup:
         provider_names: List[str] = []
 
         prog_counter = ProgressCounter(
-            total=len(data) * len(selected_providers)  # type: ignore
+            total=len(data) * len(selected_providers),  # type: ignore
         )
 
         # create a list of futures/tasks to await
@@ -522,12 +527,12 @@ class Lookup:
                     query_type=query_type,
                     prog_counter=prog_counter if progress else None,
                     **kwargs,
-                )
+                ),
             )
         if progress:
             # Create a task for tqdm
             prog_task: asyncio.Task = event_loop.create_task(
-                self._track_completion(prog_counter)
+                self._track_completion(prog_counter),
             )
         # collect the return values of the tasks
         results: List[pd.DataFrame] = await asyncio.gather(*result_futures)
@@ -587,7 +592,8 @@ class Lookup:
         item_col = item_col or col or column
 
         selected_providers: Dict[str, Provider] = self._select_providers(
-            providers or default_providers, prov_scope
+            providers or default_providers,
+            prov_scope,
         )
         if not selected_providers:
             raise MsticpyUserConfigError(
@@ -607,7 +613,7 @@ class Lookup:
                     item_type_col=item_type_col,
                     query_type=query_type,
                     **kwargs,
-                )
+                ),
             )
         return self._combine_results(results, provider_names, **kwargs)
 
@@ -646,7 +652,9 @@ class Lookup:
 
     @classmethod
     def list_available_providers(
-        cls, show_query_types=False, as_list: bool = False
+        cls,
+        show_query_types=False,
+        as_list: bool = False,
     ) -> Optional[List[str]]:  # type: ignore
         """
         Print a list of builtin providers with optional usage.
@@ -692,7 +700,8 @@ class Lookup:
             )
 
         imp_module: ModuleType = importlib.import_module(
-            f"msticpy.context.{cls.PACKAGE}.{mod_name}", package="msticpy"
+            f"msticpy.context.{cls.PACKAGE}.{mod_name}",
+            package="msticpy",
         )
         return getattr(imp_module, cls_name)
 
@@ -713,7 +722,7 @@ class Lookup:
                 warnings.warn(
                     f"Could not find provider class for {provider_name} "
                     f"in config section '{provider_name}'. "
-                    f"Provider class name in config is '{settings.provider}'"
+                    f"Provider class name in config is '{settings.provider}'",
                 )
                 continue
 
@@ -738,7 +747,9 @@ class Lookup:
             )
 
             self.add_provider(
-                provider=provider_instance, name=provider_name, primary=settings.primary
+                provider=provider_instance,
+                name=provider_name,
+                primary=settings.primary,
             )
 
     def _select_providers(
@@ -777,7 +788,9 @@ class Lookup:
 
     @staticmethod
     def _combine_results(
-        results: Iterable[pd.DataFrame], provider_names: List[str], **kwargs
+        results: Iterable[pd.DataFrame],
+        provider_names: List[str],
+        **kwargs,
     ) -> pd.DataFrame:
         """Combine dataframe results into single DF."""
         result_list: List[pd.DataFrame] = []

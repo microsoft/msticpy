@@ -46,12 +46,10 @@ _FB_CAT_PATTERNS = {
 }
 
 _BORDER_LAYOUT = widgets.Layout(
-    **{
-        "width": "90%",
-        "border": "solid gray 1px",
-        "margin": "1pt",
-        "padding": "5pt",
-    }
+    width="90%",
+    border="solid gray 1px",
+    margin="1pt",
+    padding="5pt",
 )
 
 
@@ -293,18 +291,16 @@ class SIProcess:
 
 
 VT_PROCSCHEMA = ProcSchema(
-    **{
-        "process_name": "name",
-        "process_id": "process_id",
-        "parent_id": "parent_id",
-        "cmd_line": "cmd_line",
-        "time_stamp": "time_stamp",
-        "logon_id": "logon_id",
-        "path_separator": "\\",
-        "user_name": "user_name",
-        "host_name_column": "host",
-        "event_id_column": "event_id",
-    }
+    process_name="name",
+    process_id="process_id",
+    parent_id="parent_id",
+    cmd_line="cmd_line",
+    time_stamp="time_stamp",
+    logon_id="logon_id",
+    path_separator="\\",
+    user_name="user_name",
+    host_name_column="host",
+    event_id_column="event_id",
 )
 
 
@@ -319,7 +315,8 @@ def _build_process_tree(fb_categories):
     si_procs = _extract_processes(proc_tree_raw, procs_created)
     process_tree_df = pd.DataFrame(_procs_to_df(si_procs)).drop(columns="children")
     process_tree_df = _try_match_commandlines(
-        fb_categories["command_executions"], process_tree_df
+        fb_categories["command_executions"],
+        process_tree_df,
     )
     return _fill_missing_proc_tree_values(process_tree_df)
 
@@ -338,7 +335,9 @@ def _extract_processes(process_data, procs_created, parent=None):
         child_procs_raw = process.get("children", [])
         if child_procs_raw:
             si_proc.children = _extract_processes(
-                child_procs_raw, procs_created, parent=si_proc
+                child_procs_raw,
+                procs_created,
+                parent=si_proc,
             )
         else:
             si_proc.IsLeaf = True
@@ -375,7 +374,8 @@ def _procs_to_df(procs):
 # Try to Match up 'command_executions' commandline data with
 # process_df.
 def _try_match_commandlines(
-    command_executions, procs_cmds: pd.DataFrame
+    command_executions,
+    procs_cmds: pd.DataFrame,
 ) -> pd.DataFrame:
     """Return DF with matched commandlines."""
     procs_cmd = procs_cmds.copy()
@@ -419,7 +419,7 @@ def _fill_missing_proc_tree_values(process_df: pd.DataFrame) -> pd.DataFrame:
     # Define a schema to map Df names on to internal ProcSchema
     process_df["path"] = np.nan
     process_df.loc[process_df.IsRoot, "path"] = pd.Series(
-        process_df[process_df.IsRoot].index.astype("str")
+        process_df[process_df.IsRoot].index.astype("str"),
     ).apply(lambda x: x.zfill(5))
 
     # Fill in some required fields with placeholder data
@@ -428,7 +428,7 @@ def _fill_missing_proc_tree_values(process_df: pd.DataFrame) -> pd.DataFrame:
     process_df["logon_id"] = "na"
     process_df["event_id"] = "na"
     process_df["source_index"] = pd.Series(process_df.index.astype("str")).apply(
-        lambda x: x.zfill(5)
+        lambda x: x.zfill(5),
     )
 
     proc_tree = process_df.set_index("proc_key")

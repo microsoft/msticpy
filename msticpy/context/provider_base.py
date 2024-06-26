@@ -12,20 +12,25 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractmethod
 from asyncio import get_event_loop
 from collections.abc import Iterable as C_Iterable
 from functools import lru_cache, partial, singledispatch
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Iterable
 
 import pandas as pd
+from typing_extensions import Self
+
+from msticpy.init.pivot import Pivot
+from msticpy.init.pivot_core.pivot_register import PivotRegistration
 
 from .._version import VERSION
 from ..common.utility import export
 from ..transform.iocextract import IoCExtract as ItemExtract
-from ..transform.iocextract import IoCType as Type
+from ..transform.iocextract import IoCType
 from .lookup_result import LookupStatus, SanitizedObservable
 from .preprocess_observable import PreProcessor
 
@@ -41,15 +46,14 @@ _ITEM_EXTRACT: ItemExtract = ItemExtract()
 class Provider(ABC):
     """Abstract base class for Providers."""
 
-    _QUERIES: Dict[str, Any] = {}
+    _QUERIES: ClassVar[dict[str, tuple]] = {}
 
     @abstractmethod
     def lookup_item(
         self,
         item: str,
-        item_type: Optional[str] = None,
-        query_type: Optional[str] = None,
-        **kwargs,
+        item_type: str | None = None,
+        query_type: str | None = None,
     ) -> pd.DataFrame:
         """
         Lookup from a value.
@@ -87,9 +91,9 @@ class Provider(ABC):
     def _check_item_type(
         self,
         item: str,
-        item_type: Optional[str] = None,
-        query_subtype: Optional[str] = None,
-    ) -> Dict:
+        item_type: str | None = None,
+        query_subtype: str | None = None,
+    ) -> dict:
         """
         Check Item Type and cleans up item.
 
@@ -111,7 +115,7 @@ class Provider(ABC):
 
         """
         item_type = item_type or self.resolve_item_type(item)
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "Item": item,
             "SanitizedValue": item,
             "ItemType": item_type,
@@ -145,13 +149,13 @@ class Provider(ABC):
     # pylint: disable=unused-argument
     def __init__(self) -> None:
         """Initialize the provider."""
-        self.description: Optional[str] = None
-        self._supported_types: Set[Type] = set()
+        self.description: str | None = None
+        self._supported_types: set[IoCType] = set()
         self._supported_types = {
-            Type.parse(type.split("-")[0]) for type in self._QUERIES
+            IoCType.parse(type.split("-")[0]) for type in self._QUERIES
         }
-        if Type.unknown in self._supported_types:
-            self._supported_types.remove(Type.unknown)
+        if IoCType.unknown in self._supported_types:
+            self._supported_types.remove(IoCType.unknown)
 
         self.require_url_encoding = False
         self._preprocessors = PreProcessor()
@@ -163,10 +167,10 @@ class Provider(ABC):
 
     def lookup_items(
         self,
-        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        item_col: Optional[str] = None,
-        item_type_col: Optional[str] = None,
-        query_type: Optional[str] = None,
+        data: pd.DataFrame | dict[str, str] | Iterable[str],
+        item_col: str | None = None,
+        item_type_col: str | None = None,
+        query_type: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -174,7 +178,7 @@ class Provider(ABC):
 
         Parameters
         ----------
-        data : Union[pd.DataFrame, Dict[str, str], Iterable[str]]
+        data : Union[pd.DataFrame, dict[str, str], Iterable[str]]
             Data input in one of three formats:
             1. Pandas dataframe (you must supply the column name in
             `item_col` parameter)
@@ -195,7 +199,7 @@ class Provider(ABC):
             DataFrame of results.
 
         """
-        results: List[pd.DataFrame] = []
+        results: list[pd.DataFrame] = []
         for item, item_type in generate_items(data, item_col, item_type_col):
             if not item:
                 continue
@@ -211,13 +215,13 @@ class Provider(ABC):
 
     async def lookup_items_async(
         self,
-        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        item_col: Optional[str] = None,
-        item_type_col: Optional[str] = None,
-        query_type: Optional[str] = None,
+        data: pd.DataFrame | dict[str, str] | Iterable[str],
+        item_col: str | None = None,
+        item_type_col: str | None = None,
+        query_type: str | None = None,
         *,
-        prog_counter: Optional["ProgressCounter"] = None,
-        item_type: Optional[str] = None,
+        prog_counter: ProgressCounter | None = None,
+        item_type: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -225,7 +229,7 @@ class Provider(ABC):
 
         Parameters
         ----------
-        data : Union[pd.DataFrame, Dict[str, str], Iterable[str]]
+        data : Union[pd.DataFrame, dict[str, str], Iterable[str]]
             Data input in one of three formats:
             1. Pandas dataframe (you must supply the column name in
             `item_col` parameter)
@@ -247,7 +251,7 @@ class Provider(ABC):
 
         """
         event_loop: asyncio.AbstractEventLoop = get_event_loop()
-        results: List[pd.DataFrame] = []
+        results: list[pd.DataFrame] = []
         for item, ret_item_type in generate_items(data, item_col, item_type_col):
             ret_item_type = item_type or ret_item_type
             if not item:
@@ -267,13 +271,13 @@ class Provider(ABC):
         return pd.concat(results)
 
     @property
-    def item_query_defs(self) -> Dict[str, Any]:
+    def item_query_defs(self: Self) -> dict[str, Any]:
         """
         Return current dictionary of IoC query/request definitions.
 
         Returns
         -------
-        Dict[str, Any]
+        dict[str, Any]
             IoC query/request definitions keyed by IoCType
 
         """
@@ -295,16 +299,16 @@ class Provider(ABC):
             True if known type.
 
         """
-        return item_type in Type.__members__ and item_type != "unknown"
+        return item_type in IoCType.__members__ and item_type != "unknown"
 
     @property
-    def supported_types(self) -> List[str]:
+    def supported_types(self) -> list[str]:
         """
         Return list of supported types for this provider.
 
         Returns
         -------
-        List[str]
+        list[str]
             List of supported type names
 
         """
@@ -315,19 +319,19 @@ class Provider(ABC):
         """Print usage of provider."""
         print(f"{cls.__doc__} Supported query types:")
         for key in sorted(cls._QUERIES):
-            elements: List[str] = key.split("-", maxsplit=1)
+            elements: list[str] = key.split("-", maxsplit=1)
             if len(elements) == 1:
                 print(f"\titem_type={elements[0]}")
             if len(elements) == 2:
                 print(f"\titem_type={elements[0]}, query_type={elements[1]}")
 
-    def is_supported_type(self, item_type: Union[str, Type]) -> bool:
+    def is_supported_type(self, item_type: str | IoCType) -> bool:
         """
         Return True if the passed type is supported.
 
         Parameters
         ----------
-        item_type : Union[str, Type]
+        item_type : Union[str, IoCType]
             type name or instance
 
         Returns
@@ -337,14 +341,14 @@ class Provider(ABC):
 
         """
         if isinstance(item_type, str):
-            item_type = Type.parse(item_type)
+            item_type = IoCType.parse(item_type)
         return item_type.name in self.supported_types
 
     @staticmethod
     @lru_cache(maxsize=1024)
     def resolve_item_type(item: str) -> str:
         """
-        Return Type determined by ItemExtract.
+        Return IoCType determined by ItemExtract.
 
         Parameters
         ----------
@@ -354,19 +358,19 @@ class Provider(ABC):
         Returns
         -------
         str
-            Type (or unknown if type could not be determined)
+            IoCType (or unknown if type could not be determined)
 
         """
         return _ITEM_EXTRACT.get_ioc_type(item)
 
     async def _lookup_items_async_wrapper(
         self,
-        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        item_col: Optional[str] = None,
-        item_type_col: Optional[str] = None,
-        query_type: Optional[str] = None,
+        data: pd.DataFrame | dict[str, str] | list[str],
+        item_col: str | None = None,
+        item_type_col: str | None = None,
+        query_type: str | None = None,
         *,
-        prog_counter: Optional["ProgressCounter"] = None,
+        prog_counter: ProgressCounter | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -374,7 +378,7 @@ class Provider(ABC):
 
         Parameters
         ----------
-        data : Union[pd.DataFrame, Dict[str, str], Iterable[str]]
+        data : Union[pd.DataFrame, dict[str, str], Iterable[str]]
             Data input in one of three formats:
             1. Pandas dataframe (you must supply the column name in
             `item_col` parameter)
@@ -406,7 +410,7 @@ class Provider(ABC):
         )
         result: pd.DataFrame = await event_loop.run_in_executor(None, get_items)
         if prog_counter:
-            await prog_counter.decrement(len(data))  # type: ignore
+            await prog_counter.decrement(len(data))
         return result
 
 
@@ -416,8 +420,8 @@ class PivotProvider(ABC):
     @abstractmethod
     def register_pivots(
         self,
-        pivot_reg: "PivotRegistration",  # type: ignore # noqa: F821
-        pivot: "Pivot",  # type: ignore # noqa: F821
+        pivot_reg: PivotRegistration,
+        pivot: Pivot,
     ) -> None:
         """
         Register pivot functions for a Provider.
@@ -434,8 +438,10 @@ class PivotProvider(ABC):
 
 @singledispatch
 def generate_items(
-    data: Any, item_col: Optional[str] = None, item_type_col: Optional[str] = None
-) -> Iterable[Tuple[Optional[str], Optional[str]]]:
+    data: Any,
+    item_col: str | None = None,
+    item_type_col: str | None = None,
+) -> Iterable[tuple[str | None, str | None]]:
     """
     Generate item pairs from different input types.
 
@@ -443,14 +449,14 @@ def generate_items(
     ----------
     data : Any
         DataFrame, dictionary or iterable
-    item_col : Optional[str]
+    item_col : str | None
         If `data` is a DataFrame, the column containing the item value.
-    item_type_col : Optional[str]
+    item_type_col : str | None
         If `data` is a DataFrame, the column containing the item type.
 
     Returns
     -------
-    Iterable[Tuple[Optional[str], Optional[str]]]] - a tuple of Observable/Type.
+    Iterable[tuple[str | None, str | None]] - a tuple of Observable/Type.
 
     """
     del item_col, item_type_col
@@ -463,7 +469,7 @@ def generate_items(
 
 
 @generate_items.register(pd.DataFrame)
-def _(data: pd.DataFrame, item_col: str, item_type_col: Optional[str] = None):
+def _(data: pd.DataFrame, item_col: str, item_type_col: str | None = None):
     for _, row in data.iterrows():
         if item_type_col is None:
             yield row[item_col], Provider.resolve_item_type(row[item_col])
@@ -472,7 +478,7 @@ def _(data: pd.DataFrame, item_col: str, item_type_col: Optional[str] = None):
 
 
 @generate_items.register(dict)  # type: ignore
-def _(data: dict, item_col: Optional[str] = None, item_type_col: Optional[str] = None):
+def _(data: dict, item_col: str | None = None, item_type_col: str | None = None):
     del item_col, item_type_col
     for item, item_type in data.items():
         if not item_type:

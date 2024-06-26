@@ -12,13 +12,15 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+from __future__ import annotations
+
 import contextlib
-import math  # noqa
+import math
 import re
 from collections import Counter
 from functools import partial
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Callable, List, Optional, Set, Tuple, Union
+from typing import Callable, Optional, Tuple
 from urllib.parse import quote_plus
 
 from urllib3.exceptions import LocationParseError
@@ -81,7 +83,8 @@ def _preprocess_url(url: str, **kwargs) -> SanitizedObservable:
             return SanitizedObservable(None, "Host part of URL is a private IP address")
         if addr.is_loopback:
             return SanitizedObservable(
-                None, "Host part of URL is a loopback IP address"
+                None,
+                "Host part of URL is a loopback IP address",
             )
     if "." not in host:
         return SanitizedObservable(None, "Host is unqualified domain name")
@@ -93,7 +96,8 @@ def _preprocess_url(url: str, **kwargs) -> SanitizedObservable:
 
 
 def get_schema_and_host(
-    url: str, require_url_encoding: bool = False
+    url: str,
+    require_url_encoding: bool = False,
 ) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """
     Return URL scheme and host and cleaned URL.
@@ -215,7 +219,8 @@ def _validate_ioc_type(observable, ioc_type):
         validated = False
     if not validated:
         return SanitizedObservable(
-            None, f"Observable does not match expected pattern for {ioc_type}"
+            None,
+            f"Observable does not match expected pattern for {ioc_type}",
         )
     return SanitizedObservable(observable, "ok")
 
@@ -226,7 +231,7 @@ class PreProcessor:
     _TYPE_CHECK = "type_check"
 
     # Default processors
-    _DEF_PROCESSORS: List[Tuple[Set[str], List[Union[str, CheckerType]]]] = [
+    _DEF_PROCESSORS: list[tuple[set[str], list[str | CheckerType]]] = [
         ({"url"}, [_TYPE_CHECK, _preprocess_url]),
         ({"ipv4"}, [_TYPE_CHECK, _preprocess_ip]),
         ({"ipv6"}, [_TYPE_CHECK, partial(_preprocess_ip, version=6)]),
@@ -237,13 +242,18 @@ class PreProcessor:
         ),
     ]
 
-    def __init__(self):
+    def __init__(self: PreProcessor) -> None:
         """Initialize the processor dictionary."""
-        self._processors = {
+        self._processors: dict[str, list[str | CheckerType]] = {
             obs_type: processors
             for types, processors in self._DEF_PROCESSORS
             for obs_type in types
         }
+
+    @property
+    def processors(self) -> dict[str, list[str | CheckerType]]:
+        """Return _processors value."""
+        return self._processors
 
     def check(self, value: str, value_type: str, **kwargs) -> SanitizedObservable:
         """
@@ -288,7 +298,9 @@ class PreProcessor:
 
 
 def preprocess_observable(
-    observable, ioc_type, require_url_encoding: bool = False
+    observable,
+    ioc_type,
+    require_url_encoding: bool = False,
 ) -> SanitizedObservable:
     """
     Preprocess and check validity of observable against declared IoC type.
@@ -315,7 +327,9 @@ def preprocess_observable(
     """
     processor = PreProcessor()
     return processor.check(
-        value=observable, value_type=ioc_type, require_url_encoding=require_url_encoding
+        value=observable,
+        value_type=ioc_type,
+        require_url_encoding=require_url_encoding,
     )
 
 
@@ -326,5 +340,5 @@ def _entropy(input_str: str) -> float:
         map(
             lambda a: (a / str_len) * math.log2(a / str_len),
             Counter(input_str).values(),
-        )
+        ),
     )

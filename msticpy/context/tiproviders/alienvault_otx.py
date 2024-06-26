@@ -12,9 +12,12 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import Any, Dict, List, Tuple
+from __future__ import annotations
+
+from typing import Any, ClassVar
 
 import attr
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -30,8 +33,7 @@ __author__ = "Ian Hellen"
 @attr.s
 class _OTXParams(APILookupParams):
     # override APILookupParams to set common defaults
-    def __attrs_post_init__(self):
-        # pylint: disable=
+    def __attrs_post_init__(self: Self) -> None:
         self.headers = {"X-OTX-API-KEY": "{AuthKey}"}
 
 
@@ -39,22 +41,22 @@ class _OTXParams(APILookupParams):
 class OTX(HttpTIProvider):
     """AlientVault OTX Lookup."""
 
-    _BASE_URL = "https://otx.alienvault.com"
+    _BASE_URL: ClassVar[str] = "https://otx.alienvault.com"
 
-    _QUERIES = {
+    _QUERIES: ClassVar[dict[str, _OTXParams]] = {
         "ipv4": _OTXParams(path="/api/v1/indicators/IPv4/{observable}/general"),
         "ipv6": _OTXParams(path="/api/v1/indicators/IPv6/{observable}/general"),
         "ipv4-passivedns": _OTXParams(
-            path="/api/v1/indicators/IPv4/{observable}/passive_dns"
+            path="/api/v1/indicators/IPv4/{observable}/passive_dns",
         ),
         "ipv6-passivedns": _OTXParams(
-            path="/api/v1/indicators/IPv6/{observable}/passive_dns"
+            path="/api/v1/indicators/IPv6/{observable}/passive_dns",
         ),
         "ipv4-geo": _OTXParams(path="/api/v1/indicators/IPv4/{observable}/geo"),
         "ipv6-geo": _OTXParams(path="/api/v1/indicators/IPv6/{observable}/geo"),
         "dns": _OTXParams(path="/api/v1/indicators/domain/{observable}/general"),
         "dns-passivedns": _OTXParams(
-            path="/api/v1/indicators/domain/{observable}/passive_dns"
+            path="/api/v1/indicators/domain/{observable}/passive_dns",
         ),
         "dns-geo": _OTXParams(path="/api/v1/indicators/domain/{observable}/geo"),
         "hostname": _OTXParams(path="/api/v1/indicators/hostname/{observable}/general"),
@@ -67,15 +69,14 @@ class OTX(HttpTIProvider):
     _QUERIES["sha1_hash"] = _QUERIES["file_hash"]
     _QUERIES["sha256_hash"] = _QUERIES["file_hash"]
 
-    _REQUIRED_PARAMS: List[str] = ["AuthKey"]
+    _REQUIRED_PARAMS: ClassVar[list[str]] = ["AuthKey"]
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self: OTX) -> None:
         """Set OTX specific settings."""
-        del kwargs
         super().__init__()
         self.require_url_encoding = True
 
-    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -93,7 +94,8 @@ class OTX(HttpTIProvider):
 
         """
         if self._failed_response(response) or not isinstance(
-            response["RawResult"], dict
+            response["RawResult"],
+            dict,
         ):
             return False, ResultSeverity.information, "Not found."
         if "pulse_info" in response["RawResult"]:
@@ -123,5 +125,3 @@ class OTX(HttpTIProvider):
                 },
             )
         return True, ResultSeverity.information, {}
-
-    # pylint: enable=duplicate-code

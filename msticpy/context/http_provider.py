@@ -12,6 +12,8 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+from __future__ import annotations
+
 import traceback
 from abc import abstractmethod
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -126,6 +128,7 @@ class HttpProvider(Provider):
 
     def __init__(
         self,
+        *,
         timeout: Optional[int] = None,
         ApiID: Optional[str] = None,  # noqa: N803
         AuthKey: Optional[str] = None,  # noqa: N803

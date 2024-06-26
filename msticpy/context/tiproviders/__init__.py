@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """TI Providers sub-package."""
-from typing import Dict, Tuple
+from __future__ import annotations
 
 from ..._version import VERSION
 from ..preprocess_observable import preprocess_observable  # noqa:F401
@@ -13,7 +13,7 @@ from .ti_provider_base import TIProvider  # noqa:F401
 
 __version__ = VERSION
 
-TI_PROVIDERS: Dict[str, Tuple[str, str]] = {
+TI_PROVIDERS: dict[str, tuple[str, str]] = {
     "CrowdSec": ("crowdsec", "CrowdSec"),
     "OTX": ("alienvault_otx", "OTX"),
     "AzSTI": ("azure_sent_byoti", "AzSTI"),

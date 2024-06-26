@@ -1,12 +1,11 @@
 """Context Providers sub-package."""
-
-from typing import Dict, Tuple
+from __future__ import annotations
 
 from ..._version import VERSION
 from .servicenow import ServiceNow  # noqa:F401
 
 __version__ = VERSION
 
-CONTEXT_PROVIDERS: Dict[str, Tuple[str, str]] = {
+CONTEXT_PROVIDERS: dict[str, tuple[str, str]] = {
     "ServiceNow": ("servicenow", "ServiceNow"),
 }
