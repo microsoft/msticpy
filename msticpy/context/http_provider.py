@@ -14,7 +14,7 @@ requests per minute for the account type that you have.
 """
 import traceback
 from abc import abstractmethod
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import attr
 import httpx
@@ -124,22 +124,29 @@ class HttpProvider(Provider):
     # List of required __init__ params
     _REQUIRED_PARAMS: List[str] = []
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        timeout: Optional[int] = None,
+        ApiID: Optional[str] = None,  # noqa: N803
+        AuthKey: Optional[str] = None,  # noqa: N803
+        Instance: Optional[str] = None,  # noqa: N803
+    ) -> None:
         """Initialize the class."""
-        super().__init__(**kwargs)
-        self._httpx_client = httpx.Client(timeout=get_http_timeout(**kwargs))
-        self._request_params = {}
-        if "ApiID" in kwargs:
-            api_id = kwargs.pop("ApiID")
-            self._request_params["ApiID"] = api_id.strip() if api_id else None
-        if "AuthKey" in kwargs:
-            auth_key = kwargs.pop("AuthKey")
-            self._request_params["AuthKey"] = auth_key.strip() if auth_key else None
-        if "Instance" in kwargs:
-            auth_key = kwargs.pop("Instance")
-            self._request_params["Instance"] = auth_key.strip() if auth_key else None
+        super().__init__()
+        self._httpx_client = httpx.Client(timeout=get_http_timeout(timeout=timeout))
+        self._request_params: Dict[str, Any] = {
+            "ApiID": None,
+            "AuthKey": None,
+            "Instance": None,
+        }
+        if ApiID:
+            self._request_params["ApiID"] = ApiID.strip()
+        if AuthKey:
+            self._request_params["AuthKey"] = AuthKey.strip()
+        if Instance:
+            self._request_params["Instance"] = Instance.strip()
 
-        missing_params = [
+        missing_params: List[str] = [
             param
             for param in self._REQUIRED_PARAMS
             if param not in self._request_params
@@ -148,7 +155,7 @@ class HttpProvider(Provider):
         missing_params = []
 
         if missing_params:
-            param_list = ", ".join(f"'{param}'" for param in missing_params)
+            param_list: str = ", ".join(f"'{param}'" for param in missing_params)
             raise MsticpyConfigError(
                 f"Parameter values missing for Provider '{self.__class__.__name__}'",
                 f"Missing parameters are: {param_list}",
@@ -163,7 +170,11 @@ class HttpProvider(Provider):
 
     @abstractmethod
     def lookup_item(
-        self, item: str, item_type: str = None, query_type: str = None, **kwargs
+        self,
+        item: str,
+        item_type: Optional[str] = None,
+        query_type: Optional[str] = None,
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup from an item value.
@@ -204,7 +215,10 @@ class HttpProvider(Provider):
 
     # pylint: enable=duplicate-code
     def _substitute_parms(
-        self, value: str, value_type: str, query_type: str = None
+        self,
+        value: str,
+        value_type: str,
+        query_type: Optional[str] = None,
     ) -> Tuple[str, Dict[str, Any]]:
         """
         Create requests parameters collection.
@@ -226,10 +240,10 @@ class HttpProvider(Provider):
             HTTP method, dictionary of parameter keys/values
 
         """
-        req_params = {"observable": value}
+        req_params: Dict[str, str] = {"observable": value}
         req_params.update(self._request_params)
-        value_key = f"{value_type}-{query_type}" if query_type else value_type
-        src = self.item_query_defs.get(value_key, None)
+        value_key: str = f"{value_type}-{query_type}" if query_type else value_type
+        src: Optional[APILookupParams] = self.item_query_defs.get(value_key, None)
         if not src:
             raise LookupError(f"Provider does not support this type {value_key}.")
 
@@ -293,7 +307,7 @@ class HttpProvider(Provider):
         )
 
     @staticmethod
-    def _err_to_results(result: Dict, err: Exception):
+    def _err_to_results(result: Dict, err: Exception) -> None:
         result["Details"] = err.args
         result["RawResult"] = (
             type(err).__name__ + "\n" + str(err) + "\n" + traceback.format_exc()

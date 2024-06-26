@@ -14,11 +14,11 @@ requests per minute for the account type that you have.
 """
 
 import asyncio
-import collections
 from abc import ABC, abstractmethod
 from asyncio import get_event_loop
+from collections.abc import Iterable as C_Iterable
 from functools import lru_cache, partial, singledispatch
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import pandas as pd
 
@@ -26,13 +26,15 @@ from .._version import VERSION
 from ..common.utility import export
 from ..transform.iocextract import IoCExtract as ItemExtract
 from ..transform.iocextract import IoCType as Type
-from .lookup_result import LookupStatus
+from .lookup_result import LookupStatus, SanitizedObservable
 from .preprocess_observable import PreProcessor
 
+if TYPE_CHECKING:
+    from .lookup import ProgressCounter
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-_ITEM_EXTRACT = ItemExtract()
+_ITEM_EXTRACT: ItemExtract = ItemExtract()
 
 
 @export
@@ -43,7 +45,11 @@ class Provider(ABC):
 
     @abstractmethod
     def lookup_item(
-        self, item: str, item_type: str = None, query_type: str = None, **kwargs
+        self,
+        item: str,
+        item_type: Optional[str] = None,
+        query_type: Optional[str] = None,
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup from a value.
@@ -79,7 +85,10 @@ class Provider(ABC):
         """
 
     def _check_item_type(
-        self, item: str, item_type: str = None, query_subtype: str = None
+        self,
+        item: str,
+        item_type: Optional[str] = None,
+        query_subtype: Optional[str] = None,
     ) -> Dict:
         """
         Check Item Type and cleans up item.
@@ -101,10 +110,11 @@ class Provider(ABC):
             Status is none-zero on failure.
 
         """
+        item_type = item_type or self.resolve_item_type(item)
         result: Dict[str, Any] = {
             "Item": item,
             "SanitizedValue": item,
-            "ItemType": item_type or self.resolve_item_type(item_type),
+            "ItemType": item_type,
             "QuerySubtype": query_subtype,
             "Result": False,
             "Details": "",
@@ -118,7 +128,7 @@ class Provider(ABC):
             result["Status"] = LookupStatus.NOT_SUPPORTED.value
             return result
 
-        clean_item = self._preprocessors.check(
+        clean_item: SanitizedObservable = self._preprocessors.check(
             item,
             item_type,
             require_url_encoding=self.require_url_encoding,
@@ -133,7 +143,7 @@ class Provider(ABC):
         return result
 
     # pylint: disable=unused-argument
-    def __init__(self, **kwargs):
+    def __init__(self) -> None:
         """Initialize the provider."""
         self.description: Optional[str] = None
         self._supported_types: Set[Type] = set()
@@ -154,9 +164,9 @@ class Provider(ABC):
     def lookup_items(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        item_col: str = None,
-        item_type_col: str = None,
-        query_type: str = None,
+        item_col: Optional[str] = None,
+        item_type_col: Optional[str] = None,
+        query_type: Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -185,11 +195,11 @@ class Provider(ABC):
             DataFrame of results.
 
         """
-        results = []
+        results: List[pd.DataFrame] = []
         for item, item_type in generate_items(data, item_col, item_type_col):
             if not item:
                 continue
-            item_result = self.lookup_item(
+            item_result: pd.DataFrame = self.lookup_item(
                 item,
                 item_type,
                 query_type,
@@ -202,9 +212,12 @@ class Provider(ABC):
     async def lookup_items_async(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        item_col: str = None,
-        item_type_col: str = None,
-        query_type: str = None,
+        item_col: Optional[str] = None,
+        item_type_col: Optional[str] = None,
+        query_type: Optional[str] = None,
+        *,
+        prog_counter: Optional["ProgressCounter"] = None,
+        item_type: Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -233,11 +246,10 @@ class Provider(ABC):
             DataFrame of results.
 
         """
-        event_loop = get_event_loop()
-        results = []
-        prog_counter = kwargs.pop("prog_counter", None)
-        for item, item_type in generate_items(data, item_col, item_type_col):
-            item_type = kwargs.pop("item_type", item_type)
+        event_loop: asyncio.AbstractEventLoop = get_event_loop()
+        results: List[pd.DataFrame] = []
+        for item, ret_item_type in generate_items(data, item_col, item_type_col):
+            ret_item_type = item_type or ret_item_type
             if not item:
                 continue
             get_item = partial(
@@ -299,11 +311,11 @@ class Provider(ABC):
         return [item.name for item in self._supported_types]
 
     @classmethod
-    def usage(cls):
+    def usage(cls) -> None:
         """Print usage of provider."""
         print(f"{cls.__doc__} Supported query types:")
         for key in sorted(cls._QUERIES):
-            elements = key.split("-", maxsplit=1)
+            elements: List[str] = key.split("-", maxsplit=1)
             if len(elements) == 1:
                 print(f"\titem_type={elements[0]}")
             if len(elements) == 2:
@@ -350,9 +362,11 @@ class Provider(ABC):
     async def _lookup_items_async_wrapper(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        item_col: str = None,
-        item_type_col: str = None,
-        query_type: str = None,
+        item_col: Optional[str] = None,
+        item_type_col: Optional[str] = None,
+        query_type: Optional[str] = None,
+        *,
+        prog_counter: Optional["ProgressCounter"] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -381,8 +395,7 @@ class Provider(ABC):
             DataFrame of results.
 
         """
-        event_loop = get_event_loop()
-        prog_counter = kwargs.pop("prog_counter", None)
+        event_loop: asyncio.AbstractEventLoop = get_event_loop()
         get_items = partial(
             self.lookup_items,
             data,
@@ -391,7 +404,7 @@ class Provider(ABC):
             query_type,
             **kwargs,
         )
-        result = await event_loop.run_in_executor(None, get_items)
+        result: pd.DataFrame = await event_loop.run_in_executor(None, get_items)
         if prog_counter:
             await prog_counter.decrement(len(data))  # type: ignore
         return result
@@ -405,7 +418,7 @@ class PivotProvider(ABC):
         self,
         pivot_reg: "PivotRegistration",  # type: ignore # noqa: F821
         pivot: "Pivot",  # type: ignore # noqa: F821
-    ):
+    ) -> None:
         """
         Register pivot functions for a Provider.
 
@@ -442,7 +455,7 @@ def generate_items(
     """
     del item_col, item_type_col
 
-    if isinstance(data, collections.abc.Iterable):
+    if isinstance(data, C_Iterable):
         for item in data:
             yield item, Provider.resolve_item_type(item)
     else:
@@ -470,7 +483,7 @@ def _(data: dict, item_col: Optional[str] = None, item_type_col: Optional[str] =
 def _make_sync(future):
     """Wait for an async call, making it sync."""
     try:
-        event_loop = asyncio.get_event_loop()
+        event_loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
     except RuntimeError:
         # Generate an event loop if there isn't any.
         event_loop = asyncio.new_event_loop()
