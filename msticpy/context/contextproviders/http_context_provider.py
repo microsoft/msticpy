@@ -13,8 +13,9 @@ It inherits from ContextProvider and HttpProvider
 """
 from functools import lru_cache
 from json import JSONDecodeError
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
+import httpx
 import pandas as pd
 
 from ..._version import VERSION
@@ -34,12 +35,31 @@ ContextLookupParams = APILookupParams
 class HttpContextProvider(ContextProvider, HttpProvider):
     """HTTP Context Provider base class."""
 
+    def __init__(
+        self,
+        timeout: Optional[int] = None,
+        ApiID: Optional[str] = None,  # noqa: N803
+        AuthKey: Optional[str] = None,  # noqa: N803
+        Instance: Optional[str] = None,  # noqa: N803
+    ) -> None:
+        ContextProvider.__init__(self)
+        HttpProvider.__init__(
+            self,
+            timeout=timeout,
+            ApiID=ApiID,
+            AuthKey=AuthKey,
+            Instance=Instance,
+        )
+
     @lru_cache(maxsize=256)
     def lookup_observable(
         self,
         observable: str,
-        observable_type: str = None,
-        query_type: str = None,
+        observable_type: Optional[str] = None,
+        query_type: Optional[str] = None,
+        *,
+        provider_name: Optional[str] = None,
+        timeout: Optional[int] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -78,11 +98,11 @@ class HttpContextProvider(ContextProvider, HttpProvider):
         the same item.
 
         """
-        result = self._check_observable_type(
+        result: Dict[str, Any] = self._check_observable_type(
             observable, observable_type, query_subtype=query_type
         )
 
-        result["Provider"] = kwargs.get("provider_name", self.__class__.__name__)
+        result["Provider"] = provider_name or self.__class__.__name__
 
         req_params: Dict[str, Any] = {}
         try:
@@ -90,8 +110,8 @@ class HttpContextProvider(ContextProvider, HttpProvider):
                 result["SafeObservable"], result["ObservableType"], query_type
             )
             if verb == "GET":
-                response = self._httpx_client.get(
-                    **req_params, timeout=get_http_timeout(**kwargs)
+                response: httpx.Response = self._httpx_client.get(
+                    **req_params, timeout=get_http_timeout(timeout=timeout)
                 )
             else:
                 raise NotImplementedError(f"Unsupported verb {verb}")
@@ -100,7 +120,7 @@ class HttpContextProvider(ContextProvider, HttpProvider):
             result["Reference"] = req_params["url"]
             if result["Status"] == 200:
                 try:
-                    result["RawResult"] = response.json()
+                    result["RawResult"] = response.json().copy()
                     result["Result"], result["Details"] = self.parse_results(result)
                 except JSONDecodeError:
                     result[
@@ -122,6 +142,6 @@ class HttpContextProvider(ContextProvider, HttpProvider):
         ) as err:
             self._err_to_results(result, err)
             if not isinstance(err, LookupError):
-                url = req_params.get("url", None) if req_params else None
+                url: Optional[str] = req_params.get("url") if req_params else None
                 result["Reference"] = url
         return pd.DataFrame([result])

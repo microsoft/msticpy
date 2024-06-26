@@ -13,7 +13,7 @@ requests per minute for the account type that you have.
 
 """
 import datetime as dt
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 
 import attr
 
@@ -26,7 +26,7 @@ __version__ = VERSION
 __author__ = "Florian Bracq"
 
 
-_DEF_HEADERS = {
+_DEF_HEADERS: Dict[str, str] = {
     "Content-Type": "application/json",
     "Accept": "application/json",
     "Accept-Charset": "UTF-8",
@@ -38,7 +38,7 @@ _DEF_HEADERS = {
 @attr.s
 class _ServiceNowParams(APILookupParams):
     # override LookupParams to set common defaults
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         self.auth_str = ["{ApiID}", "{AuthKey}"]
         self.auth_type = "HTTPBasic"
 
@@ -49,13 +49,13 @@ class ServiceNow(HttpContextProvider):
 
     _BASE_URL = "https://{Instance}.service-now.com/api/now/table"
 
-    _SERVICE_NOW_PARAMS = {
+    _SERVICE_NOW_PARAMS: Dict[str, Any] = {
         "sysparm_display_value": True,
         "sysparm_exclude_reference_link": True,
         "sysparm_limit": 10,
     }
 
-    _QUERIES = {
+    _QUERIES: Dict[str, APILookupParams] = {
         "ipv4": _ServiceNowParams(
             path="/cmdb_ci_computer",
             params={
@@ -89,7 +89,7 @@ class ServiceNow(HttpContextProvider):
         ),
     }
 
-    _REQUIRED_PARAMS = ["ApiID", "AuthKey", "Instance"]
+    _REQUIRED_PARAMS: List[str] = ["ApiID", "AuthKey", "Instance"]
 
     def parse_results(self, response: Dict[str, Any]) -> Tuple[bool, Any]:
         """
@@ -125,9 +125,9 @@ class ServiceNow(HttpContextProvider):
             if not response["RawResult"]["result"]:
                 return False, "Not found."
 
-        results = response["RawResult"]["result"]
+        results: List[Dict[str, Any]] = response["RawResult"]["result"]
 
-        result_dict = [
+        result_dict: List[Dict[str, Any]] = [
             {
                 "permalink": f"{response['Reference']}/{result.get('sys_id')}",
                 "sys_class_name": result.get("sys_class_name", ""),
