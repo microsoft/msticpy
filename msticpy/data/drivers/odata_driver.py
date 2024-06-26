@@ -153,11 +153,14 @@ class OData(DriverBase):
                 help_uri=("Connecting to OData sources.", _HELP_URI),
             )
 
-        # Default to using application based authentication
-        if not delegated_auth:
-            json_response = self._get_token_standard_auth(kwargs, cs_dict)
-        else:
+        # Default to using delegated auth if username is present
+        if "username" in cs_dict:
+            delegated_auth = True
+
+        if delegated_auth:
             json_response = self._get_token_delegate_auth(kwargs, cs_dict)
+        else:
+            json_response = self._get_token_standard_auth(kwargs, cs_dict)
 
         self.req_headers["Authorization"] = f"Bearer {self.aad_token}"
         self.api_root = cs_dict.get("apiRoot", self.api_root)
