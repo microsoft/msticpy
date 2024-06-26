@@ -9,7 +9,19 @@ import inspect
 import sys
 from enum import Enum
 from functools import wraps
-from typing import Any, Callable, Dict, Iterable, List, Optional, Type, TypeVar, Union
+from types import ModuleType
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+    overload,
+)
 
 from ..._version import VERSION
 
@@ -17,11 +29,21 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-def export(obj: Callable):
+@overload
+def export(obj: Type) -> Type:
+    ...
+
+
+@overload
+def export(obj: Callable) -> Callable:
+    ...
+
+
+def export(obj):
     """Decorate function or class to export to __all__."""
-    mod = sys.modules[obj.__module__]
+    mod: ModuleType = sys.modules[obj.__module__]
     if hasattr(mod, "__all__"):
-        all_list = getattr(mod, "__all__")
+        all_list: List[str] = getattr(mod, "__all__")
         all_list.append(obj.__name__)
     else:
         all_list = [obj.__name__]
@@ -221,11 +243,13 @@ def arg_to_list(arg: Union[str, List[str]], delims=",; ") -> List[str]:
 
 
 @export
-def collapse_dicts(*dicts: Dict[Any, Any]) -> Dict[Any, Any]:
+def collapse_dicts(*dicts: Dict) -> Dict:
     """Merge multiple dictionaries - later dicts have higher precedence."""
-    if len(dicts) < 2:
-        return dicts[0] or {}
-    out_dict = dicts[0]
+    if len(dicts) == 0:
+        return {}
+    if len(dicts) == 1:
+        return dicts[0]
+    out_dict: Dict = dicts[0]
     for p_dict in dicts[1:]:
         out_dict = _merge_dicts(out_dict, p_dict)
     return out_dict
@@ -238,7 +262,7 @@ def _merge_dicts(dict1: Dict[Any, Any], dict2: Dict[Any, Any]):
     if not dict1:
         return dict2 or {}
     out_dict = {}
-    for key in set().union(dict1, dict2):  # type: Any
+    for key in set().union(dict1, dict2):
         if (
             key in dict1
             and isinstance(dict1[key], dict)
