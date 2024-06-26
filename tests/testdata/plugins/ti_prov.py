@@ -60,6 +60,10 @@ class TIProviderTest(TIProvider):
     _QUERIES = _QUERIES
     _REQUIRED_PARAMS = ["AuthKey"]
 
+    def __init__(self, **kwargs) -> None:
+        del kwargs
+        super().__init__()
+
     def lookup_ioc(
         self,
         ioc: str,
