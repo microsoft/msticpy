@@ -18,7 +18,18 @@ import contextlib
 import warnings
 from collections import defaultdict
 from functools import lru_cache
-from typing import Any, Callable, DefaultDict, Dict, Iterable, List, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    DefaultDict,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import pandas as pd
 
@@ -47,9 +58,9 @@ class KqlTIProvider(TIProvider):
 
     _REQUIRED_TABLES: List[str] = []
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """Initialize a new instance of the class."""
-        super().__init__(**kwargs)
+        super().__init__()
 
         if "query_provider" in kwargs and isinstance(
             kwargs["query_provider"], QueryProvider
@@ -70,7 +81,11 @@ class KqlTIProvider(TIProvider):
 
     @lru_cache(maxsize=256)
     def lookup_ioc(  # type: ignore
-        self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
+        self,
+        ioc: str,
+        ioc_type: Optional[str] = None,
+        query_type: Optional[str] = None,
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup from a value.
@@ -114,9 +129,9 @@ class KqlTIProvider(TIProvider):
     def lookup_iocs(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        ioc_col: str = None,
-        ioc_type_col: str = None,
-        query_type: str = None,
+        ioc_col: Optional[str] = None,
+        ioc_type_col: Optional[str] = None,
+        query_type: Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -162,7 +177,7 @@ class KqlTIProvider(TIProvider):
             if result["Status"] != LookupStatus.NOT_SUPPORTED.value:
                 ioc_groups[result["IocType"]].add(result["Ioc"])
 
-        all_results = []
+        all_results: List[pd.DataFrame] = []
         for ioc_type, obs_set in ioc_groups.items():
             kwargs.pop("ioc_type", None)  # we want to use locally-determine type
             query_obj = None
@@ -180,7 +195,7 @@ class KqlTIProvider(TIProvider):
             # run the query
             data_result = query_obj(**query_params)
 
-            src_ioc_frame = pd.DataFrame(obs_set, columns=["Ioc"])
+            src_ioc_frame: pd.DataFrame = pd.DataFrame(obs_set, columns=["Ioc"])
             src_ioc_frame["IocType"] = ioc_type
             src_ioc_frame["QuerySubtype"] = query_type
             src_ioc_frame["Reference"] = query_obj("print_query", **query_params)
@@ -202,7 +217,7 @@ class KqlTIProvider(TIProvider):
             data_result["Details"] = self._get_detail_summary(data_result)
             data_result["RawResult"] = data_result.apply(lambda x: x.to_dict(), axis=1)
 
-            combined_results_df = self._combine_results(
+            combined_results_df: pd.DataFrame = self._combine_results(
                 input_df=src_ioc_frame, results_df=data_result, reslt_ioc_key="IoC"
             )
             all_results.append(combined_results_df)
@@ -318,7 +333,7 @@ class KqlTIProvider(TIProvider):
         self,
         ioc: Union[str, List[str]],
         ioc_type: str,
-        query_type: str = None,
+        query_type: Optional[str] = None,
         **kwargs,
     ) -> Tuple[Callable, Dict[str, Any]]:
         ioc_key = f"{ioc_type}-{query_type}" if query_type else ioc_type
@@ -361,8 +376,8 @@ class KqlTIProvider(TIProvider):
         # If we have results, we need to create our summary columns
         # merge the results with our original IoC set
         # and drop all of the columns that we are not interested in
-        columns_to_drop = set(results_df.columns.to_list())
-        colums_to_keep = {
+        columns_to_drop: Set[str] = set(results_df.columns.to_list())
+        colums_to_keep: Set[str] = {
             reslt_ioc_key,
             "Result",
             "Status",
@@ -372,8 +387,10 @@ class KqlTIProvider(TIProvider):
         }
         columns_to_drop = columns_to_drop - colums_to_keep
 
-        cleaned_results_df = results_df.copy().drop(columns=columns_to_drop)  # type: ignore
-        combined_df = input_df.copy()
+        cleaned_results_df: pd.DataFrame = results_df.copy().drop(
+            columns=columns_to_drop  # type: ignore
+        )
+        combined_df: pd.DataFrame = input_df.copy()
         combined_df["IoCKey"] = input_df["Ioc"].str.lower()
         cleaned_results_df = cleaned_results_df.rename(
             columns={reslt_ioc_key: "IoCKey"}

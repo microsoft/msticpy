@@ -14,8 +14,9 @@ requests per minute for the account type that you have.
 """
 from functools import lru_cache
 from json import JSONDecodeError
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
+import httpx
 import pandas as pd
 
 from ..._version import VERSION
@@ -36,7 +37,14 @@ class HttpTIProvider(TIProvider, HttpProvider):
 
     @lru_cache(maxsize=256)
     def lookup_ioc(
-        self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
+        self,
+        ioc: str,
+        ioc_type: Optional[str] = None,
+        query_type: Optional[str] = None,
+        *,
+        provider_name: Optional[str] = None,
+        timeout: int = 120,
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup from a value.
@@ -74,9 +82,10 @@ class HttpTIProvider(TIProvider, HttpProvider):
         the same item.
 
         """
-        result = self._check_ioc_type(ioc, ioc_type, query_subtype=query_type)
-
-        result["Provider"] = kwargs.get("provider_name", self.__class__.__name__)
+        result: Dict[str, Any] = self._check_ioc_type(
+            ioc, ioc_type, query_subtype=query_type
+        )
+        result["Provider"] = provider_name or self.__class__.__name__
 
         req_params: Dict[str, Any] = {}
         try:
@@ -84,12 +93,14 @@ class HttpTIProvider(TIProvider, HttpProvider):
                 result["SafeIoc"], result["IocType"], query_type
             )
             if verb == "GET":
-                response = self._httpx_client.get(
-                    **req_params, timeout=get_http_timeout(**kwargs)
+                response: httpx.Response = self._httpx_client.get(
+                    **req_params,
+                    timeout=get_http_timeout(timeout=timeout),
                 )
             elif verb == "POST":
                 response = self._httpx_client.post(
-                    **req_params, timeout=get_http_timeout(**kwargs)
+                    **req_params,
+                    timeout=get_http_timeout(timeout=timeout),
                 )
             else:
                 raise NotImplementedError(f"Unsupported verb {verb}")
@@ -126,6 +137,6 @@ class HttpTIProvider(TIProvider, HttpProvider):
         ) as err:
             self._err_to_results(result, err)
             if not isinstance(err, LookupError):
-                url = req_params.get("url", None) if req_params else None
+                url: Optional[str] = req_params.get("url", None) if req_params else None
                 result["Reference"] = url
         return pd.DataFrame([result])

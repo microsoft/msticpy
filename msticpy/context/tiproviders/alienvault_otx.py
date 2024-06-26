@@ -12,7 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 
 import attr
 
@@ -67,11 +67,12 @@ class OTX(HttpTIProvider):
     _QUERIES["sha1_hash"] = _QUERIES["file_hash"]
     _QUERIES["sha256_hash"] = _QUERIES["file_hash"]
 
-    _REQUIRED_PARAMS = ["AuthKey"]
+    _REQUIRED_PARAMS: List[str] = ["AuthKey"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """Set OTX specific settings."""
-        super().__init__(**kwargs)
+        del kwargs
+        super().__init__()
         self.require_url_encoding = True
 
     def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:

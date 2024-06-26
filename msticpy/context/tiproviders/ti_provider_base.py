@@ -14,7 +14,7 @@ requests per minute for the account type that you have.
 """
 
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
 
@@ -34,7 +34,10 @@ class TIProvider(Provider):
     _QUERIES: Dict[str, Any] = {}
 
     def _check_item_type(
-        self, item: str, item_type: str = None, query_subtype: str = None
+        self,
+        item: str,
+        item_type: Optional[str] = None,
+        query_subtype: Optional[str] = None,
     ) -> Dict:
         """
         Check Item Type and cleans up item.
@@ -63,7 +66,10 @@ class TIProvider(Provider):
         )
 
     def _check_ioc_type(
-        self, ioc: str, ioc_type: str = None, query_subtype: str = None
+        self,
+        ioc: str,
+        ioc_type: Optional[str] = None,
+        query_subtype: Optional[str] = None,
     ) -> Dict:
         """
         Check Ioc Type and cleans up ioc.
@@ -85,7 +91,7 @@ class TIProvider(Provider):
             Status is none-zero on failure.
 
         """
-        result = super()._check_item_type(
+        result: Dict[str, Any] = super()._check_item_type(
             item=ioc, item_type=ioc_type, query_subtype=query_subtype
         )
         result["Ioc"] = result.pop("Item")
@@ -95,7 +101,11 @@ class TIProvider(Provider):
         return result
 
     def lookup_item(
-        self, item: str, item_type: str = None, query_type: str = None, **kwargs
+        self,
+        item: str,
+        item_type: Optional[str] = None,
+        query_type: Optional[str] = None,
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup a single item.
@@ -163,8 +173,8 @@ class TIProvider(Provider):
     def lookup_ioc(
         self,
         ioc: str,
-        ioc_type: str = None,
-        query_type: str = None,
+        ioc_type: Optional[str] = None,
+        query_type: Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -191,9 +201,9 @@ class TIProvider(Provider):
     def lookup_iocs(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        ioc_col: str = None,
-        ioc_type_col: str = None,
-        query_type: str = None,
+        ioc_col: Optional[str] = None,
+        ioc_type_col: Optional[str] = None,
+        query_type: Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -233,9 +243,9 @@ class TIProvider(Provider):
     async def lookup_iocs_async(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        ioc_col: str = None,
-        ioc_type_col: str = None,
-        query_type: str = None,
+        ioc_col: Optional[str] = None,
+        ioc_type_col: Optional[str] = None,
+        query_type: Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Call base async wrapper."""
@@ -250,9 +260,9 @@ class TIProvider(Provider):
     async def _lookup_iocs_async_wrapper(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        ioc_col: str = None,
-        ioc_type_col: str = None,
-        query_type: str = None,
+        ioc_col: Optional[str] = None,
+        ioc_type_col: Optional[str] = None,
+        query_type: Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -303,11 +313,11 @@ class TIProvider(Provider):
         return self._QUERIES
 
     @classmethod
-    def usage(cls):
+    def usage(cls) -> None:
         """Print usage of provider."""
         print(f"{cls.__doc__} Supported query types:")
         for ioc_key in sorted(cls._QUERIES):
-            ioc_key_elems = ioc_key.split("-", maxsplit=1)
+            ioc_key_elems: List[str] = ioc_key.split("-", maxsplit=1)
             if len(ioc_key_elems) == 1:
                 print(f"\tioc_type={ioc_key_elems[0]}")
             if len(ioc_key_elems) == 2:
@@ -340,7 +350,7 @@ class TIPivotProvider(PivotProvider):
         self,
         pivot_reg: "PivotRegistration",  # type: ignore # noqa: F821
         pivot: "Pivot",  # type: ignore # noqa: F821
-    ):
+    ) -> None:
         """
         Register pivot functions for the TI Provider.
 

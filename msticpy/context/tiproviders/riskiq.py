@@ -116,9 +116,9 @@ class RiskIQ(TIProvider, TIPivotProvider):
 
     _REFERENCE = "https://community.riskiq.com"
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """Instantiate RiskIQ class."""
-        super().__init__(**kwargs)
+        super().__init__()
         ptanalyzer.init(username=kwargs.get("ApiID"), api_key=kwargs.get("AuthKey"))
         self._pivot_timespan_start: Optional[datetime] = None
         self._pivot_timespan_end: Optional[datetime] = None
@@ -130,14 +130,14 @@ class RiskIQ(TIProvider, TIPivotProvider):
         return ptanalyzer.api_clients["Cards"].session
 
     @_httpx_client.setter
-    def _httpx_client(self, session):
+    def _httpx_client(self, session) -> None:
         """Set the PT Analyzer session."""
         # pylint: disable=consider-using-dict-items
         for name in ptanalyzer.api_clients:
             ptanalyzer.api_clients[name].session = session
 
     @staticmethod
-    def _severity_rep(classification):
+    def _severity_rep(classification) -> ResultSeverity:
         """Get the severity level for a reputation score classification."""
         return {
             "MALICIOUS": ResultSeverity.high,
@@ -147,7 +147,11 @@ class RiskIQ(TIProvider, TIPivotProvider):
         }.get(classification, ResultSeverity.information)
 
     def lookup_ioc(
-        self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
+        self,
+        ioc: str,
+        ioc_type: Optional[str] = None,
+        query_type: Optional[str] = None,
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup a single IoC observable.
