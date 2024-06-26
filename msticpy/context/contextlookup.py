@@ -12,7 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import Dict, Iterable, List, Mapping, Optional, Union
+from typing import Dict, Iterable, List, Mapping, Optional, Tuple, Union
 
 import pandas as pd
 
@@ -44,7 +44,7 @@ class ContextLookup(Lookup):
 
     PACKAGE = "contextproviders"
 
-    PROVIDERS = CONTEXT_PROVIDERS
+    PROVIDERS: Dict[str, Tuple[str, str]] = CONTEXT_PROVIDERS
     CUSTOM_PROVIDERS: Dict[str, Provider] = {}
 
     # pylint: disable=too-many-arguments
@@ -98,13 +98,13 @@ class ContextLookup(Lookup):
             **kwargs,
         )
 
-    def lookup_observables(
+    def lookup_observables(  # pylint:disable=too-many-arguments
         self,
         data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
-        obs_col: str = None,
-        obs_type_col: str = None,
-        query_type: str = None,
-        providers: List[str] = None,
+        obs_col: Optional[str] = None,
+        obs_type_col: Optional[str] = None,
+        query_type: Optional[str] = None,
+        providers: Optional[List[str]] = None,
         default_providers: Optional[List[str]] = None,
         prov_scope: str = "primary",
         **kwargs,
@@ -157,13 +157,13 @@ class ContextLookup(Lookup):
         )
 
     # pylint: disable=too-many-locals
-    async def _lookup_observables_async(
+    async def _lookup_observables_async(  # pylint:disable=too-many-arguments
         self,
         data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
-        obs_col: str = None,
-        obs_type_col: str = None,
-        query_type: str = None,
-        providers: List[str] = None,
+        obs_col: Optional[str] = None,
+        obs_type_col: Optional[str] = None,
+        query_type: Optional[str] = None,
+        providers: Optional[List[str]] = None,
         default_providers: Optional[List[str]] = None,
         prov_scope: str = "primary",
         **kwargs,
@@ -180,13 +180,13 @@ class ContextLookup(Lookup):
             **kwargs,
         )
 
-    def lookup_observables_sync(
+    def lookup_observables_sync(  # pylint:disable=too-many-arguments
         self,
         data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
-        obs_col: str = None,
-        obs_type_col: str = None,
-        query_type: str = None,
-        providers: List[str] = None,
+        obs_col: Optional[str] = None,
+        obs_type_col: Optional[str] = None,
+        query_type: Optional[str] = None,
+        providers: Optional[List[str]] = None,
         default_providers: Optional[List[str]] = None,
         prov_scope: str = "primary",
         **kwargs,
@@ -236,6 +236,6 @@ class ContextLookup(Lookup):
             **kwargs,
         )
 
-    def _load_providers(self, **kwargs):
+    def _load_providers(self, **kwargs) -> None:
         """Load provider classes based on config."""
-        return super()._load_providers(providers="ContextProviders", **kwargs)
+        super()._load_providers(providers="ContextProviders", **kwargs)

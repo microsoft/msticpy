@@ -16,7 +16,17 @@ import asyncio
 import importlib
 import warnings
 from collections import ChainMap
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union, cast
+from types import ModuleType
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import nest_asyncio
 import pandas as pd
@@ -24,8 +34,13 @@ from tqdm.auto import tqdm
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyConfigError, MsticpyUserConfigError
-from ..common.provider_settings import get_provider_settings, reload_settings
+from ..common.provider_settings import (
+    ProviderSettings,
+    get_provider_settings,
+    reload_settings,
+)
 from ..common.utility import export, is_ipython
+from ..nbwidgets.select_item import SelectItem
 from ..vis.ti_browser import browse_results
 from .lookup_result import LookupStatus
 
@@ -39,13 +54,13 @@ __author__ = "Florian Bracq"
 class ProgressCounter:
     """Progress counter for async tasks."""
 
-    def __init__(self, total: int):
+    def __init__(self, total: int) -> None:
         """Initialize the class."""
-        self.total = total
+        self.total: int = total
         self._lock: asyncio.Condition = asyncio.Condition()
         self._remaining: int = total
 
-    async def decrement(self, increment: int = 1):
+    async def decrement(self, increment: int = 1) -> None:
         """Decrement the counter."""
         if self._remaining == 0:
             return
@@ -74,7 +89,7 @@ class Lookup:
 
     PACKAGE: str = ""
 
-    def __init__(self, providers: Optional[List[str]] = None, **kwargs):
+    def __init__(self, providers: Optional[List[str]] = None, **kwargs) -> None:
         """
         Initialize TILookup instance.
 
@@ -164,7 +179,7 @@ class Lookup:
 
         return prim_conf + sec_conf
 
-    def enable_provider(self, providers: Union[str, Iterable[str]]):
+    def enable_provider(self, providers: Union[str, Iterable[str]]) -> None:
         """
         Set the provider(s) as primary (used by default).
 
@@ -191,7 +206,7 @@ class Lookup:
                     ", ".join(self.list_available_providers(as_list=True)),  # type: ignore
                 )
 
-    def disable_provider(self, providers: Union[str, Iterable[str]]):
+    def disable_provider(self, providers: Union[str, Iterable[str]]) -> None:
         """
         Set the provider as secondary (not used by default).
 
@@ -218,7 +233,7 @@ class Lookup:
                     ", ".join(self.list_available_providers(as_list=True)),  # type: ignore
                 )
 
-    def set_provider_state(self, prov_dict: Dict[str, bool]):
+    def set_provider_state(self, prov_dict: Dict[str, bool]) -> None:
         """
         Set a dict of providers to primary/secondary.
 
@@ -238,7 +253,7 @@ class Lookup:
     @classmethod
     def browse_results(
         cls, data: pd.DataFrame, severities: Optional[List[str]] = None, **kwargs
-    ):
+    ) -> Optional[SelectItem]:
         """
         Return TI Results list browser.
 
@@ -270,7 +285,7 @@ class Lookup:
 
     browse = browse_results
 
-    def provider_usage(self):
+    def provider_usage(self) -> None:
         """Print usage of loaded providers."""
         print("Primary providers")
         print("-----------------")
@@ -290,7 +305,7 @@ class Lookup:
             print("none")
 
     @classmethod
-    def reload_provider_settings(cls):
+    def reload_provider_settings(cls) -> None:
         """Reload provider settings from config."""
         reload_settings()
         print(
@@ -298,12 +313,17 @@ class Lookup:
             "for loaded providers.",
         )
 
-    def reload_providers(self):
+    def reload_providers(self) -> None:
         """Reload settings and provider classes."""
         reload_settings()
         self._load_providers()
 
-    def add_provider(self, provider: Provider, name: str = None, primary: bool = True):
+    def add_provider(
+        self,
+        provider: Provider,
+        name: Optional[str] = None,
+        primary: bool = True,
+    ) -> None:
         """
         Add a provider to the current collection.
 
@@ -319,20 +339,18 @@ class Lookup:
 
         """
         if not name:
-            name = provider.__class__.__name__
+            name = str(provider.__class__.__name__)
         if primary:
             self._providers[name] = provider
         else:
             self._secondary_providers[name] = provider
 
-    # pylint: disable=too-many-locals
-    # pylint: disable=too-many-arguments
-    def lookup_item(
+    def lookup_item(  # pylint: disable=too-many-locals, too-many-arguments
         self,
         item: str,
-        item_type: str = None,
-        query_type: str = None,
-        providers: List[str] = None,
+        item_type: Optional[str] = None,
+        query_type: Optional[str] = None,
+        providers: Optional[List[str]] = None,
         default_providers: Optional[List[str]] = None,
         prov_scope: str = "primary",
         **kwargs,
@@ -374,13 +392,13 @@ class Lookup:
             **kwargs,
         )
 
-    def lookup_items(
+    def lookup_items(  # pylint: disable=too-many-arguments
         self,
         data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
-        item_col: str = None,
-        item_type_col: str = None,
-        query_type: str = None,
-        providers: List[str] = None,
+        item_col: Optional[str] = None,
+        item_type_col: Optional[str] = None,
+        query_type: Optional[str] = None,
+        providers: Optional[List[str]] = None,
         default_providers: Optional[List[str]] = None,
         prov_scope: str = "primary",
         **kwargs,
@@ -458,21 +476,23 @@ class Lookup:
             return item_lookup
         raise ValueError(f"DataFrame was expected, but {type(item_lookup)} received.")
 
-    # pylint: disable=too-many-locals
-    async def _lookup_items_async(
+    async def _lookup_items_async(  # pylint: disable=too-many-locals, too-many-arguments
         self,
         data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
-        item_col: str = None,
-        item_type_col: str = None,
-        query_type: str = None,
-        providers: List[str] = None,
+        item_col: Optional[str] = None,
+        item_type_col: Optional[str] = None,
+        query_type: Optional[str] = None,
+        providers: Optional[List[str]] = None,
         default_providers: Optional[List[str]] = None,
         prov_scope: str = "primary",
+        *,
+        progress: bool = True,
+        col: Optional[str] = None,
+        column: Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Lookup items async."""
-        item_col = item_col or kwargs.pop("col", kwargs.pop("column", None))
-        progress = kwargs.pop("progress", True)
+        item_col = item_col or col or column
         selected_providers = self._select_providers(
             providers or default_providers, prov_scope
         )
@@ -483,7 +503,7 @@ class Lookup:
                 help_uri=self._HELP_URI,
             )
 
-        event_loop = asyncio.get_event_loop()
+        event_loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
         result_futures: List[Any] = []
         provider_names: List[str] = []
 
@@ -506,23 +526,28 @@ class Lookup:
             )
         if progress:
             # Create a task for tqdm
-            prog_task = event_loop.create_task(self._track_completion(prog_counter))
+            prog_task: asyncio.Task = event_loop.create_task(
+                self._track_completion(prog_counter)
+            )
         # collect the return values of the tasks
-        results = await asyncio.gather(*result_futures)
+        results: List[pd.DataFrame] = await asyncio.gather(*result_futures)
         # cancel the progress task if results have completed.
         if progress:
             prog_task.cancel()
         return self._combine_results(results, provider_names, **kwargs)
 
-    def lookup_items_sync(
+    def lookup_items_sync(  # pylint: disable=too-many-arguments, too-many-locals
         self,
         data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
-        item_col: str = None,
-        item_type_col: str = None,
-        query_type: str = None,
-        providers: List[str] = None,
+        item_col: Optional[str] = None,
+        item_type_col: Optional[str] = None,
+        query_type: Optional[str] = None,
+        providers: Optional[List[str]] = None,
         default_providers: Optional[List[str]] = None,
         prov_scope: str = "primary",
+        *,
+        col: Optional[str] = None,
+        column: Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -559,9 +584,9 @@ class Lookup:
             DataFrame of results
 
         """
-        item_col = item_col or kwargs.pop("col", kwargs.pop("column", None))
+        item_col = item_col or col or column
 
-        selected_providers = self._select_providers(
+        selected_providers: Dict[str, Provider] = self._select_providers(
             providers or default_providers, prov_scope
         )
         if not selected_providers:
@@ -587,7 +612,7 @@ class Lookup:
         return self._combine_results(results, provider_names, **kwargs)
 
     @staticmethod
-    async def _track_completion(prog_counter):
+    async def _track_completion(prog_counter) -> None:
         total = await prog_counter.get_remaining()
         with tqdm(total=total, unit="obs", desc="Observables processed") as prog_bar:
             try:
@@ -659,23 +684,22 @@ class Lookup:
 
         if not (mod_name and cls_name):
             if hasattr(cls, "CUSTOM_PROVIDERS") and provider in cls.CUSTOM_PROVIDERS:
-                return cast(Provider, cls.CUSTOM_PROVIDERS[provider])
+                return cls.CUSTOM_PROVIDERS[provider]
             raise LookupError(
                 f"No provider named '{provider}'.",
                 "Possible values are:",
                 ", ".join(list(cls.PROVIDERS) + list(cls.CUSTOM_PROVIDERS)),
             )
 
-        imp_module = importlib.import_module(
+        imp_module: ModuleType = importlib.import_module(
             f"msticpy.context.{cls.PACKAGE}.{mod_name}", package="msticpy"
         )
         return getattr(imp_module, cls_name)
 
-    def _load_providers(self, **kwargs):
+    def _load_providers(self, **kwargs) -> None:
         """Load provider classes based on config."""
-        prov_type = kwargs.get("providers", "Providers")
-        prov_settings = get_provider_settings(prov_type)
-        provider_class: Provider
+        prov_type: str = kwargs.get("providers", "Providers")
+        prov_settings: Dict[str, ProviderSettings] = get_provider_settings(prov_type)
         for provider_name, settings in prov_settings.items():
             if (
                 self._providers_to_load is not None
@@ -684,7 +708,7 @@ class Lookup:
                 continue
             try:
                 provider_name = settings.provider or provider_name
-                provider_class = self.import_provider(provider_name)
+                provider_class: Provider = self.import_provider(provider_name)
             except LookupError:
                 warnings.warn(
                     f"Could not find provider class for {provider_name} "
@@ -695,7 +719,7 @@ class Lookup:
 
             # instantiate class sending args from settings to init
             try:
-                provider_instance = provider_class(**(settings.args))
+                provider_instance: Provider = provider_class(**(settings.args))  # type: ignore
             except MsticpyConfigError as mp_ex:
                 # If the TI Provider didn't load, raise an exception
                 raise MsticpyUserConfigError(
@@ -718,7 +742,9 @@ class Lookup:
             )
 
     def _select_providers(
-        self, providers: List[str] = None, prov_scope: str = "primary"
+        self,
+        providers: Optional[List[str]] = None,
+        prov_scope: str = "primary",
     ) -> Dict[str, Provider]:
         """
         Return required subset of providers.
@@ -752,7 +778,7 @@ class Lookup:
     @staticmethod
     def _combine_results(
         results: Iterable[pd.DataFrame], provider_names: List[str], **kwargs
-    ):
+    ) -> pd.DataFrame:
         """Combine dataframe results into single DF."""
         result_list: List[pd.DataFrame] = []
         for prov_name, provider_result in zip(provider_names, results):
@@ -771,4 +797,4 @@ class Lookup:
 
         if not result_list:
             print("No Item matches")
-        return pd.concat(result_list, sort=False) if result_list else None
+        return pd.concat(result_list, sort=False) if result_list else pd.DataFrame()
