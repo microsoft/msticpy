@@ -126,7 +126,7 @@ def _get_ws_results(**kwargs):
 
 
 @dataclass
-class TestExpected:
+class ExpectedResult:
     """Test expected values."""
 
     ws_name: str = ""
@@ -139,7 +139,7 @@ class TestExpected:
 _TEST_URL_LOOKUP = [
     (
         _PORTAL_URLS[0],
-        TestExpected(
+        ExpectedResult(
             "cybersecuritysoc",
             "d1d8779d-38d7-4f06-91db-9cbc8de0176f",
             "soc",
@@ -150,7 +150,7 @@ _TEST_URL_LOOKUP = [
     ),
     (
         _PORTAL_URLS[1],
-        TestExpected(
+        ExpectedResult(
             "asihuntomsworkspacev4",
             "40dcc8bf-0478-4f3b-b275-ed0a94f2c013",
             "asihuntomsworkspacerg",
@@ -161,7 +161,7 @@ _TEST_URL_LOOKUP = [
     ),
     (
         _PORTAL_URLS[2],
-        TestExpected(
+        ExpectedResult(
             "aipdstim",
             "d1d8779d-38d7-4f06-91db-9cbc8de0176f",
             "soc-purview",
@@ -172,7 +172,7 @@ _TEST_URL_LOOKUP = [
     ),
     (
         _PORTAL_URLS[3],
-        TestExpected(
+        ExpectedResult(
             "non-existent",
             "d1d8779d-9999-4f06-91db-9cbc8de0176f",
             "soc-na",

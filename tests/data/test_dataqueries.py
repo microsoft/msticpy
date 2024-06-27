@@ -23,10 +23,10 @@ from msticpy.common import pkg_config
 from msticpy.common.exceptions import MsticpyException
 from msticpy.data.core.data_providers import QueryProvider
 from msticpy.data.core.query_container import QueryContainer
+from msticpy.data.core.query_defns import DataEnvironment
 from msticpy.data.core.query_provider_connections_mixin import _calc_split_ranges
 from msticpy.data.core.query_source import QuerySource
 from msticpy.data.drivers.driver_base import DriverBase, DriverProps
-from msticpy.data.query_defns import DataEnvironment
 
 from ..unit_test_lib import get_test_data_path
 
