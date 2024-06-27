@@ -6,6 +6,7 @@
 """Azure Sentinel unit tests."""
 import re
 from collections import namedtuple
+from dataclasses import dataclass
 
 import pandas as pd
 import pytest
@@ -17,7 +18,6 @@ from msticpy.context.azure import MicrosoftSentinel
 from msticpy.data import QueryProvider
 
 # pylint: disable=protected-access
-pytestmark = pytest.mark.filterwarnings("ignore::pytest.PytestCollectionWarning")
 
 _PORTAL_URLS = [
     "https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/d1d8779d-38d7-4f06-91db-9cbc8de0176f/resourceGroups/soc/providers/Microsoft.OperationalInsights/workspaces/cybersecuritysoc/Overview",
@@ -125,7 +125,16 @@ def _get_ws_results(**kwargs):
     return pd.DataFrame(columns=df.columns)
 
 
-TestExpected = namedtuple("TestExpected", "ws_name, sub_id, res_group, ws_id, ten_id")
+@dataclass
+class TestExpected:
+    """Test expected values."""
+
+    ws_name: str = ""
+    sub_id: str = ""
+    res_group: str = ""
+    ws_id: str = ""
+    ten_id: str = ""
+
 
 _TEST_URL_LOOKUP = [
     (

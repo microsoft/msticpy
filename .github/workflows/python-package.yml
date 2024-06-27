@@ -79,7 +79,9 @@ jobs:
           IPSTACK_AUTH: ${{ secrets.IPSTACK_AUTH }}
           MSTICPYCONFIG: ./tests/msticpyconfig-test.yaml
           MSTICPY_BUILD_SOURCE: fork
+          JUPYTER_PLATFORM_DIRS: 1
         run: |
+          jupyter --paths
           pytest tests -n auto --junitxml=junit/test-${{ matrix.python-version }}-results.xml --cov=msticpy --cov-report=xml
         if: ${{ always() }}
       - name: Upload pytest test results
