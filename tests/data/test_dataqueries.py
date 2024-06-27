@@ -748,7 +748,7 @@ def test_check_environment_unknown_env_type() -> None:
     invalid_data_environment: int = 42
     with pytest.raises(
         TypeError,
-        match=f"Unknown data environment type {invalid_data_environment} \({type(invalid_data_environment)}\)",
+        match=f"Unknown data environment type {invalid_data_environment} \\({type(invalid_data_environment)}\\)",
     ):
         QueryProvider._check_environment(invalid_data_environment)
 
