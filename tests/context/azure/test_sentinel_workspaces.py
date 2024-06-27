@@ -17,7 +17,7 @@ from msticpy.context.azure import MicrosoftSentinel
 from msticpy.data import QueryProvider
 
 # pylint: disable=protected-access
-pytestmark = pytest.mark.filterwarnings("ignore::PytestCollectionWarning")
+pytestmark = pytest.mark.filterwarnings("ignore::pytest.PytestCollectionWarning")
 
 _PORTAL_URLS = [
     "https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/d1d8779d-38d7-4f06-91db-9cbc8de0176f/resourceGroups/soc/providers/Microsoft.OperationalInsights/workspaces/cybersecuritysoc/Overview",
