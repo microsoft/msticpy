@@ -51,7 +51,7 @@ EXTRAS = {
         "matplotlib>=3.0.0",
     ],
     "sql2kql": ["mo-sql-parsing>=8, <9.0.0"],
-    "riskiq": ["passivetotal>=2.5.3"],
+    "riskiq": ["passivetotal>=2.5.3", "requests>=2.31.0"],
     "panel": ["panel>=0.14.4"],
 }
 extras_all = [
