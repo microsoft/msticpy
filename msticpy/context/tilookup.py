@@ -14,7 +14,7 @@ requests per minute for the account type that you have.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar, Iterable, Mapping
+from typing import ClassVar, Iterable, Mapping
 
 import pandas as pd
 
@@ -26,8 +26,6 @@ from .lookup import Lookup
 from .provider_base import Provider, _make_sync
 from .tiproviders import TI_PROVIDERS
 
-if TYPE_CHECKING:
-    import datetime as dt
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
@@ -118,7 +116,6 @@ class TILookup(Lookup):
             providers=providers,
             default_providers=default_providers,
             prov_scope=prov_scope,
-            **kwargs,
         )
 
     def lookup_iocs(
@@ -130,7 +127,6 @@ class TILookup(Lookup):
         providers: list[str] | None = None,
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
-        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup Threat Intelligence reports for a collection of IoCs in active providers.
@@ -190,7 +186,6 @@ class TILookup(Lookup):
                 providers=providers,
                 default_providers=default_providers,
                 prov_scope=prov_scope,
-                **kwargs,
             ),
         )
 
@@ -204,7 +199,6 @@ class TILookup(Lookup):
         providers: list[str] | None = None,
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
-        **kwargs,
     ) -> pd.DataFrame:
         """Lookup IoCs async."""
         return await self._lookup_items_async(
@@ -215,7 +209,6 @@ class TILookup(Lookup):
             providers=providers,
             default_providers=default_providers,
             prov_scope=prov_scope,
-            **kwargs,
         )
 
     def lookup_iocs_sync(
@@ -227,7 +220,6 @@ class TILookup(Lookup):
         providers: list[str] | None = None,
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
-        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup a collection of IoCs.
@@ -271,7 +263,6 @@ class TILookup(Lookup):
             providers=providers,
             default_providers=default_providers,
             prov_scope=prov_scope,
-            **kwargs,
         )
 
     def _load_providers(self, **kwargs) -> None:

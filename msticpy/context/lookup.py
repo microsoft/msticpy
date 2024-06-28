@@ -19,7 +19,7 @@ import importlib
 import warnings
 from collections import ChainMap
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Mapping, Sized
+from typing import Any, Callable, ClassVar, Iterable, Mapping, Sized
 
 import nest_asyncio
 import pandas as pd
@@ -197,7 +197,9 @@ class Lookup:
             If the provider name is not recognized.
 
         """
-        provs_to_enable: list[str] | Iterable[str] = [providers] if isinstance(providers, str) else providers
+        provs_to_enable: list[str] | Iterable[str] = (
+            [providers] if isinstance(providers, str) else providers
+        )
         for provider in provs_to_enable:
             if provider in self._secondary_providers:
                 self._providers[provider] = self._secondary_providers[provider]
@@ -224,7 +226,9 @@ class Lookup:
             If the provider name is not recognized.
 
         """
-        provs_to_disable: list[str] | Iterable[str] = [providers] if isinstance(providers, str) else providers
+        provs_to_disable: list[str] | Iterable[str] = (
+            [providers] if isinstance(providers, str) else providers
+        )
         for provider in provs_to_disable:
             if provider in self._providers:
                 self._secondary_providers[provider] = self._providers[provider]
@@ -529,7 +533,6 @@ class Lookup:
                     item_type_col=item_type_col,
                     query_type=query_type,
                     prog_counter=prog_counter if progress else None,
-                    **kwargs,
                 ),
             )
         if progress:
@@ -561,6 +564,8 @@ class Lookup:
         *,
         col: str | None = None,
         column: str | None = None,
+        show_not_supported: bool = False,
+        show_bad_item: bool = False,
     ) -> pd.DataFrame:
         """
         Lookup a collection of items.
@@ -619,7 +624,6 @@ class Lookup:
                     item_col=item_col,
                     item_type_col=item_type_col,
                     query_type=query_type,
-                    **kwargs,
                 ),
             )
         return self._combine_results(

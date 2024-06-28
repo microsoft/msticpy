@@ -32,10 +32,8 @@ from .lookup_result import LookupStatus, SanitizedObservable
 from .preprocess_observable import PreProcessor
 
 if TYPE_CHECKING:
-
     from ..init.pivot import Pivot
     from ..init.pivot_core.pivot_register import PivotRegistration
-
     from .lookup import ProgressCounter
 
 __version__ = VERSION

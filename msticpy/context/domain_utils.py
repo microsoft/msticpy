@@ -225,7 +225,7 @@ class DomainValidator:
         """
         try:
             cert: str = ssl.get_server_certificate((url_domain, 443))
-            x509_cert: Optional[Certificate] = x509.load_pem_x509_certificate(
+            x509_cert: Certificate = x509.load_pem_x509_certificate(
                 cert.encode("ascii"),
             )
             cert_sha1: bytes = x509_cert.fingerprint(SHA1())
@@ -233,9 +233,7 @@ class DomainValidator:
                 self.ssl_abuse_list["SHA1"].str.contains(cert_sha1.hex()).any(),
             )
         except Exception:  # pylint: disable=broad-except
-            result = False
-            x509_cert = None
-
+            return False, None
         return result, x509_cert
 
     @classmethod
