@@ -32,6 +32,7 @@ SUMOLOGIC_SVC = SumologicDriver.__module__ + ".SumoLogic"
 
 # pylint: disable=too-many-branches, too-many-return-statements
 # pylint: disable=no-self-use, too-few-public-methods, protected-access
+pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
 
 
 def cli_connect(**kwargs):

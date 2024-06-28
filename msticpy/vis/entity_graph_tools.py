@@ -335,7 +335,7 @@ class EntityGraph:
             }
             for node in self.alertentity_graph.nodes.values()
         ]
-        return pd.DataFrame(node_list).replace("None", np.NaN)
+        return pd.DataFrame(node_list).replace("None", np.nan)
 
     def _add_incident_or_alert_node(self, incident: Union[Incident, Alert, None]):
         """Check what type of entity is passed in and creates relevant graph."""

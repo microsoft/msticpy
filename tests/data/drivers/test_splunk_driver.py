@@ -29,6 +29,7 @@ SPLUNK_RESULTS_PATCH = SplunkDriver.__module__ + ".sp_results"
 
 # pylint: disable=too-many-branches, too-many-return-statements
 # pylint: disable=no-self-use, too-few-public-methods, protected-access
+pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
 
 
 def cli_connect(**kwargs):
