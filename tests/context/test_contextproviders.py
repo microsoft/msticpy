@@ -4,11 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """TIProviders test class."""
-from typing import Dict, Any
 import json
 import warnings
 from pathlib import Path
+from typing import Any, Dict
 
+import httpx
 import pandas as pd
 import pytest
 import pytest_check as check
@@ -40,7 +41,7 @@ _OBS_IPS = [
 
 
 # This class will mock httpx.Client()
-class HTTPResponse:
+class HTTPResponse(httpx.Response):
     """Class for mocked response."""
 
     def __init__(self, json_data, status_code):
