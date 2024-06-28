@@ -71,9 +71,19 @@ class OTX(HttpTIProvider):
 
     _REQUIRED_PARAMS: ClassVar[list[str]] = ["AuthKey"]
 
-    def __init__(self: OTX) -> None:
+    def __init__(
+        self: OTX,
+        *,
+        timeout: int | None = None,
+        ApiID: str | None = None,  # noqa: N803
+        AuthKey: str | None = None,  # noqa: N803
+    ) -> None:
         """Set OTX specific settings."""
-        super().__init__()
+        super().__init__(
+            timeout=timeout,
+            ApiID=ApiID,
+            AuthKey=AuthKey,
+        )
         self.require_url_encoding = True
 
     def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:

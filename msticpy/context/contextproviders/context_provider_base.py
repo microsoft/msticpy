@@ -43,7 +43,7 @@ def _validate_hostname(hostname: str) -> SanitizedObservable:
     """Validate that parameter is a valid hostname."""
     match_hostname: re.Match | None = re.compile(
         HOSTNAME_REGEX,
-        re.I | re.X | re.M,
+        re.IGNORECASE | re.VERBOSE | re.MULTILINE,
     ).search(hostname)
     if not match_hostname:
         return SanitizedObservable(None, "Unrecognized hostname")
@@ -61,12 +61,14 @@ def _validate_ip(
     except ValueError:
         return SanitizedObservable(None, "IP address is invalid format")
 
-    if version == IPv4Address._version and not isinstance(  # pylint: disable=W0212
-        addr, IPv4Address
+    if version == addr.version and not isinstance(
+        addr,
+        IPv4Address,
     ):
         return SanitizedObservable(None, "Not an IPv4 address")
-    if version == IPv6Address._version and not isinstance(  # pylint: disable=W0212
-        addr, IPv6Address
+    if version == addr.version and not isinstance(
+        addr,
+        IPv6Address,
     ):
         return SanitizedObservable(None, "Not an IPv6 address")
 

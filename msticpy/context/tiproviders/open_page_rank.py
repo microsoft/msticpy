@@ -53,9 +53,19 @@ class OPR(HttpTIProvider):
 
     _REQUIRED_PARAMS: ClassVar[list[str]] = ["AuthKey"]
 
-    def __init__(self: OPR) -> None:
+    def __init__(
+        self: OPR,
+        *,
+        timeout: int | None = None,
+        ApiID: str | None = None,  # noqa: N803
+        AuthKey: str | None = None,  # noqa: N803
+    ) -> None:
         """Initialize a new instance of the class."""
-        super().__init__()
+        super().__init__(
+            timeout=timeout,
+            ApiID=ApiID,
+            AuthKey=AuthKey,
+        )
 
         self._provider_name: str = self.__class__.__name__
 
@@ -227,7 +237,7 @@ class OPR(HttpTIProvider):
 
         l_len: int = len(ioc_list)
         for step in range(0, l_len, batch_size):
-            batch_list: list[str] = ioc_list[step : (step + batch_size)]
+            batch_list: list[str] = ioc_list[step : (step + batch_size)]  # noqa: E203
             yield from self._lookup_batch(batch_list)
 
     def _lookup_batch(self: Self, ioc_list: list) -> Iterable[dict]:

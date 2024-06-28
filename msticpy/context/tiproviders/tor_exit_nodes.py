@@ -81,7 +81,7 @@ class Tor(TIProvider):
                     cls._last_cached = datetime.now(timezone.utc)
 
     @staticmethod
-    def _tor_splitter(node_list: str) -> Iterable[tuple[str, dict[str, str | None]]]:
+    def _tor_splitter(node_list: str) -> Iterable[tuple[str, dict[str, Any]]]:
         node_dict: dict[str, str | None] = {}
         for line in node_list.split("\n"):
             if not line:
@@ -130,7 +130,7 @@ class Tor(TIProvider):
         """
         if not self._nodelist:
             self._check_and_get_nodelist()
-        result = self._check_ioc_type(
+        result: dict[str, Any] = self._check_ioc_type(
             ioc=ioc,
             ioc_type=ioc_type,
             query_subtype=query_type,
@@ -159,7 +159,7 @@ class Tor(TIProvider):
             result["Details"] = "Not found."
         return pd.DataFrame([result])
 
-    def parse_results(self: Self) -> tuple[bool, ResultSeverity, Any]:
+    def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -176,4 +176,5 @@ class Tor(TIProvider):
             Object with match details
 
         """
+        del response
         return (True, ResultSeverity.information, None)

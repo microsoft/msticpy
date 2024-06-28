@@ -11,19 +11,21 @@ with a domain or url, such as getting a screenshot or validating the TLD.
 
 """
 from __future__ import annotations
+
 import json
 import ssl
 import time
 from dataclasses import asdict
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple
 from urllib.error import HTTPError, URLError
 
-import cryptography as crypto
 import httpx
 import pandas as pd
 import tldextract
+from cryptography import x509
+from cryptography.hazmat.primitives.hashes import SHA1
 from cryptography.x509 import Certificate
 from dns.exception import DNSException
 from dns.resolver import Resolver
@@ -37,6 +39,8 @@ from ..common.exceptions import MsticpyUserConfigError
 from ..common.settings import get_config, get_http_timeout
 from ..common.utility import export, mp_ua_header
 
+if TYPE_CHECKING:
+    from dns.resolver import Answer
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
@@ -131,7 +135,7 @@ def screenshot(url: str, api_key: str | None = None) -> httpx.Response:
 # otherwise use "query"
 _dns_resolver = Resolver()
 if hasattr(_dns_resolver, "resolve"):
-    _dns_resolve = _dns_resolver.resolve
+    _dns_resolve: Callable[..., Answer] = _dns_resolver.resolve
 else:
     _dns_resolve = _dns_resolver.query
 
@@ -219,25 +223,20 @@ class DomainValidator:
             Certificate - the certificate loaded from the domain.
 
         """
-        x509: Optional[Certificate]
         try:
-            cert = ssl.get_server_certificate((url_domain, 443))
-            x509 = crypto.x509.load_pem_x509_certificate(  # type: ignore
+            cert: str = ssl.get_server_certificate((url_domain, 443))
+            x509_cert: Optional[Certificate] = x509.load_pem_x509_certificate(
                 cert.encode("ascii"),
             )
-            cert_sha1 = x509.fingerprint(
-                crypto.hazmat.primitives.hashes.SHA1(),  # type: ignore # nosec
-            )
+            cert_sha1: bytes = x509_cert.fingerprint(SHA1())
             result = bool(
-                self.ssl_abuse_list["SHA1"]
-                .str.contains(cert_sha1.hex())
-                .any(),  # type: ignore
+                self.ssl_abuse_list["SHA1"].str.contains(cert_sha1.hex()).any(),
             )
         except Exception:  # pylint: disable=broad-except
             result = False
-            x509 = None
+            x509_cert = None
 
-        return result, x509
+        return result, x509_cert
 
     @classmethod
     def _get_ssl_abuselist(cls) -> pd.DataFrame:
@@ -300,7 +299,10 @@ def dns_resolve(url_domain: str, rec_type: str = "A") -> Dict[str, Any]:
         Resolver result as dictionary.
 
     """
-    domain = parse_url(url_domain).host
+    domain: str | None = parse_url(url_domain).host
+    if not domain:
+        err_msg: str = f"Failed to parse url: {url_domain}"
+        raise ValueError(err_msg)
     try:
         return _resolve_resp_to_dict(_dns_resolve(domain, rdtype=rec_type))
     except DNSException as err:

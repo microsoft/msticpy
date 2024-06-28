@@ -282,6 +282,8 @@ class PreProcessor:
         for processor in self._processors.get(value_type, []):
             if processor == self._TYPE_CHECK:
                 result = _validate_ioc_type(proc_value, value_type)
+            elif isinstance(processor, str):
+                continue
             else:
                 result = processor(proc_value, **kwargs)
             proc_value = result.observable

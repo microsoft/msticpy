@@ -14,7 +14,7 @@ requests per minute for the account type that you have.
 """
 from __future__ import annotations
 
-from typing import Dict, Iterable, List, Mapping, Optional, Union
+from typing import TYPE_CHECKING, ClassVar, Iterable, Mapping
 
 import pandas as pd
 
@@ -26,6 +26,8 @@ from .lookup import Lookup
 from .provider_base import Provider, _make_sync
 from .tiproviders import TI_PROVIDERS
 
+if TYPE_CHECKING:
+    import datetime as dt
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
@@ -34,29 +36,32 @@ __author__ = "Ian Hellen"
 class TILookup(Lookup):
     """Threat Intel observable lookup from providers."""
 
-    _NO_PROVIDERS_MSG = """
+    _NO_PROVIDERS_MSG: ClassVar[
+        str
+    ] = """
     No TI Providers are loaded - please check that
     you have correctly configured your msticpyconfig.yaml settings.
     """
-    _HELP_URI = (
+    _HELP_URI: ClassVar[str] = (
         "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
         "TIProviders.html#configuration-file"
     )
 
-    PROVIDERS = TI_PROVIDERS
-    PACKAGE = "tiproviders"
-    CUSTOM_PROVIDERS: Dict[str, Provider] = {}
+    PROVIDERS: ClassVar[dict[str, tuple[str, str]]] = TI_PROVIDERS
+    PACKAGE: ClassVar[str] = "tiproviders"
+    CUSTOM_PROVIDERS: ClassVar[dict[str, type[Provider]]] = {}
 
     # pylint: disable=too-many-arguments
     def lookup_ioc(
         self,
-        ioc: Optional[str] = None,
-        ioc_type: Optional[str] = None,
-        ioc_query_type: Optional[str] = None,
-        providers: Optional[List[str]] = None,
-        default_providers: Optional[List[str]] = None,
+        ioc: str | None = None,
+        ioc_type: str | None = None,
+        ioc_query_type: str | None = None,
+        providers: list[str] | None = None,
+        default_providers: list[str] | None = None,
         prov_scope: str = "primary",
-        **kwargs,
+        *,
+        observable: str | None = None,
     ) -> pd.DataFrame:
         """
         Lookup Threat Intelligence reports for a single IoC in active providers.
@@ -72,9 +77,9 @@ class TILookup(Lookup):
             If none, the IoC type will be inferred
         ioc_query_type: str, optional
             The ioc query type (e.g. rep, info, malware)
-        providers: List[str]
+        providers: list[str]
             Explicit list of providers to use
-        default_providers: Optional[List[str]], optional
+        default_providers: Optional[list[str]], optional
             Used by pivot functions as a fallback to `providers`. If
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
@@ -103,7 +108,7 @@ class TILookup(Lookup):
         By default, providers are queried asynchronously, in parallel.
 
         """
-        ioc = ioc or kwargs.pop("observable", None)
+        ioc = ioc or observable
         if ioc is None:
             raise ValueError("No value supplied for 'ioc' parameter")
         return self.lookup_item(
@@ -118,12 +123,12 @@ class TILookup(Lookup):
 
     def lookup_iocs(
         self,
-        data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
-        ioc_col: Optional[str] = None,
-        ioc_type_col: Optional[str] = None,
-        ioc_query_type: Optional[str] = None,
-        providers: Optional[List[str]] = None,
-        default_providers: Optional[List[str]] = None,
+        data: pd.DataFrame | Mapping[str, str] | Iterable[str],
+        ioc_col: str | None = None,
+        ioc_type_col: str | None = None,
+        ioc_query_type: str | None = None,
+        providers: list[str] | None = None,
+        default_providers: list[str] | None = None,
         prov_scope: str = "primary",
         **kwargs,
     ) -> pd.DataFrame:
@@ -145,9 +150,9 @@ class TILookup(Lookup):
             DataFrame column to use for IoCTypes, by default None
         ioc_query_type: str, optional
             The ioc query type (e.g. rep, info, malware)
-        providers: List[str]
+        providers: list[str]
             Explicit list of providers to use
-        default_providers: Optional[List[str]], optional
+        default_providers: Optional[list[str]], optional
             Used by pivot functions as a fallback to `providers`. If
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
@@ -192,12 +197,12 @@ class TILookup(Lookup):
     # pylint: disable=too-many-locals
     async def _lookup_iocs_async(
         self,
-        data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
-        ioc_col: Optional[str] = None,
-        ioc_type_col: Optional[str] = None,
-        ioc_query_type: Optional[str] = None,
-        providers: Optional[List[str]] = None,
-        default_providers: Optional[List[str]] = None,
+        data: pd.DataFrame | Mapping[str, str] | Iterable[str],
+        ioc_col: str | None = None,
+        ioc_type_col: str | None = None,
+        ioc_query_type: str | None = None,
+        providers: list[str] | None = None,
+        default_providers: list[str] | None = None,
         prov_scope: str = "primary",
         **kwargs,
     ) -> pd.DataFrame:
@@ -206,7 +211,7 @@ class TILookup(Lookup):
             data,
             item_col=ioc_col,
             item_type_col=ioc_type_col,
-            ioc_query_type=ioc_query_type,
+            query_type=ioc_query_type,
             providers=providers,
             default_providers=default_providers,
             prov_scope=prov_scope,
@@ -215,12 +220,12 @@ class TILookup(Lookup):
 
     def lookup_iocs_sync(
         self,
-        data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
-        ioc_col: Optional[str] = None,
-        ioc_type_col: Optional[str] = None,
-        ioc_query_type: Optional[str] = None,
-        providers: Optional[List[str]] = None,
-        default_providers: Optional[List[str]] = None,
+        data: pd.DataFrame | Mapping[str, str] | Iterable[str],
+        ioc_col: str | None = None,
+        ioc_type_col: str | None = None,
+        ioc_query_type: str | None = None,
+        providers: list[str] | None = None,
+        default_providers: list[str] | None = None,
         prov_scope: str = "primary",
         **kwargs,
     ) -> pd.DataFrame:
@@ -242,9 +247,9 @@ class TILookup(Lookup):
             DataFrame column to use for IoCTypes, by default None
         ioc_query_type: str, optional
             The ioc query type (e.g. rep, info, malware)
-        providers: List[str]
+        providers: list[str]
             Explicit list of providers to use
-        default_providers: Optional[List[str]], optional
+        default_providers: Optional[list[str]], optional
             Used by pivot functions as a fallback to `providers`. If
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
@@ -269,6 +274,6 @@ class TILookup(Lookup):
             **kwargs,
         )
 
-    def _load_providers(self, **kwargs):
+    def _load_providers(self, **kwargs) -> None:
         """Load provider classes based on config."""
         return super()._load_providers(providers="TIProviders", **kwargs)

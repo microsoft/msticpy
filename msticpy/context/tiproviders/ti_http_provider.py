@@ -39,6 +39,24 @@ __author__ = "Ian Hellen"
 class HttpTIProvider(TIProvider, HttpProvider):
     """HTTP API Lookup provider base class."""
 
+    def __init__(
+        self: HttpTIProvider,
+        *,
+        timeout: int | None = None,
+        ApiID: str | None = None,  # noqa: N803
+        AuthKey: str | None = None,  # noqa: N803
+        Instance: str | None = None,  # noqa: N803
+    ) -> None:
+        """Init HttpContextProvider."""
+        TIProvider.__init__(self)
+        HttpProvider.__init__(
+            self,
+            timeout=timeout,
+            ApiID=ApiID,
+            AuthKey=AuthKey,
+            Instance=Instance,
+        )
+
     def _run_ti_lookup_query(
         self: Self,
         result: dict[str, Any],

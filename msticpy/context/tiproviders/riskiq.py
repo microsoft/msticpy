@@ -28,10 +28,15 @@ from .ti_provider_base import ResultSeverity, TIPivotProvider, TIProvider
 
 try:
     from passivetotal import analyzer as ptanalyzer
+    from passivetotal.analyzer.illuminate.reputation import ReputationScore
+    from passivetotal.analyzer.summary import HostnameSummary
 
     if TYPE_CHECKING:
+        import requests
         from passivetotal.analyzer.hostname import Hostname
         from passivetotal.analyzer.ip import IPAddress
+        from passivetotal.analyzer.whois import WhoisRecords
+
 except ImportError as imp_err:
     error_msg: str = "Cannot use this feature without passivetotal package installed."
     raise MsticpyImportExtraError(
@@ -43,11 +48,9 @@ except ImportError as imp_err:
 if TYPE_CHECKING:
     from datetime import datetime
 
-    import requests
-
-    from msticpy.common.timespan import TimeSpan
-    from msticpy.init.pivot import Pivot
-    from msticpy.init.pivot_core.pivot_register import PivotRegistration
+    from ...common.timespan import TimeSpan
+    from ...init.pivot import Pivot
+    from ...init.pivot_core.pivot_register import PivotRegistration
 
 __version__ = VERSION
 __author__ = "Mark Kendrick"
@@ -144,7 +147,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
         ptanalyzer.init(username=ApiID, api_key=AuthKey)
         self._pivot_timespan_start: datetime | None = None
         self._pivot_timespan_end: datetime | None = None
-        self._pivot_get_timespan: Callable[..., TimeSpan] = None
+        self._pivot_get_timespan: Callable[..., TimeSpan] | None = None
 
     @property
     def _httpx_client(self: Self) -> requests.Session:
@@ -198,7 +201,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
             The returned results.
 
         """
-        result = self._check_ioc_type(
+        result: dict[str, Any] = self._check_ioc_type(
             ioc=ioc,
             ioc_type=ioc_type,
             query_subtype=query_type,
@@ -226,7 +229,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
             if prop == "ALL":
                 result = self._parse_result_all_props(pt_obj, result)
             else:
-                result: dict[str, Any] = self._parse_result_prop(pt_obj, prop, result)
+                result = self._parse_result_prop(pt_obj, prop, result)
         except ptanalyzer.AnalyzerError as err:
             result["Result"] = False
             result["Status"] = LookupStatus.QUERY_FAILED.value
@@ -282,7 +285,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
         ti_result["Result"] = True
         return ti_result
 
-    def parse_results(self: Self) -> tuple[bool, ResultSeverity, Any]:
+    def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -299,6 +302,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
             Object with match details
 
         """
+        del response
         return (True, ResultSeverity.information, None)
 
     def _set_pivot_timespan(
@@ -336,14 +340,17 @@ class RiskIQ(TIProvider, TIPivotProvider):
             ptanalyzer.set_date_range(start_date=start, end_date=end)
         return changed
 
-    def pivot_value(
+    def pivot_value(  # pylint: disable=too-many-arguments
         self: Self,
         prop: str,
-        host: Hostname,
+        host: str,
         *,
         start: datetime | None = None,
         end: datetime | None = None,
-        **kwargs,
+        exclude_links: bool = True,
+        explode_rules: bool = False,
+        drop_links: bool = False,
+        **kwargs: str,
     ) -> pd.DataFrame:
         """Perform a pivot on a single value."""
         ts_changed: bool = self._set_pivot_timespan(start=start, end=end)
@@ -352,17 +359,27 @@ class RiskIQ(TIProvider, TIPivotProvider):
         if ts_changed and prop not in ["reputation", "summary", "whois"]:
             obj.reset(prop)
         try:
-            attrib = getattr(obj, prop)
+            attrib: HostnameSummary | WhoisRecords | ReputationScore = getattr(
+                obj,
+                prop,
+            )
         except ptanalyzer.AnalyzerAPIError as err:
             raise RiskIQAPIUserError(err) from err
         except ptanalyzer.AnalyzerError as err:
             err_msg: str = "Analyzer error."
             raise RiskIQUserError(err_msg) from err
+        if isinstance(attrib, HostnameSummary):
+            return attrib.to_dataframe(exclude_links=exclude_links)
+        if isinstance(attrib, ReputationScore):
+            return attrib.to_dataframe(
+                explode_rules=explode_rules,
+                drop_links=drop_links,
+            )
         return attrib.to_dataframe(**kwargs)
 
     def register_pivots(
         self: Self,
-        pivot_reg: PivotRegistration,
+        pivot_reg: type[PivotRegistration],
         pivot: Pivot,
     ) -> None:
         """

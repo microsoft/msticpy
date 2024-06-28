@@ -36,7 +36,7 @@ from .ti_provider_base import ResultSeverity, TIProvider
 if TYPE_CHECKING:
     import datetime as dt
 
-    from msticpy.context.tiproviders.result_severity import LookupResult
+    from Kqlmagic.results import ResultSet
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -221,7 +221,7 @@ class KqlTIProvider(TIProvider):
             combined_results_df: pd.DataFrame = self._combine_results(
                 input_df=src_ioc_frame,
                 results_df=data_result,
-                reslt_ioc_key="IoC",
+                result_ioc_key="IoC",
             )
             all_results.append(combined_results_df)
 
@@ -245,7 +245,7 @@ class KqlTIProvider(TIProvider):
         src_ioc_frame["Severity"] = ResultSeverity.information.name
 
     @staticmethod
-    def _check_result_status(data_result: pd.DataFrame | LookupResult) -> LookupStatus:
+    def _check_result_status(data_result: pd.DataFrame | ResultSet) -> LookupStatus:
         """Check the return value from the query."""
         if isinstance(data_result, pd.DataFrame):
             return LookupStatus.NO_DATA if data_result.empty else LookupStatus.OK
@@ -383,7 +383,7 @@ class KqlTIProvider(TIProvider):
     def _combine_results(
         input_df: pd.DataFrame,
         results_df: pd.DataFrame,
-        reslt_ioc_key: str,
+        result_ioc_key: str,
     ) -> pd.DataFrame:
         # Clean out unwanted columns from the results and merge with
         # the original IoCList
@@ -392,7 +392,7 @@ class KqlTIProvider(TIProvider):
         # and drop all of the columns that we are not interested in
         columns_to_drop: set[str] = set(results_df.columns.to_list())
         colums_to_keep: set[str] = {
-            reslt_ioc_key,
+            result_ioc_key,
             "Result",
             "Status",
             "Severity",
@@ -407,7 +407,7 @@ class KqlTIProvider(TIProvider):
         combined_df: pd.DataFrame = input_df.copy()
         combined_df["IoCKey"] = input_df["Ioc"].str.lower()
         cleaned_results_df = cleaned_results_df.rename(
-            columns={reslt_ioc_key: "IoCKey"},
+            columns={result_ioc_key: "IoCKey"},
         )
         combined_df = combined_df.merge(
             right=cleaned_results_df,

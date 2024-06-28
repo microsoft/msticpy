@@ -25,7 +25,7 @@ from .result_severity import LookupResult, ResultSeverity
 from .ti_http_provider import HttpTIProvider
 
 if TYPE_CHECKING:
-    from msticpy.common.provider_settings import ProviderSettings
+    from ...common.provider_settings import ProviderSettings
 
 __version__ = VERSION
 __author__ = "Thomas Roccia | @fr0gger_"
@@ -258,7 +258,7 @@ class PDlookup:
             timeout=get_http_timeout(),
         )
         if not resp.is_success:
-            err_msg: str = (
+            err_msg = (
                 f"API request failed with status code {resp.status_code}"
                 f" and message {resp.text}"
             )
@@ -360,6 +360,7 @@ class Pulsedive(HttpTIProvider):
 
     def __init__(
         self: Pulsedive,
+        *,
         timeout: int | None = None,
         ApiID: str | None = None,  # noqa: N803
         AuthKey: str | None = None,  # noqa: N803
@@ -391,7 +392,6 @@ class Pulsedive(HttpTIProvider):
             Object with match details
 
         """
-
         if self._failed_response(response) or not isinstance(
             response["RawResult"],
             dict,

@@ -1,14 +1,16 @@
 """VirusTotal v3 API."""
+from __future__ import annotations
 
 import asyncio
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, ClassVar, Coroutine, Iterable
 
 import pandas as pd
-from IPython.display import HTML, display
+from IPython.core.display import HTML
+from IPython.display import display
 
 from ...common.exceptions import MsticpyImportExtraError
-from ...common.provider_settings import get_provider_settings
+from ...common.provider_settings import ProviderSettings, get_provider_settings
 from ...common.utility import is_ipython
 
 try:
@@ -85,7 +87,7 @@ def _ensure_eventloop(force_nest_asyncio: bool = False) -> asyncio.AbstractEvent
     return event_loop
 
 
-def _make_sync(future):
+def _make_sync(future: Coroutine) -> pd.DataFrame:
     """Wait for an async call, making it sync."""
     event_loop: asyncio.AbstractEventLoop = _ensure_eventloop()
     return event_loop.run_until_complete(future)
@@ -97,21 +99,21 @@ VT_API_NOT_FOUND = "NotFoundError"
 class VTLookupV3:
     """VTLookupV3: VirusTotal lookup of IoC reports."""
 
-    _SUPPORTED_VT_TYPES: Set[VTEntityType] = {
+    _SUPPORTED_VT_TYPES: ClassVar[set[VTEntityType]] = {
         VTEntityType.FILE,
         VTEntityType.URL,
         VTEntityType.IP_ADDRESS,
         VTEntityType.DOMAIN,
     }
 
-    _MAPPING_TYPES_ENDPOINT: Dict[VTEntityType, str] = {
+    _MAPPING_TYPES_ENDPOINT: ClassVar[dict[VTEntityType, str]] = {
         VTEntityType.FILE: "files",
         VTEntityType.URL: "urls",
         VTEntityType.IP_ADDRESS: "ip_addresses",
         VTEntityType.DOMAIN: "domains",
     }
 
-    _BASIC_PROPERTIES_PER_TYPE: Dict[VTEntityType, Set[str]] = {
+    _BASIC_PROPERTIES_PER_TYPE: ClassVar[dict[VTEntityType, set[str]]] = {
         VTEntityType.FILE: {
             "type_description",
             "size",
@@ -129,17 +131,19 @@ class VTLookupV3:
         VTEntityType.DOMAIN: {"id", "creation_date", "last_update_date", "country"},
     }
 
-    _DEFAULT_SEARCH_LIMIT = 1000  # prevents vague queries from pulling 1M+ files
-    _SEARCH_API_ENDPOINT = "/intelligence/search"
+    _DEFAULT_SEARCH_LIMIT: ClassVar[  # prevents vague queries from pulling 1M+ files
+        int
+    ] = 1000
+    _SEARCH_API_ENDPOINT: ClassVar[str] = "/intelligence/search"
 
     @property
-    def supported_vt_types(self) -> List[str]:
+    def supported_vt_types(self) -> list[str]:
         """
         Return list of VirusTotal supported IoC type names.
 
         Returns
         -------
-        List[str]:
+        list[str]:
             List of VirusTotal supported IoC type names.
 
         """
@@ -158,23 +162,23 @@ class VTLookupV3:
         vt_object: vt.object.Object,
         all_props: bool = False,
     ) -> pd.DataFrame:
-        obj_dict = vt_object.to_dict()
+        obj_dict: dict[str, Any] = vt_object.to_dict()
         add_columns_df = pd.DataFrame()
         if VTObjectProperties.ATTRIBUTES.value in obj_dict:
-            attributes = obj_dict[VTObjectProperties.ATTRIBUTES.value]
+            attributes: dict[str, Any] = obj_dict[VTObjectProperties.ATTRIBUTES.value]
             vt_type = VTEntityType(vt_object.type)
             if vt_type not in cls._SUPPORTED_VT_TYPES:
                 raise KeyError(f"Property type {vt_type} not supported")
             if not all_props:
-                obj = {
+                obj: dict[str, Any] = {
                     key: attributes[key]
                     for key in cls._BASIC_PROPERTIES_PER_TYPE[vt_type]
                     if key in attributes
                 }
             else:
                 obj = attributes
-            vt_df = pd.json_normalize(data=[obj])
-            last_analysis_stats = attributes.get(
+            vt_df: pd.DataFrame = pd.json_normalize(data=[obj])
+            last_analysis_stats: dict[str, Any] | None = attributes.get(
                 VTObjectProperties.LAST_ANALYSIS_STATS.value,
             )
             if last_analysis_stats:
@@ -206,7 +210,11 @@ class VTLookupV3:
             axis="columns",
         )  # .set_index([ColumnNames.ID.value])
 
-    def __init__(self, vt_key: Optional[str] = None, force_nestasyncio: bool = False):
+    def __init__(
+        self,
+        vt_key: str | None = None,
+        force_nestasyncio: bool = False,
+    ) -> None:
         """
         Create a new instance of VTLookupV3 class.
 
@@ -311,7 +319,7 @@ class VTLookupV3:
         observable_column: str = ColumnNames.TARGET.value,
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,
         all_props: bool = False,
-    ):
+    ) -> pd.DataFrame:
         """
         Look up and multiple IoC observables.
 
@@ -374,7 +382,7 @@ class VTLookupV3:
         observable_column: str = ColumnNames.TARGET.value,
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,
         all_props: bool = False,
-    ):
+    ) -> pd.DataFrame:
         """
         Look up and multiple IoC observables.
 
@@ -406,16 +414,15 @@ class VTLookupV3:
         finally:
             self._vt_client.close()
 
-    # pylint: disable=too-many-locals
-    async def _lookup_ioc_relationships_async(
+    async def _lookup_ioc_relationships_async(  # pylint: disable=too-many-locals
         self,
         observable: str,
         vt_type: str,
         relationship: str,
-        limit: Optional[int] = None,
+        limit: int | None = None,
         all_props: bool = False,
         full_objects: bool = False,
-    ):
+    ) -> pd.DataFrame:
         """
         Look up and single IoC observable relationships.
 
@@ -474,16 +481,15 @@ class VTLookupV3:
             f"{relationship}" if full_objects else f"relationships/{relationship}"
         )
         try:
-            # print(f"Obtaining {limit} relationships for {vt_type} {observable}")
-            response = self._vt_client.iterator(
+            relations: Iterable[vt.object.Object] = self._vt_client.iterator(
                 f"/{endpoint_name}/{observable}/{obj_relation_type}",
                 batch_size=40,
                 limit=limit,
             )
-            vt_objects = [
-                self._parse_vt_object(r, all_props=all_props) for r in response
+            vt_objects: list[pd.DataFrame] = [
+                self._parse_vt_object(r, all_props=all_props) for r in relations
             ]
-            result_df = (
+            result_df: pd.DataFrame = (
                 pd.concat(vt_objects, ignore_index=True)
                 if vt_objects
                 else self._relation_not_found_df(
@@ -495,7 +501,7 @@ class VTLookupV3:
 
             if vt_objects:
                 # Add additional columns (with same size as DF)
-                rows = len(result_df)
+                rows: int = len(result_df)
                 add_columns = pd.DataFrame(
                     {
                         ColumnNames.SOURCE.value: [observable] * rows,
@@ -515,11 +521,6 @@ class VTLookupV3:
                     )
                     .reset_index()
                 )
-                # result_df.set_index(
-                #     [ColumnNames.SOURCE.value, ColumnNames.TARGET.value], inplace=True
-                # )
-                # if "index" in result_df.columns:
-                #     result_df.drop(columns=["index"], inplace=True)
         except vt.APIError as err:
             if err.args and err.args[0] == VT_API_NOT_FOUND:
                 return self._relation_not_found_df(vt_type, observable, relationship)
@@ -534,7 +535,7 @@ class VTLookupV3:
         observable: str,
         vt_type: str,
         relationship: str,
-        limit: Optional[int] = None,
+        limit: int | None = None,
         all_props: bool = False,
     ) -> pd.DataFrame:
         """
@@ -586,7 +587,7 @@ class VTLookupV3:
         observable: str,
         vt_type: str,
         relationship: str,
-        limit: int = None,
+        limit: int | None = None,
     ) -> pd.DataFrame:
         """
         Look single IoC observable related items.
@@ -637,7 +638,7 @@ class VTLookupV3:
         relationship: str,
         observable_column: str = ColumnNames.TARGET.value,
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,
-        limit: Optional[int] = None,
+        limit: int | None = None,
         all_props: bool = False,
     ) -> pd.DataFrame:
         """
@@ -711,7 +712,7 @@ class VTLookupV3:
         relationship: str,
         observable_column: str = ColumnNames.TARGET.value,
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,
-        limit: Optional[int] = None,
+        limit: int | None = None,
         all_props: bool = False,
     ) -> pd.DataFrame:
         """
@@ -754,7 +755,7 @@ class VTLookupV3:
 
     def create_vt_graph(
         self,
-        relationship_dfs: List[pd.DataFrame],
+        relationship_dfs: list[pd.DataFrame],
         name: str,
         private: bool,
     ) -> str:
@@ -879,9 +880,9 @@ class VTLookupV3:
 
     def get_file_behavior(
         self,
-        file_id: Optional[str] = None,
-        file_summary: Optional[Dict[str, Any]] = None,
-        sandbox: Optional[str] = None,
+        file_id: str | None = None,
+        file_summary: dict[str, Any] | None = None,
+        sandbox: str | None = None,
     ) -> VTFileBehavior:
         """
         Return a VTFileBehavior object with file detonation results.
@@ -890,7 +891,7 @@ class VTLookupV3:
         ----------
         file_id : Optional[str], optional
             The ID of the file to look up, by default None
-        file_summary : Optional[Dict[str, Any]], optional
+        file_summary : Optional[dict[str, Any]], optional
             VT file summary object dictionary, by default None
         sandbox : str, optional
             Name of specific sandbox to retrieve, by default None
@@ -912,7 +913,7 @@ class VTLookupV3:
     def search(
         self,
         query: str,
-        limit: Optional[int] = _DEFAULT_SEARCH_LIMIT,
+        limit: int = _DEFAULT_SEARCH_LIMIT,
     ) -> pd.DataFrame:
         """
         Return results of a VT search query as a DataFrame.
@@ -951,12 +952,12 @@ class VTLookupV3:
 
     def iterator(
         self,
-        path,
-        *path_args,
-        params=None,
-        cursor=None,
-        limit=None,
-        batch_size=0,
+        path: str,
+        *path_args: str,
+        params: dict[str, Any] | None = None,
+        cursor: str | None = None,
+        limit: int | None = None,
+        batch_size: int = 0,
     ) -> vt.Iterator:
         """
         Return an iterator for the collection specified by the given path.
@@ -1032,19 +1033,19 @@ class VTLookupV3:
 
     @staticmethod
     def relationships_to_graph(
-        relationship_dfs: List[pd.DataFrame],
-    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+        relationship_dfs: list[pd.DataFrame],
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """
         Generate nodes and edges from relationships.
 
         Parameters
         ----------
-        relationship_dfs : List[pd.DataFrame]
+        relationship_dfs : list[pd.DataFrame]
             List of relationship DataFrames
 
         Returns
         -------
-        Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]
+        Tuple[list[dict[str, Any]], list[dict[str, Any]]]
             List of nodes (node_id, node_type)
             List of edges (source_node, target_node, connection_type)
 
@@ -1113,7 +1114,11 @@ class VTLookupV3:
         return nodes, edges
 
     @staticmethod
-    def render_vt_graph(graph_id: str, width: int = 800, height: int = 600):
+    def render_vt_graph(
+        graph_id: str,
+        width: int = 800,
+        height: int = 600,
+    ) -> None:
         """
         Display a VTGraph in a Jupyter Notebook.
 
@@ -1141,8 +1146,8 @@ class VTLookupV3:
         )
 
     @classmethod
-    def _item_not_found_df(cls, vt_type: str, observable: str):
-        not_found_dict = {
+    def _item_not_found_df(cls, vt_type: str, observable: str) -> pd.DataFrame:
+        not_found_dict: dict[str, str] = {
             ColumnNames.ID.value: observable,
             ColumnNames.TYPE.value: vt_type,
         }
@@ -1156,8 +1161,13 @@ class VTLookupV3:
         return pd.DataFrame([not_found_dict])
 
     @classmethod
-    def _relation_not_found_df(cls, vt_type: str, observable: str, relationship: str):
-        not_found_dict = {
+    def _relation_not_found_df(
+        cls,
+        vt_type: str,
+        observable: str,
+        relationship: str,
+    ) -> pd.DataFrame:
+        not_found_dict: dict[str, str] = {
             ColumnNames.SOURCE.value: observable,
             ColumnNames.SOURCE_TYPE.value: vt_type,
             ColumnNames.RELATIONSHIP_TYPE.value: relationship,
@@ -1167,23 +1177,23 @@ class VTLookupV3:
         return pd.DataFrame([not_found_dict])
 
 
-def _get_vt_api_key() -> Optional[str]:
+def _get_vt_api_key() -> str | None:
     """Retrieve the VT key from settings."""
-    prov_settings = get_provider_settings("TIProviders")
-    vt_settings = prov_settings.get("VirusTotal")
+    prov_settings: dict[str, ProviderSettings] = get_provider_settings("TIProviders")
+    vt_settings: ProviderSettings | None = prov_settings.get("VirusTotal")
     if vt_settings:
         return vt_settings.args.get("AuthKey")
     return None
 
 
-def timestamps_to_utcdate(data: pd.DataFrame):
+def timestamps_to_utcdate(data: pd.DataFrame) -> pd.DataFrame:
     """Replace Unix timestamps in VT data with Py/pandas Timestamp."""
-    columns = data.columns
+    columns: pd.Index[str] = data.columns
     for date_col in (
         col for col in columns if isinstance(col, str) and col.endswith("_date")
     ):
         data = (
-            data.assign(pd_data=pd.to_datetime(data[date_col], unit="s", utc=True))  # type: ignore
+            data.assign(pd_data=pd.to_datetime(data[date_col], unit="s", utc=True))
             .drop(columns=date_col)
             .rename(columns={"pd_data": date_col})
         )

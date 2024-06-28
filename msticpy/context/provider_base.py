@@ -19,13 +19,10 @@ from abc import ABC, abstractmethod
 from asyncio import get_event_loop
 from collections.abc import Iterable as C_Iterable
 from functools import lru_cache, partial, singledispatch
-from typing import TYPE_CHECKING, Any, ClassVar, Iterable
+from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Iterable
 
 import pandas as pd
 from typing_extensions import Self
-
-from msticpy.init.pivot import Pivot
-from msticpy.init.pivot_core.pivot_register import PivotRegistration
 
 from .._version import VERSION
 from ..common.utility import export
@@ -35,7 +32,12 @@ from .lookup_result import LookupStatus, SanitizedObservable
 from .preprocess_observable import PreProcessor
 
 if TYPE_CHECKING:
+
+    from ..init.pivot import Pivot
+    from ..init.pivot_core.pivot_register import PivotRegistration
+
     from .lookup import ProgressCounter
+
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
@@ -46,7 +48,7 @@ _ITEM_EXTRACT: ItemExtract = ItemExtract()
 class Provider(ABC):
     """Abstract base class for Providers."""
 
-    _QUERIES: ClassVar[dict[str, tuple]] = {}
+    _QUERIES: ClassVar[dict[str, Any]] = {}
 
     @abstractmethod
     def lookup_item(
@@ -419,8 +421,8 @@ class PivotProvider(ABC):
 
     @abstractmethod
     def register_pivots(
-        self,
-        pivot_reg: PivotRegistration,
+        self: Self,
+        pivot_reg: type[PivotRegistration],
         pivot: Pivot,
     ) -> None:
         """
@@ -486,7 +488,7 @@ def _(data: dict, item_col: str | None = None, item_type_col: str | None = None)
         yield item, item_type
 
 
-def _make_sync(future):
+def _make_sync(future: Coroutine) -> pd.DataFrame:
     """Wait for an async call, making it sync."""
     try:
         event_loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()

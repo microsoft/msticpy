@@ -93,7 +93,7 @@ class XForce(HttpTIProvider):
             Object with match details
 
         """
-        severity = ResultSeverity.information
+        severity: ResultSeverity = ResultSeverity.information
         if self._failed_response(response) or not isinstance(
             response["RawResult"],
             dict,
@@ -123,7 +123,7 @@ class XForce(HttpTIProvider):
                     "tags": report.get("tags", 0),
                 },
             )
-            severity: ResultSeverity = (
+            severity = (
                 ResultSeverity.information
                 if score < self.MEDIUM_SEVERITY
                 else ResultSeverity.warning
@@ -134,7 +134,7 @@ class XForce(HttpTIProvider):
             response["IocType"] in ["file_hash", "md5_hash", "sha1_hash", "sha256_hash"]
             or response["QuerySubtype"] == "malware"
         ):
-            malware: str | None = response["RawResult"].get("malware")
+            malware: dict[str, Any] | None = response["RawResult"].get("malware")
             if malware:
                 result_dict.update(
                     {

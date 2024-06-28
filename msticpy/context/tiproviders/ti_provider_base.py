@@ -27,8 +27,8 @@ from .result_severity import ResultSeverity
 if TYPE_CHECKING:
     import pandas as pd
 
-    from msticpy.init.pivot import Pivot
-    from msticpy.init.pivot_core.pivot_register import PivotRegistration
+    from ...init.pivot import Pivot
+    from ...init.pivot_core.pivot_register import PivotRegistration
 
 
 __version__ = VERSION
@@ -39,7 +39,7 @@ __author__ = "Ian Hellen"
 class TIProvider(Provider):
     """Abstract base class for Threat Intel providers."""
 
-    _QUERIES: ClassVar[dict[str, tuple]] = {}
+    _QUERIES: ClassVar[dict[str, Any]] = {}
 
     def _check_item_type(
         self: Self,
@@ -349,7 +349,7 @@ class TIPivotProvider(PivotProvider):
     @abstractmethod
     def register_pivots(
         self: Self,
-        pivot_reg: PivotRegistration,
+        pivot_reg: type[PivotRegistration],
         pivot: Pivot,
     ) -> None:
         """
