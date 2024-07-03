@@ -25,3 +25,5 @@ This contains the following functionality:
 # flake8: noqa: F403
 # pylint: disable=unused-import
 from . import mp_pandas_plot
+
+__all__ = ["mp_pandas_plot"]

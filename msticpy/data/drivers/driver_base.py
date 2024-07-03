@@ -182,7 +182,6 @@ class DriverBase(ABC):
             Connect to a data source
 
         """
-        return None
 
     @abc.abstractmethod
     def query(

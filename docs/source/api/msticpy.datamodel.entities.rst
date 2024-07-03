@@ -32,12 +32,15 @@ Submodules
    msticpy.datamodel.entities.mail_cluster
    msticpy.datamodel.entities.mail_message
    msticpy.datamodel.entities.mailbox
+   msticpy.datamodel.entities.mailbox_configuration
    msticpy.datamodel.entities.malware
    msticpy.datamodel.entities.network_connection
+   msticpy.datamodel.entities.oauth_application
    msticpy.datamodel.entities.process
    msticpy.datamodel.entities.registry_key
    msticpy.datamodel.entities.registry_value
    msticpy.datamodel.entities.security_group
+   msticpy.datamodel.entities.service_principal
    msticpy.datamodel.entities.submission_mail
    msticpy.datamodel.entities.threat_intelligence
    msticpy.datamodel.entities.unknown_entity

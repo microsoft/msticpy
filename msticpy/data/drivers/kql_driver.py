@@ -15,10 +15,11 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 from azure.core.exceptions import ClientAuthenticationError
-from IPython import get_ipython
+from IPython.core.getipython import get_ipython
 
 from ..._version import VERSION
-from ...auth.azure_auth import AzureCloudConfig, az_connect, only_interactive_cred
+from ...auth.azure_auth import AzureCloudConfig, az_connect
+from ...auth.azure_auth_core import only_interactive_cred
 from ...common.exceptions import (
     MsticpyDataQueryError,
     MsticpyImportExtraError,

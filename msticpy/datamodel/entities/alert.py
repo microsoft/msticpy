@@ -201,8 +201,6 @@ class Alert(Entity):
             self._add_additional_data(ext_props)
 
     _entity_schema = {
-        # CompromisedEntity (type String)
-        "CompromisedEntity": None,
         # Count (type Int)
         "Count": None,
         # StartTimeUtc (type Datetime)

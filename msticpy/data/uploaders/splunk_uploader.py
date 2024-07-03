@@ -59,11 +59,11 @@ class SplunkUploader(UploaderBase):
                     port=self.port,
                 )
             else:
-                logger.info("username/bearer_token are missing.")
-                logger.info("Credential loading from config file.")
-                self.driver.connect()
+                raise MsticpyConnectionError(
+                    "One of these parameters must be supplied.",
+                    title="Both 'username' and 'bearer_token' are missing.",
+                )
         else:
-            logger.info("Credential loading from config file.")
             self.driver.connect()
 
         self.connected = True

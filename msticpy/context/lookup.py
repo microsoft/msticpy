@@ -510,7 +510,8 @@ class Lookup:
         # collect the return values of the tasks
         results = await asyncio.gather(*result_futures)
         # cancel the progress task if results have completed.
-        prog_task.cancel()
+        if progress:
+            prog_task.cancel()
         return self._combine_results(results, provider_names, **kwargs)
 
     def lookup_items_sync(

@@ -4,12 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data uploader sub-package."""
-# flake8: noqa: F403
-from .uploader_base import UploaderBase
 
 try:
-    from .loganalytics_uploader import LAUploader
-    from .splunk_uploader import SplunkUploader
+    from .loganalytics_uploader import LAUploader  # noqa: F401
+    from .splunk_uploader import SplunkUploader  # noqa: F401
 except ImportError:
     pass
 

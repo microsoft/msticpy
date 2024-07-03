@@ -16,9 +16,10 @@ from typing import Callable, Dict, Iterable, Set, Union
 
 import numpy as np
 import pandas as pd
-from IPython import get_ipython
-from IPython.display import HTML, display
-from pkg_resources import parse_version
+from IPython.core.display import HTML
+from IPython.core.getipython import get_ipython
+from IPython.display import display
+from packaging.version import parse as parse_version
 
 from ..._version import VERSION
 

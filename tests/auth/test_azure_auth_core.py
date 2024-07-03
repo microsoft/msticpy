@@ -16,8 +16,8 @@ from msticpy.auth.azure_auth_core import (
     AzureCloudConfig,
     _build_env_client,
     check_cli_credentials,
-    default_auth_methods,
 )
+from msticpy.auth.cloud_mappings import default_auth_methods
 
 from ..unit_test_lib import custom_mp_config, get_test_data_path
 

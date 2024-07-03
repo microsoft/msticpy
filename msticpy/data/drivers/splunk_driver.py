@@ -5,10 +5,11 @@
 #  --------------------------------------------------------------------------
 """Splunk Driver class."""
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from time import sleep
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
+import jwt
 import pandas as pd
 from tqdm import tqdm
 
@@ -177,6 +178,7 @@ class SplunkDriver(DriverBase):
         cs_dict.update(self._get_config_settings("Splunk"))
         # If a connection string - parse this and add to config
         if connection_str:
+            print("Credential loading from connection_str tied with ';'.")
             cs_items = connection_str.split(";")
             cs_dict.update(
                 {
@@ -185,9 +187,12 @@ class SplunkDriver(DriverBase):
                 }
             )
         elif kwargs:
+            print("Credential loading from connect() method's args.")
             # if connection args supplied as kwargs
             cs_dict.update(kwargs)
             check_kwargs(cs_dict, list(SPLUNK_CONNECT_ARGS.keys()))
+        else:
+            print("Credential loading from msticpyconfig.yaml file.")
 
         cs_dict["port"] = int(cs_dict["port"])
         verify_opt = cs_dict.get("verify")
@@ -200,8 +205,10 @@ class SplunkDriver(DriverBase):
         # between user/pass and authorization bearer token
         if "username" in cs_dict:
             self._required_params = ["host", "username", "password"]
+            print("username/password method is selected.")
         else:
             self._required_params = ["host", "bearer_token"]
+            print("bearer_token method is selected.")
 
         missing_args = set(self._required_params) - cs_dict.keys()
         if missing_args:
@@ -214,6 +221,28 @@ class SplunkDriver(DriverBase):
                 title="no Splunk connection parameters",
             )
 
+        if "bearer_token" in self._required_params:
+            epoch_now = datetime.now().timestamp()
+            alg = jwt.get_unverified_header(cs_dict["bearer_token"])["alg"]
+            decoded_token = jwt.decode(
+                cs_dict["bearer_token"],
+                algorithms=[alg],
+                options={"verify_signature": False},
+            )
+            token_idp = decoded_token.get("idp")
+
+            if token_idp == "Splunk":  # nosec
+                epoch_issued_at = decoded_token["iat"]
+                epoch_expiration = decoded_token["exp"]
+                token_exp = datetime.fromtimestamp(epoch_expiration, timezone.utc)
+                if epoch_issued_at < epoch_now < epoch_expiration:
+                    print(f"This bearer_token is active until {token_exp}")
+                else:
+                    raise MsticpyConnectionError(
+                        f"This bearer_token has been expired on {token_exp}",
+                        "Recreate new bearer_token in your target Splunk and set it on.",
+                        title="expired Splunk auth token",
+                    )
         return cs_dict
 
     def query(
