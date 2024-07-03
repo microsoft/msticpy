@@ -16,7 +16,8 @@ from msticpy.context.contextlookup import ContextLookup
 from msticpy.context.contextproviders.context_provider_base import ContextProvider
 from msticpy.context.tilookup import TILookup
 from msticpy.context.tiproviders.ti_provider_base import TIProvider
-from msticpy.data import QueryProvider, drivers
+from msticpy.data import drivers
+from msticpy.data.core.data_providers import QueryProvider
 from msticpy.data.drivers import DriverBase
 from msticpy.init.mp_plugins import read_plugins
 
@@ -89,6 +90,7 @@ def test_custom_data_provider(load_plugins):
 
 
 # pylint: disable=protected-access
+@pytest.mark.filterwarnings("ignore::UserWarning")
 @respx.mock
 def test_custom_ti_provider(load_plugins):
     """Test TI plugin."""
@@ -115,7 +117,7 @@ def test_custom_ti_provider(load_plugins):
                 }
             ]
         )
-        respx.get(re.compile("https://api\.service\.com/.*")).respond(
+        respx.get(re.compile(r"https://api\.service\.com/.*")).respond(
             200, json=_df_results.iloc[0].to_dict()
         )
 

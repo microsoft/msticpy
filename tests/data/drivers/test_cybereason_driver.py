@@ -20,6 +20,7 @@ from ...unit_test_lib import custom_mp_config, get_test_data_path
 
 MP_PATH = str(get_test_data_path().parent.joinpath("msticpyconfig-test.yaml"))
 # pylint: disable=protected-access
+pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
 
 _CR_RESULT = {
     "data": {

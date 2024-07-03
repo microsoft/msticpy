@@ -22,7 +22,6 @@ from msticpy.common.exceptions import (
     MsticpyParameterError,
 )
 from msticpy.data.core.data_providers import QueryProvider
-from msticpy.data.core.query_defns import DataEnvironment
 from msticpy.data.core.query_source import QuerySource
 from msticpy.data.drivers import azure_kusto_driver
 from msticpy.data.drivers.azure_kusto_driver import AzureKustoDriver
@@ -225,9 +224,7 @@ _TEST_CONNECT_ARGS = (
     ),
     ConnectTest(
         name="cluster-id-no-init",
-        init_args={
-            "cluster": "https://test.kusto.windows.net",
-        },
+        init_args={},
         connect_args={
             "cluster": "Help",
             "auth_types": ["device_code"],
@@ -242,9 +239,7 @@ _TEST_CONNECT_ARGS = (
     ),
     ConnectTest(
         name="cluster-name-no-init",
-        init_args={
-            "cluster": "https://test.kusto.windows.net",
-        },
+        init_args={},
         connect_args={
             "cluster": "help",
             "auth_types": ["device_code"],
@@ -261,9 +256,7 @@ _TEST_CONNECT_ARGS = (
     ),
     ConnectTest(
         name="mp_az_auth-bool",
-        init_args={
-            "cluster": "https://test.kusto.windows.net",
-        },
+        init_args={},
         connect_args={
             "cluster": "Help",
             "mp_az_auth": True,
@@ -274,9 +267,7 @@ _TEST_CONNECT_ARGS = (
     ),
     ConnectTest(
         name="mp_az_auth-str",
-        init_args={
-            "cluster": "https://test.kusto.windows.net",
-        },
+        init_args={},
         connect_args={
             "cluster": "Help",
             "mp_az_auth": "msi",
@@ -287,9 +278,7 @@ _TEST_CONNECT_ARGS = (
     ),
     ConnectTest(
         name="mp_az_auth-list",
-        init_args={
-            "cluster": "https://test.kusto.windows.net",
-        },
+        init_args={},
         connect_args={
             "cluster": "Help",
             "mp_az_auth": ["msi", "cli"],
@@ -300,9 +289,7 @@ _TEST_CONNECT_ARGS = (
     ),
     ConnectTest(
         name="mp_az_auth-client_id-override",
-        init_args={
-            "cluster": "https://test.kusto.windows.net",
-        },
+        init_args={},
         connect_args={
             "cluster": "G3",
             "mp_az_auth": ["msi", "cli"],
@@ -556,7 +543,6 @@ _TEST_QUERY_ARGS = (
         connect_args={"cluster": "help"},
         query_args={
             "query": "test",
-            "cluster": "https://ignore.kusto.windows.net",
             "query_source": {
                 "database": "test_db",
                 "cluster": "https://help.kusto.windows.net",

@@ -126,8 +126,8 @@ def box_layout():
             border="1px solid black",
             margin="5px",
             padding="5px",
-            style={"padding": "5px", "background-color": "red"},
-        )
+        ),
+        # "style": {"padding": "5px", "background-color": "red"}
     }
 
 
@@ -170,7 +170,7 @@ class QueryParameterEditWidget(IPyDisplayMixin):
         self.param_container = container
         self.parameter_dropdown = widgets.Select(
             description="Parameters",
-            size=5,
+            rows=5,
             options=list(
                 self.param_container.parameters.keys()
                 if self.param_container.parameters

@@ -227,7 +227,8 @@ def get_children(
     current_index_name = procs.index.name
     children = procs[procs[Col.parent_key] == proc.name]
     if include_source:
-        children = pd.concat([pd.DataFrame(proc).T, children])
+        proc_df = _fill_empty_columns(pd.DataFrame(proc).T)
+        children = pd.concat([proc_df, _fill_empty_columns(children)])
         children.index.name = current_index_name
     return children
 
@@ -259,6 +260,7 @@ def get_descendents(
 
     """
     proc = get_process(procs, source)
+
     descendents = []
     parent_keys = [proc.name]
     level = 0
@@ -284,8 +286,11 @@ def get_descendents(
     else:
         desc_procs = pd.DataFrame(columns=proc.index, index=None)
         desc_procs.index.name = Col.proc_key
+
+    desc_procs = _fill_empty_columns(desc_procs)
     if include_source:
-        desc_procs = pd.concat([pd.DataFrame(proc).T, desc_procs])
+        proc_df = _fill_empty_columns(pd.DataFrame(proc).T)
+        desc_procs = pd.concat([proc_df, desc_procs])
         desc_procs.index.name = current_index_name
     return desc_procs.sort_values("path")
 
@@ -491,3 +496,14 @@ def _create_proctree_template(
 def _node_header(depth_count):
     """Return text tree node header given tree depth."""
     return "+ " if depth_count == 0 else "   " * depth_count + "+-- "
+
+
+def _fill_empty_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Fill empty columns in the DataFrame."""
+    df = df.copy()
+    for col in df.columns[df.isna().all()]:
+        if df[col].dtype == "object":
+            df[col] = df[col].fillna("")
+        elif pd.api.types.is_numeric_dtype(df[col].dtype):
+            df[col] = df[col].fillna(0)
+    return df

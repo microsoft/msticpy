@@ -22,6 +22,7 @@ from ..unit_test_lib import custom_mp_config, get_test_data_path
 _TEST_DATA = get_test_data_path()
 
 # pylint: disable=protected-access
+pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
 
 
 def test_load_default():
@@ -131,11 +132,13 @@ def test_validate_config():
         xf_id__save = os.environ.get("XFORCE_ID", "")
         xf_auth_save = os.environ.get("XFORCE_KEY", "")
         xf_auth_save = os.environ.get("MAXMIND_AUTH", "")
+        xf_auth_save = os.environ.get("IPSTACK_AUTH", "")
         # set to some value
         os.environ["VTAUTHKEY"] = "myXfId"
         os.environ["XFORCE_ID"] = "myXfId"
         os.environ["XFORCE_KEY"] = "myXfId"
         os.environ["MAXMIND_AUTH"] = "myXfId"
+        os.environ["IPSTACK_AUTH"] = "myXfId"
         pkg_config.refresh_config()
         results = pkg_config.validate_config()
         check.equal(results, ([], []))
