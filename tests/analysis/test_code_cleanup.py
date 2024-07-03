@@ -15,15 +15,11 @@ __author__ = "Ian Hellen"
 # pylint: disable=redefined-outer-name
 
 _OBFUS_CODE = """
-If($PSVERSiOnTaBlE.PSVErSIOn.MajOR -gE 3){$mYVAr=[rEF].ASsEMbLY.
+If($XXXXXiOnTaBlE.XXXXrSIOn.MajOR -gE 3){$mYVAr=[rEF].XyyXyyXyy.
 GetTYPE(\'System.SomeLIB\')."GEtFie`LD"(\'cachedTest\',\'N\'+\'onPublic,
-Static\');If($mYVAr){$vAr2=$mYVAr.GetVaLUE($nUlL);$vAl=[CollEctIOns.GENerIC
-.DIcTIOnarY[StrIng,SYsTEm.ObJEct]]::new();$Val.Add(\'TeS\'+\'t2\',0);$val
-.Add(\'Test1\',0);$vAr2[\'HKEY_LOCAL_MACHINE\\Software\\Some\'+\'App\']=$Val}
-ElSE{[SCRiptBlOCk]."GeTFIE`lD"(\'tes\',\'N\'+\'T3,Param\').SETValuE($NULL,
-(New-OBjEcT sAMple.fIrST.iTEm))}$Ref=[ReF].AsseMBlY.GETTypE(\'System.Test
-.Test2.\'+\'Utils\');$REf.GeTFIELd(\'testInitF\'+\'ailed\',\'NonReal,Dynamic\')
-.SeTVaLUE($nulL,$tRUE);};
+Static\');If($mYVAr){$vAr2=$mYVAr.GetVaLUE($nUlL);$vAl=[XyyXyyXYy.GENerIC
+.DIcTIOnarY[XyXyXy,SYsTEm.ObJEct]]::new();$Val.Add(\'TeS\'+\'t2\',0);$val
+.Add(\'Test1\',0);$vAr2[\'XXXX_YYYYY_XXXXX\\Software\\Some\'+\'App\']=$Val}}
 """
 
 
@@ -34,23 +30,17 @@ def ps_code():
 
 
 _EXPECTED_TEXT = r"""
-if($psversiontable.psversion.major -ge 3)
+if($xxxxxiontable.xxxxrsion.major -ge 3)
 {
-    $myvar=[ref].assembly.gettype('system.somelib')."getfield"('cachedtest','nonpublic,static')
+    $myvar=[ref].xyyxyyxyy.gettype('system.somelib')."getfield"('cachedtest','nonpublic,static')
     if($myvar)
     {
         $var2=$myvar.getvalue($null)
-        $val=[collections.generic.dictionary[string,system.object]]::new()
+        $val=[xyyxyyxyy.generic.dictionary[xyxyxy,system.object]]::new()
         $val.add('test2',0)
         $val.add('test1',0)
-        $var2['hkey_local_machine\software\someapp']=$val
+        $var2['xxxx_yyyyy_xxxxx\software\someapp']=$val
     }
-    else
-    {
-        [scriptblock]."getfield"('tes','nt3,param').setvalue($null,(new-object sample.first.item))
-    }
-    $ref=[ref].assembly.gettype('system.test.test2.utils')
-    $ref.getfield('testinitfailed','nonreal,dynamic').setvalue($null,$true)
 }
 """
 

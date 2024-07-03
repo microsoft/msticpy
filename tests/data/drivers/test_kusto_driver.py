@@ -19,6 +19,10 @@ from ...unit_test_lib import custom_mp_config, get_test_data_path
 __author__ = "Ian Hellen"
 
 # pylint: disable=redefined-outer-name, protected-access
+pytestmark = [
+    pytest.mark.filterwarnings("ignore::UserWarning"),
+    pytest.mark.filterwarnings("ignore::DeprecationWarning"),
+]
 
 _KUSTO_SETTINGS = """
 DataProviders:
