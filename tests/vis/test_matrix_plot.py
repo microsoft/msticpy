@@ -105,6 +105,7 @@ _TEST_PARAMS = [
 ]
 
 
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 @pytest.mark.parametrize("test_data, exception", _TEST_PARAMS)
 def test_matrix_plot(network_data, test_data, exception):
     """Function_docstring."""

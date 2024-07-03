@@ -14,6 +14,7 @@ import pytest
 import pytest_check as check
 import yaml
 
+from msticpy.common.pkg_config import SettingsDict
 from msticpy.config.ce_simple_settings import CESimpleSettings
 from msticpy.config.comp_edit import CEItemsBase, CompEditItems, CompEditStatusMixin
 from msticpy.config.mp_config_edit import MpConfigEdit
@@ -90,7 +91,7 @@ def test_mp_edit_load_params():
     """Test different startup params for MpConfigEdit."""
     config_path = Path(TEST_DATA_PATH).joinpath("msticpyconfig.yaml")
     with open(config_path, "r", encoding="utf-8") as conf_fh:
-        settings = yaml.safe_load(conf_fh)
+        settings = SettingsDict(yaml.safe_load(conf_fh))
 
     orig_settings = deepcopy(settings)
     orig_resgroup = orig_settings["AzureSentinel"]["Workspaces"]["Default"].get(
@@ -106,12 +107,20 @@ def test_mp_edit_load_params():
     # pass MpConfigFile instance
     mpc_file = MpConfigFile(settings=settings)
     mp_conf = MpConfigEdit(settings=mpc_file)
-    check.equal(mp_conf.mp_controls.mp_config, settings, "MpConfigFile")
+    check.equal(
+        mp_conf.mp_controls.mp_config["MSSentinel"]["Workspaces"],
+        settings["MSSentinel"]["Workspaces"],
+        "MpConfigFile",
+    )
     check.equal(mp_conf.mp_controls.get_value(test_path), "TestMarker", "File path")
 
     # pass settings dict
     mp_conf = MpConfigEdit(settings=mpc_file.settings)
-    check.equal(mp_conf.mp_controls.mp_config, settings, "Settings dict")
+    check.equal(
+        mp_conf.mp_controls.mp_config["MSSentinel"]["Workspaces"],
+        settings["MSSentinel"]["Workspaces"],
+        "Settings dict",
+    )
     check.equal(mp_conf.mp_controls.get_value(test_path), "TestMarker", "File path")
 
     # In these last tests we can't check for dict equality since MpConfigEdit

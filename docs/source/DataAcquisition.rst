@@ -10,6 +10,8 @@ Common Data Provider Operations
    data_acquisition/DataProviders
 
 
+.. individual-data-environments
+
 Individual Data Environments
 ----------------------------
 

@@ -18,7 +18,7 @@ import socket
 import warnings
 from functools import lru_cache
 from time import sleep
-from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
 import httpx
 import pandas as pd
@@ -56,7 +56,7 @@ _POTAROO_ASNS_URL = "https://bgp.potaroo.net/cidr/autnums.html"
 
 
 # Closure to cache ASN dictionary from Potaroo
-def _fetch_asns():
+def _fetch_asns() -> Callable[[], Dict[str, str]]:
     """Create closure for ASN fetching."""
     asns_dict: Dict[str, str] = {}
 

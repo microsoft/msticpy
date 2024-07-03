@@ -13,7 +13,7 @@ repos:
       - id: black
         language: python
   - repo: https://github.com/PyCQA/pylint
-    rev: v2.16.1
+    rev: v3.2.2
     hooks:
       - id: pylint
         args:

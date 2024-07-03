@@ -39,6 +39,7 @@ nest_asyncio>=1.4.0
 networkx>=2.2
 numpy>=1.15.4  # pandas
 openpyxl>=3.0
+packaging>=24.0
 pandas>=1.4.0, <3.0.0
 panel>=0.14.4
 passivetotal>=2.5.3
