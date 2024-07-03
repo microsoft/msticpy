@@ -16,34 +16,37 @@ __author__ = "Ian Hellen"
 # pylint: disable=redefined-outer-name
 
 _INPUT_TEXT = r"""
-if($psversiontable.psversion.major -ge 3)
+$GDN_VERSION_CLI_FOUND = $false
+$PARSE_GDN_VERSION_CLI = $false
+$GDN_ARGUMENTS = @()
+
+foreach ($argument in $Arguments)
 {
-    $myvar=[ref].assembly.gettype('system.somelib')."getfield"('cachedtest','nonpublic,static')
-    if($myvar)
+    if ($argument -ieq "--guardian-version")
     {
-        $var2=$myvar.getvalue($null)
-        $val=[collections.generic.dictionary[string,system.object]]::new()
-        $val.add('test2',0)
-        $val.add('test1',0)
-        $var2['hkey_local_machine\software\someapp']=$val
+        $GDN_VERSION_CLI_FOUND = $PARSE_GDN_VERSION_CLI = $true
+    }
+    elseif ($GDN_VERSION_CLI_FOUND)
+    {
+        $GDN_VERSION = $argument
+        $PARSE_GDN_VERSION_CLI = $false
     }
     else
     {
-        [scriptblock]."getfield"('tes','nt3,param').setvalue($null,(new-object sample.first.item))
+        $GDN_ARGUMENTS += $argument
     }
-    $ref=[ref].assembly.gettype('system.test.test2.utils')
-    $ref.getfield('testinitfailed','nonreal,dynamic').setvalue($null,$true)
+}
+
+if (-not [String]::IsNullOrWhiteSpace($Policy))
+{
+    $GDN_ARGUMENTS += "--policy"
+    $GDN_ARGUMENTS += $Policy
 }
 """
 
 _CORE_HTML = """
-<span class="nv">$myvar</span><span class="p">=</span><span class="no">
-[ref]</span><span class="p">.</span><span class="n">assembly</span><span class="p">
-.</span><span class="n">gettype</span><span class="p">(</span><span class="s1">
-&#39;system.somelib&#39;</span><span class="p">).</span><span class="s2">
-&quot;getfield&quot;</span><span class="p">(</span><span class="s1">
-&#39;cachedtest&#39;</span><span class="p">,</span><span class="s1">
-&#39;nonpublic,static&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><span class="nv">$GDN_VERSION_CLI_FOUND
+</span> <span class="p">=</span> <span class="nv">$false</span>
 """
 
 _HTML_STYLE_HDR = """
