@@ -116,9 +116,7 @@ class XForce(HttpTIProvider):
             severity = (
                 ResultSeverity.information
                 if score < 2
-                else ResultSeverity.warning
-                if 2 <= score < 5
-                else ResultSeverity.high
+                else ResultSeverity.warning if 2 <= score < 5 else ResultSeverity.high
             )
         if (
             response["IocType"] in ["file_hash", "md5_hash", "sha1_hash", "sha256_hash"]

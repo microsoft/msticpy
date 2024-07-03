@@ -380,6 +380,7 @@ def _try_match_commandlines(
     """Return DF with matched commandlines."""
     procs_cmd = procs_cmds.copy()
     procs_cmd["cmd_line"] = np.nan
+    procs_cmd["cmd_line"] = procs_cmd["cmd_line"].astype(object)  # Set dtype to object
     weak_matches = 0
     for cmd in command_executions:
         for idx, row in procs_cmd.iterrows():
@@ -418,6 +419,7 @@ def _try_match_commandlines(
 def _fill_missing_proc_tree_values(process_df: pd.DataFrame) -> pd.DataFrame:
     # Define a schema to map Df names on to internal ProcSchema
     process_df["path"] = np.nan
+    process_df["path"] = process_df["path"].astype(object)  # Set dtype to object
     process_df.loc[process_df.IsRoot, "path"] = pd.Series(
         process_df[process_df.IsRoot].index.astype("str")
     ).apply(lambda x: x.zfill(5))

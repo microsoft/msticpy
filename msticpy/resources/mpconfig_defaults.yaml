@@ -128,6 +128,11 @@ TIProviders:
       AuthKey: *cred_key
     Primary: bool(default=False)
     Provider: "BinaryEdge"
+  AbuseIPDB:
+    Args:
+      AuthKey: *cred_key
+    Primary: bool(default=False)
+    Provider: "AbuseIPDB"
 OtherProviders:
   GeoIPLite:
     Args:

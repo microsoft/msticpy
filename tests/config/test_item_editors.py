@@ -32,6 +32,7 @@ from ..unit_test_lib import TEST_DATA_PATH
 __author__ = "Ian Hellen"
 
 # pylint: disable=redefined-outer-name
+pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
 
 _KUSTO_DP_INST = {
     "Args": {"Cluster": "https://msticti.kusto.windows.net", "IntegratedAuth": True}

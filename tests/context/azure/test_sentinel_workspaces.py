@@ -6,6 +6,7 @@
 """Azure Sentinel unit tests."""
 import re
 from collections import namedtuple
+from dataclasses import dataclass
 
 import pandas as pd
 import pytest
@@ -124,12 +125,21 @@ def _get_ws_results(**kwargs):
     return pd.DataFrame(columns=df.columns)
 
 
-TestExpected = namedtuple("TestExpected", "ws_name, sub_id, res_group, ws_id, ten_id")
+@dataclass
+class ExpectedResult:
+    """Test expected values."""
+
+    ws_name: str = ""
+    sub_id: str = ""
+    res_group: str = ""
+    ws_id: str = ""
+    ten_id: str = ""
+
 
 _TEST_URL_LOOKUP = [
     (
         _PORTAL_URLS[0],
-        TestExpected(
+        ExpectedResult(
             "cybersecuritysoc",
             "d1d8779d-38d7-4f06-91db-9cbc8de0176f",
             "soc",
@@ -140,7 +150,7 @@ _TEST_URL_LOOKUP = [
     ),
     (
         _PORTAL_URLS[1],
-        TestExpected(
+        ExpectedResult(
             "asihuntomsworkspacev4",
             "40dcc8bf-0478-4f3b-b275-ed0a94f2c013",
             "asihuntomsworkspacerg",
@@ -151,7 +161,7 @@ _TEST_URL_LOOKUP = [
     ),
     (
         _PORTAL_URLS[2],
-        TestExpected(
+        ExpectedResult(
             "aipdstim",
             "d1d8779d-38d7-4f06-91db-9cbc8de0176f",
             "soc-purview",
@@ -162,7 +172,7 @@ _TEST_URL_LOOKUP = [
     ),
     (
         _PORTAL_URLS[3],
-        TestExpected(
+        ExpectedResult(
             "non-existent",
             "d1d8779d-9999-4f06-91db-9cbc8de0176f",
             "soc-na",
