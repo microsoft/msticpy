@@ -87,9 +87,9 @@
 85,windows_path,c:\Diagnostics\UserTmp\svchost.exe,72
 86,windows_path,c:\Diagnostics\UserTmp\smss.exe,73
 87,windows_path,c:\Windows\System32\svchost.exe,74
-88,dns,system.management.automation.amsiutils,77
-89,dns,"system.management.automation.amsiutils').getfield('amsiinitfailed','nonpublic,static').setvalue($null,$true)",77
-90,url,"http://system.management.automation.amsiutils').getfield('amsiinitfailed','nonpublic,static').setvalue($null,$true)",77
+88,dns,system.management.automation.xxxxxxxxxx,77
+89,dns,"system.management.automation.xxxxxxxxxx').getfield('xxxinitfailed','nonpublic,static').setvalue($null,$true)",77
+90,url,"http://system.management.automation.xxxxxxxxxx').getfield('xxxinitfailed','nonpublic,static').setvalue($null,$true)",77
 91,windows_path,.\powershell.exe,77
 92,ipv4,1.2.3.4,78
 93,windows_path,C:\\Users\\user\\AppData\\Local\\Temp\\bzzzzzz.txt,78

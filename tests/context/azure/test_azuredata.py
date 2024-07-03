@@ -21,6 +21,7 @@ from msticpy.context.azure.azure_data import AzureData
 from ...unit_test_lib import custom_mp_config, get_test_data_path
 
 # pylint: disable=protected-access
+pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
 
 _TEST_DATA = get_test_data_path()
 

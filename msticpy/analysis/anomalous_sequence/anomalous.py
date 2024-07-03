@@ -68,9 +68,9 @@ def score_sessions(
         window_len=window_length, use_geo_mean=False, use_start_end_tokens=True
     )
 
-    sessions_df[
-        f"rarest_window{window_length}_likelihood"
-    ] = model.rare_window_likelihoods[window_length]
+    sessions_df[f"rarest_window{window_length}_likelihood"] = (
+        model.rare_window_likelihoods[window_length]
+    )
     sessions_df[f"rarest_window{window_length}"] = model.rare_windows[window_length]
 
     return sessions_df

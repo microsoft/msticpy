@@ -237,9 +237,9 @@ class LinkedService:
         self.name: str = kwargs.get("name")
         self.entry_type: str = kwargs.get("type")
         self.etag: str = kwargs.get("etag")
-        self.properties: Dict[
-            str, Union[str, Dict[str, Union[Dict, str]]]
-        ] = kwargs.get("properties", {})
+        self.properties: Dict[str, Union[str, Dict[str, Union[Dict, str]]]] = (
+            kwargs.get("properties", {})
+        )
 
     @property
     def svc_type(self) -> str:
