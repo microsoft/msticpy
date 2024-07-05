@@ -104,9 +104,9 @@ def get_secrets_client_func() -> Callable[..., Optional["SecretsClient"]]:
 # the module is imported.
 _SECRETS_CLIENT: Any = None
 # Create the secrets client closure
-_SET_SECRETS_CLIENT: Callable[
-    ..., Optional["SecretsClient"]
-] = get_secrets_client_func()
+_SET_SECRETS_CLIENT: Callable[..., Optional["SecretsClient"]] = (
+    get_secrets_client_func()
+)
 # Create secrets client instance if SecretsClient can be imported
 # and config has KeyVault settings.
 if get_config("KeyVault", None) and _SECRETS_ENABLED:
