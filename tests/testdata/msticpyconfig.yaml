@@ -82,6 +82,11 @@ TIProviders:
       AuthKey: "[PLACEHOLDER]"
     Primary: True
     Provider: IPQualityScore
+  BinaryEdge:
+    Args:
+      AuthKey: "[PLACEHOLDER]"
+    Primary: True
+    Provider: BinaryEdge
 OtherProviders:
   GeoIPLite:
     Args:
