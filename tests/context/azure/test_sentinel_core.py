@@ -31,7 +31,7 @@ _RESOURCES = pd.DataFrame(
 
 _RES_ID = (
     "subscriptions/123/resourceGroups/RG/providers/"
-    "Microsoft.OperationalInsights/workspaces/WSNAME"
+    "Microsoft.OperationalInsights/workspaces/WSName"
 )
 
 _RESOURCE_DETAILS = {"properties": {"workspaceResourceId": _RES_ID}}
@@ -121,4 +121,71 @@ def test_azuresent_workspaces(mock_res_dets, mock_res, sentinel_inst_loader):
     ):
         workspaces = sentinel_inst_loader.get_sentinel_workspaces(sub_id="123")
         assert isinstance(workspaces, dict)
-        assert workspaces["WSNAME"] == _RES_ID
+        assert workspaces["WSName"] == _RES_ID
+
+
+@patch(AzureData.__module__ + ".AzureData.get_resources")
+@patch(AzureData.__module__ + ".AzureData.get_resource_details")
+def test_set_default_workspace(mock_res_dets, mock_res, sentinel_inst_loader):
+    """Test setting default workspace."""
+    mock_res.return_value = _RESOURCES
+    mock_res_dets.return_value = _RESOURCE_DETAILS
+    with custom_mp_config(
+        get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
+    ):
+        ws_name_config = WorkspaceConfig("WSName")
+        sentinel_inst_loader.set_default_workspace(workspace="WSName")
+        assert (
+            sentinel_inst_loader._default_workspace_name
+            == ws_name_config[WorkspaceConfig.CONF_WS_NAME_KEY]
+        )
+        assert (
+            sentinel_inst_loader.workspace_config[WorkspaceConfig.CONF_SUB_ID_KEY]
+            == ws_name_config[WorkspaceConfig.CONF_SUB_ID_KEY]
+        )
+        assert (
+            sentinel_inst_loader.workspace_config[WorkspaceConfig.CONF_RES_GROUP_KEY]
+            == ws_name_config[WorkspaceConfig.CONF_RES_GROUP_KEY]
+        )
+        assert (
+            sentinel_inst_loader.workspace_config[WorkspaceConfig.CONF_WS_NAME_KEY]
+            == ws_name_config[WorkspaceConfig.CONF_WS_NAME_KEY]
+        )
+
+        with pytest.warns(UserWarning):
+            sentinel_inst_loader.set_default_workspace(sub_id="123")
+
+        sentinel_inst_loader.set_default_workspace()
+        assert sentinel_inst_loader._default_workspace_name == "WSName"
+        assert (
+            sentinel_inst_loader.workspace_config[WorkspaceConfig.CONF_SUB_ID_KEY]
+            in _RES_ID
+        )
+        assert (
+            sentinel_inst_loader.workspace_config[WorkspaceConfig.CONF_RES_GROUP_KEY]
+            in _RES_ID
+        )
+        assert (
+            sentinel_inst_loader.workspace_config[WorkspaceConfig.CONF_WS_NAME_KEY]
+            in _RES_ID
+        )
+
+        default_workspace = WorkspaceConfig()
+        sentinel_inst_loader._resource_id = None
+        sentinel_inst_loader.set_default_workspace()
+        assert (
+            sentinel_inst_loader._default_workspace_name
+            == default_workspace[WorkspaceConfig.CONF_WS_NAME_KEY]
+        )
+        assert (
+            sentinel_inst_loader.workspace_config[WorkspaceConfig.CONF_SUB_ID_KEY]
+            == default_workspace[WorkspaceConfig.CONF_SUB_ID_KEY]
+        )
+        assert (
+            sentinel_inst_loader.workspace_config[WorkspaceConfig.CONF_RES_GROUP_KEY]
+            == default_workspace[WorkspaceConfig.CONF_RES_GROUP_KEY]
+        )
+        assert (
+            sentinel_inst_loader.workspace_config[WorkspaceConfig.CONF_WS_NAME_KEY]
+            == default_workspace[WorkspaceConfig.CONF_WS_NAME_KEY]
+        )

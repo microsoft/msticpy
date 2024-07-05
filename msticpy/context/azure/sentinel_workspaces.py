@@ -11,7 +11,7 @@ from typing import Dict, Optional
 
 import httpx
 import pandas as pd
-from msrestazure import tools as az_tools
+from azure.mgmt.core import tools as az_tools
 
 from ..._version import VERSION
 from ...auth.azure_auth_core import AzureCloudConfig
