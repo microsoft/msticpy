@@ -101,10 +101,7 @@ class XForce(HttpTIProvider):
             return False, severity, "Not found."
         result = True
         result_dict: dict[str, Any] = {}
-        if (
-            response["IocType"] in ["ipv4", "ipv6", "url", "dns"]
-            and not response["QuerySubtype"]
-        ):
+        if response["IocType"] in ["ipv4", "ipv6", "url", "dns"] and not response["QuerySubtype"]:
             # For some IocTypes "dns" and "url", the response structure differs
             report: dict[str, Any] = response["RawResult"].get(
                 "result",

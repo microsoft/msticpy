@@ -22,6 +22,7 @@ from ..unit_test_lib import custom_mp_config, get_test_data_path
 _TEST_DATA = get_test_data_path()
 
 # pylint: disable=protected-access
+pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
 
 
 def test_load_default():

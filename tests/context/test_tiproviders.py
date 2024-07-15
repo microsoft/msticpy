@@ -181,6 +181,7 @@ _TI_PROVIDER_TESTS = [
     TiTestCase("CrowdSec"),
     TiTestCase("AbuseIPDB", exp_responses=20),
     TiTestCase("IPQualityScore", exp_responses=20),
+    TiTestCase("BinaryEdge"),
 ]
 
 
@@ -253,6 +254,7 @@ def verify_result(result, ti_lookup):
                 "CrowdSec",
                 "AbuseIPDB",
                 "IPQualityScore",
+                "BinaryEdge",
             ],
         )
         check.is_not_none(lu_result["Ioc"])
@@ -1088,6 +1090,78 @@ _PROVIDER_RESPONSES = {
                 "numDistinctUsers": 0,
                 "lastReportedAt": None,
             }
+        }
+    },
+    "https://api.binaryedge.io/": {
+        "response": {
+            "total": 2,
+            "query": "124.5.6.7",
+            "events": [
+                {
+                    "results": [
+                        {
+                            "origin": {
+                                "module": "grabber",
+                                "port": 41574,
+                                "ip": "124.5.6.7",
+                                "type": "service-simple",
+                                "ts": 1537060019061,
+                                "country": "us",
+                            },
+                            "result": {
+                                "data": {
+                                    "state": {"state": "open"},
+                                    "service": {
+                                        "banner": 'HTTP/1.1 400 Bad Request\\r\\nDate: Sun, 16 Sep 2018 01:06:58 GMT\\r\\nContent-Type: text/html\\r\\nContent-Length: 268\\r\\nConnection: close\\r\\nserver: nginx\\r\\n\\r\\n<html>\\r\\n<head><title>400 The plain HTTP request was sent to HTTPS port</title></head>\\r\\n<body bgcolor="white">\\r\\n<center><h1>400 Bad Request</h1></center>\\r\\n<center>The plain HTTP request was sent to HTTPS port</center>\\r\\n<hr><center>openresty</center>\\r\\n</body>\\r\\n</html>\\r\\n',
+                                        "method": "probe_matching",
+                                        "cpe": ["cpe:/a:igor_sysoev:nginx"],
+                                        "name": "ssl/http",
+                                        "product": "nginx",
+                                    },
+                                }
+                            },
+                            "target": {
+                                "protocol": "tcp",
+                                "port": 443,
+                                "ip": "124.5.6.7",
+                            },
+                        }
+                    ],
+                    "port": 443,
+                },
+                {
+                    "results": [
+                        {
+                            "origin": {
+                                "module": "grabber",
+                                "port": 54894,
+                                "ip": "124.5.6.7",
+                                "type": "service-simple",
+                                "ts": 1534658530845,
+                                "country": "de",
+                            },
+                            "result": {
+                                "data": {
+                                    "state": {"state": "open"},
+                                    "service": {
+                                        "banner": 'HTTP/1.1 302 Moved Temporarily\\r\\nServer: nginx\\r\\nDate: Sun, 19 Aug 2018 06:02:09 GMT\\r\\nContent-Type: text/html\\r\\nContent-Length: 154\\r\\nConnection: close\\r\\nLocation: http://www.baidu.com/\\r\\n\\r\\n<html>\\r\\n<head><title>302 Found</title></head>\\r\\n<body bgcolor="white">\\r\\n<center><h1>302 Found</h1></center>\\r\\n<hr><center>nginx</center>\\r\\n</body>\\r\\n</html>\\r\\n',
+                                        "method": "probe_matching",
+                                        "cpe": ["cpe:/a:igor_sysoev:nginx"],
+                                        "name": "http",
+                                        "product": "nginx",
+                                    },
+                                }
+                            },
+                            "target": {
+                                "protocol": "tcp",
+                                "port": 80,
+                                "ip": "124.5.6.7",
+                            },
+                        }
+                    ],
+                    "port": 80,
+                },
+            ],
         }
     },
 }

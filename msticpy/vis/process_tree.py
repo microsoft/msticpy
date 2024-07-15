@@ -425,18 +425,14 @@ def _pid_fmt(pid, pid_fmt):
         return (
             f"PID: {pid}"
             if str(pid).startswith("0x")
-            else f"PID: 0x{int(pid):x}"
-            if isinstance(pid, int)
-            else "NA"
+            else f"PID: 0x{int(pid):x}" if isinstance(pid, int) else "NA"
         )
     if pid_fmt == "guid":
         return f"GUID: {pid}"
     return (
         f"PID: {pid}"
         if not str(pid).startswith("0x")
-        else f"PID: {int(pid, base=16)}"
-        if isinstance(pid, int)
-        else "NA"
+        else f"PID: {int(pid, base=16)}" if isinstance(pid, int) else "NA"
     )
 
 
