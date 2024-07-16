@@ -4,10 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot helper functions ."""
+from __future__ import annotations
+
 import warnings
 from collections import abc
 from functools import wraps
-from typing import Any, Callable, Dict, Optional, Tuple, Union
+from typing import Any, Callable
 
 import attr
 import pandas as pd
@@ -19,7 +21,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_DF_SRC_COL_PARAM_NAMES = [
+_DF_SRC_COL_PARAM_NAMES: list[str] = [
     "column",
     "input_column",
     "input_col",
@@ -50,7 +52,7 @@ class PivotRegistration:
     can_iterate: bool, optional
         True if the function supports being called multiple times
         (for iterable input). Default is True
-    entity_map: Dict[str, str]
+    entity_map: dict[str, str]
         dict of entities supported (keys) and attribute to use from
         entity as input to the function
     func_df_param_name: str
@@ -63,7 +65,7 @@ class PivotRegistration:
     func_out_column_name: str, optional
         The name of the column in the output DF to use as a key to join
         to the input. If None, use `func_df_col_param_name`
-    func_static_params: Optional[Dict[str, Any]]
+    func_static_params: Optional[dict[str, Any]]
         static parameters (kwargs) that are always passed
         to the target function
     func_input_value_arg: Optional[str]
@@ -86,24 +88,24 @@ class PivotRegistration:
     """
 
     input_type: str
-    entity_map: Dict[str, str]
-    func_df_param_name: Optional[str] = None
-    func_out_column_name: Optional[str] = None
-    func_df_col_param_name: Optional[str] = None
-    func_new_name: Optional[str] = None
-    src_module: Optional[str] = None
-    src_class: Optional[str] = None
-    src_func_name: Optional[str] = None
+    entity_map: dict[str, str]
+    func_df_param_name: str | None = None
+    func_out_column_name: str | None = None
+    func_df_col_param_name: str | None = None
+    func_new_name: str | None = None
+    src_module: str | None = None
+    src_class: str | None = None
+    src_func_name: str | None = None
     can_iterate: bool = True
-    func_static_params: Optional[Dict[str, Any]] = None
-    func_input_value_arg: Optional[str] = None
-    src_config_path: Optional[str] = None
-    src_config_entry: Optional[str] = None
-    entity_container_name: Optional[str] = None
+    func_static_params: dict[str, Any] | None = None
+    func_input_value_arg: str | None = None
+    src_config_path: str | None = None
+    src_config_entry: str | None = None
+    entity_container_name: str | None = None
     return_raw_output: bool = False
     create_shortcut: bool = False
 
-    def attr_for_entity(self, entity: Union[entities.Entity, str]) -> Optional[str]:
+    def attr_for_entity(self, entity: entities.Entity | str) -> str | None:
         """
         Return the attribute to use for the specified entity.
 
@@ -119,7 +121,7 @@ class PivotRegistration:
 
         """
         if isinstance(entity, entities.Entity):
-            ent_name = entity.__class__.__name__
+            ent_name: str = entity.__class__.__name__
         else:
             ent_name = entity
         return self.entity_map.get(ent_name)
@@ -189,9 +191,7 @@ def create_pivot_func(
                     "Try again with a single row/value as input.",
                     "E.g. func(data=df.iloc[N], column=...)",
                 )
-            result_df = _iterate_func(
-                target_func, input_df, input_column, pivot_reg, **kwargs
-            )
+            result_df = _iterate_func(target_func, input_df, input_column, pivot_reg, **kwargs)
         else:
             result_df = target_func(**param_dict, **kwargs)  # type: ignore
         merge_key = pivot_reg.func_out_column_name or input_column
@@ -219,20 +219,18 @@ def create_pivot_func(
     return pivot_lookup
 
 
-def get_join_params(
-    func_kwargs: Dict[str, Any]
-) -> Tuple[Optional[str], Optional[str], Optional[str], bool]:
+def get_join_params(func_kwargs: dict[str, Any]) -> tuple[str | None, str | None, str | None, bool]:
     """
     Get join parameters from kwargs.
 
     Parameters
     ----------
-    func_kwargs : Dict[str, Any]
+    func_kwargs : dict[str, Any]
         Keyword arguments from caller
 
     Returns
     -------
-    Tuple[str, str, str, bool]
+    tuple[str, str, str, bool]
         join_type, left_on, right_on, join_ignore_case
 
     """
@@ -335,9 +333,7 @@ def _get_entity_attr_or_self(obj, attrib):
     return obj
 
 
-def _get_input_value(
-    *args, pivot_reg: PivotRegistration, parent_kwargs: Dict[str, Any]
-) -> Any:
+def _get_input_value(*args, pivot_reg: PivotRegistration, parent_kwargs: dict[str, Any]) -> Any:
     """Extract input value from args or kwargs."""
     if args:
         input_value = args[0]
@@ -391,9 +387,7 @@ def _check_valid_settings_for_input(input_value: Any, pivot_reg: PivotRegistrati
                 # pylint: enable=isinstance-second-argument-not-valid-type
             )
         ):
-            raise ValueError(
-                f"This function does not accept inputs of {type(input_value)}"
-            )
+            raise ValueError(f"This function does not accept inputs of {type(input_value)}")
 
 
 def _arg_to_dframe(arg_val, col_name: str = "param_value"):
@@ -509,56 +503,3 @@ def _iterate_func(target_func, input_df, input_column, pivot_reg, **kwargs):
             return results[0]
         return results
     return pd.concat(results, ignore_index=True)
-
-
-# _PARENT_SELF = "parent_self"
-
-
-# def query_cont_member_wrap(func: Callable[[Any], Any]) -> Callable[[Any], Any]:
-#     """
-#     Wrap a func to work as instance method in a PivotContainer.
-
-#     Parameters
-#     ----------
-#     func : Callable[[Any], Any]
-#         Function to wrap as method
-
-#     Returns
-#     -------
-#     Callable[[Any], Any]
-#         Wrapped function
-
-#     Notes
-#     -----
-#     This is designed to be used inside a `PivotContainer`. The wrapped
-#     function checks to see if its arg[0] is a PivotContainer - meaning
-#     it has been called as an instance function of that class.
-#     If so, and the parent class has a _parent_self attribute, it will
-#     replace the original arg[0] (the self of PivotContainer) with
-#     the self of the containing class (_parent_self).
-#     It relies containing class setting `_parent_self` as an attribute
-#     in any PivotContainer attributes that it has. The msticpy Entity
-#     class does this.
-
-#     If these conditions don't apply it simply passed through the call
-#     to the original function.
-
-#     See Also
-#     --------
-#     PivotContainer
-#     Entity
-
-#     """
-
-#     @wraps(func)
-#     def _wrapped_member(*args, **kwargs):
-#         if (
-#             args
-#             and args[0].__class__.__name__ == "PivotContainer"
-#             and hasattr(args[0], _PARENT_SELF)
-#         ):
-#             parent_self = getattr(args[0], _PARENT_SELF)
-#             return func(parent_self, *args[1:], **kwargs)
-#         return func(*args, **kwargs)
-
-#     return _wrapped_member

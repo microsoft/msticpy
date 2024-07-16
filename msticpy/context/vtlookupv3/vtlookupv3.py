@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from enum import Enum
-from typing import Any, ClassVar, Coroutine, Iterable
+from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Iterable
 
 import pandas as pd
 from IPython.core.display import HTML
@@ -22,10 +22,18 @@ try:
     from vt_graph_api import errors as vt_graph_errs
 
     from .vtfile_behavior import VTFileBehavior
+
+    if TYPE_CHECKING:
+        from vt.iterator import Iterator
+        from vt.object import Object
+
 except ImportError as imp_err:
+    err_msg: str = (
+        "Cannot use this feature without vt-py, vt-graph-api and "
+        "nest_asyncio packages installed."
+    )
     raise MsticpyImportExtraError(
-        "Cannot use this feature without vt-py, vt-graph-api and",
-        "nest_asyncio packages installed.",
+        err_msg,
         title="Error importing VirusTotal modules.",
         extra="vt3",
     ) from imp_err
@@ -74,7 +82,7 @@ class VTObjectProperties(Enum):
     MALICIOUS = "malicious"
 
 
-def _ensure_eventloop(force_nest_asyncio: bool = False) -> asyncio.AbstractEventLoop:
+def _ensure_eventloop(*, force_nest_asyncio: bool = False) -> asyncio.AbstractEventLoop:
     """Ensure that we have an event loop available."""
     try:
         event_loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
@@ -131,9 +139,9 @@ class VTLookupV3:
         VTEntityType.DOMAIN: {"id", "creation_date", "last_update_date", "country"},
     }
 
-    _DEFAULT_SEARCH_LIMIT: ClassVar[  # prevents vague queries from pulling 1M+ files
+    _DEFAULT_SEARCH_LIMIT: ClassVar[
         int
-    ] = 1000
+    ] = 1000  # prevents vague queries from pulling 1M+ files
     _SEARCH_API_ENDPOINT: ClassVar[str] = "/intelligence/search"
 
     @property
@@ -152,7 +160,8 @@ class VTLookupV3:
     @classmethod
     def _get_endpoint_name(cls, vt_type: str) -> str:
         if VTEntityType(vt_type) not in cls._SUPPORTED_VT_TYPES:
-            raise KeyError(f"Property type {vt_type} not supported")
+            error_msg: str = f"Property type {vt_type} not supported"
+            raise KeyError(error_msg)
 
         return cls._MAPPING_TYPES_ENDPOINT[VTEntityType(vt_type)]
 
@@ -160,6 +169,7 @@ class VTLookupV3:
     def _parse_vt_object(
         cls,
         vt_object: vt.object.Object,
+        *,
         all_props: bool = False,
     ) -> pd.DataFrame:
         obj_dict: dict[str, Any] = vt_object.to_dict()
@@ -168,7 +178,8 @@ class VTLookupV3:
             attributes: dict[str, Any] = obj_dict[VTObjectProperties.ATTRIBUTES.value]
             vt_type = VTEntityType(vt_object.type)
             if vt_type not in cls._SUPPORTED_VT_TYPES:
-                raise KeyError(f"Property type {vt_type} not supported")
+                error_msg: str = f"Property type {vt_type} not supported"
+                raise KeyError(error_msg)
             if not all_props:
                 obj: dict[str, Any] = {
                     key: attributes[key]
@@ -208,11 +219,12 @@ class VTLookupV3:
         return pd.concat(
             [vt_df, add_columns_df],
             axis="columns",
-        )  # .set_index([ColumnNames.ID.value])
+        )
 
     def __init__(
         self,
         vt_key: str | None = None,
+        *,
         force_nestasyncio: bool = False,
     ) -> None:
         """
@@ -228,14 +240,15 @@ class VTLookupV3:
             is used in Jupyter notebooks, otherwise this defaults to False
 
         """
-        _ensure_eventloop(force_nestasyncio)
-        self._vt_key = vt_key or _get_vt_api_key()
+        _ensure_eventloop(force_nest_asyncio=force_nestasyncio)
+        self._vt_key: str | None = vt_key or _get_vt_api_key()
         self._vt_client = vt.Client(apikey=self._vt_key)
 
     async def _lookup_ioc_async(
         self,
         observable: str,
         vt_type: str,
+        *,
         all_props: bool = False,
     ) -> pd.DataFrame:
         """
@@ -261,27 +274,30 @@ class VTLookupV3:
 
         """
         if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
-            raise KeyError(
-                f"Property type {vt_type} not supported",
-                "Valid types are",
-                ", ".join(x.value for x in VTEntityType.__members__.values()),
+            error_msg: str = (
+                f"Property type {vt_type} not supported"
+                "Valid types are"
+                ", ".join(x.value for x in VTEntityType.__members__.values())
             )
+            raise KeyError(error_msg)
 
-        endpoint_name = self._get_endpoint_name(vt_type)
+        endpoint_name: str = self._get_endpoint_name(vt_type)
         try:
-            response = self._vt_client.get_object(f"/{endpoint_name}/{observable}")
+            response: Object = self._vt_client.get_object(
+                f"/{endpoint_name}/{observable}"
+            )
             return self._parse_vt_object(response, all_props=all_props)
         except vt.APIError as err:
             if err.args and err.args[0] == VT_API_NOT_FOUND:
                 return self._item_not_found_df(vt_type, observable)
-            raise MsticpyVTNoDataError(
-                "An error occurred requesting data from VirusTotal",
-            ) from err
+            error_msg = "An error occurred requesting data from VirusTotal"
+            raise MsticpyVTNoDataError(error_msg) from err
 
     def lookup_ioc(
         self,
         observable: str,
         vt_type: str,
+        *,
         all_props: bool = False,
     ) -> pd.DataFrame:
         """
@@ -318,6 +334,7 @@ class VTLookupV3:
         observables_df: pd.DataFrame,
         observable_column: str = ColumnNames.TARGET.value,
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,
+        *,
         all_props: bool = False,
     ) -> pd.DataFrame:
         """
@@ -344,29 +361,25 @@ class VTLookupV3:
             Column not found in observables_df
 
         """
-        _observables_df = observables_df.reset_index()
+        _observables_df: pd.DataFrame = observables_df.reset_index()
 
         for column in [observable_column, observable_type_column]:
             if column not in _observables_df.columns:
-                raise KeyError(f"Column {column} not found in observables_df")
+                error_msg: str = f"Column {column} not found in observables_df"
+                raise KeyError(error_msg)
 
-        observables_list = _observables_df[observable_column]
-        types_list = _observables_df[observable_type_column]
-        dfs_futures = []
-        for observable, observable_type in zip(observables_list, types_list):
-            try:
-                ioc_df_future = self._lookup_ioc_async(
-                    observable,
-                    observable_type,
-                    all_props=all_props,
-                )
-                dfs_futures.append(ioc_df_future)
-            except KeyError:
-                print(
-                    "ERROR\t It was not possible to obtain results for",
-                    f"{observable_type} {observable}",
-                )
-        dfs = await asyncio.gather(*dfs_futures)
+        observables_list: pd.Series = _observables_df[observable_column]
+        types_list: pd.Series = _observables_df[observable_type_column]
+        dfs_futures: list[Coroutine] = [
+            self._lookup_ioc_async(
+                observable,
+                observable_type,
+                all_props=all_props,
+            )
+            for observable, observable_type in zip(observables_list, types_list)
+        ]
+
+        dfs: list[pd.DataFrame] = await asyncio.gather(*dfs_futures)
         return (
             pd.concat(dfs)
             if dfs
@@ -381,6 +394,7 @@ class VTLookupV3:
         observables_df: pd.DataFrame,
         observable_column: str = ColumnNames.TARGET.value,
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,
+        *,
         all_props: bool = False,
     ) -> pd.DataFrame:
         """
@@ -419,6 +433,7 @@ class VTLookupV3:
         observable: str,
         vt_type: str,
         relationship: str,
+        *,
         limit: int | None = None,
         all_props: bool = False,
         full_objects: bool = False,
@@ -452,9 +467,10 @@ class VTLookupV3:
 
         """
         if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
-            raise KeyError(f"Property type {vt_type} not supported")
+            error_msg: str = f"Property type {vt_type} not supported"
+            raise KeyError(error_msg)
 
-        endpoint_name = self._get_endpoint_name(vt_type)
+        endpoint_name: str = self._get_endpoint_name(vt_type)
         response: vt.object.Object
 
         if limit is None:
@@ -477,7 +493,7 @@ class VTLookupV3:
         if limit == 0 or limit is None:
             return self._item_not_found_df(vt_type=vt_type, observable=observable)
 
-        obj_relation_type = (
+        obj_relation_type: str = (
             f"{relationship}" if full_objects else f"relationships/{relationship}"
         )
         try:
@@ -524,9 +540,8 @@ class VTLookupV3:
         except vt.APIError as err:
             if err.args and err.args[0] == VT_API_NOT_FOUND:
                 return self._relation_not_found_df(vt_type, observable, relationship)
-            raise MsticpyVTNoDataError(
-                "An error occurred requesting data from VirusTotal",
-            ) from err
+            error_msg = "An error occurred requesting data from VirusTotal"
+            raise MsticpyVTNoDataError(error_msg) from err
 
         return result_df
 
@@ -535,6 +550,7 @@ class VTLookupV3:
         observable: str,
         vt_type: str,
         relationship: str,
+        *,
         limit: int | None = None,
         all_props: bool = False,
     ) -> pd.DataFrame:
@@ -575,7 +591,7 @@ class VTLookupV3:
                     observable,
                     vt_type,
                     relationship,
-                    limit,
+                    limit=limit,
                     all_props=all_props,
                 ),
             )
@@ -587,6 +603,7 @@ class VTLookupV3:
         observable: str,
         vt_type: str,
         relationship: str,
+        *,
         limit: int | None = None,
     ) -> pd.DataFrame:
         """
@@ -624,7 +641,7 @@ class VTLookupV3:
                     observable,
                     vt_type,
                     relationship,
-                    limit,
+                    limit=limit,
                     all_props=True,
                     full_objects=True,
                 ),
@@ -638,6 +655,7 @@ class VTLookupV3:
         relationship: str,
         observable_column: str = ColumnNames.TARGET.value,
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,
+        *,
         limit: int | None = None,
         all_props: bool = False,
     ) -> pd.DataFrame:
@@ -669,33 +687,27 @@ class VTLookupV3:
             Column not found in observables_df
 
         """
-        _observables_df = observables_df.reset_index()
+        _observables_df: pd.DataFrame = observables_df.reset_index()
 
         for column in [observable_column, observable_type_column]:
             if column not in _observables_df.columns:
-                raise KeyError(f"Column {column} not found in observables df")
+                error_msg: str = f"Column {column} not found in observables df"
+                raise KeyError(error_msg)
 
-        observables_list = _observables_df[observable_column]
-        types_list = _observables_df[observable_type_column]
-        dfs_futures = []
+        observables_list: pd.Series = _observables_df[observable_column]
+        types_list: pd.Series = _observables_df[observable_type_column]
+        dfs_futures: list[Coroutine[Any, Any, pd.DataFrame]] = [
+            self._lookup_ioc_relationships_async(
+                observable,
+                observable_type,
+                relationship,
+                limit=limit,
+                all_props=all_props,
+            )
+            for observable, observable_type in zip(observables_list, types_list)
+        ]
 
-        for observable, observable_type in zip(observables_list, types_list):
-            try:
-                dfs_futures.append(
-                    self._lookup_ioc_relationships_async(
-                        observable,
-                        observable_type,
-                        relationship,
-                        limit,
-                        all_props=all_props,
-                    ),
-                )
-            except KeyError:
-                print(
-                    "ERROR:\t It was not possible to get the data for",
-                    f"{observable_type} {observable}",
-                )
-        dfs = await asyncio.gather(*dfs_futures)
+        dfs: list[pd.DataFrame] = await asyncio.gather(*dfs_futures)
         return (
             pd.concat(dfs)
             if len(dfs) > 0
@@ -712,6 +724,7 @@ class VTLookupV3:
         relationship: str,
         observable_column: str = ColumnNames.TARGET.value,
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,
+        *,
         limit: int | None = None,
         all_props: bool = False,
     ) -> pd.DataFrame:
@@ -745,7 +758,7 @@ class VTLookupV3:
                     relationship,
                     observable_column,
                     observable_type_column,
-                    limit,
+                    limit=limit,
                     all_props=all_props,
                 ),
             )
@@ -757,6 +770,7 @@ class VTLookupV3:
         self,
         relationship_dfs: list[pd.DataFrame],
         name: str,
+        *,
         private: bool,
     ) -> str:
         """
@@ -783,7 +797,8 @@ class VTLookupV3:
 
         """
         if not isinstance(private, bool):
-            raise ValueError("Please indicate if Graph is private or not")
+            error_msg = "Please indicate if Graph is private or not"
+            raise TypeError(error_msg)
 
         nodes, edges = self.relationships_to_graph(relationship_dfs)
         graph = VTGraph(self._vt_key, name=name, private=private)
@@ -795,7 +810,7 @@ class VTLookupV3:
         try:
             graph.save_graph()
         except vt_graph_errs.SaveGraphError as graph_err:
-            graph_mssg = (
+            graph_mssg: list[str] = (
                 [
                     "Please check you have Private Graph premium feature enabled in",
                     "your subscription. It is possible to create public Graphs",
@@ -804,9 +819,9 @@ class VTLookupV3:
                 if private
                 else [""]
             )
-
+            error_msg = "Could not save Graph."
             raise MsticpyVTGraphSaveGraphError(
-                "Could not save Graph.",
+                error_msg,
                 *graph_mssg,
             ) from graph_err
 
@@ -845,12 +860,13 @@ class VTLookupV3:
         """
         if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
             # pylint: disable=no-member
-            raise KeyError(
-                f"Property type {vt_type} not supported",
-                "Valid types are",
-                ", ".join(x.value for x in VTEntityType.__members__.values()),
+
+            error_msg: str = (
+                f"Property type {vt_type} not supported. "
+                "Valid types are: "
+                ", ".join(x.value for x in VTEntityType.__members__.values())
             )
-            # pylint: enable=no-member
+            raise KeyError(error_msg)
 
         endpoint_name = self._get_endpoint_name(vt_type)
         try:
@@ -872,9 +888,8 @@ class VTLookupV3:
         except vt.APIError as err:
             if err.args and err.args[0] == VT_API_NOT_FOUND:
                 return self._item_not_found_df(vt_type, vt_id)
-            raise MsticpyVTNoDataError(
-                "An error occurred requesting data from VirusTotal",
-            ) from err
+            error_msg = "An error occurred requesting data from VirusTotal"
+            raise MsticpyVTNoDataError(error_msg) from err
         finally:
             self._vt_client.close()
 
@@ -933,21 +948,25 @@ class VTLookupV3:
         """
         # run virus total intelligence search using iterator
         try:
-            response_itr = self._vt_client.iterator(
+            response_itr: Iterator = self._vt_client.iterator(
                 self._SEARCH_API_ENDPOINT,
                 params={"query": query},
                 limit=limit,
             )
-            response_list = list(map(lambda item: item.to_dict(), response_itr))
+            response_list: list[dict[str, Any]] = [
+                item.to_dict() for item in response_itr
+            ]
         except vt.APIError as api_err:
-            raise MsticpyVTNoDataError(
-                f"The provided query returned 0 results because of an APIError: {api_err}",
-            ) from api_err
+            error_msg: str = (
+                f"The provided query returned 0 results because of an APIError: {api_err}"
+            )
+            raise MsticpyVTNoDataError(error_msg) from api_err
 
         if len(response_list) == 0:
-            raise MsticpyVTNoDataError("The provided query returned 0 results")
+            error_msg = "The provided query returned 0 results"
+            raise MsticpyVTNoDataError(error_msg)
 
-        response_df = self._extract_response(response_list)
+        response_df: pd.DataFrame = self._extract_response(response_list)
         return timestamps_to_utcdate(response_df)
 
     def iterator(
@@ -1056,7 +1075,8 @@ class VTLookupV3:
 
         """
         if not relationship_dfs:
-            raise ValueError("There are no relationship DataFrames")
+            error_msg: str = "There are no relationship DataFrames"
+            raise ValueError(error_msg)
 
         # Set indexes to source-target so that pd.concat aligns on these indexes
         relationship_dfs = [

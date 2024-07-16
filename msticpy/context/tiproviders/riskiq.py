@@ -326,9 +326,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
             if self._pivot_get_timespan
             else None
         )
-        end = (
-            end or self._pivot_get_timespan().end if self._pivot_get_timespan else None
-        )
+        end = end or self._pivot_get_timespan().end if self._pivot_get_timespan else None
         if (
             start
             and end
@@ -396,7 +394,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
         self._pivot_get_timespan = pivot.get_timespan
         self._pivot_timespan_start = None
         self._pivot_timespan_end = None
-        base_reg = {
+        base_reg: dict[str, str | bool | None] = {
             "entity_container_name": "RiskIQ",
             "func_df_param_name": "data",
             "func_df_col_param_name": "host",

@@ -119,7 +119,6 @@ class OPR(HttpTIProvider):
             DataFrame of results.
 
         """
-
         domain_list: set[str] = set()
         bad_requests: list[pd.Series] = []
         for ioc, ioc_type in generate_items(data, ioc_col, ioc_type_col):

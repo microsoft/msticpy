@@ -16,11 +16,10 @@ from __future__ import annotations
 
 import traceback
 from abc import abstractmethod
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import attr
 import httpx
-import pandas as pd
 from attr import Factory
 
 from .._version import VERSION
@@ -29,6 +28,9 @@ from ..common.pkg_config import get_http_timeout
 from ..common.utility import mp_ua_header
 from .lookup_result import LookupStatus
 from .provider_base import Provider
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -159,17 +161,11 @@ class HttpProvider(Provider):
 
         if missing_params:
             param_list: str = ", ".join(f"'{param}'" for param in missing_params)
-            raise MsticpyConfigError(
-                f"Parameter values missing for Provider '{self.__class__.__name__}'",
-                f"Missing parameters are: {param_list}",
+            error_msg: str = (
+                f"Parameter values missing for Provider '{self.__class__.__name__}'. "
+                f"Missing parameters are: {param_list}"
             )
-
-        # In __init__ you might want to
-        # supply additional checkers/preprocessors
-        # with
-        # self._preprocessors.add_check(type, check_func)
-        # or replace the default PreProcessors
-        # self._preprocessors = MyPreProcessor()
+            raise MsticpyConfigError(error_msg)
 
     @abstractmethod
     def lookup_item(
@@ -247,7 +243,8 @@ class HttpProvider(Provider):
         value_key: str = f"{value_type}-{query_type}" if query_type else value_type
         src: APILookupParams | None = self.item_query_defs.get(value_key, None)
         if not src:
-            raise LookupError(f"Provider does not support this type {value_key}.")
+            error_msg: str = f"Provider does not support this type {value_key}."
+            raise LookupError(error_msg)
 
         # create a parameter dictionary to pass to requests
         # substitute any parameter value from our req_params dict
@@ -283,7 +280,8 @@ class HttpProvider(Provider):
             if src.auth_type == "HTTPBasic":
                 req_dict["auth"] = auth_strs
             else:
-                raise NotImplementedError(f"Unknown auth type {src.auth_type}")
+                error_msg = f"Unknown auth type {src.auth_type}"
+                raise NotImplementedError(error_msg)
         return src.verb, req_dict
 
     @staticmethod
@@ -316,11 +314,11 @@ class HttpProvider(Provider):
         )
 
     @staticmethod
-    def _response_message(status_code) -> str:
-        if status_code == 404:
+    def _response_message(status_code: int) -> str:
+        if status_code == httpx.codes.NOT_FOUND:
             return "Not found."
-        if status_code == 401:
+        if status_code == httpx.codes.UNAUTHORIZED:
             return "Authorization failed. Check account and key details."
-        if status_code == 403:
+        if status_code == httpx.codes.FORBIDDEN:
             return "Request forbidden. Allowed query rate may have been exceeded."
         return httpx.codes.get_reason_phrase(status_code) or "Unknown HTTP status code."

@@ -253,7 +253,7 @@ class Provider(ABC):
         event_loop: asyncio.AbstractEventLoop = get_event_loop()
         results: list[pd.DataFrame] = []
         for item, ret_item_type in generate_items(data, item_col, item_type_col):
-            ret_item_type = item_type or ret_item_type
+            ret_item_type: str | None = item_type or ret_item_type
             if not item:
                 continue
             get_item = partial(

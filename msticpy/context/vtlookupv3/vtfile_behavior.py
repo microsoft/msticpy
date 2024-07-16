@@ -4,12 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """VirusTotal File Behavior functions."""
+from __future__ import annotations
+
 import re
 from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
 from pprint import pformat
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, ClassVar, TYPE_CHECKING
 
 import attr
 import ipywidgets as widgets
@@ -20,11 +22,15 @@ from ..._version import VERSION
 from ...common.exceptions import MsticpyImportExtraError, MsticpyUserError
 from ...transform.proc_tree_builder import ProcSchema, build_proc_tree
 
+if TYPE_CHECKING:
+    from bokeh.plotting import figure
+
 try:
     import vt
 except ImportError as imp_err:
+    err_msg: str = "Cannot use this feature without vt-py and vt-graph-api packages installed."
     raise MsticpyImportExtraError(
-        "Cannot use this feature without vt-py and vt-graph-api packages installed.",
+        err_msg,
         title="Error importing VirusTotal modules.",
         extra="vt3",
     ) from imp_err
@@ -36,7 +42,7 @@ __author__ = "Ian Hellen"
 VT_API_NOT_FOUND = "NotFoundError"
 
 
-_FB_CAT_PATTERNS = {
+_FB_CAT_PATTERNS: dict[str, str] = {
     "File": "file.*",
     "Process": "process.*|command.*|module.*",
     "Registry": "registry.*",
@@ -56,7 +62,7 @@ _BORDER_LAYOUT = widgets.Layout(
 class VTFileBehavior:
     """VirusTotal File Behavior class."""
 
-    _SANDBOXES = [
+    _SANDBOXES: ClassVar[list[str]] = [
         "f_secure_sandbox",
         "bitdam_atp",
         "vmray",
@@ -88,7 +94,7 @@ class VTFileBehavior:
         "microsoft_sysinternals",
     ]
 
-    _FP_ENDPOINTS = {
+    _FP_ENDPOINTS: ClassVar[dict[str, str]] = {
         "summary": "/files/{id}/behaviour_summary",
         "sandbox": "/file_behaviours/{id}_{sandbox}",
         "evtx": "/file_behaviours/{sandbox_id}/evtx",
@@ -97,16 +103,16 @@ class VTFileBehavior:
     }
 
     @classmethod
-    def list_sandboxes(cls) -> List[str]:
+    def list_sandboxes(cls) -> list[str]:
         """Return list of known sandbox types."""
         return list(cls._SANDBOXES)
 
     def __init__(
         self,
-        vt_key: str = None,
-        file_id: Optional[str] = None,
-        file_summary: Optional[Union[pd.DataFrame, pd.Series, Dict[str, Any]]] = None,
-    ):
+        vt_key: str | None = None,
+        file_id: str | None = None,
+        file_summary: pd.DataFrame | pd.Series | dict[str, Any] | None = None,
+    ) -> None:
         """
         Initialize the VTFileBehavior class.
 
@@ -116,7 +122,7 @@ class VTFileBehavior:
             VirusTotal API key, by default None
         file_id : Optional[str], optional
             The ID of the file to look up, by default None
-        file_summary : Optional[Union[pd.DataFrame, pd, Series, Dict[str, Any]]], optional
+        file_summary : Optional[Union[pd.DataFrame, pd, Series, dict[str, Any]]], optional
             VT file summary - this can be in one of the following formats:
             VT object dictionary
             Pandas DataFrame - first row is assumed to be the file summary
@@ -126,8 +132,9 @@ class VTFileBehavior:
         """
         self._vt_client = vt.Client(apikey=vt_key)
         if file_id is None and file_summary is None:
+            error_msg: str = "You must supply either a file_id or a file_summary."
             raise MsticpyUserError(
-                "You must supply either a file_id or a file_summary.",
+                error_msg,
                 title="Missing required parameter.",
             )
 
@@ -135,18 +142,18 @@ class VTFileBehavior:
             file_summary = file_summary.iloc[0]
         if isinstance(file_summary, pd.Series):
             file_summary = file_summary.to_dict()
-        self.file_summary = file_summary or {}  # type: ignore
-        self.file_id = file_id or self.file_summary.get("id")
+        self.file_summary: dict[str, Any] = file_summary or {}
+        self.file_id: str | Any | None = file_id or self.file_summary.get("id")
 
-        self._file_behavior: Dict[str, Any] = {}
-        self.categories: Dict[str, Any] = {}
-        self.behavior_links: Dict[str, Any] = {}
-        self.process_tree_df: Optional[pd.DataFrame] = None
+        self._file_behavior: dict[str, Any] = {}
+        self.categories: dict[str, Any] = {}
+        self.behavior_links: dict[str, Any] = {}
+        self.process_tree_df: pd.DataFrame | None = None
 
-    def _reset_summary(self):
-        self._file_behavior: Dict[str, Any] = {}
-        self.categories: Dict[str, Any] = {}
-        self.process_tree_df: Optional[pd.DataFrame] = None
+    def _reset_summary(self) -> None:
+        self._file_behavior = {}
+        self.categories = {}
+        self.process_tree_df = None
 
     @property
     def sandbox_id(self) -> str:
@@ -168,7 +175,7 @@ class VTFileBehavior:
         """Return True if PCAP data is available (Enterprise only)."""
         return self.categories.get("has_pcap", False)
 
-    def get_file_behavior(self, sandbox: str = None):
+    def get_file_behavior(self, sandbox: str | None = None) -> None:
         """
         Retrieve the file behavior data.
 
@@ -180,7 +187,7 @@ class VTFileBehavior:
 
         """
         if sandbox:
-            endpoint = self._FP_ENDPOINTS["sandbox"].format(
+            endpoint: str = self._FP_ENDPOINTS["sandbox"].format(
                 id=self.file_id,
                 sandbox=sandbox,
             )
@@ -203,22 +210,22 @@ class VTFileBehavior:
         else:
             self.categories = self._file_behavior
 
-    def browse(self) -> Optional[widgets.VBox]:
+    def browse(self) -> widgets.VBox | None:
         """Browse the behavior categories."""
         if not self.has_behavior_data:
             self._print_no_data()
             return None
-        groupings = {}
-        remaining_categories = set(self.categories)
+        groupings: dict[str, Any] = {}
+        remaining_categories: set[str] = set(self.categories)
         for name, pattern in _FB_CAT_PATTERNS.items():
             groupings[name] = _extract_subcats(pattern, remaining_categories)
             remaining_categories = remaining_categories - groupings[name]
 
         accordion = widgets.Accordion()
-        child_tabs = {}
+        child_tabs: dict[str, Any] = {}
         for group, sub_cats in groupings.items():
             sub_cat_tab = widgets.Tab()
-            tab_content = {
+            tab_content: dict[str, widgets.HTML] = {
                 section: widgets.HTML(value=_format_widget_data(items))
                 for section, items in self.categories.items()
                 if items and section in sub_cats
@@ -234,13 +241,13 @@ class VTFileBehavior:
         accordion.selected_index = 0
 
         html_title = widgets.HTML(
-            ("<h2>VirusTotal Detonation Details</h2>" f"For file {self.file_id}"),
+            ("<h2>VirusTotal Detonation Details</h2> For file {self.file_id}"),
             layout=_BORDER_LAYOUT,
         )
         return widgets.VBox([html_title, accordion])
 
     @property
-    def process_tree(self) -> Any:
+    def process_tree(self) -> figure | None:
         """Return the process tree plot."""
         if not self.has_behavior_data:
             self._print_no_data()
@@ -259,7 +266,7 @@ class VTFileBehavior:
         """Return true if file behavior data available."""
         return bool(self.categories)
 
-    def _print_no_data(self):
+    def _print_no_data(self) -> None:
         """Print a message if operation is tried with no data."""
         print(f"No data available for {self.file_id}.")
 
@@ -276,14 +283,13 @@ class SIProcess:
     name: str
     cmd_line: str
     parent_id: int = -1
-    proc_key: Optional[str] = None
-    parent_key: Optional[str] = None
-    path: Optional[str] = None
+    proc_key: str | None = None
+    parent_key: str | None = None
+    path: str | None = None
     IsRoot: bool = False
     IsLeaf: bool = False
     IsBranch: bool = False
-    children: list = []
-    # proc_children: list = []
+    children: list = attr.ib(factory=list)
     time_offset: int = 0
 
 
@@ -304,16 +310,15 @@ VT_PROCSCHEMA = ProcSchema(
 )
 
 
-def _build_process_tree(fb_categories):
+def _build_process_tree(fb_categories: dict[str, Any]) -> pd.DataFrame:
     """Top level function to create displayable DataFrame."""
-    proc_tree_raw = deepcopy(fb_categories["processes_tree"])
-    procs_created = {
-        Path(proc).parts[-1].lower(): proc
-        for proc in fb_categories["processes_created"]
+    proc_tree_raw: list[dict[str, Any]] = deepcopy(fb_categories["processes_tree"])
+    procs_created: dict[str, Any] = {
+        Path(proc).parts[-1].lower(): proc for proc in fb_categories["processes_created"]
     }
 
-    si_procs = _extract_processes(proc_tree_raw, procs_created)
-    process_tree_df = pd.DataFrame(_procs_to_df(si_procs)).drop(columns="children")
+    si_procs: list[SIProcess] = _extract_processes(proc_tree_raw, procs_created)
+    process_tree_df: pd.DataFrame = pd.DataFrame(_procs_to_df(si_procs)).drop(columns="children")
     process_tree_df = _try_match_commandlines(
         fb_categories["command_executions"],
         process_tree_df,
@@ -321,18 +326,22 @@ def _build_process_tree(fb_categories):
     return _fill_missing_proc_tree_values(process_tree_df)
 
 
-def _extract_processes(process_data, procs_created, parent=None):
+def _extract_processes(
+    process_data: list[dict[str, Any]],
+    procs_created: dict[str, Any],
+    parent: SIProcess | None = None,
+) -> list[SIProcess]:
     """Convert processes_tree attribute to SIProcessObjects."""
-    procs = []
+    procs: list[SIProcess] = []
     for process in process_data:
-        si_proc = _create_si_proc(process, procs_created)
+        si_proc: SIProcess = _create_si_proc(process, procs_created)
         # pylint: disable=invalid-name
         if parent:
             si_proc.parent_key = parent.proc_key
             si_proc.IsBranch = True
         else:
             si_proc.IsRoot = True
-        child_procs_raw = process.get("children", [])
+        child_procs_raw: list[dict[str, Any]] = process.get("children", [])
         if child_procs_raw:
             si_proc.children = _extract_processes(
                 child_procs_raw,
@@ -346,24 +355,22 @@ def _extract_processes(process_data, procs_created, parent=None):
     return procs
 
 
-def _create_si_proc(raw_proc, procs_created):
+def _create_si_proc(raw_proc: dict[str, Any], procs_created: dict[str, Any]) -> SIProcess:
     """Return an SIProcess Object from a raw VT proc definition."""
-    # raw_proc = copy(raw_proc)
-    name = raw_proc.get("name")
+    name: str = raw_proc["name"]
     raw_proc["cmd_line"] = name
     for proc in procs_created:
         if name.lower().endswith(proc):
             raw_proc["name"] = procs_created[proc]
             break
     raw_proc["proc_key"] = raw_proc["process_id"] + "|" + raw_proc["name"]
-    # print(name, raw_proc.keys())
     return SIProcess(**raw_proc)
 
 
 # Convert to DF
-def _procs_to_df(procs):
+def _procs_to_df(procs: list[SIProcess]) -> list[dict[str, Any]]:
     """Convert the SIProcess objects recursively to a list."""
-    df_list = []
+    df_list: list[dict[str, Any]] = []
     for proc in procs:
         df_list.append(attr.asdict(proc))
         if proc.children:
@@ -374,36 +381,32 @@ def _procs_to_df(procs):
 # Try to Match up 'command_executions' commandline data with
 # process_df.
 def _try_match_commandlines(
-    command_executions,
+    command_executions: list,
     procs_cmds: pd.DataFrame,
 ) -> pd.DataFrame:
     """Return DF with matched commandlines."""
-    procs_cmd = procs_cmds.copy()
+    procs_cmd: pd.DataFrame = procs_cmds.copy()
     procs_cmd["cmd_line"] = np.nan
     procs_cmd["cmd_line"] = procs_cmd["cmd_line"].astype(object)  # Set dtype to object
     weak_matches = 0
     for cmd in command_executions:
         for idx, row in procs_cmd.iterrows():
-            # print(row["name"], cmd, row["cmd_line"], isinstance(row["cmd_line"], str))
             if (
                 not isinstance(row["cmd_line"], str)
                 and np.isnan(row["cmd_line"])
                 and row["name"] in cmd
             ):
-                # print("Found match:", row["name"], "==", cmd)
-                procs_cmd.loc[idx, "cmd_line"] = cmd  # type: ignore
+                procs_cmd.loc[idx, "cmd_line"] = cmd  # type: ignore[reportCallIssue]
                 break
     for cmd in command_executions:
         for idx, row in procs_cmd.iterrows():
-            # print(row["name"], cmd, row["cmd_line"], isinstance(row["cmd_line"], str))
             if (
                 not isinstance(row["cmd_line"], str)
                 and np.isnan(row["cmd_line"])
                 and Path(row["name"]).stem.lower() in cmd.lower()
             ):
                 weak_matches += 1
-                # print("Found weak match:", row["name"], "~=", cmd)
-                procs_cmd.loc[idx, "cmd_line"] = cmd  # type: ignore
+                procs_cmd.loc[idx, "cmd_line"] = cmd  # type: ignore[reportCallIssue]
                 break
 
     if weak_matches:
@@ -433,21 +436,21 @@ def _fill_missing_proc_tree_values(process_df: pd.DataFrame) -> pd.DataFrame:
         lambda x: x.zfill(5),
     )
 
-    proc_tree = process_df.set_index("proc_key")
+    proc_tree: pd.DataFrame = process_df.set_index("proc_key")
 
-    first_unique = proc_tree.index.duplicated()
+    first_unique: np.ndarray[Any, np.dtype[np.bool_]] = proc_tree.index.duplicated()
     proc_tree = proc_tree[~first_unique]
     # msticpy function to build the tree
     return build_proc_tree(proc_tree)
 
 
 # Process browser helper functions
-def _extract_subcats(pattern, categs):
+def _extract_subcats(pattern: str, categs: set[str]) -> set:
     """Extract the category names matching `pattern`."""
     return {cat for cat in categs if re.match(pattern, cat)}
 
 
-def _format_widget_data(data_item):
+def _format_widget_data(data_item: list[dict[str, Any] | str] | None) -> str:
     if not data_item:
         return ""
     if isinstance(data_item, list):

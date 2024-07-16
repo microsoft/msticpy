@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree Schema module for Process Tree Visualization."""
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import Any, ClassVar
 
 import attr
 import pandas as pd
@@ -19,8 +21,8 @@ __author__ = "Ian Hellen"
 class ProcessTreeSchemaException(MsticpyUserError):
     """Custom exception for Process Tree schema."""
 
-    DEF_HELP_URI = (
-        "MSTICPy Process Tree documentation",
+    DEF_HELP_URI: ClassVar[tuple[str, str]] = (
+        "MSTICPy Process Tree documentation ",
         "https://msticpy.readthedocs.io/en/latest/visualization/ProcessTree.html",
     )
 
@@ -43,22 +45,22 @@ class ProcSchema:
     process_id: str
     parent_id: str
     time_stamp: str
-    cmd_line: Optional[str] = None
+    cmd_line: str | None = None
     path_separator: str = "\\"
-    user_name: Optional[str] = None
-    logon_id: Optional[str] = None
-    host_name_column: Optional[str] = None
-    parent_name: Optional[str] = None
-    target_logon_id: Optional[str] = None
-    user_id: Optional[str] = None
-    event_id_column: Optional[str] = None
-    event_id_identifier: Optional[Any] = None
+    user_name: str | None = None
+    logon_id: str | None = None
+    host_name_column: str | None = None
+    parent_name: str | None = None
+    target_logon_id: str | None = None
+    user_id: str | None = None
+    event_id_column: str | None = None
+    event_id_identifier: Any | None = None
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Return False if any non-blank field values are unequal."""
         if not isinstance(other, ProcSchema):
             return False
-        self_dict = attr.asdict(self)
+        self_dict: dict[str, Any] = attr.asdict(self)
 
         return not any(
             value and value != self_dict[field]
@@ -66,7 +68,7 @@ class ProcSchema:
         )
 
     @property
-    def required_columns(self):
+    def required_columns(self) -> list[str]:
         """Return columns required for Init."""
         return [
             "process_name",
@@ -78,7 +80,7 @@ class ProcSchema:
         ]
 
     @property
-    def column_map(self) -> Dict[str, str]:
+    def column_map(self) -> dict[str, str]:
         """Return a dictionary that maps fields to schema names."""
         return {
             prop: str(col)
@@ -87,7 +89,7 @@ class ProcSchema:
         }
 
     @property
-    def columns(self):
+    def columns(self) -> list[str]:
         """Return list of columns in schema data source."""
         return [
             col
@@ -95,12 +97,12 @@ class ProcSchema:
             if prop not in {"path_separator", "event_id_identifier"}
         ]
 
-    def get_df_cols(self, data: pd.DataFrame):
+    def get_df_cols(self, data: pd.DataFrame) -> list[str]:
         """Return the subset of columns that are present in `data`."""
         return [col for col in self.columns if col in data.columns]
 
     @property
-    def host_name(self) -> Optional[str]:
+    def host_name(self) -> str | None:
         """Return host name column."""
         return self.host_name_column
 
@@ -149,13 +151,11 @@ class ProcSchema:
         )
 
     @classmethod
-    def blank_schema_dict(cls) -> Dict[str, Any]:
+    def blank_schema_dict(cls) -> dict[str, Any]:
         """Return blank schema dictionary."""
         return {
             field: (
-                "required"
-                if (attrib.default or attrib.default == attr.NOTHING)
-                else None
+                "required" if (attrib.default or attrib.default == attr.NOTHING) else None
             )
             for field, attrib in attr.fields_dict(cls).items()
         }
@@ -275,7 +275,7 @@ HX_PROCESSEVENT_SCH = ProcSchema(
     host_name_column="hostname",
 )
 
-SUPPORTED_SCHEMAS = (
+SUPPORTED_SCHEMAS: tuple[ProcSchema, ...] = (
     WIN_EVENT_SCH,
     LX_EVENT_SCH,
     MDE_INT_EVENT_SCH,
@@ -290,13 +290,13 @@ SUPPORTED_SCHEMAS = (
 class ColNames:
     """Class to hold constant column names."""
 
-    proc_key = "proc_key"
-    parent_key = "parent_key"
-    new_process_lc = "new_process_lc"
-    parent_proc_lc = "parent_proc_lc"
-    timestamp_orig_par = "timestamp_orig_par"
-    EffectiveLogonId = "EffectiveLogonId"
-    source_index = "source_index"
-    source_index_par = "source_index_par"
-    new_process_lc_par = "new_process_lc_par"
-    EffectiveLogonId_par = "EffectiveLogonId_par"
+    proc_key: str = "proc_key"
+    parent_key: str = "parent_key"
+    new_process_lc: str = "new_process_lc"
+    parent_proc_lc: str = "parent_proc_lc"
+    timestamp_orig_par: str = "timestamp_orig_par"
+    EffectiveLogonId: str = "EffectiveLogonId"
+    source_index: str = "source_index"
+    source_index_par: str = "source_index_par"
+    new_process_lc_par: str = "new_process_lc_par"
+    EffectiveLogonId_par: str = "EffectiveLogonId_par"
