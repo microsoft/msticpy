@@ -14,9 +14,7 @@ requests per minute for the account type that you have.
 """
 from __future__ import annotations
 
-from typing import ClassVar, Iterable, Mapping
-
-import pandas as pd
+from typing import TYPE_CHECKING, ClassVar, Iterable, Mapping
 
 from .._version import VERSION
 from ..common.utility import export
@@ -25,6 +23,11 @@ from .lookup import Lookup
 # used in dynamic instantiation of providers
 from .provider_base import Provider, _make_sync
 from .tiproviders import TI_PROVIDERS
+
+if TYPE_CHECKING:
+    import datetime as dt
+
+    import pandas as pd
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -60,6 +63,9 @@ class TILookup(Lookup):
         prov_scope: str = "primary",
         *,
         observable: str | None = None,
+        show_not_supported: bool = False,
+        start: dt.datetime | None = None,
+        end: dt.datetime | None = None,
     ) -> pd.DataFrame:
         """
         Lookup Threat Intelligence reports for a single IoC in active providers.
@@ -82,6 +88,12 @@ class TILookup(Lookup):
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
+        show_not_supported: boolean, optional
+            If True, display result even if provider does not support this type of IOC.
+        start: dt.datetime, optional
+            Time since when IOC is considered relevant
+        end: dt.datetime, optional
+            Time until when IOC is considered relevant
         kwargs :
             Additional arguments passed to the underlying provider(s)
 
@@ -108,7 +120,8 @@ class TILookup(Lookup):
         """
         ioc = ioc or observable
         if ioc is None:
-            raise ValueError("No value supplied for 'ioc' parameter")
+            err_msg: str = "No value supplied for 'ioc' parameter"
+            raise ValueError(err_msg)
         return self.lookup_item(
             item=ioc,
             item_type=ioc_type,
@@ -116,6 +129,9 @@ class TILookup(Lookup):
             providers=providers,
             default_providers=default_providers,
             prov_scope=prov_scope,
+            show_not_supported=show_not_supported,
+            start=start,
+            end=end,
         )
 
     def lookup_iocs(
@@ -127,6 +143,9 @@ class TILookup(Lookup):
         providers: list[str] | None = None,
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
+        *,
+        start: dt.datetime | None = None,
+        end: dt.datetime | None = None,
     ) -> pd.DataFrame:
         """
         Lookup Threat Intelligence reports for a collection of IoCs in active providers.
@@ -153,6 +172,10 @@ class TILookup(Lookup):
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
+        start: dt.datetime, optional
+            Time since when IOC is considered relevant
+        end: dt.datetime, optional
+            Time until when IOC is considered relevant
         kwargs :
             Additional arguments passed to the underlying provider(s)
 
@@ -186,6 +209,8 @@ class TILookup(Lookup):
                 providers=providers,
                 default_providers=default_providers,
                 prov_scope=prov_scope,
+                start=start,
+                end=end,
             ),
         )
 
@@ -198,6 +223,9 @@ class TILookup(Lookup):
         ioc_query_type: str | None = None,
         providers: list[str] | None = None,
         default_providers: list[str] | None = None,
+        *,
+        start: dt.datetime | None = None,
+        end: dt.datetime | None = None,
         prov_scope: str = "primary",
     ) -> pd.DataFrame:
         """Lookup IoCs async."""
@@ -209,6 +237,8 @@ class TILookup(Lookup):
             providers=providers,
             default_providers=default_providers,
             prov_scope=prov_scope,
+            start=start,
+            end=end,
         )
 
     def lookup_iocs_sync(
@@ -265,6 +295,6 @@ class TILookup(Lookup):
             prov_scope=prov_scope,
         )
 
-    def _load_providers(self, **kwargs) -> None:
+    def _load_providers(self, **kwargs: str) -> None:
         """Load provider classes based on config."""
         return super()._load_providers(providers="TIProviders", **kwargs)

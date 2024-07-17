@@ -13,6 +13,7 @@ requests per minute for the account type that you have.
 
 """
 from __future__ import annotations
+
 from typing import Any, ClassVar
 
 from ..._version import VERSION
@@ -37,7 +38,7 @@ class BinaryEdge(HttpTIProvider):
         "ipv4": APILookupParams(
             path="v2/query/ip/{observable}",
             headers={"X-Key": "{AuthKey}"},
-        )
+        ),
     }
 
     _REQUIRED_PARAMS: ClassVar[list[str]] = ["AuthKey"]
@@ -56,9 +57,11 @@ class BinaryEdge(HttpTIProvider):
             open_ports.append(data_point["port"])
             service_details: dict[str, Any] = {}
             for result in data_point["results"]:
-                if "service" in result["result"]["data"].keys():
-                    service_details["Banner"] = result["result"]["data"]["service"]["banner"]
-                if "cert_info" in result["result"]["data"].keys():
+                if "service" in result["result"]["data"]:
+                    service_details["Banner"] = result["result"]["data"]["service"][
+                        "banner"
+                    ]
+                if "cert_info" in result["result"]["data"]:
                     service_details["Cert Info"] = result["result"]["data"]["cert_info"]
             result_dict[data_point["port"]] = service_details
         result_dict["Ports"] = open_ports

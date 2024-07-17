@@ -269,7 +269,12 @@ class VTLookup:
 
         return self.results
 
-    def lookup_ioc(self, observable: str, ioc_type: str, output: str = "dict") -> pd.DataFrame:
+    def lookup_ioc(
+        self,
+        observable: str,
+        ioc_type: str,
+        output: str = "dict",
+    ) -> pd.DataFrame | list[dict]:
         """
         Look up and single IoC observable.
 
@@ -335,7 +340,7 @@ class VTLookup:
 
         # return as a list of dictionaries or a DataFrame
         if output == "dict":
-            list_res: list[dict] | pd.DataFrame = self.results.apply(
+            list_res: list = self.results.apply(
                 lambda x: x.to_dict(),
                 axis=1,
             ).tolist()
@@ -392,21 +397,22 @@ class VTLookup:
         for row_num, (idx, row) in enumerate(input_frame[src_cols].iterrows(), start=1):
             observable: str = row[src_col]
 
+            index: Hashable = idx
             # Use the user-specified index if possible
             if src_index_col:
-                idx = row[src_index_col]
+                index = row[src_index_col]
 
             # validate the observable to avoid sending too much junk to VT
             pp_observable: SanitizedObservable = self._validate_observable(
                 observable,
                 ioc_type,
-                idx,
+                index,
             )
 
             # if the observable is valid, add it to the submission batch
             if pp_observable.observable:
                 obs_batch.append(pp_observable.observable)
-                source_row_index[pp_observable.observable] = idx
+                source_row_index[pp_observable.observable] = index
                 batch_index += 1
 
             # We want to trigger in the following circumstances
@@ -415,14 +421,16 @@ class VTLookup:
             # 2. Or we have reached the end of our row iteration
             # AND
             # 3. The batch is not empty
-            if (len(obs_batch) == vt_param.batch_size or row_num == row_count) and obs_batch:
+            if (
+                len(obs_batch) == vt_param.batch_size or row_num == row_count
+            ) and obs_batch:
                 obs_submit: str = vt_param.batch_delimiter.join(obs_batch)
 
                 self._print_status(
                     (
                         "Submitting observables: "
                         f'"{obs_submit}", type "{ioc_type}" '
-                        "to VT. (Source index {idx})"
+                        f"to VT. (Source index {index})"
                     ),
                     2,
                 )
@@ -453,7 +461,7 @@ class VTLookup:
                         results,
                         obs_submit,
                         ioc_type,
-                        idx,
+                        index,
                         source_row_index,
                         vt_param,
                     )
@@ -468,7 +476,7 @@ class VTLookup:
         vt_results: str | list | dict | None,
         observable: str,
         ioc_type: str,
-        source_idx: int = 0,
+        source_idx: Hashable = 0,
         source_row_index: dict[str, Any] | None = None,
         vt_param: VTParams | None = None,
     ) -> None:
@@ -489,7 +497,11 @@ class VTLookup:
             with contextlib.suppress(JSONDecodeError, TypeError):
                 vt_results = json.loads(vt_results, strict=False)
 
-        if isinstance(vt_results, list) and vt_param is not None and vt_param.batch_size > 1:
+        if (
+            isinstance(vt_results, list)
+            and vt_param is not None
+            and vt_param.batch_size > 1
+        ):
             # multiple results
             results_to_parse = vt_results
         elif isinstance(vt_results, dict):
@@ -521,7 +533,11 @@ class VTLookup:
             df_dict_vtresults["IoCType"] = ioc_type
             df_dict_vtresults["Status"] = "Success"
             df_dict_vtresults["RawResponse"] = json.dumps(results_to_parse[result_idx])
-            if len(results_to_parse) == 1 or source_row_index is None or len(source_row_index) == 1:
+            if (
+                len(results_to_parse) == 1
+                or source_row_index is None
+                or len(source_row_index) == 1
+            ):
                 df_dict_vtresults["Observable"] = observable
                 df_dict_vtresults["SourceIndex"] = source_idx
             elif "resource" in results_to_parse[result_idx]:
@@ -534,10 +550,14 @@ class VTLookup:
                 if vt_resource in source_row_index:
                     df_dict_vtresults["SourceIndex"] = source_row_index[vt_resource]
                 else:
-                    df_dict_vtresults["SourceIndex"] = source_row_index[observables[result_idx]]
+                    df_dict_vtresults["SourceIndex"] = source_row_index[
+                        observables[result_idx]
+                    ]
             else:
                 df_dict_vtresults["Observable"] = observables[result_idx]
-                df_dict_vtresults["SourceIndex"] = source_row_index[observables[result_idx]]
+                df_dict_vtresults["SourceIndex"] = source_row_index[
+                    observables[result_idx]
+                ]
 
             new_results: pd.DataFrame = pd.concat(
                 objs=[self.results, df_dict_vtresults],
@@ -597,7 +617,9 @@ class VTLookup:
             # is of the required value
             if ioc_type == "ipv4" and "resolutions" in results_dict:
                 item_list: list = [
-                    item["hostname"] for item in results_dict["resolutions"] if "hostname" in item
+                    item["hostname"]
+                    for item in results_dict["resolutions"]
+                    if "hostname" in item
                 ]
                 df_dict_vtresults["ResolvedDomains"] = ", ".join(item_list)
             elif ioc_type == "dns" and "resolutions" in results_dict:
@@ -608,7 +630,9 @@ class VTLookup:
                 ]
                 df_dict_vtresults["ResolvedIPs"] = ", ".join(item_list)
             if "detected_urls" in results_dict:
-                item_list = [item["url"] for item in results_dict["detected_urls"] if "url" in item]
+                item_list = [
+                    item["url"] for item in results_dict["detected_urls"] if "url" in item
+                ]
                 df_dict_vtresults["DetectedUrls"] = ", ".join(item_list)
                 # positives are listed per detected_url so we need to
                 # pull those our and sum them.
@@ -677,7 +701,11 @@ class VTLookup:
             return pp_observable
 
         # Check that we don't already have a result for this
-        dup_result: DuplicateStatus = self._check_duplicate_submission(observable, ioc_type, idx)
+        dup_result: DuplicateStatus = self._check_duplicate_submission(
+            observable,
+            ioc_type,
+            idx,
+        )
         if dup_result.is_dup:
             self._print_status(
                 (
@@ -720,7 +748,9 @@ class VTLookup:
             return DuplicateStatus(is_dup=False, status="ok")
 
         # Note duplicate var here can be multiple rows of past results
-        duplicate: pd.DataFrame = self.results[self.results["Observable"] == observable].copy()
+        duplicate: pd.DataFrame = self.results[
+            self.results["Observable"] == observable
+        ].copy()
         # if this is a file hash we should check for previous results in
         # all of the hash columns
         if duplicate.shape[0] == 0 and ioc_type in [
@@ -728,7 +758,9 @@ class VTLookup:
             "sha1_hash",
             "sh256_hash",
         ]:
-            dup_query = "MD5 == @observable or SHA1 == @observable or SHA256 == @observable"
+            dup_query = (
+                "MD5 == @observable or SHA1 == @observable or SHA256 == @observable"
+            )
             duplicate = self.results.query(dup_query).copy()
             # In these cases we want to set the observable to the source value
             # but keep the rest of the results
@@ -749,7 +781,10 @@ class VTLookup:
             )
             self.results = new_results
 
-            return DuplicateStatus(is_dup=True, status=f"Duplicates of {original_indices}")
+            return DuplicateStatus(
+                is_dup=True,
+                status=f"Duplicates of {original_indices}",
+            )
 
         return DuplicateStatus(is_dup=False, status="ok")
 
@@ -780,7 +815,10 @@ class VTLookup:
         new_row["IoCType"] = ioc_type
         new_row["Status"] = status
         new_row["SourceIndex"] = source_idx
-        new_results: pd.DataFrame = self.results.append(new_row.to_dict(), ignore_index=True)
+        new_results: pd.DataFrame = self.results.append(
+            new_row.to_dict(),
+            ignore_index=True,
+        )
 
         self.results = new_results
 
@@ -800,7 +838,10 @@ class VTLookup:
             VT parameters appropriate to this observable type
 
         """
-        params: dict[str, str] = {"apikey": self._vtkey, vt_param.api_var_name: submission_string}
+        params: dict[str, str] = {
+            "apikey": self._vtkey,
+            vt_param.api_var_name: submission_string,
+        }
         submit_url: str = self._get_vt_api_url(vt_param.api_type)
         headers: dict[str, str] = {**(mp_ua_header()), "Content-Type": "application/json"}
         if vt_param.headers is not None:

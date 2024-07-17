@@ -20,7 +20,7 @@ import re
 from collections import Counter
 from functools import partial
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Callable, Optional, Tuple
+from typing import Callable, ClassVar
 from urllib.parse import quote_plus
 
 from urllib3.exceptions import LocationParseError
@@ -47,13 +47,19 @@ _HTTP_STRICT_REGEX = r"""
     (\?(?P<query>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?
     (\#(?P<fragment>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?\b"""
 
-_HTTP_STRICT_RGXC = re.compile(_HTTP_STRICT_REGEX, re.I | re.X | re.M)
+_HTTP_STRICT_RGXC: re.Pattern[str] = re.compile(
+    _HTTP_STRICT_REGEX, re.IGNORECASE | re.VERBOSE | re.MULTILINE
+)
 
 
 CheckerType = Callable[..., SanitizedObservable]
 
 
-def _preprocess_url(url: str, **kwargs) -> SanitizedObservable:
+def _preprocess_url(
+    url: str,
+    *,
+    require_url_encoding: bool = False,
+) -> SanitizedObservable:
     """
     Check that URL can be parsed.
 
@@ -70,15 +76,17 @@ def _preprocess_url(url: str, **kwargs) -> SanitizedObservable:
         Pre-processed result
 
     """
-    require_url_encoding: bool = kwargs.pop("require_url_encoding", False)
     url = refang_ioc(ioc=url, ioc_type="url")
-    clean_url, scheme, host = get_schema_and_host(url, require_url_encoding)
+    clean_url, scheme, host = get_schema_and_host(
+        url,
+        require_url_encoding=require_url_encoding,
+    )
 
     if scheme is None or host is None:
         return SanitizedObservable(None, f"Could not obtain scheme or host from {url}")
     # get rid of some obvious false positives (localhost, local hostnames)
     with contextlib.suppress(ValueError):
-        addr = ip_address(host)
+        addr: IPv4Address | IPv6Address = ip_address(host)
         if addr.is_private:
             return SanitizedObservable(None, "Host part of URL is a private IP address")
         if addr.is_loopback:
@@ -97,8 +105,9 @@ def _preprocess_url(url: str, **kwargs) -> SanitizedObservable:
 
 def get_schema_and_host(
     url: str,
+    *,
     require_url_encoding: bool = False,
-) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+) -> tuple[str | None, str | None, str | None]:
     """
     Return URL scheme and host and cleaned URL.
 
@@ -111,8 +120,8 @@ def get_schema_and_host(
 
     Returns
     -------
-    Tuple[Optional[str], Optional[str], Optional[str]
-        Tuple of URL, scheme, host
+    tuple[Optional[str], Optional[str], Optional[str]
+        tuple of URL, scheme, host
 
     """
     clean_url = None
@@ -133,7 +142,7 @@ def get_schema_and_host(
     return clean_url, scheme, host
 
 
-def _clean_url(url: str) -> Optional[str]:
+def _clean_url(url: str) -> str | None:
     """
     Clean URL to remove query params and fragments and any trailing stuff.
 
@@ -149,7 +158,7 @@ def _clean_url(url: str) -> Optional[str]:
 
     """
     # Try to clean URL and re-check
-    match_url = _HTTP_STRICT_RGXC.search(url)
+    match_url: re.Match[str] | None = _HTTP_STRICT_RGXC.search(url)
     if (
         not match_url
         or match_url.groupdict()["protocol"] is None
@@ -158,7 +167,7 @@ def _clean_url(url: str) -> Optional[str]:
         return None
 
     # build the URL dropping the query string and fragments
-    clean_url = match_url.groupdict()["protocol"]
+    clean_url: str = match_url.groupdict()["protocol"]
     if match_url.groupdict()["userinfo"]:
         clean_url += match_url.groupdict()["userinfo"]
     clean_url += match_url.groupdict()["host"]
@@ -170,51 +179,48 @@ def _clean_url(url: str) -> Optional[str]:
     return clean_url
 
 
-def _preprocess_ip(ipaddress: str, **kwargs):
+def _preprocess_ip(ipaddress: str, version: int = 4) -> SanitizedObservable:
     """Ensure Ip address is a valid public IPv4 address."""
-    version = kwargs.pop("version", 4)
     ipaddress = refang_ioc(ioc=ipaddress, ioc_type="ipv4")
     try:
-        addr = ip_address(ipaddress)
+        addr: IPv4Address | IPv6Address = ip_address(ipaddress)
     except ValueError:
         return SanitizedObservable(None, "IP address is invalid format")
 
-    if version == 4 and not isinstance(addr, IPv4Address):
-        return SanitizedObservable(None, "Not an IPv4 address")
-    if version == 6 and not isinstance(addr, IPv6Address):
-        return SanitizedObservable(None, "Not an IPv6 address")
+    if version != addr.version:
+        if isinstance(addr, IPv4Address):
+            return SanitizedObservable(None, "Not an IPv4 address")
+        if isinstance(addr, IPv6Address):
+            return SanitizedObservable(None, "Not an IPv6 address")
     if addr.is_global:
         return SanitizedObservable(ipaddress, "ok")
 
     return SanitizedObservable(None, "IP address is not global")
 
 
-def _preprocess_dns(domain: str, **kwargs) -> SanitizedObservable:
+def _preprocess_dns(domain: str) -> SanitizedObservable:
     """Ensure DNS is a valid-looking domain."""
-    del kwargs
     domain = refang_ioc(ioc=domain, ioc_type="dns")
     if "." not in domain:
         return SanitizedObservable(None, "Domain is unqualified domain name")
     with contextlib.suppress(ValueError):
-        addr = ip_address(domain)
-        del addr
+        _: IPv4Address | IPv6Address = ip_address(domain)
         return SanitizedObservable(None, "Domain is an IP address")
     return SanitizedObservable(domain, "ok")
 
 
-def _preprocess_hash(hash_str: str, **kwargs) -> SanitizedObservable:
+def _preprocess_hash(hash_str: str) -> SanitizedObservable:
     """Ensure Hash has minimum entropy (rather than a string of 'x')."""
-    del kwargs
-    str_entropy = _entropy(hash_str)
+    str_entropy: float = _entropy(hash_str)
     if str_entropy < 3.0:
         return SanitizedObservable(None, "String has too low an entropy to be a hash")
     return SanitizedObservable(hash_str, "ok")
 
 
-def _validate_ioc_type(observable, ioc_type):
+def _validate_ioc_type(observable: str | None, ioc_type: str) -> SanitizedObservable:
     """Validate type matches IoCExtract regex rules."""
     try:
-        validated = _IOC_EXTRACT.validate(observable, ioc_type)
+        validated: bool = _IOC_EXTRACT.validate(observable, ioc_type)
     except KeyError:
         validated = False
     if not validated:
@@ -228,10 +234,10 @@ def _validate_ioc_type(observable, ioc_type):
 class PreProcessor:
     """Observable pre-processing class."""
 
-    _TYPE_CHECK = "type_check"
+    _TYPE_CHECK: ClassVar[str] = "type_check"
 
     # Default processors
-    _DEF_PROCESSORS: list[tuple[set[str], list[str | CheckerType]]] = [
+    _DEF_PROCESSORS: ClassVar[list[tuple[set[str], list[str | CheckerType]]]] = [
         ({"url"}, [_TYPE_CHECK, _preprocess_url]),
         ({"ipv4"}, [_TYPE_CHECK, _preprocess_ip]),
         ({"ipv6"}, [_TYPE_CHECK, partial(_preprocess_ip, version=6)]),
@@ -255,7 +261,13 @@ class PreProcessor:
         """Return _processors value."""
         return self._processors
 
-    def check(self, value: str, value_type: str, **kwargs) -> SanitizedObservable:
+    def check(
+        self,
+        value: str,
+        value_type: str,
+        *,
+        require_url_encoding: bool = False,
+    ) -> SanitizedObservable:
         """
         Apply processing checks to the input value.
 
@@ -277,21 +289,30 @@ class PreProcessor:
                Otherwise, it has an error message.
 
         """
-        proc_value: Optional[str] = value.strip()
-        result = SanitizedObservable(proc_value, "ok")
+        proc_value: str | None = value.strip()
+        result: SanitizedObservable = SanitizedObservable(proc_value, "ok")
         for processor in self._processors.get(value_type, []):
             if processor == self._TYPE_CHECK:
                 result = _validate_ioc_type(proc_value, value_type)
             elif isinstance(processor, str):
                 continue
             else:
-                result = processor(proc_value, **kwargs)
+                if isinstance(processor, partial):
+                    proc_name: str = processor.func.__name__
+                else:
+                    proc_name = processor.__name__
+                if proc_name == "_preprocess_url":
+                    result = processor(
+                        proc_value, require_url_encoding=require_url_encoding
+                    )
+                else:
+                    result = processor(proc_value)
             proc_value = result.observable
             if proc_value is None:
                 break
         return result
 
-    def add_check(self, value_type: str, checker: CheckerType):
+    def add_check(self, value_type: str, checker: CheckerType) -> None:
         """Add a new checker to the processors."""
         if value_type not in self._processors:
             self._processors[value_type] = [checker]
@@ -300,8 +321,9 @@ class PreProcessor:
 
 
 def preprocess_observable(
-    observable,
-    ioc_type,
+    observable: str,
+    ioc_type: str,
+    *,
     require_url_encoding: bool = False,
 ) -> SanitizedObservable:
     """
@@ -339,8 +361,5 @@ def _entropy(input_str: str) -> float:
     """Compute entropy of input string."""
     str_len = float(len(input_str))
     return -sum(
-        map(
-            lambda a: (a / str_len) * math.log2(a / str_len),
-            Counter(input_str).values(),
-        ),
+        (a / str_len) * math.log2(a / str_len) for a in Counter(input_str).values()
     )

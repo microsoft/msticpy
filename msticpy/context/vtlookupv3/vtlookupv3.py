@@ -284,7 +284,7 @@ class VTLookupV3:
         endpoint_name: str = self._get_endpoint_name(vt_type)
         try:
             response: Object = self._vt_client.get_object(
-                f"/{endpoint_name}/{observable}"
+                f"/{endpoint_name}/{observable}",
             )
             return self._parse_vt_object(response, all_props=all_props)
         except vt.APIError as err:

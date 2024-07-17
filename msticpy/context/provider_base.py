@@ -19,7 +19,7 @@ from abc import ABC, abstractmethod
 from asyncio import get_event_loop
 from collections.abc import Iterable as C_Iterable
 from functools import lru_cache, partial, singledispatch
-from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Iterable
+from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Generator, Iterable
 
 import pandas as pd
 from typing_extensions import Self
@@ -152,7 +152,7 @@ class Provider(ABC):
         self.description: str | None = None
         self._supported_types: set[IoCType] = set()
         self._supported_types = {
-            IoCType.parse(type.split("-")[0]) for type in self._QUERIES
+            IoCType.parse(query_type.split("-")[0]) for query_type in self._QUERIES
         }
         if IoCType.unknown in self._supported_types:
             self._supported_types.remove(IoCType.unknown)
@@ -171,7 +171,6 @@ class Provider(ABC):
         item_col: str | None = None,
         item_type_col: str | None = None,
         query_type: str | None = None,
-        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup collection of items.
@@ -207,7 +206,6 @@ class Provider(ABC):
                 item,
                 item_type,
                 query_type,
-                **kwargs,
             )
             results.append(item_result)
 
@@ -222,7 +220,6 @@ class Provider(ABC):
         *,
         prog_counter: ProgressCounter | None = None,
         item_type: str | None = None,
-        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup collection of items.
@@ -243,6 +240,10 @@ class Provider(ABC):
             Specify the data subtype to be queried, by default None.
             If not specified the default record type for the item
             will be returned.
+        prog_counter: ProgressCounter, Optional
+            Progress Counter to display progess of IOC searches.
+        item_type: str, Optional
+            Type of item
 
         Returns
         -------
@@ -253,15 +254,13 @@ class Provider(ABC):
         event_loop: asyncio.AbstractEventLoop = get_event_loop()
         results: list[pd.DataFrame] = []
         for item, ret_item_type in generate_items(data, item_col, item_type_col):
-            ret_item_type: str | None = item_type or ret_item_type
             if not item:
                 continue
             get_item = partial(
                 self.lookup_item,
                 item=item,
-                item_type=item_type,
+                item_type=item_type or ret_item_type,
                 query_type=query_type,
-                **kwargs,
             )
             item_result: pd.DataFrame = await event_loop.run_in_executor(None, get_item)
             if prog_counter:
@@ -322,7 +321,7 @@ class Provider(ABC):
             elements: list[str] = key.split("-", maxsplit=1)
             if len(elements) == 1:
                 print(f"\titem_type={elements[0]}")
-            if len(elements) == 2:
+            if len(elements) > 1:
                 print(f"\titem_type={elements[0]}, query_type={elements[1]}")
 
     def is_supported_type(self, item_type: str | IoCType) -> bool:
@@ -371,7 +370,6 @@ class Provider(ABC):
         query_type: str | None = None,
         *,
         prog_counter: ProgressCounter | None = None,
-        **kwargs,
     ) -> pd.DataFrame:
         """
         Async wrapper for providers that do not implement lookup_items_async.
@@ -392,6 +390,8 @@ class Provider(ABC):
             Specify the data subtype to be queried, by default None.
             If not specified the default record type for the IoitemC type
             will be returned.
+        prog_counter: ProgressCounter; Optional
+            Progress Counter to display progess of IOC searches.
 
         Returns
         -------
@@ -406,7 +406,6 @@ class Provider(ABC):
             item_col,
             item_type_col,
             query_type,
-            **kwargs,
         )
         result: pd.DataFrame = await event_loop.run_in_executor(None, get_items)
         if prog_counter:
@@ -438,10 +437,10 @@ class PivotProvider(ABC):
 
 @singledispatch
 def generate_items(
-    data: Any,
+    data: pd.DataFrame | dict | C_Iterable,
     item_col: str | None = None,
     item_type_col: str | None = None,
-) -> Iterable[tuple[str | None, str | None]]:
+) -> Generator[tuple[str | None, str | None]]:
     """
     Generate item pairs from different input types.
 
@@ -469,7 +468,11 @@ def generate_items(
 
 
 @generate_items.register(pd.DataFrame)
-def _(data: pd.DataFrame, item_col: str, item_type_col: str | None = None):
+def _(
+    data: pd.DataFrame,
+    item_col: str,
+    item_type_col: str | None = None,
+) -> Generator[tuple[Any, Any], Any, None]:
     for _, row in data.iterrows():
         if item_type_col is None:
             yield row[item_col], Provider.resolve_item_type(row[item_col])
@@ -477,13 +480,17 @@ def _(data: pd.DataFrame, item_col: str, item_type_col: str | None = None):
             yield row[item_col], row[item_type_col]
 
 
-@generate_items.register(dict)  # type: ignore
-def _(data: dict, item_col: str | None = None, item_type_col: str | None = None):
-    del item_col, item_type_col
+@generate_items.register(dict)
+def _(
+    data: dict,
+    _: str | None = None,
+    __: str | None = None,
+) -> Generator[tuple[Any, Any], Any, None]:
     for item, item_type in data.items():
         if not item_type:
-            item_type = Provider.resolve_item_type(item)
-        yield item, item_type
+            yield item, Provider.resolve_item_type(item)
+        else:
+            yield item, item_type
 
 
 def _make_sync(future: Coroutine) -> pd.DataFrame:

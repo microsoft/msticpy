@@ -15,6 +15,7 @@ requests per minute for the account type that you have.
 from __future__ import annotations
 
 import asyncio
+import datetime as dt
 import importlib
 import warnings
 from collections import ChainMap
@@ -362,7 +363,10 @@ class Lookup:
         providers: list[str] | None = None,
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
-        **kwargs,
+        *,
+        show_not_supported: bool = False,
+        start: dt.datetime | None = None,
+        end: dt.datetime | None = None,
     ) -> pd.DataFrame:
         """
         Lookup single item in active providers.
@@ -383,8 +387,6 @@ class Lookup:
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
-        kwargs :
-            Additional arguments passed to the underlying provider(s)
 
         Returns
         -------
@@ -398,7 +400,9 @@ class Lookup:
             providers=providers,
             default_providers=default_providers,
             prov_scope=prov_scope,
-            **kwargs,
+            show_not_supported=show_not_supported,
+            start=start,
+            end=end,
         )
 
     def lookup_items(  # pylint: disable=too-many-arguments
@@ -410,7 +414,10 @@ class Lookup:
         providers: list[str] | None = None,
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
-        **kwargs,
+        *,
+        show_not_supported: bool = False,
+        start: dt.datetime | None = None,
+        end: dt.datetime | None = None,
     ) -> pd.DataFrame:
         """
         Lookup a collection of items.
@@ -460,7 +467,9 @@ class Lookup:
                 providers=providers,
                 default_providers=default_providers,
                 prov_scope=prov_scope,
-                **kwargs,
+                show_not_supported=show_not_supported,
+                start=start,
+                end=end,
             ),
         )
 
@@ -501,6 +510,8 @@ class Lookup:
         progress: bool = True,
         col: str | None = None,
         column: str | None = None,
+        start: dt.datetime | None = None,
+        end: dt.datetime | None = None,
     ) -> pd.DataFrame:
         """Lookup items async."""
         item_col = item_col or col or column
@@ -731,14 +742,16 @@ class Lookup:
             ) or settings.provider == "--no-load--":
                 continue
             try:
-                provider_name = settings.provider or provider_name
-                provider_class: type[Provider] = self.import_provider(provider_name)
+                prov_name: str = settings.provider or provider_name
+                provider_class: type[Provider] = self.import_provider(prov_name)
             except LookupError:
                 warnings.warn(
                     f"Could not find provider class for {provider_name} "
                     f"in config section '{provider_name}'. "
                     f"Provider class name in config is '{settings.provider}'",
+                    stacklevel=2,
                 )
+                prov_name = provider_name
                 continue
 
             # instantiate class sending args from settings to init
@@ -746,11 +759,13 @@ class Lookup:
                 provider_instance: Provider = provider_class(**(settings.args))
             except MsticpyConfigError as mp_ex:
                 # If the TI Provider didn't load, raise an exception
-                raise MsticpyUserConfigError(
-                    f"Could not load Provider {provider_name}",
-                    *mp_ex.args,
+                err_msg: str = (
+                    f"Could not load Provider {provider_name} {mp_ex.args}"
                     "To avoid loading this provider please use the 'providers' parameter"
-                    + " to specify which providers to load.",
+                    " to specify which providers to load."
+                )
+                raise MsticpyUserConfigError(
+                    err_msg,
                     title="Provider configuration error",
                     help_uri=self._HELP_URI,
                 ) from mp_ex
@@ -763,7 +778,7 @@ class Lookup:
 
             self.add_provider(
                 provider=provider_instance,
-                name=provider_name,
+                name=prov_name,
                 primary=settings.primary,
             )
 
@@ -814,16 +829,13 @@ class Lookup:
         for prov_name, provider_result in zip(provider_names, results):
             if provider_result is None or provider_result.empty:
                 continue
+            result: pd.DataFrame = provider_result.copy()
             if not show_not_supported:
-                provider_result = provider_result[
-                    provider_result["Status"] != LookupStatus.NOT_SUPPORTED.value
-                ]
+                result = result[result["Status"] != LookupStatus.NOT_SUPPORTED.value]
             if not show_bad_item:
-                provider_result = provider_result[
-                    provider_result["Status"] != LookupStatus.BAD_FORMAT.value
-                ]
-            provider_result["Provider"] = prov_name
-            result_list.append(provider_result)
+                result = result[result["Status"] != LookupStatus.BAD_FORMAT.value]
+            result["Provider"] = prov_name
+            result_list.append(result)
 
         if not result_list:
             print("No Item matches")

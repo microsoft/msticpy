@@ -11,7 +11,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
 from pprint import pformat
-from typing import Any, ClassVar, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import attr
 import ipywidgets as widgets
@@ -28,7 +28,9 @@ if TYPE_CHECKING:
 try:
     import vt
 except ImportError as imp_err:
-    err_msg: str = "Cannot use this feature without vt-py and vt-graph-api packages installed."
+    err_msg: str = (
+        "Cannot use this feature without vt-py and vt-graph-api packages installed."
+    )
     raise MsticpyImportExtraError(
         err_msg,
         title="Error importing VirusTotal modules.",
@@ -318,7 +320,9 @@ def _build_process_tree(fb_categories: dict[str, Any]) -> pd.DataFrame:
     }
 
     si_procs: list[SIProcess] = _extract_processes(proc_tree_raw, procs_created)
-    process_tree_df: pd.DataFrame = pd.DataFrame(_procs_to_df(si_procs)).drop(columns="children")
+    process_tree_df: pd.DataFrame = pd.DataFrame(_procs_to_df(si_procs)).drop(
+        columns="children",
+    )
     process_tree_df = _try_match_commandlines(
         fb_categories["command_executions"],
         process_tree_df,

@@ -60,6 +60,7 @@ class ContextLookup(Lookup):
         providers: list[str] | None = None,
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
+        show_not_supported: bool = False,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -99,6 +100,7 @@ class ContextLookup(Lookup):
             providers=providers,
             default_providers=default_providers,
             prov_scope=prov_scope,
+            show_not_supported=show_not_supported,
             **kwargs,
         )
 
