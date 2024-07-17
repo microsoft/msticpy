@@ -1,20 +1,23 @@
 # pylint: disable=too-few-public-methods
 """Implements the RAG (Retrieval-Augmented Generation) agent for MSTICpy."""
 
+import importlib.resources as pkg_resources
 from pathlib import Path
 
 from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProxyAgent
 
 from . import config
 
-# Get the path to the current file
-current_file_path = Path(__file__).resolve()
 
-# Construct the path to the docs/source directory
-docs_path = current_file_path.parents[2] / "docs" / "source"
+def find_rst_files():
+    """Find all .rst files in the docs/source directory of 'msticpy' package."""
+    # Get the path to the docs/source directory of the package
+    docs_path = Path(pkg_resources.files("msticpy")).parent / "docs" / "source"
 
-# Find all .rst files in the docs/source directory
-rst_files = [str(path) for path in docs_path.glob("**/*.rst")]
+    # # Find all .rst files in the docs/source directory
+    rst_files = list(docs_path.rglob("*.rst"))
+
+    return rst_files
 
 
 class RagAgent:
@@ -29,6 +32,7 @@ class RagAgent:
 
     def __init__(self):
         """Initialize the rag_agent with a RetrieveUserProxyAgent instance."""
+        rst_files = find_rst_files()
         self.ragproxyagent = RetrieveUserProxyAgent(
             name="ragproxyagent",
             human_input_mode="NEVER",
