@@ -6,9 +6,8 @@ from pathlib import Path
 
 from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProxyAgent
 
-from msticpy._version import VERSION
-
-from . import config
+from .._version import VERSION
+from .config_utils import get_autogen_config_from_msticpyconfig
 
 
 def find_rst_files():
@@ -35,6 +34,7 @@ class RagAgent:
     def __init__(self):
         """Initialize the rag_agent with a RetrieveUserProxyAgent instance."""
         rst_files = find_rst_files()
+        autogen_config = get_autogen_config_from_msticpyconfig()
         self.ragproxyagent = RetrieveUserProxyAgent(
             name="ragproxyagent",
             human_input_mode="NEVER",
@@ -43,7 +43,7 @@ class RagAgent:
                 "task": "qa",
                 "docs_path": rst_files,
                 "chunk_token_size": 2000,
-                "model": config["model"],
+                "model": autogen_config["config_list"][0]["model"],
                 "vector_db": "chroma",
                 "collection_name": f"MSTICpy_Docs_{VERSION}",
                 "get_or_create": True,

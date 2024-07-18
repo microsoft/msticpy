@@ -2,7 +2,7 @@
 """Implements the assistant agent for MSTICpy."""
 from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistantAgent
 
-from . import config
+from .config_utils import get_autogen_config_from_msticpyconfig
 
 
 class AssistantAgent:
@@ -18,5 +18,5 @@ class AssistantAgent:
         self.assistant = RetrieveAssistantAgent(
             name="assistant",
             system_message="You are a helpful assistant to security analysts using MSTICpy.",
-            llm_config=config,
+            llm_config=get_autogen_config_from_msticpyconfig(),
         )
