@@ -60,7 +60,33 @@ class AutogenMagic(Magics):
 
     @cell_magic
     def ask(self, line: str, cell: str):
-        """Parse the line to check for the --v flag and call the ask_magic method."""
+        """
+        Enable the user to ask a question to the RAG agent using a cell magic function.
+
+        It parses the line to check for the --v flag and calls the ask_magic method
+        with the cell content as the question.
+
+        Parameters
+        ----------
+        line : str
+            The line of code following the cell magic command. Used to check for the --v flag.
+        cell : str
+            The content of the cell. This is used as the question to ask the RAG agent.
+
+        Example Usage
+        -------------
+        To ask a question to the RAG agent, use the cell magic
+        command followed by the question in the cell.
+        For example:
+
+        %%ask
+        Which msticpy module contains the code related to visualizing network graphs?
+
+        If you want the RAG agent to provide a verbose response, include the --v flag. For example:
+
+        %%ask --v
+        Which msticpy module contains the code related to visualizing network graphs?
+        """
         args = line.split()
         verbose_flag = "--v" in args
 
@@ -71,12 +97,3 @@ class AutogenMagic(Magics):
 def load_ipython_extension(ipython):
     """Register the magic class with IPython."""
     ipython.register_magics(AutogenMagic)
-
-
-# Example Usage:
-# %%ask
-# Which msticpy module contains the code related to visualizing network graphs?
-
-# Example Verbose Usage:
-# %%ask --v
-# Which msticpy module contains the code related to visualizing network graphs?
