@@ -289,6 +289,10 @@ class TILookup(Lookup):
             prov_scope=prov_scope,
         )
 
-    def _load_providers(self) -> None:
+    def _load_providers(
+        self,
+        *,
+        providers: str = "TIProviders",
+    ) -> None:
         """Load provider classes based on config."""
-        return super()._load_providers(providers="TIProviders")
+        return super()._load_providers(providers=providers)

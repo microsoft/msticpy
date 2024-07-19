@@ -22,7 +22,6 @@ def browse_results(
     severities: Union[List[str], str, None] = None,
     *,
     height: str = "300px",
-    **kwargs,
 ) -> SelectItem:
     """
     Return TI Results list browser.

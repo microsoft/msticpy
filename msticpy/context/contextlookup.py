@@ -228,6 +228,10 @@ class ContextLookup(Lookup):
             prov_scope=prov_scope,
         )
 
-    def _load_providers(self) -> None:
+    def _load_providers(
+        self,
+        *,
+        providers: str = "ContextProviders",
+    ) -> None:
         """Load provider classes based on config."""
-        super()._load_providers(providers="ContextProviders")
+        super()._load_providers(providers=providers)

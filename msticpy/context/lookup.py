@@ -510,6 +510,7 @@ class Lookup:
         end: dt.datetime | None = None,
     ) -> pd.DataFrame:
         """Lookup items async."""
+        del start, end
         item_col = item_col or col or column
         selected_providers: dict[str, Any] = self._select_providers(
             providers or default_providers,
