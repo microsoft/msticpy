@@ -95,9 +95,9 @@ class MsticpyUserError(MsticpyException):
         # just strings - for simple args strings
         # tuples(str, str) - if the item is annotated as a uri or title
         # tuple(tuple(str, str), str) - if the URI is a tuple of display_name, URI
-        self._output: List[
-            Union[str, Tuple[str, str], Tuple[Tuple[str, str], str]]
-        ] = []
+        self._output: List[Union[str, Tuple[str, str], Tuple[Tuple[str, str], str]]] = (
+            []
+        )
         title = kwargs.pop("title", "we've hit an error while running")
         disp_exception = kwargs.pop("display", False)
         self._has_displayed = False
