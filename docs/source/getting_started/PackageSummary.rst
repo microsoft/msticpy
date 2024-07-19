@@ -355,6 +355,7 @@ threat hunting in Jupyter Notebooks by providing contextually relevant responses
 models and external knowledge retrieval from the MSTICpy documentation.
 
 You can invoke the RAG agent in a Jupyter Notebook by adding the following:
+
 .. code-block:: python
 
    # Load the RAG cell magic
@@ -365,7 +366,9 @@ You can invoke the RAG agent in a Jupyter Notebook by adding the following:
    What are the three things that I need to connect to Azure Query Provider?
 
 You can also invoke the RAG Agent outside of a Jupyter Notebook as follows:
+
 .. code-block:: python
+
    # Import the necessary module
    from msticpy.aiagents.assistant_agent import AssistantAgent
    from msticpy.aiagents.rag_agent import RagAgent
