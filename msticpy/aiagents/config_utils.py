@@ -1,6 +1,7 @@
 """Utility Modules related to AI agents used in MSTICpy."""
 
-from typing import Callable, Dict, TypeAlias, Union
+import os
+from typing import Callable, Dict, List, TypeAlias, Union
 
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
@@ -33,7 +34,31 @@ def inject_token_provider_callable(config: Dict[str, str]) -> ConfigWithTokenPro
     return config
 
 
-def get_autogen_config_from_msticpyconfig():
+def inject_environment_variable(config: Dict[str, str]) -> Dict[str, str]:
+    """Replace autogen configuration `api_key` with the value of an environment variable.
+
+    Parameters
+    ----------
+    config : Dict[str, str]
+        Autogen LLM configuration.
+
+    Returns
+    -------
+    Dict[str, str]
+        Autogen LLM configuration with the environment variable value.
+    """
+    if "api_key" in config:
+        api_key = os.environ.get(config["api_key"], None)
+        if not api_key:
+            raise MsticpyUserConfigError(
+                f"Environment variable {config['api_key']} specified, but not found!"
+            )
+        config["api_key"] = api_key
+
+    return config
+
+
+def get_autogen_config_from_msticpyconfig() -> Dict[str, Union[str, float, List]]:
     """Get Autogen configuration from msticpyconfig.yaml.
 
     See `https://microsoft.github.io/autogen/docs/topics/llm_configuration`
