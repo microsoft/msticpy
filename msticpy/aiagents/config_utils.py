@@ -89,10 +89,18 @@ def get_autogen_config_from_msticpyconfig() -> Dict[str, Union[str, float, List]
             "Autogen.config_list setting not found in msticpyconfig.yaml configuration!"
         )
 
+    injectors = [
+        inject_token_provider_callable,
+        inject_environment_variable,
+    ]
+
+    config_list = []
+    for config in autogen_config["config_list"]:
+        for injector in injectors:
+            config = injector(config)
+        config_list.append(config)
+
     return {
         **autogen_config,
-        "config_list": [
-            inject_token_provider_callable(config)
-            for config in autogen_config["config_list"]
-        ],
+        "config_list": config_list,
     }
