@@ -396,20 +396,17 @@ class RiskIQ(TIProvider, TIPivotProvider):
         self._pivot_get_timespan = pivot.get_timespan
         self._pivot_timespan_start = None
         self._pivot_timespan_end = None
-        base_reg: dict[str, str | bool | None] = {
-            "entity_container_name": "RiskIQ",
-            "func_df_param_name": "data",
-            "func_df_col_param_name": "host",
-            "func_input_value_arg": "host",
-            "func_out_column_name": "query",
-        }
         for prop, entity_map in self._PIVOT_ENTITIES.items():
             reg = pivot_reg(
                 func_new_name=prop,
                 func_static_params={"prop": prop},
                 input_type="value",
                 entity_map=entity_map,
-                **base_reg,
+                entity_container_name="RiskIQ",
+                func_df_param_name="data",
+                func_df_col_param_name="host",
+                func_input_value_arg="host",
+                func_out_column_name="query",
             )
             fun = partial(self.pivot_value)
             fun.__doc__ = getattr(

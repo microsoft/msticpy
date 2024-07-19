@@ -220,7 +220,10 @@ def _preprocess_hash(hash_str: str) -> SanitizedObservable:
 def _validate_ioc_type(observable: str | None, ioc_type: str) -> SanitizedObservable:
     """Validate type matches IoCExtract regex rules."""
     try:
-        validated: bool = _IOC_EXTRACT.validate(observable, ioc_type)
+        if observable:
+            validated: bool = _IOC_EXTRACT.validate(observable, ioc_type)
+        else:
+            validated = False
     except KeyError:
         validated = False
     if not validated:
