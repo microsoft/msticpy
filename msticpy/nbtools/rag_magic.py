@@ -1,5 +1,8 @@
 """Provides RAG Magic functionalities for MSTICpy."""
 
+import io
+from contextlib import redirect_stdout
+
 from IPython.core.magic import Magics, cell_magic, magics_class
 
 from msticpy.aiagents.assistant_agent import AssistantAgent
@@ -38,24 +41,28 @@ class AutogenMagic(Magics):
     def ask_magic(self, question: str, verbose: bool = False) -> str:
         """Query the RAG agent and process the response with the Assistant agent."""
         self.assistant_instance.assistant.reset()
-        print(f"Question: {question}")
+        output = io.StringIO()
+        with redirect_stdout(output):
+            # Toggle between custom messages depending on flag
+            chosen_message = (
+                VERBOSE_CUSTOM_SYSTEM_MESSAGE.format(question)
+                if verbose
+                else CUSTOM_SYSTEM_MESSAGE.format(question)
+            )
 
-        # Toggle between custom messages depending on flag
-        chosen_message = (
-            VERBOSE_CUSTOM_SYSTEM_MESSAGE.format(question)
-            if verbose
-            else CUSTOM_SYSTEM_MESSAGE.format(question)
-        )
+            self.rag_instance.ragproxyagent.customized_prompt = chosen_message
+            self.assistant_instance.assistant.customized_prompt = chosen_message
 
-        self.rag_instance.ragproxyagent.customized_prompt = chosen_message
-        self.assistant_instance.assistant.customized_prompt = chosen_message
+            rag_response = self.rag_instance.ragproxyagent.initiate_chat(
+                self.assistant_instance.assistant,
+                message=self.rag_instance.ragproxyagent.message_generator,
+                problem=question,
+                summary_method="reflection_with_llm",
+            )
 
-        rag_response = self.rag_instance.ragproxyagent.initiate_chat(
-            self.assistant_instance.assistant,
-            message=self.rag_instance.ragproxyagent.message_generator,
-            problem=question,
-            summary_method="reflection_with_llm",
-        )
+        print(f"\nQuestion: {question}")
+        print(f"\nAnswer: {rag_response.summary}")
+
         return rag_response
 
     @cell_magic
