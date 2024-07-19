@@ -94,8 +94,6 @@ class TILookup(Lookup):
             Time since when IOC is considered relevant
         end: dt.datetime, optional
             Time until when IOC is considered relevant
-        kwargs :
-            Additional arguments passed to the underlying provider(s)
 
         Returns
         -------
@@ -176,8 +174,6 @@ class TILookup(Lookup):
             Time since when IOC is considered relevant
         end: dt.datetime, optional
             Time until when IOC is considered relevant
-        kwargs :
-            Additional arguments passed to the underlying provider(s)
 
         Returns
         -------
@@ -276,8 +272,6 @@ class TILookup(Lookup):
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
-        kwargs :
-            Additional arguments passed to the underlying provider(s)
 
         Returns
         -------
@@ -295,6 +289,6 @@ class TILookup(Lookup):
             prov_scope=prov_scope,
         )
 
-    def _load_providers(self, **kwargs: str) -> None:
+    def _load_providers(self) -> None:
         """Load provider classes based on config."""
-        return super()._load_providers(providers="TIProviders", **kwargs)
+        return super()._load_providers(providers="TIProviders")

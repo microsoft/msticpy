@@ -78,9 +78,9 @@ class Lookup:
     you have correctly configured your msticpyconfig.yaml settings.
     """
 
-    _HELP_URI: ClassVar[
-        str
-    ] = "https://msticpy.readthedocs.io/en/latest/DataEnrichment.html"
+    _HELP_URI: ClassVar[str] = (
+        "https://msticpy.readthedocs.io/en/latest/DataEnrichment.html"
+    )
 
     PROVIDERS: ClassVar[dict[str, tuple[str, str]]] = {}
     CUSTOM_PROVIDERS: ClassVar[dict[str, type[Provider]]]
@@ -262,7 +262,8 @@ class Lookup:
         cls,
         data: pd.DataFrame,
         severities: list[str] | None = None,
-        **kwargs,
+        *,
+        height: str = "300px",
     ) -> SelectItem | None:
         """
         Return TI Results list browser.
@@ -276,11 +277,8 @@ class Lookup:
             By default these are ['warning', 'high'].
             Pass ['information', 'warning', 'high'] to see all
             results.
-
-        Other Parameters
-        ----------------
-        kwargs :
-            passed to SelectItem constructor.
+        height: str, Optional
+            Height of the widget
 
         Returns
         -------
@@ -291,7 +289,7 @@ class Lookup:
         if not isinstance(data, pd.DataFrame):
             print("Input data is in an unexpected format.")
             return None
-        return browse_results(data=data, severities=severities, **kwargs)
+        return browse_results(data=data, severities=severities, height=height)
 
     browse: Callable[..., SelectItem | None] = browse_results
 
@@ -449,8 +447,6 @@ class Lookup:
         ----------------
         progress : bool
             Use progress bar to track completion, by default True
-        kwargs :
-            Additional arguments passed to the underlying provider(s)
 
         Returns
         -------
@@ -603,8 +599,6 @@ class Lookup:
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
-        kwargs :
-            Additional arguments passed to the underlying provider(s)
 
         Returns
         -------
@@ -731,10 +725,13 @@ class Lookup:
         )
         return getattr(imp_module, cls_name)
 
-    def _load_providers(self, **kwargs) -> None:
+    def _load_providers(
+        self,
+        *,
+        providers: str = "Providers",
+    ) -> None:
         """Load provider classes based on config."""
-        prov_type: str = kwargs.get("providers", "Providers")
-        prov_settings: dict[str, ProviderSettings] = get_provider_settings(prov_type)
+        prov_settings: dict[str, ProviderSettings] = get_provider_settings(providers)
         for provider_name, settings in prov_settings.items():
             if (
                 self._providers_to_load is not None

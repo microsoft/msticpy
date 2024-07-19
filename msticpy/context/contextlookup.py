@@ -61,7 +61,6 @@ class ContextLookup(Lookup):
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
         show_not_supported: bool = False,
-        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup single observable in active providers.
@@ -82,8 +81,6 @@ class ContextLookup(Lookup):
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
-        kwargs :
-            Additional arguments passed to the underlying provider(s)
 
         Returns
         -------
@@ -101,7 +98,6 @@ class ContextLookup(Lookup):
             default_providers=default_providers,
             prov_scope=prov_scope,
             show_not_supported=show_not_supported,
-            **kwargs,
         )
 
     def lookup_observables(  # pylint:disable=too-many-arguments
@@ -113,7 +109,6 @@ class ContextLookup(Lookup):
         providers: list[str] | None = None,
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
-        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup a collection of Observables.
@@ -140,8 +135,6 @@ class ContextLookup(Lookup):
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
-        kwargs :
-            Additional arguments passed to the underlying provider(s)
 
         Returns
         -------
@@ -158,7 +151,6 @@ class ContextLookup(Lookup):
                 providers=providers,
                 default_providers=default_providers,
                 prov_scope=prov_scope,
-                **kwargs,
             ),
         )
 
@@ -172,7 +164,6 @@ class ContextLookup(Lookup):
         providers: list[str] | None = None,
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
-        **kwargs,
     ) -> pd.DataFrame:
         """Lookup items async."""
         return await self._lookup_items_async(
@@ -183,7 +174,6 @@ class ContextLookup(Lookup):
             providers=providers,
             default_providers=default_providers,
             prov_scope=prov_scope,
-            **kwargs,
         )
 
     def lookup_observables_sync(  # pylint:disable=too-many-arguments
@@ -195,7 +185,6 @@ class ContextLookup(Lookup):
         providers: list[str] | None = None,
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
-        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup a collection of IoCs.
@@ -222,8 +211,6 @@ class ContextLookup(Lookup):
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
-        kwargs :
-            Additional arguments passed to the underlying provider(s)
 
         Returns
         -------
@@ -239,9 +226,8 @@ class ContextLookup(Lookup):
             providers=providers,
             default_providers=default_providers,
             prov_scope=prov_scope,
-            **kwargs,
         )
 
-    def _load_providers(self, **kwargs) -> None:
+    def _load_providers(self) -> None:
         """Load provider classes based on config."""
-        super()._load_providers(providers="ContextProviders", **kwargs)
+        super()._load_providers(providers="ContextProviders")

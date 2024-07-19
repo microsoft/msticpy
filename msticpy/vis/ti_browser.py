@@ -18,7 +18,11 @@ __author__ = "Ian Hellen"
 
 
 def browse_results(
-    data: pd.DataFrame, severities: Union[List[str], str, None] = None, **kwargs
+    data: pd.DataFrame,
+    severities: Union[List[str], str, None] = None,
+    *,
+    height: str = "300px",
+    **kwargs,
 ) -> SelectItem:
     """
     Return TI Results list browser.
@@ -30,11 +34,8 @@ def browse_results(
     severities : Union[List[str], str, None], optional
         A list of the severity classes to show or the string 'all'.
         By default these are ['warning', 'high'].
-
-    Other Parameters
-    ----------------
-    kwargs :
-        passed to SelectItem constuctor.
+    height: str, Optional
+        height, in pixels of the widget. Defaults to 300px.
 
     Returns
     -------
@@ -42,9 +43,6 @@ def browse_results(
         SelectItem browser for TI Data.
 
     """
-    if "height" not in kwargs:
-        kwargs["height"] = "300px"
-
     if not isinstance(data, pd.DataFrame) or data.empty:
         raise ValueError("'data' parameter is empty or is not a dataframe.")
 
@@ -55,7 +53,7 @@ def browse_results(
         print("Displaying only 'information' severity items.")
         opts = get_ti_select_options(ti_data=data, severities="all")
 
-    return SelectItem(item_dict=opts, action=disp_func, **kwargs)
+    return SelectItem(item_dict=opts, action=disp_func, height=height)
 
 
 def get_ti_select_options(
