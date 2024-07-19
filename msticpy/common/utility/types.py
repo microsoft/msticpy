@@ -30,13 +30,11 @@ __author__ = "Ian Hellen"
 
 
 @overload
-def export(obj: Type) -> Type:
-    ...
+def export(obj: Type) -> Type: ...
 
 
 @overload
-def export(obj: Callable) -> Callable:
-    ...
+def export(obj: Callable) -> Callable: ...
 
 
 def export(obj):

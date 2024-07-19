@@ -48,9 +48,9 @@ class KqlTIProvider(TIProvider):
 
     _QUERIES: ClassVar[dict[str, tuple]] = {}
 
-    _CONNECT_STR: ClassVar[
-        str
-    ] = "loganalytics://code().tenant('{TENANT_ID}').workspace('{WORKSPACE_ID}')"
+    _CONNECT_STR: ClassVar[str] = (
+        "loganalytics://code().tenant('{TENANT_ID}').workspace('{WORKSPACE_ID}')"
+    )
 
     _REQUIRED_TABLES: ClassVar[list[str]] = []
 

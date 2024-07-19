@@ -191,7 +191,9 @@ def create_pivot_func(
                     "Try again with a single row/value as input.",
                     "E.g. func(data=df.iloc[N], column=...)",
                 )
-            result_df = _iterate_func(target_func, input_df, input_column, pivot_reg, **kwargs)
+            result_df = _iterate_func(
+                target_func, input_df, input_column, pivot_reg, **kwargs
+            )
         else:
             result_df = target_func(**param_dict, **kwargs)  # type: ignore
         merge_key = pivot_reg.func_out_column_name or input_column
@@ -219,7 +221,9 @@ def create_pivot_func(
     return pivot_lookup
 
 
-def get_join_params(func_kwargs: dict[str, Any]) -> tuple[str | None, str | None, str | None, bool]:
+def get_join_params(
+    func_kwargs: dict[str, Any]
+) -> tuple[str | None, str | None, str | None, bool]:
     """
     Get join parameters from kwargs.
 
@@ -333,7 +337,9 @@ def _get_entity_attr_or_self(obj, attrib):
     return obj
 
 
-def _get_input_value(*args, pivot_reg: PivotRegistration, parent_kwargs: dict[str, Any]) -> Any:
+def _get_input_value(
+    *args, pivot_reg: PivotRegistration, parent_kwargs: dict[str, Any]
+) -> Any:
     """Extract input value from args or kwargs."""
     if args:
         input_value = args[0]
@@ -387,7 +393,9 @@ def _check_valid_settings_for_input(input_value: Any, pivot_reg: PivotRegistrati
                 # pylint: enable=isinstance-second-argument-not-valid-type
             )
         ):
-            raise ValueError(f"This function does not accept inputs of {type(input_value)}")
+            raise ValueError(
+                f"This function does not accept inputs of {type(input_value)}"
+            )
 
 
 def _arg_to_dframe(arg_val, col_name: str = "param_value"):

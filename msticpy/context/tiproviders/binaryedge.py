@@ -47,7 +47,9 @@ class BinaryEdge(HttpTIProvider):
 
     def parse_results(self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """Return the details of the response."""
-        if self._failed_response(response) or not isinstance(response["RawResult"], dict):
+        if self._failed_response(response) or not isinstance(
+            response["RawResult"], dict
+        ):
             return False, ResultSeverity.information, "Not found."
 
         data: list = response["RawResult"]["events"]

@@ -148,7 +148,9 @@ class VTLookup:
         self._ioc_custom_type_map: dict[str, str | None] = {}
 
         # create a data frame to store the results
-        self.results: pd.DataFrame = pd.DataFrame(data=None, columns=self._RESULT_COLUMNS)
+        self.results: pd.DataFrame = pd.DataFrame(
+            data=None, columns=self._RESULT_COLUMNS
+        )
 
     @property
     def supported_ioc_types(self) -> list[str]:
@@ -631,7 +633,9 @@ class VTLookup:
                 df_dict_vtresults["ResolvedIPs"] = ", ".join(item_list)
             if "detected_urls" in results_dict:
                 item_list = [
-                    item["url"] for item in results_dict["detected_urls"] if "url" in item
+                    item["url"]
+                    for item in results_dict["detected_urls"]
+                    if "url" in item
                 ]
                 df_dict_vtresults["DetectedUrls"] = ", ".join(item_list)
                 # positives are listed per detected_url so we need to
@@ -770,7 +774,9 @@ class VTLookup:
         # if we found a duplicate so add the copies of the duplicated requests
         # to the results
         if duplicate.shape[0] > 0:
-            original_indices: list = [v[0] for v in duplicate[["SourceIndex"]].to_numpy()]
+            original_indices: list = [
+                v[0] for v in duplicate[["SourceIndex"]].to_numpy()
+            ]
             duplicate["SourceIndex"] = source_index
             duplicate["Status"] = "Duplicate"
             new_results: pd.DataFrame = pd.concat(
@@ -843,7 +849,10 @@ class VTLookup:
             vt_param.api_var_name: submission_string,
         }
         submit_url: str = self._get_vt_api_url(vt_param.api_type)
-        headers: dict[str, str] = {**(mp_ua_header()), "Content-Type": "application/json"}
+        headers: dict[str, str] = {
+            **(mp_ua_header()),
+            "Content-Type": "application/json",
+        }
         if vt_param.headers is not None:
             headers.update(vt_param.headers)
 
@@ -886,7 +895,9 @@ class VTLookup:
     @classmethod
     def _get_supported_vt_ioc_types(cls) -> list[str]:
         """Return the subset of IoC types supported by VT."""
-        return [t for t in cls._SUPPORTED_INPUT_TYPES if cls._VT_TYPE_MAP[t] is not None]
+        return [
+            t for t in cls._SUPPORTED_INPUT_TYPES if cls._VT_TYPE_MAP[t] is not None
+        ]
 
     def _print_status(self, message: str, verbosity_level: int) -> None:
         """

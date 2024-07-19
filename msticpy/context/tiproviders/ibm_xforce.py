@@ -101,7 +101,10 @@ class XForce(HttpTIProvider):
             return False, severity, "Not found."
         result = True
         result_dict: dict[str, Any] = {}
-        if response["IocType"] in ["ipv4", "ipv6", "url", "dns"] and not response["QuerySubtype"]:
+        if (
+            response["IocType"] in ["ipv4", "ipv6", "url", "dns"]
+            and not response["QuerySubtype"]
+        ):
             # For some IocTypes "dns" and "url", the response structure differs
             report: dict[str, Any] = response["RawResult"].get(
                 "result",
@@ -123,9 +126,11 @@ class XForce(HttpTIProvider):
             severity = (
                 ResultSeverity.information
                 if score < self.MEDIUM_SEVERITY
-                else ResultSeverity.warning
-                if self.MEDIUM_SEVERITY <= score < self.HIGH_SEVERITY
-                else ResultSeverity.high
+                else (
+                    ResultSeverity.warning
+                    if self.MEDIUM_SEVERITY <= score < self.HIGH_SEVERITY
+                    else ResultSeverity.high
+                )
             )
         if (
             response["IocType"] in ["file_hash", "md5_hash", "sha1_hash", "sha256_hash"]

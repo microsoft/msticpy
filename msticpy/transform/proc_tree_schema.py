@@ -155,7 +155,9 @@ class ProcSchema:
         """Return blank schema dictionary."""
         return {
             field: (
-                "required" if (attrib.default or attrib.default == attr.NOTHING) else None
+                "required"
+                if (attrib.default or attrib.default == attr.NOTHING)
+                else None
             )
             for field, attrib in attr.fields_dict(cls).items()
         }
