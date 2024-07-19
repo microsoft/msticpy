@@ -341,3 +341,54 @@ Supported Platforms and Packages
 -  Requires Python 3.8 or later
 -  See `requirements.txt <https://github.com/microsoft/msticpy/blob/master/requirements.txt>`__
    for more details and version requirements.
+
+
+
+aiagents Module: RAG Agent
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:py:mod:`msticpy.aiagents.ragagent`
+
+The **aiagents** module in MSTICpy introduces the **Retrieval-Augmented Generation (RAG) Agent**.
+This agent is designed for Q&A about MSTICpy. It enhances InfoSec investigations and
+threat hunting in Jupyter Notebooks by providing contextually relevant responses using large language
+models and external knowledge retrieval from the MSTICpy documentation.
+
+You can invoke the RAG agent in a Jupyter Notebook by adding the following:
+
+.. code-block:: python
+
+   # Load the RAG cell magic
+   %load_ext msticpy.nbtools.rag_magic
+
+   # The following command should be in a separate cell and be the first line of the cell
+   %%ask
+   What are the three things that I need to connect to Azure Query Provider?
+
+You can also invoke the RAG Agent outside of a Jupyter Notebook as follows:
+
+.. code-block:: python
+
+   # Import the necessary module
+   from msticpy.aiagents.assistant_agent import AssistantAgent
+   from msticpy.aiagents.rag_agent import RagAgent
+
+   # Initialize the agent
+   rag_agent = RagAgent()
+   assistant_agent = AssistantAgent()
+
+   # Define your question
+   question = "Your MSTICpy-related question here"
+
+   # Use the agent to answer a query
+   response = rag_agent.ragproxyagent.initiate_chat(
+      assistant_agent,
+      message=rag_agent.ragproxyagent.message_generator,
+      problem=question,
+   )
+
+   print(response)
+
+
+Sample notebook - `RAG Agent Example Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/RagAgent.ipynb>`__
+

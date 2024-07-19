@@ -171,6 +171,41 @@ as geo-location providers.
           DBFolder: "~/.msticpy"
         Provider: "GeoLiteLookup"
 
+Autogen
+~~~~~~~
+This section allows you to specify `settings for the autogen module
+<https://microsoft.github.io/autogen/docs/topics/llm_configuration>`.
+`Autogen` is a top-level section in the configuration file. This
+section is used as the `llm_config` argument when instantiating
+an agent from the `autogen` package.
+
+When using Entra ID authentication with Autogen, you an specify the
+`azure_ad_token_provider` as the string `token_provider`. This will
+automatically use `DefaultAzureCredential` to obtain bearer tokens
+rather than using an API key. This is the preferred method of
+authenticating to Azure OpenAI endpoints because there are no
+secrets to manage.
+
+If using an API key, you can specify `api_key` as the name of
+an environment variable.
+
+Here is an example of authenticating to an Azure OpenAI endpoint using
+both Entra ID and an API key:
+
+.. code:: yaml
+  Autogen:
+    config_list:
+      - model: gpt-4o
+        api_type: azure
+        api_version: 2024-02-15-preview
+        base_url: https://my-aoai-endpoint.openai.azure.com/
+        azure_ad_token_provider: token_provider
+      - model: gpt-4o
+        api_type: azure
+        api_version: 2024-02-15-preview
+        base_url: https://my-aoai-endpoint.openai.azure.com/
+        api_key: SOME_ENVIRONMENT_VARIABLE
+
 DataProviders
 ~~~~~~~~~~~~~~
 This section is similar to the previous two sections, allowing you
