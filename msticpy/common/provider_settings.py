@@ -12,9 +12,6 @@ import warnings
 from collections import UserDict
 from typing import Any, Callable
 
-import attr
-from attr import Factory
-
 from .._version import VERSION
 from .exceptions import MsticpyImportExtraError
 from .pkg_config import get_config, refresh_config

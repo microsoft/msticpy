@@ -14,9 +14,7 @@ requests per minute for the account type that you have.
 """
 from __future__ import annotations
 
-from typing import ClassVar, Iterable, Mapping
-
-import pandas as pd
+from typing import TYPE_CHECKING, ClassVar, Iterable, Mapping
 
 from .._version import VERSION
 from ..common.utility import export
@@ -26,6 +24,8 @@ from .contextproviders import CONTEXT_PROVIDERS
 from .lookup import Lookup
 from .provider_base import Provider, _make_sync
 
+if TYPE_CHECKING:
+    import pandas as pd
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
@@ -60,6 +60,7 @@ class ContextLookup(Lookup):
         providers: list[str] | None = None,
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
+        *,
         show_not_supported: bool = False,
     ) -> pd.DataFrame:
         """
@@ -81,6 +82,8 @@ class ContextLookup(Lookup):
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
+        show_not_supported: bool, optional
+            Include the not supported observables in the result DF. Defaults to False.
 
         Returns
         -------

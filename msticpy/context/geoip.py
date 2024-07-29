@@ -74,7 +74,7 @@ class GeoIpLookup(metaclass=ABCMeta):
 
     @abstractmethod
     def lookup_ip(
-        self,
+        self: Self,
         ip_address: str | None = None,
         ip_addr_list: Iterable | None = None,
         ip_entity: IpAddress | None = None,
@@ -100,7 +100,11 @@ class GeoIpLookup(metaclass=ABCMeta):
 
         """
 
-    def df_lookup_ip(self, data: pd.DataFrame, column: str) -> pd.DataFrame:
+    def df_lookup_ip(
+        self: Self,
+        data: pd.DataFrame,
+        column: str,
+    ) -> pd.DataFrame:
         """
         Lookup Geolocation data from a pandas Dataframe.
 
@@ -125,7 +129,11 @@ class GeoIpLookup(metaclass=ABCMeta):
             right_on="IpAddress",
         )
 
-    def lookup_ips(self, data: pd.DataFrame, column: str) -> pd.DataFrame:
+    def lookup_ips(
+        self: Self,
+        data: pd.DataFrame,
+        column: str,
+    ) -> pd.DataFrame:
         """
         Lookup Geolocation data from a pandas Dataframe.
 
@@ -145,7 +153,7 @@ class GeoIpLookup(metaclass=ABCMeta):
         ip_list = list(data[column].values)
         _, entities = self.lookup_ip(ip_addr_list=ip_list)
 
-        ip_dicts = [
+        ip_dicts: list[dict] = [
             {**ent.Location.properties, "IpAddress": ent.Address}
             for ent in entities
             if ent.Location is not None
@@ -153,23 +161,28 @@ class GeoIpLookup(metaclass=ABCMeta):
         return pd.DataFrame(data=ip_dicts)
 
     @staticmethod
-    def _ip_params_to_list(ip_address, ip_addr_list, ip_entity) -> list[str]:
+    def _ip_params_to_list(
+        ip_address: str | Iterable | IpAddress | None = None,
+        ip_addr_list: list[str] | None = None,
+        ip_entity: IpAddress | None = None,
+    ) -> list[str]:
         """Try to convert different parameter formats to list."""
         if ip_address is not None:
             # check if ip_address just used as positional arg.
             if isinstance(ip_address, str):
                 return [ip_address.strip()]
             if isinstance(ip_address, abc.Iterable):
-                return [str(ip).strip() for ip in ip_addr_list]
+                return [str(ip).strip() for ip in ip_address]
             if isinstance(ip_address, IpAddress):
-                return [ip_entity.Address]
+                return [ip_address.Address]
         if ip_addr_list is not None and isinstance(ip_addr_list, abc.Iterable):
             return [str(ip).strip() for ip in ip_addr_list]
         if ip_entity:
             return [ip_entity.Address]
-        raise ValueError("No valid ip addresses were passed as arguments.")
+        err_msg: str = "No valid ip addresses were passed as arguments."
+        raise ValueError(err_msg)
 
-    def print_license(self):
+    def print_license(self) -> None:
         """Print license information for providers."""
         if self._LICENSE_HTML and is_ipython(notebook=True):
             display(HTML(self._LICENSE_HTML))
@@ -242,7 +255,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         self._api_key: str | None = api_key
         self.bulk_lookup: bool = bulk_lookup
 
-    def _check_initialized(self):
+    def _check_initialized(self) -> bool:
         """Return True if valid API key available."""
         if self._api_key:
             return True
@@ -255,7 +268,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
             self._NO_API_KEY_MSSG,
             help_uri=(
                 "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
-                + "GeoIPLookups.html#ipstack-geo-lookup-class"
+                "GeoIPLookups.html#ipstack-geo-lookup-class"
             ),
             service_uri="https://ipstack.com/product",
             title="IPStack API key not found",
@@ -296,23 +309,23 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
 
         """
         self._check_initialized()
-        ip_list = self._ip_params_to_list(ip_address, ip_addr_list, ip_entity)
+        ip_list: list[str] = self._ip_params_to_list(ip_address, ip_addr_list, ip_entity)
 
-        results = self._submit_request(ip_list)
-        output_raw = []
-        output_entities = []
+        results: list[tuple[dict[str, str], int]] = self._submit_request(ip_list)
+        output_raw: list[tuple[dict[str, Any], int]] = []
+        output_entities: list[IpAddress] = []
         for ip_loc, status in results:
-            if status == 200 and "error" not in ip_loc:
+            if status == httpx.codes.OK and "error" not in ip_loc:
                 output_entities.append(self._create_ip_entity(ip_loc, ip_entity))
             output_raw.append((ip_loc, status))
         return output_raw, output_entities
 
     @staticmethod
-    def _create_ip_entity(ip_loc: dict, ip_entity) -> IpAddress:
+    def _create_ip_entity(ip_loc: dict, ip_entity: IpAddress | None) -> IpAddress:
         if not ip_entity:
             ip_entity = IpAddress()
             ip_entity.Address = ip_loc["ip"]
-        geo_entity = GeoLocation()
+        geo_entity: GeoLocation = GeoLocation()
         geo_entity.CountryCode = ip_loc["country_code"]
 
         geo_entity.CountryName = ip_loc["country_name"]
@@ -489,7 +502,12 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         """
         self._debug = debug
         if self._debug:
-            self._debug_init_state(api_key, db_folder, force_update, auto_update)
+            self._debug_init_state(
+                api_key,
+                db_folder,
+                force_update=force_update,
+                auto_update=auto_update,
+            )
         self.settings: ProviderSettings | None = None
         self._api_key: str | None = api_key or None
 
@@ -574,7 +592,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
     def _create_ip_entity(
         ip_address: str,
         geo_match: Mapping[str, Any],
-        ip_entity: IpAddress = None,
+        ip_entity: IpAddress | None = None,
     ) -> IpAddress:
         if not ip_entity:
             ip_entity = IpAddress()
@@ -614,7 +632,8 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 
         if self._db_path is None:
             self._raise_no_db_error()
-        self._reader = geoip2.database.Reader(self._db_path)
+        else:
+            self._reader = geoip2.database.Reader(self._db_path)
 
     def _check_and_update_db(self) -> None:
         """
@@ -840,8 +859,8 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 
     def _debug_init_state(
         self,
-        api_key: str,
-        db_folder: str,
+        api_key: str | None,
+        db_folder: str | None,
         *,
         force_update: bool,
         auto_update: bool,

@@ -50,7 +50,7 @@ class SentinelWatchlistsMixin:
         search_key: str,
         provider: str = "MSTICPy",
         source: str = "Notebook",
-        data: pd.DataFrame = None,
+        data: pd.DataFrame | None = None,
     ) -> Optional[str]:
         """
         Create a new watchlist.
@@ -328,7 +328,7 @@ class SentinelWatchlistsMixin:
 
         """
         # Check requested watchlist actually exists
-        existing_watchlists = self.list_watchlists()
+        existing_watchlists: pd.DataFrame = self.list_watchlists()
         if existing_watchlists.empty:
             return False
-        return watchlist_name in existing_watchlists["name"].values
+        return watchlist_name in existing_watchlists["name"].to_numpy()

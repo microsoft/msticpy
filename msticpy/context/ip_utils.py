@@ -676,14 +676,20 @@ def _rdap_lookup(url: str, retry_count: int = 5) -> httpx.Response:
     """Perform RDAP lookup with retries."""
     rdap_data: httpx.Response | None = None
     while retry_count > 0 and not rdap_data:
-        try:
-            rdap_data = httpx.get(url)
-        except (httpx.WriteError, httpx.ReadError):
-            retry_count -= 1
+        rdap_data = _run_rdap_query(url)
+        retry_count -= 1
     if not rdap_data:
         err_msg: str = "Rate limit exceeded - try adjusting query_rate parameter to slow down requests"
         raise MsticpyException(err_msg)
     return rdap_data
+
+
+def _run_rdap_query(url: str) -> httpx.Response | None:
+    """Execute rdap query call and handle errors."""
+    try:
+        return httpx.get(url)
+    except (httpx.WriteError, httpx.ReadError):
+        return None
 
 
 def _whois_result_to_pandas(results: str | list[str] | dict[str, Any]) -> pd.DataFrame:
@@ -704,7 +710,7 @@ def _find_address(
         return None
     for vcard in [vcard for vcard in entity["vcardArray"] if isinstance(vcard, list)]:
         for vcard_sub in vcard:
-            if len(vcard) >= 2 and vcard_sub[0] == "adr" and "label" in vcard_sub[1]:
+            if vcard_sub[0] == "adr" and "label" in vcard_sub[1]:
                 return vcard_sub[1]["label"]
     return None
 
@@ -757,19 +763,28 @@ def _asn_whois_query(
         response: list[str] = []
         response_data: str | None = None
         while retry_count > 0 and not response_data:
-            try:
-                response_data = conn.recv(4096).decode()
-                if "error" in response_data:
-                    err_msg: str = "An error occurred during lookup, please try again."
-                    raise MsticpyConnectionError(err_msg)
-                if "rate limit exceeded" in response_data:
-                    err_msg = "Rate limit exceeded please wait and try again."
-                    raise MsticpyConnectionError(err_msg)
-                response.append(response_data)
-            except (UnicodeDecodeError, ConnectionResetError):
-                retry_count -= 1
-                response_data = None
+            response_data = _run_asn_query(conn, response)
+            retry_count -= 1
     return "".join(response)
+
+
+def _run_asn_query(
+    conn: socket.socket,
+    response: list[str],
+) -> str | None:
+    """Execute asn query call and handle errors."""
+    try:
+        response_data: str = conn.recv(4096).decode()
+    except (UnicodeDecodeError, ConnectionResetError):
+        return None
+    if "error" in response_data:
+        err_msg: str = "An error occurred during lookup, please try again."
+        raise MsticpyConnectionError(err_msg)
+    if "rate limit exceeded" in response_data:
+        err_msg = "Rate limit exceeded please wait and try again."
+        raise MsticpyConnectionError(err_msg)
+    response.append(response_data)
+    return response_data
 
 
 def _cymru_query(query: str) -> str:
