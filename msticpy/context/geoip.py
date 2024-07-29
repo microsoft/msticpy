@@ -19,6 +19,8 @@ rate. Maxmind geolite uses a downloadable database, while IPStack is
 an online lookup (API key required).
 
 """
+from __future__ import annotations
+
 import contextlib
 import math
 import random
@@ -30,7 +32,7 @@ from datetime import datetime, timedelta, timezone
 from json import JSONDecodeError
 from pathlib import Path
 from time import sleep
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
+from typing import Any, ClassVar, Iterable, Mapping
 
 import geoip2.database
 import httpx
@@ -38,6 +40,7 @@ import pandas as pd
 from geoip2.errors import AddressNotFoundError
 from IPython.core.display import HTML
 from IPython.display import display
+from typing_extensions import Self
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserConfigError
@@ -66,16 +69,16 @@ class GeoIpLookup(metaclass=ABCMeta):
 
     """
 
-    _LICENSE_TXT: Optional[str] = None
-    _LICENSE_HTML: Optional[str] = None
+    _LICENSE_TXT: ClassVar[str]
+    _LICENSE_HTML: ClassVar[str]
 
     @abstractmethod
     def lookup_ip(
         self,
-        ip_address: str = None,
-        ip_addr_list: Iterable = None,
-        ip_entity: IpAddress = None,
-    ) -> Tuple[List[Any], List[IpAddress]]:
+        ip_address: str | None = None,
+        ip_addr_list: Iterable | None = None,
+        ip_entity: IpAddress | None = None,
+    ) -> tuple[list[Any], list[IpAddress]]:
         """
         Lookup IP location abstract method.
 
@@ -91,7 +94,7 @@ class GeoIpLookup(metaclass=ABCMeta):
 
         Returns
         -------
-        Tuple[List[Any], List[IpAddress]]:
+        tuple[list[Any], list[IpAddress]]:
             raw geolocation results and same results as IpAddress entities with
             populated Location property.
 
@@ -150,7 +153,7 @@ class GeoIpLookup(metaclass=ABCMeta):
         return pd.DataFrame(data=ip_dicts)
 
     @staticmethod
-    def _ip_params_to_list(ip_address, ip_addr_list, ip_entity) -> List[str]:
+    def _ip_params_to_list(ip_address, ip_addr_list, ip_entity) -> list[str]:
         """Try to convert different parameter formats to list."""
         if ip_address is not None:
             # check if ip_address just used as positional arg.
@@ -186,14 +189,20 @@ class IPStackLookup(GeoIpLookup):
 
     """
 
-    _LICENSE_HTML = """
+    _LICENSE_HTML: ClassVar[
+        str
+    ] = """
 This library uses services provided by ipstack.
 <a href="https://ipstack.com">https://ipstack.com</a>"""
 
-    _LICENSE_TXT = """
+    _LICENSE_TXT: ClassVar[
+        str
+    ] = """
 This library uses services provided by ipstack (https://ipstack.com)"""
 
-    _IPSTACK_API = "http://api.ipstack.com/{iplist}?access_key={access_key}&output=json"
+    _IPSTACK_API: ClassVar[
+        str
+    ] = "http://api.ipstack.com/{iplist}?access_key={access_key}&output=json"
 
     _NO_API_KEY_MSSG = """
 No API Key was found to access the IPStack service.
@@ -208,7 +217,12 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
 >>> iplookup = IPStackLookup(api_key="your_api_key")
 """
 
-    def __init__(self, api_key: Optional[str] = None, bulk_lookup: bool = False):
+    def __init__(
+        self: IPStackLookup,
+        api_key: str | None = None,
+        *,
+        bulk_lookup: bool = False,
+    ) -> None:
         """
         Create a new instance of IPStackLookup.
 
@@ -224,9 +238,9 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
             per address)
 
         """
-        self.settings: Optional[ProviderSettings] = None
-        self._api_key: Optional[str] = api_key
-        self.bulk_lookup = bulk_lookup
+        self.settings: ProviderSettings | None = None
+        self._api_key: str | None = api_key
+        self.bulk_lookup: bool = bulk_lookup
 
     def _check_initialized(self):
         """Return True if valid API key available."""
@@ -249,10 +263,10 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
 
     def lookup_ip(
         self,
-        ip_address: str = None,
-        ip_addr_list: Iterable = None,
+        ip_address: str | None = None,
+        ip_addr_list: Iterable | None = None,
         ip_entity: IpAddress = None,
-    ) -> Tuple[List[Any], List[IpAddress]]:
+    ) -> tuple[list[Any], list[IpAddress]]:
         """
         Lookup IP location from IPStack web service.
 
@@ -268,7 +282,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
 
         Returns
         -------
-        Tuple[List[Any], List[IpAddress]]:
+        tuple[list[Any], list[IpAddress]]:
             raw geolocation results and same results as IpAddress entities with
             populated Location property.
 
@@ -311,62 +325,66 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         ip_entity.Location = geo_entity
         return ip_entity
 
-    def _submit_request(self, ip_list: List[str]) -> List[Tuple[Dict[str, str], int]]:
+    def _submit_request(self, ip_list: list[str]) -> list[tuple[dict[str, str], int]]:
         """
         Submit the request to IPStack.
 
         Parameters
         ----------
-        ip_list : List[str]
+        ip_list : list[str]
             String list of IPs to look up
 
         Returns
         -------
-        List[Tuple[str, int]]
+        list[tuple[str, int]]
             List of response, status code pairs
 
         """
         if not self.bulk_lookup:
             return self._lookup_ip_list(ip_list)
 
-        submit_url = self._IPSTACK_API.format(
+        submit_url: str = self._IPSTACK_API.format(
             iplist=",".join(ip_list),
             access_key=self._api_key,
         )
-        response = httpx.get(
+        response: httpx.Response = httpx.get(
             submit_url,
             timeout=get_http_timeout(),
             headers=mp_ua_header(),
         )
 
-        if response.status_code == 200:
-            results = response.json()
+        if response.is_success:
+            results: dict[str, Any] = response.json()
             # {"success":false,"error":{"code":303,"type":"batch_not_supported_on_plan",
             # "info":"Bulk requests are not supported on your plan.
             # Please upgrade your subscription."}}
 
             if "success" in results and not results["success"]:
-                raise PermissionError(
-                    f"Service unable to complete request. Error: {results['error']}",
+                err_msg: str = (
+                    f"Service unable to complete request. Error: {results['error']}"
                 )
-            return [(item, response.status_code) for item in results]
+                raise PermissionError(err_msg)
+            return [(item, response.status_code) for item in results.values()]
 
         if response:
             with contextlib.suppress(JSONDecodeError):
                 return [(response.json(), response.status_code)]
         return [({}, response.status_code)]
 
-    def _lookup_ip_list(self, ip_list: List[str]):
+    def _lookup_ip_list(
+        self: Self,
+        ip_list: list[str],
+    ) -> list[tuple[dict[str, str] | None, int]]:
         """Lookup IP Addresses one-by-one."""
-        ip_loc_results = []
+        ip_loc_results: list[tuple[dict | None, int]] = []
         with httpx.Client(timeout=get_http_timeout(), headers=mp_ua_header()) as client:
             for ip_addr in ip_list:
-                submit_url = self._IPSTACK_API.format(
+                submit_url: str = self._IPSTACK_API.format(
                     iplist=ip_addr,
                     access_key=self._api_key,
                 )
-                response = client.get(submit_url)
-                if response.status_code == 200:
+                response: httpx.Response = client.get(submit_url)
+                if response.is_success:
                     ip_loc_results.append((response.json(), response.status_code))
                 elif response:
                     try:
@@ -393,26 +411,34 @@ class GeoLiteLookup(GeoIpLookup):
 
     """
 
-    _MAXMIND_DOWNLOAD = (
+    _MAXMIND_DOWNLOAD: ClassVar[str] = (
         "https://download.maxmind.com/app/geoip_download?"
-        + "edition_id=GeoLite2-City&license_key={license_key}&suffix=tar.gz"
+        "edition_id=GeoLite2-City&license_key={license_key}&suffix=tar.gz"
     )
 
-    _DB_HOME = str(Path.joinpath(Path("~").expanduser(), ".msticpy", "GeoLite2"))
-    _DB_ARCHIVE = "GeoLite2-City.mmdb.{rand}.tar.gz"
-    _DB_FILE = "GeoLite2-City.mmdb"
+    _DB_HOME: ClassVar[str] = str(
+        Path.joinpath(Path("~").expanduser(), ".msticpy", "GeoLite2"),
+    )
+    _DB_ARCHIVE: ClassVar[str] = "GeoLite2-City.mmdb.{rand}.tar.gz"
+    _DB_FILE: ClassVar[str] = "GeoLite2-City.mmdb"
 
-    _LICENSE_HTML = """
+    _LICENSE_HTML: ClassVar[
+        str
+    ] = """
 This product includes GeoLite2 data created by MaxMind, available from
 <a href="https://www.maxmind.com">https://www.maxmind.com</a>.
 """
 
-    _LICENSE_TXT = """
+    _LICENSE_TXT: ClassVar[
+        str
+    ] = """
 This product includes GeoLite2 data created by MaxMind, available from
 https://www.maxmind.com.
 """
 
-    _NO_API_KEY_MSSG = """
+    _NO_API_KEY_MSSG: ClassVar[
+        str
+    ] = """
 No API Key was found to download the Maxmind GeoIPLite database.
 If you do not have an account, go here to create one and obtain and API key.
 https://www.maxmind.com/en/geolite2/signup
@@ -422,16 +448,17 @@ https://msticpy.readthedocs.io/en/latest/data_acquisition/GeoIPLookups.html#maxm
 Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 >>> iplookup = GeoLiteLookup(api_key="your_api_key")
 """
-    _UNSET_PATH = "~~UNSET~~"
+    _UNSET_PATH: ClassVar[str] = "~~UNSET~~"
 
     def __init__(
-        self,
-        api_key: Optional[str] = None,
-        db_folder: Optional[str] = None,
+        self: GeoLiteLookup,
+        api_key: str | None = None,
+        db_folder: str | None = None,
+        *,
         force_update: bool = False,
         auto_update: bool = True,
         debug: bool = False,
-    ):
+    ) -> None:
         r"""
         Return new instance of GeoLiteLookup class.
 
@@ -463,16 +490,16 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         self._debug = debug
         if self._debug:
             self._debug_init_state(api_key, db_folder, force_update, auto_update)
-        self.settings: Optional[ProviderSettings] = None
-        self._api_key: Optional[str] = api_key or None
+        self.settings: ProviderSettings | None = None
+        self._api_key: str | None = api_key or None
 
         self._db_folder: str = db_folder or self._UNSET_PATH
         self._force_update = force_update
         self._auto_update = auto_update
-        self._db_path: Optional[str] = None
-        self._reader: Any = None
+        self._db_path: str | None = None
+        self._reader: geoip2.database.Reader
 
-    def close(self):
+    def close(self) -> None:
         """Close an open GeoIP DB."""
         if self._reader:
             try:
@@ -482,10 +509,10 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 
     def lookup_ip(
         self,
-        ip_address: str = None,
-        ip_addr_list: Iterable = None,
+        ip_address: str | None = None,
+        ip_addr_list: Iterable | None = None,
         ip_entity: IpAddress = None,
-    ) -> Tuple[List[Any], List[IpAddress]]:
+    ) -> tuple[list[dict[str, Any]], list[IpAddress]]:
         """
         Lookup IP location from GeoLite2 data created by MaxMind.
 
@@ -501,20 +528,20 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 
         Returns
         -------
-        Tuple[List[Any], List[IpAddress]]
+        tuple[list[Any], list[IpAddress]]
             raw geolocation results and same results as IpAddress entities with
             populated Location property.
 
         """
         self._check_initialized()
-        ip_list = self._ip_params_to_list(ip_address, ip_addr_list, ip_entity)
+        ip_list: list[str] = self._ip_params_to_list(ip_address, ip_addr_list, ip_entity)
 
-        output_raw = []
-        output_entities = []
+        output_raw: list[dict[str, Any]] = []
+        output_entities: list[IpAddress] = []
         for ip_input in ip_list:
-            geo_match = None
+            geo_match: dict[str, Any] | None = None
             try:
-                ip_type = get_ip_type(ip_input)
+                ip_type: str = get_ip_type(ip_input)
             except ValueError:
                 ip_type = "Invalid IP Address"
             if ip_type != "Public":
@@ -533,7 +560,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         return output_raw, output_entities
 
     @staticmethod
-    def _get_geomatch_non_public(ip_type):
+    def _get_geomatch_non_public(ip_type: str) -> dict[str, Any]:
         """Return placeholder record for non-public IP Types."""
         return {
             "country": {
@@ -552,12 +579,12 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         if not ip_entity:
             ip_entity = IpAddress()
             ip_entity.Address = ip_address
-        geo_entity = GeoLocation()
+        geo_entity: GeoLocation = GeoLocation()
         geo_entity.CountryCode = geo_match.get("country", {}).get("iso_code", None)
         geo_entity.CountryName = (
             geo_match.get("country", {}).get("names", {}).get("en", None)
         )
-        subdivs = geo_match.get("subdivisions", [])
+        subdivs: list[dict[str, Any]] = geo_match.get("subdivisions", [])
         if subdivs:
             geo_entity.State = subdivs[0].get("names", {}).get("en", None)
         geo_entity.City = geo_match.get("city", {}).get("names", {}).get("en", None)
@@ -566,7 +593,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         ip_entity.Location = geo_entity
         return ip_entity
 
-    def _check_initialized(self):
+    def _check_initialized(self) -> None:
         """Check if DB reader open with a valid database."""
         if self._reader and self.settings:
             return
@@ -574,22 +601,22 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         self.settings = _get_geoip_provider_settings("GeoIPLite")
         self._api_key = self._api_key or self.settings.args.get("AuthKey")
 
-        self._db_folder: str = (
+        self._db_folder = (
             self._db_folder
             if self._db_folder != self._UNSET_PATH
-            else self.settings.args.get("DBFolder", self._DB_HOME)  # type: ignore
+            else self.settings.args.get("DBFolder", self._DB_HOME)
         )
-        self._db_folder = str(Path(self._db_folder).expanduser())  # type: ignore
+        self._db_folder = str(Path(self._db_folder).expanduser())
         self._check_and_update_db()
         self._db_path = self._get_geoip_db_path()
         if self._debug:
             self._debug_open_state()
 
-        if not self._db_path:
+        if self._db_path is None:
             self._raise_no_db_error()
         self._reader = geoip2.database.Reader(self._db_path)
 
-    def _check_and_update_db(self):
+    def _check_and_update_db(self) -> None:
         """
         Check the age of geo ip database file and download if it older than 30 days.
 
@@ -597,7 +624,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         override auto-download behavior.
 
         """
-        geoip_db_path = self._get_geoip_db_path()
+        geoip_db_path: str | None = self._get_geoip_db_path()
         self._pr_debug(f"Checking geoip DB {geoip_db_path}")
         self._pr_debug(f"Download URL is {self._MAXMIND_DOWNLOAD}")
         if geoip_db_path is None:
@@ -616,7 +643,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 )
 
             # Check for out of date DB file according to db_age
-            db_age = datetime.now(timezone.utc) - last_mod_time
+            db_age: timedelta = datetime.now(timezone.utc) - last_mod_time
             db_updated = True
             if db_age > timedelta(30) and self._auto_update:
                 print(
@@ -651,14 +678,14 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         """
         if not self._api_key:
             return False
-        url = self._MAXMIND_DOWNLOAD.format(license_key=self._api_key)
+        url: str = self._MAXMIND_DOWNLOAD.format(license_key=self._api_key)
 
         if not Path(self._db_folder).exists():
             # using makedirs to create intermediate-level dirs to contain self._dbfolder
             Path(self._db_folder).mkdir(exist_ok=True, parents=True)
         # build a temp file name for the archive download
-        rand_int = random.randint(10000, 99999)  # nosec
-        db_archive_path = Path(self._db_folder).joinpath(
+        rand_int: int = random.randint(10000, 99999)
+        db_archive_path: Path = Path(self._db_folder).joinpath(
             self._DB_ARCHIVE.format(rand=rand_int),
         )
         self._pr_debug(f"Downloading GeoLite DB: {db_archive_path}")
@@ -677,7 +704,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 headers=mp_ua_header(),
             ) as response:
                 print("Downloading and extracting GeoLite DB archive from MaxMind....")
-                with open(db_archive_path, "wb") as file_hdl:
+                with db_archive_path.open(mode="wb", encoding="utf-8") as file_hdl:
                     for chunk in response.iter_bytes(chunk_size=10000):
                         file_hdl.write(chunk)
                         file_hdl.flush()
@@ -696,16 +723,11 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             # no exceptions so extract the archive contents
             try:
                 self._extract_to_folder(db_archive_path)
-                print(
-                    "Extraction complete. Local Maxmind city DB:",
-                    f"{db_archive_path}",
-                )
-                return True
             except PermissionError as err:
                 self._geolite_warn(
                     f"Cannot overwrite GeoIP DB file: {db_archive_path}."
-                    + " The file may be in use or you do not have"
-                    + f" permission to overwrite.\n - {err}",
+                    " The file may be in use or you do not have"
+                    f" permission to overwrite.\n - {err}",
                 )
             except Exception as err:  # pylint: disable=broad-except
                 # There are several exception types that might come from
@@ -713,15 +735,21 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 self._geolite_warn(
                     f"Error writing GeoIP DB file: {db_archive_path} - {err}",
                 )
+            else:
+                print(
+                    "Extraction complete. Local Maxmind city DB:",
+                    f"{db_archive_path}",
+                )
+                return True
         finally:
             if db_archive_path.is_file():
                 self._pr_debug(f"Removing temp file {db_archive_path}")
                 db_archive_path.unlink()
         return False
 
-    def _extract_to_folder(self, db_archive_path: Path):
+    def _extract_to_folder(self, db_archive_path: Path) -> None:
         self._pr_debug(f"Extracting tarfile {db_archive_path}")
-        temp_folder: Optional[Path] = None
+        temp_folder: Path | None = None
         with tarfile.open(db_archive_path) as tar_archive:
             for member in tar_archive.getmembers():
                 if not member.isreg():
@@ -731,7 +759,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 tar_archive.extract(member, self._db_folder)
                 # The files are extracted to a subfolder (with a date in the name)
                 # We want to move these into the main folder above this.
-                targetname = Path(member.name).name
+                targetname: str = Path(member.name).name
                 if targetname != member.name:
                     # if target name is not already in self._dbfolder
                     # move it to there
@@ -748,7 +776,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             self._pr_debug(f"Removing temp path {temp_folder}")
             temp_folder.rmdir()
 
-    def _get_geoip_db_path(self) -> Optional[str]:
+    def _get_geoip_db_path(self) -> str | None:
         """
         Get the correct path containing GeoLite City Database.
 
@@ -759,48 +787,46 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             database after control flow logic.
 
         """
-        latest_db_path = Path(self._db_folder or ".").joinpath(self._DB_FILE)
+        latest_db_path: Path = Path(self._db_folder or ".").joinpath(self._DB_FILE)
         return str(latest_db_path) if latest_db_path.is_file() else None
 
-    def _pr_debug(self, *args):
+    def _pr_debug(self, *args: str) -> None:
         """Print out debug info."""
         if self._debug:
             print(*args)
 
-    def _geolite_warn(self, mssg: str):
-        self._pr_debug(mssg)
+    def _geolite_warn(self, msg: str) -> None:
+        self._pr_debug(msg)
         warnings.warn(
-            f"GeoIpLookup: {mssg}",
+            f"GeoIpLookup: {msg}",
             UserWarning,
+            stacklevel=1,
         )
 
-    def _raise_no_db_error(self):
+    def _raise_no_db_error(self) -> None:
+        err_msg: str = (
+            "No usable GeoIP Database could be found.\n"
+            "Check that you have correctly configured the Maxmind API key in "
+            "msticpyconfig.yaml.\n"
+            "If you are using a custom DBFolder setting in your config, "
+            f"check that this is a valid path: {self._db_folder}.\n"
+            "If you edit your msticpyconfig to change this setting run the "
+            "following commands to reload your settings and retry:"
+            "    import msticpy"
+            "    msticpy.settings.refresh_config()"
+        )
         raise MsticpyUserConfigError(
-            "No usable GeoIP Database could be found.",
-            (
-                "Check that you have correctly configured the Maxmind API key in "
-                "msticpyconfig.yaml."
-            ),
-            (
-                "If you are using a custom DBFolder setting in your config, "
-                + f"check that this is a valid path: {self._db_folder}."
-            ),
-            (
-                "If you edit your msticpyconfig to change this setting run the "
-                "following commands to reload your settings and retry:"
-                "    import msticpy"
-                "    msticpy.settings.refresh_config()"
-            ),
+            err_msg,
             help_uri=(
                 "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
-                + "GeoIPLookups.html#maxmind-geo-ip-lite-lookup-class"
+                "GeoIPLookups.html#maxmind-geo-ip-lite-lookup-class"
             ),
             service_uri="https://www.maxmind.com/en/geolite2/signup",
             title="Maxmind GeoIP database not found",
         )
 
-    def _debug_open_state(self):
-        dbg_api_key = (
+    def _debug_open_state(self) -> None:
+        dbg_api_key: str = (
             "None"
             if self._api_key is None
             else self._api_key[:4] + "*" * (len(self._api_key) - 4)
@@ -812,8 +838,15 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         self._pr_debug(f"    dbpath={self._db_path}")
         self._pr_debug(f"Using config file: {current_config_path()}")
 
-    def _debug_init_state(self, api_key, db_folder, force_update, auto_update):
-        dbg_api_key = (
+    def _debug_init_state(
+        self,
+        api_key: str,
+        db_folder: str,
+        *,
+        force_update: bool,
+        auto_update: bool,
+    ) -> None:
+        dbg_api_key: str = (
             "None" if api_key is None else api_key[:4] + "*" * (len(api_key) - 4)
         )
         self._pr_debug(f"__init__ params: api_key={dbg_api_key}")
@@ -837,10 +870,12 @@ def _get_geoip_provider_settings(provider_name: str) -> ProviderSettings:
         Settings for the provider.
 
     """
-    settings = get_provider_settings(config_section="OtherProviders")
+    settings: dict[str, ProviderSettings] = get_provider_settings(
+        config_section="OtherProviders",
+    )
     if provider_name in settings:
         return settings[provider_name]
-    return ProviderSettings(  # type: ignore[call-arg]
+    return ProviderSettings(
         name=provider_name,
         description="Not found.",
     )
@@ -870,9 +905,10 @@ def entity_distance(ip_src: IpAddress, ip_dest: IpAddress) -> float:
 
     """
     if not ip_src.Location or not ip_dest.Location:
-        raise AttributeError(
-            "Source and destination entities must have defined Location properties.",
+        err_msg: str = (
+            "Source and destination entities must have defined Location properties."
         )
+        raise AttributeError(err_msg)
 
     return geo_distance(
         origin=(ip_src.Location.Latitude, ip_src.Location.Longitude),
@@ -885,17 +921,17 @@ _EARTH_RADIUS_KM = 6371  # km
 
 @export
 def geo_distance(
-    origin: Tuple[float, float],
-    destination: Tuple[float, float],
+    origin: tuple[float, float],
+    destination: tuple[float, float],
 ) -> float:
     """
     Calculate the Haversine distance.
 
     Parameters
     ----------
-    origin : Tuple[float, float]
+    origin : tuple[float, float]
         Latitude, Longitude of origin of distance measurement.
-    destination : Tuple[float, float]
+    destination : tuple[float, float]
         Latitude, Longitude of origin of distance measurement.
 
     Returns

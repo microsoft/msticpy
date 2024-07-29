@@ -41,10 +41,10 @@ __author__ = "Ian Hellen"
 class APILookupParams:
     """HTTP Lookup Params definition."""
 
-    path: str = ""
+    path: str = attr.ib(default="")
     verb: str = "GET"
     full_url: bool = False
-    headers: dict[str, str] = Factory(dict)
+    headers: dict[str, str] = attr.ib(factory=dict)
     params: dict[str, str | float] = Factory(dict)
     data: dict[str, str] = Factory(dict)
     auth_type: str = ""
@@ -152,9 +152,7 @@ class HttpProvider(Provider):
             self._request_params["Instance"] = Instance.strip()
 
         missing_params: list[str] = [
-            param
-            for param in self._REQUIRED_PARAMS
-            if param not in self._request_params
+            param for param in self._REQUIRED_PARAMS if param not in self._request_params
         ]
 
         missing_params = []

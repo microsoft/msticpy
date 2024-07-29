@@ -111,7 +111,7 @@ class VTFileBehavior:
 
     def __init__(
         self,
-        vt_key: str | None = None,
+        vt_key: str,
         file_id: str | None = None,
         file_summary: pd.DataFrame | pd.Series | dict[str, Any] | None = None,
     ) -> None:
@@ -316,8 +316,7 @@ def _build_process_tree(fb_categories: dict[str, Any]) -> pd.DataFrame:
     """Top level function to create displayable DataFrame."""
     proc_tree_raw: list[dict[str, Any]] = deepcopy(fb_categories["processes_tree"])
     procs_created: dict[str, Any] = {
-        Path(proc).parts[-1].lower(): proc
-        for proc in fb_categories["processes_created"]
+        Path(proc).parts[-1].lower(): proc for proc in fb_categories["processes_created"]
     }
 
     si_procs: list[SIProcess] = _extract_processes(proc_tree_raw, procs_created)
@@ -361,7 +360,8 @@ def _extract_processes(
 
 
 def _create_si_proc(
-    raw_proc: dict[str, Any], procs_created: dict[str, Any]
+    raw_proc: dict[str, Any],
+    procs_created: dict[str, Any],
 ) -> SIProcess:
     """Return an SIProcess Object from a raw VT proc definition."""
     name: str = raw_proc["name"]

@@ -15,12 +15,19 @@ requests per minute for the account type that you have.
 from __future__ import annotations
 
 import asyncio
-import datetime as dt
 import importlib
 import warnings
 from collections import ChainMap
-from types import ModuleType
-from typing import Any, Callable, ClassVar, Iterable, Mapping, Sized
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    ClassVar,
+    Iterable,
+    Mapping,
+    Sized,
+    TypeVar,
+)
 
 import nest_asyncio
 import pandas as pd
@@ -34,15 +41,22 @@ from ..common.provider_settings import (
     reload_settings,
 )
 from ..common.utility import export, is_ipython
-from ..nbwidgets.select_item import SelectItem
 from ..vis.ti_browser import browse_results
 from .lookup_result import LookupStatus
 
 # used in dynamic instantiation of providers
 from .provider_base import Provider, _make_sync
 
+if TYPE_CHECKING:
+    import datetime as dt
+    from types import ModuleType
+
+    from ..nbwidgets.select_item import SelectItem
+
 __version__ = VERSION
 __author__ = "Florian Bracq"
+
+LOOKUPTYPE = TypeVar("LOOKUPTYPE", bound="Lookup")
 
 
 class ProgressCounter:
@@ -78,9 +92,9 @@ class Lookup:
     you have correctly configured your msticpyconfig.yaml settings.
     """
 
-    _HELP_URI: ClassVar[str] = (
-        "https://msticpy.readthedocs.io/en/latest/DataEnrichment.html"
-    )
+    _HELP_URI: ClassVar[
+        str
+    ] = "https://msticpy.readthedocs.io/en/latest/DataEnrichment.html"
 
     PROVIDERS: ClassVar[dict[str, tuple[str, str]]] = {}
     CUSTOM_PROVIDERS: ClassVar[dict[str, type[Provider]]]
@@ -122,6 +136,7 @@ class Lookup:
             warnings.warn(
                 "'secondary_providers' is a deprecated parameter",
                 DeprecationWarning,
+                stacklevel=1,
             )
             for prov in secondary_providers:
                 self.add_provider(prov, primary=False)
@@ -206,10 +221,19 @@ class Lookup:
                 self._providers[provider] = self._secondary_providers[provider]
                 del self._secondary_providers[provider]
             elif provider not in self._providers:
-                raise ValueError(
-                    f"Unknown provider '{provider}'. Available providers:",
-                    ", ".join(self.list_available_providers(as_list=True)),  # type: ignore
+                available_providers: list[str] | None = self.list_available_providers(
+                    as_list=True,
                 )
+                if not available_providers:
+                    err_msg: str = (
+                        f"Unknown provider '{provider}'. No available providers."
+                    )
+                else:
+                    err_msg = (
+                        f"Unknown provider '{provider}'. Available providers:"
+                        ", ".join(available_providers)
+                    )
+                raise ValueError(err_msg)
 
     def disable_provider(self, providers: str | Iterable[str]) -> None:
         """
@@ -235,10 +259,19 @@ class Lookup:
                 self._secondary_providers[provider] = self._providers[provider]
                 del self._providers[provider]
             elif provider not in self._secondary_providers:
-                raise ValueError(
-                    f"Unknown provider '{provider}'. Available providers:",
-                    ", ".join(self.list_available_providers(as_list=True)),  # type: ignore
+                available_providers: list[str] | None = self.list_available_providers(
+                    as_list=True,
                 )
+                if not available_providers:
+                    err_msg: str = (
+                        f"Unknown provider '{provider}'. No available providers."
+                    )
+                else:
+                    err_msg = (
+                        f"Unknown provider '{provider}'. Available providers:"
+                        ", ".join(available_providers)
+                    )
+                raise ValueError(err_msg)
 
     def set_provider_state(self, prov_dict: dict[str, bool]) -> None:
         """
@@ -330,6 +363,7 @@ class Lookup:
         self,
         provider: Provider,
         name: str | None = None,
+        *,
         primary: bool = True,
     ) -> None:
         """
@@ -385,6 +419,12 @@ class Lookup:
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
+        show_not_supported: bool
+            If True, display unsupported items. Defaults to False
+        start: dt.datetime
+            If supported by the provider, start time for the item's validity
+        end: dt.datetime
+            If supported by the provider, end time for the item's validity
 
         Returns
         -------
@@ -442,6 +482,12 @@ class Lookup:
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
+        show_not_supported: bool
+            If True, display unsupported items. Defaults to False
+        start: dt.datetime
+            If supported by the provider, start time for the item's validity
+        end: dt.datetime
+            If supported by the provider, end time for the item's validity
 
         Other Parameters
         ----------------
@@ -488,7 +534,7 @@ class Lookup:
         """
         if not isinstance(item_lookup, pd.DataFrame):
             err_msg: str = f"DataFrame was expected, but {type(item_lookup)} received."
-            raise ValueError(err_msg)
+            raise TypeError(err_msg)
         return item_lookup
 
     async def _lookup_items_async(  # pylint: disable=too-many-locals, too-many-arguments
@@ -600,6 +646,16 @@ class Lookup:
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
+        col: str, Optional
+            Name of the column holding the data
+        column: str, Optional
+            Name of the column holding the data
+        show_not_supported: bool, Optional
+            Set to True to include unsupported items in the result DF.
+            Defaults to False
+        show_bad_item: bool, Optional
+            Set to True to include invalid items in the result DF.
+            Defaults to False
 
         Returns
         -------
@@ -640,7 +696,7 @@ class Lookup:
         )
 
     @staticmethod
-    async def _track_completion(prog_counter) -> None:
+    async def _track_completion(prog_counter: ProgressCounter) -> None:
         total: float = await prog_counter.get_remaining()
         with tqdm(total=total, unit="obs", desc="Observables processed") as prog_bar:
             try:
@@ -673,8 +729,9 @@ class Lookup:
 
     @classmethod
     def list_available_providers(
-        cls,
-        show_query_types=False,
+        cls: type[LOOKUPTYPE],
+        *,
+        show_query_types: bool = False,
         as_list: bool = False,
     ) -> list[str] | None:
         """
@@ -714,11 +771,11 @@ class Lookup:
         if not (mod_name and cls_name):
             if hasattr(cls, "CUSTOM_PROVIDERS") and provider in cls.CUSTOM_PROVIDERS:
                 return cls.CUSTOM_PROVIDERS[provider]
-            raise LookupError(
-                f"No provider named '{provider}'.",
-                "Possible values are:",
-                ", ".join(list(cls.PROVIDERS) + list(cls.CUSTOM_PROVIDERS)),
+            err_msg: str = (
+                f"No provider named '{provider}'. Possible values are: "
+                ", ".join(list(cls.PROVIDERS) + list(cls.CUSTOM_PROVIDERS))
             )
+            raise LookupError(err_msg)
 
         imp_module: ModuleType = importlib.import_module(
             f"msticpy.context.{cls.PACKAGE}.{mod_name}",
