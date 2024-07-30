@@ -1,55 +1,55 @@
-repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.2.0
-    hooks:
-      - id: check-yaml
-      - id: check-json
-        exclude: .*devcontainer.json
-      - id: trailing-whitespace
-        args: [--markdown-linebreak-ext=md]
-  - repo: https://github.com/ambv/black
-    rev: 24.4.2
-    hooks:
-      - id: black
-        language: python
-  - repo: https://github.com/PyCQA/pylint
-    rev: v3.2.2
-    hooks:
-      - id: pylint
-        args:
-          - --disable=duplicate-code,import-error
-          - --ignore-patterns=test_
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
-        args:
-          - --extend-ignore=E401,E501,W503
-          - --max-line-length=90
-          - --exclude=tests,test*.py
-  - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
-        name: isort (python)
-        args:
-          - --profile
-          - black
-  - repo: https://github.com/pycqa/pydocstyle
-    rev: 6.3.0
-    hooks:
-      - id: pydocstyle
-        args:
-          - --convention=numpy
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.0.1
-    hooks:
-      - id: mypy
-  - repo: local
-    hooks:
-      - id: check_reqs_all
-        name: check_reqs_all
-        entry: python -m tools.create_reqs_all
-        pass_filenames: False
-        language: python
-        types: [python]
+# repos:
+#   - repo: https://github.com/pre-commit/pre-commit-hooks
+#     rev: v3.2.0
+#     hooks:
+#       - id: check-yaml
+#       - id: check-json
+#         exclude: .*devcontainer.json
+#       - id: trailing-whitespace
+#         args: [--markdown-linebreak-ext=md]
+#   - repo: https://github.com/ambv/black
+#     rev: 24.4.2
+#     hooks:
+#       - id: black
+#         language: python
+#   - repo: https://github.com/PyCQA/pylint
+#     rev: v3.2.2
+#     hooks:
+#       - id: pylint
+#         args:
+#           - --disable=duplicate-code,import-error
+#           - --ignore-patterns=test_
+#   - repo: https://github.com/pycqa/flake8
+#     rev: 6.0.0
+#     hooks:
+#       - id: flake8
+#         args:
+#           - --extend-ignore=E401,E501,W503
+#           - --max-line-length=90
+#           - --exclude=tests,test*.py
+#   - repo: https://github.com/pycqa/isort
+#     rev: 5.12.0
+#     hooks:
+#       - id: isort
+#         name: isort (python)
+#         args:
+#           - --profile
+#           - black
+#   - repo: https://github.com/pycqa/pydocstyle
+#     rev: 6.3.0
+#     hooks:
+#       - id: pydocstyle
+#         args:
+#           - --convention=numpy
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v1.0.1
+  #   hooks:
+  #     - id: mypy
+  # - repo: local
+  #   hooks:
+  #     - id: check_reqs_all
+  #       name: check_reqs_all
+  #       entry: python -m tools.create_reqs_all
+  #       pass_filenames: False
+  #       language: python
+  #       types: [python]

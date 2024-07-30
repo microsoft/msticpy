@@ -1,3 +1,8 @@
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
 # pylint: disable=too-few-public-methods
 """Implements the RAG (Retrieval-Augmented Generation) agent for MSTICpy."""
 
@@ -38,9 +43,9 @@ class RagAgent:
         self.ragproxyagent = RetrieveUserProxyAgent(
             name="ragproxyagent",
             human_input_mode="NEVER",
-            max_consecutive_auto_reply=3,
+            max_consecutive_auto_reply=1,
             retrieve_config={
-                "task": "qa",
+                "task": "default",
                 "docs_path": rst_files,
                 "chunk_token_size": 2000,
                 "model": autogen_config["config_list"][0]["model"],

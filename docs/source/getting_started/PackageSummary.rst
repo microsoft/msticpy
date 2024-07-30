@@ -334,16 +334,11 @@ without compromising privacy.
 
 See :doc:`../data_acquisition/DataMasking`
 
-Supported Platforms and Packages
---------------------------------
-
--  msticpy is OS-independent
--  Requires Python 3.8 or later
--  See `requirements.txt <https://github.com/microsoft/msticpy/blob/master/requirements.txt>`__
-   for more details and version requirements.
 
 
 
+Agentic Module
+-----------------
 aiagents Module: RAG Agent
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -390,5 +385,15 @@ You can also invoke the RAG Agent outside of a Jupyter Notebook as follows:
    print(response)
 
 
+Add Autogen configurations to your msticpconfig - `Autogen LLM Configurations in msticpconfig <https://github.com/microsoft/msticpy/blob/master/docs/source/getting_started/msticpyconfig.rst>`__
 Sample notebook - `RAG Agent Example Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/RagAgent.ipynb>`__
+
+
+Supported Platforms and Packages
+--------------------------------
+
+-  msticpy is OS-independent
+-  Requires Python 3.8 or later
+-  See `requirements.txt <https://github.com/microsoft/msticpy/blob/master/requirements.txt>`__
+   for more details and version requirements.
 
