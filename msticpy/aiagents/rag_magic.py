@@ -9,9 +9,13 @@ import io
 from contextlib import redirect_stdout
 
 from IPython.core.magic import Magics, cell_magic, magics_class
+from IPython.display import display_markdown
 
-from msticpy.aiagents.assistant_agent import AssistantAgent
-from msticpy.aiagents.rag_agent import RagAgent
+from .rag_agents import (
+    ask_question,
+    get_retrieval_assistant_agent,
+    get_retrieval_user_proxy_agent,
+)
 
 CUSTOM_SYSTEM_MESSAGE = """
     Answer the question. If you don't know the answer, just say that you don't know, don't try to make
@@ -45,36 +49,13 @@ CUSTOM_SYSTEM_MESSAGE = """
 
 
 @magics_class
-class AutogenMagic(Magics):
+class DocsRagMagic(Magics):
     """Implement a class to provide RAG Magic functionalities for MSTICpy."""
 
     def __init__(self, shell):
         super().__init__(shell)
-        self.assistant_instance = AssistantAgent()
-        self.rag_instance = RagAgent()
-
-    # Queries the RAG agent and processes response with Assistant agent
-    def ask_magic(self, question: str, verbose: bool = False) -> str:
-        """Query the RAG agent and process the response with the Assistant agent."""
-        self.assistant_instance.assistant.reset()
-        output = io.StringIO()
-        # with redirect_stdout(output):
-        chosen_message = CUSTOM_SYSTEM_MESSAGE.format(question=question)
-
-        self.rag_instance.ragproxyagent.customized_prompt = chosen_message
-        self.assistant_instance.assistant.customized_prompt = chosen_message
-
-        rag_response = self.rag_instance.ragproxyagent.initiate_chat(
-            self.assistant_instance.assistant,
-            message=self.rag_instance.ragproxyagent.message_generator,
-            problem=question,
-            # summary_method="reflection_with_llm",
-        )
-
-        print(f"\nQuestion: {question}")
-        print(f"\nAnswer: {rag_response.summary}")
-
-        return rag_response
+        self.assistant_agent = get_retrieval_assistant_agent()
+        self.user_proxy_agent = get_retrieval_user_proxy_agent()
 
     @cell_magic
     def ask(self, line: str, cell: str):
@@ -105,13 +86,24 @@ class AutogenMagic(Magics):
         %%ask --v
         Which msticpy module contains the code related to visualizing network graphs?
         """
-        args = line.split()
-        verbose_flag = "--v" in args
+        question = cell.strip()
+        output = io.StringIO()
+        with redirect_stdout(output):
+            response = ask_question(
+                self.assistant_agent,
+                self.user_proxy_agent,
+                question=question,
+                agent_prompt=CUSTOM_SYSTEM_MESSAGE.format(question=question),
+            )
 
-        self.ask_magic(cell)
+        # answer = <something in chat history>
+        answer = response.summary
+
+        display_markdown(f"\n**Question**: {question}", raw=True)
+        display_markdown(f"\n**Answer**: {answer}", raw=True)
 
 
 # Register the magic class with IPython
 def load_ipython_extension(ipython):
     """Register the magic class with IPython."""
-    ipython.register_magics(AutogenMagic)
+    ipython.register_magics(DocsRagMagic)
