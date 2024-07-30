@@ -6,6 +6,7 @@
 """VirusTotal File Behavior functions."""
 from __future__ import annotations
 
+import logging
 import re
 from copy import deepcopy
 from datetime import datetime, timezone
@@ -36,7 +37,7 @@ except ImportError as imp_err:
         title="Error importing VirusTotal modules.",
         extra="vt3",
     ) from imp_err
-
+logger: logging.Logger = logging.getLogger(__name__)
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
@@ -270,7 +271,7 @@ class VTFileBehavior:
 
     def _print_no_data(self) -> None:
         """Print a message if operation is tried with no data."""
-        print(f"No data available for {self.file_id}.")
+        logger.info("No data available for %s.", self.file_id)
 
 
 # Process tree extraction
@@ -417,11 +418,11 @@ def _try_match_commandlines(
                 break
 
     if weak_matches:
-        print(
-            f"WARNING: {weak_matches} of the {len(command_executions)} commandlines",
-            "were weakly matched - some commandlines may be attributed",
+        logger.warning(
+            "%s of the %d commandlines were weakly matched - some commandlines may be attributed"
             "to the wrong instance of the process.",
-            end="\n",
+            weak_matches,
+            len(command_executions),
         )
     return procs_cmd
 

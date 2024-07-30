@@ -14,6 +14,7 @@ requests per minute for the account type that you have.
 """
 from __future__ import annotations
 
+import logging
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, ClassVar, Iterable
 
@@ -30,6 +31,7 @@ if TYPE_CHECKING:
     from ...init.pivot import Pivot
     from ...init.pivot_core.pivot_register import PivotRegistration
 
+logger: logging.Logger = logging.getLogger(__name__)
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -316,13 +318,17 @@ class TIProvider(Provider):
     @classmethod
     def usage(cls: type[TIProvider]) -> None:
         """Print usage of provider."""
-        print(f"{cls.__doc__} Supported query types:")
+        logger.info("%s Supported query types:", cls.__doc__)
         for ioc_key in sorted(cls._QUERIES):
             ioc_key_elems: list[str] = ioc_key.split("-", maxsplit=1)
             try:
-                print(f"\tioc_type={ioc_key_elems[0]}, query_type={ioc_key_elems[1]}")
+                logger.info(
+                    "\tioc_type=%s, query_type=%s",
+                    ioc_key_elems[0],
+                    ioc_key_elems[1],
+                )
             except IndexError:
-                print(f"\tioc_type={ioc_key_elems[0]}")
+                logger.info("\tioc_type=%s", ioc_key_elems[0])
 
     @staticmethod
     def resolve_ioc_type(observable: str) -> str:

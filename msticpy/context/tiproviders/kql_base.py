@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import abc
 import contextlib
+import logging
 import warnings
 from collections import defaultdict
 from functools import lru_cache
@@ -37,7 +38,7 @@ if TYPE_CHECKING:
     import datetime as dt
 
     from Kqlmagic.results import ResultSet
-
+logger: logging.Logger = logging.getLogger(__name__)
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
@@ -48,9 +49,9 @@ class KqlTIProvider(TIProvider):
 
     _QUERIES: ClassVar[dict[str, tuple]] = {}
 
-    _CONNECT_STR: ClassVar[str] = (
-        "loganalytics://code().tenant('{TENANT_ID}').workspace('{WORKSPACE_ID}')"
-    )
+    _CONNECT_STR: ClassVar[
+        str
+    ] = "loganalytics://code().tenant('{TENANT_ID}').workspace('{WORKSPACE_ID}')"
 
     _REQUIRED_TABLES: ClassVar[list[str]] = []
 
@@ -67,7 +68,7 @@ class KqlTIProvider(TIProvider):
             query_provider,
             QueryProvider,
         ):
-            self._query_provider = query_provider
+            self._query_provider: QueryProvider = query_provider
             self._connect_str: str = connect_str or WorkspaceConfig().code_connect_str
         else:
             self._query_provider, self._connect_str = self._create_query_provider(
@@ -237,9 +238,7 @@ class KqlTIProvider(TIProvider):
         """Add status info, if query produced no results."""
         src_ioc_frame["Result"] = False
         src_ioc_frame["Details"] = (
-            "Query failure"
-            if lookup_status == LookupStatus.QUERY_FAILED
-            else "Not found"
+            "Query failure" if lookup_status == LookupStatus.QUERY_FAILED else "Not found"
         )
         src_ioc_frame["Status"] = lookup_status.value
         src_ioc_frame["Severity"] = ResultSeverity.information.name
@@ -254,15 +253,15 @@ class KqlTIProvider(TIProvider):
             and data_result.completion_query_info["StatusCode"] == 0
             and data_result.records_count == 0
         ):
-            print("No results return from data provider.")
+            logger.info("No results return from data provider.")
             return LookupStatus.NO_DATA
         if data_result and hasattr(data_result, "completion_query_info"):
-            print(
-                "No results returned from data provider. "
-                + str(data_result.completion_query_info),
+            logger.info(
+                "No results returned from data provider. %s",
+                data_result.completion_query_info,
             )
         else:
-            print(f"Unknown response from provider: {data_result!s}")
+            logger.info("Unknown response from provider: %s", data_result)
         return LookupStatus.QUERY_FAILED
 
     @abc.abstractmethod
@@ -322,7 +321,7 @@ class KqlTIProvider(TIProvider):
 
     def _connect(self: Self) -> None:
         """Connect to query provider."""
-        print("MS Sentinel TI query provider needs authenticated connection.")
+        logger.info("MS Sentinel TI query provider needs authenticated connection.")
         self._query_provider.connect(self._connect_str)
 
     @staticmethod
@@ -338,7 +337,7 @@ class KqlTIProvider(TIProvider):
             None,
         )
 
-    def _get_query_and_params(
+    def _get_query_and_params(  # noqa:PLR0913
         self: Self,
         ioc: str | list[str],
         ioc_type: str,

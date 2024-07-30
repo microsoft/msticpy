@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from enum import Enum
 from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Iterable
 
@@ -39,7 +40,7 @@ except ImportError as imp_err:
         extra="vt3",
     ) from imp_err
 
-
+logger: logging.Logger = logging.getLogger(__name__)
 # pylint: disable=too-many-lines
 
 
@@ -140,9 +141,9 @@ class VTLookupV3:
         VTEntityType.DOMAIN: {"id", "creation_date", "last_update_date", "country"},
     }
 
-    _DEFAULT_SEARCH_LIMIT: ClassVar[int] = (
-        1000  # prevents vague queries from pulling 1M+ files
-    )
+    _DEFAULT_SEARCH_LIMIT: ClassVar[
+        int
+    ] = 1000  # prevents vague queries from pulling 1M+ files
     _SEARCH_API_ENDPOINT: ClassVar[str] = "/intelligence/search"
 
     @property
@@ -168,7 +169,7 @@ class VTLookupV3:
 
     @classmethod
     def _parse_vt_object(
-        cls,
+        cls: type[VTLookupV3],
         vt_object: vt.object.Object,
         *,
         all_props: bool = False,
@@ -429,7 +430,7 @@ class VTLookupV3:
         finally:
             self._vt_client.close()
 
-    async def _lookup_ioc_relationships_async(  # pylint: disable=too-many-locals
+    async def _lookup_ioc_relationships_async(  # pylint: disable=too-many-locals #noqa: PLR0913
         self,
         observable: str,
         vt_type: str,
@@ -479,15 +480,17 @@ class VTLookupV3:
                 response = self._vt_client.get_object(
                     f"/{endpoint_name}/{observable}?relationship_counters=true",
                 )
-                relationships = response.relationships
+                relationships: dict[str, Any] = response.relationships
                 limit = (
                     relationships[relationship]["meta"]["count"]
                     if relationship in relationships
                     else 0
                 )
             except KeyError:
-                print(
-                    f"ERROR: Could not obtain relationship limit for {vt_type} {observable}",
+                logger.exception(
+                    "Could not obtain relationship limit for %s %s",
+                    vt_type,
+                    observable,
                 )
                 return self._item_not_found_df(vt_type=vt_type, observable=observable)
 
@@ -546,7 +549,7 @@ class VTLookupV3:
 
         return result_df
 
-    def lookup_ioc_relationships(
+    def lookup_ioc_relationships(  # noqa: PLR0913
         self,
         observable: str,
         vt_type: str,
@@ -650,7 +653,7 @@ class VTLookupV3:
         finally:
             self._vt_client.close()
 
-    async def _lookup_iocs_relationships_async(
+    async def _lookup_iocs_relationships_async(  # noqa: PLR0913
         self,
         observables_df: pd.DataFrame,
         relationship: str,
@@ -719,7 +722,7 @@ class VTLookupV3:
             )
         )
 
-    def lookup_iocs_relationships(
+    def lookup_iocs_relationships(  # noqa: PLR0913
         self,
         observables_df: pd.DataFrame,
         relationship: str,
@@ -970,7 +973,7 @@ class VTLookupV3:
         response_df: pd.DataFrame = self._extract_response(response_list)
         return timestamps_to_utcdate(response_df)
 
-    def iterator(
+    def iterator(  # noqa: PLR0913
         self,
         path: str,
         *path_args: str,
@@ -993,7 +996,8 @@ class VTLookupV3:
         path : str
             Path to API endpoint returning a collection.
         path_args: dict
-            A variable number of arguments that are put into any placeholders used in path.
+            A variable number of arguments that are put
+            into any placeholders used in path.
         params: dict
             Additional parameters passed to the endpoint.
         cursor: str

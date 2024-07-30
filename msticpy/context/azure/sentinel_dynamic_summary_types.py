@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Sentinel Dynamic Summary classes."""
+from __future__ import annotations
+
 import dataclasses
 import json
 import logging
@@ -191,15 +193,11 @@ class DynamicSummary:
         self.summary_id: str = summary_id or str(uuid.uuid4())
         self.summary_name: str = kwargs.pop("summary_name", None)
         self.summary_description: str = kwargs.pop("summary_description", None)
-        self.tenant_id: str = kwargs.pop(
-            "azure_tenant_id", kwargs.pop("tenant_id", None)
-        )
+        self.tenant_id: str = kwargs.pop("azure_tenant_id", kwargs.pop("tenant_id", None))
 
         self.search_key = kwargs.pop("search_key", None)
         tactics = kwargs.pop("tactics", [])
-        self.tactics = _match_tactics(
-            [tactics] if isinstance(tactics, str) else tactics
-        )
+        self.tactics = _match_tactics([tactics] if isinstance(tactics, str) else tactics)
         techniques = kwargs.pop("techniques", [])
         self.techniques = [techniques] if isinstance(techniques, str) else techniques
         self.summary_items: List[DynamicSummaryItem] = []
@@ -208,9 +206,7 @@ class DynamicSummary:
             self.add_summary_items(summary_items)
         source_info = kwargs.pop("source_info", {})
         self.source_info = (
-            source_info
-            if isinstance(source_info, dict)
-            else {"user_source": source_info}
+            source_info if isinstance(source_info, dict) else {"user_source": source_info}
         )
         self.source_info["source_pkg"] = f"MSTICPy {VERSION}"
 
@@ -362,9 +358,7 @@ class DynamicSummary:
 
     def add_summary_items(
         self,
-        data: Union[
-            Iterable[DynamicSummaryItem], Iterable[Dict[str, Any]], pd.DataFrame
-        ],
+        data: Union[Iterable[DynamicSummaryItem], Iterable[Dict[str, Any]], pd.DataFrame],
         **kwargs,
     ):
         """
@@ -502,9 +496,7 @@ class DynamicSummary:
 
     def append_summary_items(
         self,
-        data: Union[
-            Iterable[DynamicSummaryItem], Iterable[Dict[str, Any]], pd.DataFrame
-        ],
+        data: Union[Iterable[DynamicSummaryItem], Iterable[Dict[str, Any]], pd.DataFrame],
         **kwargs,
     ):
         """
@@ -647,9 +639,7 @@ def _get_summary_record(data: pd.DataFrame) -> pd.Series:
 def _get_summary_items(data: pd.DataFrame) -> pd.DataFrame:
     """Return summary item records for dynamic summary."""
     ds_summary_items = data[data["SummaryDataType"] == "SummaryItem"]
-    return ds_summary_items[list(_DF_SUMMARY_ITEM_FIELDS)].rename(
-        columns=_DF_TO_CLS_MAP
-    )
+    return ds_summary_items[list(_DF_SUMMARY_ITEM_FIELDS)].rename(columns=_DF_TO_CLS_MAP)
 
 
 def df_to_dynamic_summaries(data: pd.DataFrame) -> List[DynamicSummary]:
@@ -763,7 +753,5 @@ def _convert_data_types(value: Any, type_convert: Dict[type, Callable] = None) -
 def _match_tactics(tactics: Iterable[str]) -> List[str]:
     """Return case-insensitive matches for tactics list."""
     return [
-        _TACTICS_DICT[tactic.casefold()]
-        for tactic in tactics
-        if tactic in _TACTICS_DICT
+        _TACTICS_DICT[tactic.casefold()] for tactic in tactics if tactic in _TACTICS_DICT
     ]

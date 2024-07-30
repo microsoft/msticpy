@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import importlib
+import logging
 import warnings
 from collections import ChainMap
 from typing import (
@@ -55,6 +56,8 @@ if TYPE_CHECKING:
 
 __version__ = VERSION
 __author__ = "Florian Bracq"
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 LOOKUPTYPE = TypeVar("LOOKUPTYPE", bound="Lookup")
 
@@ -320,7 +323,7 @@ class Lookup:
 
         """
         if not isinstance(data, pd.DataFrame):
-            print("Input data is in an unexpected format.")
+            logger.info("Input data is in an unexpected format.")
             return None
         return browse_results(data=data, severities=severities, height=height)
 
@@ -328,30 +331,29 @@ class Lookup:
 
     def provider_usage(self) -> None:
         """Print usage of loaded providers."""
-        print("Primary providers")
-        print("-----------------")
+        logger.info("Primary providers")
+        logger.info("-----------------")
         if self._providers:
             for prov_name, prov in self._providers.items():
-                print(f"\nProvider class: {prov_name}")
+                logger.info("\nProvider class: %s", prov_name)
                 prov.usage()
         else:
-            print("none")
-        print("\nSecondary providers")
-        print("-------------------")
+            logger.info("none")
+        logger.info("\nSecondary providers")
+        logger.info("-------------------")
         if self._secondary_providers:
             for prov_name, prov in self._secondary_providers.items():
-                print(f"\nProvider class: {prov_name}")
+                logger.info("\nProvider class: %s", prov_name)
                 prov.usage()
         else:
-            print("none")
+            logger.info("none")
 
     @classmethod
-    def reload_provider_settings(cls) -> None:
+    def reload_provider_settings(cls: type[Lookup]) -> None:
         """Reload provider settings from config."""
         reload_settings()
-        print(
-            "Settings reloaded. Use reload_providers to update settings",
-            "for loaded providers.",
+        logger.info(
+            "Settings reloaded. Use reload_providers to update settings for loaded providers.",
         )
 
     def reload_providers(self) -> None:
@@ -387,7 +389,7 @@ class Lookup:
         else:
             self._secondary_providers[name] = provider
 
-    def lookup_item(  # pylint: disable=too-many-locals, too-many-arguments
+    def lookup_item(  # pylint: disable=too-many-locals, too-many-arguments #noqa: PLR0913
         self,
         item: str,
         item_type: str | None = None,
@@ -443,7 +445,7 @@ class Lookup:
             end=end,
         )
 
-    def lookup_items(  # pylint: disable=too-many-arguments
+    def lookup_items(  # pylint: disable=too-many-arguments #noqa: PLR0913
         self,
         data: pd.DataFrame | Mapping[str, str] | Sized,
         item_col: str | None = None,
@@ -537,7 +539,7 @@ class Lookup:
             raise TypeError(err_msg)
         return item_lookup
 
-    async def _lookup_items_async(  # pylint: disable=too-many-locals, too-many-arguments
+    async def _lookup_items_async(  # pylint: disable=too-many-locals, too-many-arguments #noqa: PLR0913
         self,
         data: pd.DataFrame | Mapping[str, str] | Sized,
         item_col: str | None = None,
@@ -606,7 +608,7 @@ class Lookup:
             show_bad_item=show_bad_item,
         )
 
-    def lookup_items_sync(  # pylint: disable=too-many-arguments, too-many-locals
+    def lookup_items_sync(  # pylint: disable=too-many-arguments, too-many-locals #noqa: PLR0913
         self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         item_col: str | None = None,
@@ -756,7 +758,7 @@ class Lookup:
         for provider_name in cls.PROVIDERS:
             provider_class: type[Provider] = cls.import_provider(provider_name)
             if not as_list:
-                print(provider_name)
+                logger.info(provider_name)
             providers.append(provider_name)
             if show_query_types and provider_class:
                 provider_class.usage()
@@ -893,5 +895,5 @@ class Lookup:
             result_list.append(result)
 
         if not result_list:
-            print("No Item matches")
+            logger.info("No Item matches")
         return pd.concat(result_list, sort=False) if result_list else pd.DataFrame()

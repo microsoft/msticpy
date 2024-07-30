@@ -22,6 +22,7 @@ an online lookup (API key required).
 from __future__ import annotations
 
 import contextlib
+import logging
 import math
 import random
 import tarfile
@@ -52,6 +53,8 @@ from .ip_utils import get_ip_type
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class GeoIPDatabaseError(Exception):
@@ -163,7 +166,7 @@ class GeoIpLookup(metaclass=ABCMeta):
     @staticmethod
     def _ip_params_to_list(
         ip_address: str | Iterable | IpAddress | None = None,
-        ip_addr_list: list[str] | None = None,
+        ip_addr_list: list[str] | Iterable | None = None,
         ip_entity: IpAddress | None = None,
     ) -> list[str]:
         """Try to convert different parameter formats to list."""
@@ -187,7 +190,7 @@ class GeoIpLookup(metaclass=ABCMeta):
         if self._LICENSE_HTML and is_ipython(notebook=True):
             display(HTML(self._LICENSE_HTML))
         elif self._LICENSE_TXT:
-            print(self._LICENSE_TXT)
+            logger.info(self._LICENSE_TXT)
 
 
 @export
@@ -311,11 +314,11 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         self._check_initialized()
         ip_list: list[str] = self._ip_params_to_list(ip_address, ip_addr_list, ip_entity)
 
-        results: list[tuple[dict[str, str], int]] = self._submit_request(ip_list)
-        output_raw: list[tuple[dict[str, Any], int]] = []
+        results: list[tuple[dict[str, str] | None, int]] = self._submit_request(ip_list)
+        output_raw: list[tuple[dict[str, Any] | None, int]] = []
         output_entities: list[IpAddress] = []
         for ip_loc, status in results:
-            if status == httpx.codes.OK and "error" not in ip_loc:
+            if status == httpx.codes.OK and ip_loc and "error" not in ip_loc:
                 output_entities.append(self._create_ip_entity(ip_loc, ip_entity))
             output_raw.append((ip_loc, status))
         return output_raw, output_entities
@@ -338,7 +341,10 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         ip_entity.Location = geo_entity
         return ip_entity
 
-    def _submit_request(self, ip_list: list[str]) -> list[tuple[dict[str, str], int]]:
+    def _submit_request(
+        self,
+        ip_list: list[str],
+    ) -> list[tuple[dict[str, str] | None, int]]:
         """
         Submit the request to IPStack.
 
@@ -406,7 +412,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
                     except JSONDecodeError:
                         ip_loc_results.append((None, response.status_code))
                 else:
-                    print("Unknown response from IPStack request.")
+                    logger.warning("Unknown response from IPStack request.")
                     ip_loc_results.append((None, -1))
         return ip_loc_results
 
@@ -463,7 +469,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 """
     _UNSET_PATH: ClassVar[str] = "~~UNSET~~"
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self: GeoLiteLookup,
         api_key: str | None = None,
         db_folder: str | None = None,
@@ -515,15 +521,15 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         self._force_update = force_update
         self._auto_update = auto_update
         self._db_path: str | None = None
-        self._reader: geoip2.database.Reader
+        self._reader: geoip2.database.Reader | None = None
 
     def close(self) -> None:
         """Close an open GeoIP DB."""
         if self._reader:
             try:
                 self._reader.close()
-            except Exception as err:  # pylint: disable=broad-except
-                print(f"Exception when trying to close GeoIP DB {err}")
+            except Exception:  # pylint: disable=broad-except
+                logger.exception("Exception when trying to close GeoIP DB")
 
     def lookup_ip(
         self,
@@ -611,7 +617,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         ip_entity.Location = geo_entity
         return ip_entity
 
-    def _check_initialized(self) -> None:
+    def _check_initialized(self: Self) -> None:
         """Check if DB reader open with a valid database."""
         if self._reader and self.settings:
             return
@@ -647,9 +653,10 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         self._pr_debug(f"Checking geoip DB {geoip_db_path}")
         self._pr_debug(f"Download URL is {self._MAXMIND_DOWNLOAD}")
         if geoip_db_path is None:
-            print(
-                "No local Maxmind City Database found. ",
-                f"Attempting to downloading new database to {self._db_folder}",
+            logger.info(
+                "No local Maxmind City Database found. "
+                "Attempting to downloading new database to %s",
+                self._db_folder,
             )
             self._download_and_extract_archive()
         else:
@@ -665,17 +672,19 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             db_age: timedelta = datetime.now(timezone.utc) - last_mod_time
             db_updated = True
             if db_age > timedelta(30) and self._auto_update:
-                print(
-                    "Latest local Maxmind City Database present is older than 30 days.",
-                    f"Attempting to download new database to {self._db_folder}",
+                logger.info(
+                    "Latest local Maxmind City Database present is older than 30 days."
+                    "Attempting to download new database to %s",
+                    self._db_folder,
                 )
                 if not self._download_and_extract_archive():
                     self._geolite_warn("DB download failed")
                     db_updated = False
             elif self._force_update:
-                print(
-                    "force_update is set to True.",
-                    f"Attempting to download new database to {self._db_folder}",
+                logger.info(
+                    "force_update is set to True. "
+                    "Attempting to download new database to %s",
+                    self._db_folder,
                 )
                 if not self._download_and_extract_archive():
                     self._geolite_warn("DB download failed")
@@ -722,7 +731,9 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 timeout=get_http_timeout(),
                 headers=mp_ua_header(),
             ) as response:
-                print("Downloading and extracting GeoLite DB archive from MaxMind....")
+                logger.info(
+                    "Downloading and extracting GeoLite DB archive from MaxMind....",
+                )
                 with db_archive_path.open(mode="wb", encoding="utf-8") as file_hdl:
                     for chunk in response.iter_bytes(chunk_size=10000):
                         file_hdl.write(chunk)
@@ -755,9 +766,9 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                     f"Error writing GeoIP DB file: {db_archive_path} - {err}",
                 )
             else:
-                print(
-                    "Extraction complete. Local Maxmind city DB:",
-                    f"{db_archive_path}",
+                logger.info(
+                    "Extraction complete. Local Maxmind city DB: %s",
+                    db_archive_path,
                 )
                 return True
         finally:
@@ -812,7 +823,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
     def _pr_debug(self, *args: str) -> None:
         """Print out debug info."""
         if self._debug:
-            print(*args)
+            logger.debug(*args)
 
     def _geolite_warn(self, msg: str) -> None:
         self._pr_debug(msg)

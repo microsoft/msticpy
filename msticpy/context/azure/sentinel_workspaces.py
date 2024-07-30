@@ -6,9 +6,10 @@
 """Mixin Class for Sentinel Workspaces."""
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 from urllib import parse
 
 import httpx
@@ -23,6 +24,8 @@ from ...data.core.data_providers import QueryProvider
 
 if TYPE_CHECKING:
     import pandas as pd
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -42,16 +45,24 @@ class ParsedUrlComponents:
 class SentinelWorkspacesMixin:
     """Mixin class for Sentinel workspaces."""
 
-    _TENANT_URI = "{cloud_endpoint}/{tenant_name}/.well-known/openid-configuration"
-    _RES_GRAPH_PROV: QueryProvider | None = None
+    _TENANT_URI: ClassVar[
+        str
+    ] = "{cloud_endpoint}/{tenant_name}/.well-known/openid-configuration"
+    _RES_GRAPH_PROV: ClassVar[QueryProvider | None] = None
 
     @classmethod
-    def get_resource_id_from_url(cls, portal_url: str) -> str:
+    def get_resource_id_from_url(
+        cls: type[SentinelWorkspacesMixin],
+        portal_url: str,
+    ) -> str | None:
         """Return resource ID components from Sentinel portal URL."""
         return cls._extract_resource_id(portal_url).resource_id
 
     @classmethod
-    def get_workspace_details_from_url(cls, portal_url: str) -> dict[str, dict[str, str]]:
+    def get_workspace_details_from_url(
+        cls: type[SentinelWorkspacesMixin],
+        portal_url: str,
+    ) -> dict[str, dict[str, str]]:
         """
         Return workspace settings from portal URL.
 
@@ -69,7 +80,7 @@ class SentinelWorkspacesMixin:
         tenant_id: str | None = None
         if resource_comps.tenant_name:
             tenant_id = cls._get_tenantid_from_logon_domain(resource_comps.tenant_name)
-        workspace_df = cls._lookup_workspace_by_res_id(
+        workspace_df: pd.DataFrame = cls._lookup_workspace_by_res_id(
             resource_id=resource_comps.resource_id,
         )
         if df_has_data(workspace_df):
@@ -81,7 +92,9 @@ class SentinelWorkspacesMixin:
                 resource_group=workspace_df.iloc[0].resourceGroup,
                 workspace_tenant_id=workspace_df.iloc[0].tenantId,
             )
-        print("Failed to find Azure resource for workspace", "Returning partial results.")
+        logger.warning(
+            "Failed to find Azure resource for workspace. Returning partial results.",
+        )
         return cls._get_settings_for_workspace(
             workspace_name=resource_comps.res_components.get("name"),
             workspace_id="unknown",
@@ -234,9 +247,9 @@ class SentinelWorkspacesMixin:
         )
         if df_has_data(results_df):
             if len(results_df) > 1:
-                print(
-                    "Warning: query returned multiple results.",
-                    "Specify subscription_id and/or resource_group",
+                logger.warning(
+                    "Warning: query returned multiple results. "
+                    "Specify subscription_id and/or resource_group "
                     "for more accurate results.",
                 )
             return cls._get_settings_for_workspace(
@@ -279,7 +292,7 @@ class SentinelWorkspacesMixin:
         )
 
     @classmethod
-    def _lookup_workspace_by_res_id(cls, resource_id: str) -> pd.DataFrame:
+    def _lookup_workspace_by_res_id(cls, resource_id: str | None) -> pd.DataFrame:
         res_graph_prov: QueryProvider = cls._get_resource_graph_provider()
         return res_graph_prov.Sentinel.get_sentinel_workspace_for_resource_id(
             resource_id=resource_id,
@@ -303,7 +316,7 @@ class SentinelWorkspacesMixin:
         try:
             resource_id: str = cls._normalize_resource_id(res_components)
         except KeyError:
-            print("Invalid Sentinel resource id")
+            logger.exception("Invalid Sentinel resource id")
             return ParsedUrlComponents(None, None, None, None, None)
         return ParsedUrlComponents(
             domain=uri_match.groupdict().get("domain"),
@@ -348,7 +361,7 @@ class SentinelWorkspacesMixin:
         return match.groupdict()["tenant_id"] if match else None
 
     @classmethod
-    def _get_settings_for_workspace(
+    def _get_settings_for_workspace(  # pylint:disable=too-many-arguments # noqa:PLR0913
         cls: type[SentinelWorkspacesMixin],
         workspace_name: str,
         workspace_id: str,

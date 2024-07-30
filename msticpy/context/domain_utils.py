@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import logging
 import ssl
 import time
 from dataclasses import asdict
@@ -45,6 +46,7 @@ if TYPE_CHECKING:
     from tldextract.tldextract import ExtractResult
 __version__ = VERSION
 __author__ = "Pete Bryan"
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @export
@@ -121,7 +123,7 @@ def screenshot(
         f"&zoom=50&key={bs_api_key}"
     )
     # Wait until the screenshot is ready and keep user updated with progress
-    print("Getting screenshot")
+    logger.info("Getting screenshot")
     progress = IntProgress(min=0, max=max_progress)
     display.display(progress)
     ready = False
@@ -143,7 +145,7 @@ def screenshot(
     image_data: httpx.Response = httpx.get(image_string, timeout=get_http_timeout())
 
     if not image_data.is_success:
-        print(
+        logger.warning(
             "There was a problem with the request, please check the status code for details",
         )
 

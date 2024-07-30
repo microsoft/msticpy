@@ -14,6 +14,7 @@ requests per minute for the account type that you have.
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
 import attr
@@ -30,7 +31,7 @@ __author__ = "Ian Hellen"
 
 
 # pylint: disable=too-few-public-methods
-@attr.s
+@dataclass
 class _OTXParams(APILookupParams):
     # override APILookupParams to set common defaults
     def __attrs_post_init__(self: Self) -> None:
@@ -121,9 +122,7 @@ class OTX(HttpTIProvider):
                         "sections_available": response["RawResult"]["sections"],
                     },
                 )
-            severity = (
-                ResultSeverity.warning if pulse_count == 1 else ResultSeverity.high
-            )
+            severity = ResultSeverity.warning if pulse_count == 1 else ResultSeverity.high
             return (
                 True,
                 severity,

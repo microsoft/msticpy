@@ -51,8 +51,7 @@ class ContextLookup(Lookup):
     PROVIDERS: ClassVar[dict[str, tuple[str, str]]] = CONTEXT_PROVIDERS
     CUSTOM_PROVIDERS: ClassVar[dict[str, type[Provider]]] = {}
 
-    # pylint: disable=too-many-arguments
-    def lookup_observable(
+    def lookup_observable(  # pylint:disable=too-many-arguments # noqa:PLR0913
         self,
         observable: str,
         observable_type: str | None = None,
@@ -103,7 +102,7 @@ class ContextLookup(Lookup):
             show_not_supported=show_not_supported,
         )
 
-    def lookup_observables(  # pylint:disable=too-many-arguments
+    def lookup_observables(  # pylint:disable=too-many-arguments # noqa:PLR0913
         self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         obs_col: str | None = None,
@@ -158,7 +157,7 @@ class ContextLookup(Lookup):
         )
 
     # pylint: disable=too-many-locals
-    async def _lookup_observables_async(  # pylint:disable=too-many-arguments
+    async def _lookup_observables_async(  # pylint:disable=too-many-arguments # noqa:PLR0913
         self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         obs_col: str | None = None,
@@ -179,7 +178,7 @@ class ContextLookup(Lookup):
             prov_scope=prov_scope,
         )
 
-    def lookup_observables_sync(  # pylint:disable=too-many-arguments
+    def lookup_observables_sync(  # pylint:disable=too-many-arguments # noqa:PLR0913
         self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         obs_col: str | None = None,

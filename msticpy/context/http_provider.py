@@ -16,11 +16,10 @@ from __future__ import annotations
 
 import traceback
 from abc import abstractmethod
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar
 
-import attr
 import httpx
-from attr import Factory
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyConfigError
@@ -36,20 +35,19 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-# pylint: disable=too-few-public-methods
-@attr.s(auto_attribs=True)
+@dataclass
 class APILookupParams:
     """HTTP Lookup Params definition."""
 
-    path: str = attr.ib(default="")
-    verb: str = "GET"
-    full_url: bool = False
-    headers: dict[str, str] = attr.ib(factory=dict)
-    params: dict[str, str | float] = Factory(dict)
-    data: dict[str, str] = Factory(dict)
-    auth_type: str = ""
-    auth_str: list[str] = Factory(list)
-    sub_type: str = ""
+    path: str = field(default="")
+    verb: str = field(default="GET")
+    full_url: bool = field(default=False)
+    headers: dict[str, str] = field(default_factory=dict)
+    params: dict[str, str | float] = field(default_factory=dict)
+    data: dict[str, str] = field(default_factory=dict)
+    auth_type: str = field(default="")
+    auth_str: list[str] = field(default_factory=list)
+    sub_type: str = field(default="")
 
 
 class HttpProvider(Provider):

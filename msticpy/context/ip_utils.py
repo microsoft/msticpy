@@ -15,6 +15,7 @@ Designed to support any data source containing IP address entity.
 from __future__ import annotations
 
 import ipaddress
+import logging
 import re
 import socket
 import warnings
@@ -33,6 +34,8 @@ from .._version import VERSION
 from ..common.exceptions import MsticpyConnectionError, MsticpyException
 from ..common.utility import arg_to_list, export
 from ..datamodel.entities import GeoLocation, IpAddress
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 __version__ = VERSION
 __author__ = "Ashwin Patil"
@@ -245,19 +248,19 @@ def get_ip_type(ip: str | None = None, ip_str: str | None = None) -> str:
             ip_str,
         )
     except ValueError:
-        print(f"{ip_str} does not appear to be an IPv4 or IPv6 address")
+        logger.exception("%s does not appear to be an IPv4 or IPv6 address", ip_str)
     else:
         return_values: dict[str, str] = {
             "is_multicast": "Multicast",
             "is_global": "Public",
-            "is_loopback": "Loopack",
+            "is_loopback": "Loopback",
             "is_link_local": "Link Local",
             "is_unspecified": "Unspecified",
             "is_private": "Private",
             "is_reserved": "Reserved",
         }
         for func, msg in return_values.items():
-            if getattr(ip_obj, func)():
+            if getattr(ip_obj, func):
                 return msg
         return "Unspecified"
 
@@ -303,7 +306,7 @@ def get_whois_info(
         raise ValueError(err_msg)
     ip_type: str = get_ip_type(ip_str)
     if ip_type == "Public":
-        print(ip_str)
+        logger.info(ip_str)
         try:
             whois_result: pd.DataFrame | _IpWhoIsResult = ip_whois(ip_str)
         except MsticpyException as err:
@@ -312,7 +315,7 @@ def get_whois_info(
                 properties={},
             )
         if show_progress:
-            print(".", end="")
+            logger.info(".")
         return whois_result
     return _IpWhoIsResult(
         name=f"No ASN Information for IP type: {ip_type}",
@@ -320,11 +323,8 @@ def get_whois_info(
     )
 
 
-# pylint: enable=invalid-name
-
-
 @export
-def get_whois_df(
+def get_whois_df(  # noqa: PLR0913
     data: pd.DataFrame,
     ip_column: str,
     *,
@@ -486,7 +486,7 @@ def ip_whois(
     if isinstance(ip, (list, pd.Series)):
         rate_limit: bool = len(ip) > RATE_LIMIT_THRESHOLD
         if rate_limit:
-            print("Large number of lookups, this may take some time.")
+            logger.info("Large number of lookups, this may take some time.")
         whois_results: dict[str, Any] = {}
         for ip_addr in ip:
             if rate_limit:
@@ -679,7 +679,10 @@ def _rdap_lookup(url: str, retry_count: int = 5) -> httpx.Response:
         rdap_data = _run_rdap_query(url)
         retry_count -= 1
     if not rdap_data:
-        err_msg: str = "Rate limit exceeded - try adjusting query_rate parameter to slow down requests"
+        err_msg: str = (
+            "Rate limit exceeded - try adjusting query_rate parameter "
+            "to slow down requests"
+        )
         raise MsticpyException(err_msg)
     return rdap_data
 

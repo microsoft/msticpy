@@ -4,12 +4,17 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Watchlist Features."""
-from typing import Dict, Optional, Union
+from __future__ import annotations
+
+import logging
+from abc import abstractmethod
+from typing import Any
 from uuid import uuid4
 
 import httpx
 import pandas as pd
 from azure.common.exceptions import CloudError
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
@@ -19,11 +24,13 @@ from .sentinel_utils import _build_sent_data, get_http_timeout
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
+logger: logging.Logger = logging.getLogger(__name__)
+
 
 class SentinelWatchlistsMixin:
     """Mixin class for Sentinel Watchlist feature integrations."""
 
-    def list_watchlists(self) -> pd.DataFrame:
+    def list_watchlists(self: Self) -> pd.DataFrame:
         """
         List Deployed Watchlists.
 
@@ -38,20 +45,20 @@ class SentinelWatchlistsMixin:
             If a valid result is not returned.
 
         """
-        return self._list_items(  # type: ignore
+        return self._list_items(
             item_type="watchlists",
             api_version="2021-04-01",
         )
 
-    def create_watchlist(
-        self,
+    def create_watchlist(  # noqa: PLR0913
+        self: Self,
         watchlist_name: str,
         description: str,
         search_key: str,
         provider: str = "MSTICPy",
         source: str = "Notebook",
         data: pd.DataFrame | None = None,
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Create a new watchlist.
 
@@ -87,38 +94,38 @@ class SentinelWatchlistsMixin:
             If there is an issue creating the watchlist.
 
         """
-        self.check_connected()  # type: ignore
+        self.check_connected()
         if self._check_watchlist_exists(watchlist_name):
-            raise MsticpyUserError(f"Watchlist {watchlist_name} already exist.")
-        watchlist_url = self.sent_urls["watchlists"] + f"/{watchlist_name}"  # type: ignore
-        params = {"api-version": "2021-04-01"}
-        data_items = {
+            err_msg: str = f"Watchlist {watchlist_name} already exist."
+            raise MsticpyUserError(err_msg)
+        watchlist_url: str = self.sent_urls["watchlists"] + f"/{watchlist_name}"
+        params: dict[str, str] = {"api-version": "2021-04-01"}
+        data_items: dict[str, str] = {
             "displayName": watchlist_name,
             "source": source,
             "provider": provider,
             "description": description,
             "itemsSearchKey": search_key,
             "contentType": "text/csv",
-        }  # type: Dict[str, str]
+        }
         if isinstance(data, pd.DataFrame) and not data.empty:
-            data_csv = data.to_csv(index=False)
-            data_items["rawContent"] = str(data_csv)
-        request_data = _build_sent_data(data_items, props=True)
-        response = httpx.put(
+            data_items["rawContent"] = str(data.to_csv(index=False))
+        request_data: dict[str, Any] = _build_sent_data(data_items, props=True)
+        response: httpx.Response = httpx.put(
             watchlist_url,
-            headers=get_api_headers(self._token),  # type: ignore
+            headers=get_api_headers(self._token),
             params=params,
             content=str(request_data),
             timeout=get_http_timeout(),
         )
-        if response.status_code != 200:
+        if not response.is_success:
             raise CloudError(response=response)
 
-        print("Watchlist created.")
+        logger.info("Watchlist created.")
         return response.json().get("name")
 
     def list_watchlist_items(
-        self,
+        self: Self,
         watchlist_name: str,
     ) -> pd.DataFrame:
         """
@@ -140,19 +147,20 @@ class SentinelWatchlistsMixin:
             If a valid result is not returned.
 
         """
-        watchlist_name_str = f"/{watchlist_name}/watchlistItems"
-        return self._list_items(  # type: ignore
+        watchlist_name_str: str = f"/{watchlist_name}/watchlistItems"
+        return self._list_items(
             item_type="watchlists",
             api_version="2021-04-01",
             appendix=watchlist_name_str,
         )
 
     def add_watchlist_item(
-        self,
+        self: Self,
         watchlist_name: str,
-        item: Union[Dict, pd.Series, pd.DataFrame],
+        item: dict | pd.Series | pd.DataFrame,
+        *,
         overwrite: bool = False,
-    ):
+    ) -> None:
         """
         Add or update an item in a Watchlist.
 
@@ -176,66 +184,71 @@ class SentinelWatchlistsMixin:
             If the API returns an error.
 
         """
-        self.check_connected()  # type: ignore
+        self.check_connected()
         # Check requested watchlist actually exists
         if not self._check_watchlist_exists(watchlist_name):
-            raise MsticpyUserError(f"Watchlist {watchlist_name} does not exist.")
+            err_msg: str = f"Watchlist {watchlist_name} does not exist."
+            raise MsticpyUserError(err_msg)
 
-        new_items = []
+        new_items: list[dict] = []
         # Convert items to add to dictionary format
         if isinstance(item, pd.Series):
             new_items = [dict(item)]
-        elif isinstance(item, Dict):
+        elif isinstance(item, dict):
             new_items = [item]
         elif isinstance(item, pd.DataFrame):
             for _, line_item in item.iterrows():
                 new_items.append(dict(line_item))
 
-        current_items = self.list_watchlist_items(watchlist_name)
-        current_items_values = current_items.filter(
-            regex="^properties.itemsKeyValue.", axis=1
+        current_items: pd.DataFrame = self.list_watchlist_items(watchlist_name)
+        current_items_values: pd.DataFrame = current_items.filter(
+            regex="^properties.itemsKeyValue.",
+            axis=1,
         )
         current_items_values.columns = current_items_values.columns.str.replace(
-            "properties.itemsKeyValue.", "", regex=False
+            "properties.itemsKeyValue.",
+            "",
+            regex=False,
         )
 
         for new_item in new_items:
             # See if item already exists, if it does get the item ID
             current_df, item_series = current_items_values.align(
-                pd.Series(new_item), axis=1, copy=False  # type: ignore
+                pd.Series(new_item),
+                axis=1,
+                copy=False,
             )
-            if (current_df == item_series).all(axis=1).any() and overwrite:  # type: ignore
-                watchlist_id = current_items[
+            if (current_df == item_series).all(axis=1).any() and overwrite:
+                watchlist_id: str = current_items[
                     current_items.isin(list(new_item.values())).any(axis=1)
                 ]["properties.watchlistItemId"].iloc[0]
             # If not in watchlist already generate new ID
-            elif not (current_df == item_series).all(axis=1).any():  # type: ignore
+            elif not (current_df == item_series).all(axis=1).any():
                 watchlist_id = str(uuid4())
             else:
-                raise MsticpyUserError(
-                    "Item already exists in the watchlist. Set overwrite = True to replace."
-                )
+                err_msg = "Item already exists in the watchlist. Set overwrite = True to replace."
+                raise MsticpyUserError(err_msg)
 
-            watchlist_url = (
-                self.sent_urls["watchlists"]  # type: ignore
-                + f"/{watchlist_name}/watchlistItems/{watchlist_id}"
+            watchlist_url: str = (
+                f"{self.sent_urls['watchlists']}/{watchlist_name}"
+                f"/watchlistItems/{watchlist_id}"
             )
-            response = httpx.put(
+            response: httpx.Response = httpx.put(
                 watchlist_url,
-                headers=get_api_headers(self._token),  # type: ignore
+                headers=get_api_headers(self._token),
                 params={"api-version": "2021-04-01"},
                 content=str({"properties": {"itemsKeyValue": item}}),
                 timeout=get_http_timeout(),
             )
-            if response.status_code != 200:
+            if not response.is_success:
                 raise CloudError(response=response)
 
-        print(f"Items added to {watchlist_name}")
+        logger.info("Items added to %s", watchlist_name)
 
     def delete_watchlist(
-        self,
+        self: Self,
         watchlist_name: str,
-    ):
+    ) -> None:
         """
         Delete a selected Watchlist.
 
@@ -252,23 +265,28 @@ class SentinelWatchlistsMixin:
             If the API returns an error.
 
         """
-        self.check_connected()  # type: ignore
+        self.check_connected()
         # Check requested watchlist actually exists
         if not self._check_watchlist_exists(watchlist_name):
-            raise MsticpyUserError(f"Watchlist {watchlist_name} does not exist.")
-        watchlist_url = self.sent_urls["watchlists"] + f"/{watchlist_name}"  # type: ignore
-        params = {"api-version": "2021-04-01"}
-        response = httpx.delete(
+            err_msg: str = f"Watchlist {watchlist_name} does not exist."
+            raise MsticpyUserError(err_msg)
+        watchlist_url: str = self.sent_urls["watchlists"] + f"/{watchlist_name}"
+        params: dict[str, str] = {"api-version": "2021-04-01"}
+        response: httpx.Response = httpx.delete(
             watchlist_url,
-            headers=get_api_headers(self._token),  # type: ignore
+            headers=get_api_headers(self._token),
             params=params,
             timeout=get_http_timeout(),
         )
-        if response.status_code != 200:
+        if not response.is_success:
             raise CloudError(response=response)
-        print(f"Watchlist {watchlist_name} deleted")
+        logger.info("Watchlist %s deleted", watchlist_name)
 
-    def delete_watchlist_item(self, watchlist_name: str, watchlist_item_id: str):
+    def delete_watchlist_item(
+        self: Self,
+        watchlist_name: str,
+        watchlist_item_id: str,
+    ) -> None:
         """
         Delete a Watchlist item.
 
@@ -287,30 +305,31 @@ class SentinelWatchlistsMixin:
             If the API returns an error.
 
         """
-        self.check_connected()  # type: ignore
+        self.check_connected()
         # Check requested watchlist actually exists
         if not self._check_watchlist_exists(watchlist_name):
-            raise MsticpyUserError(f"Watchlist {watchlist_name} does not exist.")
+            err_msg: str = f"Watchlist {watchlist_name} does not exist."
+            raise MsticpyUserError(err_msg)
 
-        watchlist_url = (
-            self.sent_urls["watchlists"]  # type: ignore
+        watchlist_url: str = (
+            self.sent_urls["watchlists"]
             + f"/{watchlist_name}/watchlistItems/{watchlist_item_id}"
         )
-        response = httpx.delete(
+        response: httpx.Response = httpx.delete(
             watchlist_url,
-            headers=get_api_headers(self._token),  # type: ignore
+            headers=get_api_headers(self._token),
             params={"api-version": "2023-02-01"},
             timeout=get_http_timeout(),
         )
-        if response.status_code != 200:
+        if not response.is_success:
             raise CloudError(response=response)
 
-        print(f"Item deleted from {watchlist_name}")
+        logger.info("Item deleted from %s", watchlist_name)
 
     def _check_watchlist_exists(
-        self,
+        self: Self,
         watchlist_name: str,
-    ):
+    ) -> bool:
         """
         Check whether a Watchlist exists or not.
 

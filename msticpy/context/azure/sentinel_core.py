@@ -33,7 +33,7 @@ from .sentinel_workspaces import SentinelWorkspacesMixin
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-ancestors, too-many-instance-attributes
@@ -61,7 +61,7 @@ class MicrosoftSentinel(
         res_grp: Optional[str] = None,
         ws_name: Optional[str] = None,
         **kwargs,
-    ):
+    ) -> None:
         """
         Initialize connector for Azure APIs.
 
@@ -122,9 +122,7 @@ class MicrosoftSentinel(
             self._default_resource_group = res_id_parts["resource_group"]
             self._default_workspace = workspace or res_id_parts["workspace_name"]
             if self._default_workspace in WorkspaceConfig.list_workspaces():
-                self.workspace_config = WorkspaceConfig(
-                    workspace=self._default_workspace
-                )
+                self.workspace_config = WorkspaceConfig(workspace=self._default_workspace)
                 logger.info("Workspace settings found for %s", self._default_workspace)
         else:
             # Otherwise - use details from specified workspace or default from settings
@@ -226,9 +224,7 @@ class MicrosoftSentinel(
         self._create_api_paths_for_workspace(
             az_resource_id=None,
             subscription_id=self.workspace_config.get(WorkspaceConfig.CONF_SUB_ID_KEY),
-            resource_group=self.workspace_config.get(
-                WorkspaceConfig.CONF_RES_GROUP_KEY
-            ),
+            resource_group=self.workspace_config.get(WorkspaceConfig.CONF_RES_GROUP_KEY),
             workspace_name=self.workspace_config.get(WorkspaceConfig.CONF_WS_NAME_KEY),
         )
 
@@ -265,9 +261,7 @@ class MicrosoftSentinel(
             self.default_subscription = subscription_id
         else:
             print(f"Subscription ID {subscription_id} not found.")
-            print(
-                f"Subscriptions found: {', '.join(subs_df['Subscription ID'].values)}"
-            )
+            print(f"Subscriptions found: {', '.join(subs_df['Subscription ID'].values)}")
 
     def set_default_workspace(
         self, sub_id: Optional[str], workspace: Optional[str] = None

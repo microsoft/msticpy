@@ -4,9 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree builder for Windows security and Linux auditd events."""
+from dataclasses import asdict
 from typing import Tuple
 
-import attr
 import pandas as pd
 
 from .._version import VERSION
@@ -101,7 +101,7 @@ def _clean_proc_data(
     procs_cln = _num_cols_to_str(procs_cln, schema)
 
     if schema.logon_id not in procs_cln.columns:
-        schema = ProcSchema(**(attr.asdict(schema)))
+        schema = ProcSchema(**(asdict(schema)))
         schema.logon_id = None  # type: ignore
 
     if schema.logon_id:
@@ -141,7 +141,7 @@ def _num_cols_to_str(
     """
     # Change float/int cols in our core schema to force int
     schema_cols = [
-        col for col in attr.asdict(schema).values() if col and col in procs_cln.columns
+        col for col in asdict(schema).values() if col and col in procs_cln.columns
     ]
     force_int_cols = {
         col: "int"
@@ -212,9 +212,7 @@ def _extract_inferred_parents(
 
     # Fill in missing values for root processes
     root_procs_crit = merged_procs[Col.source_index_par].isna()
-    merged_procs.loc[root_procs_crit, "NewProcessId_par"] = merged_procs[
-        schema.parent_id
-    ]
+    merged_procs.loc[root_procs_crit, "NewProcessId_par"] = merged_procs[schema.parent_id]
     parent_col_name = schema.parent_name or "ParentName"
     if schema.parent_name:
         merged_procs.loc[root_procs_crit, Col.new_process_lc_par] = merged_procs[
@@ -312,9 +310,7 @@ def _check_merge_status(procs, merged_procs, schema):
     print("These two should add up to top line")
     row_dups = len(rows_with_dups2)
     print("Rows with dups", row_dups)
-    row_nodups = len(
-        merged_procs[~merged_procs[Col.source_index].isin(rows_with_dups2)]
-    )
+    row_nodups = len(merged_procs[~merged_procs[Col.source_index].isin(rows_with_dups2)])
     print("Rows with no dups", row_nodups)
     print(row_dups, "+", row_nodups, "=", row_dups + row_nodups)
 
@@ -336,9 +332,7 @@ def _check_proc_keys(merged_procs_par, schema):
     crit1 = merged_procs_par[Col.timestamp_orig_par].isin(
         merged_procs_par[schema.time_stamp]
     )
-    crit2 = merged_procs_par[Col.EffectiveLogonId].isin(
-        merged_procs_par[schema.logon_id]
-    )
+    crit2 = merged_procs_par[Col.EffectiveLogonId].isin(merged_procs_par[schema.logon_id])
     c2a = None
     if schema.target_logon_id:
         c2a = merged_procs_par[Col.EffectiveLogonId].isin(

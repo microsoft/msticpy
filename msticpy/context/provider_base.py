@@ -15,6 +15,7 @@ requests per minute for the account type that you have.
 from __future__ import annotations
 
 import asyncio
+import logging
 from abc import ABC, abstractmethod
 from asyncio import get_event_loop
 from collections.abc import Iterable as C_Iterable
@@ -40,6 +41,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 _ITEM_EXTRACT: ItemExtract = ItemExtract()
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @export
@@ -211,7 +213,7 @@ class Provider(ABC):
 
         return pd.concat(results)
 
-    async def lookup_items_async(
+    async def lookup_items_async(  # noqa:PLR0913
         self,
         data: pd.DataFrame | dict[str, str] | Iterable[str],
         item_col: str | None = None,
@@ -316,13 +318,13 @@ class Provider(ABC):
     @classmethod
     def usage(cls) -> None:
         """Print usage of provider."""
-        print(f"{cls.__doc__} Supported query types:")
+        logger.info("%s Supported query types:", cls.__doc__)
         for key in sorted(cls._QUERIES):
             elements: list[str] = key.split("-", maxsplit=1)
             if len(elements) == 1:
-                print(f"\titem_type={elements[0]}")
+                logger.info("\titem_type=%s", elements[0])
             if len(elements) > 1:
-                print(f"\titem_type={elements[0]}, query_type={elements[1]}")
+                logger.info("\titem_type=%s, query_type=%s", elements[0], elements[1])
 
     def is_supported_type(self, item_type: str | IoCType) -> bool:
         """
@@ -362,7 +364,7 @@ class Provider(ABC):
         """
         return _ITEM_EXTRACT.get_ioc_type(item)
 
-    async def _lookup_items_async_wrapper(
+    async def _lookup_items_async_wrapper(  # pylint: disable=too-many-arguments # noqa: PLR0913
         self,
         data: pd.DataFrame | dict[str, str] | list[str],
         item_col: str | None = None,

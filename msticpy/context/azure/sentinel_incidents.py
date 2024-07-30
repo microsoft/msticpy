@@ -4,30 +4,38 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Incident Features."""
-from datetime import datetime
-from typing import Dict, List, Optional, Union
-from uuid import UUID, uuid4
+from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any, Callable
+from uuid import UUID, uuid4
+import logging
 import httpx
 import pandas as pd
 from azure.common.exceptions import CloudError
 from IPython.display import display
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
 from .sentinel_utils import _azs_api_result_to_df, _build_sent_data, get_http_timeout
 
+if TYPE_CHECKING:
+    from datetime import datetime
+
 __version__ = VERSION
 __author__ = "Pete Bryan"
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class SentinelIncidentsMixin:
     """Mixin class for Sentinel Incidents feature integrations."""
 
-    def get_incident(
-        self,
+    def get_incident(  # noqa:PLR0913
+        self: Self,
         incident: str,
+        *,
         entities: bool = False,
         alerts: bool = False,
         comments: bool = False,
@@ -60,13 +68,13 @@ class SentinelIncidentsMixin:
             If incident could not be retrieved.
 
         """
-        incident_id = self._get_incident_id(incident)
-        incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
-        response = self._get_items(incident_url)  # type: ignore
-        if response.status_code != 200:
+        incident_id: str = self._get_incident_id(incident)
+        incident_url: str = self.sent_urls["incidents"] + f"/{incident_id}"
+        response: httpx.Response = self._get_items(incident_url)
+        if not response.is_success:
             raise CloudError(response=response)
 
-        incident_df = _azs_api_result_to_df(response)
+        incident_df: pd.DataFrame = _azs_api_result_to_df(response)
 
         if entities:
             incident_df["Entities"] = [self.get_entities(incident_id)]
@@ -82,7 +90,7 @@ class SentinelIncidentsMixin:
 
         return incident_df
 
-    def get_entities(self, incident: str) -> list:
+    def get_entities(self: Self, incident: str) -> list:
         """
         Get the entities from an incident.
 
@@ -97,23 +105,23 @@ class SentinelIncidentsMixin:
             A list of entities.
 
         """
-        self.check_connected()  # type: ignore
-        incident_id = self._get_incident_id(incident)
-        entities_url = self.sent_urls["incidents"] + f"/{incident_id}/entities"  # type: ignore
-        ent_parameters = {"api-version": "2021-04-01"}
-        ents = httpx.post(
+        self.check_connected()
+        incident_id: str = self._get_incident_id(incident)
+        entities_url: str = self.sent_urls["incidents"] + f"/{incident_id}/entities"
+        ent_parameters: dict[str, str] = {"api-version": "2021-04-01"}
+        ents: httpx.Response = httpx.post(
             entities_url,
-            headers=get_api_headers(self._token),  # type: ignore
+            headers=get_api_headers(self._token),
             params=ent_parameters,
             timeout=get_http_timeout(),
         )
         return (
             [(ent["kind"], ent["properties"]) for ent in ents.json()["entities"]]
-            if ents.status_code == 200
+            if ents.is_success
             else []
         )
 
-    def get_incident_alerts(self, incident: str) -> list:
+    def get_incident_alerts(self: Self, incident: str) -> list:
         """
         Get the alerts from an incident.
 
@@ -128,13 +136,13 @@ class SentinelIncidentsMixin:
             A list of alerts.
 
         """
-        self.check_connected()  # type: ignore
-        incident_id = self._get_incident_id(incident)
-        alerts_url = self.sent_urls["incidents"] + f"/{incident_id}/alerts"  # type: ignore
-        alerts_parameters = {"api-version": "2021-04-01"}
-        alerts_resp = httpx.post(
+        self.check_connected()
+        incident_id: str = self._get_incident_id(incident)
+        alerts_url: str = self.sent_urls["incidents"] + f"/{incident_id}/alerts"
+        alerts_parameters: dict[str, str] = {"api-version": "2021-04-01"}
+        alerts_resp: httpx.Response = httpx.post(
             alerts_url,
-            headers=get_api_headers(self._token),  # type: ignore
+            headers=get_api_headers(self._token),
             params=alerts_parameters,
             timeout=get_http_timeout(),
         )
@@ -146,11 +154,11 @@ class SentinelIncidentsMixin:
                 }
                 for alrts in alerts_resp.json()["value"]
             ]
-            if alerts_resp.status_code == 200
+            if alerts_resp.is_success
             else []
         )
 
-    def get_incident_comments(self, incident: str) -> list:
+    def get_incident_comments(self: Self, incident: str) -> list:
         """
         Get the comments from an incident.
 
@@ -165,10 +173,10 @@ class SentinelIncidentsMixin:
             A list of comments.
 
         """
-        incident_id = self._get_incident_id(incident)
-        comments_url = self.sent_urls["incidents"] + f"/{incident_id}/comments"  # type: ignore
-        comments_response = self._get_items(comments_url, "2021-04-01")  # type: ignore
-        comment_details = comments_response.json()
+        incident_id: str = self._get_incident_id(incident)
+        comments_url: str = self.sent_urls["incidents"] + f"/{incident_id}/comments"
+        comments_response: httpx.Response = self._get_items(comments_url, "2021-04-01")
+        comment_details: dict[str, Any] = comments_response.json()
         return (
             [
                 {
@@ -177,11 +185,11 @@ class SentinelIncidentsMixin:
                 }
                 for comment in comment_details["value"]
             ]
-            if comments_response.status_code == 200
+            if comments_response.is_success
             else []
         )
 
-    def get_incident_bookmarks(self, incident: str) -> list:
+    def get_incident_bookmarks(self: Self, incident: str) -> list:
         """
         Get the comments from an incident.
 
@@ -196,33 +204,35 @@ class SentinelIncidentsMixin:
             A list of bookmarks.
 
         """
-        bookmarks_list = []
-        incident_id = self._get_incident_id(incident)
-        relations_url = self.sent_urls["incidents"] + f"/{incident_id}/relations"  # type: ignore
-        relations_response = self._get_items(relations_url, "2021-04-01")  # type: ignore
-        if relations_response.status_code == 200 and relations_response.json()["value"]:
+        bookmarks_list: list[dict[str, Any]] = []
+        incident_id: str = self._get_incident_id(incident)
+        relations_url: str = self.sent_urls["incidents"] + f"/{incident_id}/relations"
+        relations_response: httpx.Response = self._get_items(relations_url, "2021-04-01")
+        if relations_response.is_success and relations_response.json()["value"]:
             for relationship in relations_response.json()["value"]:
                 if (
                     relationship["properties"]["relatedResourceType"]
                     == "Microsoft.SecurityInsights/Bookmarks"
                 ):
-                    bkmark_id = relationship["properties"]["relatedResourceName"]
-                    bookmarks_df = self.list_bookmarks()  # type: ignore
-                    bookmark = bookmarks_df[bookmarks_df["name"] == bkmark_id].iloc[0]
+                    bkmark_id: str = relationship["properties"]["relatedResourceName"]
+                    bookmarks_df: pd.DataFrame = self.list_bookmarks()
+                    bookmark: pd.Series = bookmarks_df[
+                        bookmarks_df["name"] == bkmark_id
+                    ].iloc[0]
                     bookmarks_list.append(
                         {
                             "Bookmark ID": bkmark_id,
                             "Bookmark Title": bookmark["properties.displayName"],
-                        }
+                        },
                     )
 
         return bookmarks_list
 
     def update_incident(
-        self,
+        self: Self,
         incident_id: str,
         update_items: dict,
-    ):
+    ) -> str:
         """
         Update properties of an incident.
 
@@ -241,40 +251,42 @@ class SentinelIncidentsMixin:
             If incident could not be updated.
 
         """
-        self.check_connected()  # type: ignore
-        incident_dets = self.get_incident(incident_id)
-        incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
-        params = {"api-version": "2020-01-01"}
-        if "title" not in update_items.keys():
+        self.check_connected()
+        incident_dets: pd.DataFrame = self.get_incident(incident_id)
+        incident_url: str = self.sent_urls["incidents"] + f"/{incident_id}"
+        params: dict[str, str] = {"api-version": "2020-01-01"}
+        if "title" not in update_items:
             update_items["title"] = incident_dets.iloc[0]["properties.title"]
-        if "status" not in update_items.keys():
+        if "status" not in update_items:
             update_items["status"] = incident_dets.iloc[0]["properties.status"]
-        data = _build_sent_data(
-            update_items, props=True, etag=incident_dets.iloc[0]["etag"]
+        data: dict[str, Any] = _build_sent_data(
+            update_items,
+            props=True,
+            etag=incident_dets.iloc[0]["etag"],
         )
-        response = httpx.put(
+        response: httpx.Response = httpx.put(
             incident_url,
-            headers=get_api_headers(self._token),  # type: ignore
+            headers=get_api_headers(self._token),
             params=params,
             content=str(data),
             timeout=get_http_timeout(),
         )
         if response.status_code not in (200, 201):
             raise CloudError(response=response)
-        print("Incident updated.")
+        logger.info("Incident updated.")
         return response.json().get("name")
 
-    def create_incident(  # pylint: disable=too-many-arguments, too-many-locals
-        self,
+    def create_incident(  # pylint: disable=too-many-arguments, too-many-locals #noqa:PLR0913
+        self: Self,
         title: str,
         severity: str,
         status: str = "New",
-        description: Optional[str] = None,
-        first_activity_time: Optional[datetime] = None,
-        last_activity_time: Optional[datetime] = None,
-        labels: Optional[List] = None,
-        bookmarks: Optional[List] = None,
-    ) -> Optional[str]:
+        description: str | None = None,
+        first_activity_time: datetime | None = None,
+        last_activity_time: datetime | None = None,
+        labels: list[dict[str, Any]] | None = None,
+        bookmarks: list[str] | None = None,
+    ) -> str | None:
         """
         Create a Sentinel Incident.
 
@@ -310,11 +322,11 @@ class SentinelIncidentsMixin:
             If the API returns an error
 
         """
-        self.check_connected()  # type: ignore
-        incident_id = uuid4()
-        incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
-        params = {"api-version": "2020-01-01"}
-        data_items: Dict[str, Union[str, List]] = {
+        self.check_connected()
+        incident_id: UUID = uuid4()
+        incident_url: str = self.sent_urls["incidents"] + f"/{incident_id}"
+        params: dict[str, str] = {"api-version": "2020-01-01"}
+        data_items: dict[str, str | list] = {
             "title": title,
             "severity": severity.capitalize(),
             "status": status.capitalize(),
@@ -328,36 +340,36 @@ class SentinelIncidentsMixin:
             data_items["firstActivityTimeUtc"] = first_activity_time.isoformat()
         if last_activity_time:
             data_items["lastActivityTimeUtc"] = last_activity_time.isoformat()
-        data = _build_sent_data(data_items, props=True)
-        response = httpx.put(
+        data: dict[str, Any] = _build_sent_data(data_items, props=True)
+        response: httpx.Response = httpx.put(
             incident_url,
-            headers=get_api_headers(self._token),  # type: ignore
+            headers=get_api_headers(self._token),
             params=params,
             content=str(data),
             timeout=get_http_timeout(),
         )
-        if response.status_code not in (200, 201):
+        if not response.is_success:
             raise CloudError(response=response)
         if bookmarks:
             for mark in bookmarks:
-                relation_id = uuid4()
-                bookmark_id = self._get_bookmark_id(mark)  # type: ignore
-                mark_res_id = self.sent_urls["bookmarks"] + f"/{bookmark_id}"  # type: ignore
-                relations_url = incident_url + f"/relations/{relation_id}"
-                bkmark_data_items = {"relatedResourceId": mark_res_id}
+                relation_id: UUID = uuid4()
+                bookmark_id: str = self._get_bookmark_id(mark)
+                mark_res_id: str = self.sent_urls["bookmarks"] + f"/{bookmark_id}"
+                relations_url: str = incident_url + f"/relations/{relation_id}"
+                bkmark_data_items: dict[str, Any] = {"relatedResourceId": mark_res_id}
                 data = _build_sent_data(bkmark_data_items, props=True)
                 params = {"api-version": "2021-04-01"}
                 response = httpx.put(
                     relations_url,
-                    headers=get_api_headers(self._token),  # type: ignore
+                    headers=get_api_headers(self._token),
                     params=params,
                     content=str(data),
                     timeout=get_http_timeout(),
                 )
-        print("Incident created.")
+        logger.info("Incident created.")
         return response.json().get("name")
 
-    def _get_incident_id(self, incident: str) -> str:
+    def _get_incident_id(self: Self, incident: str) -> str:
         """
         Get an incident ID.
 
@@ -379,31 +391,29 @@ class SentinelIncidentsMixin:
         """
         try:
             UUID(incident)
-            return incident
         except ValueError as incident_name:
-            incidents = self.list_incidents()
-            filtered_incidents = incidents[
+            incidents: pd.DataFrame = self.list_incidents()
+            filtered_incidents: pd.DataFrame = incidents[
                 incidents["properties.title"].str.contains(incident)
             ]
             if len(filtered_incidents) > 1:
                 display(filtered_incidents[["name", "properties.title"]])
-                raise MsticpyUserError(
-                    "More than one incident found, please specify by GUID"
-                ) from incident_name
+                err_msg: str = "More than one incident found, please specify by GUID"
+                raise MsticpyUserError(err_msg) from incident_name
             if (
                 not isinstance(filtered_incidents, pd.DataFrame)
                 or filtered_incidents.empty
             ):
-                raise MsticpyUserError(
-                    f"Incident {incident} not found"
-                ) from incident_name
+                err_msg = f"Incident {incident} not found"
+                raise MsticpyUserError(err_msg) from incident_name
             return filtered_incidents["name"].iloc[0]
+        return incident
 
     def post_comment(
-        self,
+        self: Self,
         incident_id: str,
         comment: str,
-    ):
+    ) -> str:
         """
         Write a comment for an incident.
 
@@ -420,25 +430,25 @@ class SentinelIncidentsMixin:
             If message could not be posted.
 
         """
-        self.check_connected()  # type: ignore
-        comment_url = (
-            self.sent_urls["incidents"] + f"/{incident_id}/comments/{uuid4()}"  # type: ignore
+        self.check_connected()
+        comment_url: str = (
+            self.sent_urls["incidents"] + f"/{incident_id}/comments/{uuid4()}"
         )
-        params = {"api-version": "2020-01-01"}
-        data = _build_sent_data({"message": comment})
-        response = httpx.put(
+        params: dict[str, str] = {"api-version": "2020-01-01"}
+        data: dict[str, Any] = _build_sent_data({"message": comment})
+        response: httpx.Response = httpx.put(
             comment_url,
-            headers=get_api_headers(self._token),  # type: ignore
+            headers=get_api_headers(self._token),
             params=params,
             content=str(data),
             timeout=get_http_timeout(),
         )
-        if response.status_code not in (200, 201):
+        if not response.is_success:
             raise CloudError(response=response)
-        print("Comment posted.")
+        logger.info("Comment posted.")
         return response.json().get("name")
 
-    def add_bookmark_to_incident(self, incident: str, bookmark: str):
+    def add_bookmark_to_incident(self: Self, incident: str, bookmark: str) -> str:
         """
         Add a bookmark to an incident.
 
@@ -455,31 +465,31 @@ class SentinelIncidentsMixin:
             If API returns error
 
         """
-        self.check_connected()  # type: ignore
-        incident_id = self._get_incident_id(incident)
-        incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
-        bookmark_id = self._get_bookmark_id(bookmark)  # type: ignore
-        mark_res_id = self.sent_urls["bookmarks"] + f"/{bookmark_id}"  # type: ignore
-        relations_id = uuid4()
-        bookmark_url = incident_url + f"/relations/{relations_id}"
-        bkmark_data_items = {
-            "relatedResourceId": mark_res_id.split(self.base_url)[1]  # type: ignore
+        self.check_connected()
+        incident_id: str = self._get_incident_id(incident)
+        incident_url: str = self.sent_urls["incidents"] + f"/{incident_id}"
+        bookmark_id: str = self._get_bookmark_id(bookmark)
+        mark_res_id: str = self.sent_urls["bookmarks"] + f"/{bookmark_id}"
+        relations_id: UUID = uuid4()
+        bookmark_url: str = incident_url + f"/relations/{relations_id}"
+        bkmark_data_items: dict[str, Any] = {
+            "relatedResourceId": mark_res_id.split(self.base_url)[1],
         }
-        data = _build_sent_data(bkmark_data_items, props=True)
-        params = {"api-version": "2021-04-01"}
-        response = httpx.put(
+        data: dict[str, Any] = _build_sent_data(bkmark_data_items, props=True)
+        params: dict[str, str] = {"api-version": "2021-04-01"}
+        response: httpx.Response = httpx.put(
             bookmark_url,
-            headers=get_api_headers(self._token),  # type: ignore
+            headers=get_api_headers(self._token),
             params=params,
             content=str(data),
             timeout=get_http_timeout(),
         )
-        if response.status_code not in (200, 201):
+        if not response.is_success:
             raise CloudError(response=response)
-        print("Bookmark added to incident.")
+        logger.info("Bookmark added to incident.")
         return response.json().get("name")
 
-    def list_incidents(self, params: Optional[dict] = None) -> pd.DataFrame:
+    def list_incidents(self: Self, params: dict | None = None) -> pd.DataFrame:
         """
         Get a list of incident for a Sentinel workspace.
 
@@ -501,6 +511,6 @@ class SentinelIncidentsMixin:
         """
         if params is None:
             params = {"$top": 50}
-        return self._list_items(item_type="incidents", params=params)  # type: ignore
+        return self._list_items(item_type="incidents", params=params)
 
-    get_incidents = list_incidents
+    get_incidents: Callable[..., pd.DataFrame] = list_incidents

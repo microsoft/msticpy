@@ -52,8 +52,7 @@ class TILookup(Lookup):
     PACKAGE: ClassVar[str] = "tiproviders"
     CUSTOM_PROVIDERS: ClassVar[dict[str, type[Provider]]] = {}
 
-    # pylint: disable=too-many-arguments
-    def lookup_ioc(
+    def lookup_ioc(  # pylint: disable=too-many-arguments #noqa: PLR0913
         self,
         ioc: str | None = None,
         ioc_type: str | None = None,
@@ -132,7 +131,7 @@ class TILookup(Lookup):
             end=end,
         )
 
-    def lookup_iocs(
+    def lookup_iocs(  # pylint: disable=too-many-arguments #noqa: PLR0913
         self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         ioc_col: str | None = None,
@@ -210,8 +209,7 @@ class TILookup(Lookup):
             ),
         )
 
-    # pylint: disable=too-many-locals
-    async def _lookup_iocs_async(
+    async def _lookup_iocs_async(  # pylint: disable=too-many-arguments #noqa:PLR0913
         self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         ioc_col: str | None = None,
@@ -237,7 +235,7 @@ class TILookup(Lookup):
             end=end,
         )
 
-    def lookup_iocs_sync(
+    def lookup_iocs_sync(  # noqa: PLR0913
         self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         ioc_col: str | None = None,

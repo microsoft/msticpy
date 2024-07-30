@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import logging
 from json import JSONDecodeError
 from typing import Any, ClassVar, Hashable, Mapping, NamedTuple
 
@@ -35,6 +36,7 @@ from ...common.utility import export, mp_ua_header
 from ..lookup_result import SanitizedObservable
 from ..preprocess_observable import preprocess_observable
 
+logger: logging.Logger = logging.getLogger(__name__)
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
@@ -473,8 +475,7 @@ class VTLookup:
                 batch_index = 0
                 obs_batch = []
 
-    # pylint: disable=too-many-branches
-    def _parse_vt_results(
+    def _parse_vt_results(  # noqa:PLR0913
         self,
         vt_results: str | list | dict | None,
         observable: str,
@@ -525,8 +526,7 @@ class VTLookup:
         else:
             observables = [observable]
 
-        # pylint: disable=consider-using-enumerate
-        for result_idx in range(len(results_to_parse)):
+        for result_idx, _ in enumerate(results_to_parse):
             df_dict_vtresults: pd.DataFrame = self._parse_single_result(
                 results_to_parse[result_idx],
                 ioc_type,
@@ -569,7 +569,6 @@ class VTLookup:
             )
 
             self.results = new_results
-        # pylint enable=locally-disabled, C0200
 
     def _parse_single_result(
         self,
@@ -907,4 +906,4 @@ class VTLookup:
 
         """
         if verbosity_level <= self._verbosity:
-            print(message)
+            logger.info(message)

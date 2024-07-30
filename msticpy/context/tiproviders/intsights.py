@@ -13,6 +13,7 @@ requests per minute for the account type that you have.
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
 import datetime as dt
 from typing import Any, ClassVar
 
@@ -36,7 +37,7 @@ _DEF_HEADERS: dict[str, str] = {
 
 
 # pylint: disable=too-few-public-methods
-@attr.s
+@dataclass
 class _IntSightsParams(APILookupParams):
     # override APILookupParams to set common defaults
     def __attrs_post_init__(self: Self) -> None:
@@ -151,7 +152,9 @@ class IntSights(HttpTIProvider):
             else (
                 ResultSeverity.warning
                 if sev == "Medium"
-                else ResultSeverity.high if sev == "High" else ResultSeverity.unknown
+                else ResultSeverity.high
+                if sev == "High"
+                else ResultSeverity.unknown
             )
         )
 

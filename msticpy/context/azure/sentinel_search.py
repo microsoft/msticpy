@@ -4,31 +4,42 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Search Features."""
-from datetime import datetime, timedelta
+from __future__ import annotations
+
+import datetime as dt
+import logging
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 import httpx
 from azure.common.exceptions import CloudError
+from typing_extensions import Self
 
 from ..._version import VERSION
 from .azure_data import get_api_headers
 from .sentinel_utils import _build_sent_data
 
+if TYPE_CHECKING:
+    from ...common.timespan import TimeSpan
 __version__ = VERSION
 __author__ = "Pete Bryan"
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class SentinelSearchlistsMixin:
     """Mixin class for Sentinel Watchlist feature integrations."""
 
-    def create_search(
-        self,
+    def create_search(  # noqa: PLR0913
+        self: Self,
         query: str,
-        start: datetime = None,
-        end: datetime = None,
-        search_name: str = None,
-        **kwargs,
-    ):
+        start: dt.datetime | None = None,
+        end: dt.datetime | None = None,
+        search_name: str | None = None,
+        *,
+        timespan: TimeSpan | None = None,
+        limit: int = 1000,
+    ) -> None:
         """
         Create a Search job.
 
@@ -42,6 +53,10 @@ class SentinelSearchlistsMixin:
             The end time for the query, by default now.
         search_name : str, optional
             A name to apply to the search, by default a random GUID is generated.
+        timespan: Timespan, optional
+           If defined, overwrite start and end variables.
+        limit: int, optional
+           Set the maximum number of results to return. Defaults to 1000.
 
         Raises
         ------
@@ -49,40 +64,36 @@ class SentinelSearchlistsMixin:
             If there is an error creating the search job.
 
         """
-        limit = 1000
-        if "limit" in kwargs:
-            limit = kwargs.pop("limit")
-        if "timespan" in kwargs:
-            start = kwargs.get("timespan").start  # type: ignore
-            end = kwargs.get("timespan").end  # type: ignore
-        search_end = end or datetime.now()
-        search_start = start or (search_end - timedelta(days=90))
-        search_name = search_name or uuid4()  # type: ignore
-        search_name = search_name.replace("_", "")  # type: ignore
-        search_url = (
-            self.sent_urls["search"]  # type: ignore
+        if timespan:
+            start = timespan.start
+            end = timespan.end
+        search_end: dt.datetime = end or dt.datetime.now(tz=dt.timezone.utc)
+        search_start: dt.datetime = start or (search_end - dt.timedelta(days=90))
+        search_name = (search_name or uuid4()).replace("_", "")
+        search_url: str = (
+            self.sent_urls["search"]
             + f"/{search_name}_SRCH?api-version=2021-12-01-preview"
         )
-        search_items = {
+        search_items: dict[str, dict[str, Any]] = {
             "searchResults": {
                 "query": f"{query}",
                 "limit": limit,
                 "startSearchTime": f"{search_start.isoformat()}",
                 "endSearchTime": f"{search_end.isoformat()}",
-            }
+            },
         }
-        search_body = _build_sent_data(search_items)
-        search_create_response = httpx.put(
+        search_body: dict[str, Any] = _build_sent_data(search_items)
+        search_create_response: httpx.Response = httpx.put(
             search_url,
-            headers=get_api_headers(self._token),  # type: ignore
+            headers=get_api_headers(self._token),
             json=search_body,
             timeout=60,
         )
-        if search_create_response.status_code != 202:
+        if not search_create_response.is_success:
             raise CloudError(response=search_create_response)
-        print(f"Search job created with for {search_name}_SRCH.")
+        logger.info("Search job created with for %s_SRCH.", search_name)
 
-    def check_search_status(self, search_name: str) -> bool:
+    def check_search_status(self: Self, search_name: str) -> bool:
         """
         Check the status of a search job.
 
@@ -103,23 +114,24 @@ class SentinelSearchlistsMixin:
 
         """
         search_name = search_name.strip("_SRCH")
-        search_url = (
-            self.sent_urls["search"]  # type: ignore
+        search_url: str = (
+            self.sent_urls["search"]
             + f"/{search_name}_SRCH?api-version=2021-12-01-preview"
         )
-        search_check_response = httpx.get(
-            search_url, headers=get_api_headers(self._token)  # type: ignore
+        search_check_response: httpx.Response = httpx.get(
+            search_url,
+            headers=get_api_headers(self._token),
         )
-        if search_check_response.status_code != 200:
+        if not search_check_response.is_success:
             raise CloudError(response=search_check_response)
 
-        check_result = search_check_response.json()["properties"]["provisioningState"]
-        print(f"{search_name}_SRCH status is '{check_result}'")
-        if check_result == "Succeeded":
-            return True
-        return False
+        check_result: str = search_check_response.json()["properties"][
+            "provisioningState"
+        ]
+        logger.info("%s_SRCH status is '%s'", search_name, check_result)
+        return check_result == "Succeeded"
 
-    def delete_search(self, search_name: str):
+    def delete_search(self: Self, search_name: str) -> None:
         """
         Delete a search result.
 
@@ -135,13 +147,14 @@ class SentinelSearchlistsMixin:
 
         """
         search_name = search_name.strip("_SRCH")
-        search_url = (
-            self.sent_urls["search"]  # type: ignore
+        search_url: str = (
+            self.sent_urls["search"]
             + f"/{search_name}_SRCH?api-version=2021-12-01-preview"
         )
-        search_delete_response = httpx.delete(
-            search_url, headers=get_api_headers(self._token)  # type: ignore
+        search_delete_response: httpx.Response = httpx.delete(
+            search_url,
+            headers=get_api_headers(self._token),
         )
-        if search_delete_response.status_code != 202:
+        if not search_delete_response.is_success:
             raise CloudError(response=search_delete_response)
-        print(f"{search_name}_SRCH set for deletion.")
+        logger.info("%s_SRCH set for deletion.", search_name)

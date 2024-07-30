@@ -6,10 +6,12 @@
 """Process Tree Schema module for Process Tree Visualization."""
 from __future__ import annotations
 
+from dataclasses import asdict, dataclass, field, fields, MISSING
 from typing import Any, ClassVar
 
 import attr
 import pandas as pd
+from typing_extensions import Self
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
@@ -27,7 +29,7 @@ class ProcessTreeSchemaException(MsticpyUserError):
     )
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class ProcSchema:
     """
     Property name lookup for Process event schema.
@@ -45,30 +47,29 @@ class ProcSchema:
     process_id: str
     parent_id: str
     time_stamp: str
-    cmd_line: str | None = None
-    path_separator: str = "\\"
-    user_name: str | None = None
-    logon_id: str | None = None
-    host_name_column: str | None = None
-    parent_name: str | None = None
-    target_logon_id: str | None = None
-    user_id: str | None = None
-    event_id_column: str | None = None
-    event_id_identifier: Any | None = None
+    cmd_line: str | None = field(default=None)
+    path_separator: str = field(default="\\")
+    user_name: str | None = field(default=None)
+    logon_id: str | None = field(default=None)
+    host_name_column: str | None = field(default=None)
+    parent_name: str | None = field(default=None)
+    target_logon_id: str | None = field(default=None)
+    user_id: str | None = field(default=None)
+    event_id_column: str | None = field(default=None)
+    event_id_identifier: Any | None = field(default=None)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self: Self, other: object) -> bool:
         """Return False if any non-blank field values are unequal."""
         if not isinstance(other, ProcSchema):
             return False
-        self_dict: dict[str, Any] = attr.asdict(self)
+        self_dict: dict[str, Any] = asdict(self)
 
         return not any(
-            value and value != self_dict[field]
-            for field, value in attr.asdict(other).items()
+            value and value != self_dict[field] for field, value in asdict(other).items()
         )
 
     @property
-    def required_columns(self) -> list[str]:
+    def required_columns(self: Self) -> list[str]:
         """Return columns required for Init."""
         return [
             "process_name",
@@ -80,34 +81,34 @@ class ProcSchema:
         ]
 
     @property
-    def column_map(self) -> dict[str, str]:
+    def column_map(self: Self) -> dict[str, str]:
         """Return a dictionary that maps fields to schema names."""
         return {
             prop: str(col)
-            for prop, col in attr.asdict(self).items()
+            for prop, col in asdict(self).items()
             if prop not in {"path_separator", "event_id_identifier"}
         }
 
     @property
-    def columns(self) -> list[str]:
+    def columns(self: Self) -> list[str]:
         """Return list of columns in schema data source."""
         return [
             col
-            for prop, col in attr.asdict(self).items()
+            for prop, col in asdict(self).items()
             if prop not in {"path_separator", "event_id_identifier"}
         ]
 
-    def get_df_cols(self, data: pd.DataFrame) -> list[str]:
+    def get_df_cols(self: Self, data: pd.DataFrame) -> list[str]:
         """Return the subset of columns that are present in `data`."""
         return [col for col in self.columns if col in data.columns]
 
     @property
-    def host_name(self) -> str | None:
+    def host_name(self: Self) -> str | None:
         """Return host name column."""
         return self.host_name_column
 
     @property
-    def event_type_col(self) -> str:
+    def event_type_col(self: Self) -> str:
         """
         Return the column name containing the event identifier.
 
@@ -129,7 +130,7 @@ class ProcSchema:
         )
 
     @property
-    def event_filter(self) -> Any:
+    def event_filter(self: Self) -> Any:
         """
         Return the event type/ID to process for the current schema.
 
@@ -151,15 +152,15 @@ class ProcSchema:
         )
 
     @classmethod
-    def blank_schema_dict(cls) -> dict[str, Any]:
+    def blank_schema_dict(cls: type[ProcSchema]) -> dict[str, Any]:
         """Return blank schema dictionary."""
         return {
-            field: (
+            cls_field.name: (
                 "required"
-                if (attrib.default or attrib.default == attr.NOTHING)
+                if (cls_field.default or cls_field.default == MISSING)
                 else None
             )
-            for field, attrib in attr.fields_dict(cls).items()
+            for cls_field in fields(cls)
         }
 
 
