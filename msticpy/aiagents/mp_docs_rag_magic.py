@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Provides RAG Magic functionalities for MSTICpy."""
+"""Integrates MSTICpy with IPython custom magic commands for retrieval-augmented generation."""
 
 import io
 from contextlib import redirect_stdout
@@ -62,13 +62,12 @@ class DocsRagMagic(Magics):
         """
         Enable the user to ask a question to the RAG agent using a cell magic function.
 
-        It parses the line to check for the --v flag and calls the ask_magic method
-        with the cell content as the question.
+        It calls the ask_magic method with the cell content as the question.
 
         Parameters
         ----------
         line : str
-            The line of code following the cell magic command. Used to check for the --v flag.
+            The line of code following the cell magic command.
         cell : str
             The content of the cell. This is used as the question to ask the RAG agent.
 
@@ -79,11 +78,6 @@ class DocsRagMagic(Magics):
         For example:
 
         %%ask
-        Which msticpy module contains the code related to visualizing network graphs?
-
-        If you want the RAG agent to provide a verbose response, include the --v flag. For example:
-
-        %%ask --v
         Which msticpy module contains the code related to visualizing network graphs?
         """
         question = cell.strip()
@@ -101,6 +95,9 @@ class DocsRagMagic(Magics):
 
         display_markdown(f"\n**Question**: {question}", raw=True)
         display_markdown(f"\n**Answer**: {answer}", raw=True)
+
+        # Suppress pylint warning for unused argument, line is required by @cell_magic decorator
+        _ = line
 
 
 # Register the magic class with IPython

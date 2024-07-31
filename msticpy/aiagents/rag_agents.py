@@ -4,7 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 # pylint: disable=too-few-public-methods
-"""Implements the RAG (Retrieval-Augmented Generation) agent for MSTICpy."""
+"""
+Module for MSTICpy documentation utilities and retrieval agent configuration.
+
+Includes functions to find documentation files and to set up retrieval
+agents that assist security analysts by answering questions based on MSTICpy documentation.
+"""
 
 import importlib.resources as pkg_resources
 from pathlib import Path
@@ -19,7 +24,14 @@ from .config_utils import get_autogen_config_from_msticpyconfig
 
 
 def find_rst_files():
-    """Find all .rst files in the docs/source directory of 'msticpy' package."""
+    """
+    Find all .rst files in the docs/source directory of 'msticpy' package.
+
+    Returns
+    -------
+    list of str
+        List of paths to .rst files in the docs/source directory.
+    """
     # Get the path to the docs/source directory of the package
     docs_path = Path(pkg_resources.files("msticpy")).parent / "docs" / "source"
 
@@ -30,17 +42,18 @@ def find_rst_files():
 
 
 def get_retrieval_assistant_agent(system_message: str = "") -> RetrieveAssistantAgent:
-    """_summary_
+    """
+    Create and return a RetrieveAssistantAgent.
 
     Parameters
     ----------
     system_message : str, optional
-        _description_, by default ""
+        Custom system message for the assistant.
 
     Returns
     -------
     RetrieveAssistantAgent
-        _description_
+        Configured RetrieveAssistantAgent instance.
     """
     if not system_message:
         system_message = (
@@ -56,17 +69,18 @@ def get_retrieval_assistant_agent(system_message: str = "") -> RetrieveAssistant
 def get_retrieval_user_proxy_agent(
     max_consecutive_auto_reply: int = 1,
 ) -> RetrieveUserProxyAgent:
-    """_summary_
+    """
+    Create and return a RetrieveUserProxyAgent.
 
     Parameters
     ----------
     max_consecutive_auto_reply : int, optional
-        _description_, by default 1
+        Maximum number of consecutive auto replies, by default 1.
 
     Returns
     -------
     RetrieveUserProxyAgent
-        _description_
+        Configured RetrieveUserProxyAgent instance.
     """
     rst_files = find_rst_files()
     autogen_config = get_autogen_config_from_msticpyconfig()
@@ -74,6 +88,7 @@ def get_retrieval_user_proxy_agent(
         name="ragproxyagent",
         human_input_mode="NEVER",
         max_consecutive_auto_reply=max_consecutive_auto_reply,
+        is_termination_msg=lambda x: True,
         retrieve_config={
             "task": "default",
             "docs_path": rst_files,
@@ -93,23 +108,24 @@ def ask_question(
     question: str,
     agent_prompt: Optional[str] = None,
 ) -> ChatResult:
-    """_summary_
+    """
+    Ask a question using the assistant and user proxy agents.
 
     Parameters
     ----------
     assistant_agent : RetrieveAssistantAgent
-        _description_
+        The assistant agent to use.
     user_proxy_agent : RetrieveUserProxyAgent
-        _description_
+        The user proxy agent to use.
     question : str
-        _description_
+        The question to ask.
     agent_prompt : Optional[str], optional
-        _description_, by default None
+        Custom prompt for the assistant agent, by default None.
 
     Returns
     -------
     ChatResult
-        _description_
+        The result of the chat interaction.
     """
     assistant_agent.reset()
     if agent_prompt:
