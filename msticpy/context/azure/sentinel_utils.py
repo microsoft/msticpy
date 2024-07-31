@@ -6,6 +6,7 @@
 """Mixin Classes for Sentinel Utilities."""
 import logging
 from collections import Counter
+from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 import httpx
@@ -37,6 +38,27 @@ _PATH_MAPPING = {
     "ti": "/providers/Microsoft.SecurityInsights/threatIntelligence/main",
     "dynamic_summary": "/providers/Microsoft.SecurityInsights/dynamicSummaries",
 }
+
+
+@dataclass
+class SentinelInstanceDetails:
+    """Dataclass for Sentinel workspace details."""
+
+    subscription_id: str
+    resource_group: str
+    workspace_name: str
+
+    @property
+    def resource_id(self) -> Optional[str]:
+        """Return the resource ID for the workspace."""
+        return build_sentinel_resource_id(
+            self.subscription_id, self.resource_group, self.workspace_name  # type: ignore
+        )
+
+    @classmethod
+    def from_resource_id(cls, resource_id: str) -> "SentinelInstanceDetails":
+        """Return SentinelInstanceDetails from a resource ID."""
+        return cls(**parse_resource_id(resource_id))
 
 
 class SentinelUtilsMixin:
@@ -147,7 +169,9 @@ class SentinelUtilsMixin:
             subscription_id, resource_group, workspace_name
         )
 
-    def _build_sent_paths(self, res_id: str, base_url: Optional[str] = None) -> str:
+    def _build_sentinel_api_root(
+        self, sentinel_instance: SentinelInstanceDetails, base_url: Optional[str] = None
+    ) -> str:
         """
         Build an API URL from an Azure resource ID.
 
@@ -169,16 +193,7 @@ class SentinelUtilsMixin:
         """
         if not base_url:
             base_url = AzureCloudConfig(self.cloud).resource_manager  # type: ignore
-        res_info = {
-            "subscription_id": res_id.split("/")[2],
-            "resource_group": res_id.split("/")[4],
-            "workspace_name": res_id.split("/")[-1],
-        }
-        resource_id = build_sentinel_resource_id(
-            subscription_id=res_info["subscription_id"],
-            resource_group=res_info["resource_group"],
-            workspace_name=res_info["workspace_name"],
-        )
+        resource_id = sentinel_instance.resource_id
         if base_url.endswith("/"):
             base_url = base_url[:-1]
 

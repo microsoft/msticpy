@@ -191,22 +191,19 @@ _EXP_URL = f"https://management.azure.com{_RES_ID_2}"
 _EXP_URL_2 = f"https://management.azure.com{_RES_ID}"
 
 
+_CONNECT_TESTS = [
+    (_RES_ID_2, None, None, None, _EXP_URL),
+    (None, "WSName2", "456", "RG2", _EXP_URL),
+    (None, "WSName2", None, None, _EXP_URL_2.replace("WSName", "WSName2")),
+    (None, None, "456", None, _EXP_URL_2.replace("123", "456")),
+    (None, None, None, "RG2", _EXP_URL_2.replace("RG", "RG2")),
+    (None, None, None, None, _EXP_URL_2),
+]
+
+
 @pytest.mark.parametrize(
     "resource_id, workspace_name, subscription_id, resource_group, expected_url",
-    [
-        (_RES_ID_2, None, None, None, _EXP_URL),
-        (
-            None,
-            "WSName2",
-            "456",
-            "RG2",
-            _EXP_URL,
-        ),
-        (None, "WSName2", None, None, _EXP_URL_2.replace("WSName", "WSName2")),
-        (None, None, "456", None, _EXP_URL_2.replace("123", "456")),
-        (None, None, None, "RG2", _EXP_URL_2.replace("RG", "RG2")),
-        (None, None, None, None, _EXP_URL_2),
-    ],
+    _CONNECT_TESTS,
 )
 @patch(MicrosoftSentinel.__module__ + ".AzureData.connect")
 def test_sentinel_connect(
@@ -243,3 +240,68 @@ def test_sentinel_connect(
             # Assert that the logger was called with the correct tenant_id
             mock_logger.info.assert_any_call("Using tenant id %s", "test_tenant_id")
             mock_logger.info.assert_any_call("Getting token for %s", "test_tenant_id")
+
+            # test with parameters with None value removed
+            non_null_params = {
+                key: val
+                for key, val in {
+                    "resource_id": resource_id,
+                    "workspace_name": workspace_name,
+                    "subscription_id": subscription_id,
+                    "resource_group": resource_group,
+                }.items()
+                if val
+            }
+            sentinel_inst_loader.connect(tenant_id="test_tenant_id", **non_null_params)
+            # Assert that the URLs were set correctly
+            assert sentinel_inst_loader.url == expected_url
+
+            # Assert that the logger was called with the correct tenant_id
+            mock_logger.info.assert_any_call("Using tenant id %s", "test_tenant_id")
+            mock_logger.info.assert_any_call("Getting token for %s", "test_tenant_id")
+
+
+_CONNECT_TESTS_2 = [
+    (_RES_ID_2, None, None, None, _EXP_URL),
+    (None, "WSName2", "456", "RG2", _EXP_URL),
+    (None, "WSName2", None, None, ("WSName", "WSName2")),
+    (None, None, "456", None, ("123", "456")),
+    (None, None, None, "RG2", ("RG", "RG2")),
+    (None, None, None, None, ("", "")),
+]
+
+
+@pytest.mark.parametrize(
+    "resource_id, workspace_name, subscription_id, resource_group, expected_url",
+    _CONNECT_TESTS_2,
+)
+@patch(MicrosoftSentinel.__module__ + ".AzureData.connect")
+def test_sentinel_connect_no_init_params(
+    mock_connect,
+    resource_id,
+    workspace_name,
+    subscription_id,
+    resource_group,
+    expected_url,
+):
+    """Test connect method where no initial parameters are set."""
+    del mock_connect
+    # reset the workspace to known values
+    sentinel_inst = MicrosoftSentinel()
+    # Mock the get_token function to return a test token
+    with patch(MicrosoftSentinel.__module__ + ".get_token", return_value="test_token"):
+        connect_kwargs = {
+            "tenant_id": "test_tenant_id",
+            "resource_id": resource_id,
+            "workspace_name": workspace_name,
+            "subscription_id": subscription_id,
+            "resource_group": resource_group,
+        }
+        connect_kwargs = {key: val for key, val in connect_kwargs.items() if val}
+
+        # Call the connect method with test parameters
+        sentinel_inst.connect(**connect_kwargs)
+        if isinstance(expected_url, str):
+            assert sentinel_inst.url == expected_url
+        else:
+            expected_url = sentinel_inst.url.replace(*expected_url)
