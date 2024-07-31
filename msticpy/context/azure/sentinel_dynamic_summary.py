@@ -71,9 +71,7 @@ class SentinelDynamicSummaryMixin:
             item_type="dynamic_summary", api_version=_DYN_SUM_API_VERSION
         )
 
-    def get_dynamic_summary(
-        self, summary_id: str, summary_items=False
-    ) -> DynamicSummary:
+    def get_dynamic_summary(self, summary_id: str, summary_items=False) -> DynamicSummary:
         """
         Return DynamicSummary for ID.
 
@@ -399,9 +397,7 @@ class SentinelDynamicSummaryMixin:
             If API returns an error.
 
         """
-        if (summary and not summary.summary_id) or (
-            data is not None and not summary_id
-        ):
+        if (summary and not summary.summary_id) or (data is not None and not summary_id):
             raise MsticpyParameterError(
                 "You must supply a summary ID to update", parameters="summary_id"
             )
@@ -439,7 +435,8 @@ class SentinelQueryProvider:
                 logger.info("Found workspace config %s", ws_name)
                 break
         else:
-            raise LookupError(f"Cannot find workspace configuration for {workspace}")
+            err_msg: str = f"Cannot find workspace configuration for {workspace}"
+            raise LookupError(err_msg)
 
         self.qry_prov = QueryProvider("MSSentinel")
         self.qry_prov.connect(workspace=self.workspace_alias)

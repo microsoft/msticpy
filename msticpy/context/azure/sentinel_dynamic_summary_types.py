@@ -12,10 +12,11 @@ import logging
 import uuid
 from datetime import datetime
 from functools import singledispatchmethod
-from typing import Any, Callable, ClassVar, Dict, Iterable, List, Optional, Union, cast
+from typing import Any, Callable, ClassVar, Hashable, Iterable
 
 import numpy as np
 import pandas as pd
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
@@ -23,7 +24,7 @@ from ...common.exceptions import MsticpyUserError
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-_TACTICS = (
+_TACTICS: tuple[str, ...] = (
     "Reconnaissance",
     "ResourceDevelopment",
     "InitialAccess",
@@ -39,9 +40,9 @@ _TACTICS = (
     "CommandAndControl",
     "Impact",
 )
-_TACTICS_DICT = {tactic.casefold(): tactic for tactic in _TACTICS}
+_TACTICS_DICT: dict[str, str] = {tactic.casefold(): tactic for tactic in _TACTICS}
 
-_CLS_TO_API_MAP = {
+_CLS_TO_API_MAP: dict[str, str] = {
     "summary_id": "summaryId",
     "summary_name": "summaryName",
     "azure_tenant_id": "azureTenantId",
@@ -60,25 +61,26 @@ _CLS_TO_API_MAP = {
     "summary_items": "rawContent",
     "summary_item_id": "summaryItemId",
 }
-_API_TO_CLS_MAP = {val: key for key, val in _CLS_TO_API_MAP.items()}
+_API_TO_CLS_MAP: dict[str, str] = {val: key for key, val in _CLS_TO_API_MAP.items()}
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class FieldList:
     """Class to hold field names."""
 
-    def __init__(self, fieldnames: Iterable[str]):
+    def __init__(self: FieldList, fieldnames: Iterable[str]) -> None:
         """Add fields to field mapping."""
         self.__dict__.update({field.upper(): field for field in fieldnames})
 
-    def __repr__(self):
+    def __repr__(self: Self) -> str:
         """Return list of field attributes and values."""
-        field_names = "\n    ".join(f"{key}='{val}'" for key, val in vars(self).items())
+        field_names: str = "\n    ".join(
+            f"{key}='{val}'" for key, val in vars(self).items()
+        )
         return f"Fields:\n    {field_names}"
 
 
-# pylint: disable=too-many-instance-attributes
 @dataclasses.dataclass
 class DynamicSummaryItem:
     """
@@ -94,9 +96,9 @@ class DynamicSummaryItem:
         The ID of the summary item relation
     search_key: Optional[str] = None
         Searchable key value for summary item
-    tactics: Union[str, List[str], None] = None
+    tactics: Union[str, list[str], None] = None
         Relevant MITRE tactics for the summary item
-    techniques: Union[str, List[str], None] = None
+    techniques: Union[str, list[str], None] = None
         Relevant MITRE techniques for the summary item
     event_time_utc: Optional[datetime] = None
         Event time for the summary item
@@ -110,22 +112,18 @@ class DynamicSummaryItem:
     """
 
     fields: ClassVar
-    summary_item_id: Optional[str] = None
-    relation_name: Optional[str] = None
-    relation_id: Optional[str] = None
-    search_key: Optional[str] = None
-    tactics: Union[str, List[str], None] = dataclasses.field(  # type: ignore
-        default_factory=list
-    )
-    techniques: Union[str, List[str], None] = dataclasses.field(  # type: ignore
-        default_factory=list
-    )
-    event_time_utc: Optional[datetime] = None
-    observable_type: Optional[str] = None
-    observable_value: Optional[str] = None
-    packed_content: Dict[str, Any] = dataclasses.field(default_factory=dict)
+    summary_item_id: str | None = None
+    relation_name: str | None = None
+    relation_id: str | None = None
+    search_key: str | None = None
+    tactics: list[str] | str = dataclasses.field(default_factory=list)
+    techniques: str | list[str] = dataclasses.field(default_factory=list)
+    event_time_utc: datetime | None = None
+    observable_type: str | None = None
+    observable_value: str | None = None
+    packed_content: dict[Hashable, Any] = dataclasses.field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self: Self) -> None:
         """Initialize item ID if was not set explicitly."""
         self.summary_item_id = self.summary_item_id or str(uuid.uuid4())
         if isinstance(self.tactics, str):
@@ -134,7 +132,7 @@ class DynamicSummaryItem:
         if isinstance(self.techniques, str):
             self.techniques = [self.techniques]
 
-    def to_api_dict(self):
+    def to_api_dict(self: Self) -> dict[str, Any]:
         """Return attributes as a JSON-serializable dictionary."""
         return {
             _CLS_TO_API_MAP.get(name, name): _convert_data_types(value)
@@ -145,7 +143,7 @@ class DynamicSummaryItem:
 
 # Add helper class attribute for field names.
 DynamicSummaryItem.fields = FieldList(
-    [field.name for field in dataclasses.fields(DynamicSummaryItem)]
+    [field.name for field in dataclasses.fields(DynamicSummaryItem)],
 )
 
 
@@ -153,13 +151,28 @@ class DynamicSummary:
     """Dynamic Summary class."""
 
     fields = FieldList(
-        ["summary_id", "summary_name", "summary_description"]
-        + ["tenant_id", "relation_name", "relation_id"]  # noqa: W503
-        + ["search_key", "tactics", "techniques", "source_info"]  # noqa: W503
-        + ["summary_items"]  # noqa: W503
+        *["summary_id", "summary_name", "summary_description"],
+        *["tenant_id", "relation_name", "relation_id"],
+        *["search_key", "tactics", "techniques", "source_info"],
+        *["summary_items"],
     )
 
-    def __init__(self, summary_id: Optional[str] = None, **kwargs):
+    def __init__(  # pylint:disable=too-many-arguments #noqa:PLR0913
+        self: DynamicSummary,
+        summary_id: str | None = None,
+        summary_name: str | None = None,
+        summary_description: str | None = None,
+        tenant_id: str | None = None,
+        azure_tenant_id: str | None = None,
+        search_key: str | None = None,
+        tactics: str | list[str] | None = None,
+        techniques: str | list[str] | None = None,
+        source_info: dict[str, Any] | None = None,
+        summary_items: pd.DataFrame
+        | Iterable[DynamicSummaryItem]
+        | list[dict[str, Any]]
+        | None = None,
+    ) -> None:
         """
         Initialize a DynamicSummary instance.
 
@@ -173,52 +186,52 @@ class DynamicSummary:
             Summary description, by default None
         tenant_id : str, optional
             Azure tenant ID, by default None
-        relation_name : str, optional
-            The relation name, by default None
-        relation_id : str, optional
-            The relation ID, by default None
+        azure_tenant_id : str, optional
+            Azure tenant ID, by default None
         search_key : str, optional
             Search key column for the summarized data, by default None
-        tactics : Union[str, List[str], None], optional
+        tactics : Union[str, list[str], None], optional
             Relevant MITRE tactics, by default None
-        techniques : Union[str, List[str], None], optional
+        techniques : Union[str, list[str], None], optional
             Relevant MITRE techniques, by default None
         source_info : Dict[str, Any], optional
             Summary source info dictionary, by default None
-        summary_items : Union[pd, DataFrame, Iterable[DynamicSummaryItem],
-        List[Dict[str, Any]]], optional
+        summary_items : Union[pd, DataFrame, Iterable[DynamicSummaryItem]
+            list of summary items
+        list[Dict[str, Any]]], optional
             Collection of summary items, by default None
 
         """
         self.summary_id: str = summary_id or str(uuid.uuid4())
-        self.summary_name: str = kwargs.pop("summary_name", None)
-        self.summary_description: str = kwargs.pop("summary_description", None)
-        self.tenant_id: str = kwargs.pop("azure_tenant_id", kwargs.pop("tenant_id", None))
+        self.summary_name: str | None = summary_name
+        self.summary_description: str | None = summary_description
+        self.tenant_id: str | None = azure_tenant_id or tenant_id
 
-        self.search_key = kwargs.pop("search_key", None)
-        tactics = kwargs.pop("tactics", [])
-        self.tactics = _match_tactics([tactics] if isinstance(tactics, str) else tactics)
-        techniques = kwargs.pop("techniques", [])
-        self.techniques = [techniques] if isinstance(techniques, str) else techniques
-        self.summary_items: List[DynamicSummaryItem] = []
-        summary_items = kwargs.pop("summary_items", None)
-        if summary_items is not None:
+        self.search_key: str | None = search_key
+        tactics = tactics or []
+        self.tactics: list[str] = _match_tactics(
+            [tactics] if isinstance(tactics, str) else tactics,
+        )
+        techniques = techniques or []
+        self.techniques: list[str] = (
+            [techniques] if isinstance(techniques, str) else techniques
+        )
+        self.summary_items: list[DynamicSummaryItem] = []
+        if summary_items:
             self.add_summary_items(summary_items)
-        source_info = kwargs.pop("source_info", {})
-        self.source_info = (
+        self.source_info: dict[str, Any] = (
             source_info if isinstance(source_info, dict) else {"user_source": source_info}
         )
         self.source_info["source_pkg"] = f"MSTICPy {VERSION}"
 
-        # Add other kwargs as instance attributes
-        self.__dict__.update(kwargs)
         logger.info(
-            "Dynamic summary created %s", summary_id or f"auto({self.summary_id})"
+            "Dynamic summary created %s",
+            summary_id or f"auto({self.summary_id})",
         )
 
-    def __repr__(self) -> str:
+    def __repr__(self: Self) -> str:
         """Return simple representation of instance."""
-        attributes = {
+        attributes: dict[str, str | Any] = {
             key: f"'{val}'" if isinstance(val, str) else val
             for key, val in vars(self).items()
             if key != "summary_items" and val not in (None, pd.NaT, "", [])
@@ -229,38 +242,38 @@ class DynamicSummary:
                 *(f"  {key}={val}" for key, val in attributes.items()),
                 f"  summary_items={len(self.summary_items)}",
                 ")",
-            ]
+            ],
         )
 
     @classmethod
-    def from_json(cls, data: Union[Dict[str, Any], str]) -> "DynamicSummary":
+    def from_json(
+        cls: type[DynamicSummary],
+        data: dict[str, Any] | str,
+    ) -> DynamicSummary:
         """Create new DynamicSummary instance from json string or dict."""
         if isinstance(data, str):
             try:
                 data = json.loads(data)
             except json.JSONDecodeError as json_err:
-                raise MsticpyUserError(
-                    "JSON Error decoding dynamic summary data"
-                ) from json_err
-        data = cast(Dict[str, Any], data)
-        if "properties" in data:
-            data = data["properties"]
-        data = cast(Dict[str, Any], data)
-        summary_props = {
+                err_msg: str = "JSON Error decoding dynamic summary data"
+                raise MsticpyUserError(err_msg) from json_err
+            return cls.from_json(data)
+        properties: dict[str, Any] = data.get("properties", data)
+        summary_props: dict[str, Any] = {
             _API_TO_CLS_MAP.get(name, name): value
-            for name, value in data.items()
+            for name, value in properties.items()
             if name != "rawContent"
         }
         summary = cls(**summary_props)
-        summary_items: List[DynamicSummaryItem] = []
+        summary_items: list[DynamicSummaryItem] = []
         try:
-            raw_content = json.loads(data.get("rawContent", "[]"))
+            raw_content_data: str = data.get("rawContent", "[]")
+            raw_content: list[dict[str, Any]] = json.loads(raw_content_data)
         except json.JSONDecodeError as json_err:
-            raise MsticpyUserError(
-                "JSON Error decoding dynamic summary item data"
-            ) from json_err
+            err_msg = "JSON Error decoding dynamic summary item data"
+            raise MsticpyUserError(err_msg) from json_err
         for raw_item in raw_content:
-            summary_item_props = {
+            summary_item_props: dict[str, Any] = {
                 _API_TO_CLS_MAP.get(name, name): (
                     pd.to_datetime(value) if name == "eventTimeUTC" else value
                 )
@@ -271,7 +284,22 @@ class DynamicSummary:
         return summary
 
     @classmethod
-    def new_dynamic_summary(cls, **kwargs):
+    def new_dynamic_summary(
+        cls: type[DynamicSummary],
+        summary_id: str | None = None,
+        summary_name: str | None = None,
+        summary_description: str | None = None,
+        tenant_id: str | None = None,
+        azure_tenant_id: str | None = None,
+        search_key: str | None = None,
+        tactics: str | list[str] | None = None,
+        techniques: str | list[str] | None = None,
+        source_info: dict[str, Any] | None = None,
+        summary_items: pd.DataFrame
+        | Iterable[DynamicSummaryItem]
+        | list[dict[str, Any]]
+        | None = None,
+    ) -> DynamicSummary:
         """
         Return a new DynamicSummary object.
 
@@ -285,10 +313,21 @@ class DynamicSummary:
         DynamicSummary
 
         """
-        return cls(**kwargs)
+        return cls(
+            summary_id=summary_id,
+            summary_name=summary_name,
+            summary_description=summary_description,
+            tenant_id=tenant_id,
+            azure_tenant_id=azure_tenant_id,
+            search_key=search_key,
+            tactics=tactics,
+            techniques=techniques,
+            source_info=source_info,
+            summary_items=summary_items,
+        )
 
     @staticmethod
-    def df_to_dynamic_summaries(data: pd.DataFrame) -> List["DynamicSummary"]:
+    def df_to_dynamic_summaries(data: pd.DataFrame) -> list[DynamicSummary]:
         r"""
         Return a list of DynamicSummary objects from a DataFrame of summaries.
 
@@ -299,7 +338,7 @@ class DynamicSummary:
 
         Returns
         -------
-        List[DynamicSummary]
+        list[DynamicSummary]
             List of Dynamic Summary objects.
 
         Examples
@@ -323,7 +362,7 @@ class DynamicSummary:
         ]
 
     @staticmethod
-    def df_to_dynamic_summary(data: pd.DataFrame) -> "DynamicSummary":
+    def df_to_dynamic_summary(data: pd.DataFrame) -> DynamicSummary:
         r"""
         Return a single DynamicSummary object from a DataFrame.
 
@@ -357,10 +396,10 @@ class DynamicSummary:
         return df_to_dynamic_summary(data)
 
     def add_summary_items(
-        self,
-        data: Union[Iterable[DynamicSummaryItem], Iterable[Dict[str, Any]], pd.DataFrame],
+        self: Self,
+        data: Iterable[DynamicSummaryItem] | Iterable[dict[str, Any]] | pd.DataFrame,
         **kwargs,
-    ):
+    ) -> None:
         """
         Add list of DynamicSummaryItems replacing existing list.
 
@@ -388,7 +427,7 @@ class DynamicSummary:
         self._add_summary_items(data, **kwargs)
 
     @singledispatchmethod
-    def _add_summary_items(self, data: list, **kwargs):
+    def _add_summary_items(self, data: list, **_) -> None:
         """
         Add list of DynamicSummaryItems.
 
@@ -398,7 +437,6 @@ class DynamicSummary:
             Iterable of DynamicSummary Items.
 
         """
-        del kwargs
         if isinstance(next(iter(data)), DynamicSummaryItem):
             logger.info(
                 "_add_summary_items (list(DynamicSummaryItem)) items %d",
@@ -410,10 +448,14 @@ class DynamicSummary:
 
     @_add_summary_items.register
     def _(
-        self,
+        self: Self,
         data: pd.DataFrame,
+        *,
+        summary_fields: dict[str, str] | None = None,
+        event_time_utc: str | None = None,
+        search_key: str | None = None,
         **kwargs,
-    ):
+    ) -> None:
         """
         Add DataFrame of dynamic summary items.
 
@@ -432,10 +474,9 @@ class DynamicSummary:
         DynamicSummaryItem
 
         """
-        summary_fields = kwargs.pop("summary_fields", None)
         logger.info("_add_summary_items (df) rows %d", len(data))
         for row in data.to_dict(orient="records"):
-            summary_params = {}
+            summary_params: dict[str, Any] = {}
             if summary_fields:
                 # if summary fields to map to dynamic summary item properties
                 # extract these from the row dictionary first
@@ -446,25 +487,27 @@ class DynamicSummary:
             # if event time not in summary_fields, try to get from
             # kwargs or from data
             if "event_time_utc" not in summary_params:
-                summary_params["event_time_utc"] = kwargs.pop(
-                    "event_time_utc", row.get("TimeGenerated")
+                summary_params["event_time_utc"] = event_time_utc or row.get(
+                    "TimeGenerated",
                 )
-            search_key_value = row.get(self.search_key) if self.search_key else None
-            if search_key_value and "search_key" not in kwargs:
-                kwargs["search_key"] = search_key_value
+            search_key_value: str | None = (
+                row.get(self.search_key) if self.search_key else None
+            )
+            if search_key_value and not search_key:
+                search_key = search_key_value
             # Create DynamicSummaryItem instance for each row
             self.summary_items.append(
                 DynamicSummaryItem(
                     packed_content={
-                        key: _convert_data_types(value)  # type: ignore
-                        for key, value in row.items()  # type: ignore
+                        key: _convert_data_types(value) for key, value in row.items()
                     },
                     **summary_params,
+                    search_key=search_key,
                     **kwargs,  # pass remaining kwargs as summary item properties
-                )
+                ),
             )
 
-    def _add_summary_items_dict(self, data: Iterable[Dict[str, Any]]):
+    def _add_summary_items_dict(self: Self, data: Iterable[dict[str, Any]]) -> None:
         """
         Add DynamicSummary items from an iterable of dicts.
 
@@ -476,9 +519,10 @@ class DynamicSummary:
 
         """
         logger.info(
-            "_add_summary_items (list(dict)) rows %d", len(list(data)) if data else 0
+            "_add_summary_items (list(dict)) rows %d",
+            len(list(data)) if data else 0,
         )
-        summary_items = []
+        summary_items: list[DynamicSummaryItem] = []
         for properties in data:
             # if search key specified, try to extract from packed_content field
             if (
@@ -486,8 +530,8 @@ class DynamicSummary:
                 and "search_key" not in properties
                 and self.search_key in properties.get("packed_content", {})
             ):
-                search_key_value = properties.get("packed_content", {}).get(
-                    self.search_key
+                search_key_value: str = properties.get("packed_content", {}).get(
+                    self.search_key,
                 )
                 if search_key_value:
                     properties["search_key"] = search_key_value
@@ -495,10 +539,10 @@ class DynamicSummary:
         self.summary_items = summary_items
 
     def append_summary_items(
-        self,
-        data: Union[Iterable[DynamicSummaryItem], Iterable[Dict[str, Any]], pd.DataFrame],
+        self: Self,
+        data: Iterable[DynamicSummaryItem] | Iterable[dict[str, Any]] | pd.DataFrame,
         **kwargs,
-    ):
+    ) -> None:
         """
         Append list of DynamicSummaryItems to existing list.
 
@@ -518,26 +562,26 @@ class DynamicSummary:
         DynamicSummaryItem
 
         """
-        current_items = self.summary_items
+        current_items: list[DynamicSummaryItem] = self.summary_items
         self.add_summary_items(data, **kwargs)
-        new_items = self.summary_items
+        new_items: list[DynamicSummaryItem] = self.summary_items
         self.summary_items = current_items + new_items
         logger.info("append_summary_items %s", type(data))
 
-    def to_json(self):
+    def to_json(self: Self) -> str:
         """Return JSON representation of DynamicSummary."""
-        summary_properties = {
+        summary_properties: dict[str, Any] = {
             _CLS_TO_API_MAP.get(prop_name, prop_name): prop_value
             for prop_name, prop_value in self.__dict__.items()
             if prop_name in _CLS_TO_API_MAP and prop_value is not None
         }
         if self.summary_items:
             summary_properties[_CLS_TO_API_MAP["summary_items"]] = json.dumps(
-                [item.to_api_dict() for item in self.summary_items]
+                [item.to_api_dict() for item in self.summary_items],
             )
         return json.dumps(summary_properties)
 
-    def to_json_api(self):
+    def to_json_api(self) -> str:
         """Return API-ready JSON representation of DynamicSummary."""
         return f'{{"properties" : {self.to_json()} }}'
 
@@ -553,7 +597,7 @@ class DynamicSummary:
         return data
 
 
-_DF_TO_CLS_MAP = {
+_DF_TO_CLS_MAP: dict[str, str] = {
     "TenantId": "ws_tenant_id",
     "TimeGenerated": "time_generated",
     "AzureTenantId": "tenant_id",
@@ -583,8 +627,8 @@ _DF_TO_CLS_MAP = {
     "SourceSystem": "source_system",
     "Type": "type",
 }
-_CLS_TO_DF_MAP = {val: key for key, val in _DF_TO_CLS_MAP.items()}
-_DF_SUMMARY_FIELDS = {
+_CLS_TO_DF_MAP: dict[str, str] = {val: key for key, val in _DF_TO_CLS_MAP.items()}
+_DF_SUMMARY_FIELDS: set[str] = {
     "TenantId",
     "TimeGenerated",
     "AzureTenantId",
@@ -607,7 +651,7 @@ _DF_SUMMARY_FIELDS = {
     "QueryEndDate",
     "SummaryDataType",
 }
-_DF_SUMMARY_ITEM_FIELDS = {
+_DF_SUMMARY_ITEM_FIELDS: set[str] = {
     "TimeGenerated",
     "SummaryItemId",
     "RelationName",
@@ -630,7 +674,7 @@ _DF_SUMMARY_ITEM_FIELDS = {
 
 def _get_summary_record(data: pd.DataFrame) -> pd.Series:
     """Return active dynamic summary header record."""
-    ds_summary = data[
+    ds_summary: pd.DataFrame = data[
         (data["SummaryDataType"] == "Summary") & (data["SummaryStatus"] == "Active")
     ]
     return ds_summary[list(_DF_SUMMARY_FIELDS)].rename(columns=_DF_TO_CLS_MAP).iloc[0]
@@ -638,11 +682,11 @@ def _get_summary_record(data: pd.DataFrame) -> pd.Series:
 
 def _get_summary_items(data: pd.DataFrame) -> pd.DataFrame:
     """Return summary item records for dynamic summary."""
-    ds_summary_items = data[data["SummaryDataType"] == "SummaryItem"]
+    ds_summary_items: pd.DataFrame = data[data["SummaryDataType"] == "SummaryItem"]
     return ds_summary_items[list(_DF_SUMMARY_ITEM_FIELDS)].rename(columns=_DF_TO_CLS_MAP)
 
 
-def df_to_dynamic_summaries(data: pd.DataFrame) -> List[DynamicSummary]:
+def df_to_dynamic_summaries(data: pd.DataFrame) -> list[DynamicSummary]:
     r"""
     Return a list of DynamicSummary objects from a DataFrame of summaries.
 
@@ -653,7 +697,7 @@ def df_to_dynamic_summaries(data: pd.DataFrame) -> List[DynamicSummary]:
 
     Returns
     -------
-    List[DynamicSummary]
+    list[DynamicSummary]
         List of Dynamic Summary objects.
 
     Examples
@@ -707,34 +751,36 @@ def df_to_dynamic_summary(data: pd.DataFrame) -> DynamicSummary:
 
     """
     dyn_summary = DynamicSummary()
-    dyn_summary.__dict__.update(_get_summary_record(data).to_dict())  # type: ignore
+    dyn_summary.__dict__.update(_get_summary_record(data).to_dict())
 
-    items_list = _get_summary_items(data).to_dict(orient="records")
-    items = []
+    items_list: list[dict[Hashable, Any]] = _get_summary_items(data).to_dict(
+        orient="records",
+    )
+    items: list[DynamicSummaryItem] = []
     for item in items_list:
-        # pylint: disable=no-value-for-parameter
         # "fields" attrib is a ClassVar
         ds_item = DynamicSummaryItem()
-        ds_item.__dict__.update(item)  # type: ignore
+        for key, value in item.items():
+            setattr(ds_item, str(key), value)
         items.append(ds_item)
     dyn_summary.add_summary_items(items)
     return dyn_summary
 
 
-def _to_datetime_utc_str(date_time):
+def _to_datetime_utc_str(date_time: datetime | str) -> str:
     """Convert datetime to ISO date string."""
     if not isinstance(date_time, datetime):
         return date_time
-    dt_str = date_time.isoformat()
+    dt_str: str = date_time.isoformat()
     return dt_str.replace("+00:00", "Z") if "+00:00" in dt_str else f"{dt_str}Z"
 
 
-def _convert_dict_types(input_dict: Dict[Any, Any]) -> Dict[Any, Any]:
+def _convert_dict_types(input_dict: dict[Any, Any]) -> dict[Any, Any]:
     """Convert data types in dictionary members."""
     return {name: _convert_data_types(value) for name, value in input_dict.items()}
 
 
-_TYPE_CONVERTER = {
+_TYPE_CONVERTER: dict[Any, Callable] = {
     np.ndarray: list,
     datetime: _to_datetime_utc_str,
     pd.Timestamp: _to_datetime_utc_str,
@@ -742,15 +788,18 @@ _TYPE_CONVERTER = {
 }
 
 
-def _convert_data_types(value: Any, type_convert: Dict[type, Callable] = None) -> Any:
+def _convert_data_types(
+    value: str,
+    type_convert: dict[type, Callable] | None = None,
+) -> str:
     """Convert a type based on dictionary of converters."""
     type_convert = type_convert or {}
     type_convert.update(_TYPE_CONVERTER)
-    converter = type_convert.get(type(value))
+    converter: Callable | None = type_convert.get(type(value))
     return converter(value) if converter else value
 
 
-def _match_tactics(tactics: Iterable[str]) -> List[str]:
+def _match_tactics(tactics: Iterable[str]) -> list[str]:
     """Return case-insensitive matches for tactics list."""
     return [
         _TACTICS_DICT[tactic.casefold()] for tactic in tactics if tactic in _TACTICS_DICT

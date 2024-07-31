@@ -25,7 +25,7 @@ T = TypeVar("T")
 
 
 @overload
-def export(obj: type) -> type:
+def export(obj: type[T]) -> type[T]:
     ...  # noqa: E704
 
 

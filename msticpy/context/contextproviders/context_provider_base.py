@@ -298,7 +298,7 @@ class ContextProvider(Provider):
 
     async def lookup_observables_async(
         self: Self,
-        data: pd.DataFrame | dict[str, str] | Iterable[str],
+        data: pd.DataFrame | dict[str, str] | list[str],
         obs_col: str | None = None,
         obs_type_col: str | None = None,
         query_type: str | None = None,
@@ -313,7 +313,7 @@ class ContextProvider(Provider):
 
     async def _lookup_observables_async_wrapper(
         self: Self,
-        data: pd.DataFrame | dict[str, str] | Iterable[str],
+        data: pd.DataFrame | dict[str, str] | list[str],
         obs_col: str | None = None,
         obs_type_col: str | None = None,
         query_type: str | None = None,

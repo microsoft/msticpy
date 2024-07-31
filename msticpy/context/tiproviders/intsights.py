@@ -13,11 +13,10 @@ requests per minute for the account type that you have.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
 import datetime as dt
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
-import attr
 from typing_extensions import Self
 
 from ..._version import VERSION

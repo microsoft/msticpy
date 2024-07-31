@@ -6,9 +6,10 @@
 """Mixin Classes for Sentinel Incident Features."""
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any, Callable
 from uuid import UUID, uuid4
-import logging
+
 import httpx
 import pandas as pd
 from azure.common.exceptions import CloudError
