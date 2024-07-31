@@ -45,11 +45,11 @@ repos:
   #   rev: v1.0.1
   #   hooks:
   #     - id: mypy
-  # - repo: local
-  #   hooks:
-  #     - id: check_reqs_all
-  #       name: check_reqs_all
-  #       entry: python -m tools.create_reqs_all
-  #       pass_filenames: False
-  #       language: python
-  #       types: [python]
+  - repo: local
+    hooks:
+      - id: check_reqs_all
+        name: check_reqs_all
+        entry: python -m tools.create_reqs_all
+        pass_filenames: False
+        language: python
+        types: [python]
