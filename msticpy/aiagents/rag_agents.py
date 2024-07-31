@@ -67,15 +67,15 @@ def get_retrieval_assistant_agent(system_message: str = "") -> RetrieveAssistant
 
 
 def get_retrieval_user_proxy_agent(
-    max_consecutive_auto_reply: int = 1,
+    customized_prompt: Optional[str] = None,
 ) -> RetrieveUserProxyAgent:
     """
     Create and return a RetrieveUserProxyAgent.
 
     Parameters
     ----------
-    max_consecutive_auto_reply : int, optional
-        Maximum number of consecutive auto replies, by default 1.
+    customized_prompt : Optional[str], optional
+        Custom prompt for the assistant agent, by default None.
 
     Returns
     -------
@@ -87,18 +87,19 @@ def get_retrieval_user_proxy_agent(
     return RetrieveUserProxyAgent(
         name="ragproxyagent",
         human_input_mode="NEVER",
-        max_consecutive_auto_reply=max_consecutive_auto_reply,
+        max_consecutive_auto_reply=1,
         is_termination_msg=lambda x: True,
         retrieve_config={
             "task": "default",
             "docs_path": rst_files,
             "chunk_token_size": 2000,
+            "customized_prompt": customized_prompt,
             "model": autogen_config["config_list"][0]["model"],
             "vector_db": "chroma",
             "collection_name": f"MSTICpy_Docs_{VERSION}",
             "get_or_create": True,
         },
-        code_execution_config=False,  # set to False if you don't want to execute the code
+        code_execution_config=False,
     )
 
 
@@ -106,7 +107,6 @@ def ask_question(
     assistant_agent: RetrieveAssistantAgent,
     user_proxy_agent: RetrieveUserProxyAgent,
     question: str,
-    agent_prompt: Optional[str] = None,
 ) -> ChatResult:
     """
     Ask a question using the assistant and user proxy agents.
@@ -119,8 +119,6 @@ def ask_question(
         The user proxy agent to use.
     question : str
         The question to ask.
-    agent_prompt : Optional[str], optional
-        Custom prompt for the assistant agent, by default None.
 
     Returns
     -------
@@ -128,8 +126,6 @@ def ask_question(
         The result of the chat interaction.
     """
     assistant_agent.reset()
-    if agent_prompt:
-        assistant_agent.customized_prompt = agent_prompt
     return user_proxy_agent.initiate_chat(
         assistant_agent, message=user_proxy_agent.message_generator, problem=question
     )
