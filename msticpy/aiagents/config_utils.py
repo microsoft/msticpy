@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Utility Modules related to AI agents used in MSTICpy."""
 
+from __future__ import annotations
+
 import os
 from typing import Callable, Dict, List, TypeAlias, Union
 
@@ -13,14 +15,16 @@ from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from ..common.exceptions import MsticpyUserConfigError
 from ..common.pkg_config import get_config
 
-ConfigWithTokenProvider: TypeAlias = Dict[str, Union[str | Callable]]
+ConfigWithTokenProvider: TypeAlias = Dict[str, str | Callable]
 
 token_provider = get_bearer_token_provider(
     DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
 )
 
 
-def inject_token_provider_callable(config: Dict[str, str]) -> ConfigWithTokenProvider:
+def inject_token_provider_callable(
+    config: ConfigWithTokenProvider,
+) -> ConfigWithTokenProvider:
     """Replace autogen configuration `azure_ad_token_provider` with a token provider callable.
 
     Parameters
