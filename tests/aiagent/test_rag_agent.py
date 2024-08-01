@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from msticpy.aiagents.rag_agent import find_rst_files
+from msticpy.aiagents.rag_agents import find_rst_files
 
 
 def test_find_rst_files_not_empty():
