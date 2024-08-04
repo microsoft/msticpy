@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar, Iterable, Mapping
 
+from typing_extensions import Self
+
 from .._version import VERSION
 from ..common.utility import export
 
@@ -52,7 +54,7 @@ class ContextLookup(Lookup):
     CUSTOM_PROVIDERS: ClassVar[dict[str, type[Provider]]] = {}
 
     def lookup_observable(  # pylint:disable=too-many-arguments # noqa:PLR0913
-        self,
+        self: Self,
         observable: str,
         observable_type: str | None = None,
         query_type: str | None = None,
@@ -103,7 +105,7 @@ class ContextLookup(Lookup):
         )
 
     def lookup_observables(  # pylint:disable=too-many-arguments # noqa:PLR0913
-        self,
+        self: Self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         obs_col: str | None = None,
         obs_type_col: str | None = None,
@@ -158,7 +160,7 @@ class ContextLookup(Lookup):
 
     # pylint: disable=too-many-locals
     async def _lookup_observables_async(  # pylint:disable=too-many-arguments # noqa:PLR0913
-        self,
+        self: Self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         obs_col: str | None = None,
         obs_type_col: str | None = None,
@@ -179,7 +181,7 @@ class ContextLookup(Lookup):
         )
 
     def lookup_observables_sync(  # pylint:disable=too-many-arguments # noqa:PLR0913
-        self,
+        self: Self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         obs_col: str | None = None,
         obs_type_col: str | None = None,
@@ -231,7 +233,7 @@ class ContextLookup(Lookup):
         )
 
     def _load_providers(
-        self,
+        self: Self,
         *,
         providers: str = "ContextProviders",
     ) -> None:

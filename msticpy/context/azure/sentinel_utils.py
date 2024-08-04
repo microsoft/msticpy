@@ -12,6 +12,7 @@ from typing import Any
 import httpx
 import pandas as pd
 from azure.common.exceptions import CloudError
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...auth.azure_auth_core import AzureCloudConfig
@@ -41,7 +42,7 @@ _PATH_MAPPING: dict[str, str] = {
 class SentinelUtilsMixin:
     """Mixin class for Sentinel core feature integrations."""
 
-    def _get_items(self, url: str, params: dict | None = None) -> httpx.Response:
+    def _get_items(self: Self, url: str, params: dict | None = None) -> httpx.Response:
         """Get items from the API."""
         self.check_connected()
         if params is None:
@@ -54,7 +55,7 @@ class SentinelUtilsMixin:
         )
 
     def _list_items(  # noqa:PLR0913
-        self,
+        self: Self,
         item_type: str,
         api_version: str = "2020-01-01",
         appendix: str | None = None,
@@ -115,7 +116,11 @@ class SentinelUtilsMixin:
                 i += 1
         return pd.concat(results)
 
-    def _check_config(self, items: list, workspace_name: str | None = None) -> dict:
+    def _check_config(
+        self: Self,
+        items: list,
+        workspace_name: str | None = None,
+    ) -> dict:
         """
         Get parameters from default config files.
 
@@ -147,7 +152,7 @@ class SentinelUtilsMixin:
         return config_items
 
     def _build_sent_res_id(
-        self,
+        self: Self,
         sub_id: str | None = None,
         res_grp: str | None = None,
         ws_name: str | None = None,
@@ -189,7 +194,7 @@ class SentinelUtilsMixin:
             ],
         )
 
-    def _build_sent_paths(self, res_id: str, base_url: str | None = None) -> str:
+    def _build_sent_paths(self: Self, res_id: str, base_url: str | None = None) -> str:
         """
         Build an API URL from an Azure resource ID.
 
@@ -226,7 +231,7 @@ class SentinelUtilsMixin:
             ],
         )
 
-    def check_connected(self) -> None:
+    def check_connected(self: Self) -> None:
         """Check that Sentinel workspace is connected."""
         if not self.connected:
             err_msg: str = (
@@ -326,7 +331,9 @@ def parse_resource_id(res_id: str) -> dict[str, Any]:
 def _validator(res_id: str) -> bool:
     """Check Resource ID string matches pattern expected."""
     counts = Counter(res_id)
-    return bool(res_id.startswith("/") and counts["/"] == 8 and not res_id.endswith("/"))
+    return bool(
+        res_id.startswith("/") and counts["/"] == 8 and not res_id.endswith("/"),
+    )
 
 
 def _fix_res_id(res_id: str) -> str:

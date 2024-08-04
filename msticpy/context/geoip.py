@@ -185,7 +185,7 @@ class GeoIpLookup(metaclass=ABCMeta):
         err_msg: str = "No valid ip addresses were passed as arguments."
         raise ValueError(err_msg)
 
-    def print_license(self) -> None:
+    def print_license(self: Self) -> None:
         """Print license information for providers."""
         if self._LICENSE_HTML and is_ipython(notebook=True):
             display(HTML(self._LICENSE_HTML))
@@ -216,9 +216,9 @@ This library uses services provided by ipstack.
     ] = """
 This library uses services provided by ipstack (https://ipstack.com)"""
 
-    _IPSTACK_API: ClassVar[
-        str
-    ] = "http://api.ipstack.com/{iplist}?access_key={access_key}&output=json"
+    _IPSTACK_API: ClassVar[str] = (
+        "http://api.ipstack.com/{iplist}?access_key={access_key}&output=json"
+    )
 
     _NO_API_KEY_MSSG = """
 No API Key was found to access the IPStack service.
@@ -258,7 +258,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         self._api_key: str | None = api_key
         self.bulk_lookup: bool = bulk_lookup
 
-    def _check_initialized(self) -> bool:
+    def _check_initialized(self: Self) -> bool:
         """Return True if valid API key available."""
         if self._api_key:
             return True
@@ -278,7 +278,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         )
 
     def lookup_ip(
-        self,
+        self: Self,
         ip_address: str | None = None,
         ip_addr_list: Iterable | None = None,
         ip_entity: IpAddress = None,
@@ -312,7 +312,11 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
 
         """
         self._check_initialized()
-        ip_list: list[str] = self._ip_params_to_list(ip_address, ip_addr_list, ip_entity)
+        ip_list: list[str] = self._ip_params_to_list(
+            ip_address,
+            ip_addr_list,
+            ip_entity,
+        )
 
         results: list[tuple[dict[str, str] | None, int]] = self._submit_request(ip_list)
         output_raw: list[tuple[dict[str, Any] | None, int]] = []
@@ -342,7 +346,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         return ip_entity
 
     def _submit_request(
-        self,
+        self: Self,
         ip_list: list[str],
     ) -> list[tuple[dict[str, str] | None, int]]:
         """
@@ -523,7 +527,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         self._db_path: str | None = None
         self._reader: geoip2.database.Reader | None = None
 
-    def close(self) -> None:
+    def close(self: Self) -> None:
         """Close an open GeoIP DB."""
         if self._reader:
             try:
@@ -532,7 +536,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 logger.exception("Exception when trying to close GeoIP DB")
 
     def lookup_ip(
-        self,
+        self: Self,
         ip_address: str | None = None,
         ip_addr_list: Iterable | None = None,
         ip_entity: IpAddress = None,
@@ -558,7 +562,11 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 
         """
         self._check_initialized()
-        ip_list: list[str] = self._ip_params_to_list(ip_address, ip_addr_list, ip_entity)
+        ip_list: list[str] = self._ip_params_to_list(
+            ip_address,
+            ip_addr_list,
+            ip_entity,
+        )
 
         output_raw: list[dict[str, Any]] = []
         output_entities: list[IpAddress] = []
@@ -641,7 +649,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         else:
             self._reader = geoip2.database.Reader(self._db_path)
 
-    def _check_and_update_db(self) -> None:
+    def _check_and_update_db(self: Self) -> None:
         """
         Check the age of geo ip database file and download if it older than 30 days.
 
@@ -694,7 +702,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                     "Continuing with cached database. Results may inaccurate.",
                 )
 
-    def _download_and_extract_archive(self) -> bool:
+    def _download_and_extract_archive(self: Self) -> bool:
         """
         Download file from the given URL and extract if it is archive.
 
@@ -777,7 +785,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 db_archive_path.unlink()
         return False
 
-    def _extract_to_folder(self, db_archive_path: Path) -> None:
+    def _extract_to_folder(self: Self, db_archive_path: Path) -> None:
         self._pr_debug(f"Extracting tarfile {db_archive_path}")
         temp_folder: Path | None = None
         with tarfile.open(db_archive_path) as tar_archive:
@@ -806,7 +814,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             self._pr_debug(f"Removing temp path {temp_folder}")
             temp_folder.rmdir()
 
-    def _get_geoip_db_path(self) -> str | None:
+    def _get_geoip_db_path(self: Self) -> str | None:
         """
         Get the correct path containing GeoLite City Database.
 
@@ -820,12 +828,12 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         latest_db_path: Path = Path(self._db_folder or ".").joinpath(self._DB_FILE)
         return str(latest_db_path) if latest_db_path.is_file() else None
 
-    def _pr_debug(self, *args: str) -> None:
+    def _pr_debug(self: Self, *args: str) -> None:
         """Print out debug info."""
         if self._debug:
             logger.debug(*args)
 
-    def _geolite_warn(self, msg: str) -> None:
+    def _geolite_warn(self: Self, msg: str) -> None:
         self._pr_debug(msg)
         warnings.warn(
             f"GeoIpLookup: {msg}",
@@ -833,7 +841,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             stacklevel=1,
         )
 
-    def _raise_no_db_error(self) -> None:
+    def _raise_no_db_error(self: Self) -> None:
         err_msg: str = (
             "No usable GeoIP Database could be found.\n"
             "Check that you have correctly configured the Maxmind API key in "
@@ -855,7 +863,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             title="Maxmind GeoIP database not found",
         )
 
-    def _debug_open_state(self) -> None:
+    def _debug_open_state(self: Self) -> None:
         dbg_api_key: str = (
             "None"
             if self._api_key is None
@@ -869,7 +877,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         self._pr_debug(f"Using config file: {current_config_path()}")
 
     def _debug_init_state(
-        self,
+        self: Self,
         api_key: str | None,
         db_folder: str | None,
         *,

@@ -18,6 +18,7 @@ import attr
 import ipywidgets as widgets
 import numpy as np
 import pandas as pd
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyImportExtraError, MsticpyUserError
@@ -106,12 +107,12 @@ class VTFileBehavior:
     }
 
     @classmethod
-    def list_sandboxes(cls) -> list[str]:
+    def list_sandboxes(cls: type[VTFileBehavior]) -> list[str]:
         """Return list of known sandbox types."""
         return list(cls._SANDBOXES)
 
     def __init__(
-        self,
+        self: VTFileBehavior,
         vt_key: str,
         file_id: str | None = None,
         file_summary: pd.DataFrame | pd.Series | dict[str, Any] | None = None,
@@ -153,32 +154,32 @@ class VTFileBehavior:
         self.behavior_links: dict[str, Any] = {}
         self.process_tree_df: pd.DataFrame | None = None
 
-    def _reset_summary(self) -> None:
+    def _reset_summary(self: Self) -> None:
         self._file_behavior = {}
         self.categories = {}
         self.process_tree_df = None
 
     @property
-    def sandbox_id(self) -> str:
+    def sandbox_id(self: Self) -> str:
         """Return sandbox ID of detonation."""
         return self.categories.get("id", "")
 
     @property
-    def has_evtx(self) -> bool:
+    def has_evtx(self: Self) -> bool:
         """Return True if EVTX data is available (Enterprise only)."""
         return self.categories.get("has_evtx", False)
 
     @property
-    def has_memdump(self) -> bool:
+    def has_memdump(self: Self) -> bool:
         """Return True if memory dump data is available (Enterprise only)."""
         return self.categories.get("has_memdump", False)
 
     @property
-    def has_pcap(self) -> bool:
+    def has_pcap(self: Self) -> bool:
         """Return True if PCAP data is available (Enterprise only)."""
         return self.categories.get("has_pcap", False)
 
-    def get_file_behavior(self, sandbox: str | None = None) -> None:
+    def get_file_behavior(self: Self, sandbox: str | None = None) -> None:
         """
         Retrieve the file behavior data.
 
@@ -213,7 +214,7 @@ class VTFileBehavior:
         else:
             self.categories = self._file_behavior
 
-    def browse(self) -> widgets.VBox | None:
+    def browse(self: Self) -> widgets.VBox | None:
         """Browse the behavior categories."""
         if not self.has_behavior_data:
             self._print_no_data()
@@ -250,7 +251,7 @@ class VTFileBehavior:
         return widgets.VBox([html_title, accordion])
 
     @property
-    def process_tree(self) -> figure | None:
+    def process_tree(self: Self) -> figure | None:
         """Return the process tree plot."""
         if not self.has_behavior_data:
             self._print_no_data()
@@ -265,11 +266,11 @@ class VTFileBehavior:
         return plot
 
     @property
-    def has_behavior_data(self) -> bool:
+    def has_behavior_data(self: Self) -> bool:
         """Return true if file behavior data available."""
         return bool(self.categories)
 
-    def _print_no_data(self) -> None:
+    def _print_no_data(self: Self) -> None:
         """Print a message if operation is tried with no data."""
         logger.info("No data available for %s.", self.file_id)
 
@@ -317,7 +318,8 @@ def _build_process_tree(fb_categories: dict[str, Any]) -> pd.DataFrame:
     """Top level function to create displayable DataFrame."""
     proc_tree_raw: list[dict[str, Any]] = deepcopy(fb_categories["processes_tree"])
     procs_created: dict[str, Any] = {
-        Path(proc).parts[-1].lower(): proc for proc in fb_categories["processes_created"]
+        Path(proc).parts[-1].lower(): proc
+        for proc in fb_categories["processes_created"]
     }
 
     si_procs: list[SIProcess] = _extract_processes(proc_tree_raw, procs_created)

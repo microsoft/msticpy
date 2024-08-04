@@ -52,7 +52,7 @@ class Provider(ABC):
 
     @abstractmethod
     def lookup_item(
-        self,
+        self: Self,
         item: str,
         item_type: str | None = None,
         query_type: str | None = None,
@@ -91,7 +91,7 @@ class Provider(ABC):
         """
 
     def _check_item_type(
-        self,
+        self: Self,
         item: str,
         item_type: str | None = None,
         query_subtype: str | None = None,
@@ -149,7 +149,7 @@ class Provider(ABC):
         return result
 
     # pylint: disable=unused-argument
-    def __init__(self) -> None:
+    def __init__(self: Provider) -> None:
         """Initialize the provider."""
         self.description: str | None = None
         self._supported_types: set[IoCType] = set()
@@ -163,12 +163,12 @@ class Provider(ABC):
         self._preprocessors = PreProcessor()
 
     @property
-    def name(self) -> str:
+    def name(self: Self) -> str:
         """Return the name of the provider."""
         return self.__class__.__name__
 
     def lookup_items(
-        self,
+        self: Self,
         data: pd.DataFrame | dict[str, str] | Iterable[str],
         item_col: str | None = None,
         item_type_col: str | None = None,
@@ -214,7 +214,7 @@ class Provider(ABC):
         return pd.concat(results)
 
     async def lookup_items_async(  # noqa:PLR0913
-        self,
+        self: Self,
         data: pd.DataFrame | dict[str, str] | Iterable[str],
         item_col: str | None = None,
         item_type_col: str | None = None,
@@ -285,7 +285,7 @@ class Provider(ABC):
         return self._QUERIES
 
     @classmethod
-    def is_known_type(cls, item_type: str) -> bool:
+    def is_known_type(cls: type[Provider], item_type: str) -> bool:
         """
         Return True if this a known IoC Type.
 
@@ -303,7 +303,7 @@ class Provider(ABC):
         return item_type in IoCType.__members__ and item_type != "unknown"
 
     @property
-    def supported_types(self) -> list[str]:
+    def supported_types(self: Self) -> list[str]:
         """
         Return list of supported types for this provider.
 
@@ -316,7 +316,7 @@ class Provider(ABC):
         return [item.name for item in self._supported_types]
 
     @classmethod
-    def usage(cls) -> None:
+    def usage(cls: type[Provider]) -> None:
         """Print usage of provider."""
         logger.info("%s Supported query types:", cls.__doc__)
         for key in sorted(cls._QUERIES):
@@ -326,7 +326,7 @@ class Provider(ABC):
             if len(elements) > 1:
                 logger.info("\titem_type=%s, query_type=%s", elements[0], elements[1])
 
-    def is_supported_type(self, item_type: str | IoCType) -> bool:
+    def is_supported_type(self: Self, item_type: str | IoCType) -> bool:
         """
         Return True if the passed type is supported.
 
@@ -365,7 +365,7 @@ class Provider(ABC):
         return _ITEM_EXTRACT.get_ioc_type(item)
 
     async def _lookup_items_async_wrapper(  # pylint: disable=too-many-arguments # noqa: PLR0913
-        self,
+        self: Self,
         data: pd.DataFrame | dict[str, str] | list[str],
         item_col: str | None = None,
         item_type_col: str | None = None,

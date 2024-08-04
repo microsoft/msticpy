@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from typing import Any, ClassVar
 
+from typing_extensions import Self
+
 from ..._version import VERSION
 from ...common.utility import export
 from ..http_provider import APILookupParams
@@ -45,7 +47,7 @@ class BinaryEdge(HttpTIProvider):
     # aliases
     _QUERIES["ipv6"] = _QUERIES["ipv4"]
 
-    def parse_results(self, response: dict) -> tuple[bool, ResultSeverity, Any]:
+    def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """Return the details of the response."""
         if self._failed_response(response) or not isinstance(
             response["RawResult"],

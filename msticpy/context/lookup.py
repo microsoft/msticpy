@@ -33,6 +33,7 @@ from typing import (
 import nest_asyncio
 import pandas as pd
 from tqdm.auto import tqdm
+from typing_extensions import Self
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyConfigError, MsticpyUserConfigError
@@ -65,20 +66,20 @@ LOOKUPTYPE = TypeVar("LOOKUPTYPE", bound="Lookup")
 class ProgressCounter:
     """Progress counter for async tasks."""
 
-    def __init__(self, total: int) -> None:
+    def __init__(self: ProgressCounter, total: int) -> None:
         """Initialize the class."""
         self.total: int = total
         self._lock: asyncio.Condition = asyncio.Condition()
         self._remaining: int = total
 
-    async def decrement(self, increment: int = 1) -> None:
+    async def decrement(self: Self, increment: int = 1) -> None:
         """Decrement the counter."""
         if self._remaining == 0:
             return
         async with self._lock:
             self._remaining -= increment
 
-    async def get_remaining(self) -> int:
+    async def get_remaining(self: Self) -> int:
         """Get the current remaining count."""
         async with self._lock:
             return self._remaining
@@ -95,9 +96,9 @@ class Lookup:
     you have correctly configured your msticpyconfig.yaml settings.
     """
 
-    _HELP_URI: ClassVar[
-        str
-    ] = "https://msticpy.readthedocs.io/en/latest/DataEnrichment.html"
+    _HELP_URI: ClassVar[str] = (
+        "https://msticpy.readthedocs.io/en/latest/DataEnrichment.html"
+    )
 
     PROVIDERS: ClassVar[dict[str, tuple[str, str]]] = {}
     CUSTOM_PROVIDERS: ClassVar[dict[str, type[Provider]]]
@@ -105,7 +106,7 @@ class Lookup:
     PACKAGE: ClassVar[str] = ""
 
     def __init__(
-        self,
+        self: Lookup,
         providers: list[str] | None = None,
         *,
         primary_providers: list[Provider] | None = None,
@@ -151,7 +152,7 @@ class Lookup:
             nest_asyncio.apply()
 
     @property
-    def loaded_providers(self) -> dict[str, Provider]:
+    def loaded_providers(self: Self) -> dict[str, Provider]:
         """
         Return dictionary of loaded providers.
 
@@ -164,7 +165,7 @@ class Lookup:
         return dict(self._all_providers)
 
     @property
-    def provider_status(self) -> Iterable[str]:
+    def provider_status(self: Self) -> Iterable[str]:
         """
         Return loaded provider status.
 
@@ -185,7 +186,7 @@ class Lookup:
         return prim + sec
 
     @property
-    def configured_providers(self) -> list[str]:
+    def configured_providers(self: Self) -> list[str]:
         """
         Return a list of available providers that have configuration details present.
 
@@ -200,7 +201,7 @@ class Lookup:
 
         return prim_conf + sec_conf
 
-    def enable_provider(self, providers: str | Iterable[str]) -> None:
+    def enable_provider(self: Self, providers: str | Iterable[str]) -> None:
         """
         Set the provider(s) as primary (used by default).
 
@@ -238,7 +239,7 @@ class Lookup:
                     )
                 raise ValueError(err_msg)
 
-    def disable_provider(self, providers: str | Iterable[str]) -> None:
+    def disable_provider(self: Self, providers: str | Iterable[str]) -> None:
         """
         Set the provider as secondary (not used by default).
 
@@ -276,7 +277,7 @@ class Lookup:
                     )
                 raise ValueError(err_msg)
 
-    def set_provider_state(self, prov_dict: dict[str, bool]) -> None:
+    def set_provider_state(self: Self, prov_dict: dict[str, bool]) -> None:
         """
         Set a dict of providers to primary/secondary.
 
@@ -295,7 +296,7 @@ class Lookup:
 
     @classmethod
     def browse_results(
-        cls,
+        cls: type[Lookup],
         data: pd.DataFrame,
         severities: list[str] | None = None,
         *,
@@ -329,7 +330,7 @@ class Lookup:
 
     browse: Callable[..., SelectItem | None] = browse_results
 
-    def provider_usage(self) -> None:
+    def provider_usage(self: Self) -> None:
         """Print usage of loaded providers."""
         logger.info("Primary providers")
         logger.info("-----------------")
@@ -356,13 +357,13 @@ class Lookup:
             "Settings reloaded. Use reload_providers to update settings for loaded providers.",
         )
 
-    def reload_providers(self) -> None:
+    def reload_providers(self: Self) -> None:
         """Reload settings and provider classes."""
         reload_settings()
         self._load_providers()
 
     def add_provider(
-        self,
+        self: Self,
         provider: Provider,
         name: str | None = None,
         *,
@@ -390,7 +391,7 @@ class Lookup:
             self._secondary_providers[name] = provider
 
     def lookup_item(  # pylint: disable=too-many-locals, too-many-arguments #noqa: PLR0913
-        self,
+        self: Self,
         item: str,
         item_type: str | None = None,
         query_type: str | None = None,
@@ -446,7 +447,7 @@ class Lookup:
         )
 
     def lookup_items(  # pylint: disable=too-many-arguments #noqa: PLR0913
-        self,
+        self: Self,
         data: pd.DataFrame | Mapping[str, str] | Sized,
         item_col: str | None = None,
         item_type_col: str | None = None,
@@ -540,7 +541,7 @@ class Lookup:
         return item_lookup
 
     async def _lookup_items_async(  # pylint: disable=too-many-locals, too-many-arguments #noqa: PLR0913
-        self,
+        self: Self,
         data: pd.DataFrame | Mapping[str, str] | Sized,
         item_col: str | None = None,
         item_type_col: str | None = None,
@@ -609,7 +610,7 @@ class Lookup:
         )
 
     def lookup_items_sync(  # pylint: disable=too-many-arguments, too-many-locals #noqa: PLR0913
-        self,
+        self: Self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         item_col: str | None = None,
         item_type_col: str | None = None,
@@ -717,7 +718,7 @@ class Lookup:
                     prog_bar.update(total - final_remaining)
 
     @property
-    def available_providers(self) -> list[str]:
+    def available_providers(self: Self) -> list[str]:
         """
         Return a list of builtin and plugin providers.
 
@@ -766,7 +767,7 @@ class Lookup:
         return providers if as_list else None
 
     @classmethod
-    def import_provider(cls, provider: str) -> type[Provider]:
+    def import_provider(cls: type[Lookup], provider: str) -> type[Provider]:
         """Import provider class."""
         mod_name, cls_name = cls.PROVIDERS.get(provider, (None, None))
 
@@ -786,7 +787,7 @@ class Lookup:
         return getattr(imp_module, cls_name)
 
     def _load_providers(
-        self,
+        self: Self,
         *,
         providers: str = "Providers",
     ) -> None:
@@ -840,7 +841,7 @@ class Lookup:
             )
 
     def _select_providers(
-        self,
+        self: Self,
         providers: list[str] | None = None,
         prov_scope: str = "primary",
     ) -> dict[str, Provider]:

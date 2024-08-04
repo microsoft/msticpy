@@ -151,10 +151,19 @@ class DynamicSummary:
     """Dynamic Summary class."""
 
     fields = FieldList(
-        *["summary_id", "summary_name", "summary_description"],
-        *["tenant_id", "relation_name", "relation_id"],
-        *["search_key", "tactics", "techniques", "source_info"],
-        *["summary_items"],
+        [
+            "summary_id",
+            "summary_name",
+            "summary_description",
+            "tenant_id",
+            "relation_name",
+            "relation_id",
+            "search_key",
+            "tactics",
+            "techniques",
+            "source_info",
+            "summary_items",
+        ],
     )
 
     def __init__(  # pylint:disable=too-many-arguments #noqa:PLR0913
@@ -168,10 +177,9 @@ class DynamicSummary:
         tactics: str | list[str] | None = None,
         techniques: str | list[str] | None = None,
         source_info: dict[str, Any] | None = None,
-        summary_items: pd.DataFrame
-        | Iterable[DynamicSummaryItem]
-        | list[dict[str, Any]]
-        | None = None,
+        summary_items: (
+            pd.DataFrame | Iterable[DynamicSummaryItem] | list[dict[str, Any]] | None
+        ) = None,
     ) -> None:
         """
         Initialize a DynamicSummary instance.
@@ -220,7 +228,9 @@ class DynamicSummary:
         if summary_items:
             self.add_summary_items(summary_items)
         self.source_info: dict[str, Any] = (
-            source_info if isinstance(source_info, dict) else {"user_source": source_info}
+            source_info
+            if isinstance(source_info, dict)
+            else {"user_source": source_info}
         )
         self.source_info["source_pkg"] = f"MSTICPy {VERSION}"
 
@@ -284,7 +294,7 @@ class DynamicSummary:
         return summary
 
     @classmethod
-    def new_dynamic_summary(
+    def new_dynamic_summary(  # noqa: PLR0913
         cls: type[DynamicSummary],
         summary_id: str | None = None,
         summary_name: str | None = None,
@@ -295,10 +305,9 @@ class DynamicSummary:
         tactics: str | list[str] | None = None,
         techniques: str | list[str] | None = None,
         source_info: dict[str, Any] | None = None,
-        summary_items: pd.DataFrame
-        | Iterable[DynamicSummaryItem]
-        | list[dict[str, Any]]
-        | None = None,
+        summary_items: (
+            pd.DataFrame | Iterable[DynamicSummaryItem] | list[dict[str, Any]] | None
+        ) = None,
     ) -> DynamicSummary:
         """
         Return a new DynamicSummary object.
@@ -427,7 +436,7 @@ class DynamicSummary:
         self._add_summary_items(data, **kwargs)
 
     @singledispatchmethod
-    def _add_summary_items(self, data: list, **_) -> None:
+    def _add_summary_items(self: Self, data: list, **_) -> None:
         """
         Add list of DynamicSummaryItems.
 
@@ -446,7 +455,7 @@ class DynamicSummary:
         else:
             self._add_summary_items_dict(data)
 
-    @_add_summary_items.register
+    @_add_summary_items.register(pd.DataFrame)
     def _(
         self: Self,
         data: pd.DataFrame,
@@ -581,11 +590,11 @@ class DynamicSummary:
             )
         return json.dumps(summary_properties)
 
-    def to_json_api(self) -> str:
+    def to_json_api(self: Self) -> str:
         """Return API-ready JSON representation of DynamicSummary."""
         return f'{{"properties" : {self.to_json()} }}'
 
-    def to_df(self) -> pd.DataFrame:
+    def to_df(self: Self) -> pd.DataFrame:
         """Return summary items as DataFrame."""
         data = pd.DataFrame([item.packed_content for item in self.summary_items])
         if "TimeGenerated" in data.columns:
@@ -683,7 +692,9 @@ def _get_summary_record(data: pd.DataFrame) -> pd.Series:
 def _get_summary_items(data: pd.DataFrame) -> pd.DataFrame:
     """Return summary item records for dynamic summary."""
     ds_summary_items: pd.DataFrame = data[data["SummaryDataType"] == "SummaryItem"]
-    return ds_summary_items[list(_DF_SUMMARY_ITEM_FIELDS)].rename(columns=_DF_TO_CLS_MAP)
+    return ds_summary_items[list(_DF_SUMMARY_ITEM_FIELDS)].rename(
+        columns=_DF_TO_CLS_MAP,
+    )
 
 
 def df_to_dynamic_summaries(data: pd.DataFrame) -> list[DynamicSummary]:
@@ -802,5 +813,7 @@ def _convert_data_types(
 def _match_tactics(tactics: Iterable[str]) -> list[str]:
     """Return case-insensitive matches for tactics list."""
     return [
-        _TACTICS_DICT[tactic.casefold()] for tactic in tactics if tactic in _TACTICS_DICT
+        _TACTICS_DICT[tactic.casefold()]
+        for tactic in tactics
+        if tactic in _TACTICS_DICT
     ]

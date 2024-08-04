@@ -81,7 +81,10 @@ def screenshot(
     if api_key is not None:
         bs_api_key: str | None = api_key
     else:
-        bs_conf: dict[str, Any] = get_config("DataProviders.Browshot", {}) or get_config(
+        bs_conf: dict[str, Any] = get_config(
+            "DataProviders.Browshot",
+            {},
+        ) or get_config(
             "Browshot",
             {},
         )
@@ -229,7 +232,7 @@ class DomainValidator:
             return False
         return True
 
-    def in_abuse_list(self, url_domain: str) -> tuple[bool, Certificate | None]:
+    def in_abuse_list(self: Self, url_domain: str) -> tuple[bool, Certificate | None]:
         """
         Validate if a domain or URL's SSL cert the abuse.ch SSL Abuse List.
 
@@ -259,7 +262,7 @@ class DomainValidator:
         return result, x509_cert
 
     @classmethod
-    def _get_ssl_abuselist(cls) -> pd.DataFrame:
+    def _get_ssl_abuselist(cls: type[DomainValidator]) -> pd.DataFrame:
         """Download and load abuse.ch SSL Abuse List."""
         try:
             ssl_ab_list: pd.DataFrame = pd.read_csv(

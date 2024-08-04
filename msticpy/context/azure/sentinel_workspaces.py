@@ -45,9 +45,9 @@ class ParsedUrlComponents:
 class SentinelWorkspacesMixin:
     """Mixin class for Sentinel workspaces."""
 
-    _TENANT_URI: ClassVar[
-        str
-    ] = "{cloud_endpoint}/{tenant_name}/.well-known/openid-configuration"
+    _TENANT_URI: ClassVar[str] = (
+        "{cloud_endpoint}/{tenant_name}/.well-known/openid-configuration"
+    )
     _RES_GRAPH_PROV: ClassVar[QueryProvider | None] = None
 
     @classmethod
@@ -263,7 +263,9 @@ class SentinelWorkspacesMixin:
         return {}
 
     @classmethod
-    def _get_resource_graph_provider(cls: type[SentinelWorkspacesMixin]) -> QueryProvider:
+    def _get_resource_graph_provider(
+        cls: type[SentinelWorkspacesMixin],
+    ) -> QueryProvider:
         if not cls._RES_GRAPH_PROV:
             cls._RES_GRAPH_PROV = QueryProvider("ResourceGraph")
         if not cls._RES_GRAPH_PROV.connected:
@@ -285,21 +287,30 @@ class SentinelWorkspacesMixin:
         )
 
     @classmethod
-    def _lookup_workspace_by_ws_id(cls, workspace_id: str) -> pd.DataFrame:
+    def _lookup_workspace_by_ws_id(
+        cls: type[SentinelWorkspacesMixin],
+        workspace_id: str,
+    ) -> pd.DataFrame:
         res_graph_prov: QueryProvider = cls._get_resource_graph_provider()
         return res_graph_prov.Sentinel.get_sentinel_workspace_for_workspace_id(
             workspace_id=workspace_id,
         )
 
     @classmethod
-    def _lookup_workspace_by_res_id(cls, resource_id: str | None) -> pd.DataFrame:
+    def _lookup_workspace_by_res_id(
+        cls: type[SentinelWorkspacesMixin],
+        resource_id: str | None,
+    ) -> pd.DataFrame:
         res_graph_prov: QueryProvider = cls._get_resource_graph_provider()
         return res_graph_prov.Sentinel.get_sentinel_workspace_for_resource_id(
             resource_id=resource_id,
         )
 
     @classmethod
-    def _extract_resource_id(cls, url: str) -> ParsedUrlComponents:
+    def _extract_resource_id(
+        cls: type[SentinelWorkspacesMixin],
+        url: str,
+    ) -> ParsedUrlComponents:
         """Extract and return resource ID components from URL."""
         resid_pattern = (
             r"https://(?P<domain>[^/]+)/#?(@(?P<tenantname>[^/]+))?"

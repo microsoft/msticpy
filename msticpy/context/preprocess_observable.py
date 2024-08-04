@@ -264,7 +264,7 @@ class PreProcessor:
         }
 
     @property
-    def processors(self) -> dict[str, list[str | CheckerType]]:
+    def processors(self: Self) -> dict[str, list[str | CheckerType]]:
         """Return _processors value."""
         return self._processors
 
@@ -323,7 +323,7 @@ class PreProcessor:
                 break
         return result
 
-    def add_check(self, value_type: str, checker: CheckerType) -> None:
+    def add_check(self: Self, value_type: str, checker: CheckerType) -> None:
         """Add a new checker to the processors."""
         if value_type not in self._processors:
             self._processors[value_type] = [checker]

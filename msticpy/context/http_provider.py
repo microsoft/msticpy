@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import httpx
+from typing_extensions import Self
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyConfigError
@@ -127,7 +128,7 @@ class HttpProvider(Provider):
     _REQUIRED_PARAMS: ClassVar[list[str]] = []
 
     def __init__(
-        self,
+        self: HttpProvider,
         *,
         timeout: int | None = None,
         ApiID: str | None = None,  # noqa: N803
@@ -150,7 +151,9 @@ class HttpProvider(Provider):
             self._request_params["Instance"] = Instance.strip()
 
         missing_params: list[str] = [
-            param for param in self._REQUIRED_PARAMS if param not in self._request_params
+            param
+            for param in self._REQUIRED_PARAMS
+            if param not in self._request_params
         ]
 
         missing_params = []
@@ -165,7 +168,7 @@ class HttpProvider(Provider):
 
     @abstractmethod
     def lookup_item(
-        self,
+        self: Self,
         item: str,
         item_type: str | None = None,
         query_type: str | None = None,
@@ -209,7 +212,7 @@ class HttpProvider(Provider):
 
     # pylint: enable=duplicate-code
     def _substitute_parms(
-        self,
+        self: Self,
         value: str,
         value_type: str,
         query_type: str | None = None,
