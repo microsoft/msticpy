@@ -8,10 +8,9 @@ from __future__ import annotations
 
 import logging
 from functools import singledispatchmethod
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any, Callable, Iterable
 
 import httpx
-import pandas as pd
 from typing_extensions import Self
 
 from ..._version import VERSION
@@ -28,27 +27,35 @@ from .sentinel_dynamic_summary_types import (
 if TYPE_CHECKING:
     from datetime import datetime
 
+    import pandas as pd
+
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 _DYN_SUM_API_VERSION = "2023-03-01-preview"
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class SentinelDynamicSummaryMixin:
     """Mixin class with Sentinel Dynamic Summary integrations."""
 
     # expose these methods as members of the Sentinel class.
-    df_to_dynamic_summary = DynamicSummary.df_to_dynamic_summary
-    df_to_dynamic_summaries = DynamicSummary.df_to_dynamic_summaries
+    df_to_dynamic_summary: Callable[
+        ...,
+        DynamicSummary,
+    ] = DynamicSummary.df_to_dynamic_summary
+    df_to_dynamic_summaries: Callable[
+        ...,
+        list[DynamicSummary],
+    ] = DynamicSummary.df_to_dynamic_summaries
 
     @classmethod
     def new_dynamic_summary(  # noqa: PLR0913
         cls: type[SentinelDynamicSummaryMixin],
         summary_id: str | None = None,
-        summary_name: str | None = None,
+        name: str | None = None,
         description: str | None = None,
         tenant_id: str | None = None,
         azure_tenant_id: str | None = None,
@@ -75,7 +82,7 @@ class SentinelDynamicSummaryMixin:
         """
         return DynamicSummary.new_dynamic_summary(
             summary_id=summary_id,
-            summary_name=summary_name,
+            summary_name=name,
             summary_description=description,
             tenant_id=tenant_id,
             azure_tenant_id=azure_tenant_id,
@@ -159,7 +166,7 @@ class SentinelDynamicSummaryMixin:
             params=params,
             timeout=get_http_timeout(),
         )
-        if response.status_code == 200:
+        if response.is_success:
             logger.info("Query API for summary id %s", summary_id)
             return DynamicSummary.from_json(response.json())
         logger.info(
@@ -202,7 +209,7 @@ class SentinelDynamicSummaryMixin:
             If API returns an error.
 
         """
-        if summary:
+        if summary is not None:
             if not summary.summary_name:
                 err_msg: str = "DynamicSummary must have unique `summary_name`."
                 raise MsticpyParameterError(
@@ -252,8 +259,8 @@ class SentinelDynamicSummaryMixin:
         self.check_connected()
         dyn_sum_url = "/".join([self.sent_urls["dynamic_summary"], summary.summary_id])
 
-        params = {"api-version": _DYN_SUM_API_VERSION}
-        response = httpx.put(
+        params: dict[str, str] = {"api-version": _DYN_SUM_API_VERSION}
+        response: httpx.Response = httpx.put(
             dyn_sum_url,
             headers=get_api_headers(self._token),
             params=params,
@@ -280,7 +287,7 @@ class SentinelDynamicSummaryMixin:
             response.text,
         )
 
-    @_create_dynamic_summary.register(pd.DataFrame)
+    @_create_dynamic_summary.register(str)
     def _(  # noqa: PLR0913
         self: Self,
         name: str,
@@ -457,9 +464,7 @@ class SentinelDynamicSummaryMixin:
             If API returns an error.
 
         """
-        if (summary and not summary.summary_id) or (
-            data is not None and not summary_id
-        ):
+        if (summary and not summary.summary_id) or (data is not None and not summary_id):
             err_msg: str = ("You must supply a summary ID to update",)
             raise MsticpyParameterError(
                 err_msg,

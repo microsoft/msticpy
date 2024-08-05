@@ -4,12 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Microsoft Sentinel APIs to interact with Microsoft Sentinel Workspaces."""
+from __future__ import annotations
 
 import contextlib
 import logging
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
-import pandas as pd
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserConfigError
@@ -29,6 +30,9 @@ from .sentinel_utils import (
 )
 from .sentinel_watchlists import SentinelWatchlistsMixin
 from .sentinel_workspaces import SentinelWorkspacesMixin
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -52,14 +56,16 @@ class MicrosoftSentinel(
 ):
     """Class for returning key Microsoft Sentinel elements."""
 
-    def __init__(
-        self,
-        res_id: Optional[str] = None,
-        connect: Optional[bool] = False,
-        cloud: Optional[str] = None,
-        sub_id: Optional[str] = None,
-        res_grp: Optional[str] = None,
-        ws_name: Optional[str] = None,
+    def __init__(  # noqa:PLR0913
+        self: MicrosoftSentinel,
+        res_id: str | None = None,
+        *,
+        connect: bool = False,
+        cloud: str | None = None,
+        sub_id: str | None = None,
+        res_grp: str | None = None,
+        ws_name: str | None = None,
+        workspace: str | None = None,
         **kwargs,
     ) -> None:
         """
@@ -90,17 +96,17 @@ class MicrosoftSentinel(
 
         """
         super().__init__(connect=False, cloud=cloud)
-        self.base_url = self.az_cloud_config.resource_manager
-        self.default_subscription: Optional[str] = None
-        self._resource_id = res_id
-        self._default_resource_group: Optional[str] = None
-        self.sent_urls: Dict[str, str] = {}
-        self.sent_data_query: Optional[SentinelQueryProvider] = None  # type: ignore
-        self.url: Optional[str] = None
-        self._token: Optional[str] = None
+        self.base_url: str = self.az_cloud_config.resource_manager
+        self.default_subscription: str | None = None
+        self._resource_id: str | None = res_id
+        self._default_resource_group: str | None = None
+        self.sent_urls: dict[str, str] = {}
+        self.sent_data_query: SentinelQueryProvider | None = None
+        self.url: str | None = None
+        self._token: str | None = None
 
-        workspace = kwargs.get("workspace", ws_name)
-        self._default_workspace: Optional[str] = workspace
+        workspace = workspace or ws_name
+        self._default_workspace: str | None = workspace
         self.workspace_config = WorkspaceConfig(workspace)
 
         logger.info("Initializing Microsoft Sentinel connector")
@@ -114,10 +120,8 @@ class MicrosoftSentinel(
         if self._resource_id:
             # If a resource ID is supplied, use that
             logger.info("Initializing from resource ID")
-            self.url = self._build_sent_paths(
-                self._resource_id, self.base_url
-            )  # type: ignore
-            res_id_parts = parse_resource_id(self._resource_id)
+            self.url = self._build_sent_paths(self._resource_id, self.base_url)
+            res_id_parts: dict[str, Any] = parse_resource_id(self._resource_id)
             self.default_subscription = res_id_parts["subscription_id"]
             self._default_resource_group = res_id_parts["resource_group"]
             self._default_workspace = workspace or res_id_parts["workspace_name"]
@@ -128,12 +132,17 @@ class MicrosoftSentinel(
             # Otherwise - use details from specified workspace or default from settings
             logger.info("Initializing from workspace settings")
             self.default_subscription = self.workspace_config.get(
-                "subscription_id", sub_id
+                "subscription_id",
+                sub_id,
             )
             self._default_resource_group = self.workspace_config.get(
-                "resource_group", res_grp
+                "resource_group",
+                res_grp,
             )
-            workspace_name = self.workspace_config.get("workspace_name", workspace)
+            workspace_name: str | None = self.workspace_config.get(
+                "workspace_name",
+                workspace,
+            )
             self._resource_id = self._build_sent_res_id(
                 sub_id=self.default_subscription,
                 res_grp=self._default_resource_group,
@@ -141,20 +150,22 @@ class MicrosoftSentinel(
             )
             logger.info("Resource ID set to %s", self._resource_id)
             self._default_workspace = workspace_name
-            self.url = self._build_sent_paths(
-                self._resource_id, self.base_url  # type: ignore
-            )
+            self.url = self._build_sent_paths(self._resource_id, self.base_url)
 
         if connect:
             self.connect(**kwargs)
 
-    def connect(
-        self,
-        auth_methods: Optional[List] = None,
-        tenant_id: Optional[str] = None,
+    def connect(  # noqa:PLR0913
+        self: Self,
+        auth_methods: list[str] | None = None,
+        tenant_id: str | None = None,
+        *,
         silent: bool = False,
+        workspace: str | None = None,
+        cloud: str | None = None,
+        token: str | None = None,
         **kwargs,
-    ):
+    ) -> None:
         """
         Authenticate with the SDK & API.
 
@@ -179,7 +190,7 @@ class MicrosoftSentinel(
         msticpy.auth.azure_auth.az_connect : function to authenticate to Azure SDK
 
         """
-        if workspace := kwargs.get("workspace"):
+        if workspace:
             # override any previous default setting
             self.workspace_config = WorkspaceConfig(workspace)
             logger.info("Using workspace settings found for %s", workspace)
@@ -189,24 +200,31 @@ class MicrosoftSentinel(
                 "Using default workspace settings for %s",
                 self.workspace_config.get(WorkspaceConfig.CONF_WS_NAME_KEY),
             )
-        if kwargs.get("cloud", self.cloud) != self.cloud:
+        if cloud and cloud != self.cloud:
+            err_msg: str = (
+                f"Cannot switch to different cloud. Current cloud '{self.cloud}'\n"
+                f"Create a new instance of `{self.__class__.__name__}` "
+                "and specify the new cloud name using the `cloud` parameter."
+            )
             raise MsticpyUserConfigError(
-                "Cannot switch to different cloud",
-                f"Current cloud '{self.cloud}'",
-                f"Create a new instance of `{self.__class__.__name__}`",
-                "and specify the new cloud name using the `cloud` parameter.",
+                err_msg,
                 title="Cannot switch cloud at connect time",
             )
         tenant_id = tenant_id or self.workspace_config[WorkspaceConfig.CONF_TENANT_ID]
         logger.info("Using tenant id %s", tenant_id)
-        self._token = kwargs.pop("token", None)
+        self._token = token
         super().connect(
-            auth_methods=auth_methods, tenant_id=tenant_id, silent=silent, **kwargs
+            auth_methods=auth_methods,
+            tenant_id=tenant_id,
+            silent=silent,
+            **kwargs,
         )
         if not self._token:
             logger.info("Getting token for %s", tenant_id)
             self._token = get_token(
-                self.credentials, tenant_id=tenant_id, cloud=self.cloud  # type: ignore
+                self.credentials,
+                tenant_id=tenant_id,
+                cloud=self.cloud,
             )
 
         with contextlib.suppress(KeyError):
@@ -229,53 +247,56 @@ class MicrosoftSentinel(
         )
 
     def _create_api_paths_for_workspace(
-        self,
-        az_resource_id: Optional[str] = None,
-        subscription_id: Optional[str] = None,
-        resource_group: Optional[str] = None,
-        workspace_name: Optional[str] = None,
-    ):
+        self: Self,
+        az_resource_id: str | None = None,
+        subscription_id: str | None = None,
+        resource_group: str | None = None,
+        workspace_name: str | None = None,
+    ) -> None:
         """Save configuration and build API URLs for workspace."""
         if workspace_name:
             self.workspace_config = WorkspaceConfig(workspace=workspace_name)
         az_resource_id = (
             az_resource_id
             or self._resource_id
-            or self._build_sent_res_id(
-                subscription_id, resource_group, workspace_name  # type: ignore
-            )
+            or self._build_sent_res_id(subscription_id, resource_group, workspace_name)
         )
         az_resource_id = validate_res_id(az_resource_id)
-        self.url = self._build_sent_paths(az_resource_id, self.base_url)  # type: ignore
+        self.url = self._build_sent_paths(az_resource_id, self.base_url)
 
         self.sent_urls = {
             name: f"{self.url}{mapping}" for name, mapping in _PATH_MAPPING.items()
         }
         logger.info("API URLs set to %s", self.sent_urls)
 
-    def set_default_subscription(self, subscription_id: str):
+    def set_default_subscription(self: Self, subscription_id: str) -> None:
         """Set the default subscription to use to `subscription_id`."""
-        subs_df = self.get_subscriptions()
+        subs_df: pd.DataFrame = self.get_subscriptions()
         logger.info("Setting default subscription to %s", subscription_id)
-        if subscription_id in subs_df["Subscription ID"].values:
+        if subscription_id in subs_df["Subscription ID"].to_numpy():
             self.default_subscription = subscription_id
         else:
-            print(f"Subscription ID {subscription_id} not found.")
-            print(f"Subscriptions found: {', '.join(subs_df['Subscription ID'].values)}")
+            logger.info("Subscription ID %s not found.", subscription_id)
+            logger.info(
+                "Subscriptions found: %s",
+                ", ".join(subs_df["Subscription ID"].values),
+            )
 
     def set_default_workspace(
-        self, sub_id: Optional[str], workspace: Optional[str] = None
-    ):
+        self: Self,
+        sub_id: str | None,
+        workspace: str | None = None,
+    ) -> None:
         """
         Set the default workspace.
 
         Parameters
         ----------
-        sub_id : Optional[str], optional
+        sub_id : str|None, optional
             Subscription ID containing the workspace. If not specified,
             the subscription will be taken from the `default_subscription`
             or from configuration.
-        workspace : Optional[str], optional
+        workspace : str|None, optional
             Name of the workspace, by default None.
             If not specified and there is only one workspace in the
             subscription, this will be set as the default.
@@ -288,17 +309,18 @@ class MicrosoftSentinel(
         """
         sub_id = sub_id or self.default_subscription
         if not sub_id:
-            raise MsticpyUserConfigError(
-                "No current or default subscription ID set.",
+            err_msg: str = (
+                "No current or default subscription ID set. "
                 "Please configure the subscription ID for your workspace in your"
-                "msticpyconfig.yaml",
+                "msticpyconfig.yaml"
             )
+            raise MsticpyUserConfigError(err_msg)
         self._default_workspace = workspace
-        ws_res_id: Optional[str] = None
+        ws_res_id: str | None = None
         # if workspace not supplied trying looking up in subscription
         if not workspace:
             logger.info("Trying to set default workspace from subscription %s", sub_id)
-            workspaces = self.get_sentinel_workspaces(sub_id=sub_id)
+            workspaces: dict[str, str] = self.get_sentinel_workspaces(sub_id=sub_id)
             if len(workspaces) == 1:
                 # if only one, use that one
                 name, ws_res_id = next(iter(workspaces.items()))
@@ -310,7 +332,7 @@ class MicrosoftSentinel(
             self.workspace_config = WorkspaceConfig(workspace=self._default_workspace)
         elif ws_res_id:
             # otherwise construct partial settings
-            res_id_parts = parse_resource_id(ws_res_id)
+            res_id_parts: dict[str, Any] = parse_resource_id(ws_res_id)
             self.workspace_config = WorkspaceConfig.from_settings(
                 {
                     "WorkspaceName": (
@@ -318,7 +340,7 @@ class MicrosoftSentinel(
                     ),
                     "SubscriptionId": res_id_parts["subscription_id"],
                     "ResourceGroup": res_id_parts["resource_group"],
-                }
+                },
             )
             logger.info(
                 "Workspace not found in settings, using partial workspace config %s",
@@ -326,16 +348,16 @@ class MicrosoftSentinel(
             )
 
     @property
-    def default_workspace_settings(self) -> Optional[Dict[str, Any]]:
+    def default_workspace_settings(self: Self) -> dict[str, Any]:
         """Return current default workspace settings."""
         return self.workspace_config.mp_settings
 
     @property
-    def default_workspace_name(self):
+    def default_workspace_name(self: Self) -> str | None:
         """Return the default workspace name."""
         return self._default_workspace
 
-    def list_data_connectors(self) -> pd.DataFrame:
+    def list_data_connectors(self: Self) -> pd.DataFrame:
         """
         List deployed data connectors.
 

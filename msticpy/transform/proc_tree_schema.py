@@ -9,7 +9,6 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field, fields, MISSING
 from typing import Any, ClassVar
 
-import attr
 import pandas as pd
 from typing_extensions import Self
 

@@ -4,13 +4,17 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Bookmark Features."""
-from typing import Dict, List, Optional, Union
+from __future__ import annotations
+
+import logging
+from typing import Any, Callable
 from uuid import UUID, uuid4
 
 import httpx
 import pandas as pd
 from azure.common.exceptions import CloudError
 from IPython.display import display
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
@@ -20,11 +24,13 @@ from .sentinel_utils import _build_sent_data, get_http_timeout
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
+logger: logging.Logger = logging.getLogger(__name__)
+
 
 class SentinelBookmarksMixin:
     """Mixin class with Sentinel Bookmark integrations."""
 
-    def list_bookmarks(self) -> pd.DataFrame:
+    def list_bookmarks(self: Self) -> pd.DataFrame:
         """
         Return a list of Bookmarks from a Sentinel workspace.
 
@@ -34,16 +40,16 @@ class SentinelBookmarksMixin:
             A set of bookmarks.
 
         """
-        return self._list_items(item_type="bookmarks")  # type: ignore
+        return self._list_items(item_type="bookmarks")
 
-    def create_bookmark(
-        self,
+    def create_bookmark(  # noqa:PLR0913
+        self: Self,
         name: str,
         query: str,
-        results: str = None,
-        notes: str = None,
-        labels: List[str] = None,
-    ) -> Optional[str]:
+        results: str | None = None,
+        notes: str | None = None,
+        labels: list[str] | None = None,
+    ) -> str | None:
         """
         Create a bookmark in the Sentinel Workspace.
 
@@ -62,7 +68,7 @@ class SentinelBookmarksMixin:
 
         Returns
         -------
-        Optional[str]
+        str|None
             The name/ID of the bookmark.
 
         Raises
@@ -71,11 +77,11 @@ class SentinelBookmarksMixin:
             If API returns an error.
 
         """
-        self.check_connected()  # type: ignore
+        self.check_connected()
         # Generate or use resource ID
         bkmark_id = str(uuid4())
-        bookmark_url = self.sent_urls["bookmarks"] + f"/{bkmark_id}"  # type: ignore
-        data_items: Dict[str, Union[str, List]] = {
+        bookmark_url: str = self.sent_urls["bookmarks"] + f"/{bkmark_id}"
+        data_items: dict[str, str | list] = {
             "displayName": name,
             "query": query,
         }
@@ -85,24 +91,24 @@ class SentinelBookmarksMixin:
             data_items["notes"] = notes
         if labels:
             data_items["labels"] = labels
-        data = _build_sent_data(data_items, props=True)
-        params = {"api-version": "2020-01-01"}
-        response = httpx.put(
+        data: dict[str, Any] = _build_sent_data(data_items, props=True)
+        params: dict[str, str] = {"api-version": "2020-01-01"}
+        response: httpx.Response = httpx.put(
             bookmark_url,
-            headers=get_api_headers(self._token),  # type: ignore
+            headers=get_api_headers(self._token),
             params=params,
             content=str(data),
             timeout=get_http_timeout(),
         )
-        if response.status_code == 200:
-            print("Bookmark created.")
+        if response.is_success:
+            logger.info("Bookmark created.")
             return response.json().get("name")
         raise CloudError(response=response)
 
     def delete_bookmark(
-        self,
+        self: Self,
         bookmark: str,
-    ):
+    ) -> None:
         """
         Delete the selected bookmark.
 
@@ -117,22 +123,22 @@ class SentinelBookmarksMixin:
             If the API returns an error.
 
         """
-        self.check_connected()  # type: ignore
-        bookmark_id = self._get_bookmark_id(bookmark)
-        bookmark_url = self.sent_urls["bookmarks"] + f"/{bookmark_id}"  # type: ignore
-        params = {"api-version": "2020-01-01"}
-        response = httpx.delete(
+        self.check_connected()
+        bookmark_id: str = self._get_bookmark_id(bookmark)
+        bookmark_url: str = self.sent_urls["bookmarks"] + f"/{bookmark_id}"
+        params: dict[str, str] = {"api-version": "2020-01-01"}
+        response: httpx.Response = httpx.delete(
             bookmark_url,
-            headers=get_api_headers(self._token),  # type: ignore
+            headers=get_api_headers(self._token),
             params=params,
             timeout=get_http_timeout(),
         )
-        if response.status_code == 200:
-            print("Bookmark deleted.")
+        if response.is_success:
+            logger.info("Bookmark deleted.")
         else:
             raise CloudError(response=response)
 
-    def _get_bookmark_id(self, bookmark: str) -> str:
+    def _get_bookmark_id(self: Self, bookmark: str) -> str:
         """
         Get the ID of a bookmark.
 
@@ -154,24 +160,22 @@ class SentinelBookmarksMixin:
         """
         try:
             UUID(bookmark)
-            return bookmark
         except ValueError as bkmark_name:
-            bookmarks = self.list_bookmarks()
-            filtered_bookmarks = bookmarks[
+            bookmarks: pd.DataFrame = self.list_bookmarks()
+            filtered_bookmarks: pd.DataFrame = bookmarks[
                 bookmarks["properties.displayName"].str.contains(bookmark)
             ]
             if len(filtered_bookmarks) > 1:
                 display(filtered_bookmarks[["name", "properties.displayName"]])
-                raise MsticpyUserError(
-                    "More than one incident found, please specify by GUID"
-                ) from bkmark_name
+                err_msg: str = "More than one incident found, please specify by GUID"
+                raise MsticpyUserError(err_msg) from bkmark_name
             if (
                 not isinstance(filtered_bookmarks, pd.DataFrame)
                 or filtered_bookmarks.empty
             ):
-                raise MsticpyUserError(
-                    f"Incident {bookmark} not found"
-                ) from bkmark_name
+                err_msg = f"Incident {bookmark} not found"
+                raise MsticpyUserError(err_msg) from bkmark_name
             return filtered_bookmarks["name"].iloc[0]
+        return bookmark
 
-    get_bookmarks = list_bookmarks
+    get_bookmarks: Callable[..., pd.DataFrame] = list_bookmarks
