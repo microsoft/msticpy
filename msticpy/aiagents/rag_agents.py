@@ -12,7 +12,7 @@ agents that assist security analysts by answering questions based on MSTICpy doc
 
 import importlib.resources as pkg_resources
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from autogen.agentchat.chat import ChatResult
 from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistantAgent
@@ -22,7 +22,7 @@ from .._version import VERSION
 from .config_utils import get_autogen_config_from_msticpyconfig
 
 
-def find_rst_files():
+def find_rst_files() -> List[str]:
     """
     Find all .rst files in the docs/source directory of 'msticpy' package.
 
