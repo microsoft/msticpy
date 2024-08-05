@@ -416,7 +416,6 @@ def test_new_dynamic_summary(sentinel_loader):
         summary_id="test_id",
         name="Test Summary",
         description="This is a test summary",
-        data=ti_data,
         tactics=["discovery", "exploitation"],
         techniques=["T1000"],
         search_key="TI stuff",
