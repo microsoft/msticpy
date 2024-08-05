@@ -12,11 +12,6 @@ agents that assist security analysts by answering questions based on MSTICpy doc
 
 import sys
 
-if sys.version_info <= (3, 8):
-    import importlib_resources as pkg_resources
-else:
-    import importlib.resources as pkg_resources
-
 from pathlib import Path
 from typing import List, Optional
 
@@ -27,6 +22,11 @@ from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProx
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserConfigError
 from .config_utils import get_autogen_config_from_msticpyconfig
+
+if sys.version_info <= (3, 8):
+    import importlib_resources as pkg_resources
+else:
+    import importlib.resources as pkg_resources
 
 
 def find_rst_files() -> List[str]:
@@ -97,7 +97,9 @@ def get_retrieval_user_proxy_agent(
     autogen_config = get_autogen_config_from_msticpyconfig()
 
     default_model = None
-    if "config_list" in autogen_config and isinstance(autogen_config["config_list"], list):
+    if "config_list" in autogen_config and isinstance(
+        autogen_config["config_list"], list
+    ):
         if autogen_config["config_list"]:
             default_config = autogen_config["config_list"][0]
             if "model" in default_config:
