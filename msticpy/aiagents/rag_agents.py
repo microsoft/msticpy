@@ -10,9 +10,13 @@ Includes functions to find documentation files and to set up retrieval
 agents that assist security analysts by answering questions based on MSTICpy documentation.
 """
 
-import importlib.resources as pkg_resources
+try:
+    import importlib_resources as pkg_resources
+except ModuleNotFoundError:
+    import importlib.resources as pkg_resources
+
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional, Union
 
 from autogen.agentchat.chat import ChatResult
 from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistantAgent
@@ -82,7 +86,15 @@ def get_retrieval_user_proxy_agent(
         Configured RetrieveUserProxyAgent instance.
     """
     rst_files = find_rst_files()
-    autogen_config = get_autogen_config_from_msticpyconfig()
+    autogen_config: Dict[str, Union[str, float, List[Dict[str, Union[str, float]]]]] = (
+        get_autogen_config_from_msticpyconfig()
+    )
+
+    config_list = autogen_config["config_list"]
+    assert isinstance(config_list, list) and all(
+        isinstance(item, dict) for item in config_list
+    )
+
     return RetrieveUserProxyAgent(
         name="ragproxyagent",
         human_input_mode="NEVER",
@@ -93,7 +105,7 @@ def get_retrieval_user_proxy_agent(
             "docs_path": rst_files,
             "chunk_token_size": 2000,
             "customized_prompt": customized_prompt,
-            "model": autogen_config["config_list"][0]["model"],
+            "model": config_list[0]["model"],
             "vector_db": "chroma",
             "collection_name": f"MSTICpy_Docs_{VERSION}",
             "get_or_create": True,
