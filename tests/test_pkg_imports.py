@@ -28,6 +28,7 @@ EXTRAS_EXCEPTIONS = {
     "pygeohash",
     "pyperclip",
     "autogen",
+    "importlib_resources",
 }
 CONDA_PKG_EXCEPTIONS = {
     "vt-py",
