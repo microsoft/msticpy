@@ -27,6 +27,7 @@ EXTRAS_EXCEPTIONS = {
     "msticnb",
     "pygeohash",
     "pyperclip",
+    "autogen",
 }
 CONDA_PKG_EXCEPTIONS = {
     "vt-py",
@@ -69,7 +70,12 @@ def test_missing_pkgs_req():
     missing_reqs = {
         req.strip() for reqs in mod_imports.values() for req in reqs.missing_reqs
     }
-    missing_reqs = missing_reqs - EXTRAS_EXCEPTIONS
+    # Remove any missing modules that part of an extra
+    missing_reqs = {
+        req
+        for req in missing_reqs
+        if not any(req.startswith(p) for p in EXTRAS_EXCEPTIONS)
+    }
     if missing_reqs:
         print(
             "Missing packages:\n",
