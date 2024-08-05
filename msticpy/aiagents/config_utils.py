@@ -5,8 +5,6 @@
 # --------------------------------------------------------------------------
 """Utility Modules related to AI agents used in MSTICpy."""
 
-from __future__ import annotations
-
 import os
 from typing import Callable, Dict, List, Union
 
@@ -16,7 +14,7 @@ from ..common.exceptions import MsticpyUserConfigError
 from ..common.pkg_config import get_config
 
 
-ConfigWithTokenProvider = Dict[str, str | Callable]
+ConfigWithTokenProvider = Dict[str, Union[str, Callable]]
 
 token_provider = get_bearer_token_provider(
     DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
