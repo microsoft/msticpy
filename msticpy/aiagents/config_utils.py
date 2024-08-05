@@ -14,7 +14,9 @@ from ..common.exceptions import MsticpyUserConfigError
 from ..common.pkg_config import get_config
 
 
-ConfigWithTokenProvider = Dict[str, Union[str, Callable]]
+ConfigItem = Dict[str, Union[str, Callable]]
+ConfigList = List[ConfigItem]
+Config = Dict[str, Union[str, float, ConfigList]]
 
 token_provider = get_bearer_token_provider(
     DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
@@ -22,18 +24,18 @@ token_provider = get_bearer_token_provider(
 
 
 def inject_token_provider_callable(
-    config: ConfigWithTokenProvider,
-) -> ConfigWithTokenProvider:
+    config: ConfigItem,
+) -> ConfigItem:
     """Replace autogen configuration `azure_ad_token_provider` with a token provider callable.
 
     Parameters
     ----------
-    config : Dict[str, str]
+    config : ConfigItem
         Autogen LLM configuration.
 
     Returns
     -------
-    ConfigWithTokenProvider
+    ConfigItem
         Autogen LLM configuration with the token provider callable.
     """
     if "azure_ad_token_provider" in config:
@@ -42,21 +44,21 @@ def inject_token_provider_callable(
     return config
 
 
-def inject_environment_variable(config: Dict[str, str]) -> Dict[str, str]:
+def inject_environment_variable(config: ConfigItem) -> ConfigItem:
     """Replace autogen configuration `api_key` with the value of an environment variable.
 
     Parameters
     ----------
-    config : Dict[str, str]
+    config : ConfigItem
         Autogen LLM configuration.
 
     Returns
     -------
-    Dict[str, str]
+    ConfigItem
         Autogen LLM configuration with the environment variable value.
     """
     if "api_key" in config:
-        api_key = os.environ.get(config["api_key"], None)
+        api_key = os.environ.get(str(config["api_key"]), None)
         if not api_key:
             raise MsticpyUserConfigError(
                 f"Environment variable {config['api_key']} specified, but not found!"
@@ -66,7 +68,7 @@ def inject_environment_variable(config: Dict[str, str]) -> Dict[str, str]:
     return config
 
 
-def get_autogen_config_from_msticpyconfig() -> Dict[str, Union[str, float, List]]:
+def get_autogen_config_from_msticpyconfig() -> Config:
     """Get Autogen configuration from msticpyconfig.yaml.
 
     See `https://microsoft.github.io/autogen/docs/topics/llm_configuration`
@@ -76,7 +78,7 @@ def get_autogen_config_from_msticpyconfig() -> Dict[str, Union[str, float, List]
 
     Returns
     -------
-    Dict[str, Union[str, float, List]]
+    Config
         Autogen configuration.
 
     Raises

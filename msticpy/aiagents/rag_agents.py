@@ -10,19 +10,22 @@ Includes functions to find documentation files and to set up retrieval
 agents that assist security analysts by answering questions based on MSTICpy documentation.
 """
 
-try:
+import sys
+
+if sys.version_info <= (3, 8):
     import importlib_resources as pkg_resources
-except ModuleNotFoundError:
+else:
     import importlib.resources as pkg_resources
 
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import List, Optional
 
 from autogen.agentchat.chat import ChatResult
 from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistantAgent
 from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProxyAgent
 
 from .._version import VERSION
+from ..common.exceptions import MsticpyUserConfigError
 from .config_utils import get_autogen_config_from_msticpyconfig
 
 
@@ -84,16 +87,26 @@ def get_retrieval_user_proxy_agent(
     -------
     RetrieveUserProxyAgent
         Configured RetrieveUserProxyAgent instance.
+
+    Raises
+    ------
+    MsticpyUserConfigError
+        Autogen settings not found in msticpyconfig.yaml configuration
     """
     rst_files = find_rst_files()
-    autogen_config: Dict[str, Union[str, float, List[Dict[str, Union[str, float]]]]] = (
-        get_autogen_config_from_msticpyconfig()
-    )
+    autogen_config = get_autogen_config_from_msticpyconfig()
 
-    config_list = autogen_config["config_list"]
-    assert isinstance(config_list, list) and all(
-        isinstance(item, dict) for item in config_list
-    )
+    default_model = None
+    if "config_list" in autogen_config and isinstance(autogen_config["config_list"], list):
+        if autogen_config["config_list"]:
+            default_config = autogen_config["config_list"][0]
+            if "model" in default_config:
+                default_model = default_config["model"]
+
+    if not default_model:
+        raise MsticpyUserConfigError(
+            "Could not find a valid default Autogen model in msticpyconfig.yaml configuration!"
+        )
 
     return RetrieveUserProxyAgent(
         name="ragproxyagent",
@@ -105,7 +118,7 @@ def get_retrieval_user_proxy_agent(
             "docs_path": rst_files,
             "chunk_token_size": 2000,
             "customized_prompt": customized_prompt,
-            "model": config_list[0]["model"],
+            "model": default_model,
             "vector_db": "chroma",
             "collection_name": f"MSTICpy_Docs_{VERSION}",
             "get_or_create": True,
