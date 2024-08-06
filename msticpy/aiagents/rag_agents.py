@@ -23,7 +23,7 @@ from .._version import VERSION
 from ..common.exceptions import MsticpyUserConfigError
 from .config_utils import get_autogen_config_from_msticpyconfig
 
-if sys.version_info <= (3, 8):
+if sys.version_info < (3, 9):
     import importlib_resources as pkg_resources
 else:
     import importlib.resources as pkg_resources
