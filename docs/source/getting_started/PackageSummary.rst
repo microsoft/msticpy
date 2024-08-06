@@ -318,7 +318,7 @@ of known malicious commands as well as suspicious patterns of behaviour.
 domain_utils
 ~~~~~~~~~~~~
 
-:py:mod:`msticpy.transform.domain_utils`
+:py:mod:`msticpy.context.domain_utils`
 
 Module to support investigation of domain names and URLs with functions to
 validate a domain name and screenshot a URL.
@@ -351,24 +351,26 @@ models and external knowledge retrieval from the MSTICpy documentation.
 
 You can invoke the RAG agent in a Jupyter Notebook by adding the following:
 
-.. code-block:: python
+.. code-block:: ipython
 
    # Load the RAG cell magic
    %load_ext msticpy.aiagents.mp_docs_rag_magic
+
+.. code-block:: ipython
 
    # The following command should be in a separate cell and be the first line of the cell
    %%ask
    What are the three things that I need to connect to Azure Query Provider?
 
-You can also invoke the RAG Agent outside of a Jupyter Notebook as follows:
+   You can also invoke the RAG Agent outside of a Jupyter Notebook as follows:
 
 .. code-block:: python
 
    # Import the necessary module
    from .rag_agents import (
-    ask_question,
-    get_retrieval_assistant_agent,
-    get_retrieval_user_proxy_agent,
+      ask_question,
+      get_retrieval_assistant_agent,
+      get_retrieval_user_proxy_agent,
    )
 
    # Initialize the agents
@@ -388,8 +390,10 @@ You can also invoke the RAG Agent outside of a Jupyter Notebook as follows:
    print(response.summary)
 
 
-Add Autogen configurations to your msticpconfig - `Autogen LLM Configurations in msticpconfig <https://github.com/microsoft/msticpy/blob/master/docs/source/getting_started/msticpyconfig.rst>`__
-Sample notebook - `RAG Agent Example Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/RagAgent.ipynb>`__
+See also:
+
+- :doc:`Autogen LLM Configurations in msticpyconfig <../getting_started/msticpyconfig>`
+- Sample notebook - `RAG Agent Example Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/RagAgent.ipynb>`__
 
 
 Supported Platforms and Packages

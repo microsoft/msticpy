@@ -193,6 +193,7 @@ Here is an example of authenticating to an Azure OpenAI endpoint using
 both Entra ID and an API key:
 
 .. code:: yaml
+
   Autogen:
     config_list:
       - model: gpt-4o

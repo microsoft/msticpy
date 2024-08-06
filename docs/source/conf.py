@@ -217,6 +217,7 @@ autoapi_dirs = ["../../msticpy"]
 
 autodoc_mock_imports = [
     "adal",
+    "autogen",
     "azure",
     "azure.common.exceptions",
     "azure.core.exceptions",
@@ -245,6 +246,7 @@ autodoc_mock_imports = [
     "dns",
     "folium",
     "geoip2",
+    "importlib_resources",
     "ipwhois",
     "IPython",
     "ipywidgets",
