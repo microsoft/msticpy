@@ -12,10 +12,13 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+from __future__ import annotations
+
 import datetime as dt
-from typing import Any, Dict, Tuple
+from typing import Any, ClassVar
 
 import attr
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -26,7 +29,7 @@ __version__ = VERSION
 __author__ = "Florian Bracq"
 
 
-_DEF_HEADERS = {
+_DEF_HEADERS: dict[str, str] = {
     "Content-Type": "application/json",
     "Accept": "application/json",
     "Accept-Charset": "UTF-8",
@@ -38,7 +41,7 @@ _DEF_HEADERS = {
 @attr.s
 class _ServiceNowParams(APILookupParams):
     # override LookupParams to set common defaults
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self: Self) -> None:
         self.auth_str = ["{ApiID}", "{AuthKey}"]
         self.auth_type = "HTTPBasic"
 
@@ -47,15 +50,15 @@ class _ServiceNowParams(APILookupParams):
 class ServiceNow(HttpContextProvider):
     """ServiceNow Lookup."""
 
-    _BASE_URL = "https://{Instance}.service-now.com/api/now/table"
+    _BASE_URL: ClassVar[str] = "https://{Instance}.service-now.com/api/now/table"
 
-    _SERVICE_NOW_PARAMS = {
+    _SERVICE_NOW_PARAMS: ClassVar[dict[str, Any]] = {
         "sysparm_display_value": True,
         "sysparm_exclude_reference_link": True,
         "sysparm_limit": 10,
     }
 
-    _QUERIES = {
+    _QUERIES: ClassVar[dict[str, APILookupParams]] = {
         "ipv4": _ServiceNowParams(
             path="/cmdb_ci_computer",
             params={
@@ -89,9 +92,9 @@ class ServiceNow(HttpContextProvider):
         ),
     }
 
-    _REQUIRED_PARAMS = ["ApiID", "AuthKey", "Instance"]
+    _REQUIRED_PARAMS: ClassVar[list[str]] = ["ApiID", "AuthKey", "Instance"]
 
-    def parse_results(self, response: Dict[str, Any]) -> Tuple[bool, Any]:
+    def parse_results(self: Self, response: dict[str, Any]) -> tuple[bool, Any]:
         """
         Return the details of the response.
 
@@ -102,13 +105,14 @@ class ServiceNow(HttpContextProvider):
 
         Returns
         -------
-        Tuple[bool, Any]
+        tuple[bool, Any]
             bool = positive or negative hit
             Object with match details
 
         """
         if self._failed_response(response) or not isinstance(
-            response.get("RawResult", {}), dict
+            response.get("RawResult", {}),
+            dict,
         ):
             return False, "Not found."
 
@@ -125,9 +129,9 @@ class ServiceNow(HttpContextProvider):
             if not response["RawResult"]["result"]:
                 return False, "Not found."
 
-        results = response["RawResult"]["result"]
+        results: list[dict[str, Any]] = response["RawResult"]["result"]
 
-        result_dict = [
+        result_dict: list[dict[str, Any]] = [
             {
                 "permalink": f"{response['Reference']}/{result.get('sys_id')}",
                 "sys_class_name": result.get("sys_class_name", ""),
@@ -136,13 +140,19 @@ class ServiceNow(HttpContextProvider):
                 "company": result.get("company", None),
                 "location": result.get("location", ""),
                 "sys_updated_on": (
-                    dt.datetime.strptime(result["sys_updated_on"], "%Y-%m-%d %H:%M:%S")
-                    if "sys_updated_on" in result and result["sys_updated_on"]
+                    dt.datetime.strptime(
+                        result["sys_updated_on"],
+                        "%Y-%m-%d %H:%M:%S",
+                    ).replace(tzinfo=dt.timezone.utc)
+                    if result.get("sys_updated_on")
                     else ""
                 ),
                 "sys_created_on": (
-                    dt.datetime.strptime(result["sys_created_on"], "%Y-%m-%d %H:%M:%S")
-                    if "sys_created_on" in result and result["sys_created_on"]
+                    dt.datetime.strptime(
+                        result["sys_created_on"],
+                        "%Y-%m-%d %H:%M:%S",
+                    ).replace(tzinfo=dt.timezone.utc)
+                    if result.get("sys_created_on")
                     else ""
                 ),
                 **(
@@ -154,64 +164,72 @@ class ServiceNow(HttpContextProvider):
 
         return True, result_dict
 
-    def _parse_result_ipv4(self, result: Dict[str, Any]) -> Dict[str, Any]:
+    def _parse_result_ipv4(self: Self, result: dict[str, Any]) -> dict[str, Any]:
         """
         Return a dictionary of relevant fields for a "Computer" Service Now object.
 
         Parameters
         ----------
-        result : Dict[str, Any]
+        result : dict[str, Any]
             Entry returned by Service Now
 
         Returns
         -------
-        Dict[str, Any]
+        dict[str, Any]
 
             Subset of releavnt keys parsed
 
         """
         return {
-            "assignment_group": result.get("assignment_group", None),
+            "assignment_group": result.get("assignment_group"),
             "busines_criticality": result.get("busines_criticality", ""),
-            "category": result.get("category", None),
-            "comments": result.get("comments", None),
-            "fqdn": result.get("fqdn", None),
-            "hostname": result.get("hostname", None),
+            "category": result.get("category"),
+            "comments": result.get("comments"),
+            "fqdn": result.get("fqdn"),
+            "hostname": result.get("hostname"),
             "install_status": result.get("install_status", ""),
             "internet_facing": result.get("internet_facing", False),
             "ip_address": result.get("ip_address", "").split(","),
-            "subcategory": result.get("subcategory", None),
-            "support_group": result.get("support_group", None),
+            "subcategory": result.get("subcategory"),
+            "support_group": result.get("support_group"),
             "sys_class_name": result.get("sys_class_name", ""),
             "last_discovered": (
-                dt.datetime.strptime(result["last_discovered"], "%Y-%m-%d %H:%M:%S")
-                if "last_discovered" in result and result["last_discovered"]
+                dt.datetime.strptime(
+                    result["last_discovered"],
+                    "%Y-%m-%d %H:%M:%S",
+                ).replace(tzinfo=dt.timezone.utc)
+                if result.get("last_discovered")
                 else ""
             ),
             "install_date": (
-                dt.datetime.strptime(result["install_date"], "%Y-%m-%d %H:%M:%S")
-                if "install_date" in result and result["install_date"]
+                dt.datetime.strptime(
+                    result["install_date"],
+                    "%Y-%m-%d %H:%M:%S",
+                ).replace(tzinfo=dt.timezone.utc)
+                if result.get("install_date")
                 else ""
             ),
             "created_on": (
-                dt.datetime.strptime(result["created_on"], "%Y-%m-%d %H:%M:%S")
-                if "created_on" in result and result["created_on"]
+                dt.datetime.strptime(result["created_on"], "%Y-%m-%d %H:%M:%S").replace(
+                    tzinfo=dt.timezone.utc,
+                )
+                if result.get("created_on")
                 else ""
             ),
         }
 
-    def _parse_result_user(self, result: Dict[str, Any]) -> Dict[str, Any]:
+    def _parse_result_user(self: Self, result: dict[str, Any]) -> dict[str, Any]:
         """
         Return a dictionary of relevant fields for a "Computer" Service Now object.
 
         Parameters
         ----------
-        result : Dict[str, Any]
+        result : dict[str, Any]
             Entry returned by Service Now
 
         Returns
         -------
-        Dict[str, Any]
+        dict[str, Any]
 
             Subset of releavnt keys parsed
 
@@ -235,13 +253,18 @@ class ServiceNow(HttpContextProvider):
             "user_name": result.get("user_name", ""),
             "vip": result.get("vip", "false"),
             "last_login": (
-                dt.datetime.strptime(result["last_login"], "%Y-%m-%d")
-                if "last_login" in result and result["last_login"]
+                dt.datetime.strptime(result["last_login"], "%Y-%m-%d").replace(
+                    tzinfo=dt.timezone.utc,
+                )
+                if result.get("last_login")
                 else ""
             ),
             "last_login_time": (
-                dt.datetime.strptime(result["last_login_time"], "%Y-%m-%d %H:%M:%S")
-                if "last_login_time" in result and result["last_login_time"]
+                dt.datetime.strptime(
+                    result["last_login_time"],
+                    "%Y-%m-%d %H:%M:%S",
+                ).replace(tzinfo=dt.timezone.utc)
+                if result.get("last_login_time")
                 else ""
             ),
         }

@@ -4,9 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Result Severity enumeration."""
+from __future__ import annotations
+
 from enum import Enum
 from functools import total_ordering
-from typing import Any, Dict, NamedTuple
+from typing import Any, NamedTuple
+
+from typing_extensions import Self
 
 from ..._version import VERSION
 
@@ -27,7 +31,7 @@ class ResultSeverity(Enum):
     # pylint: enable=invalid-name
 
     @classmethod
-    def parse(cls, value) -> "ResultSeverity":
+    def parse(cls: type[ResultSeverity], value: object) -> ResultSeverity:
         """
         Parse string or numeric value to ResultSeverity.
 
@@ -52,7 +56,7 @@ class ResultSeverity(Enum):
             return cls(value)
         return ResultSeverity.unknown
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self: Self, other: object) -> bool:
         """
         Return True if severities are equal.
 
@@ -68,10 +72,10 @@ class ResultSeverity(Enum):
             If severities are equal
 
         """
-        other_sev = ResultSeverity.parse(other)
+        other_sev: ResultSeverity = ResultSeverity.parse(other)
         return self.value == other_sev.value
 
-    def __gt__(self, other) -> bool:
+    def __gt__(self: Self, other: str | int | ResultSeverity) -> bool:
         """
         Return True self is greater than other.
 
@@ -87,7 +91,7 @@ class ResultSeverity(Enum):
             If severities are equal
 
         """
-        other_sev = ResultSeverity.parse(other)
+        other_sev: ResultSeverity = ResultSeverity.parse(other)
         return self.value > other_sev.value
 
 
@@ -96,4 +100,4 @@ class LookupResult(NamedTuple):
 
     status: bool
     severity: ResultSeverity
-    details: Dict[str, Any]
+    details: dict[str, Any]

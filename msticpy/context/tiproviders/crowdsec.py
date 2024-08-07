@@ -12,7 +12,12 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import Any, Dict, Tuple
+
+from __future__ import annotations
+
+from typing import Any, ClassVar
+
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ..http_provider import APILookupParams
@@ -26,9 +31,9 @@ __author__ = "Shivam Sandbhor"
 class CrowdSec(HttpTIProvider):
     """CrowdSec CTI Smoke Lookup."""
 
-    _BASE_URL = "https://cti.api.crowdsec.net"
+    _BASE_URL: ClassVar[str] = "https://cti.api.crowdsec.net"
 
-    _QUERIES = {
+    _QUERIES: ClassVar[dict[str, APILookupParams]] = {
         "ipv4": APILookupParams(
             path="/v2/smoke/{observable}",
             headers={
@@ -39,14 +44,17 @@ class CrowdSec(HttpTIProvider):
     }
     _QUERIES["ipv6"] = _QUERIES["ipv4"]
 
-    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
+    MEDIUM_SEVERITY: ClassVar[int] = 2
+    HIGH_SEVERITY: ClassVar[int] = 3
+
+    def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """Return the details of the response."""
         if self._failed_response(response):
             return False, ResultSeverity.information, response["RawResult"]["message"]
 
-        if response["RawResult"]["scores"]["overall"]["total"] <= 2:
+        if response["RawResult"]["scores"]["overall"]["total"] <= self.MEDIUM_SEVERITY:
             result_severity = ResultSeverity.information
-        elif response["RawResult"]["scores"]["overall"]["total"] <= 3:
+        elif response["RawResult"]["scores"]["overall"]["total"] <= self.HIGH_SEVERITY:
             result_severity = ResultSeverity.warning
         else:
             result_severity = ResultSeverity.high
@@ -63,13 +71,13 @@ class CrowdSec(HttpTIProvider):
                     [
                         attack_detail["label"]
                         for attack_detail in response["RawResult"]["attack_details"]
-                    ]
+                    ],
                 ),
                 "Behaviors": ",".join(
                     [
                         behavior["name"]
                         for behavior in response["RawResult"]["behaviors"]
-                    ]
+                    ],
                 ),
             },
         )

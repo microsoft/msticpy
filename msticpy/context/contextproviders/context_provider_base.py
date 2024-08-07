@@ -12,50 +12,64 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+from __future__ import annotations
+
 import re
 from abc import abstractmethod
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Iterable
 
-import pandas as pd
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.utility import export
 from ..lookup_result import SanitizedObservable
 from ..provider_base import Provider
 
+if TYPE_CHECKING:
+    import pandas as pd
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 # Regular expression from Grok patterns
 # https://github.com/hpcugent/logstash-patterns/blob/master/files/grok-patterns
-HOSTNAME_REGEX = (
+HOSTNAME_REGEX: str = (
     r"\b(?:[0-9A-Za-z][0-9A-Za-z-]{0,62})"
     r"(?:\.(?:[0-9A-Za-z][0-9A-Za-z-]{0,62}))*(\.?|\b)"
 )
 
 
-def _validate_hostname(hostname: str, **kwargs) -> SanitizedObservable:
+def _validate_hostname(hostname: str) -> SanitizedObservable:
     """Validate that parameter is a valid hostname."""
-    del kwargs
-    match_hostname = re.compile(HOSTNAME_REGEX, re.I | re.X | re.M).search(hostname)
+    match_hostname: re.Match | None = re.compile(
+        HOSTNAME_REGEX,
+        re.IGNORECASE | re.VERBOSE | re.MULTILINE,
+    ).search(hostname)
     if not match_hostname:
         return SanitizedObservable(None, "Unrecognized hostname")
 
     return SanitizedObservable(match_hostname.group(0), "ok")
 
 
-def _validate_ip(ipaddress: str, **kwargs):
+def _validate_ip(
+    ipaddress: str,
+    version: int = 4,
+) -> SanitizedObservable:
     """Ensure Ip address is a valid public IPv4 address."""
-    version = kwargs.pop("version", 4)
     try:
-        addr = ip_address(ipaddress)
+        addr: IPv4Address | IPv6Address = ip_address(ipaddress)
     except ValueError:
         return SanitizedObservable(None, "IP address is invalid format")
 
-    if version == 4 and not isinstance(addr, IPv4Address):
+    if version == addr.version and not isinstance(
+        addr,
+        IPv4Address,
+    ):
         return SanitizedObservable(None, "Not an IPv4 address")
-    if version == 6 and not isinstance(addr, IPv6Address):
+    if version == addr.version and not isinstance(
+        addr,
+        IPv6Address,
+    ):
         return SanitizedObservable(None, "Not an IPv6 address")
 
     return SanitizedObservable(ipaddress, "ok")
@@ -65,24 +79,23 @@ def _validate_ip(ipaddress: str, **kwargs):
 class ContextProvider(Provider):
     """Abstract base class for Context providers."""
 
-    _REQUIRED_PARAMS: List[str] = []
+    _REQUIRED_PARAMS: ClassVar[list[str]] = []
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self: ContextProvider) -> None:
         """Initialize Context provider."""
-        super().__init__(**kwargs)
-        self._preprocessors._processors.pop("hostname")
-        self._preprocessors._processors.pop("ipv4")
-        self._preprocessors._processors.pop("ipv6")
+        super().__init__()
+        self._preprocessors.processors.pop("hostname")
+        self._preprocessors.processors.pop("ipv4")
+        self._preprocessors.processors.pop("ipv6")
         self._preprocessors.add_check("hostname", _validate_hostname)
         self._preprocessors.add_check("ipv4", _validate_ip)
         self._preprocessors.add_check("ipv6", _validate_ip)
 
     def lookup_item(
-        self,
+        self: Self,
         item: str,
-        item_type: Optional[str] = None,
-        query_type: Optional[str] = None,
-        **kwargs,
+        item_type: str | None = None,
+        query_type: str | None = None,
     ) -> pd.DataFrame:
         """
         Lookup from a value.
@@ -124,16 +137,14 @@ class ContextProvider(Provider):
             observable=item,
             observable_type=item_type,
             query_type=query_type,
-            **kwargs,
         )
 
     @abstractmethod
-    def lookup_observable(  # type: ignore
-        self,
+    def lookup_observable(
+        self: Self,
         observable: str,
-        observable_type: str = None,
-        query_type: str = None,
-        **kwargs,
+        observable_type: str | None = None,
+        query_type: str | None = None,
     ) -> pd.DataFrame:
         """
         Lookup a single observable.
@@ -161,8 +172,11 @@ class ContextProvider(Provider):
         """
 
     def _check_item_type(
-        self, item: str, item_type: str = None, query_subtype: str = None
-    ) -> Dict:
+        self: Self,
+        item: str,
+        item_type: str | None = None,
+        query_subtype: str | None = None,
+    ) -> dict:
         """
         Check Item Type and cleans up item.
 
@@ -177,7 +191,7 @@ class ContextProvider(Provider):
 
         Returns
         -------
-        Dict
+        dict
             Dict result with resolved type and pre-processed item.
             Status is none-zero on failure.
 
@@ -189,8 +203,11 @@ class ContextProvider(Provider):
         )
 
     def _check_observable_type(
-        self, obs: str, obs_type: str = None, query_subtype: str = None
-    ) -> Dict:
+        self: Self,
+        obs: str,
+        obs_type: str | None = None,
+        query_subtype: str | None = None,
+    ) -> dict:
         """
         Check Observable Type and cleans up observable.
 
@@ -205,13 +222,15 @@ class ContextProvider(Provider):
 
         Returns
         -------
-        Dict
+        dict
             Dict result with resolved type and pre-processed Observable.
             Status is none-zero on failure.
 
         """
-        result = super()._check_item_type(
-            item=obs, item_type=obs_type, query_subtype=query_subtype
+        result: dict[str, Any] = super()._check_item_type(
+            item=obs,
+            item_type=obs_type,
+            query_subtype=query_subtype,
         )
         result["Observable"] = result.pop("Item")
         result["ObservableType"] = result.pop("ItemType")
@@ -219,18 +238,18 @@ class ContextProvider(Provider):
         return result
 
     @abstractmethod
-    def parse_results(self, response: Dict) -> Tuple[bool, Any]:
+    def parse_results(self: Self, response: dict) -> tuple[bool, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : Dict
+        response : dict
             The returned data response
 
         Returns
         -------
-        Tuple[bool, ResultSeverity, Any]
+        tuple[bool, ResultSeverity, Any]
             bool = positive or negative hit
             ResultSeverity = enumeration of severity
             Object with match details
@@ -238,19 +257,18 @@ class ContextProvider(Provider):
         """
 
     def lookup_observables(
-        self,
-        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        obs_col: str = None,
-        obs_type_col: str = None,
-        query_type: str = None,
-        **kwargs,
+        self: Self,
+        data: pd.DataFrame | dict[str, str] | Iterable[str],
+        obs_col: str | None = None,
+        obs_type_col: str | None = None,
+        query_type: str | None = None,
     ) -> pd.DataFrame:
         """
         Lookup collection of observables.
 
         Parameters
         ----------
-        data : Union[pd.DataFrame, Dict[str, str], Iterable[str]]
+        data : pd.DataFrame | dict[str, str] | Iterable[str]
             Data input in one of three formats:
             1. Pandas dataframe (you must supply the column name in
             `obs_col` parameter)
@@ -276,16 +294,14 @@ class ContextProvider(Provider):
             item_col=obs_col,
             item_type_col=obs_type_col,
             query_type=query_type,
-            **kwargs,
         )
 
     async def lookup_observables_async(
-        self,
-        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        obs_col: str = None,
-        obs_type_col: str = None,
-        query_type: str = None,
-        **kwargs,
+        self: Self,
+        data: pd.DataFrame | dict[str, str] | Iterable[str],
+        obs_col: str | None = None,
+        obs_type_col: str | None = None,
+        query_type: str | None = None,
     ) -> pd.DataFrame:
         """Call base async wrapper."""
         return await self._lookup_items_async_wrapper(
@@ -293,23 +309,21 @@ class ContextProvider(Provider):
             item_col=obs_col,
             item_type_col=obs_type_col,
             query_type=query_type,
-            **kwargs,
         )
 
     async def _lookup_observables_async_wrapper(
-        self,
-        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        obs_col: str = None,
-        obs_type_col: str = None,
-        query_type: str = None,
-        **kwargs,
+        self: Self,
+        data: pd.DataFrame | dict[str, str] | Iterable[str],
+        obs_col: str | None = None,
+        obs_type_col: str | None = None,
+        query_type: str | None = None,
     ) -> pd.DataFrame:
         """
         Async wrapper for providers that do not implement lookup_iocs_async.
 
         Parameters
         ----------
-        data : Union[pd.DataFrame, Dict[str, str], Iterable[str]]
+        data : pd.DataFrame | dict[str, str] | Iterable[str]
             Data input in one of three formats:
             1. Pandas dataframe (you must supply the column name in
             `obs_col` parameter)
@@ -335,5 +349,4 @@ class ContextProvider(Provider):
             item_col=obs_col,
             item_type_col=obs_type_col,
             query_type=query_type,
-            **kwargs,
         )

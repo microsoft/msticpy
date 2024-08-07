@@ -63,3 +63,4 @@ typing-extensions>=4.2.0
 urllib3>=1.23
 vt-py>=0.18.0
 vt-graph-api>=2.0
+requests>=2.31.0

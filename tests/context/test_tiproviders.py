@@ -12,6 +12,7 @@ import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
+import httpx
 import pandas as pd
 import pytest
 import pytest_check as check
@@ -73,7 +74,7 @@ def is_benign_ioc(request_item):
 
 
 # This class will mock httpx.Client()
-class HTTPResponse:
+class HTTPResponse(httpx.Response):
     """Class for mocked response."""
 
     def __init__(self, json_data, status_code):
@@ -84,6 +85,10 @@ class HTTPResponse:
     def json(self):
         """Return Python representation of json data."""
         return self.json_data
+
+    def __repr__(self) -> str:
+        """Return object representation."""
+        return f"<Response [{self.status_code}]>"
 
 
 class RequestSession:
