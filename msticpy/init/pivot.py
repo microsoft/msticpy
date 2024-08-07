@@ -185,9 +185,8 @@ class Pivot:
     @staticmethod
     def _get_def_pivot_reg():
         try:
-            from importlib.resources import (  # pylint: disable=import-outside-toplevel
-                files,  # noqa=attr_defined
-            )
+            # pylint: disable=import-outside-toplevel
+            from importlib.resources import files  # type: ignore[attr-defined]
 
             return files("msticpy").joinpath(_DEF_PIVOT_REG_FILE)
         except ImportError:
