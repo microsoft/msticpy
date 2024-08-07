@@ -27,6 +27,8 @@ EXTRAS_EXCEPTIONS = {
     "msticnb",
     "pygeohash",
     "pyperclip",
+    "autogen",
+    "importlib_resources",
 }
 CONDA_PKG_EXCEPTIONS = {
     "vt-py",
@@ -69,7 +71,12 @@ def test_missing_pkgs_req():
     missing_reqs = {
         req.strip() for reqs in mod_imports.values() for req in reqs.missing_reqs
     }
-    missing_reqs = missing_reqs - EXTRAS_EXCEPTIONS
+    # Remove any missing modules that part of an extra
+    missing_reqs = {
+        req
+        for req in missing_reqs
+        if not any(req.startswith(p) for p in EXTRAS_EXCEPTIONS)
+    }
     if missing_reqs:
         print(
             "Missing packages:\n",
@@ -138,10 +145,10 @@ def test_conda_reqs(extras_from_setup):
             conda_reqs_pip_dict.pop(pkg_name)
 
     if conda_reqs_dict:
-        print("Extra items found in conda-reqs.txt", conda_reqs_pip_dict)
+        print("Extra items found in conda-reqs.txt", conda_reqs_dict)
     check.is_false(conda_reqs_dict, "no extra items in conda-reqs.txt")
     if conda_reqs_pip_dict:
-        print("Extra items found in conda-reqs-pip.txt", conda_reqs_dict)
+        print("Extra items found in conda-reqs-pip.txt", conda_reqs_pip_dict)
     check.is_false(conda_reqs_pip_dict, "no extra items in conda-reqs-pip.txt")
 
 
@@ -153,4 +160,8 @@ def _get_reqs_from_file(reqs_file):
         for req in reqs_lines
         if req.strip() and not req.strip().startswith("#")
     ]
-    return {req.name.casefold(): req.specifier for req in reqs}
+    return {
+        req.name.casefold(): req.specifier
+        for req in reqs
+        if req.marker is None or req.marker.evaluate()
+    }
