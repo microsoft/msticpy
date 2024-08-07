@@ -274,7 +274,7 @@ def sentinel_loader(mock_creds, get_token, monkeypatch):
             res_grp=settings.get("ResourceGroup", "RG"),
             ws_name=settings.get("WorkspaceName", "Default"),
         )
-        sent._default_workspace = ws_key
+        sent._default_workspace_name = ws_key
         sent.connect(workspace=ws_key, token=["PLACEHOLDER"])  # nosec
         sent.connected = True
     return sent

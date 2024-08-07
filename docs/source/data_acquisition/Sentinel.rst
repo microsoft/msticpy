@@ -34,7 +34,9 @@ e.g.
 
 .. code:: ipython3
 
-    MicrosoftSentinel(res_id="subscriptions/fdee8146-8bcf-460f-86f3-3f788c285efd/resourceGroups/myRG/providers/Microsoft.OperationalInsights/workspaces/myWorkspace")
+    MicrosoftSentinel(
+        resource_id="subscriptions/fdee8146-8bcf-460f-86f3-3f788c285efd/resourceGroups/myRG/providers/Microsoft.OperationalInsights/workspaces/myWorkspace"
+    )
 
 Alternatively you can provide the Subscription ID, Resource Group name and Workspace name
 seperately and let the class build the resource ID for you.
@@ -43,9 +45,11 @@ e.g.
 
 .. code:: ipython3
 
-    MicrosoftSentinel(sub_id="fdee8146-8bcf-460f-86f3-3f788c285efd"
-        res_grp="myRG",
-        ws_name="myWorkspace")
+    MicrosoftSentinel(
+        subscription_id="fdee8146-8bcf-460f-86f3-3f788c285efd"
+        resource_group="myRG",
+        workspace_name="myWorkspace"
+    )
 
 If no workspace details are provided it will attempt to use default workspace details from
 your config file.
@@ -56,8 +60,8 @@ In order to connect to the Microsoft Sentinel API and retrieve the required data
 we need to instantiate the MicrosoftSentinel class and authenticate to Azure.
 Authentication to the Microsoft Sentinel API is handled via an the azure_auth package.
 
-By default ``['cli', 'msi', 'devicecode']`` is used but you can provide an alternative
-list to ``.connect`` via the auth_methods parameter.
+By default, the credential types used default to the values configured in your ``msticpyconfig.yaml``
+but you can provide an alternative list to ``.connect()`` via the auth_methods parameter.
 
 .. code:: ipython3
 
