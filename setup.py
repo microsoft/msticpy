@@ -53,6 +53,7 @@ EXTRAS = {
     "sql2kql": ["mo-sql-parsing>=8, <9.0.0"],
     "riskiq": ["passivetotal>=2.5.3", "requests>=2.31.0"],
     "panel": ["panel>=0.14.4"],
+    "aiagents": ["pyautogen[retrievechat]>=0.2.28"],
 }
 extras_all = [
     extra for name, extras in EXTRAS.items() for extra in extras if name != "dev"
@@ -73,5 +74,8 @@ EXTRAS["sentinel"] = sorted(_combine_extras(["azure", "kql", "keyvault"]))
 
 if __name__ == "__main__":
     setuptools.setup(
-        install_requires=INSTALL_REQUIRES, extras_require=EXTRAS, version=__version__
+        install_requires=INSTALL_REQUIRES,
+        extras_require=EXTRAS,
+        version=__version__,
+        package_data={"docs": ["msticpy/docs/source/**/*.rst"]},
     )
