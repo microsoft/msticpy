@@ -151,9 +151,7 @@ class HttpProvider(Provider):
             self._request_params["Instance"] = Instance.strip()
 
         missing_params: list[str] = [
-            param
-            for param in self._REQUIRED_PARAMS
-            if param not in self._request_params
+            param for param in self._REQUIRED_PARAMS if param not in self._request_params
         ]
 
         missing_params = []

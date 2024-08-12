@@ -45,9 +45,9 @@ class ParsedUrlComponents:
 class SentinelWorkspacesMixin:
     """Mixin class for Sentinel workspaces."""
 
-    _TENANT_URI: ClassVar[str] = (
-        "{cloud_endpoint}/{tenant_name}/.well-known/openid-configuration"
-    )
+    _TENANT_URI: ClassVar[
+        str
+    ] = "{cloud_endpoint}/{tenant_name}/.well-known/openid-configuration"
     _RES_GRAPH_PROV: ClassVar[QueryProvider | None] = None
 
     @classmethod

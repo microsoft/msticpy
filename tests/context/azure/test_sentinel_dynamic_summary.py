@@ -268,13 +268,13 @@ def sentinel_loader(mock_creds, get_token, monkeypatch):
         get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
     ):
         sent = MicrosoftSentinel(
-            sub_id=settings.get(
+            subscription_id=settings.get(
                 "SubscriptionId", "fd09863b-5cec-4833-ab9c-330ad07b0c1a"
             ),
-            res_grp=settings.get("ResourceGroup", "RG"),
-            ws_name=settings.get("WorkspaceName", "Default"),
+            resource_group=settings.get("ResourceGroup", "RG"),
+            workspace_name=settings.get("WorkspaceName", "Default"),
         )
-        sent._default_workspace = ws_key
+        sent._default_workspace_name = ws_key
         sent.connect(workspace=ws_key, token=["PLACEHOLDER"])  # nosec
         sent.connected = True
     return sent
@@ -483,9 +483,7 @@ def test_dynamic_summary_class(ti_data):
         check.equal(item.search_key, ds2.summary_items[idx].search_key)
         check.equal(item.observable_type, ds2.summary_items[idx].observable_type)
         check.equal(item.observable_value, ds2.summary_items[idx].observable_value)
-        check.equal(
-            len(item.packed_content), len(ds2.summary_items[idx].packed_content)
-        )
+        check.equal(len(item.packed_content), len(ds2.summary_items[idx].packed_content))
 
 
 def test_df_to_dynamic_summaries():

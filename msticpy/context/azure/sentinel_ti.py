@@ -17,7 +17,11 @@ from typing_extensions import Self
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
-from .sentinel_utils import _azs_api_result_to_df, _build_sent_data, get_http_timeout
+from .sentinel_utils import (
+    _azs_api_result_to_df,
+    extract_sentinel_response,
+    get_http_timeout,
+)
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -196,7 +200,7 @@ class SentinelTIMixin:
                 description=description,
             ),
         )
-        data: dict[str, Any] = _build_sent_data(data_items, props=True)
+        data: dict[str, Any] = extract_sentinel_response(data_items, props=True)
         data["kind"] = "indicator"
         response: httpx.Response = httpx.post(
             ti_url,
@@ -348,7 +352,7 @@ class SentinelTIMixin:
             data_items,
             indicator_details,
         )
-        data: dict[str, Any] = _build_sent_data(full_data_items, props=True)
+        data: dict[str, Any] = extract_sentinel_response(full_data_items, props=True)
         data["etag"] = indicator_details["etag"]
         data["kind"] = "indicator"
         params: dict[str, str] = {"api-version": "2021-10-01"}

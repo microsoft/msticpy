@@ -17,7 +17,7 @@ from typing_extensions import Self
 
 from ..._version import VERSION
 from .azure_data import get_api_headers
-from .sentinel_utils import _build_sent_data
+from .sentinel_utils import extract_sentinel_response
 
 if TYPE_CHECKING:
     from ...common.timespan import TimeSpan
@@ -82,7 +82,7 @@ class SentinelSearchlistsMixin:
                 "endSearchTime": f"{search_end.isoformat()}",
             },
         }
-        search_body: dict[str, Any] = _build_sent_data(search_items)
+        search_body: dict[str, Any] = extract_sentinel_response(search_items)
         search_create_response: httpx.Response = httpx.put(
             search_url,
             headers=get_api_headers(self._token),

@@ -142,9 +142,9 @@ class VTLookupV3:
         VTEntityType.DOMAIN: {"id", "creation_date", "last_update_date", "country"},
     }
 
-    _DEFAULT_SEARCH_LIMIT: ClassVar[int] = (
-        1000  # prevents vague queries from pulling 1M+ files
-    )
+    _DEFAULT_SEARCH_LIMIT: ClassVar[
+        int
+    ] = 1000  # prevents vague queries from pulling 1M+ files
     _SEARCH_API_ENDPOINT: ClassVar[str] = "/intelligence/search"
 
     @property

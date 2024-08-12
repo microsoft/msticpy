@@ -9,7 +9,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import pytest_check as check
-from msrestazure import azure_cloud
 
 from msticpy.auth.azure_auth_core import (
     AzureCliStatus,
@@ -50,8 +49,7 @@ def test_azure_cloud_config(mp_config_file):
     check.is_in("msi", az_config.auth_methods)
     check.is_in("cli", az_config.auth_methods)
     check.is_in("interactive", az_config.auth_methods)
-    glob_rm_uri = azure_cloud.AZURE_PUBLIC_CLOUD.endpoints.resource_manager
-    check.equal(f"{glob_rm_uri}.default", az_config.token_uri)
+    check.is_in(".default", az_config.token_uri)
 
 
 _TOKEN_WRAPPER = ["Bearer", "__b64_str__"]

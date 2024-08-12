@@ -18,7 +18,7 @@ from typing_extensions import Self
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
-from .sentinel_utils import _build_sent_data, get_http_timeout
+from .sentinel_utils import extract_sentinel_response, get_http_timeout
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -109,7 +109,7 @@ class SentinelWatchlistsMixin:
         }
         if isinstance(data, pd.DataFrame) and not data.empty:
             data_items["rawContent"] = str(data.to_csv(index=False))
-        request_data: dict[str, Any] = _build_sent_data(data_items, props=True)
+        request_data: dict[str, Any] = extract_sentinel_response(data_items, props=True)
         response: httpx.Response = httpx.put(
             watchlist_url,
             headers=get_api_headers(self._token),

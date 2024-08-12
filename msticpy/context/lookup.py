@@ -15,6 +15,7 @@ requests per minute for the account type that you have.
 from __future__ import annotations
 
 import asyncio
+import datetime as dt
 import importlib
 import logging
 import warnings
@@ -43,6 +44,7 @@ from ..common.provider_settings import (
     reload_settings,
 )
 from ..common.utility import export, is_ipython
+from ..nbwidgets.select_item import SelectItem
 from ..vis.ti_browser import browse_results
 from .lookup_result import LookupStatus
 
@@ -96,9 +98,9 @@ class Lookup:
     you have correctly configured your msticpyconfig.yaml settings.
     """
 
-    _HELP_URI: ClassVar[str] = (
-        "https://msticpy.readthedocs.io/en/latest/DataEnrichment.html"
-    )
+    _HELP_URI: ClassVar[
+        str
+    ] = "https://msticpy.readthedocs.io/en/latest/DataEnrichment.html"
 
     PROVIDERS: ClassVar[dict[str, tuple[str, str]]] = {}
     CUSTOM_PROVIDERS: ClassVar[dict[str, type[Provider]]]

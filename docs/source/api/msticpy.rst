@@ -12,6 +12,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   msticpy.aiagents
    msticpy.analysis
    msticpy.auth
    msticpy.common

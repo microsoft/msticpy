@@ -19,7 +19,7 @@ from typing_extensions import Self
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
-from .sentinel_utils import _build_sent_data, get_http_timeout
+from .sentinel_utils import extract_sentinel_response, get_http_timeout
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -91,7 +91,7 @@ class SentinelBookmarksMixin:
             data_items["notes"] = notes
         if labels:
             data_items["labels"] = labels
-        data: dict[str, Any] = _build_sent_data(data_items, props=True)
+        data: dict[str, Any] = extract_sentinel_response(data_items, props=True)
         params: dict[str, str] = {"api-version": "2020-01-01"}
         response: httpx.Response = httpx.put(
             bookmark_url,

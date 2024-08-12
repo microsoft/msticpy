@@ -15,6 +15,7 @@ Submodules
    msticpy.context.tiproviders.abuseipdb
    msticpy.context.tiproviders.alienvault_otx
    msticpy.context.tiproviders.azure_sent_byoti
+   msticpy.context.tiproviders.binaryedge
    msticpy.context.tiproviders.crowdsec
    msticpy.context.tiproviders.greynoise
    msticpy.context.tiproviders.ibm_xforce

@@ -19,7 +19,11 @@ from typing_extensions import Self
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
-from .sentinel_utils import _azs_api_result_to_df, _build_sent_data, get_http_timeout
+from .sentinel_utils import (
+    _azs_api_result_to_df,
+    extract_sentinel_response,
+    get_http_timeout,
+)
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -150,10 +154,11 @@ class SentinelIncidentsMixin:
         return (
             [
                 {
-                    "ID": alrts["properties"]["systemAlertId"],
-                    "Name": alrts["properties"]["alertDisplayName"],
+                    "ID": alert["properties"]["systemAlertId"],
+                    "Name": alert["properties"]["alertDisplayName"],
+                    "AlertProperties": alert["properties"],
                 }
-                for alrts in alerts_resp.json()["value"]
+                for alert in alerts_resp.json()["value"]
             ]
             if alerts_resp.is_success
             else []
@@ -260,7 +265,7 @@ class SentinelIncidentsMixin:
             update_items["title"] = incident_dets.iloc[0]["properties.title"]
         if "status" not in update_items:
             update_items["status"] = incident_dets.iloc[0]["properties.status"]
-        data: dict[str, Any] = _build_sent_data(
+        data: dict[str, Any] = extract_sentinel_response(
             update_items,
             props=True,
             etag=incident_dets.iloc[0]["etag"],
@@ -341,7 +346,7 @@ class SentinelIncidentsMixin:
             data_items["firstActivityTimeUtc"] = first_activity_time.isoformat()
         if last_activity_time:
             data_items["lastActivityTimeUtc"] = last_activity_time.isoformat()
-        data: dict[str, Any] = _build_sent_data(data_items, props=True)
+        data: dict[str, Any] = extract_sentinel_response(data_items, props=True)
         response: httpx.Response = httpx.put(
             incident_url,
             headers=get_api_headers(self._token),
@@ -358,7 +363,7 @@ class SentinelIncidentsMixin:
                 mark_res_id: str = self.sent_urls["bookmarks"] + f"/{bookmark_id}"
                 relations_url: str = incident_url + f"/relations/{relation_id}"
                 bkmark_data_items: dict[str, Any] = {"relatedResourceId": mark_res_id}
-                data = _build_sent_data(bkmark_data_items, props=True)
+                data = extract_sentinel_response(bkmark_data_items, props=True)
                 params = {"api-version": "2021-04-01"}
                 response = httpx.put(
                     relations_url,
@@ -436,7 +441,7 @@ class SentinelIncidentsMixin:
             self.sent_urls["incidents"] + f"/{incident_id}/comments/{uuid4()}"
         )
         params: dict[str, str] = {"api-version": "2020-01-01"}
-        data: dict[str, Any] = _build_sent_data({"message": comment})
+        data: dict[str, Any] = extract_sentinel_response({"message": comment})
         response: httpx.Response = httpx.put(
             comment_url,
             headers=get_api_headers(self._token),
@@ -476,7 +481,7 @@ class SentinelIncidentsMixin:
         bkmark_data_items: dict[str, Any] = {
             "relatedResourceId": mark_res_id.split(self.base_url)[1],
         }
-        data: dict[str, Any] = _build_sent_data(bkmark_data_items, props=True)
+        data: dict[str, Any] = extract_sentinel_response(bkmark_data_items, props=True)
         params: dict[str, str] = {"api-version": "2021-04-01"}
         response: httpx.Response = httpx.put(
             bookmark_url,
