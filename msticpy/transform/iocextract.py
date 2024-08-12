@@ -54,7 +54,7 @@ class IoCPattern:
     ioc_type: str
     comp_regex: re.Pattern[str]
     priority: int
-    group: str
+    group: str | None
 
 
 _RESULT_COLS: list[str] = ["IoCType", "Observable", "SourceIndex", "Input"]
@@ -593,7 +593,7 @@ class IoCExtract:
         pattern_match = rgx.comp_regex.fullmatch(input_str)
         validated = self._validate_tld(input_str) if val_type == "dns" else True
         self._ignore_tld = ignore_tld_current
-        return pattern_match and validated
+        return bool(pattern_match) and validated
 
     @staticmethod
     def file_hash_type(file_hash: str) -> IoCType:

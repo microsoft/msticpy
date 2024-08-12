@@ -164,9 +164,7 @@ def _extract_missing_parents(
         .drop(columns=["InitiatingProcessFileName"])
     )
     missing_parents["CreatedProcessFilePath"] = (
-        missing_parents.CreatedProcessFilePath
-        + "\\"
-        + missing_parents.CreatedProcessName
+        missing_parents.CreatedProcessFilePath + "\\" + missing_parents.CreatedProcessName
     )
     missing_parents = _sort_df_by_time(missing_parents)
     if debug:
@@ -346,9 +344,9 @@ def convert_mde_schema_to_internal(
     data["InitiatingProcessCreationTime"] = data.InitiatingProcessCreationTime.fillna(
         _UNK_TIME
     )
-    data["InitiatingProcessParentCreationTime"] = (
-        data.InitiatingProcessParentCreationTime.fillna(_UNK_TIME)
-    )
+    data[
+        "InitiatingProcessParentCreationTime"
+    ] = data.InitiatingProcessParentCreationTime.fillna(_UNK_TIME)
 
     # Proc tree code references CreateProcessParentId
     # This should be the same as InitiatingProcessParentId

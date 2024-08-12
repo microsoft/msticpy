@@ -29,7 +29,7 @@ class ProcessTreeSchemaException(MsticpyUserError):
 
 
 @dataclass
-class ProcSchema:
+class ProcSchema:  # pylint: disable=too-many-instance-attributes
     """
     Property name lookup for Process event schema.
 

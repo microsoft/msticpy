@@ -6,9 +6,9 @@
 """Mixin Classes for Sentinel Utilties."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 from collections import Counter
+from dataclasses import dataclass
 from typing import Any, TypeVar
 
 import httpx
@@ -54,7 +54,7 @@ class SentinelInstanceDetails:
     workspace_name: str
 
     @property
-    def resource_id(self) -> str | None:
+    def resource_id(self) -> str:
         """Return the resource ID for the workspace."""
         return build_sentinel_resource_id(
             self.subscription_id,
@@ -146,7 +146,9 @@ class SentinelUtilsMixin:
                 i += 1
         results_df = pd.concat(results)
         logger.info(
-            "list_items request to %s returned %d rows", item_url, len(results_df)
+            "list_items request to %s returned %d rows",
+            item_url,
+            len(results_df),
         )
         return results_df
 
@@ -186,8 +188,8 @@ class SentinelUtilsMixin:
 
         Parameters
         ----------
-        res_id : str
-            An Azure resource ID.
+        sentinel_instance : SentinelInstanceDetails
+            Details of a Sentinel workspace
         base_url : str, optional
             The base URL of the Azure cloud to connect to.
             Defaults to resource manager for configured cloud.
@@ -282,8 +284,9 @@ def build_sentinel_resource_id(
 
 def extract_sentinel_response(
     items: dict,
+    *,
     props: bool = False,
-    etag: str | None = None,
+    etag: dict[str, str] | None = None,
 ) -> dict:
     """
     Build request data body from items.

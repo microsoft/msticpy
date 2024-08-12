@@ -52,7 +52,7 @@ class SentinelDynamicSummaryMixin:
     ] = DynamicSummary.df_to_dynamic_summaries
 
     @classmethod
-    def new_dynamic_summary(  # noqa: PLR0913
+    def new_dynamic_summary(  # pylint:disable=too-many-arguments # noqa: PLR0913
         cls: type[SentinelDynamicSummaryMixin],
         summary_id: str | None = None,
         name: str | None = None,
@@ -139,8 +139,10 @@ class SentinelDynamicSummaryMixin:
         if summary_items:
             if not self.sent_data_query:
                 try:
-                    self.sent_data_query = SentinelQueryProvider(
-                        self.default_workspace_name,  # type: ignore[attr-defined]
+                    self.sent_data_query: SentinelQueryProvider | None = (
+                        SentinelQueryProvider(
+                            self.default_workspace_name,  # type: ignore[attr-defined]
+                        )
                     )
                     logger.info(
                         "Created sentinel query provider for %s",
@@ -288,7 +290,7 @@ class SentinelDynamicSummaryMixin:
         )
 
     @_create_dynamic_summary.register(str)
-    def _(  # noqa: PLR0913
+    def _(  # pylint:disable=too-many-arguments # noqa: PLR0913
         self: Self,
         name: str,
         description: str,
@@ -312,13 +314,12 @@ class SentinelDynamicSummaryMixin:
             Dynamic Summary description
         data : pd.DataFrame
             The summary data
-
-        Other Parameters
-        ----------------
-        relation_name : str, optional
-            The relation name, by default None
-        relation_id : str, optional
-            The relation ID, by default None
+        summary_id: str | None
+            Id of the summary object
+        tenant_id: str | None
+            Tenant Id of the Sentinel workspace
+        azure_tenant_id: str | None
+            Tenant Id of the Sentinel workspace
         search_key : str, optional
             Search key for the entire summary, by default None
         tactics : Union[str, List[str], None], optional
@@ -327,9 +328,6 @@ class SentinelDynamicSummaryMixin:
             Relevant MITRE techniques, by default None
         source_info : str, optional
             Summary source info, by default None
-        summary_items : Union[pd, DataFrame, Iterable[DynamicSummaryItem],
-        List[Dict[str, Any]]], optional
-            Collection of summary items, by default None
 
         Returns
         -------
@@ -465,7 +463,7 @@ class SentinelDynamicSummaryMixin:
 
         """
         if (summary and not summary.summary_id) or (data is not None and not summary_id):
-            err_msg: str = ("You must supply a summary ID to update",)
+            err_msg: str = "You must supply a summary ID to update"
             raise MsticpyParameterError(
                 err_msg,
                 parameters="summary_id",

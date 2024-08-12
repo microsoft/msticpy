@@ -923,6 +923,9 @@ class VTLookupV3:
         VTFileBehavior
 
         """
+        if not self._vt_key:
+            error_msg: str = "VT key is required to retrieve file behavior"
+            raise ValueError(error_msg)
         vt_behavior = VTFileBehavior(
             self._vt_key,
             file_id=file_id,

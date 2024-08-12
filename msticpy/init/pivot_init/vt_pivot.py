@@ -158,7 +158,6 @@ def _create_pivots(api_scope: Union[str, VTAPIScope, None]):
     else:
         scope = api_scope
     try:
-        # pylint: disable=possibly-used-before-assignment
         vt_client = VTLookupV3()
     except (ValueError, AttributeError):
         # Can't initialize VTLookup - don't add the pivot funcs
@@ -176,9 +175,7 @@ def _create_pivots(api_scope: Union[str, VTAPIScope, None]):
         scope = VTAPIScope.ALL
     ent_funcs = {}
     for entity, (vt_type, category) in PIVOT_ENTITY_CATS.items():
-        ent_relations = (
-            rel for rel, rel_scope in category.items() if rel_scope & scope
-        )
+        ent_relations = (rel for rel, rel_scope in category.items() if rel_scope & scope)
         func_dict = {}
         for relationship in ent_relations:
             f_part = partial(

@@ -9,13 +9,10 @@ from __future__ import annotations
 import datetime
 import logging
 from dataclasses import asdict, dataclass, field
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Iterable
 
 import numpy as np
 import pandas as pd
-from azure.common.exceptions import CloudError
-from azure.core.exceptions import ClientAuthenticationError
-from azure.mgmt.resource.subscriptions import SubscriptionClient
 from typing_extensions import Self
 
 from ..._version import VERSION
@@ -34,8 +31,11 @@ from ...common.exceptions import (
 )
 
 try:
+    from azure.common.exceptions import CloudError
+    from azure.core.exceptions import ClientAuthenticationError
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.resource import ResourceManagementClient
+    from azure.mgmt.resource.subscriptions import SubscriptionClient
 
     try:
         # Try new version but keep backward compat with 1.0.1
@@ -46,7 +46,7 @@ try:
 
     if TYPE_CHECKING:
         from azure.mgmt.compute.models import VirtualMachineInstanceView
-        from azure.mgmt.subscription.models import Subscription
+        from azure.mgmt.subscription.models import Subscription, NetworkInterface
 except ImportError as imp_err:
     error_msg: str = (
         "Cannot use this feature without these azure packages installed:\n"
@@ -63,6 +63,8 @@ except ImportError as imp_err:
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
+
+# pylint:disable=too-many-lines
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -85,7 +87,7 @@ _CLIENT_MAPPING: dict[
 
 
 @dataclass
-class Items:
+class Items:  # pylint:disable=too-many-instance-attributes
     """attr class to build resource details dictionary."""
 
     resource_id: str | None = None
@@ -252,16 +254,21 @@ class AzureData:
         subscription_ids: list[str] = []
         display_names: list[str] = []
         states: list[str] = []
-        try:
-            sub_list = list(self.sub_client.subscriptions.list())
-        except AttributeError:
-            self._legacy_auth("sub_client")
-            sub_list = list(self.sub_client.subscriptions.list())
+        if self.sub_client:
+            try:
+                sub_list: Iterable[Subscription] = list(
+                    self.sub_client.subscriptions.list(),
+                )
+            except AttributeError:
+                self._legacy_auth("sub_client")
+                sub_list = list(self.sub_client.subscriptions.list())
 
-        for item in sub_list:
-            subscription_ids.append(item.subscription_id)
-            display_names.append(item.display_name)
-            states.append(str(item.state))
+            for item in sub_list:
+                if item.subscription_id:
+                    subscription_ids.append(item.subscription_id)
+                if item.display_name:
+                    display_names.append(item.display_name)
+                states.append(str(item.state))
 
         return pd.DataFrame(
             {
@@ -300,20 +307,27 @@ class AzureData:
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
                 title="Please call connect() before continuing.",
             )
-        try:
-            sub: Subscription = self.sub_client.subscriptions.get(sub_id)
-        except AttributeError:
-            self._legacy_auth("sub_client")
-            sub = self.sub_client.subscriptions.get(sub_id)
+        if self.sub_client:
+            try:
+                sub: Subscription = self.sub_client.subscriptions.get(sub_id)
+            except AttributeError:
+                self._legacy_auth("sub_client")
+                sub = self.sub_client.subscriptions.get(sub_id)
+            sub_loc: dict[str, Any] | None = None
+            quota_id: dict[str, Any] | None = None
+            spending_limit: dict[str, Any] | None = None
+            if sub.subscription_policies:
+                sub_loc = sub.subscription_policies.location_placement_id
+                quota_id = sub.subscription_policies.quota_id
+                spending_limit = sub.subscription_policies.spending_limit
 
-        sub_loc = sub.subscription_policies.location_placement_id
         return {
             "Subscription ID": sub.subscription_id,
             "Display Name": sub.display_name,
             "State": str(sub.state),
             "Subscription Location": sub_loc,
-            "Subscription Quota": sub.subscription_policies.quota_id,
-            "Spending Limit": sub.subscription_policies.spending_limit,
+            "Subscription Quota": quota_id,
+            "Spending Limit": spending_limit,
         }
 
     def list_sentinel_workspaces(self: Self, sub_id: str) -> dict[str, str]:
@@ -360,7 +374,7 @@ class AzureData:
     # Get > List Aliases
     get_sentinel_workspaces: Callable[..., dict[str, Any]] = list_sentinel_workspaces
 
-    def get_resources(  # noqa: MC0001
+    def get_resources(
         self: Self,
         sub_id: str,
         rgroup: str | None = None,
@@ -398,6 +412,9 @@ class AzureData:
             )
 
         self._check_client("resource_client", sub_id)
+        if not self.resource_client:
+            err_msg = "Resource client must be set to retrieve resources."
+            raise ValueError(err_msg)
 
         resources: list[Any] = []
         if rgroup is None:
@@ -499,6 +516,9 @@ class AzureData:
                 title="Please call connect() before continuing.",
             )
         self._check_client("resource_client", sub_id)
+        if not self.resource_client:
+            err_msg = "Cannot get resource details if resource client is not set."
+            raise ValueError(err_msg)
 
         # If a resource id is provided use get_by_id to get details
         if resource_id is not None:
@@ -575,7 +595,7 @@ class AzureData:
             ),
         )
 
-    def _get_api(  # noqa: MC0001
+    def _get_api(
         self: Self,
         resource_id: str | None = None,
         sub_id: str | None = None,
@@ -611,6 +631,9 @@ class AzureData:
             )
 
         self._check_client("resource_client", sub_id)
+        if not self.resource_client:
+            err_msg = "Resource client must be set to get api."
+            raise ValueError(err_msg)
 
         # Normalize elements depending on user input type
         if resource_id is not None:
@@ -618,7 +641,7 @@ class AzureData:
                 namespace = resource_id.split("/")[6]
                 service = resource_id.split("/")[7]
             except IndexError as idx_err:
-                err_msg: str = (
+                err_msg = (
                     "Provided Resource ID isn't in the correct format. "
                     "It should look like:\n"
                     "/subscriptions/SUB_ID/resourceGroups/RESOURCE_GROUP/"
@@ -654,7 +677,7 @@ class AzureData:
 
         # Get first API version that isn't in preview
         if not resource_types:
-            err_msg: str = "Resource provider not found"
+            err_msg = "Resource provider not found"
             raise MsticpyResourceError(err_msg)
 
         api_version = [
@@ -699,10 +722,13 @@ class AzureData:
             )
 
         self._check_client("network_client", sub_id)
+        if not self.network_client:
+            err_msg = "Cannot retrieve network details if the network client is not set"
+            raise ValueError(err_msg)
 
         # Get interface details and parse relevant elements into a dataframe
         try:
-            details = self.network_client.network_interfaces.get(
+            details: NetworkInterface = self.network_client.network_interfaces.get(
                 network_id.split("/")[4],
                 network_id.split("/")[8],
             )
@@ -713,11 +739,11 @@ class AzureData:
                 network_id.split("/")[8],
             )
 
-        ips = []
+        ips: list[dict[str, Any]] = []
         for ip_addr in details.ip_configurations:
-            ip_details = asdict(
+            ip_details: dict[str, Any] = asdict(
                 InterfaceItems(
-                    id=network_id,
+                    interface_id=network_id,
                     private_ip=ip_addr.private_ip_address,
                     private_ip_allocation=str(ip_addr.private_ip_allocation_method),
                     public_ip=(
@@ -818,6 +844,9 @@ class AzureData:
             )
 
         self._check_client("monitoring_client", sub_id)
+        if not self.monitoring_client:
+            err_msg = "Cannot get metrics if monitoring client is not set."
+            raise ValueError(err_msg)
 
         # Get metrics in one hour chunks for the last 30 days
         start = datetime.datetime.now(tz=datetime.timezone.utc).date()
@@ -886,6 +915,9 @@ class AzureData:
             )
 
         self._check_client("compute_client", sub_id)
+        if not self.compute_client:
+            err_msg = "Cannot provide compute state if compute_client is None."
+            raise ValueError(err_msg)
 
         # Parse the Resource ID to extract Resource Group and Resource Name
         r_details = resource_id.split("/")
@@ -919,6 +951,9 @@ class AzureData:
             The subscription ID for the client to connect to, by default None
 
         """
+        if not self.credentials:
+            err_msg: str = "Credentials must be provided for _check_client to work."
+            raise ValueError(err_msg)
         if getattr(self, client_name) is None:
             client: type[
                 SubscriptionClient
@@ -943,14 +978,14 @@ class AzureData:
                     client_name,
                     client(
                         self.credentials.modern,
-                        sub_id,
+                        subscription_id=sub_id,
                         base_url=self.az_cloud_config.resource_manager,
                         credential_scopes=[self.az_cloud_config.token_uri],
                     ),
                 )
 
         if getattr(self, client_name) is None:
-            err_msg: str = "Could not create client"
+            err_msg = "Could not create client"
             raise CloudError(err_msg)
 
     def _legacy_auth(self: Self, client_name: str, sub_id: str | None = None) -> None:
@@ -965,7 +1000,18 @@ class AzureData:
             The subscription ID for the client to connect to, by default None
 
         """
-        client = _CLIENT_MAPPING[client_name]
+        if not self.credentials:
+            err_msg: str = (
+                "Credentials must be provided for legacy authentication to work."
+            )
+            raise ValueError(err_msg)
+        client: type[
+            SubscriptionClient
+            | ResourceManagementClient
+            | NetworkManagementClient
+            | MonitorManagementClient
+            | ComputeManagementClient
+        ] = _CLIENT_MAPPING[client_name]
         if sub_id is None:
             setattr(
                 self,
@@ -982,7 +1028,7 @@ class AzureData:
                 client_name,
                 client(
                     self.credentials.legacy,
-                    sub_id,
+                    subscription_id=sub_id,
                     base_url=self.az_cloud_config.resource_manager,
                     credential_scopes=[self.az_cloud_config.token_uri],
                 ),

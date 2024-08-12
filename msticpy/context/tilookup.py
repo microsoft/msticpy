@@ -237,7 +237,7 @@ class TILookup(Lookup):
             end=end,
         )
 
-    def lookup_iocs_sync(  # noqa: PLR0913
+    def lookup_iocs_sync(  # pylint:disable=too-many-arguments # noqa: PLR0913
         self: Self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         ioc_col: str | None = None,

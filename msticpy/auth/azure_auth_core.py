@@ -4,16 +4,18 @@
 # license information.
 # --------------------------------------------------------------------------
 """Azure KeyVault pre-authentication."""
+from __future__ import annotations
 
 import logging
 import os
 import sys
-from collections import namedtuple
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Tuple, Union
+from typing import ClassVar
 
 from azure.common.credentials import get_cli_profile
+from azure.core.credentials import TokenCredential
 from azure.identity import (
     AzureCliCredential,
     AzurePowerShellCredential,
@@ -38,46 +40,60 @@ from .cred_wrapper import CredentialWrapper
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
-AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
 
 _HELP_URI = (
-    "https://msticpy.readthedocs.io/en/latest/"
-    "getting_started/AzureAuthentication.html"
+    "https://msticpy.readthedocs.io/en/latest/getting_started/AzureAuthentication.html"
 )
+
+
+@dataclass
+class AzCredentials:
+    """Class holding legacy(ADAL) and modern(MSAL) credentials."""
+
+    legacy: TokenCredential
+    modern: ChainedTokenCredential
 
 
 # pylint: disable=too-few-public-methods
 class AzureCredEnvNames:
     """Enumeration of Azure environment credential names."""
 
-    AZURE_CLIENT_ID = "AZURE_CLIENT_ID"  # The app ID for the service principal
-    AZURE_TENANT_ID = "AZURE_TENANT_ID"  # The service principal's Azure AD tenant ID
+    AZURE_CLIENT_ID: ClassVar[
+        str
+    ] = "AZURE_CLIENT_ID"  # The app ID for the service principal
+    AZURE_TENANT_ID: ClassVar[
+        str
+    ] = "AZURE_TENANT_ID"  # The service principal's Azure AD tenant ID
     # pylint: disable=line-too-long
     # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="This is an enum of env variable names")]
-    AZURE_CLIENT_SECRET = "AZURE_CLIENT_SECRET"  # nosec  # noqa
+    AZURE_CLIENT_SECRET: ClassVar[str] = "AZURE_CLIENT_SECRET"  # nosec  # noqa
 
     # Certificate auth:
     # A path to certificate and private key pair in PEM or PFX format
-    AZURE_CLIENT_CERTIFICATE_PATH = "AZURE_CLIENT_CERTIFICATE_PATH"
+    AZURE_CLIENT_CERTIFICATE_PATH: ClassVar[str] = "AZURE_CLIENT_CERTIFICATE_PATH"
     # (Optional) The password protecting the certificate file
     # (for PFX (PKCS12) certificates).
-    AZURE_CLIENT_CERTIFICATE_PASSWORD = (
-        "AZURE_CLIENT_CERTIFICATE_PASSWORD"  # nosec  # noqa
-    )
+    AZURE_CLIENT_CERTIFICATE_PASSWORD: ClassVar[
+        str
+    ] = "AZURE_CLIENT_CERTIFICATE_PASSWORD"  # nosec  # noqa
     # (Optional) Specifies whether an authentication request will include an x5c
     # header to support subject name / issuer based authentication.
     # When set to `true` or `1`, authentication requests include the x5c header.
-    AZURE_CLIENT_SEND_CERTIFICATE_CHAIN = "AZURE_CLIENT_SEND_CERTIFICATE_CHAIN"
+    AZURE_CLIENT_SEND_CERTIFICATE_CHAIN: ClassVar[
+        str
+    ] = "AZURE_CLIENT_SEND_CERTIFICATE_CHAIN"
 
     # Username and password:
-    AZURE_USERNAME = "AZURE_USERNAME"  # The username/upn of an AAD user account.
+    AZURE_USERNAME: ClassVar[
+        str
+    ] = "AZURE_USERNAME"  # The username/upn of an AAD user account.
     # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="This is an enum of env variable names")]
-    AZURE_PASSWORD = "AZURE_PASSWORD"  # User password  # nosec  # noqa
+    AZURE_PASSWORD: ClassVar[str] = "AZURE_PASSWORD"  # User password  # nosec  # noqa
 
 
-_VALID_ENV_VAR_COMBOS = (
+_VALID_ENV_VAR_COMBOS: tuple[tuple[str, ...], ...] = (
     (
         AzureCredEnvNames.AZURE_CLIENT_ID,
         AzureCredEnvNames.AZURE_CLIENT_SECRET,
@@ -98,13 +114,14 @@ _VALID_ENV_VAR_COMBOS = (
 
 
 def _build_env_client(
-    aad_uri: Optional[str] = None, **kwargs
-) -> Optional[EnvironmentCredential]:
+    aad_uri: str | None = None,
+    **kwargs,
+) -> EnvironmentCredential | None:
     """Build a credential from environment variables."""
     del kwargs
     for env_vars in _VALID_ENV_VAR_COMBOS:
         if all(var in os.environ for var in env_vars):
-            return EnvironmentCredential(authority=aad_uri)  # type: ignore
+            return EnvironmentCredential(authority=aad_uri)
 
     # avoid creating env credential if require envs not set.
     logger.info("'env' credential requested but required env vars not set")
@@ -118,20 +135,22 @@ def _build_cli_client(**kwargs) -> AzureCliCredential:
 
 
 def _build_msi_client(
-    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
+    tenant_id: str | None = None,
+    aad_uri: str | None = None,
+    **kwargs,
 ) -> ManagedIdentityCredential:
     """Build a credential from Managed Identity."""
     msi_kwargs = kwargs.copy()
     if AzureCredEnvNames.AZURE_CLIENT_ID in os.environ:
         msi_kwargs["client_id"] = os.environ[AzureCredEnvNames.AZURE_CLIENT_ID]
 
-    return ManagedIdentityCredential(
-        tenant_id=tenant_id, authority=aad_uri, **msi_kwargs
-    )
+    return ManagedIdentityCredential(tenant_id=tenant_id, authority=aad_uri, **msi_kwargs)
 
 
 def _build_vscode_client(
-    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
+    tenant_id: str | None = None,
+    aad_uri: str | None = None,
+    **kwargs,
 ) -> VisualStudioCodeCredential:
     """Build a credential from Visual Studio Code."""
     del kwargs
@@ -139,24 +158,28 @@ def _build_vscode_client(
 
 
 def _build_interactive_client(
-    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
+    tenant_id: str | None = None,
+    aad_uri: str | None = None,
+    **kwargs,
 ) -> InteractiveBrowserCredential:
     """Build a credential from Interactive Browser logon."""
-    return InteractiveBrowserCredential(
-        authority=aad_uri, tenant_id=tenant_id, **kwargs
-    )
+    return InteractiveBrowserCredential(authority=aad_uri, tenant_id=tenant_id, **kwargs)
 
 
 def _build_device_code_client(
-    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
+    tenant_id: str | None = None,
+    aad_uri: str | None = None,
+    **kwargs,
 ) -> DeviceCodeCredential:
     """Build a credential from Device Code."""
     return DeviceCodeCredential(authority=aad_uri, tenant_id=tenant_id, **kwargs)
 
 
 def _build_client_secret_client(
-    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
-) -> Optional[ClientSecretCredential]:
+    tenant_id: str | None = None,
+    aad_uri: str | None = None,
+    **kwargs,
+) -> ClientSecretCredential | None:
     """Build a credential from Client Secret."""
     client_id = kwargs.pop("client_id", None)
     client_secret = kwargs.pop("client_secret", None)
@@ -173,14 +196,12 @@ def _build_client_secret_client(
 
 
 def _build_certificate_client(
-    tenant_id: Optional[str] = None, aad_uri: Optional[str] = None, **kwargs
-) -> Optional[CertificateCredential]:
+    tenant_id: str | None = None, aad_uri: str | None = None, **kwargs
+) -> CertificateCredential | None:
     """Build a credential from Certificate."""
     client_id = kwargs.pop("client_id", None)
     if not client_id:
-        logger.info(
-            "'certificate' credential requested but client_id param not supplied"
-        )
+        logger.info("'certificate' credential requested but client_id param not supplied")
         return None
     return CertificateCredential(
         authority=aad_uri,
@@ -219,15 +240,15 @@ _CLIENTS = dict(
 )
 
 
-def list_auth_methods() -> List[str]:
+def list_auth_methods() -> list[str]:
     """Return list of accepted authentication methods."""
     return sorted(_CLIENTS.keys())
 
 
 def _az_connect_core(
-    auth_methods: Optional[List[str]] = None,
-    cloud: Optional[str] = None,
-    tenant_id: Optional[str] = None,
+    auth_methods: list[str] = None,
+    cloud: str | None = None,
+    tenant_id: str | None = None,
     silent: bool = False,
     **kwargs,
 ) -> AzCredentials:
@@ -236,7 +257,7 @@ def _az_connect_core(
 
     Parameters
     ----------
-    auth_methods : List[str], optional
+    auth_methods : list[str], optional
         List of authentication methods to try
         For a list of possible authentication methods use the `list_auth_methods`
         function.
@@ -333,8 +354,8 @@ az_connect_core = _az_connect_core
 
 def _build_chained_creds(
     aad_uri,
-    requested_clients: Union[List[str], None] = None,
-    tenant_id: Optional[str] = None,
+    requested_clients: list[str] | None = None,
+    tenant_id: str | None = None,
     **kwargs,
 ) -> ChainedTokenCredential:
     """
@@ -342,7 +363,7 @@ def _build_chained_creds(
 
     Parameters
     ----------
-    requested_clients : List[str]
+    requested_clients : list[str]
         List of clients to chain.
     aad_uri : str
         The URI of the Azure AD cloud to connect to
@@ -365,8 +386,8 @@ def _build_chained_creds(
         requested_clients = ["env", "cli", "msi", "interactive"]
         logger.info("No auth methods requested defaulting to: %s", requested_clients)
     cred_list = []
-    invalid_cred_types: List[str] = []
-    unusable_cred_type: List[str] = []
+    invalid_cred_types: list[str] = []
+    unusable_cred_type: list[str] = []
     for cred_type in requested_clients:  # type: ignore[union-attr]
         if cred_type not in _CLIENTS:
             invalid_cred_types.append(cred_type)
@@ -418,10 +439,7 @@ def only_interactive_cred(chained_cred: ChainedTokenCredential):
 
 def _filter_credential_warning(record) -> bool:
     """Rewrite out credential not found message."""
-    if (
-        not record.name.startswith("azure.identity")
-        or record.levelno != logging.WARNING
-    ):
+    if not record.name.startswith("azure.identity") or record.levelno != logging.WARNING:
         return True
     message = record.getMessage()
     if ".get_token" in message:
@@ -453,7 +471,7 @@ class AzureCliStatus(Enum):
     CLI_UNKNOWN_ERROR = 4
 
 
-def check_cli_credentials() -> Tuple[AzureCliStatus, Optional[str]]:
+def check_cli_credentials() -> tuple[AzureCliStatus, str | None]:
     """Check to see if there is a CLI session with a valid AAD token."""
     try:
         cli_profile = get_cli_profile()
@@ -465,10 +483,7 @@ def check_cli_credentials() -> Tuple[AzureCliStatus, Optional[str]]:
             and len(raw_token[0]) == 3
         ):
             bearer_token = raw_token[0][2]
-            if (
-                parser.parse(bearer_token.get("expiresOn", datetime.min))
-                < datetime.now()
-            ):
+            if parser.parse(bearer_token.get("expiresOn", datetime.min)) < datetime.now():
                 raise ValueError("AADSTS70043: The refresh token has expired")
 
         return AzureCliStatus.CLI_OK, "Azure CLI credentials available."

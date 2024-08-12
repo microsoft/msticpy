@@ -23,7 +23,7 @@ TS_FMT_STRING = "%Y-%m-%d %H:%M:%S.%f"
 
 def extract_process_tree(
     procs: pd.DataFrame,
-    schema: "ProcSchema",  # type: ignore  # noqa: F821
+    schema: ProcSchema,
     debug: bool = False,
 ) -> pd.DataFrame:
     """

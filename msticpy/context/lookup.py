@@ -15,7 +15,6 @@ requests per minute for the account type that you have.
 from __future__ import annotations
 
 import asyncio
-import datetime as dt
 import importlib
 import logging
 import warnings
@@ -44,7 +43,6 @@ from ..common.provider_settings import (
     reload_settings,
 )
 from ..common.utility import export, is_ipython
-from ..nbwidgets.select_item import SelectItem
 from ..vis.ti_browser import browse_results
 from .lookup_result import LookupStatus
 

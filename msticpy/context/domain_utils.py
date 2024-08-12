@@ -50,7 +50,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 @export
-def screenshot(
+def screenshot(  # pylint: disable=too-many-locals
     url: str,
     api_key: str | None = None,
     *,

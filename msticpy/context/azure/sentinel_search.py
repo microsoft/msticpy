@@ -69,7 +69,7 @@ class SentinelSearchlistsMixin:
             end = timespan.end
         search_end: dt.datetime = end or dt.datetime.now(tz=dt.timezone.utc)
         search_start: dt.datetime = start or (search_end - dt.timedelta(days=90))
-        search_name = (search_name or uuid4()).replace("_", "")
+        search_name = (search_name or str(uuid4())).replace("_", "")
         search_url: str = (
             self.sent_urls["search"]
             + f"/{search_name}_SRCH?api-version=2021-12-01-preview"

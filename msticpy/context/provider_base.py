@@ -442,7 +442,7 @@ def generate_items(
     data: pd.DataFrame | dict | C_Iterable,
     item_col: str | None = None,
     item_type_col: str | None = None,
-) -> Generator[tuple[str | None, str | None]]:
+) -> Generator[tuple[str | None, str | None], Any, None]:
     """
     Generate item pairs from different input types.
 

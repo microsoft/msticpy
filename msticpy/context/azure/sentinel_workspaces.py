@@ -36,10 +36,10 @@ class ParsedUrlComponents:
     """Class to defined components for Parsed URLs."""
 
     domain: str | None
-    resource_id: str | None
+    resource_id: str
     tenant_name: str | None
-    res_components: dict[str, Any] | None
-    raw_res_id: str | None
+    res_components: dict[str, str]
+    raw_res_id: str
 
 
 class SentinelWorkspacesMixin:
@@ -56,7 +56,10 @@ class SentinelWorkspacesMixin:
         portal_url: str,
     ) -> str | None:
         """Return resource ID components from Sentinel portal URL."""
-        return cls._extract_resource_id(portal_url).resource_id
+        try:
+            return cls._extract_resource_id(portal_url).resource_id
+        except AttributeError:
+            return None
 
     @classmethod
     def get_workspace_details_from_url(
@@ -76,9 +79,9 @@ class SentinelWorkspacesMixin:
         dict[str, dict[str, str]]
 
         """
-        resource_comps: ParsedUrlComponents = cls._extract_resource_id(portal_url)
+        resource_comps: ParsedUrlComponents | None = cls._extract_resource_id(portal_url)
         tenant_id: str | None = None
-        if resource_comps.tenant_name:
+        if resource_comps and resource_comps.tenant_name:
             tenant_id = cls._get_tenantid_from_logon_domain(resource_comps.tenant_name)
         workspace_df: pd.DataFrame = cls._lookup_workspace_by_res_id(
             resource_id=resource_comps.resource_id,
@@ -96,11 +99,11 @@ class SentinelWorkspacesMixin:
             "Failed to find Azure resource for workspace. Returning partial results.",
         )
         return cls._get_settings_for_workspace(
-            workspace_name=resource_comps.res_components.get("name"),
+            workspace_name=resource_comps.res_components["name"],
             workspace_id="unknown",
             tenant_id=tenant_id or "unknown",
-            subscription_id=resource_comps.res_components.get("subscription"),
-            resource_group=resource_comps.res_components.get("resource_group"),
+            subscription_id=resource_comps.res_components["subscription"],
+            resource_group=resource_comps.res_components["resource_group"],
             workspace_tenant_id="unknown",
         )
 
@@ -310,7 +313,7 @@ class SentinelWorkspacesMixin:
     def _extract_resource_id(
         cls: type[SentinelWorkspacesMixin],
         url: str,
-    ) -> ParsedUrlComponents:
+    ) -> ParsedUrlComponents | None:
         """Extract and return resource ID components from URL."""
         resid_pattern = (
             r"https://(?P<domain>[^/]+)/#?(@(?P<tenantname>[^/]+))?"
@@ -319,7 +322,7 @@ class SentinelWorkspacesMixin:
 
         uri_match: re.Match[str] | None = re.search(resid_pattern, url)
         if not uri_match:
-            return ParsedUrlComponents(None, None, None, None, None)
+            return None
 
         raw_res_id: str = uri_match.groupdict()["res_id"]
         raw_res_id = parse.unquote(raw_res_id)
@@ -328,7 +331,7 @@ class SentinelWorkspacesMixin:
             resource_id: str = cls._normalize_resource_id(res_components)
         except KeyError:
             logger.exception("Invalid Sentinel resource id")
-            return ParsedUrlComponents(None, None, None, None, None)
+            return None
         return ParsedUrlComponents(
             domain=uri_match.groupdict().get("domain"),
             resource_id=resource_id,

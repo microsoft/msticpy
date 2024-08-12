@@ -82,7 +82,7 @@ class FieldList:
 
 
 @dataclasses.dataclass
-class DynamicSummaryItem:
+class DynamicSummaryItem:  # pylint:disable=too-many-instance-attributes
     """
     DynamicSummaryItem class.
 
@@ -111,7 +111,7 @@ class DynamicSummaryItem:
 
     """
 
-    fields: ClassVar
+    fields: ClassVar[FieldList]
     summary_item_id: str | None = None
     relation_name: str | None = None
     relation_id: str | None = None
@@ -292,7 +292,7 @@ class DynamicSummary:
         return summary
 
     @classmethod
-    def new_dynamic_summary(  # noqa: PLR0913
+    def new_dynamic_summary(  # pylint:disable=too-many-arguments # noqa: PLR0913
         cls: type[DynamicSummary],
         summary_id: str | None = None,
         summary_name: str | None = None,
@@ -434,7 +434,7 @@ class DynamicSummary:
         self._add_summary_items(data, **kwargs)
 
     @singledispatchmethod
-    def _add_summary_items(self: Self, data: list, **_) -> None:
+    def _add_summary_items(self: Self, data: list, **__) -> None:
         """
         Add list of DynamicSummaryItems.
 
@@ -475,6 +475,10 @@ class DynamicSummary:
             and use as SummaryItem properties, by default None.
             For example: {"col_a": "tactics", "col_b": "relation_name"}
             See DynamicSummaryItem for a list of available properties.
+        event_time_utc: Optional[datetime] = None
+            Event time for the summary item
+        search_key: Optional[str] = None
+            Searchable key value for summary item
 
         See Also
         --------
@@ -758,7 +762,7 @@ def df_to_dynamic_summary(data: pd.DataFrame) -> DynamicSummary:
         dyn_summaries = df_to_dynamic_summary(data)
 
     """
-    dyn_summary = DynamicSummary()
+    dyn_summary: DynamicSummary = DynamicSummary()
     dyn_summary.__dict__.update(_get_summary_record(data).to_dict())
 
     items_list: list[dict[Hashable, Any]] = _get_summary_items(data).to_dict(
@@ -767,7 +771,7 @@ def df_to_dynamic_summary(data: pd.DataFrame) -> DynamicSummary:
     items: list[DynamicSummaryItem] = []
     for item in items_list:
         # "fields" attrib is a ClassVar
-        ds_item = DynamicSummaryItem()
+        ds_item: DynamicSummaryItem = DynamicSummaryItem()
         for key, value in item.items():
             setattr(ds_item, str(key), value)
         items.append(ds_item)

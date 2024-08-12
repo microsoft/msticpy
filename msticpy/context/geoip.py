@@ -24,7 +24,7 @@ from __future__ import annotations
 import contextlib
 import logging
 import math
-import random
+import secrets
 import tarfile
 import warnings
 from abc import ABCMeta, abstractmethod
@@ -55,6 +55,8 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+# pylint:disable=too-many-lines
 
 
 class GeoIPDatabaseError(Exception):
@@ -578,16 +580,16 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 ip_type = "Invalid IP Address"
             if ip_type != "Public":
                 geo_match = self._get_geomatch_non_public(ip_type)
-            else:
+            elif self._reader:
                 try:
                     geo_match = self._reader.city(ip_input).raw
                 except (AddressNotFoundError, AttributeError, ValueError):
                     continue
-            if geo_match:
-                output_raw.append(geo_match)
-                output_entities.append(
-                    self._create_ip_entity(ip_input, geo_match, ip_entity),
-                )
+                if geo_match:
+                    output_raw.append(geo_match)
+                    output_entities.append(
+                        self._create_ip_entity(ip_input, geo_match, ip_entity),
+                    )
 
         return output_raw, output_entities
 
@@ -720,7 +722,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             # using makedirs to create intermediate-level dirs to contain self._dbfolder
             Path(self._db_folder).mkdir(exist_ok=True, parents=True)
         # build a temp file name for the archive download
-        rand_int: int = random.randint(10000, 99999)
+        rand_int: int = secrets.choice(range(10000, 99999))
         db_archive_path: Path = Path(self._db_folder).joinpath(
             self._DB_ARCHIVE.format(rand=rand_int),
         )

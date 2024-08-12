@@ -6,10 +6,10 @@
 """Uses the Microsoft Sentinel APIs to interact with Microsoft Sentinel Workspaces."""
 from __future__ import annotations
 
-from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any, Callable
 import warnings
+from functools import partial
+from typing import TYPE_CHECKING, Any, Callable
 
 from typing_extensions import Self
 
@@ -69,7 +69,7 @@ _LEGACY_PARAM_NAMES: dict[str, str] = {
     "res_id": _RES_ID,
 }
 _CORE_WS_PARAMETERS: list[str] = [_SUB_ID, _RES_GRP, _WS_NAME]
-_WS_PARAMETERS: list[str] = _CORE_WS_PARAMETERS + [_RES_ID]
+_WS_PARAMETERS: list[str] = [*_CORE_WS_PARAMETERS, _RES_ID]
 _MISSING_PARAMS_ERR: list[str] = [
     "Unable to build a valid resource ID from the parameters provided.",
     "This class requires either a valid Azure resource ID or a combination of",
@@ -133,7 +133,7 @@ class MicrosoftSentinel(
 ):
     """Class for returning key Microsoft Sentinel elements."""
 
-    def __init__(  # noqa:PLR0913
+    def __init__(  # pylint:disable=too-many-arguments # noqa:PLR0913
         self: MicrosoftSentinel,
         resource_id: str | None = None,
         *,
@@ -142,7 +142,6 @@ class MicrosoftSentinel(
         subscription_id: str | None = None,
         resource_group: str | None = None,
         workspace_name: str | None = None,
-        workspace: str | None = None,
         **kwargs,
     ) -> None:
         """
@@ -202,7 +201,8 @@ class MicrosoftSentinel(
             init_kwargs[_WS_NAME] = workspace_name
 
         self._default_settings: Callable[
-            ..., SentinelInstanceDetails
+            ...,
+            SentinelInstanceDetails,
         ] = self._set_ws_defaults(_create_ws_defaults, **init_kwargs)
         self.base_url: str = self.az_cloud_config.resource_manager
         self.sent_urls: dict[str, str] = {}
@@ -229,7 +229,6 @@ class MicrosoftSentinel(
         tenant_id: str | None = None,
         *,
         silent: bool = False,
-        workspace: str | None = None,
         cloud: str | None = None,
         token: str | None = None,
         **kwargs,
@@ -264,6 +263,8 @@ class MicrosoftSentinel(
             If specified, this will override the resource group name
             set during initialization.
             `res_grp` is an alias for resource_group.
+        token: str, optional
+            If specified, utilize this token to authenticate against Azure.
 
         Notes
         -----
@@ -304,7 +305,7 @@ class MicrosoftSentinel(
         else:
             try:
                 sentinel_instance = SentinelInstanceDetails.from_resource_id(
-                    connect_kwargs.get(_RES_ID) or self.default_resource_id
+                    connect_kwargs.get(_RES_ID) or self.default_resource_id,
                 )
             except TypeError as err:
                 raise MsticpyUserConfigError(
@@ -314,7 +315,10 @@ class MicrosoftSentinel(
         self._create_api_paths_for_workspace(sentinel_instance)
 
         if cloud is not None and cloud != self.cloud:
-            err_msg: str = "Cannot switch to different cloud and specify the new cloud name using the `cloud` parameter."
+            err_msg: str = (
+                "Cannot switch to different cloud "
+                "and specify the new cloud name using the `cloud` parameter."
+            )
             raise MsticpyUserConfigError(
                 err_msg,
                 title="Cannot switch cloud at connect time",
@@ -327,9 +331,9 @@ class MicrosoftSentinel(
         }
         if tenant_id:
             az_connect_kwargs["tenant_id"] = tenant_id
-        self._token = az_connect_kwargs.pop("token", None)
+        self._token = token
         super().connect(auth_methods=auth_methods, silent=silent, **az_connect_kwargs)
-        if not self._token and self.credentials:
+        if not self._token:
             logger.info("Getting token for %s", tenant_id)
             self._token = get_token(
                 self.credentials,
@@ -345,7 +349,7 @@ class MicrosoftSentinel(
         try:
             validate_resource_id(sentinel_instance.resource_id)
         except MsticpyUserConfigError as err:
-            logger.error("Error validating resource ID %s", err)
+            logger.exception("Error validating resource ID")
             raise MsticpyUserConfigError(
                 *_MISSING_PARAMS_ERR,
                 title="Unable to build valid resource ID",
@@ -360,7 +364,7 @@ class MicrosoftSentinel(
         }
         logger.info("API URLs set to %s", self.sent_urls)
 
-    def set_default_subscription(self: Self, subscription_id: str) -> None:
+    def set_default_subscription(self: Self, _: str) -> None:
         """Set the default subscription to use to `subscription_id`."""
         err_msg: str = (
             "This method is deprecated. Use `set_default_workspace` instead "
@@ -402,7 +406,8 @@ class MicrosoftSentinel(
                 "Setting the workspace from the `subscription_id` parameter "
                 "no longer supported. Please use the `workspace` parameter "
                 "instead or set the workspace or "
-                "Azure resource ID during initialization."
+                "Azure resource ID during initialization.",
+                stacklevel=1,
             )
         workspace = adjust_kwargs.get(_WS_NAME, workspace)
 
@@ -438,26 +443,26 @@ class MicrosoftSentinel(
                 WorkspaceConfig.CONF_SUB_ID: self.default_subscription_id,
                 WorkspaceConfig.CONF_RES_GROUP: self.default_resource_group,
                 WorkspaceConfig.CONF_WS_NAME: self.default_workspace_name,
-            }
+            },
         ).mp_settings
 
     @property
-    def default_subscription_id(self: Self) -> str | None:
+    def default_subscription_id(self: Self) -> str:
         """Return the default subscription ID."""
         return self._default_settings().subscription_id
 
     @property
-    def default_resource_group(self: Self) -> str | None:
+    def default_resource_group(self: Self) -> str:
         """Return the default resource group."""
         return self._default_settings().resource_group
 
     @property
-    def default_workspace_name(self: Self) -> str | None:
+    def default_workspace_name(self: Self) -> str:
         """Return the default workspace Name."""
         return self._default_settings().workspace_name
 
     @property
-    def default_resource_id(self: Self) -> str | None:
+    def default_resource_id(self: Self) -> str:
         """Return the default resource ID."""
         return self._default_settings().resource_id
 
@@ -483,7 +488,8 @@ class MicrosoftSentinel(
         create_defaults_func: Callable[..., SentinelInstanceDetails],
         **kwargs,
     ) -> Callable:
-        """Create a partial function with the defaults set based on the kwargs.
+        """
+        Create a partial function with the defaults set based on the kwargs.
 
         Parameters
         ----------
@@ -502,7 +508,7 @@ class MicrosoftSentinel(
         non_null_kwargs: dict[str, Any] = {
             key: value for key, value in kwargs.items() if value
         }
-        workspace_name: str = non_null_kwargs.get(_WS_NAME)
+        workspace_name: str | None = non_null_kwargs.get(_WS_NAME)
         workspace_config: WorkspaceConfig | None = None
         if not any(ws_param in non_null_kwargs for ws_param in _WS_PARAMETERS):
             # if we can't build a resource ID from the parameters, try to get the
