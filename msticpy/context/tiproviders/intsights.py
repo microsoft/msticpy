@@ -151,9 +151,7 @@ class IntSights(HttpTIProvider):
             else (
                 ResultSeverity.warning
                 if sev == "Medium"
-                else ResultSeverity.high
-                if sev == "High"
-                else ResultSeverity.unknown
+                else ResultSeverity.high if sev == "High" else ResultSeverity.unknown
             )
         )
 

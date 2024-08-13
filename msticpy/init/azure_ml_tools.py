@@ -419,7 +419,9 @@ def _get_vm_fqdn() -> str:
     """Get the FQDN of the host."""
     vm_metadata = _get_vm_metadata()
     if vm_metadata and "instance" in vm_metadata:
-        return f"https://{vm_metadata.get('instance')}.{vm_metadata.get('domainsuffix')}"
+        return (
+            f"https://{vm_metadata.get('instance')}.{vm_metadata.get('domainsuffix')}"
+        )
     return ""
 
 
@@ -479,7 +481,9 @@ def _check_kql_prereqs():
             if apt_pkg not in apt_list
         ]
         if missing_lx_pkg:
-            _disp_html("Kqlmagic/msal-extensions pre-requisite PyGObject not installed.")
+            _disp_html(
+                "Kqlmagic/msal-extensions pre-requisite PyGObject not installed."
+            )
             _disp_html(
                 "To prevent warnings when loading the Kqlmagic data provider,"
                 " Please run the following command:<br>"

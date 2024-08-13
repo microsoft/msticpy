@@ -179,7 +179,9 @@ def _load_ti_lookup(comp_settings=None, **kwargs):
 
 def _load_geoip_lookup(comp_settings=None, **kwargs):
     del kwargs
-    provider = comp_settings.get("provider") if isinstance(comp_settings, dict) else None
+    provider = (
+        comp_settings.get("provider") if isinstance(comp_settings, dict) else None
+    )
     if provider == "GeoLiteLookup":
         from ..context.geoip import GeoLiteLookup
 
@@ -194,7 +196,9 @@ def _load_geoip_lookup(comp_settings=None, **kwargs):
 def _load_notebooklets(comp_settings=None, **kwargs):
     nbinit_params = {}
     if comp_settings and isinstance(comp_settings, dict):
-        prov_name, prov_args = next(iter(comp_settings.get("query_provider", {}).items()))
+        prov_name, prov_args = next(
+            iter(comp_settings.get("query_provider", {}).items())
+        )
         if prov_name:
             nbinit_params = {"query_provider": prov_name}
         if prov_args:

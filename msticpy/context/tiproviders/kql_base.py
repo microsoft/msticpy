@@ -49,9 +49,9 @@ class KqlTIProvider(TIProvider):
 
     _QUERIES: ClassVar[dict[str, tuple]] = {}
 
-    _CONNECT_STR: ClassVar[
-        str
-    ] = "loganalytics://code().tenant('{TENANT_ID}').workspace('{WORKSPACE_ID}')"
+    _CONNECT_STR: ClassVar[str] = (
+        "loganalytics://code().tenant('{TENANT_ID}').workspace('{WORKSPACE_ID}')"
+    )
 
     _REQUIRED_TABLES: ClassVar[list[str]] = []
 
@@ -238,7 +238,9 @@ class KqlTIProvider(TIProvider):
         """Add status info, if query produced no results."""
         src_ioc_frame["Result"] = False
         src_ioc_frame["Details"] = (
-            "Query failure" if lookup_status == LookupStatus.QUERY_FAILED else "Not found"
+            "Query failure"
+            if lookup_status == LookupStatus.QUERY_FAILED
+            else "Not found"
         )
         src_ioc_frame["Status"] = lookup_status.value
         src_ioc_frame["Severity"] = ResultSeverity.information.name

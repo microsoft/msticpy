@@ -326,7 +326,9 @@ class RiskIQ(TIProvider, TIPivotProvider):
             if self._pivot_get_timespan
             else None
         )
-        end = end or self._pivot_get_timespan().end if self._pivot_get_timespan else None
+        end = (
+            end or self._pivot_get_timespan().end if self._pivot_get_timespan else None
+        )
         if (
             start
             and end

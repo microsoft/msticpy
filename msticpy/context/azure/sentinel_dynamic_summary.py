@@ -139,10 +139,10 @@ class SentinelDynamicSummaryMixin:
         if summary_items:
             if not self.sent_data_query:
                 try:
-                    self.sent_data_query: SentinelQueryProvider | None = (
-                        SentinelQueryProvider(
-                            self.default_workspace_name,  # type: ignore[attr-defined]
-                        )
+                    self.sent_data_query: (
+                        SentinelQueryProvider | None
+                    ) = SentinelQueryProvider(
+                        self.default_workspace_name,  # type: ignore[attr-defined]
                     )
                     logger.info(
                         "Created sentinel query provider for %s",
@@ -462,7 +462,9 @@ class SentinelDynamicSummaryMixin:
             If API returns an error.
 
         """
-        if (summary and not summary.summary_id) or (data is not None and not summary_id):
+        if (summary and not summary.summary_id) or (
+            data is not None and not summary_id
+        ):
             err_msg: str = "You must supply a summary ID to update"
             raise MsticpyParameterError(
                 err_msg,

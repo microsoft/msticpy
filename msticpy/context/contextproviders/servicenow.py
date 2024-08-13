@@ -155,7 +155,9 @@ class ServiceNow(HttpContextProvider):
                     if result.get("sys_created_on")
                     else ""
                 ),
-                **(getattr(self, f"_parse_result_{response['ObservableType']}")(result)),
+                **(
+                    getattr(self, f"_parse_result_{response['ObservableType']}")(result)
+                ),
             }
             for result in results
         ]

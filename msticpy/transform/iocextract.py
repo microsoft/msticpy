@@ -224,7 +224,12 @@ class IoCExtract:
         self.add_ioc_type(IoCType.url.name, self.URL_DF_REGEX, 0, defang_pattern=True)
         # Email addresses (lower priority than URLs)
         self.add_ioc_type(IoCType.email.name, self.EMAIL_REGEX, 1, defang_pattern=False)
-        self.add_ioc_type(IoCType.email.name, self.EMAIL_DF_REGEX, 1, defang_pattern=True)
+        self.add_ioc_type(
+            IoCType.email.name,
+            self.EMAIL_DF_REGEX,
+            1,
+            defang_pattern=True,
+        )
         # File paths
         self.add_ioc_type(IoCType.windows_path.name, self.WINPATH_REGEX, 3)
         self.add_ioc_type(IoCType.linux_path.name, self.LXPATH_REGEX, 4)

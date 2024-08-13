@@ -344,9 +344,9 @@ def convert_mde_schema_to_internal(
     data["InitiatingProcessCreationTime"] = data.InitiatingProcessCreationTime.fillna(
         _UNK_TIME
     )
-    data[
-        "InitiatingProcessParentCreationTime"
-    ] = data.InitiatingProcessParentCreationTime.fillna(_UNK_TIME)
+    data["InitiatingProcessParentCreationTime"] = (
+        data.InitiatingProcessParentCreationTime.fillna(_UNK_TIME)
+    )
 
     # Proc tree code references CreateProcessParentId
     # This should be the same as InitiatingProcessParentId

@@ -318,7 +318,8 @@ def _build_process_tree(fb_categories: dict[str, Any]) -> pd.DataFrame:
     """Top level function to create displayable DataFrame."""
     proc_tree_raw: list[dict[str, Any]] = deepcopy(fb_categories["processes_tree"])
     procs_created: dict[str, Any] = {
-        Path(proc).parts[-1].lower(): proc for proc in fb_categories["processes_created"]
+        Path(proc).parts[-1].lower(): proc
+        for proc in fb_categories["processes_created"]
     }
 
     si_procs: list[SIProcess] = _extract_processes(proc_tree_raw, procs_created)

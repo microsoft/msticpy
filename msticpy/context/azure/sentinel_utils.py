@@ -176,7 +176,11 @@ class SentinelUtilsMixin:
             The formatted resource ID.
 
         """
-        return build_sentinel_resource_id(subscription_id, resource_group, workspace_name)
+        return build_sentinel_resource_id(
+            subscription_id,
+            resource_group,
+            workspace_name,
+        )
 
     def _build_sentinel_api_root(
         self: Self,

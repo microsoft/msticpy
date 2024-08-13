@@ -121,7 +121,9 @@ class OTX(HttpTIProvider):
                         "sections_available": response["RawResult"]["sections"],
                     },
                 )
-            severity = ResultSeverity.warning if pulse_count == 1 else ResultSeverity.high
+            severity = (
+                ResultSeverity.warning if pulse_count == 1 else ResultSeverity.high
+            )
             return (
                 True,
                 severity,

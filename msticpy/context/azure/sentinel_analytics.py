@@ -44,7 +44,9 @@ class SentinelHuntingMixin:
             item_type="ss_path",
             api_version="2020-08-01",
         )
-        return saved_query_df[saved_query_df["properties.category"] == "Hunting Queries"]
+        return saved_query_df[
+            saved_query_df["properties.category"] == "Hunting Queries"
+        ]
 
     get_hunting_queries: Callable[..., pd.DataFrame] = list_hunting_queries
 
@@ -78,7 +80,9 @@ class SentinelAnalyticsMixin:
             A table of the workspace's alert rules.
 
         """
-        return self._list_items(item_type="alert_rules", api_version="2024-01-01-preview")
+        return self._list_items(
+            item_type="alert_rules", api_version="2024-01-01-preview"
+        )
 
     def _get_template_id(
         self: Self,

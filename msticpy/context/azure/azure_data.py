@@ -426,7 +426,9 @@ class AzureData:
 
         # Warn users about getting full properties for each resource
         if get_props:
-            logger.info("Collecting properties for every resource may take some time...")
+            logger.info(
+                "Collecting properties for every resource may take some time..."
+            )
 
         resource_items: list[Any] = []
 

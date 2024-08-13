@@ -218,9 +218,9 @@ This library uses services provided by ipstack.
     ] = """
 This library uses services provided by ipstack (https://ipstack.com)"""
 
-    _IPSTACK_API: ClassVar[
-        str
-    ] = "http://api.ipstack.com/{iplist}?access_key={access_key}&output=json"
+    _IPSTACK_API: ClassVar[str] = (
+        "http://api.ipstack.com/{iplist}?access_key={access_key}&output=json"
+    )
 
     _NO_API_KEY_MSSG = """
 No API Key was found to access the IPStack service.

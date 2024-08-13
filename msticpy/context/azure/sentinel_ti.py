@@ -249,7 +249,10 @@ class SentinelTIMixin:
                     silent=True,
                 )
             except CloudError:
-                logger.exception("Error creating indicator %s", row[1][indicator_column])
+                logger.exception(
+                    "Error creating indicator %s",
+                    row[1][indicator_column],
+                )
         logger.info("%s indicators created.", len(data.index))
 
     def get_indicator(self: Self, indicator_id: str) -> dict:

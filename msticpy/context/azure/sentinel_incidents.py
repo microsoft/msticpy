@@ -213,7 +213,9 @@ class SentinelIncidentsMixin:
         bookmarks_list: list[dict[str, Any]] = []
         incident_id: str = self._get_incident_id(incident)
         relations_url: str = self.sent_urls["incidents"] + f"/{incident_id}/relations"
-        relations_response: httpx.Response = self._get_items(relations_url, "2021-04-01")
+        relations_response: httpx.Response = self._get_items(
+            relations_url, "2021-04-01"
+        )
         if relations_response.is_success and relations_response.json()["value"]:
             for relationship in relations_response.json()["value"]:
                 if (

@@ -199,7 +199,10 @@ class Entity(ABC, Node):
         entity_type = None
         if isinstance(val, type) and issubclass(val, Entity):
             entity_type = val
-        self[attr] = Entity.instantiate_entity(src_entity[attr], entity_type=entity_type)
+        self[attr] = Entity.instantiate_entity(
+            src_entity[attr],
+            entity_type=entity_type,
+        )
         if isinstance(self[attr], Entity):
             self.add_edge(self[attr], edge_attrs={"name": attr})
 

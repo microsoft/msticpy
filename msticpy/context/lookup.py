@@ -96,9 +96,9 @@ class Lookup:
     you have correctly configured your msticpyconfig.yaml settings.
     """
 
-    _HELP_URI: ClassVar[
-        str
-    ] = "https://msticpy.readthedocs.io/en/latest/DataEnrichment.html"
+    _HELP_URI: ClassVar[str] = (
+        "https://msticpy.readthedocs.io/en/latest/DataEnrichment.html"
+    )
 
     PROVIDERS: ClassVar[dict[str, tuple[str, str]]] = {}
     CUSTOM_PROVIDERS: ClassVar[dict[str, type[Provider]]]

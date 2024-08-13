@@ -45,9 +45,9 @@ class ParsedUrlComponents:
 class SentinelWorkspacesMixin:
     """Mixin class for Sentinel workspaces."""
 
-    _TENANT_URI: ClassVar[
-        str
-    ] = "{cloud_endpoint}/{tenant_name}/.well-known/openid-configuration"
+    _TENANT_URI: ClassVar[str] = (
+        "{cloud_endpoint}/{tenant_name}/.well-known/openid-configuration"
+    )
     _RES_GRAPH_PROV: ClassVar[QueryProvider | None] = None
 
     @classmethod
@@ -79,7 +79,9 @@ class SentinelWorkspacesMixin:
         dict[str, dict[str, str]]
 
         """
-        resource_comps: ParsedUrlComponents | None = cls._extract_resource_id(portal_url)
+        resource_comps: ParsedUrlComponents | None = cls._extract_resource_id(
+            portal_url
+        )
         tenant_id: str | None = None
         if resource_comps and resource_comps.tenant_name:
             tenant_id = cls._get_tenantid_from_logon_domain(resource_comps.tenant_name)

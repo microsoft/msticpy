@@ -60,12 +60,12 @@ class AzCredentials:
 class AzureCredEnvNames:
     """Enumeration of Azure environment credential names."""
 
-    AZURE_CLIENT_ID: ClassVar[
-        str
-    ] = "AZURE_CLIENT_ID"  # The app ID for the service principal
-    AZURE_TENANT_ID: ClassVar[
-        str
-    ] = "AZURE_TENANT_ID"  # The service principal's Azure AD tenant ID
+    AZURE_CLIENT_ID: ClassVar[str] = (
+        "AZURE_CLIENT_ID"  # The app ID for the service principal
+    )
+    AZURE_TENANT_ID: ClassVar[str] = (
+        "AZURE_TENANT_ID"  # The service principal's Azure AD tenant ID
+    )
     # pylint: disable=line-too-long
     # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="This is an enum of env variable names")]
     AZURE_CLIENT_SECRET: ClassVar[str] = "AZURE_CLIENT_SECRET"  # nosec  # noqa
@@ -75,20 +75,20 @@ class AzureCredEnvNames:
     AZURE_CLIENT_CERTIFICATE_PATH: ClassVar[str] = "AZURE_CLIENT_CERTIFICATE_PATH"
     # (Optional) The password protecting the certificate file
     # (for PFX (PKCS12) certificates).
-    AZURE_CLIENT_CERTIFICATE_PASSWORD: ClassVar[
-        str
-    ] = "AZURE_CLIENT_CERTIFICATE_PASSWORD"  # nosec  # noqa
+    AZURE_CLIENT_CERTIFICATE_PASSWORD: ClassVar[str] = (
+        "AZURE_CLIENT_CERTIFICATE_PASSWORD"  # nosec  # noqa
+    )
     # (Optional) Specifies whether an authentication request will include an x5c
     # header to support subject name / issuer based authentication.
     # When set to `true` or `1`, authentication requests include the x5c header.
-    AZURE_CLIENT_SEND_CERTIFICATE_CHAIN: ClassVar[
-        str
-    ] = "AZURE_CLIENT_SEND_CERTIFICATE_CHAIN"
+    AZURE_CLIENT_SEND_CERTIFICATE_CHAIN: ClassVar[str] = (
+        "AZURE_CLIENT_SEND_CERTIFICATE_CHAIN"
+    )
 
     # Username and password:
-    AZURE_USERNAME: ClassVar[
-        str
-    ] = "AZURE_USERNAME"  # The username/upn of an AAD user account.
+    AZURE_USERNAME: ClassVar[str] = (
+        "AZURE_USERNAME"  # The username/upn of an AAD user account.
+    )
     # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="This is an enum of env variable names")]
     AZURE_PASSWORD: ClassVar[str] = "AZURE_PASSWORD"  # User password  # nosec  # noqa
 
@@ -144,7 +144,11 @@ def _build_msi_client(
     if AzureCredEnvNames.AZURE_CLIENT_ID in os.environ:
         msi_kwargs["client_id"] = os.environ[AzureCredEnvNames.AZURE_CLIENT_ID]
 
-    return ManagedIdentityCredential(tenant_id=tenant_id, authority=aad_uri, **msi_kwargs)
+    return ManagedIdentityCredential(
+        tenant_id=tenant_id,
+        authority=aad_uri,
+        **msi_kwargs,
+    )
 
 
 def _build_vscode_client(
@@ -163,7 +167,11 @@ def _build_interactive_client(
     **kwargs,
 ) -> InteractiveBrowserCredential:
     """Build a credential from Interactive Browser logon."""
-    return InteractiveBrowserCredential(authority=aad_uri, tenant_id=tenant_id, **kwargs)
+    return InteractiveBrowserCredential(
+        authority=aad_uri,
+        tenant_id=tenant_id,
+        **kwargs,
+    )
 
 
 def _build_device_code_client(
@@ -196,7 +204,9 @@ def _build_client_secret_client(
 
 
 def _build_certificate_client(
-    tenant_id: str | None = None, aad_uri: str | None = None, **kwargs
+    tenant_id: str | None = None,
+    aad_uri: str | None = None,
+    **kwargs,
 ) -> CertificateCredential | None:
     """Build a credential from Certificate."""
     client_id = kwargs.pop("client_id", None)

@@ -80,7 +80,9 @@ def _fetch_asns() -> Callable[[], dict[str, str]]:
                 raise MsticpyConnectionError(err_msg) from err
             asns_soup = BeautifulSoup(asns_resp.content, features="lxml")
             asns_dict = {
-                str(asn.next_element).strip(): str(asn.next_element.next_element).strip()
+                str(asn.next_element)
+                .strip(): str(asn.next_element.next_element)
+                .strip()
                 for asn in asns_soup.find_all("a")
             }
         return asns_dict

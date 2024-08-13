@@ -25,13 +25,11 @@ T = TypeVar("T")
 
 
 @overload
-def export(obj: type[T]) -> type[T]:
-    ...  # noqa: E704
+def export(obj: type[T]) -> type[T]: ...
 
 
 @overload
-def export(obj: Callable) -> Callable:
-    ...  # noqa: E704
+def export(obj: Callable) -> Callable: ...
 
 
 def export(obj: type | Callable) -> type | Callable:
