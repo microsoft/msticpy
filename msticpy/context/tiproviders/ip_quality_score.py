@@ -62,7 +62,7 @@ class IPQualityScore(HttpTIProvider):
                 "FraudScore": response["RawResult"].get("fraud_score"),
                 "ISP": response["RawResult"].get("ISP"),
                 "ASN": response["RawResult"].get("ASN"),
-                "Country": response["RawResult"].get("country_code"),
+                "CountryOrRegion": response["RawResult"].get("country_code"),
                 "Region": response["RawResult"].get("city"),
                 "City": response["RawResult"].get("region"),
                 "Organization": response["RawResult"].get("organization"),

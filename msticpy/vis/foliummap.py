@@ -744,7 +744,8 @@ def plot_map(
             tooltip_columns = _default_columns(data, [ip_column, "CountryCode", "City"])
         if not popup_columns:
             popup_columns = _default_columns(
-                data, [ip_column, "CountryName", "City", lat_column, long_column]
+                data,
+                [ip_column, "CountryOrRegionName", "City", lat_column, long_column],
             )
     else:
         if not tooltip_columns:

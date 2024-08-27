@@ -26,7 +26,7 @@ class GeoLocation(Entity, ContextObject):
     ----------
     CountryCode : str
         GeoLocation CountryCode
-    CountryName : str
+    CountryOrRegionName : str
         GeoLocation CountryName
     State : str
         GeoLocation State
@@ -62,7 +62,7 @@ class GeoLocation(Entity, ContextObject):
 
         """
         self.CountryCode: Optional[str] = None
-        self.CountryName: Optional[str] = None
+        self.CountryOrRegionName: Optional[str] = None
         self.State: Optional[str] = None
         self.City: Optional[str] = None
         self.Longitude: Optional[float] = None
@@ -81,6 +81,16 @@ class GeoLocation(Entity, ContextObject):
         return self.CountryCode or self.__class__.__name__
 
     @property
+    def CountryName(self) -> Optional[str]:
+        """Return CountryName."""
+        return self.CountryOrRegionName
+
+    @CountryName.setter
+    def CountryName(self, value: str):
+        """Set CountryName."""
+        self.CountryOrRegionName = value
+
+    @property
     def coordinates(self) -> Tuple[float, float]:
         """Return Latitude/Longitude as a tuple of floats."""
         if self.Latitude and self.Longitude:
@@ -91,7 +101,7 @@ class GeoLocation(Entity, ContextObject):
         # str
         "CountryCode": None,
         # str
-        "CountryName": None,
+        "CountryOrRegionName": None,
         # str
         "State": None,
         # str
