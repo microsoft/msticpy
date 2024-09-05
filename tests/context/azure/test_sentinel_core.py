@@ -10,8 +10,10 @@ import pandas as pd
 import pytest
 from azure.core.exceptions import ClientAuthenticationError
 
+import msticpy.context.azure
 from msticpy.common.wsconfig import WorkspaceConfig
-from msticpy.context.azure import AzureData, MicrosoftSentinel
+from msticpy.context.azure.azure_data import AzureData
+from msticpy.context.azure.sentinel_core import MicrosoftSentinel
 
 from ...unit_test_lib import custom_mp_config, get_test_data_path
 
@@ -61,7 +63,7 @@ def test_azuresent_init():
         assert sentinel_inst.default_workspace_name == "WSName"
 
 
-@patch(MicrosoftSentinel.__module__ + ".AzureData.connect")
+@patch.object(AzureData,"connect")
 @patch(MicrosoftSentinel.__module__ + ".get_token")
 def test_azuresent_connect_token(get_token: Mock, az_data_connect: Mock):
     """Test connect success."""
@@ -73,6 +75,7 @@ def test_azuresent_connect_token(get_token: Mock, az_data_connect: Mock):
         sentinel_inst = MicrosoftSentinel(res_id=_RES_ID)
 
         setattr(sentinel_inst, "set_default_workspace", MagicMock())
+        setattr(sentinel_inst, "credentials", MagicMock())
         sentinel_inst.connect(auth_methods=["env"], token=token)
 
         assert sentinel_inst._token == token
@@ -84,6 +87,7 @@ def test_azuresent_connect_token(get_token: Mock, az_data_connect: Mock):
             res_id=_RES_ID,
         )
         setattr(sentinel_inst, "set_default_workspace", MagicMock())
+        setattr(sentinel_inst, "credentials", MagicMock())
         sentinel_inst.connect(auth_methods=["env"], tenant_id="12345")
 
         assert sentinel_inst._token == token
@@ -94,7 +98,7 @@ def test_azuresent_connect_token(get_token: Mock, az_data_connect: Mock):
         )
 
 
-@patch(MicrosoftSentinel.__module__ + ".AzureData.connect")
+@patch.object(AzureData, "connect")
 def test_azuresent_connect_fail(az_data_connect: Mock):
     """Test connect failure."""
     az_data_connect.side_effect = ClientAuthenticationError("Could not authenticate.")
@@ -205,7 +209,7 @@ _CONNECT_TESTS = [
     "resource_id, workspace_name, subscription_id, resource_group, expected_url",
     _CONNECT_TESTS,
 )
-@patch(MicrosoftSentinel.__module__ + ".AzureData.connect")
+@patch.object(AzureData, "connect")
 def test_sentinel_connect(
     mock_connect,
     resource_id,
@@ -225,6 +229,7 @@ def test_sentinel_connect(
         with patch(
             MicrosoftSentinel.__module__ + ".get_token", return_value="test_token"
         ):
+            sentinel_inst_loader.credentials = MagicMock()
             # Call the connect method with test parameters
             sentinel_inst_loader.connect(
                 tenant_id="test_tenant_id",
@@ -275,7 +280,7 @@ _CONNECT_TESTS_2 = [
     "resource_id, workspace_name, subscription_id, resource_group, expected_url",
     _CONNECT_TESTS_2,
 )
-@patch(MicrosoftSentinel.__module__ + ".AzureData.connect")
+@patch.object(AzureData, "connect")
 def test_sentinel_connect_no_init_params(
     mock_connect,
     resource_id,
@@ -300,6 +305,7 @@ def test_sentinel_connect_no_init_params(
         connect_kwargs = {key: val for key, val in connect_kwargs.items() if val}
 
         # Call the connect method with test parameters
+        setattr(sentinel_inst, "credentials", MagicMock())
         sentinel_inst.connect(**connect_kwargs)
         if isinstance(expected_url, str):
             assert sentinel_inst.url == expected_url

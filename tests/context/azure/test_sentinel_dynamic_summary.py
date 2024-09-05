@@ -9,7 +9,7 @@ import re
 import uuid
 from copy import deepcopy
 from datetime import datetime, timezone
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pandas as pd
 import pytest
@@ -20,6 +20,7 @@ import yaml
 from msticpy.common.exceptions import MsticpyAzureConnectionError
 from msticpy.common.pkg_config import SettingsDict
 from msticpy.common.wsconfig import WorkspaceConfig
+from msticpy.context.azure.azure_data import AzureData
 from msticpy.context.azure.sentinel_core import MicrosoftSentinel
 from msticpy.context.azure.sentinel_dynamic_summary import SentinelQueryProvider
 from msticpy.context.azure.sentinel_dynamic_summary_types import (
@@ -254,7 +255,7 @@ def _set_default_workspace(self, sub_id, workspace=None):
 
 @pytest.fixture
 @patch(f"{MicrosoftSentinel.__module__}.get_token")
-@patch(f"{MicrosoftSentinel.__module__}.AzureData.connect")
+@patch.object(AzureData, "connect")
 def sentinel_loader(mock_creds, get_token, monkeypatch):
     """Generate MicrosoftSentinel for testing."""
     monkeypatch.setattr(
@@ -274,6 +275,7 @@ def sentinel_loader(mock_creds, get_token, monkeypatch):
             resource_group=settings.get("ResourceGroup", "RG"),
             workspace_name=settings.get("WorkspaceName", "Default"),
         )
+        sent.credentials = MagicMock()
         sent._default_workspace_name = ws_key
         sent.connect(workspace=ws_key, token=["PLACEHOLDER"])  # nosec
         sent.connected = True
@@ -483,7 +485,9 @@ def test_dynamic_summary_class(ti_data):
         check.equal(item.search_key, ds2.summary_items[idx].search_key)
         check.equal(item.observable_type, ds2.summary_items[idx].observable_type)
         check.equal(item.observable_value, ds2.summary_items[idx].observable_value)
-        check.equal(len(item.packed_content), len(ds2.summary_items[idx].packed_content))
+        check.equal(
+            len(item.packed_content), len(ds2.summary_items[idx].packed_content)
+        )
 
 
 def test_df_to_dynamic_summaries():
