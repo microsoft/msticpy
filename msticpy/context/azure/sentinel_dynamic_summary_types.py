@@ -436,7 +436,7 @@ class DynamicSummary:
         self._add_summary_items(data, **kwargs)
 
     @singledispatchmethod
-    def _add_summary_items(self: Self, data: list, **__) -> None:
+    def _add_summary_items(self: Self, data: list, **kwargs) -> None:
         """
         Add list of DynamicSummaryItems.
 
@@ -446,6 +446,7 @@ class DynamicSummary:
             Iterable of DynamicSummary Items.
 
         """
+        del kwargs
         if isinstance(next(iter(data)), DynamicSummaryItem):
             logger.info(
                 "_add_summary_items (list(DynamicSummaryItem)) items %d",

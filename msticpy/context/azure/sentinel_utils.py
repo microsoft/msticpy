@@ -21,7 +21,7 @@ from ..._version import VERSION
 from ...auth.azure_auth_core import AzureCloudConfig
 from ...common.exceptions import MsticpyAzureConfigError, MsticpyAzureConnectionError
 from ...common.pkg_config import get_http_timeout
-from .azure_data import get_api_headers
+from .azure_data import AzureData, get_api_headers
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -68,7 +68,7 @@ class SentinelInstanceDetails:
         return cls(**parse_resource_id(resource_id))
 
 
-class SentinelUtilsMixin:
+class SentinelUtilsMixin(AzureData):
     """Mixin class for Sentinel core feature integrations."""
 
     def _get_items(self: Self, url: str, params: dict | None = None) -> httpx.Response:
@@ -77,6 +77,9 @@ class SentinelUtilsMixin:
         if params is None:
             params = {"api-version": "2020-01-01"}
         logger.debug("_get_items request to %s.", url)
+        if not self._token:
+            err_msg = "Token not found, can't get items."
+            raise ValueError(err_msg)
         return httpx.get(
             url,
             headers=get_api_headers(self._token),
@@ -120,7 +123,7 @@ class SentinelUtilsMixin:
             If a valid result is not returned.
 
         """
-        item_url: str = self.url + _PATH_MAPPING[item_type]
+        item_url: str = (self.url or "") + _PATH_MAPPING[item_type]
         if appendix:
             item_url = item_url + appendix
         if params is None:

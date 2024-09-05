@@ -46,7 +46,8 @@ try:
 
     if TYPE_CHECKING:
         from azure.mgmt.compute.models import VirtualMachineInstanceView
-        from azure.mgmt.subscription.models import Subscription, NetworkInterface
+        from azure.mgmt.network.models import NetworkInterface
+        from azure.mgmt.subscription.models import Subscription
 except ImportError as imp_err:
     error_msg: str = (
         "Cannot use this feature without these azure packages installed:\n"
@@ -134,7 +135,7 @@ class InterfaceItems:
     subnet_route_table: Any = None
 
 
-class AzureData:
+class AzureData:  # pylint:disable=too-many-instance-attributes
     """Class for returning data on an Azure tenant."""
 
     def __init__(
@@ -154,6 +155,10 @@ class AzureData:
         self.compute_client: ComputeManagementClient | None = None
         self.cloud: str | None = cloud or self.az_cloud_config.cloud
         self.endpoints: dict[str, Any] = self.az_cloud_config.endpoints
+        self._token: str | None = None
+        self.sent_urls: dict[str, Any] = {}
+        self.base_url: str = ""
+        self.url: str | None = None
         logger.info("Initialized AzureData")
         if connect:
             self.connect()
@@ -211,7 +216,6 @@ class AzureData:
         if not self.credentials:
             err_msg: str = "Could not obtain credentials."
             raise CloudError(err_msg)
-        self._check_client("sub_client")
         if only_interactive_cred(self.credentials.modern) and not silent:
             logger.warning("Check your default browser for interactive sign-in prompt.")
 
@@ -256,7 +260,7 @@ class AzureData:
         states: list[str] = []
         if self.sub_client:
             try:
-                sub_list: Iterable[Subscription] = list(
+                sub_list: Iterable[Any] = list(
                     self.sub_client.subscriptions.list(),
                 )
             except AttributeError:
@@ -427,7 +431,7 @@ class AzureData:
         # Warn users about getting full properties for each resource
         if get_props:
             logger.info(
-                "Collecting properties for every resource may take some time..."
+                "Collecting properties for every resource may take some time...",
             )
 
         resource_items: list[Any] = []
@@ -451,7 +455,7 @@ class AzureData:
                 except CloudError:
                     props = self.resource_client.resources.get_by_id(
                         resource.id,
-                        self._get_api(resource.id, sub_id=sub_id),
+                        self._get_api(resource_id=resource.id, sub_id=sub_id),
                     ).properties
             else:
                 props = resource.properties
@@ -527,13 +531,13 @@ class AzureData:
             try:
                 resource = self.resource_client.resources.get_by_id(
                     resource_id,
-                    api_version=self._get_api(resource_id, sub_id=sub_id),
+                    api_version=self._get_api(resource_id=resource_id, sub_id=sub_id),
                 )
             except AttributeError:
                 self._legacy_auth("resource_client", sub_id)
                 resource = self.resource_client.resources.get_by_id(
                     resource_id,
-                    api_version=self._get_api(resource_id, sub_id=sub_id),
+                    api_version=self._get_api(resource_id=resource_id, sub_id=sub_id),
                 )
             if resource.type == "Microsoft.Compute/virtualMachines":
                 state = self._get_compute_state(resource_id=resource_id, sub_id=sub_id)
@@ -599,8 +603,9 @@ class AzureData:
 
     def _get_api(
         self: Self,
+        *,
+        sub_id: str,
         resource_id: str | None = None,
-        sub_id: str | None = None,
         resource_provider: str | None = None,
     ) -> str:
         """
@@ -638,7 +643,7 @@ class AzureData:
             raise ValueError(err_msg)
 
         # Normalize elements depending on user input type
-        if resource_id is not None:
+        if resource_id:
             try:
                 namespace = resource_id.split("/")[6]
                 service = resource_id.split("/")[7]
@@ -672,10 +677,13 @@ class AzureData:
             self._legacy_auth("resource_client", sub_id)
             provider = self.resource_client.providers.get(namespace)
 
-        resource_types = next(
-            (t for t in provider.resource_types if t.resource_type == service),
-            None,
-        )
+        if not provider.resource_types:
+            resource_types = None
+        else:
+            resource_types = next(
+                (t for t in provider.resource_types if t.resource_type == service),
+                None,
+            )
 
         # Get first API version that isn't in preview
         if not resource_types:
@@ -742,7 +750,7 @@ class AzureData:
             )
 
         ips: list[dict[str, Any]] = []
-        for ip_addr in details.ip_configurations:
+        for ip_addr in details.ip_configurations or []:
             ip_details: dict[str, Any] = asdict(
                 InterfaceItems(
                     interface_id=network_id,
@@ -758,10 +766,20 @@ class AzureData:
                         if ip_addr.public_ip_address
                         else None
                     ),
-                    app_sec_group=ip_addr.application_security_groups,
-                    subnet=ip_addr.subnet.name,
-                    subnet_nsg=ip_addr.subnet.network_security_group,
-                    subnet_route_table=ip_addr.subnet.route_table,
+                    app_sec_group=(
+                        ip_addr.application_security_groups
+                        if ip_addr.application_security_groups
+                        else []
+                    ),
+                    subnet=ip_addr.subnet.name if ip_addr.subnet else None,
+                    subnet_nsg=(
+                        ip_addr.subnet.network_security_group
+                        if ip_addr.subnet
+                        else None
+                    ),
+                    subnet_route_table=(
+                        ip_addr.subnet.route_table if ip_addr.subnet else None
+                    ),
                 ),
             )
             ips.append(ip_details)
@@ -769,7 +787,10 @@ class AzureData:
         ip_df = pd.DataFrame(ips)
 
         nsg_df = pd.DataFrame()
-        if details.network_security_group is not None:
+        if (
+            details.network_security_group is not None
+            and details.network_security_group.id is not None
+        ):
             # Get NSG details and parse relevant elements into a dataframe
             nsg_details = self.network_client.network_security_groups.get(
                 details.network_security_group.id.split("/")[4],
@@ -928,9 +949,11 @@ class AzureData:
 
         # Get VM instance details and return them
         try:
-            instance_details = self.compute_client.virtual_machines.instance_view(
-                r_group,
-                name,
+            instance_details: VirtualMachineInstanceView = (
+                self.compute_client.virtual_machines.instance_view(
+                    r_group,
+                    name,
+                )
             )
         except AttributeError:
             self._legacy_auth("compute_client", sub_id)
@@ -965,15 +988,16 @@ class AzureData:
                 | ComputeManagementClient
             ] = _CLIENT_MAPPING[client_name]
             if sub_id is None:
-                setattr(
-                    self,
-                    client_name,
-                    client(
-                        self.credentials.modern,
-                        base_url=self.az_cloud_config.resource_manager,
-                        credential_scopes=[self.az_cloud_config.token_uri],
-                    ),
-                )
+                if client is SubscriptionClient:
+                    setattr(
+                        self,
+                        client_name,
+                        client(
+                            self.credentials.modern,
+                            base_url=self.az_cloud_config.resource_manager,
+                            credential_scopes=[self.az_cloud_config.token_uri],
+                        ),
+                    )
             else:
                 setattr(
                     self,
@@ -1015,15 +1039,16 @@ class AzureData:
             | ComputeManagementClient
         ] = _CLIENT_MAPPING[client_name]
         if sub_id is None:
-            setattr(
-                self,
-                client_name,
-                client(
-                    self.credentials.legacy,
-                    base_url=self.az_cloud_config.resource_manager,
-                    credential_scopes=[self.az_cloud_config.token_uri],
-                ),
-            )
+            if client is SubscriptionClient:
+                setattr(
+                    self,
+                    client_name,
+                    client(
+                        self.credentials.legacy,
+                        base_url=self.az_cloud_config.resource_manager,
+                        credential_scopes=[self.az_cloud_config.token_uri],
+                    ),
+                )
         else:
             setattr(
                 self,

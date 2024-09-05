@@ -16,6 +16,8 @@ from azure.common.exceptions import CloudError
 from IPython.display import display
 from typing_extensions import Self
 
+from msticpy.context.azure.sentinel_bookmarks import SentinelBookmarksMixin
+
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
@@ -34,7 +36,7 @@ __author__ = "Pete Bryan"
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class SentinelIncidentsMixin:
+class SentinelIncidentsMixin(SentinelBookmarksMixin):
     """Mixin class for Sentinel Incidents feature integrations."""
 
     def get_incident(  # noqa:PLR0913
@@ -75,7 +77,9 @@ class SentinelIncidentsMixin:
         """
         incident_id: str = self._get_incident_id(incident)
         incident_url: str = self.sent_urls["incidents"] + f"/{incident_id}"
-        response: httpx.Response = self._get_items(incident_url)
+        response: httpx.Response = super(SentinelBookmarksMixin, self)._get_items(
+            incident_url,
+        )
         if not response.is_success:
             raise CloudError(response=response)
 
@@ -114,6 +118,9 @@ class SentinelIncidentsMixin:
         incident_id: str = self._get_incident_id(incident)
         entities_url: str = self.sent_urls["incidents"] + f"/{incident_id}/entities"
         ent_parameters: dict[str, str] = {"api-version": "2021-04-01"}
+        if not self._token:
+            err_msg = "Token not found, can't get entities."
+            raise ValueError(err_msg)
         ents: httpx.Response = httpx.post(
             entities_url,
             headers=get_api_headers(self._token),
@@ -145,6 +152,9 @@ class SentinelIncidentsMixin:
         incident_id: str = self._get_incident_id(incident)
         alerts_url: str = self.sent_urls["incidents"] + f"/{incident_id}/alerts"
         alerts_parameters: dict[str, str] = {"api-version": "2021-04-01"}
+        if not self._token:
+            err_msg = "Token not found, can't get incident alerts."
+            raise ValueError(err_msg)
         alerts_resp: httpx.Response = httpx.post(
             alerts_url,
             headers=get_api_headers(self._token),
@@ -181,7 +191,10 @@ class SentinelIncidentsMixin:
         """
         incident_id: str = self._get_incident_id(incident)
         comments_url: str = self.sent_urls["incidents"] + f"/{incident_id}/comments"
-        comments_response: httpx.Response = self._get_items(comments_url, "2021-04-01")
+        comments_response: httpx.Response = self._get_items(
+            comments_url,
+            {"api-version": "2020-04-01"},
+        )
         comment_details: dict[str, Any] = comments_response.json()
         return (
             [
@@ -214,7 +227,8 @@ class SentinelIncidentsMixin:
         incident_id: str = self._get_incident_id(incident)
         relations_url: str = self.sent_urls["incidents"] + f"/{incident_id}/relations"
         relations_response: httpx.Response = self._get_items(
-            relations_url, "2021-04-01"
+            relations_url,
+            {"api-version": "2020-04-01"},
         )
         if relations_response.is_success and relations_response.json()["value"]:
             for relationship in relations_response.json()["value"]:
@@ -272,6 +286,9 @@ class SentinelIncidentsMixin:
             props=True,
             etag=incident_dets.iloc[0]["etag"],
         )
+        if not self._token:
+            err_msg = "Token not found, can't update incident."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.put(
             incident_url,
             headers=get_api_headers(self._token),
@@ -349,6 +366,9 @@ class SentinelIncidentsMixin:
         if last_activity_time:
             data_items["lastActivityTimeUtc"] = last_activity_time.isoformat()
         data: dict[str, Any] = extract_sentinel_response(data_items, props=True)
+        if not self._token:
+            err_msg: str = "Token not found, can't create incident."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.put(
             incident_url,
             headers=get_api_headers(self._token),
@@ -367,6 +387,9 @@ class SentinelIncidentsMixin:
                 bkmark_data_items: dict[str, Any] = {"relatedResourceId": mark_res_id}
                 data = extract_sentinel_response(bkmark_data_items, props=True)
                 params = {"api-version": "2021-04-01"}
+                if not self._token:
+                    err_msg = "Token not found, can't create relations."
+                    raise ValueError(err_msg)
                 response = httpx.put(
                     relations_url,
                     headers=get_api_headers(self._token),
@@ -444,6 +467,9 @@ class SentinelIncidentsMixin:
         )
         params: dict[str, str] = {"api-version": "2020-01-01"}
         data: dict[str, Any] = extract_sentinel_response({"message": comment})
+        if not self._token:
+            err_msg = "Token not found, can't post comment."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.put(
             comment_url,
             headers=get_api_headers(self._token),
@@ -485,6 +511,9 @@ class SentinelIncidentsMixin:
         }
         data: dict[str, Any] = extract_sentinel_response(bkmark_data_items, props=True)
         params: dict[str, str] = {"api-version": "2021-04-01"}
+        if not self._token:
+            err_msg = "Token not found, can't add bookmark to incident."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.put(
             bookmark_url,
             headers=get_api_headers(self._token),

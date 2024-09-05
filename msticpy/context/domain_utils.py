@@ -253,7 +253,7 @@ class DomainValidator:
             x509_cert: Certificate = x509.load_pem_x509_certificate(
                 cert.encode("ascii"),
             )
-            cert_sha1: bytes = x509_cert.fingerprint(SHA1())
+            cert_sha1: bytes = x509_cert.fingerprint(SHA1())  # noqa: S303
             result = bool(
                 self.ssl_abuse_list["SHA1"].str.contains(cert_sha1.hex()).any(),
             )

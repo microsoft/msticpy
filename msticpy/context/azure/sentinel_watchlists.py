@@ -18,7 +18,11 @@ from typing_extensions import Self
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
-from .sentinel_utils import extract_sentinel_response, get_http_timeout
+from .sentinel_utils import (
+    SentinelUtilsMixin,
+    extract_sentinel_response,
+    get_http_timeout,
+)
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -26,7 +30,7 @@ __author__ = "Pete Bryan"
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class SentinelWatchlistsMixin:
+class SentinelWatchlistsMixin(SentinelUtilsMixin):
     """Mixin class for Sentinel Watchlist feature integrations."""
 
     def list_watchlists(self: Self) -> pd.DataFrame:
@@ -110,6 +114,9 @@ class SentinelWatchlistsMixin:
         if isinstance(data, pd.DataFrame) and not data.empty:
             data_items["rawContent"] = str(data.to_csv(index=False))
         request_data: dict[str, Any] = extract_sentinel_response(data_items, props=True)
+        if not self._token:
+            err_msg = "Token not found, can't create watchlist."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.put(
             watchlist_url,
             headers=get_api_headers(self._token),
@@ -232,6 +239,9 @@ class SentinelWatchlistsMixin:
                 f"{self.sent_urls['watchlists']}/{watchlist_name}"
                 f"/watchlistItems/{watchlist_id}"
             )
+            if not self._token:
+                err_msg = "Token not found, can't add watchlist item."
+                raise ValueError(err_msg)
             response: httpx.Response = httpx.put(
                 watchlist_url,
                 headers=get_api_headers(self._token),
@@ -271,6 +281,9 @@ class SentinelWatchlistsMixin:
             raise MsticpyUserError(err_msg)
         watchlist_url: str = self.sent_urls["watchlists"] + f"/{watchlist_name}"
         params: dict[str, str] = {"api-version": "2021-04-01"}
+        if not self._token:
+            err_msg = "Token not found, can't delete watchlist."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.delete(
             watchlist_url,
             headers=get_api_headers(self._token),
@@ -314,6 +327,9 @@ class SentinelWatchlistsMixin:
             self.sent_urls["watchlists"]
             + f"/{watchlist_name}/watchlistItems/{watchlist_item_id}"
         )
+        if not self._token:
+            err_msg = "Token not found, can't delete watchlist item."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.delete(
             watchlist_url,
             headers=get_api_headers(self._token),

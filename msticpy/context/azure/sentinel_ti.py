@@ -18,6 +18,7 @@ from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
 from .sentinel_utils import (
+    SentinelUtilsMixin,
     _azs_api_result_to_df,
     extract_sentinel_response,
     get_http_timeout,
@@ -50,8 +51,10 @@ _IOC_TYPE_MAPPING: dict[str, str] = {
     "sha256_hash": "SHA-256",
 }
 
+MAX_CONFIDENCE: int = 100
 
-class SentinelTIMixin:
+
+class SentinelTIMixin(SentinelUtilsMixin):
     """Mixin class for Sentinel Hunting feature integrations."""
 
     def get_all_indicators(
@@ -176,7 +179,7 @@ class SentinelTIMixin:
             pattern_type = "file"
             value = f"hashes.'{normalized_ioc_type}'"
 
-        if confidence > 100 or confidence < 0:
+        if confidence > MAX_CONFIDENCE or confidence < 0:
             err_msg = "confidence must be between 0 and 100"
             raise MsticpyUserError(err_msg)
         data_items: dict[str, Any] = {
@@ -202,6 +205,9 @@ class SentinelTIMixin:
         )
         data: dict[str, Any] = extract_sentinel_response(data_items, props=True)
         data["kind"] = "indicator"
+        if not self._token:
+            err_msg = "Token not found, can't create indicator."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.post(
             ti_url,
             headers=get_api_headers(self._token),
@@ -278,6 +284,9 @@ class SentinelTIMixin:
         self.check_connected()
         ti_url: str = self.sent_urls["ti"] + f"/indicators/{indicator_id}"
         params: dict[str, str] = {"api-version": "2021-10-01"}
+        if not self._token:
+            err_msg = "Token not found, can't get indicator."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.get(
             ti_url,
             headers=get_api_headers(self._token),
@@ -359,6 +368,9 @@ class SentinelTIMixin:
         data["etag"] = indicator_details["etag"]
         data["kind"] = "indicator"
         params: dict[str, str] = {"api-version": "2021-10-01"}
+        if not self._token:
+            err_msg = "Token not found, can't update indicator."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.put(
             ti_url,
             headers=get_api_headers(self._token),
@@ -407,6 +419,9 @@ class SentinelTIMixin:
         self.check_connected()
         ti_url: str = self.sent_urls["ti"] + f"/indicators/{indicator_id}"
         params: dict[str, str] = {"api-version": "2021-10-01"}
+        if not self._token:
+            err_msg = "Token not found, can't delete indicator."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.delete(
             ti_url,
             headers=get_api_headers(self._token),
@@ -497,6 +512,9 @@ class SentinelTIMixin:
         if threat_types:
             data_items["threatTypes"] = threat_types
         params: dict[str, str] = {"api-version": "2021-10-01"}
+        if not self._token:
+            err_msg = "Token not found, can't query indicators."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.post(
             ti_url,
             headers=get_api_headers(self._token),

@@ -19,7 +19,11 @@ from typing_extensions import Self
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
-from .sentinel_utils import extract_sentinel_response, get_http_timeout
+from .sentinel_utils import (
+    SentinelUtilsMixin,
+    extract_sentinel_response,
+    get_http_timeout,
+)
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -27,7 +31,7 @@ __author__ = "Pete Bryan"
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class SentinelBookmarksMixin:
+class SentinelBookmarksMixin(SentinelUtilsMixin):
     """Mixin class with Sentinel Bookmark integrations."""
 
     def list_bookmarks(self: Self) -> pd.DataFrame:
@@ -93,6 +97,9 @@ class SentinelBookmarksMixin:
             data_items["labels"] = labels
         data: dict[str, Any] = extract_sentinel_response(data_items, props=True)
         params: dict[str, str] = {"api-version": "2020-01-01"}
+        if not self._token:
+            err_msg = "Token not found, can't create bookmark."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.put(
             bookmark_url,
             headers=get_api_headers(self._token),
@@ -127,6 +134,9 @@ class SentinelBookmarksMixin:
         bookmark_id: str = self._get_bookmark_id(bookmark)
         bookmark_url: str = self.sent_urls["bookmarks"] + f"/{bookmark_id}"
         params: dict[str, str] = {"api-version": "2020-01-01"}
+        if not self._token:
+            err_msg = "Token not found, can't delete bookmatk."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.delete(
             bookmark_url,
             headers=get_api_headers(self._token),

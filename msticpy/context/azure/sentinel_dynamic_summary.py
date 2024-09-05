@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable
 import httpx
 from typing_extensions import Self
 
+from msticpy.context.azure.sentinel_utils import SentinelUtilsMixin
+
 from ..._version import VERSION
 from ...common.exceptions import MsticpyAzureConnectionError, MsticpyParameterError
 from ...common.pkg_config import get_config, get_http_timeout
@@ -38,7 +40,7 @@ _DYN_SUM_API_VERSION = "2023-03-01-preview"
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class SentinelDynamicSummaryMixin:
+class SentinelDynamicSummaryMixin(SentinelUtilsMixin):
     """Mixin class with Sentinel Dynamic Summary integrations."""
 
     # expose these methods as members of the Sentinel class.
@@ -162,6 +164,9 @@ class SentinelDynamicSummaryMixin:
 
         dyn_sum_url = self.sent_urls["dynamic_summary"] + f"/{summary_id}"
         params = {"api-version": _DYN_SUM_API_VERSION}
+        if not self._token:
+            err_msg = "Token not found, can't get dynamic summary."
+            raise ValueError(err_msg)
         response = httpx.get(
             dyn_sum_url,
             headers=get_api_headers(self._token),
@@ -178,13 +183,20 @@ class SentinelDynamicSummaryMixin:
         )
         raise MsticpyAzureConnectionError(response.json())
 
-    def create_dynamic_summary(
+    def create_dynamic_summary(  # pylint:disable=too-many-arguments #noqa: PLR0913
         self: Self,
         summary: DynamicSummary | None = None,
         name: str | None = None,
         description: str | None = None,
         data: pd.DataFrame | None = None,
-        **kwargs,
+        *,
+        summary_id: str | None = None,
+        tenant_id: str | None = None,
+        azure_tenant_id: str | None = None,
+        search_key: str | None = None,
+        tactics: str | list[str] | None = None,
+        techniques: str | list[str] | None = None,
+        source_info: dict[str, Any] | None = None,
     ) -> str | None:
         """
         Create a Dynamic Summary in the Sentinel Workspace.
@@ -199,6 +211,20 @@ class SentinelDynamicSummaryMixin:
             Dynamic Summary description
         data : pd.DataFrame
             The summary data
+        summary_id: str | None
+            Id of the summary object
+        tenant_id: str | None
+            Tenant Id of the Sentinel workspace
+        azure_tenant_id: str | None
+            Tenant Id of the Sentinel workspace
+        search_key : str, optional
+            Search key for the entire summary, by default None
+        tactics : Union[str, List[str], None], optional
+            Relevant MITRE tactics, by default None
+        techniques : Union[str, List[str], None], optional
+            Relevant MITRE techniques, by default None
+        source_info : str, optional
+            Summary source info, by default None
 
         Returns
         -------
@@ -231,7 +257,13 @@ class SentinelDynamicSummaryMixin:
             name,
             description=description,
             data=data,
-            **kwargs,
+            summary_id=summary_id,
+            tenant_id=tenant_id,
+            azure_tenant_id=azure_tenant_id,
+            search_key=search_key,
+            tactics=tactics,
+            techniques=techniques,
+            source_info=source_info,
         )
 
     @singledispatchmethod
@@ -262,6 +294,9 @@ class SentinelDynamicSummaryMixin:
         dyn_sum_url = "/".join([self.sent_urls["dynamic_summary"], summary.summary_id])
 
         params: dict[str, str] = {"api-version": _DYN_SUM_API_VERSION}
+        if not self._token:
+            err_msg: str = "Token not found, can't create dynamic summary."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.put(
             dyn_sum_url,
             headers=get_api_headers(self._token),
@@ -280,7 +315,7 @@ class SentinelDynamicSummaryMixin:
             "_create_dynamic_summary (DynamicSummary) failure %s",
             response.content.decode("utf-8"),
         )
-        err_msg: str = (
+        err_msg = (
             f"Dynamic summary create/update failed with status {response.status_code}"
         )
         raise MsticpyAzureConnectionError(
@@ -381,6 +416,9 @@ class SentinelDynamicSummaryMixin:
 
         dyn_sum_url = f"{self.sent_urls['dynamic_summary']}/{summary_id}"
         params = {"api-version": _DYN_SUM_API_VERSION}
+        if not self._token:
+            err_msg: str = "Token not found, can't delete dynamic summary."
+            raise ValueError(err_msg)
         response = httpx.delete(
             dyn_sum_url,
             headers=get_api_headers(self._token),
@@ -399,21 +437,27 @@ class SentinelDynamicSummaryMixin:
             "delete_dynamic_summary failure %s",
             response.content.decode("utf-8"),
         )
-        err_msg: str = (
-            f"Dynamic summary deletion failed with status {response.status_code}"
-        )
+        err_msg = f"Dynamic summary deletion failed with status {response.status_code}"
         raise MsticpyAzureConnectionError(
             err_msg,
             "Text response:",
             response.text,
         )
 
-    def update_dynamic_summary(
+    def update_dynamic_summary(  # pylint:disable=too-many-arguments # noqa:PLR0913
         self: Self,
         summary: DynamicSummary | None = None,
         summary_id: str | None = None,
         data: pd.DataFrame | None = None,
-        **kwargs,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        tenant_id: str | None = None,
+        azure_tenant_id: str | None = None,
+        search_key: str | None = None,
+        tactics: str | list[str] | None = None,
+        techniques: str | list[str] | None = None,
+        source_info: dict[str, Any] | None = None,
     ) -> str | None:
         """
         Update a dynamic summary in the Sentinel Workspace.
@@ -426,9 +470,6 @@ class SentinelDynamicSummaryMixin:
             The ID of the summary to update.
         data : pd.DataFrame
             The summary data
-
-        Other Parameters
-        ----------------
         name : str
             The name of the dynamic summary to create
         description : str
@@ -446,8 +487,12 @@ class SentinelDynamicSummaryMixin:
         source_info : str, optional
             Summary source info, by default None
         summary_items : Union[pd, DataFrame, Iterable[DynamicSummaryItem],
-        List[Dict[str, Any]]], optional
-            Collection of summary items, by default None
+            List[Dict[str, Any]]], optional
+                Collection of summary items, by default
+        tenant_id: str | None
+            Tenant Id of the Sentinel workspace
+        azure_tenant_id: str | None
+            Tenant Id of the Sentinel workspace
 
         Returns
         -------
@@ -478,8 +523,15 @@ class SentinelDynamicSummaryMixin:
         return self.create_dynamic_summary(
             summary=summary,
             data=data,
+            name=name,
+            description=description,
             summary_id=summary_id,
-            **kwargs,
+            tenant_id=tenant_id,
+            azure_tenant_id=azure_tenant_id,
+            search_key=search_key,
+            tactics=tactics,
+            techniques=techniques,
+            source_info=source_info,
         )
 
 

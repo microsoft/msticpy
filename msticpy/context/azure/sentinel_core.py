@@ -16,9 +16,8 @@ from typing_extensions import Self
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserConfigError
 from ...common.wsconfig import WorkspaceConfig
-from .azure_data import AzureData, get_token
+from .azure_data import get_token
 from .sentinel_analytics import SentinelAnalyticsMixin, SentinelHuntingMixin
-from .sentinel_bookmarks import SentinelBookmarksMixin
 from .sentinel_dynamic_summary import SentinelDynamicSummaryMixin, SentinelQueryProvider
 from .sentinel_incidents import SentinelIncidentsMixin
 from .sentinel_search import SentinelSearchlistsMixin
@@ -26,7 +25,6 @@ from .sentinel_ti import SentinelTIMixin
 from .sentinel_utils import (
     _PATH_MAPPING,
     SentinelInstanceDetails,
-    SentinelUtilsMixin,
     parse_resource_id,
     validate_resource_id,
 )
@@ -121,15 +119,12 @@ def _map_legacy_param_names(**kwargs) -> dict[str, Any]:
 class MicrosoftSentinel(
     SentinelAnalyticsMixin,
     SentinelHuntingMixin,
-    SentinelBookmarksMixin,
     SentinelDynamicSummaryMixin,
-    SentinelIncidentsMixin,
-    SentinelUtilsMixin,
     SentinelWatchlistsMixin,
     SentinelSearchlistsMixin,
     SentinelWorkspacesMixin,
     SentinelTIMixin,
-    AzureData,
+    SentinelIncidentsMixin,
 ):
     """Class for returning key Microsoft Sentinel elements."""
 
@@ -188,7 +183,7 @@ class MicrosoftSentinel(
         the workspace details from the msticpyconfig configuration file.
 
         """
-        super().__init__(connect=False, cloud=cloud)
+        super(SentinelIncidentsMixin, self).__init__(connect=False, cloud=cloud)
 
         init_kwargs: dict[str, Any] = _map_legacy_param_names(**kwargs)
         if resource_id:
@@ -205,10 +200,8 @@ class MicrosoftSentinel(
             SentinelInstanceDetails,
         ] = self._set_ws_defaults(_create_ws_defaults, **init_kwargs)
         self.base_url: str = self.az_cloud_config.resource_manager
-        self.sent_urls: dict[str, str] = {}
         self.sent_data_query: SentinelQueryProvider | None = None
         self.url: str | None = None
-        self._token: str | None = None
 
         logger.info("Initializing Microsoft Sentinel connector")
         logger.info(
@@ -333,6 +326,9 @@ class MicrosoftSentinel(
             az_connect_kwargs["tenant_id"] = tenant_id
         self._token = token
         super().connect(auth_methods=auth_methods, silent=silent, **az_connect_kwargs)
+        if not self.credentials:
+            err_msg = "Could not connect."
+            raise ValueError(err_msg)
         if not self._token:
             logger.info("Getting token for %s", tenant_id)
             self._token = get_token(

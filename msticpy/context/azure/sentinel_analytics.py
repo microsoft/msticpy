@@ -19,7 +19,11 @@ from typing_extensions import Self
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
-from .sentinel_utils import extract_sentinel_response, get_http_timeout
+from .sentinel_utils import (
+    SentinelUtilsMixin,
+    extract_sentinel_response,
+    get_http_timeout,
+)
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -27,7 +31,7 @@ __author__ = "Pete Bryan"
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class SentinelHuntingMixin:
+class SentinelHuntingMixin(SentinelUtilsMixin):
     """Mixin class for Sentinel Hunting feature integrations."""
 
     def list_hunting_queries(self: Self) -> pd.DataFrame:
@@ -67,7 +71,7 @@ class SentinelHuntingMixin:
         return saved_query_df
 
 
-class SentinelAnalyticsMixin:
+class SentinelAnalyticsMixin(SentinelUtilsMixin):
     """Mixin class for Sentinel Analytics feature integrations."""
 
     def list_alert_rules(self: Self) -> pd.DataFrame:
@@ -81,7 +85,8 @@ class SentinelAnalyticsMixin:
 
         """
         return self._list_items(
-            item_type="alert_rules", api_version="2024-01-01-preview"
+            item_type="alert_rules",
+            api_version="2024-01-01-preview",
         )
 
     def _get_template_id(
@@ -236,6 +241,9 @@ class SentinelAnalyticsMixin:
         data: dict[str, Any] = extract_sentinel_response(data_items, props=True)
         data["kind"] = "Scheduled"
         params: dict[str, str] = {"api-version": "2020-01-01"}
+        if not self._token:
+            err_msg = "Token not found, can't create analytic rule."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.put(
             analytic_url,
             headers=get_api_headers(self._token),
@@ -307,13 +315,16 @@ class SentinelAnalyticsMixin:
         analytic_id: str = self._get_analytic_id(analytic_rule)
         analytic_url: str = self.sent_urls["alert_rules"] + f"/{analytic_id}"
         params: dict[str, str] = {"api-version": "2020-01-01"}
+        if not self._token:
+            err_msg: str = "Token not found, can't delete analytic rule."
+            raise ValueError(err_msg)
         response: httpx.Response = httpx.delete(
             analytic_url,
             headers=get_api_headers(self._token),
             params=params,
             timeout=get_http_timeout(),
         )
-        if not response.is_success:
+        if response.is_error:
             raise CloudError(response=response)
         logger.info("Analytic Deleted.")
 

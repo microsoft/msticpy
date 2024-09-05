@@ -17,7 +17,7 @@ from typing_extensions import Self
 
 from ..._version import VERSION
 from .azure_data import get_api_headers
-from .sentinel_utils import extract_sentinel_response
+from .sentinel_utils import SentinelUtilsMixin, extract_sentinel_response
 
 if TYPE_CHECKING:
     from ...common.timespan import TimeSpan
@@ -27,7 +27,7 @@ __author__ = "Pete Bryan"
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class SentinelSearchlistsMixin:
+class SentinelSearchlistsMixin(SentinelUtilsMixin):
     """Mixin class for Sentinel Watchlist feature integrations."""
 
     def create_search(  # noqa: PLR0913
@@ -83,6 +83,9 @@ class SentinelSearchlistsMixin:
             },
         }
         search_body: dict[str, Any] = extract_sentinel_response(search_items)
+        if not self._token:
+            err_msg = "Token not found, can't create search."
+            raise ValueError(err_msg)
         search_create_response: httpx.Response = httpx.put(
             search_url,
             headers=get_api_headers(self._token),
@@ -118,6 +121,9 @@ class SentinelSearchlistsMixin:
             self.sent_urls["search"]
             + f"/{search_name}_SRCH?api-version=2021-12-01-preview"
         )
+        if not self._token:
+            err_msg = "Token not found, can't check search status."
+            raise ValueError(err_msg)
         search_check_response: httpx.Response = httpx.get(
             search_url,
             headers=get_api_headers(self._token),
@@ -151,6 +157,9 @@ class SentinelSearchlistsMixin:
             self.sent_urls["search"]
             + f"/{search_name}_SRCH?api-version=2021-12-01-preview"
         )
+        if not self._token:
+            err_msg = "Token not found, can't delete search."
+            raise ValueError(err_msg)
         search_delete_response: httpx.Response = httpx.delete(
             search_url,
             headers=get_api_headers(self._token),

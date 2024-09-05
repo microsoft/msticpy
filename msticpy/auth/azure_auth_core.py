@@ -12,7 +12,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import ClassVar
+from typing import Callable, ClassVar
 
 from azure.common.credentials import get_cli_profile
 from azure.core.credentials import TokenCredential
@@ -66,8 +66,11 @@ class AzureCredEnvNames:
     AZURE_TENANT_ID: ClassVar[str] = (
         "AZURE_TENANT_ID"  # The service principal's Azure AD tenant ID
     )
-    # pylint: disable=line-too-long
-    # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="This is an enum of env variable names")]
+    # [SuppressMessage(
+    #   "Microsoft.Security",
+    #   "CS002:SecretInNextLine",
+    #   Justification="This is an enum of env variable names"
+    # )]
     AZURE_CLIENT_SECRET: ClassVar[str] = "AZURE_CLIENT_SECRET"  # nosec  # noqa
 
     # Certificate auth:
@@ -89,7 +92,11 @@ class AzureCredEnvNames:
     AZURE_USERNAME: ClassVar[str] = (
         "AZURE_USERNAME"  # The username/upn of an AAD user account.
     )
-    # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="This is an enum of env variable names")]
+    # [SuppressMessage(
+    #   "Microsoft.Security",
+    #   "CS002:SecretInNextLine",
+    #   Justification="This is an enum of env variable names"
+    # )]
     AZURE_PASSWORD: ClassVar[str] = "AZURE_PASSWORD"  # User password  # nosec  # noqa
 
 
@@ -211,7 +218,9 @@ def _build_certificate_client(
     """Build a credential from Certificate."""
     client_id = kwargs.pop("client_id", None)
     if not client_id:
-        logger.info("'certificate' credential requested but client_id param not supplied")
+        logger.info(
+            "'certificate' credential requested but client_id param not supplied"
+        )
         return None
     return CertificateCredential(
         authority=aad_uri,
@@ -227,7 +236,7 @@ def _build_powershell_client(**kwargs) -> AzurePowerShellCredential:
     return AzurePowerShellCredential()
 
 
-_CLIENTS = dict(
+_CLIENTS: dict[str, Callable] = dict(
     {
         "env": _build_env_client,
         "cli": _build_cli_client,
@@ -256,10 +265,13 @@ def list_auth_methods() -> list[str]:
 
 
 def _az_connect_core(
-    auth_methods: list[str] = None,
+    auth_methods: list[str] | None = None,
     cloud: str | None = None,
     tenant_id: str | None = None,
     silent: bool = False,
+    *,
+    region: str | None = None,
+    credential: AzCredentials | None = None,
     **kwargs,
 ) -> AzCredentials:
     """
@@ -315,7 +327,7 @@ def _az_connect_core(
 
     """
     # Create the auth methods with the specified cloud region
-    cloud = cloud or kwargs.pop("region", AzureCloudConfig().cloud)
+    cloud = cloud or region or AzureCloudConfig().cloud
     az_config = AzureCloudConfig(cloud)
     aad_uri = az_config.authority_uri
     logger.info("az_connect_core - using %s cloud and endpoint: %s", cloud, aad_uri)
@@ -327,17 +339,9 @@ def _az_connect_core(
         tenant_id,
         ", ".join(auth_methods or ["none"]),
     )
-    creds = kwargs.pop("credential", None)
-    if not creds:
-        creds = _build_chained_creds(
-            aad_uri=aad_uri,
-            requested_clients=auth_methods,
-            tenant_id=tenant_id,
-            **kwargs,
-        )
 
     # Filter and replace error message when credentials not found
-    azure_identity_logger = logging.getLogger("azure.identity")
+    azure_identity_logger: logging.Logger = logging.getLogger("azure.identity")
     handler = logging.StreamHandler(sys.stdout)
     if silent:
         handler.addFilter(_filter_all_warnings)
@@ -346,20 +350,35 @@ def _az_connect_core(
     azure_identity_logger.setLevel(logging.WARNING)
     azure_identity_logger.handlers = [handler]
 
-    # Connect to the subscription client to validate
-    legacy_creds = CredentialWrapper(creds, resource_id=az_config.token_uri)
-    if not creds:
+    if not credential:
+        chained_credential: ChainedTokenCredential = _build_chained_creds(
+            aad_uri=aad_uri,
+            requested_clients=auth_methods,
+            tenant_id=tenant_id,
+            **kwargs,
+        )
+        legacy_creds: CredentialWrapper = CredentialWrapper(
+            chained_credential, resource_id=az_config.token_uri
+        )
+    else:
+        # Connect to the subscription client to validate
+        legacy_creds = CredentialWrapper(credential, resource_id=az_config.token_uri)
+
+    if not credential:
+        err_msg: str = (
+            "Cannot authenticate with specified credential types. "
+            "At least one valid authentication method required."
+        )
         raise MsticpyAzureConfigError(
-            "Cannot authenticate with specified credential types.",
-            "At least one valid authentication method required.",
+            err_msg,
             help_uri=_HELP_URI,
             title="Authentication failure",
         )
 
-    return AzCredentials(legacy_creds, creds)
+    return AzCredentials(legacy_creds, ChainedTokenCredential(credential))
 
 
-az_connect_core = _az_connect_core
+az_connect_core: Callable[..., AzCredentials] = _az_connect_core
 
 
 def _build_chained_creds(
@@ -403,8 +422,10 @@ def _build_chained_creds(
             invalid_cred_types.append(cred_type)
             logger.info("Unknown authentication type requested: %s", cred_type)
             continue
-        cred_client = _CLIENTS[cred_type](  # type: ignore[operator]
-            tenant_id=tenant_id, aad_uri=aad_uri, **kwargs
+        cred_client = _CLIENTS[cred_type](
+            tenant_id=tenant_id,
+            aad_uri=aad_uri,
+            **kwargs,
         )
         if cred_client is not None:
             cred_list.append(cred_client)
@@ -449,7 +470,10 @@ def only_interactive_cred(chained_cred: ChainedTokenCredential):
 
 def _filter_credential_warning(record) -> bool:
     """Rewrite out credential not found message."""
-    if not record.name.startswith("azure.identity") or record.levelno != logging.WARNING:
+    if (
+        not record.name.startswith("azure.identity")
+        or record.levelno != logging.WARNING
+    ):
         return True
     message = record.getMessage()
     if ".get_token" in message:
@@ -493,7 +517,10 @@ def check_cli_credentials() -> tuple[AzureCliStatus, str | None]:
             and len(raw_token[0]) == 3
         ):
             bearer_token = raw_token[0][2]
-            if parser.parse(bearer_token.get("expiresOn", datetime.min)) < datetime.now():
+            if (
+                parser.parse(bearer_token.get("expiresOn", datetime.min))
+                < datetime.now()
+            ):
                 raise ValueError("AADSTS70043: The refresh token has expired")
 
         return AzureCliStatus.CLI_OK, "Azure CLI credentials available."

@@ -15,6 +15,8 @@ from urllib import parse
 import httpx
 from msrestazure import tools as az_tools
 
+from msticpy.context.azure.sentinel_utils import SentinelUtilsMixin
+
 from ..._version import VERSION
 from ...auth.azure_auth_core import AzureCloudConfig
 from ...common.data_utils import df_has_data
@@ -42,7 +44,7 @@ class ParsedUrlComponents:
     raw_res_id: str
 
 
-class SentinelWorkspacesMixin:
+class SentinelWorkspacesMixin(SentinelUtilsMixin):
     """Mixin class for Sentinel workspaces."""
 
     _TENANT_URI: ClassVar[str] = (
@@ -56,10 +58,9 @@ class SentinelWorkspacesMixin:
         portal_url: str,
     ) -> str | None:
         """Return resource ID components from Sentinel portal URL."""
-        try:
-            return cls._extract_resource_id(portal_url).resource_id
-        except AttributeError:
-            return None
+        if (resource := cls._extract_resource_id(portal_url)) is not None:
+            return resource.resource_id
+        return None
 
     @classmethod
     def get_workspace_details_from_url(
@@ -80,10 +81,13 @@ class SentinelWorkspacesMixin:
 
         """
         resource_comps: ParsedUrlComponents | None = cls._extract_resource_id(
-            portal_url
+            portal_url,
         )
+        if not resource_comps:
+            err_msg: str = f"Cannot retrieve workspace details from {portal_url}"
+            raise ValueError(err_msg)
         tenant_id: str | None = None
-        if resource_comps and resource_comps.tenant_name:
+        if resource_comps.tenant_name:
             tenant_id = cls._get_tenantid_from_logon_domain(resource_comps.tenant_name)
         workspace_df: pd.DataFrame = cls._lookup_workspace_by_res_id(
             resource_id=resource_comps.resource_id,
