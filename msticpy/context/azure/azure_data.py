@@ -311,19 +311,22 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
                 title="Please call connect() before continuing.",
             )
-        if self.sub_client:
-            try:
-                sub: Subscription = self.sub_client.subscriptions.get(sub_id)
-            except AttributeError:
-                self._legacy_auth("sub_client")
-                sub = self.sub_client.subscriptions.get(sub_id)
-            sub_loc: dict[str, Any] | None = None
-            quota_id: dict[str, Any] | None = None
-            spending_limit: dict[str, Any] | None = None
-            if sub.subscription_policies:
-                sub_loc = sub.subscription_policies.location_placement_id
-                quota_id = sub.subscription_policies.quota_id
-                spending_limit = sub.subscription_policies.spending_limit
+        if not self.sub_client:
+            err_msg = "sub_client must be defined to retrieve subscription info"
+            raise ValueError(err_msg)
+
+        try:
+            sub: Subscription = self.sub_client.subscriptions.get(sub_id)
+        except AttributeError:
+            self._legacy_auth("sub_client")
+            sub = self.sub_client.subscriptions.get(sub_id)
+        sub_loc: dict[str, Any] | None = None
+        quota_id: dict[str, Any] | None = None
+        spending_limit: dict[str, Any] | None = None
+        if sub.subscription_policies:
+            sub_loc = sub.subscription_policies.location_placement_id
+            quota_id = sub.subscription_policies.quota_id
+            spending_limit = sub.subscription_policies.spending_limit
 
         return {
             "Subscription ID": sub.subscription_id,
@@ -601,6 +604,43 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
             ),
         )
 
+    @staticmethod
+    def _normalize_resources(
+        resource_id: str | None = None,
+        resource_provider: str | None = None,
+    ) -> tuple[str, str]:
+        """Normalize elements depending on user input type"""
+        if resource_id:
+            try:
+                return (
+                    resource_id.split("/")[6],
+                    resource_id.split("/")[7],
+                )
+            except IndexError as idx_err:
+                err_msg = (
+                    "Provided Resource ID isn't in the correct format. "
+                    "It should look like:\n"
+                    "/subscriptions/SUB_ID/resourceGroups/RESOURCE_GROUP/"
+                    "providers/NAMESPACE/SERVICE_NAME/RESOURCE_NAME "
+                )
+                raise MsticpyResourceError(err_msg) from idx_err
+
+        elif resource_provider:
+            try:
+                return (
+                    resource_provider.split("/")[0],
+                    resource_provider.split("/")[1],
+                )
+            except IndexError as idx_err:
+                err_msg = (
+                    "Provided Resource Provider isn't in the correct format.\n"
+                    "It should look like: NAMESPACE/SERVICE_NAME"
+                )
+                raise MsticpyResourceError(err_msg) from idx_err
+        else:
+            err_msg = "Please provide an resource ID or resource provider namespace"
+            raise ValueError(err_msg)
+
     def _get_api(
         self: Self,
         *,
@@ -642,33 +682,10 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
             err_msg = "Resource client must be set to get api."
             raise ValueError(err_msg)
 
-        # Normalize elements depending on user input type
-        if resource_id:
-            try:
-                namespace = resource_id.split("/")[6]
-                service = resource_id.split("/")[7]
-            except IndexError as idx_err:
-                err_msg = (
-                    "Provided Resource ID isn't in the correct format. "
-                    "It should look like:\n"
-                    "/subscriptions/SUB_ID/resourceGroups/RESOURCE_GROUP/"
-                    "providers/NAMESPACE/SERVICE_NAME/RESOURCE_NAME "
-                )
-                raise MsticpyResourceError(err_msg) from idx_err
-
-        elif resource_provider is not None:
-            try:
-                namespace = resource_provider.split("/")[0]
-                service = resource_provider.split("/")[1]
-            except IndexError as idx_err:
-                err_msg = (
-                    "Provided Resource Provider isn't in the correct format.\n"
-                    "It should look like: NAMESPACE/SERVICE_NAME"
-                )
-                raise MsticpyResourceError(err_msg) from idx_err
-        else:
-            err_msg = "Please provide an resource ID or resource provider namespace"
-            raise ValueError(err_msg)
+        namespace, service = AzureData._normalize_resources(
+            resource_id=resource_id,
+            resource_provider=resource_provider,
+        )
 
         # Get list of API versions for the service
         try:
