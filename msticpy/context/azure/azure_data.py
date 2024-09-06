@@ -612,7 +612,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
         resource_id: str | None = None,
         resource_provider: str | None = None,
     ) -> tuple[str, str]:
-        """Normalize elements depending on user input type"""
+        """Normalize elements depending on user input type."""
         if resource_id:
             try:
                 return (
