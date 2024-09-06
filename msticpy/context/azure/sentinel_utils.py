@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from collections import Counter
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import Any
 
 import httpx
 import pandas as pd
@@ -42,8 +42,6 @@ _PATH_MAPPING: dict[str, str] = {
     "dynamic_summary": "/providers/Microsoft.SecurityInsights/dynamicSummaries",
 }
 
-T = TypeVar("T", bound="SentinelInstanceDetails")
-
 
 @dataclass
 class SentinelInstanceDetails:
@@ -63,7 +61,7 @@ class SentinelInstanceDetails:
         )
 
     @classmethod
-    def from_resource_id(cls: type[T], resource_id: str) -> T:
+    def from_resource_id(cls: type[Self], resource_id: str) -> Self:
         """Return SentinelInstanceDetails from a resource ID."""
         return cls(**parse_resource_id(resource_id))
 

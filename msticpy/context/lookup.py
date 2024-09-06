@@ -27,7 +27,6 @@ from typing import (
     Iterable,
     Mapping,
     Sized,
-    TypeVar,
 )
 
 import nest_asyncio
@@ -59,8 +58,6 @@ __version__ = VERSION
 __author__ = "Florian Bracq"
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-LOOKUPTYPE = TypeVar("LOOKUPTYPE", bound="Lookup")
 
 
 class ProgressCounter:
@@ -296,7 +293,7 @@ class Lookup:
 
     @classmethod
     def browse_results(
-        cls: type[Lookup],
+        cls: type[Self],
         data: pd.DataFrame,
         severities: list[str] | None = None,
         *,
@@ -350,7 +347,7 @@ class Lookup:
             logger.info("none")
 
     @classmethod
-    def reload_provider_settings(cls: type[Lookup]) -> None:
+    def reload_provider_settings(cls: type[Self]) -> None:
         """Reload provider settings from config."""
         reload_settings()
         logger.info(
@@ -732,7 +729,7 @@ class Lookup:
 
     @classmethod
     def list_available_providers(
-        cls: type[LOOKUPTYPE],
+        cls: type[Self],
         *,
         show_query_types: bool = False,
         as_list: bool = False,
@@ -767,7 +764,7 @@ class Lookup:
         return providers if as_list else None
 
     @classmethod
-    def import_provider(cls: type[Lookup], provider: str) -> type[Provider]:
+    def import_provider(cls: type[Self], provider: str) -> type[Provider]:
         """Import provider class."""
         mod_name, cls_name = cls.PROVIDERS.get(provider, (None, None))
 
