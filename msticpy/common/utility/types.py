@@ -306,10 +306,10 @@ class SingletonClass:
 
     """
 
-    def __init__(self: "SingletonClass", wrapped_cls: type[T]) -> None:
+    def __init__(self: Self, wrapped_cls: type[Any]) -> None:
         """Instantiate the class wrapper."""
-        self.wrapped_cls: type[T] = wrapped_cls
-        self.instance: T | None = None
+        self.wrapped_cls: type[Any] = wrapped_cls
+        self.instance: Self | None = None
         self.__doc__ = wrapped_cls.__doc__
 
     def __call__(self: Self, *args, **kwargs) -> object:
@@ -322,7 +322,7 @@ class SingletonClass:
         """Return the current instance of the wrapped class."""
         return self.instance
 
-    def __getattr__(self, name) -> Any:
+    def __getattr__(self, name: str) -> Any:
         """Return the attribute `name` from the wrapped class."""
         if hasattr(self.wrapped_cls, name):
             return getattr(self.wrapped_cls, name)
@@ -353,6 +353,11 @@ class SingletonArgsClass(SingletonClass):
 
     """
 
+    def __init__(self: Self, wrapped_cls: type[Any]) -> None:
+        super().__init__(wrapped_cls)
+        self.kwargs: dict[str, Any] | None = None
+        self.args: tuple[Any] | None = None
+
     def __call__(self, *args, **kwargs) -> object:
         """Override the __call__ method for the wrapper class."""
         if (
@@ -361,8 +366,9 @@ class SingletonArgsClass(SingletonClass):
             or getattr(self.instance, "args", None) != args
         ):
             self.instance = self.wrapped_cls(*args, **kwargs)
-            self.instance.kwargs = kwargs
-            self.instance.args = args
+            if self.instance:
+                self.instance.kwargs = kwargs
+                self.instance.args = args
         return self.instance
 
 
