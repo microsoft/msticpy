@@ -40,8 +40,9 @@ try:
     try:
         # Try new version but keep backward compat with 1.0.1
         from azure.mgmt.monitor import MonitorManagementClient
-    except ImportError:
-        from azure.mgmt.monitor import MonitorClient as MonitorManagementClient
+        from azure.mgmt.monitor import (  # type: ignore[attr-defined, no-redef]
+            MonitorClient as MonitorManagementClient,
+        )
     from azure.mgmt.compute import ComputeManagementClient
 
     if TYPE_CHECKING:

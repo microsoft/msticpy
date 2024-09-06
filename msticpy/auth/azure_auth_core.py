@@ -375,7 +375,7 @@ def _az_connect_core(
             title="Authentication failure",
         )
 
-    return AzCredentials(legacy_creds, ChainedTokenCredential(credential))
+    return AzCredentials(legacy_creds, ChainedTokenCredential(credential))  # type: ignore[arg-type]
 
 
 az_connect_core: Callable[..., AzCredentials] = _az_connect_core

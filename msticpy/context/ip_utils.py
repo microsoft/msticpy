@@ -556,7 +556,7 @@ def get_asn_from_name(name: str) -> dict[str, Any]:
         key: value for key, value in asns_dict.items() if name in value.casefold()
     }
     if len(matches.keys()) == 1:
-        return next(iter(matches))
+        return next(iter(matches))  # type:ignore[arg-type]
     if len(matches.keys()) > 1:
         return matches
 

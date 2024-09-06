@@ -178,7 +178,7 @@ def fallback_devicecode_creds(
     if not creds:
         raise CloudError("Could not obtain credentials.")
 
-    return AzCredentials(legacy_creds, ChainedTokenCredential(creds))
+    return AzCredentials(legacy_creds, ChainedTokenCredential(creds))  # type: ignore[arg-type]
 
 
 def get_default_resource_name(resource_uri: str) -> str:
