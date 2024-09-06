@@ -9,8 +9,9 @@ from __future__ import annotations
 import datetime
 import logging
 from dataclasses import asdict, dataclass, field
+from importlib.metadata import version
 from typing import TYPE_CHECKING, Any, Callable, Iterable
-
+from packaging.version import Version, parse
 import numpy as np
 import pandas as pd
 from typing_extensions import Self
@@ -37,9 +38,10 @@ try:
     from azure.mgmt.resource import ResourceManagementClient
     from azure.mgmt.resource.subscriptions import SubscriptionClient
 
-    try:
+    if parse(version("azure.mgmt.monitor")) > Version("1.0.1"):
         # Try new version but keep backward compat with 1.0.1
         from azure.mgmt.monitor import MonitorManagementClient
+    else:
         from azure.mgmt.monitor import (  # type: ignore[attr-defined, no-redef]
             MonitorClient as MonitorManagementClient,
         )
@@ -1006,7 +1008,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
                 | ComputeManagementClient
             ] = _CLIENT_MAPPING[client_name]
             if sub_id is None:
-                if client is SubscriptionClient:
+                if issubclass(client, SubscriptionClient):
                     setattr(
                         self,
                         client_name,
@@ -1057,7 +1059,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
             | ComputeManagementClient
         ] = _CLIENT_MAPPING[client_name]
         if sub_id is None:
-            if client is SubscriptionClient:
+            if issubclass(client, SubscriptionClient):
                 setattr(
                     self,
                     client_name,
