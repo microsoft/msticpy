@@ -1,6 +1,7 @@
 # MSTICPy Release pipeline
 
-trigger: none
+trigger:
+- main
 name: 1ES-MSTICPy-Rel-$(date:yyyyMMdd)$(rev:.r)
 
 resources:
