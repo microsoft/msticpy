@@ -97,7 +97,7 @@ def create_host_record(
         ip_entity = IpAddress()
         ip_entity.Address = host_hb["ComputerIP"]
         geoloc_entity = GeoLocation()
-        geoloc_entity.CountryName = host_hb["RemoteIPCountry"]  # type: ignore
+        geoloc_entity.CountryOrRegionName = host_hb["RemoteIPCountry"]  # type: ignore
         geoloc_entity.Longitude = host_hb["RemoteIPLongitude"]  # type: ignore
         geoloc_entity.Latitude = host_hb["RemoteIPLatitude"]  # type: ignore
         ip_entity.Location = geoloc_entity  # type: ignore

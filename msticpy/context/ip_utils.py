@@ -192,7 +192,7 @@ def create_ip_record(
     ip_entity.VMUUID = ip_hb["VMUUID"]  # type: ignore
     ip_entity.SubscriptionId = ip_hb["SubscriptionId"]  # type: ignore
     geoloc_entity = GeoLocation()  # type: ignore
-    geoloc_entity.CountryName = ip_hb["RemoteIPCountry"]  # type: ignore
+    geoloc_entity.CountryOrRegionName = ip_hb["RemoteIPCountry"]  # type: ignore
     geoloc_entity.Longitude = ip_hb["RemoteIPLongitude"]  # type: ignore
     geoloc_entity.Latitude = ip_hb["RemoteIPLatitude"]  # type: ignore
     ip_entity.Location = geoloc_entity  # type: ignore
