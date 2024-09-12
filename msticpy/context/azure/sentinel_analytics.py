@@ -15,7 +15,7 @@ from IPython.display import display
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
-from .sentinel_utils import _build_sent_data, get_http_timeout
+from .sentinel_utils import extract_sentinel_response, get_http_timeout
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -75,7 +75,7 @@ class SentinelAnalyticsMixin:
 
         """
         return self._list_items(  # type: ignore
-            item_type="alert_rules", api_version="2022-11-01"
+            item_type="alert_rules", api_version="2024-01-01-preview"
         )
 
     def _get_template_id(
@@ -227,7 +227,7 @@ class SentinelAnalyticsMixin:
             "tactics": tactics,
             "enabled": str(enabled).lower(),
         }
-        data = _build_sent_data(data_items, props=True)
+        data = extract_sentinel_response(data_items, props=True)
         data["kind"] = "Scheduled"
         params = {"api-version": "2020-01-01"}
         response = httpx.put(

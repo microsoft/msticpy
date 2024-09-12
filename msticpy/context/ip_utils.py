@@ -62,13 +62,13 @@ def _fetch_asns() -> Callable[[], Dict[str, str]]:
 
     def _get_asns_dict() -> Dict[str, str]:
         """Return or fetch and return ASN Soup."""
-        nonlocal asns_dict  # noqa
+        nonlocal asns_dict
         if not asns_dict:
             try:
                 asns_resp = httpx.get(_POTAROO_ASNS_URL)
             except httpx.ConnectError as err:
                 raise MsticpyConnectionError(
-                    "Unable to get ASN details from potaroo.net"
+                    "Unable to get ASN details from potaroo.net",
                 ) from err
             asns_soup = BeautifulSoup(asns_resp.content, features="lxml")
             asns_dict = {
@@ -86,13 +86,13 @@ def _fetch_asns() -> Callable[[], Dict[str, str]]:
 _ASNS_DICT = _fetch_asns()
 
 
-@export  # noqa: MC0001
-def convert_to_ip_entities(  # noqa: MC0001
+@export
+def convert_to_ip_entities(
     ip_str: Optional[str] = None,
     data: Optional[pd.DataFrame] = None,
     ip_col: Optional[str] = None,
     geo_lookup: bool = True,
-) -> List[IpAddress]:  # noqa: MC0001
+) -> List[IpAddress]:
     """
     Take in an IP Address string and converts it to an IP Entity.
 
@@ -155,7 +155,8 @@ def convert_to_ip_entities(  # noqa: MC0001
 @deprecated("Will be removed in a version 2.2", version="1.4.0")
 @export
 def create_ip_record(
-    heartbeat_df: pd.DataFrame, az_net_df: pd.DataFrame = None
+    heartbeat_df: pd.DataFrame,
+    az_net_df: pd.DataFrame = None,
 ) -> IpAddress:
     """
     Generate ip_entity record for provided IP value.
@@ -212,9 +213,9 @@ def create_ip_record(
     return ip_entity
 
 
-@export  # noqa: MC0001
+@export
 # pylint: disable=too-many-return-statements, invalid-name
-def get_ip_type(ip: str = None, ip_str: str = None) -> str:  # noqa: MC0001
+def get_ip_type(ip: str = None, ip_str: str = None) -> str:
     """
     Validate value is an IP address and determine IPType category.
 
@@ -267,7 +268,9 @@ def get_ip_type(ip: str = None, ip_str: str = None) -> str:  # noqa: MC0001
 @export
 @lru_cache(maxsize=1024)
 def get_whois_info(
-    ip: str = None, show_progress: bool = False, **kwargs
+    ip: str = None,
+    show_progress: bool = False,
+    **kwargs,
 ) -> Tuple[str, dict]:
     """
     Retrieve whois ASN information for given IP address using IPWhois python package.
@@ -464,7 +467,9 @@ def ip_whois(
             if rate_limit:
                 sleep(query_rate)
             whois_results[ip_addr] = _whois_lookup(  # type: ignore
-                ip_addr, raw=raw, retry_count=retry_count
+                ip_addr,
+                raw=raw,
+                retry_count=retry_count,
             ).properties
         return _whois_result_to_pandas(whois_results)
     if isinstance(ip, (str, IpAddress)):
@@ -571,7 +576,9 @@ class _IpWhoIsResult(NamedTuple):
 
 @lru_cache(maxsize=1024)
 def _whois_lookup(
-    ip_addr: Union[str, IpAddress], raw: bool = False, retry_count: int = 5  # type: ignore
+    ip_addr: Union[str, IpAddress],
+    raw: bool = False,
+    retry_count: int = 5,  # type: ignore
 ) -> _IpWhoIsResult:
     """Conduct lookup of IP Whois information."""
     if isinstance(ip_addr, IpAddress):  # type: ignore
@@ -599,7 +606,10 @@ def _whois_lookup(
 
 
 def _add_rdap_data(
-    ipwhois_result: _IpWhoIsResult, rdap_reg_url: str, retry_count: int, raw: bool
+    ipwhois_result: _IpWhoIsResult,
+    rdap_reg_url: str,
+    retry_count: int,
+    raw: bool,
 ) -> _IpWhoIsResult:
     """Add RDAP data to WhoIs result."""
     retries = 0
@@ -637,7 +647,7 @@ def _rdap_lookup(url: str, retry_count: int = 5) -> httpx.Response:
             retry_count -= 1
     if not rdap_data:
         raise MsticpyException(
-            "Rate limit exceeded - try adjusting query_rate parameter to slow down requests"
+            "Rate limit exceeded - try adjusting query_rate parameter to slow down requests",
         )
     return rdap_data
 
@@ -646,7 +656,7 @@ def _whois_result_to_pandas(results: Union[str, List, Dict]) -> pd.DataFrame:
     """Transform whois results to a Pandas DataFrame."""
     if isinstance(results, dict):
         return pd.DataFrame(
-            [result or {"query": idx} for idx, result in results.items()]
+            [result or {"query": idx} for idx, result in results.items()],
         )
     raise NotImplementedError("Only dict type current supported for `results`.")
 
@@ -710,11 +720,11 @@ def _asn_whois_query(query, server, port=43, retry_count=5) -> str:
                 response_data = conn.recv(4096).decode()
                 if "error" in response_data:
                     raise MsticpyConnectionError(
-                        "An error occurred during lookup, please try again."
+                        "An error occurred during lookup, please try again.",
                     )
                 if "rate limit exceeded" in response_data:
                     raise MsticpyConnectionError(
-                        "Rate limit exceeded please wait and try again."
+                        "Rate limit exceeded please wait and try again.",
                     )
                 response.append(response_data)
             except (UnicodeDecodeError, ConnectionResetError):

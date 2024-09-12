@@ -12,13 +12,14 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+from __future__ import annotations
+
 import traceback
 from abc import abstractmethod
-from typing import Any, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import attr
 import httpx
-import pandas as pd
 from attr import Factory
 
 from .._version import VERSION
@@ -27,6 +28,9 @@ from ..common.pkg_config import get_http_timeout
 from ..common.utility import mp_ua_header
 from .lookup_result import LookupStatus
 from .provider_base import Provider
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -40,11 +44,11 @@ class APILookupParams:
     path: str = ""
     verb: str = "GET"
     full_url: bool = False
-    headers: Dict[str, str] = Factory(dict)
-    params: Dict[str, Union[str, int, float]] = Factory(dict)
-    data: Dict[str, str] = Factory(dict)
+    headers: dict[str, str] = Factory(dict)
+    params: dict[str, str | float] = Factory(dict)
+    data: dict[str, str] = Factory(dict)
     auth_type: str = ""
-    auth_str: List[str] = Factory(list)
+    auth_str: list[str] = Factory(list)
     sub_type: str = ""
 
 
@@ -64,7 +68,7 @@ class HttpProvider(Provider):
 
     ..code:: python
 
-        _QUERIES: Dict[str, APILookupParams] = {}
+        _QUERIES: dict[str, APILookupParams] = {}
 
     For example:
 
@@ -85,7 +89,7 @@ class HttpProvider(Provider):
 
     .. code:: python
 
-        _REQUIRED_PARAMS: List[str] = []
+        _REQUIRED_PARAMS: list[str] = []
 
     For example:
 
@@ -116,30 +120,38 @@ class HttpProvider(Provider):
     """
 
     # Base URL of the service
-    _BASE_URL = ""
+    _BASE_URL: ClassVar[str] = ""
 
     # Define query parameters for different item types (keys)
-    _QUERIES: Dict[str, APILookupParams] = {}
+    _QUERIES: ClassVar[dict[str, Any]] = {}
 
     # List of required __init__ params
-    _REQUIRED_PARAMS: List[str] = []
+    _REQUIRED_PARAMS: ClassVar[list[str]] = []
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        *,
+        timeout: int | None = None,
+        ApiID: str | None = None,  # noqa: N803
+        AuthKey: str | None = None,  # noqa: N803
+        Instance: str | None = None,  # noqa: N803
+    ) -> None:
         """Initialize the class."""
-        super().__init__(**kwargs)
-        self._httpx_client = httpx.Client(timeout=get_http_timeout(**kwargs))
-        self._request_params = {}
-        if "ApiID" in kwargs:
-            api_id = kwargs.pop("ApiID")
-            self._request_params["ApiID"] = api_id.strip() if api_id else None
-        if "AuthKey" in kwargs:
-            auth_key = kwargs.pop("AuthKey")
-            self._request_params["AuthKey"] = auth_key.strip() if auth_key else None
-        if "Instance" in kwargs:
-            auth_key = kwargs.pop("Instance")
-            self._request_params["Instance"] = auth_key.strip() if auth_key else None
+        super().__init__()
+        self._httpx_client = httpx.Client(timeout=get_http_timeout(timeout=timeout))
+        self._request_params: dict[str, Any] = {
+            "ApiID": None,
+            "AuthKey": None,
+            "Instance": None,
+        }
+        if ApiID:
+            self._request_params["ApiID"] = ApiID.strip()
+        if AuthKey:
+            self._request_params["AuthKey"] = AuthKey.strip()
+        if Instance:
+            self._request_params["Instance"] = Instance.strip()
 
-        missing_params = [
+        missing_params: list[str] = [
             param
             for param in self._REQUIRED_PARAMS
             if param not in self._request_params
@@ -148,22 +160,19 @@ class HttpProvider(Provider):
         missing_params = []
 
         if missing_params:
-            param_list = ", ".join(f"'{param}'" for param in missing_params)
-            raise MsticpyConfigError(
-                f"Parameter values missing for Provider '{self.__class__.__name__}'",
-                f"Missing parameters are: {param_list}",
+            param_list: str = ", ".join(f"'{param}'" for param in missing_params)
+            error_msg: str = (
+                f"Parameter values missing for Provider '{self.__class__.__name__}'. "
+                f"Missing parameters are: {param_list}"
             )
-
-        # In __init__ you might want to
-        # supply additional checkers/preprocessors
-        # with
-        # self._preprocessors.add_check(type, check_func)
-        # or replace the default PreProcessors
-        # self._preprocessors = MyPreProcessor()
+            raise MsticpyConfigError(error_msg)
 
     @abstractmethod
     def lookup_item(
-        self, item: str, item_type: str = None, query_type: str = None, **kwargs
+        self,
+        item: str,
+        item_type: str | None = None,
+        query_type: str | None = None,
     ) -> pd.DataFrame:
         """
         Lookup from an item value.
@@ -204,8 +213,11 @@ class HttpProvider(Provider):
 
     # pylint: enable=duplicate-code
     def _substitute_parms(
-        self, value: str, value_type: str, query_type: str = None
-    ) -> Tuple[str, Dict[str, Any]]:
+        self,
+        value: str,
+        value_type: str,
+        query_type: str | None = None,
+    ) -> tuple[str, dict[str, Any]]:
         """
         Create requests parameters collection.
 
@@ -222,20 +234,21 @@ class HttpProvider(Provider):
 
         Returns
         -------
-        Tuple[str, Dict[str, Any]]
+        Tuple[str, dict[str, Any]]
             HTTP method, dictionary of parameter keys/values
 
         """
-        req_params = {"observable": value}
+        req_params: dict[str, str] = {"observable": value}
         req_params.update(self._request_params)
-        value_key = f"{value_type}-{query_type}" if query_type else value_type
-        src = self.item_query_defs.get(value_key, None)
+        value_key: str = f"{value_type}-{query_type}" if query_type else value_type
+        src: APILookupParams | None = self.item_query_defs.get(value_key, None)
         if not src:
-            raise LookupError(f"Provider does not support this type {value_key}.")
+            error_msg: str = f"Provider does not support this type {value_key}."
+            raise LookupError(error_msg)
 
         # create a parameter dictionary to pass to requests
         # substitute any parameter value from our req_params dict
-        req_dict: Dict[str, Any] = {
+        req_dict: dict[str, Any] = {
             "headers": {},
             "url": (
                 src.path.format(**req_params)
@@ -245,33 +258,34 @@ class HttpProvider(Provider):
         }
 
         if src.headers:
-            headers: Dict[str, Any] = {
+            headers: dict[str, Any] = {
                 key: val.format(**req_params) for key, val in src.headers.items()
             }
             req_dict["headers"] = headers
         if "User-Agent" not in req_dict["headers"]:
             req_dict["headers"].update(mp_ua_header())
         if src.params:
-            q_params: Dict[str, Any] = {
+            q_params: dict[str, Any] = {
                 key: val.format(**req_params) if isinstance(val, str) else val
                 for key, val in src.params.items()
             }
             req_dict["params"] = q_params
         if src.data:
-            q_data: Dict[str, Any] = {
+            q_data: dict[str, Any] = {
                 key: val.format(**req_params) for key, val in src.data.items()
             }
             req_dict["data"] = q_data
         if src.auth_type and src.auth_str:
-            auth_strs: Tuple = tuple(p.format(**req_params) for p in src.auth_str)
+            auth_strs: tuple = tuple(p.format(**req_params) for p in src.auth_str)
             if src.auth_type == "HTTPBasic":
                 req_dict["auth"] = auth_strs
             else:
-                raise NotImplementedError(f"Unknown auth type {src.auth_type}")
+                error_msg = f"Unknown auth type {src.auth_type}"
+                raise NotImplementedError(error_msg)
         return src.verb, req_dict
 
     @staticmethod
-    def _failed_response(response: Dict) -> bool:
+    def _failed_response(response: dict) -> bool:
         """
         Return True if negative response.
 
@@ -293,18 +307,18 @@ class HttpProvider(Provider):
         )
 
     @staticmethod
-    def _err_to_results(result: Dict, err: Exception):
+    def _err_to_results(result: dict, err: Exception) -> None:
         result["Details"] = err.args
         result["RawResult"] = (
             type(err).__name__ + "\n" + str(err) + "\n" + traceback.format_exc()
         )
 
     @staticmethod
-    def _response_message(status_code):
-        if status_code == 404:
+    def _response_message(status_code: int) -> str:
+        if status_code == httpx.codes.NOT_FOUND:
             return "Not found."
-        if status_code == 401:
+        if status_code == httpx.codes.UNAUTHORIZED:
             return "Authorization failed. Check account and key details."
-        if status_code == 403:
+        if status_code == httpx.codes.FORBIDDEN:
             return "Request forbidden. Allowed query rate may have been exceeded."
         return httpx.codes.get_reason_phrase(status_code) or "Unknown HTTP status code."

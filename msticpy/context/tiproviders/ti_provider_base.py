@@ -12,16 +12,24 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, Tuple, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Iterable
 
-import pandas as pd
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.utility import export
 from ..provider_base import PivotProvider, Provider
 from .result_severity import ResultSeverity
+
+if TYPE_CHECKING:
+    import pandas as pd
+
+    from ...init.pivot import Pivot
+    from ...init.pivot_core.pivot_register import PivotRegistration
+
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -31,11 +39,14 @@ __author__ = "Ian Hellen"
 class TIProvider(Provider):
     """Abstract base class for Threat Intel providers."""
 
-    _QUERIES: Dict[str, Any] = {}
+    _QUERIES: ClassVar[dict[str, Any]] = {}
 
     def _check_item_type(
-        self, item: str, item_type: str = None, query_subtype: str = None
-    ) -> Dict:
+        self: Self,
+        item: str,
+        item_type: str | None = None,
+        query_subtype: str | None = None,
+    ) -> dict:
         """
         Check Item Type and cleans up item.
 
@@ -63,8 +74,11 @@ class TIProvider(Provider):
         )
 
     def _check_ioc_type(
-        self, ioc: str, ioc_type: str = None, query_subtype: str = None
-    ) -> Dict:
+        self: Self,
+        ioc: str,
+        ioc_type: str | None = None,
+        query_subtype: str | None = None,
+    ) -> dict:
         """
         Check Ioc Type and cleans up ioc.
 
@@ -85,8 +99,10 @@ class TIProvider(Provider):
             Status is none-zero on failure.
 
         """
-        result = super()._check_item_type(
-            item=ioc, item_type=ioc_type, query_subtype=query_subtype
+        result: dict[str, Any] = super()._check_item_type(
+            item=ioc,
+            item_type=ioc_type,
+            query_subtype=query_subtype,
         )
         result["Ioc"] = result.pop("Item")
         result["IocType"] = result.pop("ItemType")
@@ -95,7 +111,10 @@ class TIProvider(Provider):
         return result
 
     def lookup_item(
-        self, item: str, item_type: str = None, query_type: str = None, **kwargs
+        self: Self,
+        item: str,
+        item_type: str | None = None,
+        query_type: str | None = None,
     ) -> pd.DataFrame:
         """
         Lookup a single item.
@@ -137,11 +156,10 @@ class TIProvider(Provider):
             ioc=item,
             ioc_type=item_type,
             query_type=query_type,
-            **kwargs,
         )
 
     @abstractmethod
-    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -152,7 +170,7 @@ class TIProvider(Provider):
 
         Returns
         -------
-        Tuple[bool, ResultSeverity, Any]
+        tuple[bool, ResultSeverity, Any]
             bool = positive or negative hit
             ResultSeverity = enumeration of severity
             Object with match details
@@ -161,11 +179,10 @@ class TIProvider(Provider):
 
     @abstractmethod
     def lookup_ioc(
-        self,
+        self: Self,
         ioc: str,
-        ioc_type: str = None,
-        query_type: str = None,
-        **kwargs,
+        ioc_type: str | None = None,
+        query_type: str | None = None,
     ) -> pd.DataFrame:
         """
         Lookup a single IoC observable.
@@ -189,19 +206,18 @@ class TIProvider(Provider):
         """
 
     def lookup_iocs(
-        self,
-        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        ioc_col: str = None,
-        ioc_type_col: str = None,
-        query_type: str = None,
-        **kwargs,
+        self: Self,
+        data: pd.DataFrame | dict[str, str] | Iterable[str],
+        ioc_col: str | None = None,
+        ioc_type_col: str | None = None,
+        query_type: str | None = None,
     ) -> pd.DataFrame:
         """
         Lookup collection of IoC observables.
 
         Parameters
         ----------
-        data : Union[pd.DataFrame, Dict[str, str], Iterable[str]]
+        data : Union[pd.DataFrame, dict[str, str], Iterable[str]]
             Data input in one of three formats:
             1. Pandas dataframe (you must supply the column name in
             `ioc_col` parameter)
@@ -227,16 +243,14 @@ class TIProvider(Provider):
             item_col=ioc_col,
             item_type_col=ioc_type_col,
             query_type=query_type,
-            **kwargs,
         )
 
     async def lookup_iocs_async(
-        self,
-        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        ioc_col: str = None,
-        ioc_type_col: str = None,
-        query_type: str = None,
-        **kwargs,
+        self: Self,
+        data: pd.DataFrame | dict[str, str] | Iterable[str],
+        ioc_col: str | None = None,
+        ioc_type_col: str | None = None,
+        query_type: str | None = None,
     ) -> pd.DataFrame:
         """Call base async wrapper."""
         return await self._lookup_items_async_wrapper(
@@ -244,23 +258,21 @@ class TIProvider(Provider):
             item_col=ioc_col,
             item_type_col=ioc_type_col,
             query_type=query_type,
-            **kwargs,
         )
 
     async def _lookup_iocs_async_wrapper(
-        self,
-        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        ioc_col: str = None,
-        ioc_type_col: str = None,
-        query_type: str = None,
-        **kwargs,
+        self: Self,
+        data: pd.DataFrame | dict[str, str] | Iterable[str],
+        ioc_col: str | None = None,
+        ioc_type_col: str | None = None,
+        query_type: str | None = None,
     ) -> pd.DataFrame:
         """
         Async wrapper for providers that do not implement lookup_iocs_async.
 
         Parameters
         ----------
-        data : Union[pd.DataFrame, Dict[str, str], Iterable[str]]
+        data : Union[pd.DataFrame, dict[str, str], Iterable[str]]
             Data input in one of three formats:
             1. Pandas dataframe (you must supply the column name in
             `obs_col` parameter)
@@ -286,32 +298,31 @@ class TIProvider(Provider):
             item_col=ioc_col,
             item_type_col=ioc_type_col,
             query_type=query_type,
-            **kwargs,
         )
 
     @property
-    def ioc_query_defs(self) -> Dict[str, Any]:
+    def ioc_query_defs(self: Self) -> dict[str, Any]:
         """
         Return current dictionary of IoC query/request definitions.
 
         Returns
         -------
-        Dict[str, Any]
+        dict[str, Any]
             IoC query/request definitions keyed by IoCType
 
         """
         return self._QUERIES
 
     @classmethod
-    def usage(cls):
+    def usage(cls: type[TIProvider]) -> None:
         """Print usage of provider."""
         print(f"{cls.__doc__} Supported query types:")
         for ioc_key in sorted(cls._QUERIES):
-            ioc_key_elems = ioc_key.split("-", maxsplit=1)
-            if len(ioc_key_elems) == 1:
-                print(f"\tioc_type={ioc_key_elems[0]}")
-            if len(ioc_key_elems) == 2:
+            ioc_key_elems: list[str] = ioc_key.split("-", maxsplit=1)
+            try:
                 print(f"\tioc_type={ioc_key_elems[0]}, query_type={ioc_key_elems[1]}")
+            except IndexError:
+                print(f"\tioc_type={ioc_key_elems[0]}")
 
     @staticmethod
     def resolve_ioc_type(observable: str) -> str:
@@ -337,10 +348,10 @@ class TIPivotProvider(PivotProvider):
 
     @abstractmethod
     def register_pivots(
-        self,
-        pivot_reg: "PivotRegistration",  # type: ignore # noqa: F821
-        pivot: "Pivot",  # type: ignore # noqa: F821
-    ):
+        self: Self,
+        pivot_reg: type[PivotRegistration],
+        pivot: Pivot,
+    ) -> None:
         """
         Register pivot functions for the TI Provider.
 

@@ -794,7 +794,7 @@ class AzureData:
         results = {}
         # Create a dict of all the results returned
         for metric in mon_details.value:  # type: ignore
-            times = []
+            times: list = []
             output = []
             for time in metric.timeseries:
                 for data in time.data:

@@ -12,9 +12,12 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import Any, Dict, Tuple
+from __future__ import annotations
+
+from typing import Any, ClassVar
 
 import pandas as pd
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -29,7 +32,7 @@ __author__ = "Ian Hellen"
 class AzSTI(KqlTIProvider):
     """Microsoft Sentinel TI provider class."""
 
-    _QUERIES: Dict[str, tuple] = {
+    _QUERIES: ClassVar[dict[str, tuple]] = {
         "ipv4": ("ThreatIntelligence.list_indicators_by_ip", {"ioc": "observables"}),
         "file_hash": (
             "ThreatIntelligence.list_indicators_by_hash",
@@ -51,9 +54,9 @@ class AzSTI(KqlTIProvider):
     _QUERIES["linux_path"] = _QUERIES["windows_path"]
     _QUERIES["hostname"] = _QUERIES["dns"]
 
-    _REQUIRED_TABLES = ["ThreatIntelligenceIndicator"]
+    _REQUIRED_TABLES: ClassVar[list[str]] = ["ThreatIntelligenceIndicator"]
 
-    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -76,7 +79,7 @@ class AzSTI(KqlTIProvider):
         severity = ResultSeverity.warning
         # if this is a series (single row) return a dictionary
         if isinstance(response["RawResult"], pd.Series):
-            extracted_data = response["RawResult"][
+            extracted_data: dict[str, Any] = response["RawResult"][
                 ["Action", "ThreatType", "ThreatSeverity", "Active", "ConfidenceScore"]
             ].to_dict()
             if extracted_data["Action"].lower() in ["alert", "block"]:
@@ -86,7 +89,7 @@ class AzSTI(KqlTIProvider):
         # concatenate the values for each column/record into a list
         # and return as a dictionary
         if isinstance(response["RawResult"], pd.DataFrame):
-            d_frame = response["RawResult"]
+            d_frame: pd.DataFrame = response["RawResult"]
             if d_frame["Action"].str.lower().isin(["alert", "block"]).any():
                 severity = ResultSeverity.high
 

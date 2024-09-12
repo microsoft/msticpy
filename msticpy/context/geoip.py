@@ -32,11 +32,12 @@ from pathlib import Path
 from time import sleep
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
-import geoip2.database  # type: ignore
+import geoip2.database
 import httpx
 import pandas as pd
-from geoip2.errors import AddressNotFoundError  # type: ignore
-from IPython.display import HTML, display
+from geoip2.errors import AddressNotFoundError
+from IPython.core.display import HTML
+from IPython.display import display
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserConfigError
@@ -329,10 +330,13 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
             return self._lookup_ip_list(ip_list)
 
         submit_url = self._IPSTACK_API.format(
-            iplist=",".join(ip_list), access_key=self._api_key
+            iplist=",".join(ip_list),
+            access_key=self._api_key,
         )
         response = httpx.get(
-            submit_url, timeout=get_http_timeout(), headers=mp_ua_header()
+            submit_url,
+            timeout=get_http_timeout(),
+            headers=mp_ua_header(),
         )
 
         if response.status_code == 200:
@@ -343,7 +347,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
 
             if "success" in results and not results["success"]:
                 raise PermissionError(
-                    f"Service unable to complete request. Error: {results['error']}"
+                    f"Service unable to complete request. Error: {results['error']}",
                 )
             return [(item, response.status_code) for item in results]
 
@@ -358,7 +362,8 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         with httpx.Client(timeout=get_http_timeout(), headers=mp_ua_header()) as client:
             for ip_addr in ip_list:
                 submit_url = self._IPSTACK_API.format(
-                    iplist=ip_addr, access_key=self._api_key
+                    iplist=ip_addr,
+                    access_key=self._api_key,
                 )
                 response = client.get(submit_url)
                 if response.status_code == 200:
@@ -475,7 +480,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             except Exception as err:  # pylint: disable=broad-except
                 print(f"Exception when trying to close GeoIP DB {err}")
 
-    def lookup_ip(  # noqa: MC0001
+    def lookup_ip(
         self,
         ip_address: str = None,
         ip_addr_list: Iterable = None,
@@ -522,7 +527,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             if geo_match:
                 output_raw.append(geo_match)
                 output_entities.append(
-                    self._create_ip_entity(ip_input, geo_match, ip_entity)
+                    self._create_ip_entity(ip_input, geo_match, ip_entity),
                 )
 
         return output_raw, output_entities
@@ -540,7 +545,9 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 
     @staticmethod
     def _create_ip_entity(
-        ip_address: str, geo_match: Mapping[str, Any], ip_entity: IpAddress = None
+        ip_address: str,
+        geo_match: Mapping[str, Any],
+        ip_entity: IpAddress = None,
     ) -> IpAddress:
         if not ip_entity:
             ip_entity = IpAddress()
@@ -604,7 +611,8 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             # to check age from build_epoch property.
             with geoip2.database.Reader(geoip_db_path) as reader:
                 last_mod_time = datetime.fromtimestamp(
-                    reader.metadata().build_epoch, tz=timezone.utc
+                    reader.metadata().build_epoch,
+                    tz=timezone.utc,
                 )
 
             # Check for out of date DB file according to db_age
@@ -628,11 +636,10 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                     db_updated = False
             if not db_updated:
                 self._geolite_warn(
-                    "Continuing with cached database. Results may inaccurate."
+                    "Continuing with cached database. Results may inaccurate.",
                 )
 
-    # noqa: MC0001
-    def _download_and_extract_archive(self) -> bool:  # noqa: MC0001
+    def _download_and_extract_archive(self) -> bool:
         """
         Download file from the given URL and extract if it is archive.
 
@@ -652,7 +659,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         # build a temp file name for the archive download
         rand_int = random.randint(10000, 99999)  # nosec
         db_archive_path = Path(self._db_folder).joinpath(
-            self._DB_ARCHIVE.format(rand=rand_int)
+            self._DB_ARCHIVE.format(rand=rand_int),
         )
         self._pr_debug(f"Downloading GeoLite DB: {db_archive_path}")
         try:
@@ -664,7 +671,10 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 sleep(3)
                 return True
             with httpx.stream(
-                "GET", url, timeout=get_http_timeout(), headers=mp_ua_header()
+                "GET",
+                url,
+                timeout=get_http_timeout(),
+                headers=mp_ua_header(),
             ) as response:
                 print("Downloading and extracting GeoLite DB archive from MaxMind....")
                 with open(db_archive_path, "wb") as file_hdl:
@@ -674,12 +684,12 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             self._pr_debug(f"Downloaded GeoLite DB: {db_archive_path}")
         except httpx.HTTPError as http_err:
             self._geolite_warn(
-                f"HTTP error occurred trying to download GeoLite DB: {http_err}"
+                f"HTTP error occurred trying to download GeoLite DB: {http_err}",
             )
         # pylint: disable=broad-except
         except Exception as err:
             self._geolite_warn(
-                f"Other error occurred trying to download GeoLite DB: {err}"
+                f"Other error occurred trying to download GeoLite DB: {err}",
             )
         # pylint: enable=broad-except
         else:
@@ -687,20 +697,21 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             try:
                 self._extract_to_folder(db_archive_path)
                 print(
-                    "Extraction complete. Local Maxmind city DB:", f"{db_archive_path}"
+                    "Extraction complete. Local Maxmind city DB:",
+                    f"{db_archive_path}",
                 )
                 return True
             except PermissionError as err:
                 self._geolite_warn(
                     f"Cannot overwrite GeoIP DB file: {db_archive_path}."
                     + " The file may be in use or you do not have"
-                    + f" permission to overwrite.\n - {err}"
+                    + f" permission to overwrite.\n - {err}",
                 )
             except Exception as err:  # pylint: disable=broad-except
                 # There are several exception types that might come from
                 # unpacking a tar.gz
                 self._geolite_warn(
-                    f"Error writing GeoIP DB file: {db_archive_path} - {err}"
+                    f"Error writing GeoIP DB file: {db_archive_path} - {err}",
                 )
         finally:
             if db_archive_path.is_file():
@@ -728,7 +739,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                     temp_folder = target_file_path.parent
                     target_file_path.replace(Path(self._db_folder).joinpath(targetname))
                     self._pr_debug(
-                        f"Moving to {Path(self._db_folder).joinpath(targetname)}"
+                        f"Moving to {Path(self._db_folder).joinpath(targetname)}",
                     )
         # delete contents of temp folder and remove it
         if temp_folder:
@@ -830,7 +841,8 @@ def _get_geoip_provider_settings(provider_name: str) -> ProviderSettings:
     if provider_name in settings:
         return settings[provider_name]
     return ProviderSettings(  # type: ignore[call-arg]
-        name=provider_name, description="Not found."
+        name=provider_name,
+        description="Not found.",
     )
 
 
@@ -859,7 +871,7 @@ def entity_distance(ip_src: IpAddress, ip_dest: IpAddress) -> float:
     """
     if not ip_src.Location or not ip_dest.Location:
         raise AttributeError(
-            "Source and destination entities must have defined Location properties."
+            "Source and destination entities must have defined Location properties.",
         )
 
     return geo_distance(
@@ -873,7 +885,8 @@ _EARTH_RADIUS_KM = 6371  # km
 
 @export
 def geo_distance(
-    origin: Tuple[float, float], destination: Tuple[float, float]
+    origin: Tuple[float, float],
+    destination: Tuple[float, float],
 ) -> float:
     """
     Calculate the Haversine distance.

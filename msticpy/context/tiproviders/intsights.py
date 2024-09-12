@@ -11,10 +11,13 @@ multiple observables. Processing may require a an API key and
 processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 """
+from __future__ import annotations
+
 import datetime as dt
-from typing import Any, Dict, Tuple
+from typing import Any, ClassVar
 
 import attr
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -26,14 +29,17 @@ __version__ = VERSION
 __author__ = "Florian Bracq"
 
 
-_DEF_HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
+_DEF_HEADERS: dict[str, str] = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+}
 
 
 # pylint: disable=too-few-public-methods
 @attr.s
 class _IntSightsParams(APILookupParams):
     # override APILookupParams to set common defaults
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self: Self) -> None:
         self.auth_str = ["{ApiID}", "{AuthKey}"]
         self.auth_type = "HTTPBasic"
 
@@ -44,7 +50,7 @@ class IntSights(HttpTIProvider):
 
     _BASE_URL = "https://api.ti.insight.rapid7.com"
 
-    _QUERIES = {
+    _QUERIES: ClassVar[dict[str, _IntSightsParams]] = {
         "ipv4": _IntSightsParams(
             path="/public/v3/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
@@ -87,9 +93,9 @@ class IntSights(HttpTIProvider):
         ),
     }
 
-    _REQUIRED_PARAMS = ["ApiID", "AuthKey"]
+    _REQUIRED_PARAMS: ClassVar[list[str]] = ["ApiID", "AuthKey"]
 
-    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -107,15 +113,16 @@ class IntSights(HttpTIProvider):
 
         """
         if self._failed_response(response) or not isinstance(
-            response["RawResult"], dict
+            response["RawResult"],
+            dict,
         ):
             return False, ResultSeverity.information, "Not found."
 
         if response["RawResult"].get("whitelisted", False):
             return False, ResultSeverity.information, "Whitelisted."
 
-        sev = response["RawResult"].get("severity", "Low")
-        result_dict = {
+        sev: str = response["RawResult"].get("severity", "Low")
+        result_dict: dict[str, Any] = {
             "threat_actors": response["RawResult"].get("relatedThreatActors", ""),
             "geolocation": response["RawResult"].get("geolocation", None),
             "response_code": response["Status"],
@@ -125,26 +132,26 @@ class IntSights(HttpTIProvider):
             "campaigns": response["RawResult"].get("relatedCampaigns", []),
             "score": response["RawResult"].get("score", 0),
             "first_seen": dt.datetime.strptime(
-                response["RawResult"].get("firstSeen", None), "%Y-%m-%dT%H:%M:%S.%fZ"
-            ),
+                response["RawResult"].get("firstSeen", None),
+                "%Y-%m-%dT%H:%M:%S.%fZ",
+            ).replace(tzinfo=dt.timezone.utc),
             "last_seen": dt.datetime.strptime(
-                response["RawResult"].get("lastSeen", None), "%Y-%m-%dT%H:%M:%S.%fZ"
-            ),
+                response["RawResult"].get("lastSeen", None),
+                "%Y-%m-%dT%H:%M:%S.%fZ",
+            ).replace(tzinfo=dt.timezone.utc),
             "last_update": dt.datetime.strptime(
                 response["RawResult"].get("lastUpdateDate", None),
                 "%Y-%m-%dT%H:%M:%S.%fZ",
-            ),
+            ).replace(tzinfo=dt.timezone.utc),
         }
 
-        severity = (
+        severity: ResultSeverity = (
             ResultSeverity.information
             if sev == "Low"
             else (
                 ResultSeverity.warning
                 if sev == "Medium"
-                else ResultSeverity.high
-                if sev == "High"
-                else ResultSeverity.unknown
+                else ResultSeverity.high if sev == "High" else ResultSeverity.unknown
             )
         )
 

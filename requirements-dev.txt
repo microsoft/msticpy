@@ -2,9 +2,9 @@ aiohttp>=3.7.4
 async-cache>=1.1.1
 bandit>=1.7.0
 beautifulsoup4>=4.0.0
-black>=20.8b1, <24.0.0
+black>=20.8b1, <25.0.0
 coverage>=5.5
-docutils<0.20.0
+docutils<0.22.0
 filelock>=3.0.0
 flake8>=3.8.4
 isort>=5.10.1
@@ -36,3 +36,4 @@ respx>=0.20.1
 sphinx-rtd-theme>=1.0.0
 sphinx>=5.0.1,<8.0.0
 types-attrs>=19.0.0
+types-requests>=2.32.0
