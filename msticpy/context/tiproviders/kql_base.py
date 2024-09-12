@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import abc
 import contextlib
+import logging
 import warnings
 from collections import defaultdict
 from functools import lru_cache
@@ -40,6 +41,8 @@ if TYPE_CHECKING:
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+logger = logging.getLogger(__name__)
 
 
 @export
@@ -162,9 +165,12 @@ class KqlTIProvider(TIProvider):
         """
         if not self._connected:
             self._connect()
-        if any(
+        if self._query_provider.schema and any(
             table not in self._query_provider.schema for table in self._REQUIRED_TABLES
         ):
+            logger.error(
+                "Required tables not found in schema: %s", self._REQUIRED_TABLES
+            )
             return pd.DataFrame()
 
         # We need to partition the IoC types to invoke separate queries
@@ -175,6 +181,9 @@ class KqlTIProvider(TIProvider):
             result = self._check_ioc_type(ioc, ioc_type, query_type)
 
             if result["Status"] != LookupStatus.NOT_SUPPORTED.value:
+                logger.info(
+                    "Check ioc type for %s (%s): %s", ioc, ioc_type, result["Status"]
+                )
                 ioc_groups[result["IocType"]].add(result["Ioc"])
 
         all_results: list[pd.DataFrame] = []
@@ -187,6 +196,7 @@ class KqlTIProvider(TIProvider):
                     query_type=query_type,
                 )
             if not query_obj:
+                logger.info("No query found for %s", ioc_type)
                 warnings.warn(
                     f"Could not find query for {ioc_type}, {query_type}",
                     stacklevel=1,
@@ -194,6 +204,7 @@ class KqlTIProvider(TIProvider):
                 continue
 
             # run the query
+            logger.info("Running query for %s with params %s", ioc_type, query_params)
             data_result: pd.DataFrame = query_obj(**query_params)
 
             src_ioc_frame: pd.DataFrame = pd.DataFrame(obs_set, columns=["Ioc"])
@@ -226,7 +237,9 @@ class KqlTIProvider(TIProvider):
             all_results.append(combined_results_df)
 
         if all_results:
+            logger.info("Combining results from %d queries", len(all_results))
             return pd.concat(all_results, ignore_index=True, sort=False, axis=0)
+        logger.info("No results found in data for any iocs.")
         return pd.DataFrame()
 
     @staticmethod
@@ -318,12 +331,14 @@ class KqlTIProvider(TIProvider):
             WORKSPACE_ID=workspace_id,
         )
         query_provider: QueryProvider = QueryProvider("LogAnalytics")
+        logging.info("Connection string: %s", connect_str)
         return query_provider, connect_str
 
     def _connect(self: Self) -> None:
         """Connect to query provider."""
         print("MS Sentinel TI query provider needs authenticated connection.")
         self._query_provider.connect(self._connect_str)
+        logging.info("Connected to Sentinel. (%s)", self._connect_str)
 
     @staticmethod
     def _get_spelled_variants(name: str, **kwargs: str) -> str | None:
