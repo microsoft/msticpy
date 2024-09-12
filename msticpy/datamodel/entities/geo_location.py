@@ -81,12 +81,12 @@ class GeoLocation(Entity, ContextObject):
         return self.CountryCode or self.__class__.__name__
 
     @property
-    def CountryName(self) -> Optional[str]:
+    def CountryName(self) -> Optional[str]:  # noqa: N802
         """Return CountryName."""
         return self.CountryOrRegionName
 
     @CountryName.setter
-    def CountryName(self, value: str):
+    def CountryName(self, value: str):  # noqa: N802
         """Set CountryName."""
         self.CountryOrRegionName = value
 
