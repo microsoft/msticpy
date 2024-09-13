@@ -318,17 +318,13 @@ class TIProvider(Provider):
     @classmethod
     def usage(cls: type[Self]) -> None:
         """Print usage of provider."""
-        logger.info("%s Supported query types:", cls.__doc__)
+        print(f"{cls.__doc__} Supported query types:")
         for ioc_key in sorted(cls._QUERIES):
             ioc_key_elems: list[str] = ioc_key.split("-", maxsplit=1)
             try:
-                logger.info(
-                    "\tioc_type=%s, query_type=%s",
-                    ioc_key_elems[0],
-                    ioc_key_elems[1],
-                )
+                print(f"\tioc_type={ioc_key_elems[0]}, query_type={ioc_key_elems[1]}")
             except IndexError:
-                logger.info("\tioc_type=%s", ioc_key_elems[0])
+                print(f"\tioc_type={ioc_key_elems[0]}")
 
     @staticmethod
     def resolve_ioc_type(observable: str) -> str:
