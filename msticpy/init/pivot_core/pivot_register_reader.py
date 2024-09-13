@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Reads pivot registration config files."""
 from __future__ import annotations
+
 import importlib
 import warnings
 from typing import Any, Callable, Generator

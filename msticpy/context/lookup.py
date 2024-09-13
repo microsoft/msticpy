@@ -15,16 +15,24 @@ requests per minute for the account type that you have.
 from __future__ import annotations
 
 import asyncio
-import datetime as dt
 import importlib
+import logging
 import warnings
 from collections import ChainMap
-from types import ModuleType
-from typing import Any, Callable, ClassVar, Iterable, Mapping, Sized
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    ClassVar,
+    Iterable,
+    Mapping,
+    Sized,
+)
 
 import nest_asyncio
 import pandas as pd
 from tqdm.auto import tqdm
+from typing_extensions import Self
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyConfigError, MsticpyUserConfigError
@@ -34,34 +42,41 @@ from ..common.provider_settings import (
     reload_settings,
 )
 from ..common.utility import export, is_ipython
-from ..nbwidgets.select_item import SelectItem
 from ..vis.ti_browser import browse_results
 from .lookup_result import LookupStatus
 
 # used in dynamic instantiation of providers
 from .provider_base import Provider, _make_sync
 
+if TYPE_CHECKING:
+    import datetime as dt
+    from types import ModuleType
+
+    from ..nbwidgets.select_item import SelectItem
+
 __version__ = VERSION
 __author__ = "Florian Bracq"
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class ProgressCounter:
     """Progress counter for async tasks."""
 
-    def __init__(self, total: int) -> None:
+    def __init__(self: ProgressCounter, total: int) -> None:
         """Initialize the class."""
         self.total: int = total
         self._lock: asyncio.Condition = asyncio.Condition()
         self._remaining: int = total
 
-    async def decrement(self, increment: int = 1) -> None:
+    async def decrement(self: Self, increment: int = 1) -> None:
         """Decrement the counter."""
         if self._remaining == 0:
             return
         async with self._lock:
             self._remaining -= increment
 
-    async def get_remaining(self) -> int:
+    async def get_remaining(self: Self) -> int:
         """Get the current remaining count."""
         async with self._lock:
             return self._remaining
@@ -88,7 +103,7 @@ class Lookup:
     PACKAGE: ClassVar[str] = ""
 
     def __init__(
-        self,
+        self: Lookup,
         providers: list[str] | None = None,
         *,
         primary_providers: list[Provider] | None = None,
@@ -122,6 +137,7 @@ class Lookup:
             warnings.warn(
                 "'secondary_providers' is a deprecated parameter",
                 DeprecationWarning,
+                stacklevel=1,
             )
             for prov in secondary_providers:
                 self.add_provider(prov, primary=False)
@@ -133,7 +149,7 @@ class Lookup:
             nest_asyncio.apply()
 
     @property
-    def loaded_providers(self) -> dict[str, Provider]:
+    def loaded_providers(self: Self) -> dict[str, Provider]:
         """
         Return dictionary of loaded providers.
 
@@ -146,7 +162,7 @@ class Lookup:
         return dict(self._all_providers)
 
     @property
-    def provider_status(self) -> Iterable[str]:
+    def provider_status(self: Self) -> Iterable[str]:
         """
         Return loaded provider status.
 
@@ -167,7 +183,7 @@ class Lookup:
         return prim + sec
 
     @property
-    def configured_providers(self) -> list[str]:
+    def configured_providers(self: Self) -> list[str]:
         """
         Return a list of available providers that have configuration details present.
 
@@ -182,7 +198,7 @@ class Lookup:
 
         return prim_conf + sec_conf
 
-    def enable_provider(self, providers: str | Iterable[str]) -> None:
+    def enable_provider(self: Self, providers: str | Iterable[str]) -> None:
         """
         Set the provider(s) as primary (used by default).
 
@@ -206,12 +222,21 @@ class Lookup:
                 self._providers[provider] = self._secondary_providers[provider]
                 del self._secondary_providers[provider]
             elif provider not in self._providers:
-                raise ValueError(
-                    f"Unknown provider '{provider}'. Available providers:",
-                    ", ".join(self.list_available_providers(as_list=True)),  # type: ignore
+                available_providers: list[str] | None = self.list_available_providers(
+                    as_list=True,
                 )
+                if not available_providers:
+                    err_msg: str = (
+                        f"Unknown provider '{provider}'. No available providers."
+                    )
+                else:
+                    err_msg = (
+                        f"Unknown provider '{provider}'. Available providers:"
+                        ", ".join(available_providers)
+                    )
+                raise ValueError(err_msg)
 
-    def disable_provider(self, providers: str | Iterable[str]) -> None:
+    def disable_provider(self: Self, providers: str | Iterable[str]) -> None:
         """
         Set the provider as secondary (not used by default).
 
@@ -235,12 +260,21 @@ class Lookup:
                 self._secondary_providers[provider] = self._providers[provider]
                 del self._providers[provider]
             elif provider not in self._secondary_providers:
-                raise ValueError(
-                    f"Unknown provider '{provider}'. Available providers:",
-                    ", ".join(self.list_available_providers(as_list=True)),  # type: ignore
+                available_providers: list[str] | None = self.list_available_providers(
+                    as_list=True,
                 )
+                if not available_providers:
+                    err_msg: str = (
+                        f"Unknown provider '{provider}'. No available providers."
+                    )
+                else:
+                    err_msg = (
+                        f"Unknown provider '{provider}'. Available providers:"
+                        ", ".join(available_providers)
+                    )
+                raise ValueError(err_msg)
 
-    def set_provider_state(self, prov_dict: dict[str, bool]) -> None:
+    def set_provider_state(self: Self, prov_dict: dict[str, bool]) -> None:
         """
         Set a dict of providers to primary/secondary.
 
@@ -259,7 +293,7 @@ class Lookup:
 
     @classmethod
     def browse_results(
-        cls,
+        cls: type[Self],
         data: pd.DataFrame,
         severities: list[str] | None = None,
         *,
@@ -287,19 +321,19 @@ class Lookup:
 
         """
         if not isinstance(data, pd.DataFrame):
-            print("Input data is in an unexpected format.")
+            logger.info("Input data is in an unexpected format.")
             return None
         return browse_results(data=data, severities=severities, height=height)
 
     browse: Callable[..., SelectItem | None] = browse_results
 
-    def provider_usage(self) -> None:
+    def provider_usage(self: Self) -> None:
         """Print usage of loaded providers."""
         print("Primary providers")
         print("-----------------")
         if self._providers:
             for prov_name, prov in self._providers.items():
-                print(f"\nProvider class: {prov_name}")
+                print("\nProvider class: %s", prov_name)
                 prov.usage()
         else:
             print("none")
@@ -307,29 +341,29 @@ class Lookup:
         print("-------------------")
         if self._secondary_providers:
             for prov_name, prov in self._secondary_providers.items():
-                print(f"\nProvider class: {prov_name}")
+                print("\nProvider class: %s", prov_name)
                 prov.usage()
         else:
             print("none")
 
     @classmethod
-    def reload_provider_settings(cls) -> None:
+    def reload_provider_settings(cls: type[Self]) -> None:
         """Reload provider settings from config."""
         reload_settings()
-        print(
-            "Settings reloaded. Use reload_providers to update settings",
-            "for loaded providers.",
+        logger.info(
+            "Settings reloaded. Use reload_providers to update settings for loaded providers.",
         )
 
-    def reload_providers(self) -> None:
+    def reload_providers(self: Self) -> None:
         """Reload settings and provider classes."""
         reload_settings()
         self._load_providers()
 
     def add_provider(
-        self,
+        self: Self,
         provider: Provider,
         name: str | None = None,
+        *,
         primary: bool = True,
     ) -> None:
         """
@@ -353,8 +387,8 @@ class Lookup:
         else:
             self._secondary_providers[name] = provider
 
-    def lookup_item(  # pylint: disable=too-many-locals, too-many-arguments
-        self,
+    def lookup_item(  # pylint: disable=too-many-locals, too-many-arguments #noqa: PLR0913
+        self: Self,
         item: str,
         item_type: str | None = None,
         query_type: str | None = None,
@@ -385,6 +419,12 @@ class Lookup:
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
+        show_not_supported: bool
+            If True, display unsupported items. Defaults to False
+        start: dt.datetime
+            If supported by the provider, start time for the item's validity
+        end: dt.datetime
+            If supported by the provider, end time for the item's validity
 
         Returns
         -------
@@ -403,8 +443,8 @@ class Lookup:
             end=end,
         )
 
-    def lookup_items(  # pylint: disable=too-many-arguments
-        self,
+    def lookup_items(  # pylint: disable=too-many-arguments #noqa: PLR0913
+        self: Self,
         data: pd.DataFrame | Mapping[str, str] | Sized,
         item_col: str | None = None,
         item_type_col: str | None = None,
@@ -442,6 +482,12 @@ class Lookup:
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
+        show_not_supported: bool
+            If True, display unsupported items. Defaults to False
+        start: dt.datetime
+            If supported by the provider, start time for the item's validity
+        end: dt.datetime
+            If supported by the provider, end time for the item's validity
 
         Other Parameters
         ----------------
@@ -488,11 +534,11 @@ class Lookup:
         """
         if not isinstance(item_lookup, pd.DataFrame):
             err_msg: str = f"DataFrame was expected, but {type(item_lookup)} received."
-            raise ValueError(err_msg)
+            raise TypeError(err_msg)
         return item_lookup
 
-    async def _lookup_items_async(  # pylint: disable=too-many-locals, too-many-arguments
-        self,
+    async def _lookup_items_async(  # pylint: disable=too-many-locals, too-many-arguments #noqa: PLR0913
+        self: Self,
         data: pd.DataFrame | Mapping[str, str] | Sized,
         item_col: str | None = None,
         item_type_col: str | None = None,
@@ -560,8 +606,8 @@ class Lookup:
             show_bad_item=show_bad_item,
         )
 
-    def lookup_items_sync(  # pylint: disable=too-many-arguments, too-many-locals
-        self,
+    def lookup_items_sync(  # pylint: disable=too-many-arguments, too-many-locals #noqa: PLR0913
+        self: Self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         item_col: str | None = None,
         item_type_col: str | None = None,
@@ -600,6 +646,16 @@ class Lookup:
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
+        col: str, Optional
+            Name of the column holding the data
+        column: str, Optional
+            Name of the column holding the data
+        show_not_supported: bool, Optional
+            Set to True to include unsupported items in the result DF.
+            Defaults to False
+        show_bad_item: bool, Optional
+            Set to True to include invalid items in the result DF.
+            Defaults to False
 
         Returns
         -------
@@ -640,7 +696,7 @@ class Lookup:
         )
 
     @staticmethod
-    async def _track_completion(prog_counter) -> None:
+    async def _track_completion(prog_counter: ProgressCounter) -> None:
         total: float = await prog_counter.get_remaining()
         with tqdm(total=total, unit="obs", desc="Observables processed") as prog_bar:
             try:
@@ -659,7 +715,7 @@ class Lookup:
                     prog_bar.update(total - final_remaining)
 
     @property
-    def available_providers(self) -> list[str]:
+    def available_providers(self: Self) -> list[str]:
         """
         Return a list of builtin and plugin providers.
 
@@ -673,8 +729,9 @@ class Lookup:
 
     @classmethod
     def list_available_providers(
-        cls,
-        show_query_types=False,
+        cls: type[Self],
+        *,
+        show_query_types: bool = False,
         as_list: bool = False,
     ) -> list[str] | None:
         """
@@ -699,7 +756,7 @@ class Lookup:
         for provider_name in cls.PROVIDERS:
             provider_class: type[Provider] = cls.import_provider(provider_name)
             if not as_list:
-                print(provider_name)
+                logger.info(provider_name)
             providers.append(provider_name)
             if show_query_types and provider_class:
                 provider_class.usage()
@@ -707,18 +764,18 @@ class Lookup:
         return providers if as_list else None
 
     @classmethod
-    def import_provider(cls, provider: str) -> type[Provider]:
+    def import_provider(cls: type[Self], provider: str) -> type[Provider]:
         """Import provider class."""
         mod_name, cls_name = cls.PROVIDERS.get(provider, (None, None))
 
         if not (mod_name and cls_name):
             if hasattr(cls, "CUSTOM_PROVIDERS") and provider in cls.CUSTOM_PROVIDERS:
                 return cls.CUSTOM_PROVIDERS[provider]
-            raise LookupError(
-                f"No provider named '{provider}'.",
-                "Possible values are:",
-                ", ".join(list(cls.PROVIDERS) + list(cls.CUSTOM_PROVIDERS)),
+            err_msg: str = (
+                f"No provider named '{provider}'. Possible values are: "
+                ", ".join(list(cls.PROVIDERS) + list(cls.CUSTOM_PROVIDERS))
             )
+            raise LookupError(err_msg)
 
         imp_module: ModuleType = importlib.import_module(
             f"msticpy.context.{cls.PACKAGE}.{mod_name}",
@@ -727,7 +784,7 @@ class Lookup:
         return getattr(imp_module, cls_name)
 
     def _load_providers(
-        self,
+        self: Self,
         *,
         providers: str = "Providers",
     ) -> None:
@@ -781,7 +838,7 @@ class Lookup:
             )
 
     def _select_providers(
-        self,
+        self: Self,
         providers: list[str] | None = None,
         prov_scope: str = "primary",
     ) -> dict[str, Provider]:
@@ -836,5 +893,5 @@ class Lookup:
             result_list.append(result)
 
         if not result_list:
-            print("No Item matches")
+            logger.info("No Item matches")
         return pd.concat(result_list, sort=False) if result_list else pd.DataFrame()

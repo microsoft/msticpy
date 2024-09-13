@@ -4,9 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree builder for Windows security and Linux auditd events."""
+from dataclasses import asdict
 from typing import Tuple
 
-import attr
 import pandas as pd
 
 from .._version import VERSION
@@ -23,7 +23,7 @@ TS_FMT_STRING = "%Y-%m-%d %H:%M:%S.%f"
 
 def extract_process_tree(
     procs: pd.DataFrame,
-    schema: "ProcSchema",  # type: ignore  # noqa: F821
+    schema: ProcSchema,
     debug: bool = False,
 ) -> pd.DataFrame:
     """
@@ -101,7 +101,7 @@ def _clean_proc_data(
     procs_cln = _num_cols_to_str(procs_cln, schema)
 
     if schema.logon_id not in procs_cln.columns:
-        schema = ProcSchema(**(attr.asdict(schema)))
+        schema = ProcSchema(**(asdict(schema)))
         schema.logon_id = None  # type: ignore
 
     if schema.logon_id:
@@ -141,7 +141,7 @@ def _num_cols_to_str(
     """
     # Change float/int cols in our core schema to force int
     schema_cols = [
-        col for col in attr.asdict(schema).values() if col and col in procs_cln.columns
+        col for col in asdict(schema).values() if col and col in procs_cln.columns
     ]
     force_int_cols = {
         col: "int"

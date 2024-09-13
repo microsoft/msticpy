@@ -340,7 +340,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
             ptanalyzer.set_date_range(start_date=start, end_date=end)
         return changed
 
-    def pivot_value(  # pylint: disable=too-many-arguments
+    def pivot_value(  # pylint: disable=too-many-arguments #noqa:PLR0913
         self: Self,
         prop: str,
         host: str,

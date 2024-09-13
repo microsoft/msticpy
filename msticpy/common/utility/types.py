@@ -4,44 +4,39 @@
 # license information.
 # --------------------------------------------------------------------------
 """Utility classes and functions."""
+from __future__ import annotations
+
 import difflib
 import inspect
 import sys
 from enum import Enum
 from functools import wraps
 from types import ModuleType
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Type,
-    TypeVar,
-    Union,
-    overload,
-)
+from typing import Any, Callable, Iterable, TypeVar, overload
+
+from typing_extensions import Self
 
 from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+T = TypeVar("T")
+
 
 @overload
-def export(obj: Type) -> Type: ...  # noqa: E704
+def export(obj: type[T]) -> type[T]: ...  # noqa: E704
 
 
 @overload
 def export(obj: Callable) -> Callable: ...  # noqa: E704
 
 
-def export(obj):
+def export(obj: type | Callable) -> type | Callable:
     """Decorate function or class to export to __all__."""
     mod: ModuleType = sys.modules[obj.__module__]
     if hasattr(mod, "__all__"):
-        all_list: List[str] = getattr(mod, "__all__")
+        all_list: list[str] = getattr(mod, "__all__")
         all_list.append(obj.__name__)
     else:
         all_list = [obj.__name__]
@@ -74,13 +69,16 @@ def checked_kwargs(legal_args: Iterable[str]):
     """
 
     def arg_check_wrapper(func):
-        func_args = inspect.signature(func).parameters.keys() - {"args", "kwargs"}
-        valid_arg_names = set(legal_args) | func_args
+        func_args: set[str] = inspect.signature(func).parameters.keys() - {
+            "args",
+            "kwargs",
+        }
+        valid_arg_names: set[str] = set(legal_args) | func_args
 
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs) -> Callable:
             """Inner argument name checker."""
-            name_errs = []
+            name_errs: list[Exception] = []
             for name in kwargs:
                 try:
                     check_kwarg(name, valid_arg_names)
@@ -96,7 +94,7 @@ def checked_kwargs(legal_args: Iterable[str]):
 
 
 @export
-def check_kwarg(arg_name: str, legal_args: List[str]):
+def check_kwarg(arg_name: str, legal_args: list[str]) -> None:
     """
     Check argument names against a list.
 
@@ -104,7 +102,7 @@ def check_kwarg(arg_name: str, legal_args: List[str]):
     ----------
     arg_name : str
         Argument to check
-    legal_args : List[str]
+    legal_args : list[str]
         List of possible arguments.
 
     Raises
@@ -116,29 +114,29 @@ def check_kwarg(arg_name: str, legal_args: List[str]):
 
     """
     if arg_name not in legal_args:
-        closest = difflib.get_close_matches(arg_name, legal_args)
-        mssg = f"'{arg_name}' is not a recognized argument or attribute. "
+        closest: list[str] = difflib.get_close_matches(arg_name, legal_args)
+        msg: str = f"'{arg_name}' is not a recognized argument or attribute. "
         if len(closest) == 1:
-            mssg += f"Closest match is '{closest[0]}'"
+            msg += f"Closest match is '{closest[0]}'"
         elif closest:
-            match_list = [f"'{match}'" for match in closest]
-            mssg += f"Closest matches are {', '.join(match_list)}"
+            match_list: list[str] = [f"'{match}'" for match in closest]
+            msg += f"Closest matches are {', '.join(match_list)}"
         else:
-            valid_opts = [f"'{arg}'" for arg in legal_args]
-            mssg += f"Valid options are {', '.join(valid_opts)}"
-        raise NameError(arg_name, mssg)
+            valid_opts: list[str] = [f"'{arg}'" for arg in legal_args]
+            msg += f"Valid options are {', '.join(valid_opts)}"
+        raise NameError(arg_name, msg)
 
 
 @export
-def check_kwargs(supplied_args: Dict[str, Any], legal_args: List[str]):
+def check_kwargs(supplied_args: dict[str, Any], legal_args: list[str]) -> None:
     """
     Check all kwargs names against a list.
 
     Parameters
     ----------
-    supplied_args : Dict[str, Any]
+    supplied_args : dict[str, Any]
         Arguments to check
-    legal_args : List[str]
+    legal_args : list[str]
         List of possible arguments.
 
     Raises
@@ -149,7 +147,7 @@ def check_kwargs(supplied_args: Dict[str, Any], legal_args: List[str]):
         returned in the exception.
 
     """
-    name_errs = []
+    name_errs: list[Exception] = []
     for name in supplied_args:
         try:
             check_kwarg(name, legal_args)
@@ -161,11 +159,11 @@ def check_kwargs(supplied_args: Dict[str, Any], legal_args: List[str]):
 
 # Define generic type so enum_parse returns the same type as
 # passed in 'enum_class
-EnumType = TypeVar("EnumType")  # pylint: disable=invalid-name
+EnumT = TypeVar("EnumT", bound=Enum)
 
 
 @export
-def enum_parse(enum_cls: Type[EnumType], value: str) -> Optional[EnumType]:
+def enum_parse(enum_cls: type[EnumT], value: str) -> EnumT | None:
     """
     Try to parse a string value to an Enum member.
 
@@ -187,14 +185,15 @@ def enum_parse(enum_cls: Type[EnumType], value: str) -> Optional[EnumType]:
         If something other than an Enum subclass is passed.
 
     """
-    if not issubclass(enum_cls, Enum):  # type: ignore
-        raise TypeError("Can only be used with classes derived from enum.Enum.")
-    if value in enum_cls.__members__:  # type: ignore
-        return enum_cls.__members__[value]  # type: ignore
-    val_lc = value.casefold()
-    val_map = {name.casefold(): name for name in enum_cls.__members__}  # type: ignore
+    if not issubclass(enum_cls, Enum):
+        err_msg: str = "Can only be used with classes derived from enum.Enum."
+        raise TypeError(err_msg)
+    if value in enum_cls.__members__:
+        return enum_cls.__members__[value]
+    val_lc: str = value.casefold()
+    val_map: dict[str, str] = {name.casefold(): name for name in enum_cls.__members__}
     if val_lc in val_map:
-        return enum_cls.__members__[val_map[val_lc]]  # type: ignore
+        return enum_cls.__members__[val_map[val_lc]]
     return None
 
 
@@ -202,26 +201,26 @@ def enum_parse(enum_cls: Type[EnumType], value: str) -> Optional[EnumType]:
 class ParseableEnum:
     """Mix-in class for parseable Enum sub-classes."""
 
-    def parse(self, value: str):
+    def parse(self: Self, value: str) -> Enum | None:
         """Return enumeration matching (case-insensitive) string value."""
         return enum_parse(enum_cls=self.__class__, value=value)
 
 
 @export
-def arg_to_list(arg: Union[str, List[str]], delims=",; ") -> List[str]:
+def arg_to_list(arg: str | list[str], delims: str = ",; ") -> list[str]:
     """
     Convert an optional list/str/str with delims into a list.
 
     Parameters
     ----------
-    arg : Union[str, List[str]]
+    arg : Union[str, list[str]]
         A string, delimited string or list
     delims : str, optional
         The default delimiters to use, by default ",; "
 
     Returns
     -------
-    List[str]
+    list[str]
         List of string components
 
     Raises
@@ -241,25 +240,25 @@ def arg_to_list(arg: Union[str, List[str]], delims=",; ") -> List[str]:
 
 
 @export
-def collapse_dicts(*dicts: Dict) -> Dict:
+def collapse_dicts(*dicts: dict) -> dict:
     """Merge multiple dictionaries - later dicts have higher precedence."""
     if len(dicts) == 0:
         return {}
     if len(dicts) == 1:
         return dicts[0]
-    out_dict: Dict = dicts[0]
+    out_dict: dict = dicts[0]
     for p_dict in dicts[1:]:
         out_dict = _merge_dicts(out_dict, p_dict)
     return out_dict
 
 
-def _merge_dicts(dict1: Dict[Any, Any], dict2: Dict[Any, Any]):
+def _merge_dicts(dict1: dict[Any, Any], dict2: dict[Any, Any]) -> dict:
     """Merge dict2 into dict1."""
     if not dict2:
         return dict1 or {}
     if not dict1:
         return dict2 or {}
-    out_dict = {}
+    out_dict: dict = {}
     for key in set().union(dict1, dict2):
         if (
             key in dict1
@@ -267,7 +266,7 @@ def _merge_dicts(dict1: Dict[Any, Any], dict2: Dict[Any, Any]):
             and key in dict2
             and isinstance(dict2[key], dict)
         ):
-            d_val = _merge_dicts(dict1[key], dict2[key])
+            d_val: dict = _merge_dicts(dict1[key], dict2[key])
         elif key in dict2:
             d_val = dict2[key]
         else:
@@ -276,11 +275,11 @@ def _merge_dicts(dict1: Dict[Any, Any], dict2: Dict[Any, Any]):
     return out_dict
 
 
-def singleton(cls):
+def singleton(cls: type) -> Callable:
     """Class decorator for singleton classes."""
-    instances = {}
+    instances: dict[type[object], object] = {}
 
-    def get_instance(*args, **kwargs):
+    def get_instance(*args, **kwargs) -> object:
         nonlocal instances
         if cls not in instances:
             instances[cls] = cls(*args, **kwargs)
@@ -307,23 +306,23 @@ class SingletonClass:
 
     """
 
-    def __init__(self, wrapped_cls):
+    def __init__(self: SingletonClass, wrapped_cls: type[Any]) -> None:
         """Instantiate the class wrapper."""
-        self.wrapped_cls = wrapped_cls
-        self.instance = None
+        self.wrapped_cls: type[Any] = wrapped_cls
+        self.instance: Self | None = None
         self.__doc__ = wrapped_cls.__doc__
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self: Self, *args, **kwargs) -> object:
         """Override the __call__ method for the wrapper class."""
         if self.instance is None:
             self.instance = self.wrapped_cls(*args, **kwargs)
         return self.instance
 
-    def current(self):
+    def current(self: Self) -> object:
         """Return the current instance of the wrapped class."""
         return self.instance
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         """Return the attribute `name` from the wrapped class."""
         if hasattr(self.wrapped_cls, name):
             return getattr(self.wrapped_cls, name)
@@ -354,7 +353,12 @@ class SingletonArgsClass(SingletonClass):
 
     """
 
-    def __call__(self, *args, **kwargs):
+    def __init__(self: SingletonArgsClass, wrapped_cls: type[Any]) -> None:
+        super().__init__(wrapped_cls)
+        self.kwargs: dict[str, Any] | None = None
+        self.args: tuple[Any] | None = None
+
+    def __call__(self, *args, **kwargs) -> object:
         """Override the __call__ method for the wrapper class."""
         if (
             self.instance is None
@@ -362,8 +366,9 @@ class SingletonArgsClass(SingletonClass):
             or getattr(self.instance, "args", None) != args
         ):
             self.instance = self.wrapped_cls(*args, **kwargs)
-            self.instance.kwargs = kwargs
-            self.instance.args = args
+            if self.instance:
+                self.instance.kwargs = kwargs
+                self.instance.args = args
         return self.instance
 
 
@@ -371,27 +376,27 @@ class SingletonArgsClass(SingletonClass):
 class ImportPlaceholder:
     """Placeholder class for optional imports."""
 
-    def __init__(self, name: str, required_pkgs: List[str]):
+    def __init__(self, name: str, required_pkgs: list[str]) -> None:
         """Initialize class with imported item name and reqd. packages."""
-        self.name = name
-        self.required_pkgs = required_pkgs
-        self.message = (
+        self.name: str = name
+        self.required_pkgs: list[str] = required_pkgs
+        self.message: str = (
             f"{self.name} cannot be loaded without the following packages"
             f" installed: {', '.join(self.required_pkgs)}"
         )
         self._mssg_displayed = False
 
-    def _print_req_packages(self):
+    def _print_req_packages(self) -> None:
         if not self._mssg_displayed:
             print(self.message, "\nPlease install and restart the notebook.")
             self._mssg_displayed = True
 
-    def __getattr__(self, name):
+    def __getattr__(self, name) -> None:
         """When any attribute is accessed, print requirements."""
         self._print_req_packages()
         raise ImportError(self.name)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> None:
         """If object is called, print requirements."""
         del args, kwargs
         self._print_req_packages()

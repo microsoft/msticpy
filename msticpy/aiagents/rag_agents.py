@@ -11,7 +11,6 @@ agents that assist security analysts by answering questions based on MSTICpy doc
 """
 
 import sys
-
 from pathlib import Path
 from typing import List, Optional
 

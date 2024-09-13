@@ -815,9 +815,13 @@ def get_hashes(binary: bytes) -> Dict[str, str]:
     hash_dict = {}
     for hash_type in ["md5", "sha1", "sha256"]:
         if hash_type == "md5":
-            hash_alg = hashlib.md5()  # nosec
+            hash_alg = (
+                hashlib.md5()  # nosec  # CodeQL [SM02167] Compatibility for TI providers
+            )
         elif hash_type == "sha1":
-            hash_alg = hashlib.sha1()  # nosec
+            hash_alg = (
+                hashlib.sha1()  # nosec  # CodeQL [SM02167] Compatibility for TI providers
+            )
         else:
             hash_alg = hashlib.sha256()
         hash_alg.update(binary)

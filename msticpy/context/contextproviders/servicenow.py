@@ -15,9 +15,9 @@ requests per minute for the account type that you have.
 from __future__ import annotations
 
 import datetime as dt
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
-import attr
 from typing_extensions import Self
 
 from ..._version import VERSION
@@ -38,7 +38,7 @@ _DEF_HEADERS: dict[str, str] = {
 
 
 # pylint: disable=too-few-public-methods
-@attr.s
+@dataclass
 class _ServiceNowParams(APILookupParams):
     # override LookupParams to set common defaults
     def __attrs_post_init__(self: Self) -> None:

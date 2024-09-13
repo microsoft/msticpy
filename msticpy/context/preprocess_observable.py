@@ -23,6 +23,7 @@ from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import Callable, ClassVar
 from urllib.parse import quote_plus
 
+from typing_extensions import Self
 from urllib3.exceptions import LocationParseError
 from urllib3.util import parse_url
 
@@ -34,7 +35,9 @@ from .lookup_result import SanitizedObservable
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-_IOC_EXTRACT = IoCExtract()
+_IOC_EXTRACT: IoCExtract = IoCExtract()
+
+MINIMAL_ENTROPY: float = 3.0
 
 
 # slightly stricter than normal URL regex to exclude '() from host string
@@ -48,7 +51,8 @@ _HTTP_STRICT_REGEX = r"""
     (\#(?P<fragment>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?\b"""
 
 _HTTP_STRICT_RGXC: re.Pattern[str] = re.compile(
-    _HTTP_STRICT_REGEX, re.IGNORECASE | re.VERBOSE | re.MULTILINE
+    _HTTP_STRICT_REGEX,
+    re.IGNORECASE | re.VERBOSE | re.MULTILINE,
 )
 
 
@@ -212,7 +216,7 @@ def _preprocess_dns(domain: str) -> SanitizedObservable:
 def _preprocess_hash(hash_str: str) -> SanitizedObservable:
     """Ensure Hash has minimum entropy (rather than a string of 'x')."""
     str_entropy: float = _entropy(hash_str)
-    if str_entropy < 3.0:
+    if str_entropy < MINIMAL_ENTROPY:
         return SanitizedObservable(None, "String has too low an entropy to be a hash")
     return SanitizedObservable(hash_str, "ok")
 
@@ -260,12 +264,12 @@ class PreProcessor:
         }
 
     @property
-    def processors(self) -> dict[str, list[str | CheckerType]]:
+    def processors(self: Self) -> dict[str, list[str | CheckerType]]:
         """Return _processors value."""
         return self._processors
 
     def check(
-        self,
+        self: Self,
         value: str,
         value_type: str,
         *,
@@ -280,6 +284,9 @@ class PreProcessor:
             The value to be checked.
         value_type : str
             The type of value to be checked.
+        require_url_encoding: bool, Optional
+            If true, apply URL encoding. Only applicable for URL observables.*
+            Defaults to False.
 
         Returns
         -------
@@ -306,7 +313,8 @@ class PreProcessor:
                     proc_name = processor.__name__
                 if proc_name == "_preprocess_url":
                     result = processor(
-                        proc_value, require_url_encoding=require_url_encoding
+                        proc_value,
+                        require_url_encoding=require_url_encoding,
                     )
                 else:
                     result = processor(proc_value)
@@ -315,7 +323,7 @@ class PreProcessor:
                 break
         return result
 
-    def add_check(self, value_type: str, checker: CheckerType) -> None:
+    def add_check(self: Self, value_type: str, checker: CheckerType) -> None:
         """Add a new checker to the processors."""
         if value_type not in self._processors:
             self._processors[value_type] = [checker]

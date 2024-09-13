@@ -12,25 +12,28 @@ with a domain or url, such as getting a screenshot or validating the TLD.
 """
 from __future__ import annotations
 
+import datetime as dt
 import json
+import logging
 import ssl
 import time
 from dataclasses import asdict
-from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable
 from urllib.error import HTTPError, URLError
 
 import httpx
 import pandas as pd
 import tldextract
 from cryptography import x509
-from cryptography.hazmat.primitives.hashes import SHA1
-from cryptography.x509 import Certificate
+
+# CodeQL [SM02167] Compatibility requirement for SSL abuse list
+from cryptography.hazmat.primitives.hashes import SHA1  # CodeQL [SM02167] Compatibility
 from dns.exception import DNSException
 from dns.resolver import Resolver
 from IPython import display
 from ipywidgets import IntProgress
+from typing_extensions import Self
 from urllib3.exceptions import LocationParseError
 from urllib3.util import parse_url
 
@@ -40,13 +43,22 @@ from ..common.settings import get_config, get_http_timeout
 from ..common.utility import export, mp_ua_header
 
 if TYPE_CHECKING:
+    from cryptography.x509 import Certificate
     from dns.resolver import Answer
+    from tldextract.tldextract import ExtractResult
 __version__ = VERSION
 __author__ = "Pete Bryan"
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @export
-def screenshot(url: str, api_key: str | None = None) -> httpx.Response:
+def screenshot(  # pylint: disable=too-many-locals
+    url: str,
+    api_key: str | None = None,
+    *,
+    sleep: float = 0.05,
+    max_progress: int = 100,
+) -> httpx.Response:
     """
     Get a screenshot of a url with Browshot.
 
@@ -56,6 +68,10 @@ def screenshot(url: str, api_key: str | None = None) -> httpx.Response:
         The url a screenshot is wanted for.
     api_key : str (optional)
         Browshot API key. If not set msticpyconfig checked for this.
+    sleep: int (optional)
+        Time to sleep between calls. Defaults to 0.05 seconds
+    max_progress: int (optional)
+        Set the maximum value for the progress bar. Defaults to 100.
 
     Returns
     -------
@@ -65,65 +81,76 @@ def screenshot(url: str, api_key: str | None = None) -> httpx.Response:
     """
     # Get Browshot API key from kwargs or config
     if api_key is not None:
-        bs_api_key: Optional[str] = api_key
+        bs_api_key: str | None = api_key
     else:
         bs_conf: dict[str, Any] = get_config(
-            "DataProviders.Browshot", {}
-        ) or get_config("Browshot", {})
+            "DataProviders.Browshot",
+            {},
+        ) or get_config(
+            "Browshot",
+            {},
+        )
         bs_api_key = None
         if bs_conf is not None:
-            bs_api_key = bs_conf.get("Args", {}).get("AuthKey")  # type: ignore
+            bs_api_key = bs_conf.get("Args", {}).get("AuthKey")
 
     if bs_api_key is None:
+        err_msg: str = (
+            "No configuration found for Browshot\n"
+            "Please add a section to msticpyconfig.yaml:\n"
+            "DataProviders:\n"
+            "  Browshot:\n"
+            "    Args:\n"
+            "      AuthKey: {your_auth_key}"
+        )
         raise MsticpyUserConfigError(
-            "No configuration found for Browshot",
-            "Please add a section to msticpyconfig.yaml:",
-            "DataProviders:",
-            "  Browshot:",
-            "    Args:",
-            "      AuthKey: {your_auth_key}",
+            err_msg,
             title="Browshot configuration not found",
             browshot_uri=("Get an API key for Browshot", "https://api.browshot.com/"),
         )
 
     # Request screenshot from Browshot and get request ID
-    id_string = (
+    id_string: str = (
         f"https://api.browshot.com/api/v1/screenshot/create?url={url}/"
         f"&instance_id=26&size=screen&cache=0&key={bs_api_key}"
     )
-    id_data = httpx.get(id_string, timeout=get_http_timeout(), headers=mp_ua_header())
-    bs_id = json.loads(id_data.content)["id"]
-    status_string = (
+    id_data: httpx.Response = httpx.get(
+        id_string,
+        timeout=get_http_timeout(),
+        headers=mp_ua_header(),
+    )
+    bs_id: str = json.loads(id_data.content)["id"]
+    status_string: str = (
         f"https://api.browshot.com/api/v1/screenshot/info?id={bs_id}&key={bs_api_key}"
     )
-    image_string = (
+    image_string: str = (
         f"https://api.browshot.com/api/v1/screenshot/thumbnail?id={bs_id}"
         f"&zoom=50&key={bs_api_key}"
     )
     # Wait until the screenshot is ready and keep user updated with progress
-    print("Getting screenshot")
-    progress = IntProgress(min=0, max=100)
+    logger.info("Getting screenshot")
+    progress = IntProgress(min=0, max=max_progress)
     display.display(progress)
     ready = False
-    while not ready and progress.value < 100:
+    while not ready and progress.value < max_progress:
         progress.value += 1
-        status_data = httpx.get(
+        status_data: httpx.Response = httpx.get(
             status_string,
             timeout=get_http_timeout(),
             headers=mp_ua_header(),
         )
-        status = json.loads(status_data.content)["status"]
+        status: str = json.loads(status_data.content)["status"]
         if status == "finished":
             ready = True
         else:
-            time.sleep(0.05)
-    progress.value = 100
+            time.sleep(sleep)
+    progress.value = max_progress
 
     # Once ready or timed out get the screenshot
-    image_data = httpx.get(image_string, timeout=get_http_timeout())
+    image_data: httpx.Response = httpx.get(image_string, timeout=get_http_timeout())
 
-    if image_data.status_code != 200:
-        print(
+    if not image_data.is_success:
+        logger.warning(
             "There was a problem with the request, please check the status code for details",
         )
 
@@ -147,13 +174,13 @@ class DomainValidator:
     _ssl_abuse_list: pd.DataFrame = pd.DataFrame()
 
     @classmethod
-    def _check_and_load_abuselist(cls):
+    def _check_and_load_abuselist(cls: type[Self]) -> None:
         """Pull IANA TLD list and save to internal attribute."""
         if cls._ssl_abuse_list is None or cls._ssl_abuse_list.empty:
             cls._ssl_abuse_list = cls._get_ssl_abuselist()
 
     @property
-    def ssl_abuse_list(self) -> pd.DataFrame:
+    def ssl_abuse_list(self: Self) -> pd.DataFrame:
         """
         Return the class SSL Blacklist.
 
@@ -182,7 +209,7 @@ class DomainValidator:
             True if valid public TLD, False if not.
 
         """
-        extract_result = tldextract.extract(url_domain.lower())
+        extract_result: ExtractResult = tldextract.extract(url_domain.lower())
         return bool(extract_result.suffix)
 
     @staticmethod
@@ -203,11 +230,11 @@ class DomainValidator:
         """
         try:
             _dns_resolve(url_domain, "A")
-            return True
         except DNSException:
             return False
+        return True
 
-    def in_abuse_list(self, url_domain: str) -> Tuple[bool, Optional[Certificate]]:
+    def in_abuse_list(self: Self, url_domain: str) -> tuple[bool, Certificate | None]:
         """
         Validate if a domain or URL's SSL cert the abuse.ch SSL Abuse List.
 
@@ -228,7 +255,9 @@ class DomainValidator:
             x509_cert: Certificate = x509.load_pem_x509_certificate(
                 cert.encode("ascii"),
             )
-            cert_sha1: bytes = x509_cert.fingerprint(SHA1())
+            cert_sha1: bytes = x509_cert.fingerprint(
+                SHA1()
+            )  # noqa: S303  # CodeQL [SM02167] Compatibility requirement for SSL abuse list
             result = bool(
                 self.ssl_abuse_list["SHA1"].str.contains(cert_sha1.hex()).any(),
             )
@@ -237,10 +266,10 @@ class DomainValidator:
         return result, x509_cert
 
     @classmethod
-    def _get_ssl_abuselist(cls) -> pd.DataFrame:
+    def _get_ssl_abuselist(cls: type[Self]) -> pd.DataFrame:
         """Download and load abuse.ch SSL Abuse List."""
         try:
-            ssl_ab_list = pd.read_csv(
+            ssl_ab_list: pd.DataFrame = pd.read_csv(
                 "https://sslbl.abuse.ch/blacklist/sslblacklist.csv",
                 skiprows=8,
             )
@@ -265,13 +294,13 @@ def dns_components(domain: str) -> dict:
         Returns subdomain and TLD components from a domain.
 
     """
-    result = tldextract.extract(domain.lower())
-    if isinstance(result, tuple):
-        return result._asdict()  # type: ignore
+    result: ExtractResult = tldextract.extract(domain.lower())
+    if isinstance(result, tuple) and hasattr(result, "_asdict"):
+        return result._asdict()
     return asdict(result)
 
 
-def url_components(url: str) -> Dict[str, str]:
+def url_components(url: str) -> dict[str, str]:
     """Return parsed Url components as dict."""
     try:
         return parse_url(url)._asdict()
@@ -280,7 +309,7 @@ def url_components(url: str) -> Dict[str, str]:
 
 
 @export
-def dns_resolve(url_domain: str, rec_type: str = "A") -> Dict[str, Any]:
+def dns_resolve(url_domain: str, rec_type: str = "A") -> dict[str, Any]:
     """
     Validate if a domain or URL be be resolved to an IP address.
 
@@ -337,7 +366,7 @@ def dns_resolve_df(url_domain: str, rec_type: str = "A") -> pd.DataFrame:
 
 
 @export
-def ip_rev_resolve(ip_address: str) -> Dict[str, Any]:
+def ip_rev_resolve(ip_address: str) -> dict[str, Any]:
     """
     Reverse lookup for IP Address.
 
@@ -386,20 +415,20 @@ def ip_rev_resolve_df(ip_address: str) -> pd.DataFrame:
 
 
 @export
-def _resolve_resp_to_dict(resolver_resp):
+def _resolve_resp_to_dict(resolver_resp: Answer) -> dict[str, Any]:
     """Return Dns Python resolver response to dict."""
-    rdtype = (
+    rdtype: str = (
         resolver_resp.rdtype.name
         if isinstance(resolver_resp.rdtype, Enum)
         else str(resolver_resp.rdtype)
     )
-    rdclass = (
+    rdclass: str = (
         resolver_resp.rdclass.name
         if isinstance(resolver_resp.rdclass, Enum)
         else str(resolver_resp.rdclass)
     )
 
-    return {
+    result: dict[str, Any] = {
         "qname": str(resolver_resp.qname),
         "rdtype": rdtype,
         "rdclass": rdclass,
@@ -407,6 +436,11 @@ def _resolve_resp_to_dict(resolver_resp):
         "nameserver": getattr(resolver_resp, "nameserver", None),
         "port": getattr(resolver_resp, "port", None),
         "canonical_name": str(resolver_resp.canonical_name),
-        "rrset": [str(res) for res in resolver_resp.rrset],
-        "expiration": datetime.utcfromtimestamp(resolver_resp.expiration),
+        "expiration": dt.datetime.fromtimestamp(
+            resolver_resp.expiration,
+            tz=dt.timezone.utc,
+        ),
     }
+    if resolver_resp.rrset:
+        result["rrset"] = [str(res) for res in resolver_resp.rrset]
+    return result

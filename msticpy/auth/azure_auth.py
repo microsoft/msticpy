@@ -21,6 +21,7 @@ from .azure_auth_core import (  # noqa: F401
     AzCredentials,
     AzureCloudConfig,
     AzureCredEnvNames,
+    ChainedTokenCredential,
     az_connect_core,
 )
 from .cred_wrapper import CredentialWrapper
@@ -99,7 +100,10 @@ def az_connect(
             az_cli_config.args.get("clientSecret") or ""
         )
     credentials = az_connect_core(
-        auth_methods=auth_methods, tenant_id=tenant_id, silent=silent, **kwargs
+        auth_methods=auth_methods,
+        tenant_id=tenant_id,
+        silent=silent,
+        **kwargs,
     )
     sub_client = SubscriptionClient(
         credential=credentials.modern,
@@ -174,7 +178,7 @@ def fallback_devicecode_creds(
     if not creds:
         raise CloudError("Could not obtain credentials.")
 
-    return AzCredentials(legacy_creds, creds)
+    return AzCredentials(legacy_creds, ChainedTokenCredential(creds))  # type: ignore[arg-type]
 
 
 def get_default_resource_name(resource_uri: str) -> str:

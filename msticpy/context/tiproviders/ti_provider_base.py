@@ -14,6 +14,7 @@ requests per minute for the account type that you have.
 """
 from __future__ import annotations
 
+import logging
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, ClassVar, Iterable
 
@@ -30,6 +31,7 @@ if TYPE_CHECKING:
     from ...init.pivot import Pivot
     from ...init.pivot_core.pivot_register import PivotRegistration
 
+logger: logging.Logger = logging.getLogger(__name__)
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -314,7 +316,7 @@ class TIProvider(Provider):
         return self._QUERIES
 
     @classmethod
-    def usage(cls: type[TIProvider]) -> None:
+    def usage(cls: type[Self]) -> None:
         """Print usage of provider."""
         print(f"{cls.__doc__} Supported query types:")
         for ioc_key in sorted(cls._QUERIES):

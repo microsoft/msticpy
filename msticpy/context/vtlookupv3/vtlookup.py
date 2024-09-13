@@ -23,11 +23,13 @@ from __future__ import annotations
 
 import contextlib
 import json
+import logging
 from json import JSONDecodeError
 from typing import Any, ClassVar, Hashable, Mapping, NamedTuple
 
 import httpx
 import pandas as pd
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.pkg_config import get_http_timeout
@@ -35,6 +37,7 @@ from ...common.utility import export, mp_ua_header
 from ..lookup_result import SanitizedObservable
 from ..preprocess_observable import preprocess_observable
 
+logger: logging.Logger = logging.getLogger(__name__)
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
@@ -128,7 +131,7 @@ class VTLookup:
 
     _http_strict_rgxc: None = None
 
-    def __init__(self, vtkey: str, verbosity: int = 1) -> None:
+    def __init__(self: VTLookup, vtkey: str, verbosity: int = 1) -> None:
         """
         Create a new instance of VTLookup class.
 
@@ -149,11 +152,12 @@ class VTLookup:
 
         # create a data frame to store the results
         self.results: pd.DataFrame = pd.DataFrame(
-            data=None, columns=self._RESULT_COLUMNS
+            data=None,
+            columns=self._RESULT_COLUMNS,
         )
 
     @property
-    def supported_ioc_types(self) -> list[str]:
+    def supported_ioc_types(self: Self) -> list[str]:
         """
         Return list of supported IoC type internal names.
 
@@ -166,7 +170,7 @@ class VTLookup:
         return self._SUPPORTED_INPUT_TYPES
 
     @property
-    def supported_vt_types(self) -> list[str]:
+    def supported_vt_types(self: Self) -> list[str]:
         """
         Return list of VirusTotal supported IoC type names.
 
@@ -179,7 +183,7 @@ class VTLookup:
         return list(self._VT_API_TYPES.keys())
 
     @property
-    def ioc_vt_type_mapping(self) -> dict[str, str]:
+    def ioc_vt_type_mapping(self: Self) -> dict[str, str]:
         """
         Return mapping between internal and VirusTotal IoC type names.
 
@@ -192,7 +196,7 @@ class VTLookup:
         return self._VT_TYPE_MAP
 
     def lookup_iocs(
-        self,
+        self: Self,
         data: pd.DataFrame,
         src_col: str = "Observable",
         type_col: str = "IoCType",
@@ -272,7 +276,7 @@ class VTLookup:
         return self.results
 
     def lookup_ioc(
-        self,
+        self: Self,
         observable: str,
         ioc_type: str,
         output: str = "dict",
@@ -352,7 +356,7 @@ class VTLookup:
 
     # pylint: disable=too-many-locals
     def _lookup_ioc_type(
-        self,
+        self: Self,
         input_frame: pd.DataFrame,
         ioc_type: str,
         src_col: str,
@@ -472,9 +476,8 @@ class VTLookup:
                 batch_index = 0
                 obs_batch = []
 
-    # pylint: disable=too-many-branches
-    def _parse_vt_results(
-        self,
+    def _parse_vt_results(  # noqa:PLR0913
+        self: Self,
         vt_results: str | list | dict | None,
         observable: str,
         ioc_type: str,
@@ -524,8 +527,7 @@ class VTLookup:
         else:
             observables = [observable]
 
-        # pylint: disable=consider-using-enumerate
-        for result_idx in range(len(results_to_parse)):
+        for result_idx, _ in enumerate(results_to_parse):
             df_dict_vtresults: pd.DataFrame = self._parse_single_result(
                 results_to_parse[result_idx],
                 ioc_type,
@@ -568,10 +570,9 @@ class VTLookup:
             )
 
             self.results = new_results
-        # pylint enable=locally-disabled, C0200
 
     def _parse_single_result(
-        self,
+        self: Self,
         results_dict: Mapping[str, Any],
         ioc_type: str,
     ) -> pd.DataFrame:
@@ -654,7 +655,7 @@ class VTLookup:
         )
 
     def _validate_observable(
-        self,
+        self: Self,
         observable: str,
         ioc_type: str,
         idx: Hashable,
@@ -725,7 +726,7 @@ class VTLookup:
         return pp_observable
 
     def _check_duplicate_submission(
-        self,
+        self: Self,
         observable: str,
         ioc_type: str,
         source_index: Hashable,
@@ -795,7 +796,7 @@ class VTLookup:
         return DuplicateStatus(is_dup=False, status="ok")
 
     def _add_invalid_input_result(
-        self,
+        self: Self,
         observable: str,
         ioc_type: str,
         status: str,
@@ -829,7 +830,7 @@ class VTLookup:
         self.results = new_results
 
     def _vt_submit_request(
-        self,
+        self: Self,
         submission_string: str,
         vt_param: VTParams,
     ) -> tuple[dict[Any, Any] | None, int]:
@@ -881,7 +882,7 @@ class VTLookup:
         return None, response.status_code
 
     @classmethod
-    def _get_vt_api_url(cls, api_type: str) -> str:
+    def _get_vt_api_url(cls: type[Self], api_type: str) -> str:
         """
         Return the VirusTotal API URL for the supplied type.
 
@@ -893,13 +894,13 @@ class VTLookup:
         return cls._VT_API.format(type=api_type)
 
     @classmethod
-    def _get_supported_vt_ioc_types(cls) -> list[str]:
+    def _get_supported_vt_ioc_types(cls: type[VTLookup]) -> list[str]:
         """Return the subset of IoC types supported by VT."""
         return [
             t for t in cls._SUPPORTED_INPUT_TYPES if cls._VT_TYPE_MAP[t] is not None
         ]
 
-    def _print_status(self, message: str, verbosity_level: int) -> None:
+    def _print_status(self: Self, message: str, verbosity_level: int) -> None:
         """
         Print a status message depending on the current level of verbosity.
 
@@ -912,4 +913,4 @@ class VTLookup:
 
         """
         if verbosity_level <= self._verbosity:
-            print(message)
+            logger.info(message)
