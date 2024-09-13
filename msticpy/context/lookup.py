@@ -329,22 +329,22 @@ class Lookup:
 
     def provider_usage(self: Self) -> None:
         """Print usage of loaded providers."""
-        logger.info("Primary providers")
-        logger.info("-----------------")
+        print("Primary providers")
+        print("-----------------")
         if self._providers:
             for prov_name, prov in self._providers.items():
-                logger.info("\nProvider class: %s", prov_name)
+                print("\nProvider class: %s", prov_name)
                 prov.usage()
         else:
-            logger.info("none")
-        logger.info("\nSecondary providers")
-        logger.info("-------------------")
+            print("none")
+        print("\nSecondary providers")
+        print("-------------------")
         if self._secondary_providers:
             for prov_name, prov in self._secondary_providers.items():
-                logger.info("\nProvider class: %s", prov_name)
+                print("\nProvider class: %s", prov_name)
                 prov.usage()
         else:
-            logger.info("none")
+            print("none")
 
     @classmethod
     def reload_provider_settings(cls: type[Self]) -> None:

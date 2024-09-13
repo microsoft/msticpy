@@ -285,7 +285,7 @@ class Provider(ABC):
         return self._QUERIES
 
     @classmethod
-    def is_known_type(cls: type[Provider], item_type: str) -> bool:
+    def is_known_type(cls: type[Self], item_type: str) -> bool:
         """
         Return True if this a known IoC Type.
 
@@ -316,15 +316,15 @@ class Provider(ABC):
         return [item.name for item in self._supported_types]
 
     @classmethod
-    def usage(cls: type[Provider]) -> None:
+    def usage(cls: type[Self]) -> None:
         """Print usage of provider."""
-        logger.info("%s Supported query types:", cls.__doc__)
+        print(f"{cls.__doc__} Supported query types:")
         for key in sorted(cls._QUERIES):
             elements: list[str] = key.split("-", maxsplit=1)
             if len(elements) == 1:
-                logger.info("\titem_type=%s", elements[0])
+                print(f"\titem_type={elements[0]}")
             if len(elements) > 1:
-                logger.info("\titem_type=%s, query_type=%s", elements[0], elements[1])
+                print(f"\titem_type={elements[0]}, query_type={elements[1]}")
 
     def is_supported_type(self: Self, item_type: str | IoCType) -> bool:
         """

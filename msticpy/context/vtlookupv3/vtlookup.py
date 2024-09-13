@@ -882,7 +882,7 @@ class VTLookup:
         return None, response.status_code
 
     @classmethod
-    def _get_vt_api_url(cls: type[VTLookup], api_type: str) -> str:
+    def _get_vt_api_url(cls: type[Self], api_type: str) -> str:
         """
         Return the VirusTotal API URL for the supplied type.
 

@@ -257,9 +257,9 @@ class DynamicSummary:
 
     @classmethod
     def from_json(
-        cls: type[DynamicSummary],
+        cls: type[Self],
         data: dict[str, Any] | str,
-    ) -> DynamicSummary:
+    ) -> Self:
         """Create new DynamicSummary instance from json string or dict."""
         if isinstance(data, str):
             try:
@@ -295,7 +295,7 @@ class DynamicSummary:
 
     @classmethod
     def new_dynamic_summary(  # pylint:disable=too-many-arguments # noqa: PLR0913
-        cls: type[DynamicSummary],
+        cls: type[Self],
         summary_id: str | None = None,
         summary_name: str | None = None,
         summary_description: str | None = None,
@@ -308,7 +308,7 @@ class DynamicSummary:
         summary_items: (
             pd.DataFrame | Iterable[DynamicSummaryItem] | list[dict[str, Any]] | None
         ) = None,
-    ) -> DynamicSummary:
+    ) -> Self:
         """
         Return a new DynamicSummary object.
 

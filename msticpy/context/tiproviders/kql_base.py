@@ -169,7 +169,8 @@ class KqlTIProvider(TIProvider):
             table not in self._query_provider.schema for table in self._REQUIRED_TABLES
         ):
             logger.error(
-                "Required tables not found in schema: %s", self._REQUIRED_TABLES
+                "Required tables not found in schema: %s",
+                self._REQUIRED_TABLES,
             )
             return pd.DataFrame()
 
@@ -182,7 +183,10 @@ class KqlTIProvider(TIProvider):
 
             if result["Status"] != LookupStatus.NOT_SUPPORTED.value:
                 logger.info(
-                    "Check ioc type for %s (%s): %s", ioc, ioc_type, result["Status"]
+                    "Check ioc type for %s (%s): %s",
+                    ioc,
+                    ioc_type,
+                    result["Status"],
                 )
                 ioc_groups[result["IocType"]].add(result["Ioc"])
 

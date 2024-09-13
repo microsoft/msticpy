@@ -161,7 +161,7 @@ class VTLookupV3:
         return [str(i_type) for i_type in self._SUPPORTED_VT_TYPES]
 
     @classmethod
-    def _get_endpoint_name(cls: type[VTLookupV3], vt_type: str) -> str:
+    def _get_endpoint_name(cls: type[Self], vt_type: str) -> str:
         if VTEntityType(vt_type) not in cls._SUPPORTED_VT_TYPES:
             error_msg: str = f"Property type {vt_type} not supported"
             raise KeyError(error_msg)
@@ -170,7 +170,7 @@ class VTLookupV3:
 
     @classmethod
     def _parse_vt_object(
-        cls: type[VTLookupV3],
+        cls: type[Self],
         vt_object: vt.object.Object,
         *,
         all_props: bool = False,
@@ -1177,7 +1177,7 @@ class VTLookupV3:
 
     @classmethod
     def _item_not_found_df(
-        cls: type[VTLookupV3],
+        cls: type[Self],
         vt_type: str,
         observable: str,
     ) -> pd.DataFrame:
@@ -1196,7 +1196,7 @@ class VTLookupV3:
 
     @classmethod
     def _relation_not_found_df(
-        cls: type[VTLookupV3],
+        cls: type[Self],
         vt_type: str,
         observable: str,
         relationship: str,

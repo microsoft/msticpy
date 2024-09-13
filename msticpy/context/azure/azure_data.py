@@ -11,9 +11,10 @@ import logging
 from dataclasses import asdict, dataclass, field
 from importlib.metadata import version
 from typing import TYPE_CHECKING, Any, Callable, Iterable
-from packaging.version import Version, parse
+
 import numpy as np
 import pandas as pd
+from packaging.version import Version, parse
 from typing_extensions import Self
 
 from ..._version import VERSION

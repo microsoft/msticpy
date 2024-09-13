@@ -49,7 +49,7 @@ class Tor(TIProvider):
     _cache_lock = Lock()
 
     @classmethod
-    def _check_and_get_nodelist(cls: type[Tor]) -> None:
+    def _check_and_get_nodelist(cls: type[Self]) -> None:
         """Pull down Tor exit node list and save to internal attribute."""
         if cls._cache_lock.locked():
             return

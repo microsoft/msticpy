@@ -306,7 +306,7 @@ class SingletonClass:
 
     """
 
-    def __init__(self: Self, wrapped_cls: type[Any]) -> None:
+    def __init__(self: SingletonClass, wrapped_cls: type[Any]) -> None:
         """Instantiate the class wrapper."""
         self.wrapped_cls: type[Any] = wrapped_cls
         self.instance: Self | None = None
@@ -353,7 +353,7 @@ class SingletonArgsClass(SingletonClass):
 
     """
 
-    def __init__(self: Self, wrapped_cls: type[Any]) -> None:
+    def __init__(self: SingletonArgsClass, wrapped_cls: type[Any]) -> None:
         super().__init__(wrapped_cls)
         self.kwargs: dict[str, Any] | None = None
         self.args: tuple[Any] | None = None
