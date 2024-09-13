@@ -14,6 +14,7 @@ from urllib import parse
 
 import httpx
 from msrestazure import tools as az_tools
+from typing_extensions import Self
 
 from msticpy.context.azure.sentinel_utils import SentinelUtilsMixin
 
@@ -54,7 +55,7 @@ class SentinelWorkspacesMixin(SentinelUtilsMixin):
 
     @classmethod
     def get_resource_id_from_url(
-        cls: type[SentinelWorkspacesMixin],
+        cls: type[Self],
         portal_url: str,
     ) -> str | None:
         """Return resource ID components from Sentinel portal URL."""
@@ -64,7 +65,7 @@ class SentinelWorkspacesMixin(SentinelUtilsMixin):
 
     @classmethod
     def get_workspace_details_from_url(
-        cls: type[SentinelWorkspacesMixin],
+        cls: type[Self],
         portal_url: str,
     ) -> dict[str, dict[str, str]]:
         """
@@ -115,7 +116,7 @@ class SentinelWorkspacesMixin(SentinelUtilsMixin):
 
     @classmethod
     def get_workspace_name(
-        cls: type[SentinelWorkspacesMixin],
+        cls: type[Self],
         workspace_id: str | None = None,
         resource_id: str | None = None,
     ) -> str | None:
@@ -149,7 +150,7 @@ class SentinelWorkspacesMixin(SentinelUtilsMixin):
 
     @classmethod
     def get_workspace_id(
-        cls: type[SentinelWorkspacesMixin],
+        cls: type[Self],
         workspace_name: str,
         subscription_id: str = "",
         resource_group: str = "",
@@ -181,7 +182,7 @@ class SentinelWorkspacesMixin(SentinelUtilsMixin):
 
     @classmethod
     def get_workspace_settings(
-        cls: type[SentinelWorkspacesMixin],
+        cls: type[Self],
         workspace_id: str | None = None,
         resource_id: str | None = None,
     ) -> dict[str, Any]:
@@ -226,7 +227,7 @@ class SentinelWorkspacesMixin(SentinelUtilsMixin):
 
     @classmethod
     def get_workspace_settings_by_name(
-        cls: type[SentinelWorkspacesMixin],
+        cls: type[Self],
         workspace_name: str,
         subscription_id: str = "",
         resource_group: str = "",
@@ -273,7 +274,7 @@ class SentinelWorkspacesMixin(SentinelUtilsMixin):
 
     @classmethod
     def _get_resource_graph_provider(
-        cls: type[SentinelWorkspacesMixin],
+        cls: type[Self],
     ) -> QueryProvider:
         if not cls._RES_GRAPH_PROV:
             cls._RES_GRAPH_PROV = QueryProvider("ResourceGraph")
@@ -283,7 +284,7 @@ class SentinelWorkspacesMixin(SentinelUtilsMixin):
 
     @classmethod
     def _lookup_workspace_by_name(
-        cls: type[SentinelWorkspacesMixin],
+        cls: type[Self],
         workspace_name: str,
         subscription_id: str = "",
         resource_group: str = "",
@@ -297,7 +298,7 @@ class SentinelWorkspacesMixin(SentinelUtilsMixin):
 
     @classmethod
     def _lookup_workspace_by_ws_id(
-        cls: type[SentinelWorkspacesMixin],
+        cls: type[Self],
         workspace_id: str,
     ) -> pd.DataFrame:
         res_graph_prov: QueryProvider = cls._get_resource_graph_provider()
@@ -307,7 +308,7 @@ class SentinelWorkspacesMixin(SentinelUtilsMixin):
 
     @classmethod
     def _lookup_workspace_by_res_id(
-        cls: type[SentinelWorkspacesMixin],
+        cls: type[Self],
         resource_id: str | None,
     ) -> pd.DataFrame:
         res_graph_prov: QueryProvider = cls._get_resource_graph_provider()
@@ -317,7 +318,7 @@ class SentinelWorkspacesMixin(SentinelUtilsMixin):
 
     @classmethod
     def _extract_resource_id(
-        cls: type[SentinelWorkspacesMixin],
+        cls: type[Self],
         url: str,
     ) -> ParsedUrlComponents | None:
         """Extract and return resource ID components from URL."""
@@ -357,7 +358,7 @@ class SentinelWorkspacesMixin(SentinelUtilsMixin):
 
     @classmethod
     def _get_tenantid_from_logon_domain(
-        cls: type[SentinelWorkspacesMixin],
+        cls: type[Self],
         domain: str,
         cloud: str = "global",
     ) -> str | None:
@@ -382,7 +383,7 @@ class SentinelWorkspacesMixin(SentinelUtilsMixin):
 
     @classmethod
     def _get_settings_for_workspace(  # pylint:disable=too-many-arguments # noqa:PLR0913
-        cls: type[SentinelWorkspacesMixin],
+        cls: type[Self],
         workspace_name: str,
         workspace_id: str,
         tenant_id: str,

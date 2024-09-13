@@ -55,7 +55,7 @@ class SentinelDynamicSummaryMixin(SentinelUtilsMixin):
 
     @classmethod
     def new_dynamic_summary(  # pylint:disable=too-many-arguments # noqa: PLR0913
-        cls: type[SentinelDynamicSummaryMixin],
+        cls: type[Self],
         summary_id: str | None = None,
         name: str | None = None,
         description: str | None = None,

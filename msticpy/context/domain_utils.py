@@ -172,7 +172,7 @@ class DomainValidator:
     _ssl_abuse_list: pd.DataFrame = pd.DataFrame()
 
     @classmethod
-    def _check_and_load_abuselist(cls: type[DomainValidator]) -> None:
+    def _check_and_load_abuselist(cls: type[Self]) -> None:
         """Pull IANA TLD list and save to internal attribute."""
         if cls._ssl_abuse_list is None or cls._ssl_abuse_list.empty:
             cls._ssl_abuse_list = cls._get_ssl_abuselist()
@@ -262,7 +262,7 @@ class DomainValidator:
         return result, x509_cert
 
     @classmethod
-    def _get_ssl_abuselist(cls: type[DomainValidator]) -> pd.DataFrame:
+    def _get_ssl_abuselist(cls: type[Self]) -> pd.DataFrame:
         """Download and load abuse.ch SSL Abuse List."""
         try:
             ssl_ab_list: pd.DataFrame = pd.read_csv(

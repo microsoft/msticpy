@@ -82,7 +82,7 @@ class IoCType(Enum):
     # pylint: enable=invalid-name
 
     @classmethod
-    def parse(cls: type[IoCType], value: str) -> "IoCType":
+    def parse(cls: type[Self], value: str) -> IoCType:
         """
         Return parsed IoCType of string.
 

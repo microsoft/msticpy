@@ -316,7 +316,7 @@ class TIProvider(Provider):
         return self._QUERIES
 
     @classmethod
-    def usage(cls: type[TIProvider]) -> None:
+    def usage(cls: type[Self]) -> None:
         """Print usage of provider."""
         logger.info("%s Supported query types:", cls.__doc__)
         for ioc_key in sorted(cls._QUERIES):

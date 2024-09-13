@@ -107,12 +107,12 @@ class VTFileBehavior:
     }
 
     @classmethod
-    def list_sandboxes(cls: type[VTFileBehavior]) -> list[str]:
+    def list_sandboxes(cls: type[Self]) -> list[str]:
         """Return list of known sandbox types."""
         return list(cls._SANDBOXES)
 
     def __init__(
-        self: VTFileBehavior,
+        self: Self,
         vt_key: str,
         file_id: str | None = None,
         file_summary: pd.DataFrame | pd.Series | dict[str, Any] | None = None,

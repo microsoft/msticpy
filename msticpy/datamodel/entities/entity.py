@@ -65,7 +65,7 @@ class Entity(ABC, Node):
     JSONEncoder = _EntityJSONEncoder
 
     def __init__(
-        self: "Entity",
+        self: Entity,
         src_entity: Mapping[str, Any] | None = None,
         **kwargs,
     ) -> None:

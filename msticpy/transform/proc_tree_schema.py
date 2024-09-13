@@ -152,7 +152,7 @@ class ProcSchema:  # pylint: disable=too-many-instance-attributes
         )
 
     @classmethod
-    def blank_schema_dict(cls: type[ProcSchema]) -> dict[str, Any]:
+    def blank_schema_dict(cls: type[Self]) -> dict[str, Any]:
         """Return blank schema dictionary."""
         return {
             cls_field.name: (

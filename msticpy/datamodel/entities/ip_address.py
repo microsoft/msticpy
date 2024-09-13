@@ -40,7 +40,7 @@ class IpAddress(Entity):
     ID_PROPERTIES: list[str] = ["Address"]
 
     def __init__(
-        self: "IpAddress",
+        self: IpAddress,
         src_entity: Mapping[str, Any] | None = None,
         src_event: Mapping[str, Any] | None = None,
         **kwargs,
