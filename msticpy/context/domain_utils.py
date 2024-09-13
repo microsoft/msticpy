@@ -26,7 +26,9 @@ import httpx
 import pandas as pd
 import tldextract
 from cryptography import x509
-from cryptography.hazmat.primitives.hashes import SHA1
+
+# CodeQL [SM02167] Compatibility requirement for SSL abuse list
+from cryptography.hazmat.primitives.hashes import SHA1  # CodeQL [SM02167] Compatibility
 from dns.exception import DNSException
 from dns.resolver import Resolver
 from IPython import display
@@ -253,7 +255,9 @@ class DomainValidator:
             x509_cert: Certificate = x509.load_pem_x509_certificate(
                 cert.encode("ascii"),
             )
-            cert_sha1: bytes = x509_cert.fingerprint(SHA1())  # noqa: S303
+            cert_sha1: bytes = x509_cert.fingerprint(
+                SHA1()
+            )  # noqa: S303  # CodeQL [SM02167] Compatibility requirement for SSL abuse list
             result = bool(
                 self.ssl_abuse_list["SHA1"].str.contains(cert_sha1.hex()).any(),
             )
