@@ -337,7 +337,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         geo_entity: GeoLocation = GeoLocation()
         geo_entity.CountryCode = ip_loc["country_code"]
 
-        geo_entity.CountryName = ip_loc["country_name"]
+        geo_entity.CountryOrRegionName = ip_loc["country_name"]
         geo_entity.State = ip_loc["region_name"]
         geo_entity.City = ip_loc["city"]
         geo_entity.Longitude = ip_loc["longitude"]
@@ -615,7 +615,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             ip_entity.Address = ip_address
         geo_entity: GeoLocation = GeoLocation()
         geo_entity.CountryCode = geo_match.get("country", {}).get("iso_code", None)
-        geo_entity.CountryName = (
+        geo_entity.CountryOrRegionName = (
             geo_match.get("country", {}).get("names", {}).get("en", None)
         )
         subdivs: list[dict[str, Any]] = geo_match.get("subdivisions", [])

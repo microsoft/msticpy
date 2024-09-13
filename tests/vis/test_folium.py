@@ -222,7 +222,7 @@ def create_geo_entity(row):
     """Return GeoLocation entity - test helper."""
     # get subset of fields for GeoLocation
     loc_props = row[
-        ["CountryCode", "CountryName", "State", "City", "Longitude", "Latitude"]
+        ["CountryCode", "CountryOrRegionName", "State", "City", "Longitude", "Latitude"]
     ]
     return GeoLocation(**loc_props.to_dict())
 
@@ -242,7 +242,7 @@ def icon_map_func(key):
 _IP_COL = "AllExtIPs"
 _LAT_COL = "Latitude"
 _LONG_COL = "Longitude"
-_COUNTRY_COL = "CountryName"
+_COUNTRY_COL = "CountryOrRegionName"
 
 
 @attr.s(auto_attribs=True)
@@ -272,8 +272,8 @@ _PM_TEST_PARAMS = [
     (PlotMapTest(name="layer", **_STD_ARGS, layer_column=_COUNTRY_COL)),  # type: ignore
     (PlotMapTest(name="icon_dict", **_STD_ARGS, icon_column=_COUNTRY_COL, icon_map=icon_map)),  # type: ignore
     (PlotMapTest(name="icon_map", **_STD_ARGS, icon_column=_COUNTRY_COL, icon_map=icon_map_func)),  # type: ignore
-    (PlotMapTest(name="popup", **_STD_ARGS, popup_columns=["CountryName", "State", "City"])),  # type: ignore
-    (PlotMapTest(name="tooltip", **_STD_ARGS, tooltip_columns=["CountryName", "State", "City"])),  # type: ignore
+    (PlotMapTest(name="popup", **_STD_ARGS, popup_columns=["CountryOrRegionName", "State", "City"])),  # type: ignore
+    (PlotMapTest(name="tooltip", **_STD_ARGS, tooltip_columns=["CountryOrRegionName", "State", "City"])),  # type: ignore
 ]
 
 _PM_IDS = [pmt.name for pmt in _PM_TEST_PARAMS]
