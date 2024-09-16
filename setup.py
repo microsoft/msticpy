@@ -33,7 +33,7 @@ EXTRAS = {
     "splunk": ["splunk-sdk>=1.6.0,!=2.0.0"],
     "sumologic": ["sumologic-sdk>=0.1.11", "openpyxl>=3.0"],
     "kql": ["KqlmagicCustom[jupyter-extended]>=0.1.114.post22"],
-    "_azure_core": [
+    "azure": [
         "azure-mgmt-compute>=4.6.2",
         "azure-mgmt-core>=1.2.1",
         "azure-mgmt-monitor>=2.0.0",
@@ -65,11 +65,10 @@ EXTRAS["all"] = sorted(
     _combine_extras(list({name for name in EXTRAS if name != "dev"}))
 )
 
-EXTRAS["azure"] = sorted(_combine_extras(["_azure_core", "keyvault", "azure_query"]))
 EXTRAS["test"] = sorted(_combine_extras(["all", "dev"]))
-EXTRAS["azsentinel"] = sorted(_combine_extras(["azure", "kql", "keyvault"]))
-EXTRAS["azuresentinel"] = sorted(_combine_extras(["azure", "kql", "keyvault"]))
-EXTRAS["sentinel"] = sorted(_combine_extras(["azure", "kql", "keyvault"]))
+EXTRAS["sentinel"] = EXTRAS["azure"]
+EXTRAS["azsentinel"] = EXTRAS["sentinel"]
+EXTRAS["azuresentinel"] = EXTRAS["sentinel"]
 
 
 if __name__ == "__main__":
