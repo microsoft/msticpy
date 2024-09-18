@@ -151,7 +151,7 @@ class HttpTIProvider(TIProvider, HttpProvider):
         return result
 
     @lru_cache(maxsize=256)
-    def lookup_ioc(
+    def lookup_ioc(  # noqa: PLR0913
         self: Self,
         ioc: str,
         ioc_type: str | None = None,

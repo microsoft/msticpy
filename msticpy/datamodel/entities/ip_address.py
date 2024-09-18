@@ -4,8 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """IpAddress Entity class."""
+from __future__ import annotations
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, List, Mapping, Optional, Union
+from typing import Any, Mapping
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -36,14 +37,14 @@ class IpAddress(Entity):
 
     """
 
-    ID_PROPERTIES = ["Address"]
+    ID_PROPERTIES: list[str] = ["Address"]
 
     def __init__(
-        self,
-        src_entity: Mapping[str, Any] = None,
-        src_event: Mapping[str, Any] = None,
+        self: IpAddress,
+        src_entity: Mapping[str, Any] | None = None,
+        src_event: Mapping[str, Any] | None = None,
         **kwargs,
-    ):
+    ) -> None:
         """
         Create a new instance of the entity type.
 
@@ -65,8 +66,18 @@ class IpAddress(Entity):
 
         """
         self.Address: str = ""
-        self.Location: Optional[GeoLocation] = None
-        self.ThreatIntelligence: List[Threatintelligence] = []
+        self.Location: GeoLocation | None = None
+        self.ThreatIntelligence: list[Threatintelligence] = []
+        self.hostname: str | None = None
+        self.SourceComputerId: str | None = None
+        self.OSType: str | None = None
+        self.OSName: str | None = None
+        self.OSVMajorVersion: str | None = None
+        self.OSVMinorVersion: str | None = None
+        self.ComputerEnvironment: str | None = None
+        self.OmsSolutions: list[str] | None = None
+        self.VMUUID: str | None = None
+        self.SubscriptionId: str | None = None
         super().__init__(src_entity=src_entity, **kwargs)
 
         if src_event is not None and "Location" in src_event:
@@ -78,7 +89,7 @@ class IpAddress(Entity):
                 self.Address = src_event["Address"]
 
     @property
-    def ip_address(self) -> Union[IPv4Address, IPv6Address, None]:
+    def ip_address(self) -> IPv4Address | IPv6Address | None:
         """Return a python IP address object from the entity property."""
         try:
             return ip_address(self.Address)
@@ -99,7 +110,7 @@ class IpAddress(Entity):
         """Return Entity Name."""
         return self.Address or self.__class__.__name__
 
-    _entity_schema = {
+    _entity_schema: dict[str, Any] = {
         # Address (type System.String)
         "Address": None,
         # Location (type Microsoft.Azure.Security.Detection.AlertContracts
@@ -116,4 +127,4 @@ class IpAddress(Entity):
 
 
 # Alias for IpAddress
-Ip = IpAddress
+Ip: type[IpAddress] = IpAddress

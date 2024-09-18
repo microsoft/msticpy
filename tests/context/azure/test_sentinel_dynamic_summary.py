@@ -9,7 +9,7 @@ import re
 import uuid
 from copy import deepcopy
 from datetime import datetime, timezone
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pandas as pd
 import pytest
@@ -20,6 +20,7 @@ import yaml
 from msticpy.common.exceptions import MsticpyAzureConnectionError
 from msticpy.common.pkg_config import SettingsDict
 from msticpy.common.wsconfig import WorkspaceConfig
+from msticpy.context.azure.azure_data import AzureData
 from msticpy.context.azure.sentinel_core import MicrosoftSentinel
 from msticpy.context.azure.sentinel_dynamic_summary import SentinelQueryProvider
 from msticpy.context.azure.sentinel_dynamic_summary_types import (
@@ -254,7 +255,7 @@ def _set_default_workspace(self, sub_id, workspace=None):
 
 @pytest.fixture
 @patch(f"{MicrosoftSentinel.__module__}.get_token")
-@patch(f"{MicrosoftSentinel.__module__}.AzureData.connect")
+@patch.object(AzureData, "connect")
 def sentinel_loader(mock_creds, get_token, monkeypatch):
     """Generate MicrosoftSentinel for testing."""
     monkeypatch.setattr(
@@ -268,12 +269,13 @@ def sentinel_loader(mock_creds, get_token, monkeypatch):
         get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
     ):
         sent = MicrosoftSentinel(
-            sub_id=settings.get(
+            subscription_id=settings.get(
                 "SubscriptionId", "fd09863b-5cec-4833-ab9c-330ad07b0c1a"
             ),
-            res_grp=settings.get("ResourceGroup", "RG"),
-            ws_name=settings.get("WorkspaceName", "Default"),
+            resource_group=settings.get("ResourceGroup", "RG"),
+            workspace_name=settings.get("WorkspaceName", "Default"),
         )
+        sent.credentials = MagicMock()
         sent._default_workspace_name = ws_key
         sent.connect(workspace=ws_key, token=["PLACEHOLDER"])  # nosec
         sent.connected = True
@@ -416,7 +418,6 @@ def test_new_dynamic_summary(sentinel_loader):
         summary_id="test_id",
         name="Test Summary",
         description="This is a test summary",
-        data=ti_data,
         tactics=["discovery", "exploitation"],
         techniques=["T1000"],
         search_key="TI stuff",

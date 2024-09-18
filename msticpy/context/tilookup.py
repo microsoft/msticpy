@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar, Iterable, Mapping
 
+from typing_extensions import Self
+
 from .._version import VERSION
 from ..common.utility import export
 from .lookup import Lookup
@@ -52,9 +54,8 @@ class TILookup(Lookup):
     PACKAGE: ClassVar[str] = "tiproviders"
     CUSTOM_PROVIDERS: ClassVar[dict[str, type[Provider]]] = {}
 
-    # pylint: disable=too-many-arguments
-    def lookup_ioc(
-        self,
+    def lookup_ioc(  # pylint: disable=too-many-arguments #noqa: PLR0913
+        self: Self,
         ioc: str | None = None,
         ioc_type: str | None = None,
         ioc_query_type: str | None = None,
@@ -132,8 +133,8 @@ class TILookup(Lookup):
             end=end,
         )
 
-    def lookup_iocs(
-        self,
+    def lookup_iocs(  # pylint: disable=too-many-arguments #noqa: PLR0913
+        self: Self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         ioc_col: str | None = None,
         ioc_type_col: str | None = None,
@@ -210,9 +211,8 @@ class TILookup(Lookup):
             ),
         )
 
-    # pylint: disable=too-many-locals
-    async def _lookup_iocs_async(
-        self,
+    async def _lookup_iocs_async(  # pylint: disable=too-many-arguments #noqa:PLR0913
+        self: Self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         ioc_col: str | None = None,
         ioc_type_col: str | None = None,
@@ -237,8 +237,8 @@ class TILookup(Lookup):
             end=end,
         )
 
-    def lookup_iocs_sync(
-        self,
+    def lookup_iocs_sync(  # pylint:disable=too-many-arguments # noqa: PLR0913
+        self: Self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         ioc_col: str | None = None,
         ioc_type_col: str | None = None,
@@ -290,7 +290,7 @@ class TILookup(Lookup):
         )
 
     def _load_providers(
-        self,
+        self: Self,
         *,
         providers: str = "TIProviders",
     ) -> None:

@@ -20,6 +20,7 @@ from msticpy.context.ip_utils import (
     get_ip_type,
     get_whois_df,
     ip_whois,
+    _IpWhoIsResult,
 )
 
 from ..unit_test_lib import TEST_DATA_PATH, get_test_data_path
@@ -452,8 +453,8 @@ def test_get_whois(mock_asn_whois_query):
     respx.get(re.compile(r"http://rdap\.arin\.net/.*")).respond(200, json=RDAP_RESPONSE)
     ms_ip = "13.107.4.50"
     ms_asn = "MICROSOFT-CORP"
-    asn, _ = ip_whois(ms_ip)
-    check.is_in(ms_asn, asn)
+    asn: _IpWhoIsResult = ip_whois(ms_ip)
+    check.is_in(ms_asn, asn.name)
 
 
 @respx.mock
@@ -504,9 +505,7 @@ def test_asn_query_features(mock_asn_whois_query):
     """Test ASN query features"""
     # mock the potaroo request
     html_resp = get_test_data_path().joinpath("potaroo.html").read_bytes()
-    respx.get("https://bgp.potaroo.net/cidr/autnums.html").respond(
-        200, content=html_resp
-    )
+    respx.get("https://bgp.potaroo.net/cidr/autnums.html").respond(200, content=html_resp)
     # mock the whois response
     mock_asn_whois_query.return_value = ASN_RESPONSE_2
     # run tests

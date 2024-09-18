@@ -13,7 +13,6 @@ from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from ..common.exceptions import MsticpyUserConfigError
 from ..common.pkg_config import get_config
 
-
 ConfigItem = Dict[str, Union[str, Callable]]
 ConfigList = List[ConfigItem]
 Config = Dict[str, Union[str, float, ConfigList]]

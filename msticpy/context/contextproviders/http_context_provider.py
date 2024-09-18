@@ -140,7 +140,7 @@ class HttpContextProvider(ContextProvider, HttpProvider):
         return result
 
     @lru_cache(maxsize=256)
-    def lookup_observable(
+    def lookup_observable(  # noqa:PLR0913
         self: Self,
         observable: str,
         observable_type: str | None = None,

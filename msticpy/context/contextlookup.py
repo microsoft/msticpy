@@ -14,9 +14,9 @@ requests per minute for the account type that you have.
 """
 from __future__ import annotations
 
-from typing import ClassVar, Iterable, Mapping
+from typing import TYPE_CHECKING, ClassVar, Iterable, Mapping
 
-import pandas as pd
+from typing_extensions import Self
 
 from .._version import VERSION
 from ..common.utility import export
@@ -26,6 +26,8 @@ from .contextproviders import CONTEXT_PROVIDERS
 from .lookup import Lookup
 from .provider_base import Provider, _make_sync
 
+if TYPE_CHECKING:
+    import pandas as pd
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
@@ -51,15 +53,15 @@ class ContextLookup(Lookup):
     PROVIDERS: ClassVar[dict[str, tuple[str, str]]] = CONTEXT_PROVIDERS
     CUSTOM_PROVIDERS: ClassVar[dict[str, type[Provider]]] = {}
 
-    # pylint: disable=too-many-arguments
-    def lookup_observable(
-        self,
+    def lookup_observable(  # pylint:disable=too-many-arguments # noqa:PLR0913
+        self: Self,
         observable: str,
         observable_type: str | None = None,
         query_type: str | None = None,
         providers: list[str] | None = None,
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
+        *,
         show_not_supported: bool = False,
     ) -> pd.DataFrame:
         """
@@ -81,6 +83,8 @@ class ContextLookup(Lookup):
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
+        show_not_supported: bool, optional
+            Include the not supported observables in the result DF. Defaults to False.
 
         Returns
         -------
@@ -100,8 +104,8 @@ class ContextLookup(Lookup):
             show_not_supported=show_not_supported,
         )
 
-    def lookup_observables(  # pylint:disable=too-many-arguments
-        self,
+    def lookup_observables(  # pylint:disable=too-many-arguments # noqa:PLR0913
+        self: Self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         obs_col: str | None = None,
         obs_type_col: str | None = None,
@@ -155,8 +159,8 @@ class ContextLookup(Lookup):
         )
 
     # pylint: disable=too-many-locals
-    async def _lookup_observables_async(  # pylint:disable=too-many-arguments
-        self,
+    async def _lookup_observables_async(  # pylint:disable=too-many-arguments # noqa:PLR0913
+        self: Self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         obs_col: str | None = None,
         obs_type_col: str | None = None,
@@ -176,8 +180,8 @@ class ContextLookup(Lookup):
             prov_scope=prov_scope,
         )
 
-    def lookup_observables_sync(  # pylint:disable=too-many-arguments
-        self,
+    def lookup_observables_sync(  # pylint:disable=too-many-arguments # noqa:PLR0913
+        self: Self,
         data: pd.DataFrame | Mapping[str, str] | Iterable[str],
         obs_col: str | None = None,
         obs_type_col: str | None = None,
@@ -229,7 +233,7 @@ class ContextLookup(Lookup):
         )
 
     def _load_providers(
-        self,
+        self: Self,
         *,
         providers: str = "ContextProviders",
     ) -> None:

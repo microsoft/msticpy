@@ -29,6 +29,7 @@ EXTRAS_EXCEPTIONS = {
     "pyperclip",
     "autogen",
     "importlib_resources",
+    "notebookutils",
 }
 CONDA_PKG_EXCEPTIONS = {
     "vt-py",

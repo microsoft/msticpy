@@ -31,7 +31,7 @@ class ResultSeverity(Enum):
     # pylint: enable=invalid-name
 
     @classmethod
-    def parse(cls: type[ResultSeverity], value: object) -> ResultSeverity:
+    def parse(cls: type[Self], value: object) -> ResultSeverity:
         """
         Parse string or numeric value to ResultSeverity.
 
