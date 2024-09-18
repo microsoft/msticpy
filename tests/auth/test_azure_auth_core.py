@@ -119,7 +119,7 @@ def test_check_cli_credentials(get_cli_profile, test, expected):
 _CLI_ID = "d8d9d2f2-5d2d-4d7e-9c5c-5d6d9d1d8d9d"
 _TENANT_ID = "f8d9d2f2-5d2d-4d7e-9c5c-5d6d9d1d8d9e"
 
-_TEST_ENV_VARS: tuple[tuple[dict[str, str], bool]] = (
+_TEST_ENV_VARS = (
     (
         {
             "AZURE_CLIENT_ID": _CLI_ID,
