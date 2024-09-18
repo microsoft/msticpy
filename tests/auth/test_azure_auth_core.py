@@ -11,8 +11,11 @@ import pytest
 import pytest_check as check
 
 from msticpy.auth.azure_auth_core import (
+    AzCredentials,
     AzureCliStatus,
     AzureCloudConfig,
+    DeviceCodeCredential,
+    _az_connect_core,
     _build_env_client,
     check_cli_credentials,
 )
@@ -116,7 +119,7 @@ def test_check_cli_credentials(get_cli_profile, test, expected):
 _CLI_ID = "d8d9d2f2-5d2d-4d7e-9c5c-5d6d9d1d8d9d"
 _TENANT_ID = "f8d9d2f2-5d2d-4d7e-9c5c-5d6d9d1d8d9e"
 
-_TEST_ENV_VARS = (
+_TEST_ENV_VARS: tuple[tuple[dict[str, str], bool]] = (
     (
         {
             "AZURE_CLIENT_ID": _CLI_ID,
@@ -178,3 +181,50 @@ def test_build_env_client(env_vars, expected, monkeypatch):
         check.is_true(
             mock_env_cred.called_once_with(authority="test_aad_uri") or not expected
         )
+
+
+@pytest.mark.parametrize(
+    "auth_methods, cloud, tenant_id, silent, region, credential",
+    [
+        (["env", "cli"], "global", "tenant1", False, "region1", None),
+        (["msi", "interactive"], "usgov", "tenant2", True, "region2", None),
+        (None, None, None, False, None, DeviceCodeCredential()),
+    ],
+)
+def test_az_connect_core(auth_methods, cloud, tenant_id, silent, region, credential):
+    """
+    Test _az_connect_core function with different parameters.
+
+    Parameters
+    ----------
+    auth_methods : list[str]
+        List of authentication methods to try.
+    cloud : str
+        Azure cloud to connect to.
+    tenant_id : str
+        Tenant to authenticate against.
+    silent : bool
+        Whether to display any output during auth process.
+    region : str
+        Azure region to connect to.
+    credential : AzCredentials
+        Azure credential to use directly.
+
+    Returns
+    -------
+    None
+    """
+    # Call the function with the test parameters
+    result = _az_connect_core(
+        auth_methods=auth_methods,
+        cloud=cloud,
+        tenant_id=tenant_id,
+        silent=silent,
+        region=region,
+        credential=credential,
+    )
+
+    # Assert that the result matches the expected credential
+    assert isinstance(result, AzCredentials)
+    assert result.legacy is not None
+    assert result.modern is not None
