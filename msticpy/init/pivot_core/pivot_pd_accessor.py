@@ -442,7 +442,7 @@ class PivotAccessor:
             data = data.drop([col], axis=1).rename(columns={col_parsed: col})
         return data
 
-    def json_to_pandas(self, col: str) -> pd.DataFrame:
+    def dict_to_dataframe(self, col: str) -> pd.DataFrame:
         """
         Constructs a new dataframe having keys as column and values as row.
 
@@ -458,17 +458,19 @@ class PivotAccessor:
 
         """
 
-        self._df[col] = self._df[col].apply(_json_safe_conv)
-
         unnested_col = []
 
-        for record in self._df[col]:
+        for row_value in self._df[col]:
             unnest_row = dict()
-            try:
-                for key in record.keys():
-                    unnest_row.update(_extract_values(record[key], key))
-            except AttributeError:  # Handles nan values
-                pass
+            if isinstance(row_value, dict):
+                record = row_value
+            elif isinstance(row_value, str):
+                try:
+                    record = json.loads(row_value)
+                except json.JSONDecodeError:
+                    continue
+            for key in record.keys():
+                unnest_row.update(_extract_values(record[key], key))
             unnested_col.append(unnest_row)
 
         return pd.DataFrame(unnested_col)
