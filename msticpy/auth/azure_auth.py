@@ -7,11 +7,11 @@
 import os
 from typing import List, Optional
 
-from azure.common.exceptions import CloudError
 from azure.identity import DeviceCodeCredential
 from azure.mgmt.subscription import SubscriptionClient
 
 from .._version import VERSION
+from ..common.exceptions import MsticpyAzureConnectionError
 
 # pylint: enable=unused-import
 from ..common.provider_settings import get_provider_settings
@@ -68,7 +68,7 @@ def az_connect(
 
     Raises
     ------
-    CloudError
+    MsticpyAzureConnectionError
         If chained token credential creation fails.
 
     See Also
@@ -111,7 +111,10 @@ def az_connect(
         credential_scopes=[az_cloud_config.token_uri],
     )
     if not sub_client:
-        raise CloudError("Could not create a Subscription client.")
+        raise MsticpyAzureConnectionError(
+            "Could not create an Azure Subscription client with credentials.",
+            title="Azure authentication error",
+        )
 
     return credentials
 
@@ -132,7 +135,9 @@ def az_user_connect(
 
     Returns
     -------
-    AzCredentials
+    AzCredentials - Dataclass combining two types of Azure credentials:
+    - legacy (ADAL) credentials
+    - modern (MSAL) credentials
 
     """
     return az_connect_core(
@@ -158,14 +163,13 @@ def fallback_devicecode_creds(
 
     Returns
     -------
-    AzCredentials
-                Named tuple of:
-        - legacy (ADAL) credentials
-        - modern (MSAL) credentials
+    AzCredentials - Dataclass combining two types of Azure credentials:
+    - legacy (ADAL) credentials
+    - modern (MSAL) credentials
 
     Raises
     ------
-    CloudError
+    MsticpyAzureConnectionError
         If chained token credential creation fails.
 
     """
@@ -176,7 +180,11 @@ def fallback_devicecode_creds(
     creds = DeviceCodeCredential(authority=aad_uri, tenant_id=tenant_id)
     legacy_creds = CredentialWrapper(creds, resource_id=az_config.token_uri)
     if not creds:
-        raise CloudError("Could not obtain credentials.")
+        raise MsticpyAzureConnectionError(
+            f"Could not obtain credentials for tenant {tenant_id}",
+            "Please check your Azure configuration and try again.",
+            title="Azure authentication error",
+        )
 
     return AzCredentials(legacy_creds, ChainedTokenCredential(creds))  # type: ignore[arg-type]
 

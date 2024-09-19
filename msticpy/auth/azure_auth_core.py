@@ -137,7 +137,8 @@ def _build_env_client(
 
 def _build_cli_client(**kwargs) -> AzureCliCredential:
     """Build a credential from Azure CLI."""
-    del kwargs
+    if tenant_id := kwargs.pop("tenant_id", None):
+        return AzureCliCredential(tenant_id=tenant_id)
     return AzureCliCredential()
 
 
@@ -148,7 +149,7 @@ def _build_msi_client(
 ) -> ManagedIdentityCredential:
     """Build a credential from Managed Identity."""
     msi_kwargs = kwargs.copy()
-    if AzureCredEnvNames.AZURE_CLIENT_ID in os.environ:
+    if "client_id" not in kwargs and AzureCredEnvNames.AZURE_CLIENT_ID in os.environ:
         msi_kwargs["client_id"] = os.environ[AzureCredEnvNames.AZURE_CLIENT_ID]
 
     return ManagedIdentityCredential(
