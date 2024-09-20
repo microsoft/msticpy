@@ -19,15 +19,7 @@ import importlib
 import logging
 import warnings
 from collections import ChainMap
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    ClassVar,
-    Iterable,
-    Mapping,
-    Sized,
-)
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Mapping, Sized
 
 import nest_asyncio
 import pandas as pd
@@ -58,6 +50,8 @@ __version__ = VERSION
 __author__ = "Florian Bracq"
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+_HTTP_PROVIDER_LEGAL_KWARGS: list[str] = ["timeout", "ApiID", "AuthKey", "Instance"]
 
 
 class ProgressCounter:
@@ -811,7 +805,13 @@ class Lookup:
 
             # instantiate class sending args from settings to init
             try:
-                provider_instance: Provider = provider_class(**(settings.args))
+                # filter out any args that are not valid for the provider
+                provider_args = {
+                    key: value
+                    for key, value in settings.args.items()
+                    if key in _HTTP_PROVIDER_LEGAL_KWARGS
+                }
+                provider_instance: Provider = provider_class(**(provider_args))
             except MsticpyConfigError as mp_ex:
                 # If the TI Provider didn't load, raise an exception
                 err_msg: str = (
