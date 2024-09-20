@@ -48,7 +48,10 @@ def test_az_connect(
 
     assert result == mock_az_credentials
     mock_az_connect_core.assert_called_once_with(
-        auth_methods=["env"], tenant_id="test_tenant", silent=True
+        auth_methods=["env"],
+        tenant_id="test_tenant",
+        silent=True,
+        cloud=None,
     )
     mock_sub_client.assert_called_once()
 

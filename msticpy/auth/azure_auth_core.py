@@ -12,7 +12,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Callable, ClassVar
+from typing import Any, Callable, ClassVar
 
 from azure.common.credentials import get_cli_profile
 from azure.core.credentials import TokenCredential
@@ -135,9 +135,13 @@ def _build_env_client(
     return None
 
 
-def _build_cli_client(**kwargs) -> AzureCliCredential:
+def _build_cli_client(
+    tenant_id: str | None = None,
+    **kwargs,
+) -> AzureCliCredential:
     """Build a credential from Azure CLI."""
-    if tenant_id := kwargs.pop("tenant_id", None):
+    del kwargs
+    if tenant_id:
         return AzureCliCredential(tenant_id=tenant_id)
     return AzureCliCredential()
 
@@ -145,16 +149,17 @@ def _build_cli_client(**kwargs) -> AzureCliCredential:
 def _build_msi_client(
     tenant_id: str | None = None,
     aad_uri: str | None = None,
+    client_id: str | None = None,
     **kwargs,
 ) -> ManagedIdentityCredential:
     """Build a credential from Managed Identity."""
-    msi_kwargs = kwargs.copy()
-    if "client_id" not in kwargs and AzureCredEnvNames.AZURE_CLIENT_ID in os.environ:
-        msi_kwargs["client_id"] = os.environ[AzureCredEnvNames.AZURE_CLIENT_ID]
+    msi_kwargs: dict[str, Any] = kwargs.copy()
+    client_id = client_id or os.environ.get(AzureCredEnvNames.AZURE_CLIENT_ID)
 
     return ManagedIdentityCredential(
         tenant_id=tenant_id,
         authority=aad_uri,
+        client_id=client_id,
         **msi_kwargs,
     )
 
@@ -214,10 +219,10 @@ def _build_client_secret_client(
 def _build_certificate_client(
     tenant_id: str | None = None,
     aad_uri: str | None = None,
+    client_id: str | None = None,
     **kwargs,
 ) -> CertificateCredential | None:
     """Build a credential from Certificate."""
-    client_id = kwargs.pop("client_id", None)
     if not client_id:
         logger.info(
             "'certificate' credential requested but client_id param not supplied"

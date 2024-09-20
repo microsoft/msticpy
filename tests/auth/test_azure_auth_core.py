@@ -296,28 +296,36 @@ def test_build_cli_client(mock_cli_credential):
 
 
 @pytest.mark.parametrize(
-    "env_vars, expected_kwargs, tenant_id, aad_uri",
+    "env_vars, expected_kwargs, tenant_id, aad_uri, client_id",
     [
         (
             {"AZURE_CLIENT_ID": "test_client_id"},
-            {"client_id": "test_client_id"},
+            {},
             "test_tenant_id",
             "test_aad_uri",
+            "test_client_id",
         ),
-        ({}, {}, None, None),
+        ({}, {}, None, None, None),
     ],
 )
 @patch.dict(os.environ, {}, clear=True)
 @patch("msticpy.auth.azure_auth_core.ManagedIdentityCredential", autospec=True)
 def test_build_msi_client(
-    mock_msi_credential, env_vars, expected_kwargs, tenant_id, aad_uri
+    mock_msi_credential,
+    env_vars,
+    expected_kwargs,
+    tenant_id,
+    aad_uri,
+    client_id,
 ):
     """Test _build_msi_client function."""
     os.environ.update(env_vars)
-    result = _build_msi_client(tenant_id=tenant_id, aad_uri=aad_uri)
+    result = _build_msi_client(
+        tenant_id=tenant_id, aad_uri=aad_uri, client_id=client_id
+    )
     # assert isinstance(result, mock_msi_credential)
     mock_msi_credential.assert_called_once_with(
-        tenant_id=tenant_id, authority=aad_uri, **expected_kwargs
+        tenant_id=tenant_id, authority=aad_uri, client_id=client_id, **expected_kwargs
     )
 
 
