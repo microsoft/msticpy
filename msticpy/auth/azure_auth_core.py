@@ -9,10 +9,10 @@ from __future__ import annotations
 import logging
 import os
 import sys
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, ClassVar
+from typing import Any, Callable, ClassVar, Iterator
 
 from azure.common.credentials import get_cli_profile
 from azure.core.credentials import TokenCredential
@@ -54,6 +54,15 @@ class AzCredentials:
 
     legacy: TokenCredential
     modern: ChainedTokenCredential
+
+    # Backward compatibility with namedtuple
+    def __iter__(self) -> Iterator[Any]:
+        """Iterate over properties."""
+        return iter(asdict(self).values())
+
+    def __getitem__(self, item) -> Any:
+        """Get item from properties."""
+        return list(asdict(self).values())[item]
 
 
 # pylint: disable=too-few-public-methods
