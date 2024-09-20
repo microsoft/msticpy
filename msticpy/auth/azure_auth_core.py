@@ -242,7 +242,7 @@ def _build_powershell_client(**kwargs) -> AzurePowerShellCredential:
     return AzurePowerShellCredential()
 
 
-_CLIENTS: dict[str, Callable] = dict(
+_CLIENTS: dict[str, Callable[..., TokenCredential | None]] = dict(
     {
         "env": _build_env_client,
         "cli": _build_cli_client,
@@ -411,15 +411,15 @@ def _create_chained_credential(
     if not requested_clients:
         requested_clients = ["env", "cli", "msi", "interactive"]
         logger.info("No auth methods requested defaulting to: %s", requested_clients)
-    cred_list = []
+    cred_list: list[TokenCredential] = []
     invalid_cred_types: list[str] = []
     unusable_cred_type: list[str] = []
-    for cred_type in requested_clients:  # type: ignore[union-attr]
+    for cred_type in requested_clients:
         if cred_type not in _CLIENTS:
             invalid_cred_types.append(cred_type)
             logger.info("Unknown authentication type requested: %s", cred_type)
             continue
-        cred_client = _CLIENTS[cred_type](
+        cred_client: TokenCredential | None = _CLIENTS[cred_type](
             tenant_id=tenant_id,
             aad_uri=aad_uri,
             **kwargs,
@@ -433,7 +433,7 @@ def _create_chained_credential(
         ", ".join(cred.__class__.__name__ for cred in cred_list if cred is not None),
     )
     if not cred_list:
-        exception_args = [
+        exception_args: list[str] = [
             "Cannot authenticate - no valid credential types.",
             "At least one valid authentication method required.",
             f"Configured auth_types: {','.join(requested_clients)}",

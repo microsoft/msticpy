@@ -10,6 +10,8 @@ import os
 from azure.identity import DeviceCodeCredential
 from azure.mgmt.subscription import SubscriptionClient
 
+from msticpy.common.provider_settings import ProviderSettings
+
 from .._version import VERSION
 from ..common.exceptions import MsticpyAzureConnectionError
 
@@ -80,12 +82,14 @@ def az_connect(
     """
     az_cloud_config = AzureCloudConfig(cloud=cloud)
     # Use auth_methods param or configuration defaults
-    data_provs = get_provider_settings(config_section="DataProviders")
+    data_provs: dict[str, ProviderSettings] = get_provider_settings(
+        config_section="DataProviders"
+    )
     auth_methods = auth_methods or az_cloud_config.auth_methods
     tenant_id = tenant_id or az_cloud_config.tenant_id
 
     # Ignore AzCLI settings except for authentication creds for EnvCred
-    az_cli_config = data_provs.get("AzureCLI")
+    az_cli_config: ProviderSettings | None = data_provs.get("AzureCLI")
     if (
         az_cli_config
         and az_cli_config.args
@@ -101,7 +105,7 @@ def az_connect(
         os.environ[AzureCredEnvNames.AZURE_CLIENT_SECRET] = (
             az_cli_config.args.get("clientSecret") or ""
         )
-    credentials = az_connect_core(
+    credentials: AzCredentials = az_connect_core(
         auth_methods=auth_methods,
         tenant_id=tenant_id,
         silent=silent,
@@ -114,8 +118,9 @@ def az_connect(
         credential_scopes=[az_cloud_config.token_uri],
     )
     if not sub_client:
+        err_msg: str = "Could not create an Azure Subscription client with credentials."
         raise MsticpyAzureConnectionError(
-            "Could not create an Azure Subscription client with credentials.",
+            err_msg,
             title="Azure authentication error",
         )
 
@@ -146,7 +151,9 @@ def az_user_connect(
 
     """
     return az_connect_core(
-        auth_methods=["cli", "interactive"], tenant_id=tenant_id, silent=silent
+        auth_methods=["cli", "interactive"],
+        tenant_id=tenant_id,
+        silent=silent,
     )
 
 
@@ -181,15 +188,18 @@ def fallback_devicecode_creds(
 
     """
     cloud = cloud or region or AzureCloudConfig().cloud
-    az_config = AzureCloudConfig(cloud)
-    aad_uri = az_config.authority_uri
+    az_config: AzureCloudConfig = AzureCloudConfig(cloud)
+    aad_uri: str = az_config.authority_uri
     tenant_id = tenant_id or az_config.tenant_id
     creds = DeviceCodeCredential(authority=aad_uri, tenant_id=tenant_id)
     legacy_creds = CredentialWrapper(creds, resource_id=az_config.token_uri)
     if not creds:
+        err_msg: str = (
+            f"Could not obtain credentials for tenant {tenant_id}"
+            "Please check your Azure configuration and try again."
+        )
         raise MsticpyAzureConnectionError(
-            f"Could not obtain credentials for tenant {tenant_id}",
-            "Please check your Azure configuration and try again.",
+            err_msg,
             title="Azure authentication error",
         )
 
@@ -198,5 +208,5 @@ def fallback_devicecode_creds(
 
 def get_default_resource_name(resource_uri: str) -> str:
     """Get a default resource name for a resource URI."""
-    separator = "" if resource_uri.strip().endswith("/") else "/"
+    separator: str = "" if resource_uri.strip().endswith("/") else "/"
     return f"{resource_uri}{separator}.default"
