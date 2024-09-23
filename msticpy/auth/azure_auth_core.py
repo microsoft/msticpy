@@ -351,37 +351,28 @@ def _az_connect_core(
     azure_identity_logger.handlers = [handler]
 
     if not credential:
-        chained_credential: ChainedTokenCredential = _build_chained_creds(
+        chained_credential: ChainedTokenCredential = _create_chained_credential(
             aad_uri=aad_uri,
             requested_clients=auth_methods,
             tenant_id=tenant_id,
             **kwargs,
         )
-        legacy_creds: CredentialWrapper = CredentialWrapper(
+        wrapped_credentials: CredentialWrapper = CredentialWrapper(
             chained_credential, resource_id=az_config.token_uri
         )
-    else:
-        # Connect to the subscription client to validate
-        legacy_creds = CredentialWrapper(credential, resource_id=az_config.token_uri)
+        return AzCredentials(wrapped_credentials, chained_credential)  # type: ignore[arg-type]
 
-    if not credential:
-        err_msg: str = (
-            "Cannot authenticate with specified credential types. "
-            "At least one valid authentication method required."
-        )
-        raise MsticpyAzureConfigError(
-            err_msg,
-            help_uri=_HELP_URI,
-            title="Authentication failure",
-        )
-
-    return AzCredentials(legacy_creds, ChainedTokenCredential(credential))  # type: ignore[arg-type]
+    # Create the wrapped credential using the passed credential
+    wrapped_credentials = CredentialWrapper(credential, resource_id=az_config.token_uri)
+    return AzCredentials(
+        wrapped_credentials, ChainedTokenCredential(credential)  # type: ignore[arg-type]
+    )
 
 
 az_connect_core: Callable[..., AzCredentials] = _az_connect_core
 
 
-def _build_chained_creds(
+def _create_chained_credential(
     aad_uri,
     requested_clients: list[str] | None = None,
     tenant_id: str | None = None,
