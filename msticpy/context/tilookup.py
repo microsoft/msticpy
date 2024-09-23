@@ -145,6 +145,8 @@ class TILookup(Lookup):
         *,
         start: dt.datetime | None = None,
         end: dt.datetime | None = None,
+        col: str | None = None,
+        column: str | None = None,
     ) -> pd.DataFrame:
         """
         Lookup Threat Intelligence reports for a collection of IoCs in active providers.
@@ -200,7 +202,7 @@ class TILookup(Lookup):
         return _make_sync(
             self._lookup_iocs_async(
                 data=data,
-                ioc_col=ioc_col,
+                ioc_col=ioc_col or column or col,
                 ioc_type_col=ioc_type_col,
                 ioc_query_type=ioc_query_type,
                 providers=providers,
