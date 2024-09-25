@@ -211,6 +211,8 @@ class Provider(ABC):
             )
             results.append(item_result)
 
+        if not results:
+            return pd.DataFrame()
         return pd.concat(results)
 
     async def lookup_items_async(  # noqa:PLR0913

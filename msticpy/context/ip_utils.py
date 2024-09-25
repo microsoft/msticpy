@@ -19,10 +19,10 @@ import logging
 import re
 import socket
 import warnings
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from functools import lru_cache
 from time import sleep
-from typing import Any, Callable
+from typing import Any, Callable, Iterator
 
 import httpx
 import pandas as pd
@@ -603,6 +603,15 @@ class _IpWhoIsResult:
 
     name: str | None = None
     properties: dict[str, Any] = field(default_factory=dict)
+
+    # Backward compatibility with namedtuple
+    def __iter__(self) -> Iterator[Any]:
+        """Iterate over properties."""
+        return iter(asdict(self).values())
+
+    def __getitem__(self, item):
+        """Get item from properties."""
+        return list(asdict(self).values())[item]
 
 
 @lru_cache(maxsize=1024)
