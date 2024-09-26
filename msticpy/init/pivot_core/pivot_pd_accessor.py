@@ -444,7 +444,7 @@ class PivotAccessor:
 
     def dict_to_dataframe(self, col: str) -> pd.DataFrame:
         """
-        Constructs a new dataframe having keys as column and values as row.
+        Construct a new dataframe having keys as column and values as row.
 
         Parameters
         ----------
@@ -457,11 +457,11 @@ class PivotAccessor:
             A new dataframe containing the json data in tabular form.
 
         """
-
         unnested_col = []
 
         for row_value in self._df[col]:
-            unnest_row = dict()
+            unnest_row = {}
+            record = {}
             if isinstance(row_value, dict):
                 record = row_value
             elif isinstance(row_value, str):
