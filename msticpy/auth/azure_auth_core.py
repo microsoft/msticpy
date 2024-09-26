@@ -9,10 +9,10 @@ from __future__ import annotations
 import logging
 import os
 import sys
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Callable, ClassVar
+from typing import Any, Callable, ClassVar, Iterator
 
 from azure.common.credentials import get_cli_profile
 from azure.core.credentials import TokenCredential
@@ -54,6 +54,15 @@ class AzCredentials:
 
     legacy: TokenCredential
     modern: ChainedTokenCredential
+
+    # Backward compatibility with namedtuple
+    def __iter__(self) -> Iterator[Any]:
+        """Iterate over properties."""
+        return iter(asdict(self).values())
+
+    def __getitem__(self, item) -> Any:
+        """Get item from properties."""
+        return list(asdict(self).values())[item]
 
 
 # pylint: disable=too-few-public-methods
@@ -135,25 +144,31 @@ def _build_env_client(
     return None
 
 
-def _build_cli_client(**kwargs) -> AzureCliCredential:
+def _build_cli_client(
+    tenant_id: str | None = None,
+    **kwargs,
+) -> AzureCliCredential:
     """Build a credential from Azure CLI."""
     del kwargs
+    if tenant_id:
+        return AzureCliCredential(tenant_id=tenant_id)
     return AzureCliCredential()
 
 
 def _build_msi_client(
     tenant_id: str | None = None,
     aad_uri: str | None = None,
+    client_id: str | None = None,
     **kwargs,
 ) -> ManagedIdentityCredential:
     """Build a credential from Managed Identity."""
-    msi_kwargs = kwargs.copy()
-    if AzureCredEnvNames.AZURE_CLIENT_ID in os.environ:
-        msi_kwargs["client_id"] = os.environ[AzureCredEnvNames.AZURE_CLIENT_ID]
+    msi_kwargs: dict[str, Any] = kwargs.copy()
+    client_id = client_id or os.environ.get(AzureCredEnvNames.AZURE_CLIENT_ID)
 
     return ManagedIdentityCredential(
         tenant_id=tenant_id,
         authority=aad_uri,
+        client_id=client_id,
         **msi_kwargs,
     )
 
@@ -213,10 +228,10 @@ def _build_client_secret_client(
 def _build_certificate_client(
     tenant_id: str | None = None,
     aad_uri: str | None = None,
+    client_id: str | None = None,
     **kwargs,
 ) -> CertificateCredential | None:
     """Build a credential from Certificate."""
-    client_id = kwargs.pop("client_id", None)
     if not client_id:
         logger.info(
             "'certificate' credential requested but client_id param not supplied"
@@ -236,7 +251,7 @@ def _build_powershell_client(**kwargs) -> AzurePowerShellCredential:
     return AzurePowerShellCredential()
 
 
-_CLIENTS: dict[str, Callable] = dict(
+_CLIENTS: dict[str, Callable[..., TokenCredential | None]] = dict(
     {
         "env": _build_env_client,
         "cli": _build_cli_client,
@@ -351,37 +366,28 @@ def _az_connect_core(
     azure_identity_logger.handlers = [handler]
 
     if not credential:
-        chained_credential: ChainedTokenCredential = _build_chained_creds(
+        chained_credential: ChainedTokenCredential = _create_chained_credential(
             aad_uri=aad_uri,
             requested_clients=auth_methods,
             tenant_id=tenant_id,
             **kwargs,
         )
-        legacy_creds: CredentialWrapper = CredentialWrapper(
+        wrapped_credentials: CredentialWrapper = CredentialWrapper(
             chained_credential, resource_id=az_config.token_uri
         )
-    else:
-        # Connect to the subscription client to validate
-        legacy_creds = CredentialWrapper(credential, resource_id=az_config.token_uri)
+        return AzCredentials(wrapped_credentials, chained_credential)  # type: ignore[arg-type]
 
-    if not credential:
-        err_msg: str = (
-            "Cannot authenticate with specified credential types. "
-            "At least one valid authentication method required."
-        )
-        raise MsticpyAzureConfigError(
-            err_msg,
-            help_uri=_HELP_URI,
-            title="Authentication failure",
-        )
-
-    return AzCredentials(legacy_creds, ChainedTokenCredential(credential))  # type: ignore[arg-type]
+    # Create the wrapped credential using the passed credential
+    wrapped_credentials = CredentialWrapper(credential, resource_id=az_config.token_uri)
+    return AzCredentials(
+        wrapped_credentials, ChainedTokenCredential(credential)  # type: ignore[arg-type]
+    )
 
 
 az_connect_core: Callable[..., AzCredentials] = _az_connect_core
 
 
-def _build_chained_creds(
+def _create_chained_credential(
     aad_uri,
     requested_clients: list[str] | None = None,
     tenant_id: str | None = None,
@@ -414,15 +420,15 @@ def _build_chained_creds(
     if not requested_clients:
         requested_clients = ["env", "cli", "msi", "interactive"]
         logger.info("No auth methods requested defaulting to: %s", requested_clients)
-    cred_list = []
+    cred_list: list[TokenCredential] = []
     invalid_cred_types: list[str] = []
     unusable_cred_type: list[str] = []
-    for cred_type in requested_clients:  # type: ignore[union-attr]
+    for cred_type in requested_clients:
         if cred_type not in _CLIENTS:
             invalid_cred_types.append(cred_type)
             logger.info("Unknown authentication type requested: %s", cred_type)
             continue
-        cred_client = _CLIENTS[cred_type](
+        cred_client: TokenCredential | None = _CLIENTS[cred_type](
             tenant_id=tenant_id,
             aad_uri=aad_uri,
             **kwargs,
@@ -436,7 +442,7 @@ def _build_chained_creds(
         ", ".join(cred.__class__.__name__ for cred in cred_list if cred is not None),
     )
     if not cred_list:
-        exception_args = [
+        exception_args: list[str] = [
             "Cannot authenticate - no valid credential types.",
             "At least one valid authentication method required.",
             f"Configured auth_types: {','.join(requested_clients)}",

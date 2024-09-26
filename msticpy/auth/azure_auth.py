@@ -4,14 +4,16 @@
 # license information.
 # --------------------------------------------------------------------------
 """Azure authentication handling."""
+from __future__ import annotations
 import os
-from typing import List, Optional
 
-from azure.common.exceptions import CloudError
 from azure.identity import DeviceCodeCredential
 from azure.mgmt.subscription import SubscriptionClient
 
+from msticpy.common.provider_settings import ProviderSettings
+
 from .._version import VERSION
+from ..common.exceptions import MsticpyAzureConnectionError
 
 # pylint: enable=unused-import
 from ..common.provider_settings import get_provider_settings
@@ -31,9 +33,11 @@ __author__ = "Pete Bryan"
 
 
 def az_connect(
-    auth_methods: Optional[List[str]] = None,
-    tenant_id: Optional[str] = None,
+    auth_methods: list[str] | None = None,
+    tenant_id: str | None = None,
+    *,
     silent: bool = False,
+    cloud: str | None = None,
     **kwargs,
 ) -> AzCredentials:
     """
@@ -68,7 +72,7 @@ def az_connect(
 
     Raises
     ------
-    CloudError
+    MsticpyAzureConnectionError
         If chained token credential creation fails.
 
     See Also
@@ -76,14 +80,16 @@ def az_connect(
     list_auth_methods
 
     """
-    az_cloud_config = AzureCloudConfig(cloud=kwargs.get("cloud"))
+    az_cloud_config = AzureCloudConfig(cloud=cloud)
     # Use auth_methods param or configuration defaults
-    data_provs = get_provider_settings(config_section="DataProviders")
+    data_provs: dict[str, ProviderSettings] = get_provider_settings(
+        config_section="DataProviders"
+    )
     auth_methods = auth_methods or az_cloud_config.auth_methods
     tenant_id = tenant_id or az_cloud_config.tenant_id
 
     # Ignore AzCLI settings except for authentication creds for EnvCred
-    az_cli_config = data_provs.get("AzureCLI")
+    az_cli_config: ProviderSettings | None = data_provs.get("AzureCLI")
     if (
         az_cli_config
         and az_cli_config.args
@@ -99,10 +105,11 @@ def az_connect(
         os.environ[AzureCredEnvNames.AZURE_CLIENT_SECRET] = (
             az_cli_config.args.get("clientSecret") or ""
         )
-    credentials = az_connect_core(
+    credentials: AzCredentials = az_connect_core(
         auth_methods=auth_methods,
         tenant_id=tenant_id,
         silent=silent,
+        cloud=cloud,
         **kwargs,
     )
     sub_client = SubscriptionClient(
@@ -111,13 +118,19 @@ def az_connect(
         credential_scopes=[az_cloud_config.token_uri],
     )
     if not sub_client:
-        raise CloudError("Could not create a Subscription client.")
+        err_msg: str = "Could not create an Azure Subscription client with credentials."
+        raise MsticpyAzureConnectionError(
+            err_msg,
+            title="Azure authentication error",
+        )
 
     return credentials
 
 
 def az_user_connect(
-    tenant_id: Optional[str] = None, silent: bool = False
+    tenant_id: str | None = None,
+    *,
+    silent: bool = False,
 ) -> AzCredentials:
     """
     Authenticate to the SDK using user based authentication methods, Azure CLI or interactive logon.
@@ -132,17 +145,23 @@ def az_user_connect(
 
     Returns
     -------
-    AzCredentials
+    AzCredentials - Dataclass combining two types of Azure credentials:
+    - legacy (ADAL) credentials
+    - modern (MSAL) credentials
 
     """
     return az_connect_core(
-        auth_methods=["cli", "interactive"], tenant_id=tenant_id, silent=silent
+        auth_methods=["cli", "interactive"],
+        tenant_id=tenant_id,
+        silent=silent,
     )
 
 
 def fallback_devicecode_creds(
-    cloud: Optional[str] = None, tenant_id: Optional[str] = None, **kwargs
-):
+    cloud: str | None = None,
+    tenant_id: str | None = None,
+    region: str | None = None,
+) -> AzCredentials:
     """
     Authenticate using device code as a fallback method.
 
@@ -158,30 +177,36 @@ def fallback_devicecode_creds(
 
     Returns
     -------
-    AzCredentials
-                Named tuple of:
-        - legacy (ADAL) credentials
-        - modern (MSAL) credentials
+    AzCredentials - Dataclass combining two types of Azure credentials:
+    - legacy (ADAL) credentials
+    - modern (MSAL) credentials
 
     Raises
     ------
-    CloudError
+    MsticpyAzureConnectionError
         If chained token credential creation fails.
 
     """
-    cloud = cloud or kwargs.pop("region", AzureCloudConfig().cloud)
-    az_config = AzureCloudConfig(cloud)
-    aad_uri = az_config.authority_uri
+    cloud = cloud or region or AzureCloudConfig().cloud
+    az_config: AzureCloudConfig = AzureCloudConfig(cloud)
+    aad_uri: str = az_config.authority_uri
     tenant_id = tenant_id or az_config.tenant_id
     creds = DeviceCodeCredential(authority=aad_uri, tenant_id=tenant_id)
     legacy_creds = CredentialWrapper(creds, resource_id=az_config.token_uri)
     if not creds:
-        raise CloudError("Could not obtain credentials.")
+        err_msg: str = (
+            f"Could not obtain credentials for tenant {tenant_id}"
+            "Please check your Azure configuration and try again."
+        )
+        raise MsticpyAzureConnectionError(
+            err_msg,
+            title="Azure authentication error",
+        )
 
     return AzCredentials(legacy_creds, ChainedTokenCredential(creds))  # type: ignore[arg-type]
 
 
 def get_default_resource_name(resource_uri: str) -> str:
     """Get a default resource name for a resource URI."""
-    separator = "" if resource_uri.strip().endswith("/") else "/"
+    separator: str = "" if resource_uri.strip().endswith("/") else "/"
     return f"{resource_uri}{separator}.default"
