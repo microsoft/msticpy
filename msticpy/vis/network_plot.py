@@ -209,7 +209,8 @@ def _get_graph_layout(nx_graph: nx.Graph, layout: GraphLayout, **kwargs):
     if callable(layout):
         return layout(nx_graph, **kwargs)
     layout_func = getattr(nx, f"{layout}_layout", None)
-    if layout_func:
+    if layout_func and callable(layout_func):
+        # pylint: disable=not-callable
         return layout_func(nx_graph, **kwargs)
     return nx.spring_layout(nx_graph, **kwargs)
 
