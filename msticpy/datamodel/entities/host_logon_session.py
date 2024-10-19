@@ -73,7 +73,7 @@ class HostLogonSession(Entity):
         self.StartTimeUtc: datetime = datetime.min
         self.EndTimeUtc: datetime = datetime.min
         self.Host: Optional[Host] = None
-        self.SessionId: str = ""
+        self.SessionId: str | None = ""
         super().__init__(src_entity=src_entity, **kwargs)
 
         if src_event is not None:

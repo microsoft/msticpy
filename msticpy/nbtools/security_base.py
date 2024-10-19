@@ -158,7 +158,7 @@ class SecurityBase(QueryParamProvider):
         return self._source_data.to_dict()
 
     @property
-    def hostname(self) -> str:
+    def hostname(self) -> str | None:
         """Return the Hostname (not FQDN) of the host associated with the alert."""
         return self.primary_host.HostName if self.primary_host is not None else None
 

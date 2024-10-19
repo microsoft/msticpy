@@ -23,6 +23,7 @@ class DocsRagMagic(Magics):
     """Implement a class to provide RAG Magic functionalities for MSTICpy."""
 
     def __init__(self, shell):
+        """Initialize the class with the shell."""
         super().__init__(shell)
         self.assistant_agent = get_retrieval_assistant_agent()
         self.user_proxy_agent = get_retrieval_user_proxy_agent()
@@ -47,6 +48,7 @@ class DocsRagMagic(Magics):
 
         %%ask
         Which msticpy module contains the code related to visualizing network graphs?
+
         """
         question = cell.strip()
         output = io.StringIO()

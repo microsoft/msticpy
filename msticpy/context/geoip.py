@@ -437,8 +437,8 @@ class GeoLiteLookup(GeoIpLookup):
     """
 
     _MAXMIND_DOWNLOAD: ClassVar[str] = (
-        "https://download.maxmind.com/app/geoip_download?"
-        "edition_id=GeoLite2-City&license_key={license_key}&suffix=tar.gz"
+        "https://download.maxmind.com/geoip/databases"
+        "/GeoLite2-City/download?suffix=tar.gz"
     )
 
     _DB_HOME: ClassVar[str] = str(
@@ -464,20 +464,22 @@ https://www.maxmind.com.
     _NO_API_KEY_MSSG: ClassVar[
         str
     ] = """
-No API Key was found to download the Maxmind GeoIPLite database.
-If you do not have an account, go here to create one and obtain and API key.
+You need both an API Key and an Account ID to download the Maxmind GeoIPLite database.
+If you do not have an account, go here to create one and obtain and API key
+and your account ID.
 https://www.maxmind.com/en/geolite2/signup
 
-Add this API key to your msticpyconfig.yaml
+Add this API key and account ID to your msticpyconfig.yaml
 https://msticpy.readthedocs.io/en/latest/data_acquisition/GeoIPLookups.html#maxmind-geo-ip-lite-lookup-class.
-Alternatively, you can pass this to the GeoLiteLookup class when creating it:
->>> iplookup = GeoLiteLookup(api_key="your_api_key")
+Alternatively, you can pass the account_id and api_key to the GeoLiteLookup class when creating it:
+>>> iplookup = GeoLiteLookup(account_id="your_id", api_key="your_api_key")
 """
     _UNSET_PATH: ClassVar[str] = "~~UNSET~~"
 
     def __init__(  # noqa: PLR0913
         self: GeoLiteLookup,
         api_key: str | None = None,
+        account_id: str | None = None,
         db_folder: str | None = None,
         *,
         force_update: bool = False,
@@ -497,6 +499,9 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             https://www.maxmind.com/en/geolite2/signup
             Set your password and create a license key:
             https://www.maxmind.com/en/accounts/current/license-key
+        account_id: str, optional
+            Your numeric Maxmind account ID, default is None.
+            This is read from the msticpyconfig.yaml file, if not supplied.
         db_folder: str, optional
             Provide absolute path to the folder containing MMDB file
             (e.g. '/usr/home' or 'C:/maxmind').
@@ -522,6 +527,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             )
         self.settings: ProviderSettings | None = None
         self._api_key: str | None = api_key or None
+        self._account_id: str | None = account_id or None
 
         self._db_folder: str = db_folder or self._UNSET_PATH
         self._force_update = force_update
@@ -634,6 +640,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 
         self.settings = _get_geoip_provider_settings("GeoIPLite")
         self._api_key = self._api_key or self.settings.args.get("AuthKey")
+        self._account_id = self._account_id or self.settings.args.get("AccountID")
 
         self._db_folder = (
             self._db_folder
@@ -714,9 +721,10 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             True if download_success
 
         """
-        if not self._api_key:
+        if not self._api_key and not self._account_id:
+            logger.error(self._NO_API_KEY_MSSG)
             return False
-        url: str = self._MAXMIND_DOWNLOAD.format(license_key=self._api_key)
+        url: str = self._MAXMIND_DOWNLOAD
 
         if not Path(self._db_folder).exists():
             # using makedirs to create intermediate-level dirs to contain self._dbfolder
@@ -735,19 +743,28 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 # Some other process is downloading, wait a little then return
                 sleep(3)
                 return True
+            # Create a basic auth object for the request
+            basic_auth = httpx.BasicAuth(
+                username=self._account_id, password=self._api_key  # type: ignore[arg-type]
+            )
+            # Stream download and write to file
+            logger.info(
+                "Downloading and extracting GeoLite DB archive from MaxMind....",
+            )
             with httpx.stream(
                 "GET",
                 url,
                 timeout=get_http_timeout(),
                 headers=mp_ua_header(),
+                auth=basic_auth,
+                follow_redirects=True,
             ) as response:
-                logger.info(
-                    "Downloading and extracting GeoLite DB archive from MaxMind....",
-                )
-                with db_archive_path.open(mode="wb", encoding="utf-8") as file_hdl:
+                response.raise_for_status()  # Raise an error for bad status codes
+                with db_archive_path.open("wb") as file:
                     for chunk in response.iter_bytes(chunk_size=10000):
-                        file_hdl.write(chunk)
-                        file_hdl.flush()
+                        file.write(chunk)
+                        file.flush()
+            logger.info("Downloaded and GeoLite DB archive")
             self._pr_debug(f"Downloaded GeoLite DB: {db_archive_path}")
         except httpx.HTTPError as http_err:
             self._geolite_warn(
@@ -763,6 +780,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             # no exceptions so extract the archive contents
             try:
                 self._extract_to_folder(db_archive_path)
+                logger.info("Extracted GeoLite DB")
             except PermissionError as err:
                 self._geolite_warn(
                     f"Cannot overwrite GeoIP DB file: {db_archive_path}."
@@ -790,7 +808,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
     def _extract_to_folder(self: Self, db_archive_path: Path) -> None:
         self._pr_debug(f"Extracting tarfile {db_archive_path}")
         temp_folder: Path | None = None
-        with tarfile.open(db_archive_path) as tar_archive:
+        with tarfile.open(db_archive_path, mode="r:gz") as tar_archive:
             for member in tar_archive.getmembers():
                 if not member.isreg():
                     # Skip the dirs to extract only file objects

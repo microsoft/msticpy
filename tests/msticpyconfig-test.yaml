@@ -121,6 +121,7 @@ ContextProviders:
 OtherProviders:
   GeoIPLite:
     Args:
+      AccountID: "1234567"
       AuthKey:
         EnvironmentVar: "MAXMIND_AUTH"
       DBFolder: "~/.msticpy"

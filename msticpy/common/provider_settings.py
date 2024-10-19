@@ -6,10 +6,10 @@
 """Helper functions for configuration settings."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import os
 import warnings
 from collections import UserDict
+from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from .._version import VERSION
@@ -320,8 +320,8 @@ def _fetch_secret_setting(
         _description_
 
     """
-    if isinstance(config_setting, str):
-        return config_setting
+    if isinstance(config_setting, (str, int, float)):
+        return str(config_setting)
     if not isinstance(config_setting, dict):
         err_msg: str = (
             "Configuration setting format not recognized. "

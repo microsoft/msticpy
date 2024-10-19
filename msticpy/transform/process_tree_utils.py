@@ -424,6 +424,7 @@ def tree_to_text(
     ------
     ValueError
         If neither of
+
     """
     if not schema and not template:
         raise ValueError(
