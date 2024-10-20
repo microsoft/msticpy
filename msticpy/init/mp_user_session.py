@@ -96,8 +96,8 @@ def load_user_session(
         by default False.
 
     """
+    current_level = logger.level
     if verbose:
-        current_level = logger.level
         if current_level > logging.INFO:
             logger.setLevel(logging.INFO)
     try:
