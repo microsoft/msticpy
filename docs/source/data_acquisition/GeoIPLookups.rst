@@ -82,14 +82,14 @@ The example shown here shows part of the ``OtherProviders`` section of
 msticpyconfig.yaml. You can specify an API key in the ``AuthKey`` setting.
 For example, ``AuthKey: abcd424246789`` or use a reference to an
 environment variable holding the key value.
-The API key you need to specify in the ``AuthKey`` setting is you MaxMind
-License Key that can be found on the MaxMind website under Account > Services.
+The API key you need to specify in the ``AuthKey`` setting is your MaxMind
+License Key that can be found on the MaxMind website under Account/Services.
 Set the ``AccountID`` field to your MaxMind Account ID. (this is typically
 not a secret value but you can opt to store this in an environment variable
 or Azure Key Vault).
 
 The DBFolder setting specifies a folder where the downloaded Maxmind
-database files will be stored and referenced from. Thefolder path
+database files will be stored and referenced from. The folder path
 can be prefixed with "~" to specify a path relative to the current
 users home directory (this works cross-platform).
 
