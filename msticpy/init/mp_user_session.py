@@ -11,6 +11,7 @@ This loads user-specific configuration settings from a YAML file.
 Example YAML file:
 
 .. code-block:: yaml
+
     QueryProviders:
         qry_prov_sent:
             DataEnvironment: MSSentinel

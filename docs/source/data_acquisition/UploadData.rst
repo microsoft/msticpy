@@ -107,7 +107,7 @@ Uploading a DataFrame to Splunk
 To upload a Pandas DataFrame to Splunk you simply pass the DataFrame to ``.upload_df()``
 along with index you wish the data to be uploaded to.
 As the ``source_type`` parameter, csv, json or others can be input and then passed to
- df.to_csv(), df.to_json(), df.to_string() styles respectively and **json** is by default.
+df.to_csv(), df.to_json(), df.to_string() styles respectively and **json** is by default.
 ``table_name`` parameter remains for the backward compatibility.
 If the index provided does not exist and you want it to be created,
 you can pass the parameter ``create_index = True``.
@@ -167,7 +167,7 @@ with the a pattern for files to attempt to upload.
 The pattern format required follows the ``pathlib.glob()`` pattern - more details are
 avaliable `here <"https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob>`_
 As with the other methods if the index provided does not exist and you want it to be created,
- you can pass the parameter ``create_index = True``.
+you can pass the parameter ``create_index = True``.
 
 .. code:: ipython3
 
