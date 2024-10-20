@@ -18,8 +18,8 @@ The first step in uploading data is to instantiate an uploader for the location 
 For Azure Sentinel there are two parameters that need to be passed at this stage,
 the workspace ID of the workspace to upload data to, and the workspace key.
 
-**Note that these are different from the details required to query data from Log Analytics using the DataProvider.
-Your workspace key can be found under the Advanced setting tab of your Log Analytics workspace.**
+.. note:: that these are different from the details required to query data from Log Analytics using the DataProvider.
+   Your workspace key can be found under the Advanced setting tab of your Log Analytics workspace.**
 
 .. code:: ipython3
 
@@ -36,7 +36,7 @@ you wish the data to be uploaded to. If that table exists the data will be appen
 Note that all tables fall under the Custom Log category so any name you provide will be appended with _CL (i.e. table_name will be table_name_CL).
 Log Analytics will parse each column in the DataFrame into a column in the resulting table.
 
-*Note: table_name cannot contain any special characters except `_` all other characters will be removed.*
+.. note:: table_name cannot contain any special characters except `_` all other characters will be removed.
 
 .. code:: ipython3
 
@@ -98,13 +98,14 @@ On the other hand, You can use the stored credentials in msticpyconfig.yaml to S
 	from msticpy.data.uploaders.splunk_uploader import SplunkUploader
 	spup = SplunkUploader()
 
-*Note: Due to the way Splunk API's work the time taken to upload a file to
-Splunk can be significantly longer than with Log Analytics.*
+.. note:: Due to the way Splunk API's work the time taken to upload a file to
+  Splunk can be significantly longer than with Log Analytics.*
 
 Uploading a DataFrame to Splunk
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To upload a Pandas DataFrame to Splunk you simply pass the DataFrame to ``.upload_df()`` along with index you wish the data to be uploaded to.
+To upload a Pandas DataFrame to Splunk you simply pass the DataFrame to ``.upload_df()``
+along with index you wish the data to be uploaded to.
 As the ``source_type`` parameter, csv, json or others can be input and then passed to
  df.to_csv(), df.to_json(), df.to_string() styles respectively and **json** is by default.
 ``table_name`` parameter remains for the backward compatibility.
@@ -126,12 +127,14 @@ To upload a file to Splunk pass the path to the file to ``.upload_file()`` along
 the index you want the data uploaded to.
 By default, a comma separated value file is expected but if your file has
 some other separator value you can pass this with the ``delim`` parameter.
-You can specify the sourcetype to upload the data to with that ``source_type`` parameter
+You can specify the source type to upload the data to with that ``source_type`` parameter
 but by default the uploader will upload to the sourcetype with the same name as the file.
 As the ``source_type`` parameter, csv, json or others can be input and then passed to
- df.to_csv(), df.to_json(), df.to_string() styles respectively.
+df.to_csv(), df.to_json(), df.to_string() styles respectively.
+
 The default is **json** if without ``table_name`` parameter, because ``table_name`` remains
- only for the backward compatibility.
+only for the backward compatibility.
+
 As with uploading a DataFrame
 if the index provided does not exist and you want it to be created, you can pass
 the parameter ``create_index = True``.
@@ -144,14 +147,18 @@ Uploading a Folder to Splunk
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can also upload a whole folder of files. To do this simply pass the folder path to
- ``.upload_folder()`` along with the
-name of the index you want the data uploaded to. By default this will upload all csv files in that folder to Splunk,
-with each file being uploaded to a sourcetype with a name corresponding to the file name. Alternatively you can also
-specify single a sourcetype which all files will be uploaded with the ``source_type`` parameter.
+``.upload_folder()`` along with the
+name of the index you want the data uploaded to. By default,
+this will upload all csv files in that folder to Splunk,
+with each file being uploaded to a sourcetype with a name corresponding to the file name.
+
+Alternatively, you can also
+specify single a source type which all files will be uploaded with the ``source_type`` parameter.
 As the ``source_type`` parameter, csv, json or others can be input and then passed to
- df.to_csv(), df.to_json(), df.to_string() styles respectively.
+df.to_csv(), df.to_json(), df.to_string() styles respectively.
 The default is **json** if without ``table_name`` parameter, because ``table_name`` remains
- only for the backward compatibility.
+only for the backward compatibility.
+
 If your files have some
 other separated value file type you can pass ``delim``, and the specified delimiter value, however currently there is
 only support for a single delim type across files. By default this method attempts to upload all files in the specified

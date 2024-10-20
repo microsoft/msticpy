@@ -7,7 +7,9 @@ components based on configuration provided in a YAML file.
 This allows you to load multiple providers and components in a single step
 avoiding having to write a lot of repetitive code in your notebooks.
 
-The user is expected to supply the path to the YAML file to the ``load_user_config`` function. Each key in the ``QueryProviders`` and `Components` sections of the YAML file will be the name of the component variable in the local namespace.
+The user is expected to supply the path to the YAML file to the ``load_user_config`` function.
+Each key in the ``QueryProviders`` and ``Components`` sections of the YAML file will be the
+name of the component variable in the local namespace.
 
 Example YAML Configuration
 --------------------------

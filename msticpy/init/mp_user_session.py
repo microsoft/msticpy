@@ -10,44 +10,45 @@ This loads user-specific configuration settings from a YAML file.
 
 Example YAML file:
 
-QueryProviders:
-    qry_prov_sent:
-        DataEnvironment: MSSentinel
-        InitArgs:
-            debug: True
-        Connect: True
-        ConnectArgs:
-            workspace: CyberSecuritySoc
-            auth_methods: ['cli', 'device_code']
-    qry_prov_md:
-        DataEnvironment: M365D
-    qry_kusto_mde:
-        DataEnvironment: Kusto
-        Connect: True
-        ConnectArgs:
-            cluster: MDE-Scrubbed
-    qry_kusto_msticti:
-        DataEnvironment: Kusto
-        Connect: True
-        ConnectArgs:
-            cluster: MSTICTI
-Components:
-    mssentinel:
-        Module: msticpy.context.azure
-        Class: MicrosoftSentinel
-        InitArgs:
-        Connect: True
-        ConnectArgs:
-            workspace: CyberSecuritySoc
-            auth_methods: ['cli', 'device_code']
+.. code-block:: yaml
+    QueryProviders:
+        qry_prov_sent:
+            DataEnvironment: MSSentinel
+            InitArgs:
+                debug: True
+            Connect: True
+            ConnectArgs:
+                workspace: MySoc
+                auth_methods: ['cli', 'device_code']
+        qry_prov_md:
+            DataEnvironment: M365D
+        qry_kusto_mde:
+            DataEnvironment: Kusto
+            Connect: True
+            ConnectArgs:
+                cluster: MDEData
+        qry_kusto_mstic:
+            DataEnvironment: Kusto
+            Connect: True
+            ConnectArgs:
+                cluster: MSTIC
+    Components:
+        mssentinel:
+            Module: msticpy.context.azure
+            Class: MicrosoftSentinel
+            InitArgs:
+            Connect: True
+            ConnectArgs:
+                workspace: CyberSecuritySoc
+                auth_methods: ['cli', 'device_code']
 
 Example usage:
 
-    ```python
+.. code-block:: python
+
     import msticpy as mp
     mp.init_notebook()
     mp.mp_user_session.load_user_config()
-    ```
 
 """
 
