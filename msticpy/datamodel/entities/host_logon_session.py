@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """HostLogonSession Entity class."""
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any, Mapping, Optional
 

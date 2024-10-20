@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for SecurityAlert class."""
+from __future__ import annotations
+
 import html
 import re
 from collections import Counter
