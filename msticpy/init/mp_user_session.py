@@ -56,6 +56,7 @@ Example usage:
 from __future__ import annotations
 
 import importlib
+import logging
 import sys
 from pathlib import Path
 from typing import Any
@@ -69,9 +70,13 @@ from ..data.core.data_providers import QueryProvider
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+logger = logging.getLogger(__name__)
+
 
 def load_user_session(
-    session_file: str | Path | None = None, namespace: dict[str, Any] | None = None
+    session_file: str | Path | None = None,
+    namespace: dict[str, Any] | None = None,
+    verbose: bool = False,
 ):
     """
     Load user session configuration.
@@ -86,30 +91,52 @@ def load_user_session(
         Namespace to load the configuration into, by default None.
         If no namespace is provided, the configuration will be loaded into the
         global namespace of the caller (usually the notebook).
+    verbose : bool, optional
+        If True, set the logger to INFO level for the duration of the function,
+        by default False.
 
     """
-    if session_file is None:
-        session_file = Path.cwd() / "mp_user_session.yaml"
-    session_file = Path(session_file)
-    if not session_file.exists():
-        print(f"Session file {session_file} not found.")
-        return
+    if verbose:
+        current_level = logger.level
+        if current_level > logging.INFO:
+            logger.setLevel(logging.INFO)
+    try:
+        if session_file is None:
+            session_file = Path.cwd() / "mp_user_session.yaml"
+        session_file = Path(session_file)
+        if not session_file.exists():
+            raise FileNotFoundError(f"Session file {session_file} not found.")
 
-    if namespace is None:
-        ipython = get_ipython()
-        if ipython is None:
-            # pylint: disable=protected-access
-            namespace = sys._getframe(1).f_locals
-        else:
-            namespace = ipython.user_ns
+        if namespace is None:
+            ipython = get_ipython()
+            if ipython is None:
+                # pylint: disable=protected-access
+                namespace = sys._getframe(1).f_locals
+            else:
+                namespace = ipython.user_ns
 
-    user_config = yaml.safe_load(session_file.read_text(encoding="utf-8"))
-    _load_query_providers(user_config, namespace)
-    _load_mp_components(user_config, namespace)
+        user_config = yaml.safe_load(session_file.read_text(encoding="utf-8"))
+        _load_query_providers(user_config, namespace)
+        _load_mp_components(user_config, namespace)
+    finally:
+        logger.setLevel(current_level)
 
 
 def _load_query_providers(user_config, namespace):
-    """Process the query provider settings."""
+    """
+    Load and Initialize the query provider settings.
+
+    Parameters
+    ----------
+    user_config : dict[str, Any]
+        The user configuration settings.
+    namespace : dict[str, Any]
+        The namespace to load the component instances into.
+
+    """
+    logger.info(
+        "Loading %d query providers", len(user_config.get("QueryProviders", {}))
+    )
     for qry_prov_name, qry_prov_settings in user_config.get(
         "QueryProviders", {}
     ).items():
@@ -121,7 +148,18 @@ def _load_query_providers(user_config, namespace):
 
 
 def _load_mp_components(user_config, namespace):
-    """Initialize non-query components."""
+    """
+    Load and Initialize non-query components.
+
+    Parameters
+    ----------
+    user_config : dict[str, Any]
+        The user configuration settings.
+    namespace : dict[str, Any]
+        The namespace to load the component instances into.
+
+    """
+    logger.info("Loading %d components", len(user_config.get("QueryProviders", {})))
     for comp_name, comp_settings in user_config.get("Components", {}).items():
         module = importlib.import_module(comp_settings.get("Module"), package="msticpy")
         comp_class = getattr(module, comp_settings.get("Class"))
@@ -130,7 +168,7 @@ def _load_mp_components(user_config, namespace):
             namespace[comp_name] = comp_instance
 
 
-def _initialize_component(name, settings, cls):
+def _initialize_component(name, settings, cls) -> Any:
     """
     Initialize a component or query provider.
 
@@ -156,9 +194,10 @@ def _initialize_component(name, settings, cls):
         if data_env := settings.get("DataEnvironment"):
             init_args["data_environment"] = data_env
         instance = cls(**init_args)
+        logger.info("Initialized %s", name)
     # pylint: disable=broad-except
-    except Exception as err:
-        print(f"Failed to create {name}: {err}")
+    except Exception:
+        logger.exception("Failed to initialize %s", name, exc_info=True)
         return None
 
     if settings.get("Connect"):
@@ -168,11 +207,12 @@ def _initialize_component(name, settings, cls):
             if connect_args is None:
                 connect_args = {}
             instance.connect(**connect_args)
+            logger.info("Connected to %s", name)
         # pylint: disable=broad-except
-        except Exception as err:
-            print(f"Failed to connect to {name}: {err}")
+        except Exception:
+            logger.exception("Failed to connect to %s", name, exc_info=True)
             return None
     else:
-        print(f"Not connecting to {name}")
+        logger.info("Connect not requested for %s", name)
 
     return instance

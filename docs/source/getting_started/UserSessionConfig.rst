@@ -53,11 +53,14 @@ equivalent to the code:
     import msticpy as mp
     qry_prov_md = mp.QueryProvider("M365D")
 
-You can also specify initialization arguments. The ``qry_prov_sent`` entry adds ``debug=True`` to
-the parameters given to the query provider.
+You can also specify initialization arguments using the ``InitArgs`` property.
+This should be a dictionary of ``<parameter name>: <param value>``.
+The ``qry_prov_sent`` entry in the above example adds ``debug=True`` to
+the parameters given to the QueryProvider class when it is initialized.
 
 You can also ask the user session manager to call the ``connect`` method for the provider with the
 ``Connect`` property, and supply parameters to the ``connect`` call with the ``ConnectArgs``
+property. This is a dictionary of ``<parameter name>: <param value>`` similar to the ``InitArgs``
 property.
 
 The ``Components`` section allows you to define non-query components and works in a similar way to
