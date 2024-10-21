@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Entity Entity class."""
 from __future__ import annotations
+
 import json
 import pprint
 import typing
@@ -353,7 +354,7 @@ class Entity(ABC, Node):
         return not any(
             self.__dict__[prop] != other.__dict__[prop]
             and self.__dict__[prop]
-            and other.__dict__[prop]
+            and other.__dict__[prop]  # pylint: disable=consider-using-dict-items
             for prop in self.__dict__  # pylint: disable=consider-using-dict-items
             if prop not in ("edges", "TimeGenerated") and not prop.startswith("_")
         )

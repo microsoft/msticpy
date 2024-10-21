@@ -63,7 +63,7 @@ def test_azuresent_init():
         assert sentinel_inst.default_workspace_name == "WSName"
 
 
-@patch.object(AzureData,"connect")
+@patch.object(AzureData, "connect")
 @patch(MicrosoftSentinel.__module__ + ".get_token")
 def test_azuresent_connect_token(get_token: Mock, az_data_connect: Mock):
     """Test connect success."""

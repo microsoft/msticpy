@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """IpAddress Entity class."""
 from __future__ import annotations
+
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import Any, Mapping
 

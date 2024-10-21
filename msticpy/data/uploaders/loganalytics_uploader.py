@@ -156,6 +156,7 @@ class LAUploader(UploaderBase):
             Custom table name to upload the data to.
         batch_size : int
             Custom number of rows to batch.
+
         """
         batch_size = kwargs.get("batch_size", 10000)  # Set a default batch size
         events = []

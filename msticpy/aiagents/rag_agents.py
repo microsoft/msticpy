@@ -36,9 +36,11 @@ def find_rst_files() -> List[str]:
     -------
     list of str
         List of paths to .rst files in the docs/source directory.
+
     """
     # Get the path to the docs/source directory of the package
-    docs_path = Path(pkg_resources.files("msticpy")).parent / "docs" / "source"
+    mp_resources = pkg_resources.files("msticpy")
+    docs_path = Path(mp_resources).parent / "docs" / "source"  # type: ignore[arg-type]
 
     # Find all .rst files in the docs/source directory
     rst_files = list(str(fp) for fp in docs_path.rglob("*.rst"))
@@ -59,6 +61,7 @@ def get_retrieval_assistant_agent(system_message: str = "") -> RetrieveAssistant
     -------
     RetrieveAssistantAgent
         Configured RetrieveAssistantAgent instance.
+
     """
     if not system_message:
         system_message = (
@@ -91,6 +94,7 @@ def get_retrieval_user_proxy_agent(
     ------
     MsticpyUserConfigError
         Autogen settings not found in msticpyconfig.yaml configuration
+
     """
     rst_files = find_rst_files()
     autogen_config = get_autogen_config_from_msticpyconfig()
@@ -149,6 +153,7 @@ def ask_question(
     -------
     ChatResult
         The result of the chat interaction.
+
     """
     assistant_agent.reset()
     return user_proxy_agent.initiate_chat(
