@@ -401,6 +401,7 @@ class CybereasonDriver(DriverBase):
         page: int = 0,
         page_size: int = 2000,
         pagination_token: str = None,
+        max_retry: int = 3,
     ) -> Dict[str, Any]:
         """
         Run query with pagination enabled.
@@ -436,7 +437,8 @@ class CybereasonDriver(DriverBase):
             headers = {}
         params = {"page": page, "itemsPerPage": page_size}
         status = None
-        while status != "SUCCESS":
+        cur_try = 0
+        while status != "SUCCESS" and cur_try < max_retry:
             response = self.client.post(
                 self.search_endpoint,
                 json={**body, **pagination},
@@ -446,6 +448,7 @@ class CybereasonDriver(DriverBase):
             response.raise_for_status()
             json_result = response.json()
             status = json_result["status"]
+            cur_try += 1
         return json_result
 
     async def __run_threaded_queries(
