@@ -43,7 +43,7 @@ def identify_outliers(
     """
     Identify outlier items using SkLearn IsolationForest.
 
-    Arguments
+    Arguments:
     ---------
     x : np.ndarray
             Input data

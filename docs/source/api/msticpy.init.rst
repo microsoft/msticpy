@@ -26,6 +26,7 @@ Submodules
    msticpy.init.logging
    msticpy.init.mp_pandas_accessors
    msticpy.init.mp_plugins
+   msticpy.init.mp_user_session
    msticpy.init.nbinit
    msticpy.init.nbmagics
    msticpy.init.pivot

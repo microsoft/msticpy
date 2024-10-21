@@ -354,6 +354,7 @@ class SingletonArgsClass(SingletonClass):
     """
 
     def __init__(self: SingletonArgsClass, wrapped_cls: type[Any]) -> None:
+        """Instantiate the class wrapper."""
         super().__init__(wrapped_cls)
         self.kwargs: dict[str, Any] | None = None
         self.args: tuple[Any] | None = None
