@@ -27,7 +27,7 @@ from .provider_base import Provider, _make_sync
 from .tiproviders import TI_PROVIDERS
 
 if TYPE_CHECKING:
-    import datetime as dt
+    import datetime
 
     import pandas as pd
 
@@ -65,8 +65,8 @@ class TILookup(Lookup):
         *,
         observable: str | None = None,
         show_not_supported: bool = False,
-        start: dt.datetime | None = None,
-        end: dt.datetime | None = None,
+        start: datetime.datetime | None = None,
+        end: datetime.datetime | None = None,
     ) -> pd.DataFrame:
         """
         Lookup Threat Intelligence reports for a single IoC in active providers.
@@ -143,8 +143,9 @@ class TILookup(Lookup):
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
         *,
-        start: dt.datetime | None = None,
-        end: dt.datetime | None = None,
+        progress: bool = True,
+        start: datetime.datetime | None = None,
+        end: datetime.datetime | None = None,
         col: str | None = None,
         column: str | None = None,
     ) -> pd.DataFrame:
@@ -177,6 +178,8 @@ class TILookup(Lookup):
             Time since when IOC is considered relevant
         end: dt.datetime, optional
             Time until when IOC is considered relevant
+        progress : bool
+            Use progress bar to track completion, by default True
 
         Returns
         -------
@@ -210,6 +213,7 @@ class TILookup(Lookup):
                 prov_scope=prov_scope,
                 start=start,
                 end=end,
+                progress=progress,
             ),
         )
 
@@ -222,8 +226,9 @@ class TILookup(Lookup):
         providers: list[str] | None = None,
         default_providers: list[str] | None = None,
         *,
-        start: dt.datetime | None = None,
-        end: dt.datetime | None = None,
+        progress: bool = True,
+        start: datetime.datetime | None = None,
+        end: datetime.datetime | None = None,
         prov_scope: str = "primary",
     ) -> pd.DataFrame:
         """Lookup IoCs async."""
@@ -237,6 +242,7 @@ class TILookup(Lookup):
             prov_scope=prov_scope,
             start=start,
             end=end,
+            progress=progress,
         )
 
     def lookup_iocs_sync(  # pylint:disable=too-many-arguments # noqa: PLR0913

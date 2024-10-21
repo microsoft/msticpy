@@ -11,6 +11,7 @@ Getting Started
    getting_started/PackageSummary
    getting_started/msticpyconfig
    getting_started/SettingsEditor
+   getting_started/UserSessionConfig
    getting_started/JupyterAndSecurity
    getting_started/JupyterAndAzureSentinel
    getting_started/AzureAuthentication

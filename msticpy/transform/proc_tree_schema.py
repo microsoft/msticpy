@@ -6,7 +6,7 @@
 """Process Tree Schema module for Process Tree Visualization."""
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field, fields, MISSING
+from dataclasses import MISSING, asdict, dataclass, field, fields
 from typing import Any, ClassVar
 
 import pandas as pd

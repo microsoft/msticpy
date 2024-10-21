@@ -41,7 +41,7 @@ from .lookup_result import LookupStatus
 from .provider_base import Provider, _make_sync
 
 if TYPE_CHECKING:
-    import datetime as dt
+    import datetime
     from types import ModuleType
 
     from ..nbwidgets.select_item import SelectItem
@@ -390,9 +390,10 @@ class Lookup:
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
         *,
+        progress: bool = True,
         show_not_supported: bool = False,
-        start: dt.datetime | None = None,
-        end: dt.datetime | None = None,
+        start: datetime.datetime | None = None,
+        end: datetime.datetime | None = None,
     ) -> pd.DataFrame:
         """
         Lookup single item in active providers.
@@ -419,6 +420,8 @@ class Lookup:
             If supported by the provider, start time for the item's validity
         end: dt.datetime
             If supported by the provider, end time for the item's validity
+        progress : bool
+            Use progress bar to track completion, by default True
 
         Returns
         -------
@@ -435,6 +438,7 @@ class Lookup:
             show_not_supported=show_not_supported,
             start=start,
             end=end,
+            progress=progress,
         )
 
     def lookup_items(  # pylint: disable=too-many-arguments #noqa: PLR0913
@@ -447,9 +451,10 @@ class Lookup:
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
         *,
+        progress=True,
         show_not_supported: bool = False,
-        start: dt.datetime | None = None,
-        end: dt.datetime | None = None,
+        start: datetime.datetime | None = None,
+        end: datetime.datetime | None = None,
     ) -> pd.DataFrame:
         """
         Lookup a collection of items.
@@ -482,6 +487,8 @@ class Lookup:
             If supported by the provider, start time for the item's validity
         end: dt.datetime
             If supported by the provider, end time for the item's validity
+        progress : bool
+            Use progress bar to track completion, by default True
 
         Other Parameters
         ----------------
@@ -506,6 +513,7 @@ class Lookup:
                 show_not_supported=show_not_supported,
                 start=start,
                 end=end,
+                progress=progress,
             ),
         )
 
@@ -546,8 +554,8 @@ class Lookup:
         progress: bool = True,
         col: str | None = None,
         column: str | None = None,
-        start: dt.datetime | None = None,
-        end: dt.datetime | None = None,
+        start: datetime.datetime | None = None,
+        end: datetime.datetime | None = None,
     ) -> pd.DataFrame:
         """Lookup items async."""
         del start, end

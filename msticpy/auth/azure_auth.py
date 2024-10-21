@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Azure authentication handling."""
 from __future__ import annotations
+
 import os
 
 from azure.identity import DeviceCodeCredential

@@ -25,7 +25,8 @@ token_provider = get_bearer_token_provider(
 def inject_token_provider_callable(
     config: ConfigItem,
 ) -> ConfigItem:
-    """Replace autogen configuration `azure_ad_token_provider` with a token provider callable.
+    """
+    Replace autogen configuration `azure_ad_token_provider` with a token provider callable.
 
     Parameters
     ----------
@@ -36,6 +37,7 @@ def inject_token_provider_callable(
     -------
     ConfigItem
         Autogen LLM configuration with the token provider callable.
+
     """
     if "azure_ad_token_provider" in config:
         config["azure_ad_token_provider"] = token_provider
@@ -44,7 +46,8 @@ def inject_token_provider_callable(
 
 
 def inject_environment_variable(config: ConfigItem) -> ConfigItem:
-    """Replace autogen configuration `api_key` with the value of an environment variable.
+    """
+    Replace autogen configuration `api_key` with the value of an environment variable.
 
     Parameters
     ----------
@@ -55,6 +58,7 @@ def inject_environment_variable(config: ConfigItem) -> ConfigItem:
     -------
     ConfigItem
         Autogen LLM configuration with the environment variable value.
+
     """
     if "api_key" in config:
         api_key = os.environ.get(str(config["api_key"]), None)
@@ -68,7 +72,8 @@ def inject_environment_variable(config: ConfigItem) -> ConfigItem:
 
 
 def get_autogen_config_from_msticpyconfig() -> Config:
-    """Get Autogen configuration from msticpyconfig.yaml.
+    """
+    Get Autogen configuration from msticpyconfig.yaml.
 
     See `https://microsoft.github.io/autogen/docs/topics/llm_configuration`
     for more information on the structure of the LLM configuration object.
@@ -86,6 +91,7 @@ def get_autogen_config_from_msticpyconfig() -> Config:
         Autogen settings not found in msticpyconfig.yaml configuration
     MsticpyUserConfigError
         Autogen.config_list setting not found in msticpyconfig.yaml configuration
+
     """
     autogen_config = get_config("Autogen", None)
     if not autogen_config:

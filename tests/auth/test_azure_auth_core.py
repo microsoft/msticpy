@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Module docstring."""
 from __future__ import annotations
+
 import logging
 import os
 from datetime import datetime, timedelta
@@ -542,14 +543,14 @@ def test_create_chained_credential(
                 aad_uri=aad_uri,
                 requested_clients=requested_clients,
                 tenant_id=tenant_id,
-                **kwargs
+                **kwargs,
             )
     else:
         result = _create_chained_credential(
             aad_uri=aad_uri,
             requested_clients=requested_clients,
             tenant_id=tenant_id,
-            **kwargs
+            **kwargs,
         )
         assert isinstance(result, ChainedTokenCredential)
         cred_classes = {cred.__class__.__name__ for cred in result.credentials}

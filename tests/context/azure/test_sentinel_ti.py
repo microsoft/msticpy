@@ -137,7 +137,9 @@ _TI_RESULT = {
             }
         ],
         "lastUpdatedTimeUtc": "2022-09-30T21:21:28.6388624Z",
-        "objectMarkingRefs": ["marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da"],
+        "objectMarkingRefs": [
+            "marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da"
+        ],
         "source": "Microsoft Emerging Threat Feed",
         "displayName": "Microsoft Identified Botnet",
         "threatIntelligenceTags": ["test"],

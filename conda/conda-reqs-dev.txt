@@ -26,6 +26,7 @@ pyroma>=3.1
 pytest-check>=1.0.1
 pytest-xdist>=2.5.0
 respx>=0.20.1
+ruff>=0.6.6
 sphinx_rtd_theme>=0.5.1
 sphinx>=2.1.2
 virtualenv

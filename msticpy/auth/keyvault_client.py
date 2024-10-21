@@ -451,6 +451,7 @@ class BHKeyVaultMgmtClient:
 
     def _get_params(self):
         """Build the vault parameters block."""
+        # pylint: disable=no-member
         oid = _user_oid(self.auth_client.legacy.token)
         sec_perms_all = [perm.value for perm in SecretPermissions]
         key_perms_all = [perm.value for perm in KeyPermissions]

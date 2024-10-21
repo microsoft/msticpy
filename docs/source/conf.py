@@ -269,6 +269,7 @@ autodoc_mock_imports = [
     "nest_asyncio",
     "networkx",
     "openpyxl",
+    "packaging",
     "panel",
     "passivetotal",
     "pygeohash",

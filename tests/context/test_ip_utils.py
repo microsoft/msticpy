@@ -14,13 +14,13 @@ import pytest_check as check
 import respx
 
 from msticpy.context.ip_utils import (
+    _IpWhoIsResult,
     get_asn_details,
     get_asn_from_ip,
     get_asn_from_name,
     get_ip_type,
     get_whois_df,
     ip_whois,
-    _IpWhoIsResult,
 )
 
 from ..unit_test_lib import TEST_DATA_PATH, get_test_data_path
@@ -505,7 +505,9 @@ def test_asn_query_features(mock_asn_whois_query):
     """Test ASN query features"""
     # mock the potaroo request
     html_resp = get_test_data_path().joinpath("potaroo.html").read_bytes()
-    respx.get("https://bgp.potaroo.net/cidr/autnums.html").respond(200, content=html_resp)
+    respx.get("https://bgp.potaroo.net/cidr/autnums.html").respond(
+        200, content=html_resp
+    )
     # mock the whois response
     mock_asn_whois_query.return_value = ASN_RESPONSE_2
     # run tests
