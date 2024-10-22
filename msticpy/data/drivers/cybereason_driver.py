@@ -449,6 +449,14 @@ class CybereasonDriver(DriverBase):
             json_result = response.json()
             status = json_result["status"]
             cur_try += 1
+
+        if cur_try >= max_retry:
+            raise httpx.HTTPStatusError(
+                f"{status}: {json_result['message']}",
+                request=response.request,
+                response=response
+            )
+
         return json_result
 
     async def __run_threaded_queries(
