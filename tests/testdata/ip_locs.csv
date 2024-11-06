@@ -1,4 +1,4 @@
-,AllExtIPs,AdditionalData,Type,CountryCode,CountryName,State,City,Longitude,Latitude,IpAddress
+,AllExtIPs,AdditionalData,Type,CountryCode,CountryOrRegionName,State,City,Longitude,Latitude,IpAddress
 0,65.55.44.109,{},geolocation,US,United States,Virginia,Boydton,-78.375,36.6534,65.55.44.109
 1,13.71.172.128,{},geolocation,CA,Canada,Ontario,Toronto,-79.4195,43.6644,13.71.172.128
 2,13.71.172.130,{},geolocation,CA,Canada,Ontario,Toronto,-79.4195,43.6644,13.71.172.130

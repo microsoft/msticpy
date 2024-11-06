@@ -12,9 +12,12 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import Any, Dict, Tuple
+from __future__ import annotations
 
-import attr
+from dataclasses import dataclass
+from typing import Any, ClassVar
+
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -27,10 +30,10 @@ __author__ = "Ian Hellen"
 
 
 # pylint: disable=too-few-public-methods
-@attr.s
+@dataclass
 class _XForceParams(APILookupParams):
     # override APILookupParams to set common defaults
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self: Self) -> None:
         self.auth_str = ["{ApiID}", "{AuthKey}"]
         self.auth_type = "HTTPBasic"
 
@@ -39,9 +42,9 @@ class _XForceParams(APILookupParams):
 class XForce(HttpTIProvider):
     """IBM XForce Lookup."""
 
-    _BASE_URL = "https://api.xforce.ibmcloud.com"
+    _BASE_URL: ClassVar[str] = "https://api.xforce.ibmcloud.com"
 
-    _QUERIES = {
+    _QUERIES: ClassVar[dict[str, _XForceParams]] = {
         "ipv4": _XForceParams(path="/ipr/{observable}"),
         "ipv4-rep": _XForceParams(path="/ipr/history/{observable}"),
         "ipv4-malware": _XForceParams(path="/ipr/malware/{observable}"),
@@ -68,9 +71,12 @@ class XForce(HttpTIProvider):
     _QUERIES["hostname-whois"] = _QUERIES["ipv4-whois"]
     _QUERIES["dns-whois"] = _QUERIES["ipv4-whois"]
 
-    _REQUIRED_PARAMS = ["ApiID", "AuthKey"]
+    _REQUIRED_PARAMS: ClassVar[list[str]] = ["ApiID", "AuthKey"]
 
-    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
+    HIGH_SEVERITY: ClassVar[int] = 5
+    MEDIUM_SEVERITY: ClassVar[int] = 2
+
+    def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -87,20 +93,24 @@ class XForce(HttpTIProvider):
             Object with match details
 
         """
-        severity = ResultSeverity.information
+        severity: ResultSeverity = ResultSeverity.information
         if self._failed_response(response) or not isinstance(
-            response["RawResult"], dict
+            response["RawResult"],
+            dict,
         ):
             return False, severity, "Not found."
         result = True
-        result_dict = {}
+        result_dict: dict[str, Any] = {}
         if (
             response["IocType"] in ["ipv4", "ipv6", "url", "dns"]
             and not response["QuerySubtype"]
         ):
             # For some IocTypes "dns" and "url", the response structure differs
-            report = response["RawResult"].get("result", response["RawResult"])
-            score = report.get("score", 0)
+            report: dict[str, Any] = response["RawResult"].get(
+                "result",
+                response["RawResult"],
+            )
+            score: int = report.get("score", 0)
             if score is None:
                 score = 0
             result_dict.update(
@@ -111,36 +121,39 @@ class XForce(HttpTIProvider):
                     "reason": report.get("reason"),
                     "reasonDescription": report.get("reasonDescription", 0),
                     "tags": report.get("tags", 0),
-                }
+                },
             )
             severity = (
                 ResultSeverity.information
-                if score < 2
-                else ResultSeverity.warning
-                if 2 <= score < 5
-                else ResultSeverity.high
+                if score < self.MEDIUM_SEVERITY
+                else (
+                    ResultSeverity.warning
+                    if self.MEDIUM_SEVERITY <= score < self.HIGH_SEVERITY
+                    else ResultSeverity.high
+                )
             )
         if (
             response["IocType"] in ["file_hash", "md5_hash", "sha1_hash", "sha256_hash"]
             or response["QuerySubtype"] == "malware"
         ):
-            malware = response["RawResult"].get("malware")
+            malware: dict[str, Any] | None = response["RawResult"].get("malware")
             if malware:
                 result_dict.update(
                     {
                         "risk": malware.get("risk"),
                         "family": malware.get("family"),
                         "reasonDescription": response["RawResult"].get(
-                            "reasonDescription", 0
+                            "reasonDescription",
+                            0,
                         ),
-                    }
+                    },
                 )
                 severity = ResultSeverity.high
         if response["IocType"] in ["dns", "ipv4", "ipv6", "hostname"] and response[
             "QuerySubtype"
         ] in ["info", "passivedns", "whois"]:
-            records = response["RawResult"].get("total_rows", 0)
-            contact = response["RawResult"].get("contact", 0)
+            records: int = response["RawResult"].get("total_rows", 0)
+            contact: int = response["RawResult"].get("contact", 0)
             if records:
                 result_dict["records"] = records
             elif contact:

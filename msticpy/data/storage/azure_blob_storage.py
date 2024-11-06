@@ -244,7 +244,7 @@ class AzureBlobStorage:
         key = self.abs_client.get_user_delegation_key(start, end)  # type: ignore
         abs_name = self.abs_client.account_name  # type: ignore
         sast = generate_blob_sas(
-            abs_name,
+            abs_name,  # type: ignore
             container_name,
             blob_name,
             user_delegation_key=key,

@@ -9,7 +9,11 @@ IPQualityScore Provider.
 This provider offers contextual lookup services and fraud scoring for IP addresses.
 https://www.ipqualityscore.com/
 """
-from typing import Any, Dict, Tuple
+from __future__ import annotations
+
+from typing import Any, ClassVar
+
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ..http_provider import APILookupParams
@@ -25,16 +29,19 @@ class IPQualityScore(HttpTIProvider):
 
     _BASE_URL = "https://www.ipqualityscore.com/api/json"
 
-    _QUERIES = {
+    _QUERIES: ClassVar[dict[str, APILookupParams]] = {
         # Supported API Types
         "ipv4": APILookupParams(
             path="/ip/{AuthKey}/{observable}",
-        )
+        ),
     }
 
-    _REQUIRED_PARAMS = ["AuthKey"]
+    _REQUIRED_PARAMS: ClassVar[list[str]] = ["AuthKey"]
 
-    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
+    MEDIUM_SEVERITY: ClassVar[int] = 50
+    HIGH_SEVERITY: ClassVar[int] = 80
+
+    def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -52,17 +59,18 @@ class IPQualityScore(HttpTIProvider):
 
         """
         if self._failed_response(response) or not isinstance(
-            response["RawResult"], dict
+            response["RawResult"],
+            dict,
         ):
             return False, ResultSeverity.information, "Not found."
         result = True
-        result_dict = {}
+        result_dict: dict[str, Any] = {}
         result_dict.update(
             {
                 "FraudScore": response["RawResult"].get("fraud_score"),
                 "ISP": response["RawResult"].get("ISP"),
                 "ASN": response["RawResult"].get("ASN"),
-                "Country": response["RawResult"].get("country_code"),
+                "CountryOrRegion": response["RawResult"].get("country_code"),
                 "Region": response["RawResult"].get("city"),
                 "City": response["RawResult"].get("region"),
                 "Organization": response["RawResult"].get("organization"),
@@ -74,15 +82,15 @@ class IPQualityScore(HttpTIProvider):
                 "IsVPN": response["RawResult"].get("active_vpn"),
                 "IsBot": response["RawResult"].get("bot_status"),
                 "AbuseStatus": response["RawResult"].get("recent_abuse"),
-            }
+            },
         )
 
         severity = ResultSeverity.information
         if (
-            response["RawResult"]["fraud_score"] > 50
-            and response["RawResult"]["fraud_score"] < 80
+            response["RawResult"]["fraud_score"] > self.MEDIUM_SEVERITY
+            and response["RawResult"]["fraud_score"] < self.HIGH_SEVERITY
         ):
             severity = ResultSeverity.warning
-        elif response["RawResult"]["fraud_score"] >= 80:
+        elif response["RawResult"]["fraud_score"] >= self.HIGH_SEVERITY:
             severity = ResultSeverity.high
         return result, severity, result_dict

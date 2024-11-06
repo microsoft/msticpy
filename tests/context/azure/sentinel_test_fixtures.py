@@ -4,12 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Sentinel test fixtures."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from msticpy import VERSION
-from msticpy.context.azure import MicrosoftSentinel
+from msticpy.context.azure.azure_data import AzureData
+from msticpy.context.azure.sentinel_core import MicrosoftSentinel
 
 from ...unit_test_lib import custom_mp_config, get_test_data_path
 
@@ -43,7 +44,7 @@ def _set_default_workspace(self, sub_id, workspace=None):
 
 @pytest.fixture
 @patch(f"{MicrosoftSentinel.__module__}.get_token")
-@patch(f"{MicrosoftSentinel.__module__}.AzureData.connect")
+@patch.object(AzureData, "connect")
 def sent_loader(mock_creds, get_token, monkeypatch):
     """Generate MicrosoftSentinel instance for testing."""
     monkeypatch.setattr(
@@ -58,6 +59,7 @@ def sent_loader(mock_creds, get_token, monkeypatch):
             # sub_id="fd09863b-5cec-4833-ab9c-330ad07b0c1a", res_grp="RG", ws_name="WSName"
             workspace="WSName"
         )
+        setattr(sentinel, "credentials", MagicMock())
     sentinel.connect()
     sentinel.connected = True
     sentinel._token = "fd09863b-5cec-4833-ab9c-330ad07b0c1a"

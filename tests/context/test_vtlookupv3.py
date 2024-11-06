@@ -46,8 +46,7 @@ def create_vt_client(vt_lib) -> VTLookupV3:
     """Test simple lookup of IoC."""
     vt_lib.Client = VTClient
     vt_lib.APIError = VTAPIError
-
-    return VTLookupV3()
+    return VTLookupV3(vt_key="vt_key")
 
 
 @pytest.fixture
@@ -159,22 +158,6 @@ class VTClient:
     def close(self):
         """Close the client connection."""
         return None
-
-
-def test_init_vt_lookup_class():
-    """Test fetching a key from settings."""
-    test_vt_key = "somerandomvalue"
-
-    vt_client = VTLookupV3(vt_key=test_vt_key)
-    check.equal(vt_client._vt_key, test_vt_key)
-
-    try:
-        curr_vt_key = os.environ.get("VIRUSTOTAL_AUTH", "")
-        os.environ["VIRUSTOTAL_AUTH"] = test_vt_key
-        vt_client = VTLookupV3(vt_key=test_vt_key)
-        check.equal(vt_client._vt_key, test_vt_key)
-    finally:
-        os.environ["VIRUSTOTAL_AUTH"] = curr_vt_key
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")

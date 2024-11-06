@@ -72,7 +72,7 @@ class SplunkUploader(UploaderBase):
         self,
         data: pd.DataFrame,
         index_name: str,
-        table_name: Any,
+        source_type: Any,
         host: str = None,
         **kwargs,
     ):
@@ -85,10 +85,12 @@ class SplunkUploader(UploaderBase):
             Data to upload.
         index_name : str
             Name of the Splunk Index to add data to.
-        table_name : str
+        source_type : str
             The sourcetype in Splunk data will be uploaded to.
+            csv, json or other can be input and then passed to
+            df.to_csv(), df.to_json(), df.to_string() styles respectively.
         host : str, optional
-            The hostname associated with the uploaded data, by default "Upload".
+            The hostname associated with the uploaded data, by default "msticpy_splunk_uploader".
 
         """
         if not self.connected:
@@ -97,28 +99,36 @@ class SplunkUploader(UploaderBase):
                 title="Splunk host not connected",
             )
         if not host:
-            host = "Upload"
+            host = "msticpy_splunk_uploader"
         index = self._load_index(index_name, kwargs.get("create_index", False))
         progress = tqdm(total=len(data.index), desc="Rows", position=0)
+        source_types = []
         for row in data.iterrows():
-            data = row[1].to_csv()  # type: ignore
+            if source_type == "json":
+                data = row[1].to_json()  # type: ignore
+            elif source_type == "csv":
+                data = row[1].to_csv()  # type: ignore
+            else:
+                data = row[1].to_string()  # type: ignore
             try:
                 data.encode(encoding="latin-1")  # type: ignore
             except UnicodeEncodeError:
                 data = data.encode(encoding="utf-8")  # type: ignore
-            index.submit(data, sourcetype=table_name, host=host)
+            index.submit(data, sourcetype=source_type, host=host)
+            source_types.append(source_type)
             progress.update(1)
         progress.close()
         if self._debug is True:
-            print("Upload complete")
+            print(f"Upload complete: Splunk sourcetype = {source_types}")
 
     # pylint: disable=arguments-differ
     def upload_df(  # type: ignore
         self,
         data: pd.DataFrame,
-        table_name: Optional[str],
-        index_name: str,
+        table_name: Optional[str] = None,
+        index_name: Optional[str] = None,
         create_index: bool = False,
+        source_type: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -128,8 +138,13 @@ class SplunkUploader(UploaderBase):
         ----------
         data : pd.DataFrame
             Data to upload.
-        table_name : str
+        source_type : str, optional
             The sourcetype in Splunk data will be uploaded to.
+            csv, json or other can be input and then passed to
+            df.to_csv(), df.to_json(), df.to_string() styles respectively.
+            "json" is by default.
+        table_name: str, optional
+            The backward compatibility of source_type.
         index_name : str
             Name of the Splunk Index to add data to.
         host : str, optional
@@ -138,6 +153,12 @@ class SplunkUploader(UploaderBase):
             Set this to true to create the index if it doesn't already exist. Default is False.
 
         """
+        if not source_type:
+            if not table_name:
+                source_type = "json"
+            else:
+                source_type = table_name
+
         host = kwargs.get("host", None)
         if not index_name:
             raise ValueError("parameter `index_name` must be specified")
@@ -148,10 +169,10 @@ class SplunkUploader(UploaderBase):
             )
         self._post_data(
             data=data,
-            table_name=table_name,
             index_name=index_name,
-            create_index=create_index,
             host=host,
+            source_type=source_type,
+            create_index=create_index,
         )
 
     def upload_file(  # type: ignore
@@ -161,6 +182,7 @@ class SplunkUploader(UploaderBase):
         delim: str = ",",
         index_name: Optional[str] = None,
         create_index: bool = False,
+        source_type: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -172,9 +194,14 @@ class SplunkUploader(UploaderBase):
             Path to the file to upload.
         index_name : str
             Name of the Splunk Index to add data to.
-        table_name : str, optional
+        source_name : str, optional
             The sourcetype in Splunk data will be uploaded to.
+            csv, json or other can be input and then passed to
+            df.to_csv(), df.to_json(), df.to_string() styles respectively.
             If not set the file name will be used.
+            "json" is by default.
+        table_name: str, optional
+            The backward compatibility of source_type.
         delim : str, optional
             Seperator value in file, by default ","
         host : str, optional
@@ -195,13 +222,17 @@ class SplunkUploader(UploaderBase):
                 "Incorrect file type.",
             ) from parse_err
 
-        if not table_name:
-            table_name = path.stem
+        if not source_type:
+            if table_name:
+                source_type = table_name
+            else:
+                source_type = path.stem
+
         self._post_data(
             data=data,
-            table_name=table_name,
             index_name=index_name,
             host=host,
+            source_type=source_type,
             create_index=create_index,
         )
 
@@ -212,6 +243,7 @@ class SplunkUploader(UploaderBase):
         delim: str = ",",
         index_name: Optional[str] = None,
         create_index=False,
+        source_type: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -223,9 +255,13 @@ class SplunkUploader(UploaderBase):
             Path to folder to upload.
         index_name : str
             Name of the Splunk Index to add data to, if it doesn't exist it will be created.
-        table_name : str, optional
+        source_type : str, optional
             The sourcetype in Splunk data will be uploaded to.
-            If not set the file name will be used.
+            csv, json or other can be input and then passed to
+            df.to_csv(), df.to_json(), df.to_string() styles respectively.
+            If not set the file name will be used. "json" is by default.
+        table_name: str, optional
+            The backward compatibility of source_type.
         delim : str, optional
             Seperator value in files, by default ","
         host : str, optional
@@ -248,18 +284,28 @@ class SplunkUploader(UploaderBase):
                     "The file specified is not a seperated value file.",
                     title="Incorrect file type.",
                 ) from parse_err
-            if not table_name:
-                table_name = path.stem
+
+            if not source_type:
+                if table_name:
+                    source_type = table_name
+                else:
+                    source_type = path.stem
+
             self._post_data(
                 data=data,
-                table_name=table_name,
                 index_name=index_name,
                 host=host,
+                source_type=source_type,
                 create_index=create_index,
             )
             f_progress.update(1)
             if self._debug is True:
-                print(f"{str(path)} uploaded to {table_name}")
+                print(
+                    f"{str(path)} uploaded to \
+                    index={index_name} \
+                    source_type={source_type} \
+                    host={host}"
+                )
         f_progress.close()
 
     # pylint: enable=arguments-differ

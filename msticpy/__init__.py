@@ -153,6 +153,7 @@ _LAZY_IMPORTS = {
     "msticpy.init.nbinit.init_notebook",
     "msticpy.init.nbinit.reset_ipython_exception_handler",
     "msticpy.init.pivot.Pivot",
+    "msticpy.init.mp_user_session.load_mp_session",
 }
 
 module, __getattr__, __dir__ = lazy_import(__name__, _LAZY_IMPORTS)

@@ -12,9 +12,11 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import Dict, Iterable, List, Mapping, Optional, Union
+from __future__ import annotations
 
-import pandas as pd
+from typing import TYPE_CHECKING, ClassVar, Iterable, Mapping
+
+from typing_extensions import Self
 
 from .._version import VERSION
 from ..common.utility import export
@@ -24,6 +26,8 @@ from .contextproviders import CONTEXT_PROVIDERS
 from .lookup import Lookup
 from .provider_base import Provider, _make_sync
 
+if TYPE_CHECKING:
+    import pandas as pd
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
@@ -32,31 +36,33 @@ __author__ = "Ian Hellen"
 class ContextLookup(Lookup):
     """Observable lookup from providers."""
 
-    _NO_PROVIDERS_MSG = """
+    _NO_PROVIDERS_MSG: ClassVar[
+        str
+    ] = """
     No Context Providers are loaded - please check that
     you have correctly configured your msticpyconfig.yaml settings.
     """
 
-    _HELP_URI = (
+    _HELP_URI: ClassVar[str] = (
         "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
         "ContextProviders.html#configuration-file"
     )
 
     PACKAGE = "contextproviders"
 
-    PROVIDERS = CONTEXT_PROVIDERS
-    CUSTOM_PROVIDERS: Dict[str, Provider] = {}
+    PROVIDERS: ClassVar[dict[str, tuple[str, str]]] = CONTEXT_PROVIDERS
+    CUSTOM_PROVIDERS: ClassVar[dict[str, type[Provider]]] = {}
 
-    # pylint: disable=too-many-arguments
-    def lookup_observable(
-        self,
+    def lookup_observable(  # pylint:disable=too-many-arguments # noqa:PLR0913
+        self: Self,
         observable: str,
-        observable_type: Optional[str] = None,
-        query_type: Optional[str] = None,
-        providers: Optional[List[str]] = None,
-        default_providers: Optional[List[str]] = None,
+        observable_type: str | None = None,
+        query_type: str | None = None,
+        providers: list[str] | None = None,
+        default_providers: list[str] | None = None,
         prov_scope: str = "primary",
-        **kwargs,
+        *,
+        show_not_supported: bool = False,
     ) -> pd.DataFrame:
         """
         Lookup single observable in active providers.
@@ -70,15 +76,15 @@ class ContextLookup(Lookup):
             If none, the Observable type will be inferred
         query_type: str, optional
             The observable query type (e.g. rep, info, malware)
-        providers: List[str]
+        providers: list[str]
             Explicit list of providers to use
-        default_providers: Optional[List[str]] = None,
+        default_providers: Optional[list[str]] = None,
             Used by pivot functions as a fallback to `providers`. If
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
-        kwargs :
-            Additional arguments passed to the underlying provider(s)
+        show_not_supported: bool, optional
+            Include the not supported observables in the result DF. Defaults to False.
 
         Returns
         -------
@@ -95,19 +101,18 @@ class ContextLookup(Lookup):
             providers=providers,
             default_providers=default_providers,
             prov_scope=prov_scope,
-            **kwargs,
+            show_not_supported=show_not_supported,
         )
 
-    def lookup_observables(
-        self,
-        data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
-        obs_col: str = None,
-        obs_type_col: str = None,
-        query_type: str = None,
-        providers: List[str] = None,
-        default_providers: Optional[List[str]] = None,
+    def lookup_observables(  # pylint:disable=too-many-arguments # noqa:PLR0913
+        self: Self,
+        data: pd.DataFrame | Mapping[str, str] | Iterable[str],
+        obs_col: str | None = None,
+        obs_type_col: str | None = None,
+        query_type: str | None = None,
+        providers: list[str] | None = None,
+        default_providers: list[str] | None = None,
         prov_scope: str = "primary",
-        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup a collection of Observables.
@@ -127,15 +132,13 @@ class ContextLookup(Lookup):
             DataFrame column to use for ObservableTypes, by default None
         query_type: str, optional
             The observable query type (e.g. rep, info, malware)
-        providers: List[str]
+        providers: list[str]
             Explicit list of providers to use
-        default_providers: Optional[List[str]], optional
+        default_providers: Optional[list[str]], optional
             Used by pivot functions as a fallback to `providers`. If
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
-        kwargs :
-            Additional arguments passed to the underlying provider(s)
 
         Returns
         -------
@@ -152,21 +155,19 @@ class ContextLookup(Lookup):
                 providers=providers,
                 default_providers=default_providers,
                 prov_scope=prov_scope,
-                **kwargs,
-            )
+            ),
         )
 
     # pylint: disable=too-many-locals
-    async def _lookup_observables_async(
-        self,
-        data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
-        obs_col: str = None,
-        obs_type_col: str = None,
-        query_type: str = None,
-        providers: List[str] = None,
-        default_providers: Optional[List[str]] = None,
+    async def _lookup_observables_async(  # pylint:disable=too-many-arguments # noqa:PLR0913
+        self: Self,
+        data: pd.DataFrame | Mapping[str, str] | Iterable[str],
+        obs_col: str | None = None,
+        obs_type_col: str | None = None,
+        query_type: str | None = None,
+        providers: list[str] | None = None,
+        default_providers: list[str] | None = None,
         prov_scope: str = "primary",
-        **kwargs,
     ) -> pd.DataFrame:
         """Lookup items async."""
         return await self._lookup_items_async(
@@ -177,19 +178,17 @@ class ContextLookup(Lookup):
             providers=providers,
             default_providers=default_providers,
             prov_scope=prov_scope,
-            **kwargs,
         )
 
-    def lookup_observables_sync(
-        self,
-        data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
-        obs_col: str = None,
-        obs_type_col: str = None,
-        query_type: str = None,
-        providers: List[str] = None,
-        default_providers: Optional[List[str]] = None,
+    def lookup_observables_sync(  # pylint:disable=too-many-arguments # noqa:PLR0913
+        self: Self,
+        data: pd.DataFrame | Mapping[str, str] | Iterable[str],
+        obs_col: str | None = None,
+        obs_type_col: str | None = None,
+        query_type: str | None = None,
+        providers: list[str] | None = None,
+        default_providers: list[str] | None = None,
         prov_scope: str = "primary",
-        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup a collection of IoCs.
@@ -209,15 +208,13 @@ class ContextLookup(Lookup):
             DataFrame column to use for IoCTypes, by default None
         query_type: str, optional
             The ioc query type (e.g. rep, info, malware)
-        providers: List[str]
+        providers: list[str]
             Explicit list of providers to use
-        default_providers: Optional[List[str]], optional
+        default_providers: Optional[list[str]], optional
             Used by pivot functions as a fallback to `providers`. If
             `providers` is specified, it will override this parameter.
         prov_scope : str, optional
             Use "primary", "secondary" or "all" providers, by default "primary"
-        kwargs :
-            Additional arguments passed to the underlying provider(s)
 
         Returns
         -------
@@ -233,9 +230,12 @@ class ContextLookup(Lookup):
             providers=providers,
             default_providers=default_providers,
             prov_scope=prov_scope,
-            **kwargs,
         )
 
-    def _load_providers(self, **kwargs):
+    def _load_providers(
+        self: Self,
+        *,
+        providers: str = "ContextProviders",
+    ) -> None:
         """Load provider classes based on config."""
-        return super()._load_providers(providers="ContextProviders", **kwargs)
+        super()._load_providers(providers=providers)

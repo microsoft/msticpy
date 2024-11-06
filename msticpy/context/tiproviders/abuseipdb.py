@@ -12,7 +12,11 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import Any, Dict, Tuple
+from __future__ import annotations
+
+from typing import Any, ClassVar
+
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -28,45 +32,48 @@ __author__ = "Rubén Revuelta Briz"
 class AbuseIPDB(HttpTIProvider):
     """AbuseIPDB Lookup."""
 
-    PROVIDER_NAME = "AbuseIPDB"
+    PROVIDER_NAME: ClassVar[str] = "AbuseIPDB"
 
-    _BASE_URL = "https://api.abuseipdb.com/"
+    _BASE_URL: ClassVar[str] = "https://api.abuseipdb.com/"
 
-    _QUERIES = {
+    _QUERIES: ClassVar[dict[str, APILookupParams]] = {
         "ipv4": APILookupParams(
             path="api/v2/check",
             params={"ipAddress": "{observable}"},
             headers={"Key": "{AuthKey}", "Accept": "application/json"},
-        )
+        ),
     }
+
+    HIGH_SEVERITY: ClassVar[int] = 50
 
     # aliases
     _QUERIES["ipv6"] = _QUERIES["ipv4"]
 
-    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """Return the details of the response."""
         if self._failed_response(response) or not isinstance(
-            response["RawResult"], dict
+            response["RawResult"],
+            dict,
         ):
             return False, ResultSeverity.information, "Not found."
 
-        data = response["RawResult"]["data"]
-        result_dict = {
-            "countryCode": data.get("countryCode", None),
-            "usage": data.get("usageType", None),
-            "isp": data.get("isp", None),
-            "domain": data.get("domain", None),
-            "hostNames": data.get("hostnames", None),
-            "lastReportedAt": data.get("lastReportedAt", None),
+        data: dict[str, Any] = response["RawResult"]["data"]
+        result_dict: dict[str, Any] = {
+            "countryCode": data.get("countryCode"),
+            "usage": data.get("usageType"),
+            "isp": data.get("isp"),
+            "domain": data.get("domain"),
+            "hostNames": data.get("hostnames"),
+            "lastReportedAt": data.get("lastReportedAt"),
         }
 
-        score = data.get("abuseConfidenceScore", None)
+        score: int = data.get("abuseConfidenceScore", 0)
 
-        if score == 0:
-            result_severity = ResultSeverity.information
-        elif score <= 50:
-            result_severity = ResultSeverity.warning
-        elif score > 50:
+        if score > self.HIGH_SEVERITY:
             result_severity = ResultSeverity.high
+        elif score > 0:
+            result_severity = ResultSeverity.warning
+        else:
+            result_severity = ResultSeverity.information
 
         return (True, result_severity, result_dict)

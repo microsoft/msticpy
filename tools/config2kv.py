@@ -37,7 +37,7 @@ from pathlib import Path
 from pprint import pprint
 
 import yaml
-from msrestazure.azure_exceptions import CloudError
+from azure.core.exceptions import ResourceNotFoundError
 
 from msticpy.auth.keyvault_client import (
     BHKeyVaultClient,
@@ -161,7 +161,7 @@ def _add_secrets_to_vault(vault_name, secrets, confirm, **kwargs):
     try:
         vault_uri = kv_mgmt.get_vault_uri(vault_name)
         print(f"Vault {vault_name} found.")
-    except CloudError:
+    except ResourceNotFoundError:
         mssg = f"Vault {vault_name} not found. Create new vault (y/n)? "
         if _prompt_yn(mssg, confirm):
             print("Creating {vault_name}. Please wait...")

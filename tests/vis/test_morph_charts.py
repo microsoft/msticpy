@@ -26,6 +26,7 @@ def test_morph():
     return MorphCharts()
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @patch("builtins.print")
 def test_chart_details(mocked_print, test_morph):
     """Test case."""

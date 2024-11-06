@@ -10,7 +10,7 @@ import pytest
 import pytest_check as check
 
 from msticpy.common.exceptions import MsticpyParameterError, MsticpyUserConfigError
-from msticpy.data import QueryProvider
+from msticpy.data.core.data_providers import QueryProvider
 from msticpy.data.drivers.kql_driver import KqlDriver
 from msticpy.data.drivers.kusto_driver import KustoDriver
 
@@ -19,6 +19,10 @@ from ...unit_test_lib import custom_mp_config, get_test_data_path
 __author__ = "Ian Hellen"
 
 # pylint: disable=redefined-outer-name, protected-access
+pytestmark = [
+    pytest.mark.filterwarnings("ignore::UserWarning"),
+    pytest.mark.filterwarnings("ignore::DeprecationWarning"),
+]
 
 _KUSTO_SETTINGS = """
 DataProviders:

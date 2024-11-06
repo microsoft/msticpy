@@ -4,27 +4,37 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Analytics Features."""
-from typing import Optional
+from __future__ import annotations
+
+import logging
+from typing import Any, Callable
 from uuid import UUID, uuid4
 
 import httpx
 import pandas as pd
 from azure.common.exceptions import CloudError
 from IPython.display import display
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
-from .sentinel_utils import _build_sent_data, get_http_timeout
+from .sentinel_utils import (
+    SentinelUtilsMixin,
+    extract_sentinel_response,
+    get_http_timeout,
+)
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
+logger: logging.Logger = logging.getLogger(__name__)
 
-class SentinelHuntingMixin:
+
+class SentinelHuntingMixin(SentinelUtilsMixin):
     """Mixin class for Sentinel Hunting feature integrations."""
 
-    def list_hunting_queries(self) -> pd.DataFrame:
+    def list_hunting_queries(self: Self) -> pd.DataFrame:
         """
         Return all custom hunting queries in a Microsoft Sentinel workspace.
 
@@ -34,16 +44,17 @@ class SentinelHuntingMixin:
             A table of the custom hunting queries.
 
         """
-        saved_query_df = self._list_items(  # type: ignore
-            item_type="ss_path", api_version="2020-08-01"
+        saved_query_df: pd.DataFrame = self._list_items(
+            item_type="ss_path",
+            api_version="2020-08-01",
         )
         return saved_query_df[
             saved_query_df["properties.category"] == "Hunting Queries"
         ]
 
-    get_hunting_queries = list_hunting_queries
+    get_hunting_queries: Callable[..., pd.DataFrame] = list_hunting_queries
 
-    def list_saved_queries(self) -> pd.DataFrame:
+    def list_saved_queries(self: Self) -> pd.DataFrame:
         """
         Return all saved queries in a Microsoft Sentinel workspace.
 
@@ -53,18 +64,17 @@ class SentinelHuntingMixin:
             A table of the custom hunting queries.
 
         """
-        saved_query_df = self._list_items(  # type: ignore
-            item_type="ss_path", api_version="2020-08-01"
+        saved_query_df: pd.DataFrame = self._list_items(
+            item_type="ss_path",
+            api_version="2020-08-01",
         )
         return saved_query_df
 
-    get_hunting_queries = list_hunting_queries
 
-
-class SentinelAnalyticsMixin:
+class SentinelAnalyticsMixin(SentinelUtilsMixin):
     """Mixin class for Sentinel Analytics feature integrations."""
 
-    def list_alert_rules(self) -> pd.DataFrame:
+    def list_alert_rules(self: Self) -> pd.DataFrame:
         """
         Return all Microsoft Sentinel alert rules for a workspace.
 
@@ -74,12 +84,13 @@ class SentinelAnalyticsMixin:
             A table of the workspace's alert rules.
 
         """
-        return self._list_items(  # type: ignore
-            item_type="alert_rules", api_version="2022-11-01"
+        return self._list_items(
+            item_type="alert_rules",
+            api_version="2024-01-01-preview",
         )
 
     def _get_template_id(
-        self,
+        self: Self,
         template: str,
     ) -> str:
         """
@@ -105,29 +116,28 @@ class SentinelAnalyticsMixin:
         """
         try:
             UUID(template)
-            return template
         except ValueError as template_name:
-            templates = self.list_analytic_templates()
-            template_details = templates[
+            templates: pd.DataFrame = self.list_analytic_templates()
+            template_details: pd.DataFrame = templates[
                 templates["properties.displayName"].str.contains(template)
             ]
             if len(template_details) > 1:
                 display(template_details[["name", "properties.displayName"]])
-                raise MsticpyUserError(
-                    "More than one template found, please specify by GUID"
-                ) from template_name
+                err_msg: str = "More than one template found, please specify by GUID"
+                raise MsticpyUserError(err_msg) from template_name
             if not isinstance(template_details, pd.DataFrame) or template_details.empty:
-                raise MsticpyUserError(
-                    f"Template {template_details} not found"
-                ) from template_name
+                err_msg = f"Template {template_details} not found"
+                raise MsticpyUserError(err_msg) from template_name
             return template_details["name"].iloc[0]
+        return template
 
-    def create_analytic_rule(  # pylint: disable=too-many-arguments, too-many-locals
-        self,
-        template: str = None,
-        name: str = None,
+    def create_analytic_rule(  # pylint: disable=too-many-arguments, too-many-locals #noqa:PLR0913
+        self: Self,
+        template: str | None = None,
+        name: str | None = None,
+        *,
         enabled: bool = True,
-        query: str = None,
+        query: str | None = None,
         query_frequency: str = "PT5H",
         query_period: str = "PT5H",
         severity: str = "Medium",
@@ -135,9 +145,9 @@ class SentinelAnalyticsMixin:
         suppression_enabled: bool = False,
         trigger_operator: str = "GreaterThan",
         trigger_threshold: int = 0,
-        description: str = None,
-        tactics: list = None,
-    ) -> Optional[str]:
+        description: str | None = None,
+        tactics: list[str] | None = None,
+    ) -> str | None:
         """
         Create a Sentinel Analytics Rule.
 
@@ -173,7 +183,7 @@ class SentinelAnalyticsMixin:
 
         Returns
         -------
-        Optional[str]
+        str|None
             The name/ID of the analytic rule.
 
         Raises
@@ -184,11 +194,13 @@ class SentinelAnalyticsMixin:
             If the API returns an error.
 
         """
-        self.check_connected()  # type: ignore
+        self.check_connected()
         if template:
-            template_id = self._get_template_id(template)
-            templates = self.list_analytic_templates()
-            template_details = templates[templates["name"] == template_id].iloc[0]
+            template_id: str = self._get_template_id(template)
+            templates: pd.DataFrame = self.list_analytic_templates()
+            template_details: pd.Series = templates[
+                templates["name"] == template_id
+            ].iloc[0]
             name = template_details["properties.displayName"]
             query = template_details["properties.query"]
             query_frequency = template_details["properties.queryFrequency"]
@@ -207,13 +219,12 @@ class SentinelAnalyticsMixin:
             tactics = []
 
         if not name:
-            raise MsticpyUserError(
-                "Please specify either a template ID or analytic details."
-            )
+            err_msg: str = "Please specify either a template ID or analytic details."
+            raise MsticpyUserError(err_msg)
 
-        rule_id = uuid4()
-        analytic_url = self.sent_urls["alert_rules"] + f"/{rule_id}"  # type: ignore
-        data_items = {
+        rule_id: UUID = uuid4()
+        analytic_url: str = self.sent_urls["alert_rules"] + f"/{rule_id}"
+        data_items: dict[str, Any] = {
             "displayName": name,
             "query": query,
             "queryFrequency": query_frequency,
@@ -227,22 +238,25 @@ class SentinelAnalyticsMixin:
             "tactics": tactics,
             "enabled": str(enabled).lower(),
         }
-        data = _build_sent_data(data_items, props=True)
+        data: dict[str, Any] = extract_sentinel_response(data_items, props=True)
         data["kind"] = "Scheduled"
-        params = {"api-version": "2020-01-01"}
-        response = httpx.put(
+        params: dict[str, str] = {"api-version": "2020-01-01"}
+        if not self._token:
+            err_msg = "Token not found, can't create analytic rule."
+            raise ValueError(err_msg)
+        response: httpx.Response = httpx.put(
             analytic_url,
-            headers=get_api_headers(self._token),  # type: ignore
+            headers=get_api_headers(self._token),
             params=params,
             content=str(data),
             timeout=get_http_timeout(),
         )
-        if response.status_code != 201:
+        if not response.is_success:
             raise CloudError(response=response)
-        print("Analytic Created.")
+        logger.info("Analytic Created.")
         return response.json().get("name")
 
-    def _get_analytic_id(self, analytic: str) -> str:
+    def _get_analytic_id(self: Self, analytic: str) -> str:
         """
         Get the GUID of an analytic rule.
 
@@ -264,27 +278,25 @@ class SentinelAnalyticsMixin:
         """
         try:
             UUID(analytic)
-            return analytic
         except ValueError as analytic_name:
-            analytics = self.list_analytic_rules()
-            analytic_details = analytics[
+            analytics: pd.DataFrame = self.list_analytic_rules()
+            analytic_details: pd.DataFrame = analytics[
                 analytics["properties.displayName"].str.contains(analytic)
             ]
             if len(analytic_details) > 1:
                 display(analytic_details[["name", "properties.displayName"]])
-                raise MsticpyUserError(
-                    "More than one analytic found, please specify by GUID"
-                ) from analytic_name
+                err_msg: str = "More than one analytic found, please specify by GUID"
+                raise MsticpyUserError(err_msg) from analytic_name
             if not isinstance(analytic_details, pd.DataFrame) or analytic_details.empty:
-                raise MsticpyUserError(
-                    f"Analytic {analytic_details} not found"
-                ) from analytic_name
+                err_msg = f"Analytic {analytic_details} not found"
+                raise MsticpyUserError(err_msg) from analytic_name
             return analytic_details["name"].iloc[0]
+        return analytic
 
     def delete_analytic_rule(
-        self,
+        self: Self,
         analytic_rule: str,
-    ):
+    ) -> None:
         """
         Delete a deployed Analytic rule from a Sentinel workspace.
 
@@ -299,19 +311,22 @@ class SentinelAnalyticsMixin:
             If the API returns an error.
 
         """
-        self.check_connected()  # type: ignore
-        analytic_id = self._get_analytic_id(analytic_rule)
-        analytic_url = self.sent_urls["alert_rules"] + f"/{analytic_id}"  # type: ignore
-        params = {"api-version": "2020-01-01"}
-        response = httpx.delete(
+        self.check_connected()
+        analytic_id: str = self._get_analytic_id(analytic_rule)
+        analytic_url: str = self.sent_urls["alert_rules"] + f"/{analytic_id}"
+        params: dict[str, str] = {"api-version": "2020-01-01"}
+        if not self._token:
+            err_msg: str = "Token not found, can't delete analytic rule."
+            raise ValueError(err_msg)
+        response: httpx.Response = httpx.delete(
             analytic_url,
-            headers=get_api_headers(self._token),  # type: ignore
+            headers=get_api_headers(self._token),
             params=params,
             timeout=get_http_timeout(),
         )
-        if response.status_code != 200:
+        if response.is_error:
             raise CloudError(response=response)
-        print("Analytic Deleted.")
+        logger.info("Analytic Deleted.")
 
     def list_analytic_templates(self) -> pd.DataFrame:
         """
@@ -328,8 +343,8 @@ class SentinelAnalyticsMixin:
             If a valid result is not returned.
 
         """
-        return self._list_items(item_type="alert_template")  # type: ignore
+        return self._list_items(item_type="alert_template")
 
-    get_alert_rules = list_alert_rules
-    list_analytic_rules = list_alert_rules
-    get_analytic_rules = list_alert_rules
+    get_alert_rules: Callable[..., pd.DataFrame] = list_alert_rules
+    list_analytic_rules: Callable[..., pd.DataFrame] = list_alert_rules
+    get_analytic_rules: Callable[..., pd.DataFrame] = list_alert_rules

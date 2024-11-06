@@ -4,24 +4,31 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Utilties."""
+from __future__ import annotations
+
+import logging
 from collections import Counter
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Any
 
 import httpx
 import pandas as pd
 from azure.common.exceptions import CloudError
+from azure.mgmt.core import tools as az_tools
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...auth.azure_auth_core import AzureCloudConfig
 from ...common.exceptions import MsticpyAzureConfigError, MsticpyAzureConnectionError
 from ...common.pkg_config import get_http_timeout
-from ...common.wsconfig import WorkspaceConfig
-from .azure_data import get_api_headers
+from .azure_data import AzureData, get_api_headers
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
-_PATH_MAPPING = {
+logger: logging.Logger = logging.getLogger(__name__)
+
+_PATH_MAPPING: dict[str, str] = {
     "ops_path": "/providers/Microsoft.SecurityInsights/operations",
     "alert_rules": "/providers/Microsoft.SecurityInsights/alertRules",
     "ss_path": "/savedSearches",
@@ -36,28 +43,56 @@ _PATH_MAPPING = {
 }
 
 
-class SentinelUtilsMixin:
+@dataclass
+class SentinelInstanceDetails:
+    """Dataclass for Sentinel workspace details."""
+
+    subscription_id: str
+    resource_group: str
+    workspace_name: str
+
+    @property
+    def resource_id(self) -> str:
+        """Return the resource ID for the workspace."""
+        return build_sentinel_resource_id(
+            self.subscription_id,
+            self.resource_group,
+            self.workspace_name,
+        )
+
+    @classmethod
+    def from_resource_id(cls: type[Self], resource_id: str) -> Self:
+        """Return SentinelInstanceDetails from a resource ID."""
+        return cls(**parse_resource_id(resource_id))
+
+
+class SentinelUtilsMixin(AzureData):
     """Mixin class for Sentinel core feature integrations."""
 
-    def _get_items(self, url: str, params: Optional[dict] = None) -> httpx.Response:
+    def _get_items(self: Self, url: str, params: dict | None = None) -> httpx.Response:
         """Get items from the API."""
-        self.check_connected()  # type: ignore
+        self.check_connected()
         if params is None:
             params = {"api-version": "2020-01-01"}
+        logger.debug("_get_items request to %s.", url)
+        if not self._token:
+            err_msg = "Token not found, can't get items."
+            raise ValueError(err_msg)
         return httpx.get(
             url,
-            headers=get_api_headers(self._token),  # type: ignore
+            headers=get_api_headers(self._token),
             params=params,
             timeout=get_http_timeout(),
         )
 
-    def _list_items(
-        self,
+    def _list_items(  # noqa:PLR0913
+        self: Self,
         item_type: str,
         api_version: str = "2020-01-01",
-        appendix: Optional[str] = None,
+        appendix: str | None = None,
+        *,
         next_follow: bool = False,
-        params: Optional[Dict[str, Any]] = None,
+        params: dict[str, Any] | None = None,
     ) -> pd.DataFrame:
         """
         Return lists of core resources from APIs.
@@ -74,6 +109,7 @@ class SentinelUtilsMixin:
             If True, follow the nextLink to get all results, by default False
         params: Dict, optional
             Any additional parameters to pass to the API call, by default None
+
         Returns
         -------
         pd.DataFrame
@@ -85,79 +121,55 @@ class SentinelUtilsMixin:
             If a valid result is not returned.
 
         """
-        item_url = self.url + _PATH_MAPPING[item_type]  # type: ignore
+        item_url: str = (self.url or "") + _PATH_MAPPING[item_type]
         if appendix:
             item_url = item_url + appendix
         if params is None:
             params = {}
         params["api-version"] = api_version
-        response = self._get_items(item_url, params)
-        if response.status_code == 200:
-            results_df = _azs_api_result_to_df(response)
+        response: httpx.Response = self._get_items(item_url, params)
+        if response.is_success:
+            results_df: pd.DataFrame = _azs_api_result_to_df(response)
         else:
             raise CloudError(response=response)
-        j_resp = response.json()
-        results = [results_df]
+        j_resp: dict[str, Any] = response.json()
+        results: list[pd.DataFrame] = [results_df]
         # If nextLink in response, go get that data as well
         if next_follow:
             i = 0
             # Limit to 5 nextLinks to prevent infinite loop
             while "nextLink" in j_resp and i < 5:
-                next_url = j_resp["nextLink"]
-                next_response = self._get_items(next_url, params)
-                next_results_df = _azs_api_result_to_df(next_response)
+                next_url: str = j_resp["nextLink"]
+                next_response: httpx.Response = self._get_items(next_url, params)
+                next_results_df: pd.DataFrame = _azs_api_result_to_df(next_response)
                 results.append(next_results_df)
                 j_resp = next_response.json()
                 i += 1
-        return pd.concat(results)
-
-    def _check_config(self, items: List, workspace_name: Optional[str] = None) -> Dict:
-        """
-        Get parameters from default config files.
-
-        Parameters
-        ----------
-        items : List
-            The items to get from the config.
-        workspace_name : str
-            The workspace name supplied by the user.
-
-        Returns
-        -------
-        Dict
-            The config items.
-
-        """
-        config_items = {}
-        if not self.workspace_config:  # type: ignore
-            self.workspace_config = WorkspaceConfig(workspace_name)  # type: ignore
-        for item in items:
-            if item in self.workspace_config:  # type: ignore
-                config_items[item] = self.workspace_config[item]  # type: ignore
-            else:
-                raise MsticpyAzureConfigError(
-                    f"No {item} available in config for workspace {workspace_name}."
-                )
-
-        return config_items
+        results_df = pd.concat(results)
+        logger.info(
+            "list_items request to %s returned %d rows",
+            item_url,
+            len(results_df),
+        )
+        return results_df
 
     def _build_sent_res_id(
-        self,
-        sub_id: Optional[str] = None,
-        res_grp: Optional[str] = None,
-        ws_name: Optional[str] = None,
+        self: Self,
+        subscription_id: str,
+        resource_group: str,
+        workspace_name: str,
     ) -> str:
         """
         Build a resource ID.
 
         Parameters
         ----------
-        sub_id : str, optional
-            Subscription ID to use, by default None
-        res_grp : str, optional
-            Resource Group name to use, by default None
-        ws_name : str, optional
-            Workspace name to user, by default None
+        subscription_id : str
+            Subscription ID to use
+        resource_group : str
+            Resource Group name to use
+        workspace_name : str
+            Workspace name to user
 
         Returns
         -------
@@ -165,33 +177,24 @@ class SentinelUtilsMixin:
             The formatted resource ID.
 
         """
-        if not sub_id or not res_grp or not ws_name:
-            config = self._check_config(
-                workspace_name=ws_name,
-                items=[
-                    WorkspaceConfig.CONF_SUB_ID,
-                    WorkspaceConfig.CONF_RES_GROUP,
-                    WorkspaceConfig.CONF_WS_NAME,
-                ],
-            )
-            sub_id = config[WorkspaceConfig.CONF_SUB_ID]
-            res_grp = config[WorkspaceConfig.CONF_RES_GROUP]
-            ws_name = config[WorkspaceConfig.CONF_WS_NAME]
-        return "".join(
-            [
-                f"/subscriptions/{sub_id}/resourcegroups/{res_grp}",
-                f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}",
-            ]
+        return build_sentinel_resource_id(
+            subscription_id,
+            resource_group,
+            workspace_name,
         )
 
-    def _build_sent_paths(self, res_id: str, base_url: Optional[str] = None) -> str:
+    def _build_sentinel_api_root(
+        self: Self,
+        sentinel_instance: SentinelInstanceDetails,
+        base_url: str | None = None,
+    ) -> str:
         """
         Build an API URL from an Azure resource ID.
 
         Parameters
         ----------
-        res_id : str
-            An Azure resource ID.
+        sentinel_instance : SentinelInstanceDetails
+            Details of a Sentinel workspace
         base_url : str, optional
             The base URL of the Azure cloud to connect to.
             Defaults to resource manager for configured cloud.
@@ -205,28 +208,23 @@ class SentinelUtilsMixin:
 
         """
         if not base_url:
-            base_url = AzureCloudConfig(self.cloud).resource_manager  # type: ignore
-        res_info = {
-            "subscription_id": res_id.split("/")[2],
-            "resource_group": res_id.split("/")[4],
-            "workspace_name": res_id.split("/")[-1],
-        }
+            base_url = AzureCloudConfig(self.cloud).resource_manager
+        resource_id: str | None = sentinel_instance.resource_id
+        if base_url.endswith("/"):
+            base_url = base_url[:-1]
 
-        return "".join(
-            [
-                f"{base_url}subscriptions/{res_info['subscription_id']}",
-                f"/resourceGroups/{res_info['resource_group']}",
-                "/providers/Microsoft.OperationalInsights/workspaces"
-                f"/{res_info['workspace_name']}",
-            ]
-        )
+        sentinel_api_url: str = f"{base_url}{resource_id}"
+        logger.info("Sentinel API URL built: %s", sentinel_api_url)
+        return sentinel_api_url
 
-    def check_connected(self):
+    def check_connected(self: Self) -> None:
         """Check that Sentinel workspace is connected."""
-        if not self.connected:  # type: ignore
-            raise MsticpyAzureConnectionError(
-                "Not connected to Sentinel, ensure you run `.connect` before calling functions."
+        if not self.connected:
+            err_msg: str = (
+                "Not connected to Sentinel, ensure you run `.connect`"
+                "before calling functions."
             )
+            raise MsticpyAzureConnectionError(err_msg)
 
 
 def _azs_api_result_to_df(response: httpx.Response) -> pd.DataFrame:
@@ -249,15 +247,52 @@ def _azs_api_result_to_df(response: httpx.Response) -> pd.DataFrame:
         If the response is not valid JSON.
 
     """
-    j_resp = response.json()
-    if response.status_code != 200 or not j_resp:
-        raise ValueError("No valid JSON result in response")
+    j_resp: dict[str, Any] = response.json()
+    if not response.is_success or not j_resp:
+        err_msg: str = "No valid JSON result in response"
+        raise ValueError(err_msg)
     if "value" in j_resp:
         j_resp = j_resp["value"]
     return pd.json_normalize(j_resp)
 
 
-def _build_sent_data(items: dict, props: bool = False, **kwargs) -> dict:
+def build_sentinel_resource_id(
+    subscription_id: str,
+    resource_group: str,
+    workspace_name: str,
+) -> str:
+    """
+    Build a MS Sentinel resource ID.
+
+    Parameters
+    ----------
+    subscription_id : str
+        Subscription ID to use
+    resource_group : str
+        Resource Group name to use
+    workspace_name : str
+        Workspace name to user
+
+    Returns
+    -------
+    str
+        The formatted resource ID.
+
+    """
+    resource_id: str = (
+        f"/subscriptions/{subscription_id}/resourcegroups/{resource_group}"
+        f"/providers/Microsoft.OperationalInsights/workspaces/{workspace_name}"
+    )
+    logger.info("Resource ID built: %s", resource_id)
+    return resource_id
+
+
+def extract_sentinel_response(
+    items: dict,
+    *,
+    props: bool = False,
+    etag: dict[str, str] | None = None,
+) -> dict:
     """
     Build request data body from items.
 
@@ -267,6 +302,8 @@ def _build_sent_data(items: dict, props: bool = False, **kwargs) -> dict:
         A set pf items to be formated in the request body.
     props: bool, optional
         Whether all items are to be built as properities. Default is false.
+    etag: dict[str, str], Optional
+        If defined, set the etag body value
 
     Returns
     -------
@@ -274,48 +311,54 @@ def _build_sent_data(items: dict, props: bool = False, **kwargs) -> dict:
         The request body formatted for the API.
 
     """
-    data_body = {"properties": {}}  # type: Dict[str, Dict[str, str]]
+    data_body: dict[str, dict[str, str]] = {"properties": {}}
     for key in items:
         if key in ["severity", "status", "title", "message", "searchResults"] or props:
-            data_body["properties"].update({key: items[key]})  # type:ignore
+            data_body["properties"].update({key: items[key]})
         else:
             data_body[key] = items[key]
-    if "etag" in kwargs:
-        data_body["etag"] = kwargs.get("etag")  # type:ignore
+    if etag:
+        data_body["etag"] = etag
     return data_body
 
 
-def validate_res_id(res_id):
+def validate_resource_id(res_id: str) -> str:
     """Validate a Resource ID String and fix if needed."""
-    valid = _validator(res_id)
+    valid: bool = _validator(res_id)
     if not valid:
         res_id = _fix_res_id(res_id)
         valid = _validator(res_id)
     if not valid:
-        raise MsticpyAzureConfigError("The Resource ID provided is not valid.")
+        err_msg: str = "The Resource ID provided is not valid."
+        raise MsticpyAzureConfigError(err_msg)
 
     return res_id
 
 
-def parse_resource_id(res_id: str) -> Dict[str, Any]:
+def parse_resource_id(res_id: str) -> dict[str, Any]:
     """Extract components from workspace resource ID."""
-    res_id_parts = res_id.split("/")
+    if not res_id.startswith("/"):
+        res_id = f"/{res_id}"
+    res_id_parts: dict[str, Any] = az_tools.parse_resource_id(res_id)
+    workspace_name: str | None = None
+    if (
+        res_id_parts.get("namespace") == "Microsoft.OperationalInsights"
+        and res_id_parts.get("type") == "workspaces"
+    ):
+        workspace_name = res_id_parts.get("name")
     return {
-        "subscription_id": res_id_parts[1] if len(res_id_parts) > 1 else None,
-        "resource_group": res_id_parts[3] if len(res_id_parts) > 3 else None,
-        "workspace_name": res_id_parts[7] if len(res_id_parts) > 7 else None,
+        "subscription_id": res_id_parts.get("subscription"),
+        "resource_group": res_id_parts.get("resource_group"),
+        "workspace_name": workspace_name,
     }
 
 
-def _validator(res_id):
+def _validator(res_id: str) -> bool:
     """Check Resource ID string matches pattern expected."""
-    counts = Counter(res_id)
-    return bool(
-        res_id.startswith("/") and counts["/"] == 8 and not res_id.endswith("/")
-    )
+    return az_tools.is_valid_resource_id(res_id)
 
 
-def _fix_res_id(res_id):
+def _fix_res_id(res_id: str) -> str:
     """Try to fix common issues with Resource ID string."""
     if res_id.startswith("https:"):
         res_id = "/".join(res_id.split("/")[5:])

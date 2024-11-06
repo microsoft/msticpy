@@ -47,7 +47,8 @@ _DESC_WIDTH = "120px"
 
 
 def txt_fmt(width: str = "70%") -> Dict:
-    """Return a dictionary with layout and style for a text widget.
+    """
+    Return a dictionary with layout and style for a text widget.
 
     Parameters
     ----------
@@ -69,7 +70,8 @@ def txt_fmt(width: str = "70%") -> Dict:
 
 
 def txtarea_fmt(width: str = "70%", height: str = "150px") -> Dict:
-    """Return a dictionary with layout and style for a textarea widget.
+    """
+    Return a dictionary with layout and style for a textarea widget.
 
     Parameters
     ----------
@@ -91,7 +93,8 @@ def txtarea_fmt(width: str = "70%", height: str = "150px") -> Dict:
 
 
 def sel_fmt(width: str = "40%", height: str = "150px") -> Dict:
-    """Return a dictionary with layout and style for a select widget.
+    """
+    Return a dictionary with layout and style for a select widget.
 
     Parameters
     ----------
@@ -113,7 +116,8 @@ def sel_fmt(width: str = "40%", height: str = "150px") -> Dict:
 
 
 def box_layout():
-    """Return a dictionary with layout and style for a box widget.
+    """
+    Return a dictionary with layout and style for a box widget.
 
     Returns
     -------
@@ -126,8 +130,8 @@ def box_layout():
             border="1px solid black",
             margin="5px",
             padding="5px",
-            style={"padding": "5px", "background-color": "red"},
-        )
+        ),
+        # "style": {"padding": "5px", "background-color": "red"}
     }
 
 
@@ -139,7 +143,8 @@ class CustomChange:
 
 
 class QueryParameterEditWidget(IPyDisplayMixin):
-    """Class to manage editing of query parameters.
+    """
+    Class to manage editing of query parameters.
 
     This class provides a graphical user interface for editing query parameters.
     It allows users to add, modify, and delete parameters, as well as specify
@@ -170,7 +175,7 @@ class QueryParameterEditWidget(IPyDisplayMixin):
         self.param_container = container
         self.parameter_dropdown = widgets.Select(
             description="Parameters",
-            size=5,
+            rows=5,
             options=list(
                 self.param_container.parameters.keys()
                 if self.param_container.parameters

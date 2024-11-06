@@ -16,10 +16,10 @@ import contextlib
 import numbers
 import os
 from collections import UserDict
-from importlib.resources import path
+from contextlib import AbstractContextManager
 from importlib.util import find_spec
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import httpx
 import yaml
@@ -294,15 +294,31 @@ def _override_config(base_config: SettingsDict, new_config: SettingsDict):
 
 def _get_default_config():
     """Return the package default config file."""
-    config_path = None
     package = "msticpy"
     try:
-        with path(package, _CONFIG_FILE) as config_path:
-            return _read_config_file(config_path) if config_path else {}
+        from importlib.resources import (  # pylint: disable=import-outside-toplevel
+            as_file,
+            files,
+        )
+
+        package_path: AbstractContextManager = as_file(
+            files(package).joinpath(_CONFIG_FILE)
+        )
+    except ImportError:
+        # If importlib.resources is not available we fall back to
+        # older Python method
+        from importlib.resources import path  # pylint: disable=import-outside-toplevel
+
+        # pylint: disable=deprecated-method
+        package_path = path(package, _CONFIG_FILE)  # noqa: W4902
+
+    try:
+        with package_path as config_path:
+            return _read_config_file(config_path) if config_path.exists() else {}
     except ModuleNotFoundError as mod_err:
         # if all else fails we try to find the package default config somewhere
         # in the package tree - we use the first one we find
-        pkg_root = _get_pkg_path("msticpy")
+        pkg_root: Optional[Path] = _get_pkg_path("msticpy")
         if not pkg_root:
             raise MsticpyUserConfigError(
                 f"Unable to locate the package default {_CONFIG_FILE}",
@@ -362,15 +378,19 @@ def _create_data_providers(mp_config: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_http_timeout(
+    *,
+    timeout: Optional[int] = None,
+    def_timeout: Optional[int] = None,
     **kwargs,
 ) -> httpx.Timeout:
     """Return timeout from settings or overridden in `kwargs`."""
-    config_timeout = get_config(
+    del kwargs
+    config_timeout: Union[int, Dict, httpx.Timeout, List, Tuple] = get_config(
         "msticpy.http_timeout", get_config("http_timeout", None)
     )
-    timeout_params = kwargs.get(
-        "timeout", kwargs.get("def_timeout", config_timeout)  # type: ignore
-    )  # type: ignore
+    timeout_params: Union[int, Dict, httpx.Timeout, List[Union[float, None]], Tuple] = (
+        timeout or def_timeout or config_timeout
+    )
     if isinstance(timeout_params, dict):
         timeout_params = {
             name: _valid_timeout(val) for name, val in timeout_params.items()
@@ -389,7 +409,9 @@ def get_http_timeout(
     return httpx.Timeout(None)
 
 
-def _valid_timeout(timeout_val) -> Union[float, None]:
+def _valid_timeout(
+    timeout_val: Optional[Union[float, numbers.Real]]
+) -> Union[float, None]:
     """Return float in valid range or None."""
     if isinstance(timeout_val, numbers.Real) and float(timeout_val) >= 0.0:
         return float(timeout_val)

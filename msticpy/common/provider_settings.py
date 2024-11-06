@@ -4,13 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Helper functions for configuration settings."""
+from __future__ import annotations
+
 import os
 import warnings
 from collections import UserDict
-from typing import Any, Callable, Dict, List, Optional, Union
-
-import attr
-from attr import Factory
+from dataclasses import dataclass, field
+from typing import Any, Callable
 
 from .._version import VERSION
 from .exceptions import MsticpyImportExtraError
@@ -28,11 +28,10 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-# pylint: disable=too-few-public-methods, too-many-ancestors
 class ProviderArgs(UserDict):
     """ProviderArgs dictionary."""
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> Any:
         """Return key value via SecretsClient.read_secret."""
         if key not in self.data:
             raise KeyError(key)
@@ -41,25 +40,22 @@ class ProviderArgs(UserDict):
         return self.data[key]
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class ProviderSettings:
     """Provider settings."""
 
     name: str
     description: str
-    provider: Optional[str] = None
-    args: ProviderArgs = Factory(ProviderArgs)  # type: ignore
-    primary: bool = False
-
-
-# pylint: enable=too-few-public-methods, too-many-ancestors
+    provider: str | None = field(default=None)
+    args: ProviderArgs = field(default_factory=ProviderArgs)
+    primary: bool = field(default=False)
 
 
 def _secrets_enabled() -> bool:
     return _SECRETS_ENABLED and _SECRETS_CLIENT
 
 
-def get_secrets_client_func() -> Callable[..., Optional["SecretsClient"]]:
+def get_secrets_client_func() -> Callable[..., "SecretsClient" | None]:
     """
     Return function to get or create secrets client.
 
@@ -82,11 +78,11 @@ def get_secrets_client_func() -> Callable[..., Optional["SecretsClient"]]:
       replace the SecretsClient instance and return that.
 
     """
-    _secrets_client: Optional["SecretsClient"] = None
+    _secrets_client: "SecretsClient" | None = None
 
     def _return_secrets_client(
-        secrets_client: Optional["SecretsClient"] = None, **kwargs
-    ) -> Optional["SecretsClient"]:
+        secrets_client: "SecretsClient" | None = None, **kwargs
+    ) -> "SecretsClient" | None:
         """Return (optionally setting or creating) a SecretsClient."""
         nonlocal _secrets_client
         if not _SECRETS_ENABLED:
@@ -104,16 +100,14 @@ def get_secrets_client_func() -> Callable[..., Optional["SecretsClient"]]:
 # the module is imported.
 _SECRETS_CLIENT: Any = None
 # Create the secrets client closure
-_SET_SECRETS_CLIENT: Callable[
-    ..., Optional["SecretsClient"]
-] = get_secrets_client_func()
+_SET_SECRETS_CLIENT: Callable[..., "SecretsClient" | None] = get_secrets_client_func()
 # Create secrets client instance if SecretsClient can be imported
 # and config has KeyVault settings.
 if get_config("KeyVault", None) and _SECRETS_ENABLED:
     _SECRETS_CLIENT = _SET_SECRETS_CLIENT()
 
 
-def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSettings]:
+def get_provider_settings(config_section="TIProviders") -> dict[str, ProviderSettings]:
     """
     Read Provider settings from package config.
 
@@ -124,7 +118,7 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
 
     Returns
     -------
-    Dict[str, ProviderSettings]
+    dict[str, ProviderSettings]
         Provider settings indexed by provider name.
 
     """
@@ -180,11 +174,11 @@ def clear_keyring():
 
 
 def auth_secrets_client(
-    tenant_id: Optional[str] = None,
-    auth_methods: List[str] = None,
+    tenant_id: str | None = None,
+    auth_methods: list[str] | None = None,
     credential: Any = None,
     **kwargs,
-):
+) -> None:
     """
     Authenticate the Secrets/Key Vault client.
 
@@ -221,7 +215,7 @@ def auth_secrets_client(
 
     """
     if _secrets_enabled():
-        secrets_client = SecretsClient(
+        secrets_client: SecretsClient = SecretsClient(
             tenant_id=tenant_id,
             auth_methods=auth_methods,
             credential=credential,
@@ -238,12 +232,14 @@ def get_protected_setting(config_path, setting_name) -> Any:
 
 
 def _get_setting_args(
-    config_path: str, provider_name: str, prov_args: Optional[Dict[str, Any]]
+    config_path: str,
+    provider_name: str,
+    prov_args: dict[str, Any] | None,
 ) -> ProviderArgs:
     """Extract the provider args from the settings."""
     if not prov_args:
         return ProviderArgs()
-    name_map = {
+    name_map: dict[str, str] = {
         "workspaceid": "workspace_id",
         "tenantid": "tenant_id",
         "subscriptionid": "subscription_id",
@@ -257,8 +253,8 @@ def _get_setting_args(
 
 def _get_protected_settings(
     setting_path: str,
-    section_settings: Optional[Dict[str, Any]],
-    name_map: Optional[Dict[str, str]] = None,
+    section_settings: dict[str, Any] | None,
+    name_map: dict[str, str] | None = None,
 ) -> ProviderArgs:
     """
     Lookup configuration values config, environment or KeyVault.
@@ -267,9 +263,9 @@ def _get_protected_settings(
     ----------
     setting_path : str
         Dotted path to the setting
-    section_settings : Optional[Dict[str, Any]]
+    section_settings : Optional[dict[str, Any]]
         The configuration settings for this path.
-    name_map : Optional[Dict[str, str]], optional
+    name_map : Optional[dict[str, str]], optional
         Optional mapping to re-write setting names,
         by default None
 
@@ -284,7 +280,7 @@ def _get_protected_settings(
     setting_dict: ProviderArgs = ProviderArgs(section_settings.copy())
 
     for arg_name, arg_value in section_settings.items():
-        target_name = arg_name
+        target_name: str = arg_name
         if name_map:
             target_name = name_map.get(target_name.casefold(), target_name)
 
@@ -299,8 +295,8 @@ def _get_protected_settings(
 
 def _fetch_secret_setting(
     setting_path: str,
-    config_setting: Union[str, Dict[str, Any]],
-) -> Union[Optional[str], Callable[[], Any]]:
+    config_setting: str | dict[str, Any],
+) -> str | Callable[[], Any] | None:
     """
     Return required value for potential secret setting.
 
@@ -308,7 +304,7 @@ def _fetch_secret_setting(
     ----------
     setting_path : str
         Dotted path to the setting
-    config_setting : Union[str, Dict[str, Any]]
+    config_setting : Union[str, dict[str, Any]]
         Setting value (str or Dict)
 
     Returns
@@ -324,40 +320,44 @@ def _fetch_secret_setting(
         _description_
 
     """
-    if isinstance(config_setting, str):
-        return config_setting
+    if isinstance(config_setting, (str, int, float)):
+        return str(config_setting)
     if not isinstance(config_setting, dict):
-        return NotImplementedError(
-            "Configuration setting format not recognized.",
-            f"'{setting_path}' should be a string or dictionary",
-            "with either 'EnvironmentVar' or 'KeyVault' entry.",
+        err_msg: str = (
+            "Configuration setting format not recognized. "
+            f"'{setting_path}' should be a string or dictionary "
+            "with either 'EnvironmentVar' or 'KeyVault' entry."
         )
+        raise NotImplementedError(err_msg)
     if "EnvironmentVar" in config_setting:
-        env_value = os.environ.get(config_setting["EnvironmentVar"])
+        env_value: str | None = os.environ.get(config_setting["EnvironmentVar"])
         if not env_value:
             warnings.warn(
                 f"Environment variable {config_setting['EnvironmentVar']}"
-                + f" ({setting_path})"
-                + " was not set"
+                f" ({setting_path})"
+                " was not set"
             )
         return env_value
     if "KeyVault" in config_setting:
         if not _SECRETS_ENABLED:
+            err_msg = "Cannot use this feature without Key Vault support installed"
             raise MsticpyImportExtraError(
-                "Cannot use this feature without Key Vault support installed",
+                err_msg,
                 title="Error importing Loading Key Vault and/or keyring libraries.",
                 extra="keyvault",
             )
         if not _SECRETS_CLIENT:
             warnings.warn(
                 "Cannot use a KeyVault configuration setting without"
-                + "a KeyVault configuration section in msticpyconfig.yaml"
-                + f" ({setting_path})"
+                "a KeyVault configuration section in msticpyconfig.yaml"
+                f" ({setting_path})",
+                stacklevel=1,
             )
             return None
         return _SECRETS_CLIENT.get_secret_accessor(setting_path)
-    raise NotImplementedError(
-        "Configuration setting format not recognized.",
-        f"'{setting_path}' should be a string or dictionary",
-        "with either 'EnvironmentVar' or 'KeyVault' entry.",
+    err_msg = (
+        "Configuration setting format not recognized. "
+        f"'{setting_path}' should be a string or dictionary "
+        "with either 'EnvironmentVar' or 'KeyVault' entry."
     )
+    raise NotImplementedError(err_msg)

@@ -23,7 +23,6 @@ from azure.mgmt.keyvault.models import (
     VaultProperties,
 )
 from IPython.display import HTML, display
-from msrestazure.azure_exceptions import CloudError
 
 from .._version import VERSION
 from ..common.exceptions import (
@@ -408,7 +407,7 @@ class BHKeyVaultMgmtClient:
         mgmt = KeyVaultManagementClient(self.auth_client.modern, self.subscription_id)
         try:
             vault = mgmt.vaults.get(self.resource_group, vault_name)
-        except (CloudError, ResourceNotFoundError) as cloud_err:
+        except ResourceNotFoundError as cloud_err:
             raise MsticpyKeyVaultConfigError(
                 "Check that you have specified the right value for VaultName"
                 + " in your configuration",
@@ -452,6 +451,7 @@ class BHKeyVaultMgmtClient:
 
     def _get_params(self):
         """Build the vault parameters block."""
+        # pylint: disable=no-member
         oid = _user_oid(self.auth_client.legacy.token)
         sec_perms_all = [perm.value for perm in SecretPermissions]
         key_perms_all = [perm.value for perm in KeyPermissions]

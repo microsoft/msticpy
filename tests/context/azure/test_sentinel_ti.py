@@ -276,7 +276,7 @@ def test_sent_ti_query_indicator(sent_loader):
     respx.post(re.compile(r"https://management\.azure\.com/.*")).respond(
         200, json=_TI_RESULTS
     )
-    sent_loader.query_indicators(minConfidence=10, maxConfidence=100)
+    sent_loader.query_indicators(min_confidence=10, max_confidence=100)
 
 
 @respx.mock

@@ -158,7 +158,7 @@ def _create_pivots(api_scope: Union[str, VTAPIScope, None]):
     else:
         scope = api_scope
     try:
-        vt_client = VTLookupV3()
+        vt_client = VTLookupV3()  # pylint:disable=possibly-used-before-assignment
     except (ValueError, AttributeError):
         # Can't initialize VTLookup - don't add the pivot funcs
         return {}

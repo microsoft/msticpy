@@ -12,6 +12,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   msticpy.aiagents
    msticpy.analysis
    msticpy.auth
    msticpy.common
@@ -24,3 +25,11 @@ Subpackages
    msticpy.nbwidgets
    msticpy.transform
    msticpy.vis
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   msticpy.lazy_importer

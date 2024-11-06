@@ -15,10 +15,12 @@ Submodules
    msticpy.context.tiproviders.abuseipdb
    msticpy.context.tiproviders.alienvault_otx
    msticpy.context.tiproviders.azure_sent_byoti
+   msticpy.context.tiproviders.binaryedge
    msticpy.context.tiproviders.crowdsec
    msticpy.context.tiproviders.greynoise
    msticpy.context.tiproviders.ibm_xforce
    msticpy.context.tiproviders.intsights
+   msticpy.context.tiproviders.ip_quality_score
    msticpy.context.tiproviders.kql_base
    msticpy.context.tiproviders.mblookup
    msticpy.context.tiproviders.open_page_rank

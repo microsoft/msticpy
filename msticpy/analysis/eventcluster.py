@@ -39,6 +39,7 @@ from typing import Any, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
+from numpy.typing import NDArray
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyImportExtraError
@@ -679,7 +680,7 @@ def plot_cluster(  # noqa: C901, MC0001
         raise ValueError(mssg + f" {max_idx}.")
 
     labels = db_cluster.labels_
-    core_samples_mask = np.zeros_like(labels, dtype=bool)
+    core_samples_mask: NDArray[np.bool_] = np.zeros_like(labels, dtype=bool)
 
     # pylint: disable=unsupported-assignment-operation
     # (assignment of numpy array is valid)
