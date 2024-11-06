@@ -14,7 +14,7 @@ data and another on which to predict outliers.
 """
 
 import math
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -33,12 +33,15 @@ except ImportError as imp_err:
     ) from imp_err
 
 __version__ = VERSION
-__author__ = "Ian Hellen"
+__author__ = "Ian Hellen, Tatsuya Hasegawa"
 
 
 # pylint: disable=invalid-name
 def identify_outliers(
-    x: np.ndarray, x_predict: np.ndarray, contamination: float = 0.05, max_features: Optional[int] = None, 
+    x: np.ndarray,
+    x_predict: np.ndarray,
+    contamination: float = 0.05,
+    max_features: Optional[int] = None,
 ) -> Tuple[IsolationForest, np.ndarray, np.ndarray]:
     """
     Identify outlier items using SkLearn IsolationForest.
@@ -69,7 +72,7 @@ def identify_outliers(
     max_samples = min(100, rows)
     if not max_features:
         max_features = math.floor(math.sqrt(cols))
-   
+
     clf = IsolationForest(
         max_samples=max_samples,
         max_features=max_features,
@@ -87,7 +90,7 @@ def identify_outliers(
     return clf, x_outliers, y_pred_outliers
 
 
-# pylint: disable=too-many-arguments, too-many-locals
+# pylint: disable=too-many-arguments, too-many-statements, too-many-locals
 def plot_outlier_results(
     clf: IsolationForest,
     x: np.ndarray,
@@ -113,13 +116,9 @@ def plot_outlier_results(
         list of feature columns to display
     plt_title : str
         Plot title
-
     """
-
-    if len(feature_columns) < 2:
-        raise ValueError("plot_outlier_results function needs more than two features for the graph visualization.")
-    
-    elif len(feature_columns) == 2: # two dimension plot: remain original codes from msticpy 2.14.0      
+    if len(feature_columns) == 2:
+        # two dimension plot: mostly remain original codes from msticpy 2.14.0
         # plot the line, the samples, and the nearest vectors to the plane
         x_max_x = x[:, 0].max() + (x[:, 0].max() / 10)
         x_min_x = -x[:, 0].max() / 10
@@ -128,7 +127,15 @@ def plot_outlier_results(
         xx, yy = np.meshgrid(
             np.linspace(x_min_x, x_max_x, 100), np.linspace(x_min_y, x_max_y, 100)
         )
-        z = clf.decision_function(np.c_[xx.ravel(), yy.ravel(), np.zeros((xx.ravel().shape[0], clf.n_features_in_ - len(feature_columns)))])
+        z = clf.decision_function(
+            np.c_[
+                xx.ravel(),
+                yy.ravel(),
+                np.zeros(
+                    (xx.ravel().shape[0], clf.n_features_in_ - len(feature_columns))
+                ),
+            ]
+        )
         z = z.reshape(xx.shape)
 
         plt.rcParams["figure.figsize"] = (20, 10)
@@ -138,10 +145,10 @@ def plot_outlier_results(
         plt.contourf(xx, yy, z, cmap=plt.cm.Blues_r)  # type: ignore
 
         b1 = plt.scatter(x[:, 0], x[:, 1], c="white", s=20, edgecolor="k")
-        b2 = plt.scatter(x_predict[:, 0], x_predict[:, 1], c="green", s=40, edgecolor="k")
-        c = plt.scatter(
-            x_outliers[:, 0], x_outliers[:, 1], c="red", marker="x", s=200
+        b2 = plt.scatter(
+            x_predict[:, 0], x_predict[:, 1], c="green", s=40, edgecolor="k"
         )
+        c = plt.scatter(x_outliers[:, 0], x_outliers[:, 1], c="red", marker="x", s=200)
         plt.axis("tight")
 
         xp_max_x = x_predict[:, 0].max() + (x_predict[:, 0].max() / 10)
@@ -164,10 +171,12 @@ def plot_outlier_results(
             loc="upper right",
         )
         plt.show()
-    
-    elif len(feature_columns) > 2: # multi dimension subplots
+
+    elif len(feature_columns) > 2:  # multi dimension subplots
         dimension_num = x.shape[1]
-        fig, axes = plt.subplots(dimension_num, dimension_num, figsize=(20, 20),constrained_layout=True)
+        fig, axes = plt.subplots(
+            dimension_num, dimension_num, figsize=(20, 20), constrained_layout=True
+        )
         for i in range(dimension_num):
             for j in range(dimension_num):
                 if i != j:
@@ -177,17 +186,28 @@ def plot_outlier_results(
                     x_max_y = x[:, i].max() + (x[:, i].max() / 10)
                     x_min_y = -x[:, i].max() / 10
                     xx, yy = np.meshgrid(
-                        np.linspace(x_min_x, x_max_x, 100), np.linspace(x_min_y, x_max_y, 100)
+                        np.linspace(x_min_x, x_max_x, 100),
+                        np.linspace(x_min_y, x_max_y, 100),
                     )
-                    z = clf.decision_function(np.c_[xx.ravel(), yy.ravel(), np.zeros((xx.ravel().shape[0], len(feature_columns)-2))])
+                    z = clf.decision_function(
+                        np.c_[
+                            xx.ravel(),
+                            yy.ravel(),
+                            np.zeros((xx.ravel().shape[0], len(feature_columns) - 2)),
+                        ]
+                    )
                     z = z.reshape(xx.shape)
 
                     # pylint: disable=no-member
                     axes[i, j].contourf(xx, yy, z, cmap=plt.cm.Blues_r)  # type: ignore
 
                     b1 = axes[i, j].scatter(x[:, j], x[:, i], c="white", edgecolor="k")
-                    b2 = axes[i, j].scatter(x_predict[:, j], x_predict[:, i], c="green", edgecolor="k")
-                    c = axes[i, j].scatter(x_outliers[:, j], x_outliers[:, i], c="red", marker="x")
+                    b2 = axes[i, j].scatter(
+                        x_predict[:, j], x_predict[:, i], c="green", edgecolor="k"
+                    )
+                    c = axes[i, j].scatter(
+                        x_outliers[:, j], x_outliers[:, i], c="red", marker="x"
+                    )
 
                     xp_max_x = x_predict[:, 0].max() + (x_predict[:, 0].max() / 10)
                     xp_min_x = -x_predict[:, 0].max() / 10
@@ -196,13 +216,14 @@ def plot_outlier_results(
 
                     axes[i, j].axis(xmin=xp_min_x, xmax=xp_max_x)
                     axes[i, j].axis(ymin=xp_min_y, ymax=xp_max_y)
-                    axes[i, j].set_xlabel(f'{feature_columns[j]}')
-                    axes[i, j].set_ylabel(f'{feature_columns[i]}')
+                    axes[i, j].set_xlabel(f"{feature_columns[j]}")
+                    axes[i, j].set_ylabel(f"{feature_columns[i]}")
 
                 else:
-                    axes[i, j].axis('off')  # do not show the same features x,y each other.
-        
-        plt.suptitle(plt_title)
+                    # do not show the same features x,y each other.
+                    axes[i, j].axis("off")
+
+        fig.suptitle(plt_title)
         plt.legend(
             [b1, b2, c],
             [
@@ -211,11 +232,13 @@ def plot_outlier_results(
                 "new abnormal observations",
             ],
             loc="best",
-            facecolor="#0072BD", 
+            facecolor="#0072BD",
             framealpha=0.3,
         )
         plt.show()
 
+    else:
+        raise ValueError("plot_outlier_results function needs more than two features.")
 
 
 def remove_common_items(data: pd.DataFrame, columns: List[str]) -> pd.DataFrame:
