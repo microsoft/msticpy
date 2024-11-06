@@ -14,7 +14,7 @@ data and another on which to predict outliers.
 """
 
 import math
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -41,7 +41,7 @@ def identify_outliers(
     x: np.ndarray,
     x_predict: np.ndarray,
     contamination: float = 0.05,
-    max_features: Optional[int] = None,
+    max_features: Optional[Union[int, float]] = None,
 ) -> Tuple[IsolationForest, np.ndarray, np.ndarray]:
     """
     Identify outlier items using SkLearn IsolationForest.
@@ -54,8 +54,10 @@ def identify_outliers(
         Model
     contamination : float
         Percentage contamination (default: {0.05})
-    max_features : int, optional
-        The maximum number of features to be used for Isolation Forest (default: None)
+    max_features : int or float, optional
+        Specifies max num or max rate of features
+        to be randomly selected when building each tree.
+        default: None => {math.floor(math.sqrt(cols))}
 
     Returns
     -------
@@ -90,7 +92,7 @@ def identify_outliers(
     return clf, x_outliers, y_pred_outliers
 
 
-# pylint: disable=too-many-arguments, too-many-statements, too-many-locals
+# pylint: disable=too-many-arguments, too-many-locals
 def plot_outlier_results(
     clf: IsolationForest,
     x: np.ndarray,
@@ -231,7 +233,6 @@ def plot_outlier_results(
                 "new regular observations",
                 "new abnormal observations",
             ],
-            loc="best",
             facecolor="#0072BD",
             framealpha=0.3,
         )
