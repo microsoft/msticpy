@@ -459,7 +459,7 @@ class CybereasonDriver(DriverBase):
             raise httpx.HTTPStatusError(
                 f"{status}: {json_result['message']}",
                 request=response.request,
-                response=response
+                response=response,
             )
 
         return json_result

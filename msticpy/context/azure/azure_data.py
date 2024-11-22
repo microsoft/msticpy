@@ -818,21 +818,22 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
                 details.network_security_group.id.split("/")[8],
             )
             nsg_rules = []
-            for nsg in nsg_details.default_security_rules:
-                rules = asdict(
-                    NsgItems(
-                        rule_name=nsg.name,
-                        description=nsg.description,
-                        protocol=str(nsg.protocol),
-                        direction=str(nsg.direction),
-                        src_ports=nsg.source_port_range,
-                        dst_ports=nsg.destination_port_range,
-                        src_addrs=nsg.source_address_prefix,
-                        dst_addrs=nsg.destination_address_prefix,
-                        action=str(nsg.access),
-                    ),
-                )
-                nsg_rules.append(rules)
+            if nsg_details is not None:
+                for nsg in nsg_details.default_security_rules:
+                    rules = asdict(
+                        NsgItems(
+                            rule_name=nsg.name,
+                            description=nsg.description,
+                            protocol=str(nsg.protocol),
+                            direction=str(nsg.direction),
+                            src_ports=nsg.source_port_range,
+                            dst_ports=nsg.destination_port_range,
+                            src_addrs=nsg.source_address_prefix,
+                            dst_addrs=nsg.destination_address_prefix,
+                            action=str(nsg.access),
+                        ),
+                    )
+                    nsg_rules.append(rules)
 
             nsg_df = pd.DataFrame(nsg_rules)
 

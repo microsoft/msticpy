@@ -146,7 +146,9 @@ class VTFileBehavior:
             file_summary = file_summary.iloc[0]
         if isinstance(file_summary, pd.Series):
             file_summary = file_summary.to_dict()
-        self.file_summary: dict[str, Any] = file_summary or {}
+        self.file_summary: pd.Series | dict[str, pd.Timestamp] | dict[str, Any] = (
+            file_summary or {}
+        )
         self.file_id: str | Any | None = file_id or self.file_summary.get("id")
 
         self._file_behavior: dict[str, Any] = {}
@@ -406,7 +408,7 @@ def _try_match_commandlines(
                 and np.isnan(row["cmd_line"])
                 and row["name"] in cmd
             ):
-                procs_cmd.loc[idx, "cmd_line"] = cmd  # type: ignore[reportCallIssue]
+                procs_cmd.loc[idx, "cmd_line"] = cmd  # type: ignore[reportCallIssue, assignment, index]
                 break
     for cmd in command_executions:
         for idx, row in procs_cmd.iterrows():
@@ -416,7 +418,7 @@ def _try_match_commandlines(
                 and Path(row["name"]).stem.lower() in cmd.lower()
             ):
                 weak_matches += 1
-                procs_cmd.loc[idx, "cmd_line"] = cmd  # type: ignore[reportCallIssue]
+                procs_cmd.loc[idx, "cmd_line"] = cmd  # type: ignore[reportCallIssue, assignment, index]
                 break
 
     if weak_matches:

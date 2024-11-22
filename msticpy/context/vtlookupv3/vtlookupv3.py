@@ -1222,7 +1222,7 @@ def _get_vt_api_key() -> str | None:
 
 def timestamps_to_utcdate(data: pd.DataFrame) -> pd.DataFrame:
     """Replace Unix timestamps in VT data with Py/pandas Timestamp."""
-    columns: pd.Index[str] = data.columns
+    columns: pd.Index = data.columns
     for date_col in (
         col for col in columns if isinstance(col, str) and col.endswith("_date")
     ):

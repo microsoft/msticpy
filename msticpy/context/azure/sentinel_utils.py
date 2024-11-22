@@ -339,7 +339,7 @@ def parse_resource_id(res_id: str) -> dict[str, Any]:
     """Extract components from workspace resource ID."""
     if not res_id.startswith("/"):
         res_id = f"/{res_id}"
-    res_id_parts: dict[str, Any] = az_tools.parse_resource_id(res_id)
+    res_id_parts: dict[str, str] = az_tools.parse_resource_id(res_id)
     workspace_name: str | None = None
     if (
         res_id_parts.get("namespace") == "Microsoft.OperationalInsights"
