@@ -588,7 +588,7 @@ Alternatively, you can pass the account_id and api_key to the GeoLiteLookup clas
                 geo_match = self._get_geomatch_non_public(ip_type)
             elif self._reader:
                 try:
-                    geo_match = self._reader.city(ip_input).raw
+                    geo_match = self._reader.city(ip_input).raw  # type: ignore
                 except (AddressNotFoundError, AttributeError, ValueError):
                     continue
                 if geo_match:
