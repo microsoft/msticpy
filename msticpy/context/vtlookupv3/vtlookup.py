@@ -823,7 +823,7 @@ class VTLookup:
         new_row["Status"] = status
         new_row["SourceIndex"] = source_idx
         new_results: pd.DataFrame = self.results.append(
-            new_row.to_dict(),
+            new_row.to_dict(),  # type: ignore[operator]
             ignore_index=True,
         )
 

@@ -224,12 +224,14 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
                 axis=1,
                 copy=False,
             )
-            if (current_df == item_series).all(axis=1).any() and overwrite:
+            if (current_df == item_series).all(
+                axis=1
+            ).any() and overwrite:  # type: ignore[attr-defined]
                 watchlist_id: str = current_items[
                     current_items.isin(list(new_item.values())).any(axis=1)
                 ]["properties.watchlistItemId"].iloc[0]
             # If not in watchlist already generate new ID
-            elif not (current_df == item_series).all(axis=1).any():
+            elif not (current_df == item_series).all(axis=1).any():  # type: ignore[attr-defined]
                 watchlist_id = str(uuid4())
             else:
                 err_msg = "Item already exists in the watchlist. Set overwrite = True to replace."

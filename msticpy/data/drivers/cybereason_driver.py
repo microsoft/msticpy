@@ -398,6 +398,7 @@ class CybereasonDriver(DriverBase):
     def __execute_query(
         self,
         body: Dict[str, Any],
+        *,
         page: int = 0,
         page_size: int = 2000,
         pagination_token: str = None,
@@ -405,6 +406,8 @@ class CybereasonDriver(DriverBase):
     ) -> Dict[str, Any]:
         """
         Run query with pagination enabled.
+
+        :raises httpx.HTTPStatusError: if max_retry reached
 
         Parameters
         ----------
@@ -416,6 +419,8 @@ class CybereasonDriver(DriverBase):
             Page number to query
         pagination_token: str
             Token of the current search
+        max_retry: int
+            Maximum retries in case of API no cuccess response
 
         Returns
         -------
@@ -449,6 +454,14 @@ class CybereasonDriver(DriverBase):
             json_result = response.json()
             status = json_result["status"]
             cur_try += 1
+
+        if cur_try >= max_retry:
+            raise httpx.HTTPStatusError(
+                f"{status}: {json_result['message']}",
+                request=response.request,
+                response=response,
+            )
+
         return json_result
 
     async def __run_threaded_queries(
