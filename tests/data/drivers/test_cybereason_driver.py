@@ -281,6 +281,7 @@ def test_query(driver):
         check.is_true(connect.called or driver.connected)
         check.is_true(query.called)
         check.is_instance(data, pd.DataFrame)
+        check.is_true("instance" in data.columns)
 
 @respx.mock
 def test_partial_success_query(driver):

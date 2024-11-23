@@ -159,7 +159,7 @@ class CybereasonDriver(DriverBase):
             )
         else:
             df_result = self._format_result_to_dataframe(result=response)
-
+        df_result["instance"] = self.instance
         return df_result
 
     def _exec_paginated_queries(
