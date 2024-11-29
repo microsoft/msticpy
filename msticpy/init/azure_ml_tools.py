@@ -554,9 +554,9 @@ def _check_aml_auth_method_order():
     if msi_lower_than_cli or msi_lower_than_devcode:
         return
     _disp_html(_MSI_WARNING)
-    logging.warning("MSI authentication is higher priority than CLI or DeviceCode.")
+    logger.warning("MSI authentication is higher priority than CLI or DeviceCode.")
     if "msi" in current_methods:
         _disp_html("Reordering auth_methods to move MSI to lowest priority.")
         current_methods.remove("msi")
         current_methods.append("msi")
-        logging.info("Reordering auth_methods to move MSI to the end.")
+        logger.info("Reordering auth_methods to move MSI to the end.")

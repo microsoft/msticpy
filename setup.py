@@ -33,7 +33,7 @@ EXTRAS = {
     "splunk": ["splunk-sdk>=1.6.0,!=2.0.0"],
     "sumologic": ["sumologic-sdk>=0.1.11", "openpyxl>=3.0"],
     "kql": ["KqlmagicCustom[jupyter-extended]>=0.1.114.post22"],
-    "_azure_core": [
+    "azure": [
         "azure-mgmt-compute>=4.6.2",
         "azure-mgmt-core>=1.2.1",
         "azure-mgmt-monitor>=2.0.0",
@@ -51,8 +51,9 @@ EXTRAS = {
         "matplotlib>=3.0.0",
     ],
     "sql2kql": ["mo-sql-parsing>=8, <9.0.0"],
-    "riskiq": ["passivetotal>=2.5.3"],
+    "riskiq": ["passivetotal>=2.5.3", "requests>=2.31.0"],
     "panel": ["panel>=0.14.4"],
+    "aiagents": ["pyautogen[retrievechat]>=0.2.28"],
 }
 extras_all = [
     extra for name, extras in EXTRAS.items() for extra in extras if name != "dev"
@@ -64,14 +65,16 @@ EXTRAS["all"] = sorted(
     _combine_extras(list({name for name in EXTRAS if name != "dev"}))
 )
 
-EXTRAS["azure"] = sorted(_combine_extras(["_azure_core", "keyvault", "azure_query"]))
 EXTRAS["test"] = sorted(_combine_extras(["all", "dev"]))
-EXTRAS["azsentinel"] = sorted(_combine_extras(["azure", "kql", "keyvault"]))
-EXTRAS["azuresentinel"] = sorted(_combine_extras(["azure", "kql", "keyvault"]))
-EXTRAS["sentinel"] = sorted(_combine_extras(["azure", "kql", "keyvault"]))
+EXTRAS["sentinel"] = EXTRAS["azure"]
+EXTRAS["azsentinel"] = EXTRAS["sentinel"]
+EXTRAS["azuresentinel"] = EXTRAS["sentinel"]
 
 
 if __name__ == "__main__":
     setuptools.setup(
-        install_requires=INSTALL_REQUIRES, extras_require=EXTRAS, version=__version__
+        install_requires=INSTALL_REQUIRES,
+        extras_require=EXTRAS,
+        version=__version__,
+        package_data={"docs": ["msticpy/docs/source/**/*.rst"]},
     )

@@ -10,13 +10,13 @@ import re
 import subprocess  # nosec
 import sys
 import warnings
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from platform import python_version
 from typing import Dict, List, Optional, Tuple, Union
 
-from IPython.core.getipython import get_ipython
 from IPython.core.display import HTML
+from IPython.core.getipython import get_ipython
 from IPython.display import display
 from packaging.requirements import Requirement
 from tqdm.auto import tqdm

@@ -5,23 +5,23 @@
 # Author: Thomas Roccia - @fr0gger_
 # --------------------------------------------------------------------------
 """MalwareBazaar TI Provider."""
-import json
+from __future__ import annotations
+
 from enum import Enum
-from typing import Set
+from typing import Any, ClassVar
 
 import httpx
 import pandas as pd
-from pandas import json_normalize
+from typing_extensions import Self
 
 from ..._version import VERSION
-from ...common.provider_settings import get_provider_settings
 
 __version__ = VERSION
 __author__ = "Thomas Roccia | @fr0gger_"
 
 _BASE_URL = "https://mb-api.abuse.ch/api/v1/"
 
-_QUERY_OBJECTS_MAPPINGS = {
+_QUERY_OBJECTS_MAPPINGS: dict[str, dict[str, str]] = {
     "hash": {"query": "get_info", "hash": "observable"},
     "tag": {"query": "get_taginfo", "tag": "observable", "limit": "limit"},
     "signature": {"query": "get_siginfo", "signature": "observable", "limit": "limit"},
@@ -61,7 +61,7 @@ class MBEntityType(Enum):
 class MBlookup:
     """MBlookup Python Class wrapper for MalwareBazaar API."""
 
-    _SUPPORTED_MB_TYPES: Set[MBEntityType] = {
+    _SUPPORTED_MB_TYPES: ClassVar[set[MBEntityType]] = {
         MBEntityType.HASH,
         MBEntityType.TAG,
         MBEntityType.SIGNATURE,
@@ -78,22 +78,26 @@ class MBlookup:
         MBEntityType.GIMPHASH,
     }
 
-    def __init__(self, mb_key=None):
+    def __init__(self: MBlookup, mb_key: str | None = None) -> None:
         """Init function to get the API key if necessary."""
-        self.mb_key = mb_key  # or_get_mb_api_key()
+        self.mb_key: str | None = mb_key
 
-    def _make_mb_request(self, data):
+    def _make_mb_request(self: Self, data: dict[str, Any]) -> pd.DataFrame:
         """Request to the malware bazaar api."""
-        try:
-            res = httpx.post(_BASE_URL, data=data, timeout=None)
-            res_data = json.loads(res.text)
-            if res_data["query_status"] == "ok":
-                return json_normalize(res_data["data"])
-            return res["query_status"]
-        except httpx.ConnectError as err:
-            return err
+        res: httpx.Response = httpx.post(_BASE_URL, data=data, timeout=None)
+        res.raise_for_status()
+        res_data: dict[str, Any] = res.json()
+        if res.is_success:
+            return pd.json_normalize(res_data["data"])
+        err_msg: str = "Query failed"
+        raise httpx.ConnectError(err_msg)
 
-    def lookup_ioc(self, observable: str, mb_type: str, limit=10) -> pd.DataFrame:
+    def lookup_ioc(
+        self: Self,
+        observable: str,
+        mb_type: str,
+        limit: int = 10,
+    ) -> pd.DataFrame:
         """
         Lookup for IOC in MalwareBazaar.
 
@@ -118,21 +122,26 @@ class MBlookup:
 
         """
         if MBEntityType(mb_type) not in self._SUPPORTED_MB_TYPES:
-            raise KeyError(
-                f"Property type {mb_type} not supported",
-                "Valid types are",
-                ", ".join(x.value for x in MBEntityType.__members__.values()),
+            err_msg: str = (
+                f"Property type {mb_type} not supported."
+                " Valid types are "
+                ", ".join(x.value for x in MBEntityType.__members__.values())
             )
+            raise KeyError(err_msg)
 
-        query_parameters = _build_query_string(observable, mb_type, limit)
+        query_parameters: dict[str, str] = _build_query_string(
+            observable,
+            mb_type,
+            limit,
+        )
 
         return self._make_mb_request(query_parameters)
 
-    def download_sample(self, sha2: str):
+    def download_sample(self: Self, sha2: str) -> pd.DataFrame:
         """Download specified sample from MB."""
         return self._make_mb_request({"query": "get_file", "sha256_hash": sha2})
 
-    def get_recent(self, selector: str):
+    def get_recent(self: Self, selector: str) -> pd.DataFrame:
         """
         Get the recent MB additions.
 
@@ -149,23 +158,14 @@ class MBlookup:
         """
         return self._make_mb_request({"query": "get_recent", "selector": selector})
 
-    def get_cscb(self):
+    def get_cscb(self: Self) -> pd.DataFrame:
         """Query Code Signing Certificate Blocklist (CSCB)."""
         return self._make_mb_request({"query": "get_cscb"})
 
 
-def _get_mb_api_key():
-    """Retrieve the MB key from settings."""
-    prov_settings = get_provider_settings("TIProviders")
-    mb_settings = prov_settings.get("MalwareBazaar")
-    if mb_settings:
-        return mb_settings.args.get("AuthKey")
-    return None
-
-
-def _build_query_string(observable, mb_type, limit):
+def _build_query_string(observable: str, mb_type: str, limit: int) -> dict[str, str]:
     """Build the query string for the MB API."""
-    query_items = _QUERY_OBJECTS_MAPPINGS[mb_type]
+    query_items: dict[str, Any] = _QUERY_OBJECTS_MAPPINGS[mb_type]
     if "limit" in query_items:
         query_items["limit"] = limit
     for key, value in query_items.items():

@@ -14,6 +14,7 @@ import pytest_check as check
 import respx
 
 from msticpy.context.ip_utils import (
+    _IpWhoIsResult,
     get_asn_details,
     get_asn_from_ip,
     get_asn_from_name,
@@ -452,8 +453,8 @@ def test_get_whois(mock_asn_whois_query):
     respx.get(re.compile(r"http://rdap\.arin\.net/.*")).respond(200, json=RDAP_RESPONSE)
     ms_ip = "13.107.4.50"
     ms_asn = "MICROSOFT-CORP"
-    asn, _ = ip_whois(ms_ip)
-    check.is_in(ms_asn, asn)
+    asn: _IpWhoIsResult = ip_whois(ms_ip)
+    check.is_in(ms_asn, asn.name)
 
 
 @respx.mock

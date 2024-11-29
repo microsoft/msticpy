@@ -18,7 +18,8 @@ __author__ = "Claudiu Toma"
 
 @export
 def set_figure_size(fig: figure, width: int, height: int) -> figure:
-    """Set the figure size.
+    """
+    Set the figure size.
 
     Args:
         fig (figure): initial figure

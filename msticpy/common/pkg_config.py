@@ -13,14 +13,13 @@ a file `msticpyconfig.yaml` in the current directory.
 
 """
 import contextlib
-from contextlib import AbstractContextManager
 import numbers
 import os
 from collections import UserDict
-
+from contextlib import AbstractContextManager
 from importlib.util import find_spec
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Tuple, Union, List
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import httpx
 import yaml
@@ -298,17 +297,20 @@ def _get_default_config():
     package = "msticpy"
     try:
         from importlib.resources import (  # pylint: disable=import-outside-toplevel
-            files,
             as_file,
+            files,
         )
 
         package_path: AbstractContextManager = as_file(
             files(package).joinpath(_CONFIG_FILE)
         )
     except ImportError:
+        # If importlib.resources is not available we fall back to
+        # older Python method
         from importlib.resources import path  # pylint: disable=import-outside-toplevel
 
-        package_path = path(package, _CONFIG_FILE)
+        # pylint: disable=deprecated-method
+        package_path = path(package, _CONFIG_FILE)  # noqa: W4902
 
     try:
         with package_path as config_path:

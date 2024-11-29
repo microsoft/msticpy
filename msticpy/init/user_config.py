@@ -242,7 +242,7 @@ def _load_azsent_api(comp_settings=None, **kwargs):
 
     res_id = comp_settings.pop("res_id", None)
     if res_id:
-        az_sent = MicrosoftSentinel(res_id=res_id)
+        az_sent = MicrosoftSentinel(resource_id=res_id)
     else:
         az_sent = MicrosoftSentinel()
     connect = comp_settings.pop("connect", True)

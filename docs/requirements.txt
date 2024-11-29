@@ -1,4 +1,8 @@
 attrs>=18.2.0
+azure.mgmt.network
+azure.mgmt.resource
+azure.mgmt.monitor
+azure.mgmt.compute
 cryptography
 deprecated>=1.2.4
 docutils<0.22.0

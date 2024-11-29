@@ -12,7 +12,11 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import Any, Dict, Tuple
+from __future__ import annotations
+
+from typing import Any, ClassVar
+
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ..http_provider import APILookupParams
@@ -26,9 +30,9 @@ __author__ = "Pete Bryan"
 class GreyNoise(HttpTIProvider):
     """GreyNoise Lookup."""
 
-    _BASE_URL = "https://api.greynoise.io"
+    _BASE_URL: ClassVar[str] = "https://api.greynoise.io"
 
-    _QUERIES = {
+    _QUERIES: ClassVar[dict[str, APILookupParams]] = {
         # Community API
         "ipv4": APILookupParams(
             path="/v3/community/{observable}",
@@ -46,7 +50,7 @@ class GreyNoise(HttpTIProvider):
         ),
     }
 
-    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -64,11 +68,12 @@ class GreyNoise(HttpTIProvider):
 
         """
         if self._failed_response(response) or not isinstance(
-            response["RawResult"], dict
+            response["RawResult"],
+            dict,
         ):
             return False, ResultSeverity.information, "Not found."
         result = True
-        result_dict = {}
+        result_dict: dict[str, Any] = {}
         # If community API response extract key elements
         if "riot" in response["RawResult"]:
             result_dict.update(
@@ -79,7 +84,7 @@ class GreyNoise(HttpTIProvider):
                     "Message": response["RawResult"].get("message"),
                     "Noise": response["RawResult"].get("noise"),
                     "RIOT": response["RawResult"].get("riot"),
-                }
+                },
             )
         # If enterprise full lookup response extract key elements
         if "actor" in response["RawResult"]:
@@ -92,7 +97,7 @@ class GreyNoise(HttpTIProvider):
                     "Tags": response["RawResult"].get("tags"),
                     "VPN": response["RawResult"].get("vpn_service", False),
                     "Metadata": response["RawResult"].get("metadata"),
-                }
+                },
             )
         # If enterprise quick lookup just return raw data is its so small
         if "code" in response["RawResult"]:

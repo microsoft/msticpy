@@ -46,7 +46,7 @@ def create_vt_client(vt_lib) -> VTLookupV3:
     """Test simple lookup of IoC."""
     vt_lib.Client = VTClient
     vt_lib.APIError = VTAPIError
-    return VTLookupV3()
+    return VTLookupV3(vt_key="vt_key")
 
 
 @pytest.fixture

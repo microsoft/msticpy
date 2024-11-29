@@ -114,13 +114,14 @@ ContextProviders:
   ServiceNow:
     Primary: True
     Args:
-      TenantId: 8360dd21-0294-4240-9128-89611f415c53
+      Instance: 8360dd21-0294-4240-9128-89611f415c53
       AuthKey: "authkey"
-      AuthId: "authid"
+      ApiID: "authid"
     Provider: "ServiceNow"
 OtherProviders:
   GeoIPLite:
     Args:
+      AccountID: "1234567"
       AuthKey:
         EnvironmentVar: "MAXMIND_AUTH"
       DBFolder: "~/.msticpy"

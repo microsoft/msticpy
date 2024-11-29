@@ -447,6 +447,7 @@ def download_and_write_sentinel_queries(
         Path to the folder you want the new generated YAML files to be stored in
     github_outputdir : Optional[str]
         Path to the directory you want the Github download to be stored in
+
     """
     print("Downloading files from GitHub")
     get_sentinel_queries_from_github(outputdir=github_outputdir)

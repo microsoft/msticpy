@@ -149,6 +149,7 @@ class SplitProperty:
             Name of the instance attribute to use to store the right value.
         split_char : str
             Character to use to split the value.
+
         """
         self.inst_left_name = inst_left_name
         self.inst_right_name = inst_right_name

@@ -19,13 +19,17 @@ for the account type that you have. Support IoC Types:
 -  IPv4 Address
 
 """
+from __future__ import annotations
+
+import contextlib
 import json
-from collections import namedtuple
+import logging
 from json import JSONDecodeError
-from typing import Any, Dict, List, Mapping, Optional, Tuple
+from typing import Any, ClassVar, Hashable, Mapping, NamedTuple
 
 import httpx
 import pandas as pd
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.pkg_config import get_http_timeout
@@ -33,23 +37,27 @@ from ...common.utility import export, mp_ua_header
 from ..lookup_result import SanitizedObservable
 from ..preprocess_observable import preprocess_observable
 
+logger: logging.Logger = logging.getLogger(__name__)
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-# VirusTotal parameter collection
-VTParams = namedtuple(
-    "VTParams",
-    [
-        "api_type",
-        "batch_size",
-        "batch_delimiter",
-        "http_verb",
-        "api_var_name",
-        "headers",
-    ],
-)
 
-DuplicateStatus = namedtuple("DuplicateStatus", ["is_dup", "status"])
+class VTParams(NamedTuple):
+    """VirusTotal parameter collection."""
+
+    api_type: str
+    batch_size: int
+    batch_delimiter: str
+    http_verb: str
+    api_var_name: str
+    headers: dict[str, Any] | None
+
+
+class DuplicateStatus(NamedTuple):
+    """Information about vt objects being duplicates."""
+
+    is_dup: bool
+    status: str
 
 
 @export
@@ -71,7 +79,7 @@ class VTLookup:
     """
 
     # Ioc types that we support
-    _SUPPORTED_INPUT_TYPES: List[str] = [
+    _SUPPORTED_INPUT_TYPES: ClassVar[list[str]] = [
         "ipv4",
         "dns",
         "url",
@@ -81,7 +89,7 @@ class VTLookup:
     ]
 
     # Mapping to to VT Types
-    _VT_TYPE_MAP: Dict[str, str] = {
+    _VT_TYPE_MAP: ClassVar[dict[str, str]] = {
         "ipv4": "ip-address",
         "dns": "domain",
         "url": "url",
@@ -91,16 +99,16 @@ class VTLookup:
     }
 
     # VT API parameters
-    _HDR_GZIP = {"Accept-Encoding": "gzip, deflate"}
-    _VT_API = "https://www.virustotal.com/vtapi/v2/{type}/report"
-    _VT_API_TYPES: Dict[str, VTParams] = {
+    _HDR_GZIP: ClassVar[dict[str, str]] = {"Accept-Encoding": "gzip, deflate"}
+    _VT_API: ClassVar[str] = "https://www.virustotal.com/vtapi/v2/{type}/report"
+    _VT_API_TYPES: ClassVar[dict[str, VTParams]] = {
         "url": VTParams("url", 1, "\n", "get", "resource", _HDR_GZIP),
         "file": VTParams("file", 25, ",", "get", "resource", _HDR_GZIP),
         "ip-address": VTParams("ip-address", 1, "", "get", "ip", None),
         "domain": VTParams("domain", 1, "", "get", "domain", None),
     }
 
-    _RESULT_COLUMNS: List[str] = [
+    _RESULT_COLUMNS: ClassVar[list[str]] = [
         "Observable",
         "IoCType",
         "Status",
@@ -121,9 +129,9 @@ class VTLookup:
         "DetectedUrls",
     ]
 
-    _http_strict_rgxc = None  # type: Any
+    _http_strict_rgxc: None = None
 
-    def __init__(self, vtkey: str, verbosity: int = 1):
+    def __init__(self: VTLookup, vtkey: str, verbosity: int = 1) -> None:
         """
         Create a new instance of VTLookup class.
 
@@ -138,41 +146,44 @@ class VTLookup:
                 2 = verbose reporting
 
         """
-        self._vtkey = vtkey
-        self._verbosity = verbosity
-        self._ioc_custom_type_map = {}  # type: Dict[str, Optional[str]]
+        self._vtkey: str = vtkey
+        self._verbosity: int = verbosity
+        self._ioc_custom_type_map: dict[str, str | None] = {}
 
         # create a data frame to store the results
-        self.results = pd.DataFrame(data=None, columns=self._RESULT_COLUMNS)
+        self.results: pd.DataFrame = pd.DataFrame(
+            data=None,
+            columns=self._RESULT_COLUMNS,
+        )
 
     @property
-    def supported_ioc_types(self) -> List[str]:
+    def supported_ioc_types(self: Self) -> list[str]:
         """
         Return list of supported IoC type internal names.
 
         Returns
         -------
-        List[str]
-            List of supported IoC type internal names.
+        list[str]
+            list of supported IoC type internal names.
 
         """
         return self._SUPPORTED_INPUT_TYPES
 
     @property
-    def supported_vt_types(self) -> List[str]:
+    def supported_vt_types(self: Self) -> list[str]:
         """
         Return list of VirusTotal supported IoC type names.
 
         Returns
         -------
-        List[str]
-            List of VirusTotal supported IoC type names.
+        list[str]
+            list of VirusTotal supported IoC type names.
 
         """
         return list(self._VT_API_TYPES.keys())
 
     @property
-    def ioc_vt_type_mapping(self) -> Dict[str, str]:
+    def ioc_vt_type_mapping(self: Self) -> dict[str, str]:
         """
         Return mapping between internal and VirusTotal IoC type names.
 
@@ -185,12 +196,12 @@ class VTLookup:
         return self._VT_TYPE_MAP
 
     def lookup_iocs(
-        self,
+        self: Self,
         data: pd.DataFrame,
         src_col: str = "Observable",
         type_col: str = "IoCType",
         src_index_col: str = "SourceIndex",
-        **kwargs,
+        **kwargs: str,
     ) -> pd.DataFrame:
         """
         Retrieve results for IoC observables in the source dataframe.
@@ -212,9 +223,7 @@ class VTLookup:
             be used. This is retained in the output so that you can join the results
             back to the original data.
             (the default is 'SourceIndex')
-
-        Other Parameters
-        ----------------
+        kwargs: str
             key/value pairs of additional mappings to supported IoC type names
             e.g. ipv4='ipaddress', url='httprequest'.
             This allows you to specify custom
@@ -252,22 +261,26 @@ class VTLookup:
             if k in self._get_supported_vt_ioc_types():
                 self._ioc_custom_type_map[k] = val
 
-        src_idx_col = src_index_col if src_index_col in data else None
+        src_idx_col: str | None = src_index_col if src_index_col in data else None
 
         # for each ioc_type, retrieve observables from dataframe
         for ioc_type, mapped_type in self._ioc_custom_type_map.items():
-            input_df = data[data[type_col] == mapped_type]
+            input_df: pd.DataFrame = data[data[type_col] == mapped_type]
             self._lookup_ioc_type(input_df, ioc_type, src_col, src_idx_col)
 
         self._print_status(
-            f"Submission complete. {len(self.results)} "
-            f"responses from {len(data)} input rows",
+            f"Submission complete. {len(self.results)} responses from {len(data)} input rows",
             2,
         )
 
         return self.results
 
-    def lookup_ioc(self, observable: str, ioc_type: str, output: str = "dict") -> Any:
+    def lookup_ioc(
+        self: Self,
+        observable: str,
+        ioc_type: str,
+        output: str = "dict",
+    ) -> pd.DataFrame | list[dict]:
         """
         Look up and single IoC observable.
 
@@ -300,49 +313,55 @@ class VTLookup:
             or ioc_type is None
             or ioc_type.strip() is None
         ):
-            raise SyntaxError("Invalid value for observable or ioc_type")
+            error_msg: str = "Invalid value for observable or ioc_type"
+            raise SyntaxError(error_msg)
 
         pp_observable, status = preprocess_observable(observable, ioc_type)
         if pp_observable is None:
-            raise SyntaxError(f"{status} for observable value {observable}")
+            error_msg = f"{status} for observable value {observable}"
+            raise SyntaxError(error_msg)
 
         if ioc_type not in self._VT_TYPE_MAP:
-            raise LookupError(
-                f"IoC Type {ioc_type} not recognized.",
-                f"Valid types are [{', '.join(self.supported_ioc_types)}]",
+            error_msg = (
+                f"IoC Type {ioc_type} not recognized. "
+                f"Valid types are [{', '.join(self.supported_ioc_types)}]"
             )
+            raise LookupError(error_msg)
 
         if self._VT_TYPE_MAP[ioc_type] not in self._VT_API_TYPES:
-            vt_types = {
+            vt_types: set[str] = {
                 k for k, val in self.ioc_vt_type_mapping.items() if val is not None
             }
-            err = (
+            err: tuple[str, str] = (
                 f"IoC Type {ioc_type} is recognized by VirusTotal.",
                 f"Valid types are [{'', ''.join(vt_types)}]",
             )
             raise LookupError(err)
 
         # do the submission
-        vt_api_type = self._VT_TYPE_MAP[ioc_type]
-        vt_param = self._VT_API_TYPES[vt_api_type]
+        vt_api_type: str = self._VT_TYPE_MAP[ioc_type]
+        vt_param: VTParams = self._VT_API_TYPES[vt_api_type]
         results, _ = self._vt_submit_request(pp_observable, vt_param)
         self._parse_vt_results(results, pp_observable, ioc_type)
 
         # return as a list of dictionaries or a DataFrame
         if output == "dict":
-            list_res = self.results.apply(lambda x: x.to_dict(), axis=1).tolist()
+            list_res: list = self.results.apply(
+                lambda x: x.to_dict(),
+                axis=1,
+            ).tolist()
             return list_res[0] if len(list_res) == 1 else list_res
 
         return self.results
 
     # pylint: disable=too-many-locals
     def _lookup_ioc_type(
-        self,
+        self: Self,
         input_frame: pd.DataFrame,
         ioc_type: str,
         src_col: str,
-        src_index_col: Optional[str],
-    ):
+        src_index_col: str | None,
+    ) -> None:
         """
         Perform the VT submission of a set of IoCs of a given type.
 
@@ -365,37 +384,41 @@ class VTLookup:
 
         """
         if ioc_type not in self._VT_TYPE_MAP:
-            raise KeyError(f'Unknown ioc_type "{ioc_type}""')
+            error_msg: str = f'Unknown ioc_type "{ioc_type}""'
+            raise KeyError(error_msg)
 
-        vt_param = self._VT_API_TYPES[self._VT_TYPE_MAP[ioc_type]]
+        vt_param: VTParams = self._VT_API_TYPES[self._VT_TYPE_MAP[ioc_type]]
 
         # Some types support batch lookups so we can assemble them into batches
         # for the moment we are only supporting
-        source_row_index = {}
-        obs_batch = []
-        batch_index = 0
-        row_num = 0
-        row_count = len(input_frame)
+        source_row_index: dict[str, Any] = {}
+        obs_batch: list[str] = []
+        batch_index: int = 0
+        row_count: int = len(input_frame)
         if src_index_col:
-            src_cols = [src_col, src_index_col]
+            src_cols: list[str] = [src_col, src_index_col]
         else:
             src_cols = [src_col]
 
-        for idx, row in input_frame[src_cols].iterrows():
-            row_num += 1
-            observable = row[src_col]
+        for row_num, (idx, row) in enumerate(input_frame[src_cols].iterrows(), start=1):
+            observable: str = row[src_col]
 
+            index: Hashable = idx
             # Use the user-specified index if possible
             if src_index_col:
-                idx = row[src_index_col]
+                index = row[src_index_col]
 
             # validate the observable to avoid sending too much junk to VT
-            pp_observable = self._validate_observable(observable, ioc_type, idx)
+            pp_observable: SanitizedObservable = self._validate_observable(
+                observable,
+                ioc_type,
+                index,
+            )
 
             # if the observable is valid, add it to the submission batch
             if pp_observable.observable:
                 obs_batch.append(pp_observable.observable)
-                source_row_index[pp_observable.observable] = idx
+                source_row_index[pp_observable.observable] = index
                 batch_index += 1
 
             # We want to trigger in the following circumstances
@@ -407,25 +430,28 @@ class VTLookup:
             if (
                 len(obs_batch) == vt_param.batch_size or row_num == row_count
             ) and obs_batch:
-                obs_submit = vt_param.batch_delimiter.join(obs_batch)
+                obs_submit: str = vt_param.batch_delimiter.join(obs_batch)
 
                 self._print_status(
                     (
                         "Submitting observables: "
-                        + f'"{obs_submit}", type "{ioc_type}" '
-                        + "to VT. (Source index {idx})"
+                        f'"{obs_submit}", type "{ioc_type}" '
+                        f"to VT. (Source index {index})"
                     ),
                     2,
                 )
                 # Submit the request
                 results, status_code = self._vt_submit_request(obs_submit, vt_param)
 
-                if status_code != 200:
+                if status_code != httpx.codes.OK:
                     # Print status messages and add failure cases to results
-                    status = f"Failed submission: http error {status_code}"
+                    status: str = f"Failed submission: http error {status_code}"
                     for failed_obs in obs_batch:
                         self._add_invalid_input_result(
-                            failed_obs, ioc_type, status, source_row_index[failed_obs]
+                            failed_obs,
+                            ioc_type,
+                            status,
+                            source_row_index[failed_obs],
                         )
                         self._print_status(
                             "Error in response submitting observables: "
@@ -438,23 +464,27 @@ class VTLookup:
                 else:
                     # parse the results from the response
                     self._parse_vt_results(
-                        results, obs_submit, ioc_type, idx, source_row_index, vt_param
+                        results,
+                        obs_submit,
+                        ioc_type,
+                        index,
+                        source_row_index,
+                        vt_param,
                     )
 
                 # reset index of batch
                 batch_index = 0
                 obs_batch = []
 
-    # pylint: disable=too-many-branches
-    def _parse_vt_results(  # noqa: C901 MC0001
-        self,
-        vt_results: Any,
+    def _parse_vt_results(  # noqa:PLR0913
+        self: Self,
+        vt_results: str | list | dict | None,
         observable: str,
         ioc_type: str,
-        source_idx: Any = 0,
-        source_row_index: Any = None,
-        vt_param: VTParams = None,
-    ):  # noqa: C901 MC0001
+        source_idx: Hashable = 0,
+        source_row_index: dict[str, Any] | None = None,
+        vt_param: VTParams | None = None,
+    ) -> None:
         """
         Parse VirusTotal results based on IoCType.
 
@@ -467,12 +497,10 @@ class VTLookup:
             :param vt_param: (batch only) the VTParams tuple for this submission
 
         """
-        results_to_parse = []  # type: List[dict]
+        results_to_parse: list[dict] = []
         if isinstance(vt_results, str):
-            try:
+            with contextlib.suppress(JSONDecodeError, TypeError):
                 vt_results = json.loads(vt_results, strict=False)
-            except (JSONDecodeError, TypeError):
-                pass
 
         if (
             isinstance(vt_results, list)
@@ -488,21 +516,21 @@ class VTLookup:
             self._print_status(
                 (
                     "Error parsing response to JSON: "
-                    + f'"{observable}", type "{ioc_type}". '
-                    + f"(Source index {source_idx})"
+                    f'"{observable}", type "{ioc_type}". '
+                    f"(Source index {source_idx})"
                 ),
                 1,
             )
 
         if vt_param and vt_param.batch_delimiter:
-            observables = observable.split(vt_param.batch_delimiter)
+            observables: list[str] = observable.split(vt_param.batch_delimiter)
         else:
             observables = [observable]
 
-        # pylint: disable=consider-using-enumerate
-        for result_idx in range(len(results_to_parse)):
-            df_dict_vtresults = self._parse_single_result(
-                results_to_parse[result_idx], ioc_type
+        for result_idx, _ in enumerate(results_to_parse):
+            df_dict_vtresults: pd.DataFrame = self._parse_single_result(
+                results_to_parse[result_idx],
+                ioc_type,
             )
 
             # Add remaining fields from source
@@ -535,15 +563,18 @@ class VTLookup:
                     observables[result_idx]
                 ]
 
-            new_results = pd.concat(
-                objs=[self.results, df_dict_vtresults], ignore_index=True, axis=0
+            new_results: pd.DataFrame = pd.concat(
+                objs=[self.results, df_dict_vtresults],
+                ignore_index=True,
+                axis=0,
             )
 
             self.results = new_results
-        # pylint enable=locally-disabled, C0200
 
     def _parse_single_result(
-        self, results_dict: Mapping[str, Any], ioc_type: str
+        self: Self,
+        results_dict: Mapping[str, Any],
+        ioc_type: str,
     ) -> pd.DataFrame:
         """
         Parse VirusTotal single result based on IoCType.
@@ -562,7 +593,7 @@ class VTLookup:
 
         """
         # create output frame and parse results to intermediate frame
-        df_dict_vtresults = {}
+        df_dict_vtresults: dict[str, Any] = {}
 
         # Parse returned results to our output dataframe depending
         # on the IoC type
@@ -588,7 +619,7 @@ class VTLookup:
             # then using a list comprehension to pull out the value, where the key 'k'
             # is of the required value
             if ioc_type == "ipv4" and "resolutions" in results_dict:
-                item_list = [
+                item_list: list = [
                     item["hostname"]
                     for item in results_dict["resolutions"]
                     if "hostname" in item
@@ -618,11 +649,16 @@ class VTLookup:
                 df_dict_vtresults["Positives"] = positives
 
         return pd.DataFrame(
-            data=df_dict_vtresults, columns=self._RESULT_COLUMNS, index=[0]
+            data=df_dict_vtresults,
+            columns=self._RESULT_COLUMNS,
+            index=[0],
         )
 
     def _validate_observable(
-        self, observable: str, ioc_type: str, idx: Any
+        self: Self,
+        observable: str,
+        ioc_type: str,
+        idx: Hashable,
     ) -> SanitizedObservable:
         """
         Validate observable for format and duplicates of existing results.
@@ -650,7 +686,7 @@ class VTLookup:
 
         # Check that observable is of the correct format for this type
         # and do any cleaning up required
-        pp_observable = preprocess_observable(observable, ioc_type)
+        pp_observable: SanitizedObservable = preprocess_observable(observable, ioc_type)
         if pp_observable.observable is None:
             self._add_invalid_input_result(
                 observable,
@@ -661,23 +697,27 @@ class VTLookup:
             self._print_status(
                 (
                     f'Invalid observable format: "{observable}", '
-                    + f'type "{ioc_type}", '
-                    + f"status: {pp_observable.status} "
-                    + f"- skipping. (Source index {idx})"
+                    f'type "{ioc_type}", '
+                    f"status: {pp_observable.status} "
+                    f"- skipping. (Source index {idx})"
                 ),
                 2,
             )
             return pp_observable
 
         # Check that we don't already have a result for this
-        dup_result = self._check_duplicate_submission(observable, ioc_type, idx)
+        dup_result: DuplicateStatus = self._check_duplicate_submission(
+            observable,
+            ioc_type,
+            idx,
+        )
         if dup_result.is_dup:
             self._print_status(
                 (
                     "Duplicate observable value detected: "
-                    + f'"{observable}", type "{ioc_type}" '
-                    + f"status: {dup_result.status} "
-                    + f"- skipping. (Source index {idx})"
+                    f'"{observable}", type "{ioc_type}" '
+                    f"status: {dup_result.status} "
+                    f"- skipping. (Source index {idx})"
                 ),
                 2,
             )
@@ -686,7 +726,10 @@ class VTLookup:
         return pp_observable
 
     def _check_duplicate_submission(
-        self, observable: str, ioc_type: str, source_index: Any
+        self: Self,
+        observable: str,
+        ioc_type: str,
+        source_index: Hashable,
     ) -> DuplicateStatus:
         """
         Check for a duplicate value in existing results.
@@ -707,10 +750,12 @@ class VTLookup:
 
         """
         if self.results is None:
-            return DuplicateStatus(False, "ok")
+            return DuplicateStatus(is_dup=False, status="ok")
 
         # Note duplicate var here can be multiple rows of past results
-        duplicate = self.results[self.results["Observable"] == observable].copy()
+        duplicate: pd.DataFrame = self.results[
+            self.results["Observable"] == observable
+        ].copy()
         # if this is a file hash we should check for previous results in
         # all of the hash columns
         if duplicate.shape[0] == 0 and ioc_type in [
@@ -730,21 +775,33 @@ class VTLookup:
         # if we found a duplicate so add the copies of the duplicated requests
         # to the results
         if duplicate.shape[0] > 0:
-            original_indices = [v[0] for v in duplicate[["SourceIndex"]].values]
+            original_indices: list = [
+                v[0] for v in duplicate[["SourceIndex"]].to_numpy()
+            ]
             duplicate["SourceIndex"] = source_index
             duplicate["Status"] = "Duplicate"
-            new_results = pd.concat(
-                objs=[self.results, duplicate], ignore_index=True, sort=False, axis=0
+            new_results: pd.DataFrame = pd.concat(
+                objs=[self.results, duplicate],
+                ignore_index=True,
+                sort=False,
+                axis=0,
             )
             self.results = new_results
 
-            return DuplicateStatus(True, f"Duplicates of {original_indices}")
+            return DuplicateStatus(
+                is_dup=True,
+                status=f"Duplicates of {original_indices}",
+            )
 
-        return DuplicateStatus(False, "ok")
+        return DuplicateStatus(is_dup=False, status="ok")
 
     def _add_invalid_input_result(
-        self, observable: str, ioc_type: str, status: str, source_idx: Any
-    ):
+        self: Self,
+        observable: str,
+        ioc_type: str,
+        status: str,
+        source_idx: Hashable,
+    ) -> None:
         """
         Add a result row to indicate an invalid submission.
 
@@ -765,13 +822,18 @@ class VTLookup:
         new_row["IoCType"] = ioc_type
         new_row["Status"] = status
         new_row["SourceIndex"] = source_idx
-        new_results = self.results.append(new_row.to_dict(), ignore_index=True)  # type: ignore
+        new_results: pd.DataFrame = self.results.append(
+            new_row.to_dict(),  # type: ignore[operator]
+            ignore_index=True,
+        )
 
         self.results = new_results
 
     def _vt_submit_request(
-        self, submission_string: str, vt_param: VTParams
-    ) -> Tuple[Optional[Dict[Any, Any]], int]:
+        self: Self,
+        submission_string: str,
+        vt_param: VTParams,
+    ) -> tuple[dict[Any, Any] | None, int]:
         """
         Submit the request to VT.
 
@@ -783,15 +845,20 @@ class VTLookup:
             VT parameters appropriate to this observable type
 
         """
-        params = {"apikey": self._vtkey, vt_param.api_var_name: submission_string}
-        submit_url = self._get_vt_api_url(vt_param.api_type)
-        headers = {**(mp_ua_header()), "Content-Type": "application/json"}
+        params: dict[str, str] = {
+            "apikey": self._vtkey,
+            vt_param.api_var_name: submission_string,
+        }
+        submit_url: str = self._get_vt_api_url(vt_param.api_type)
+        headers: dict[str, str] = {
+            **(mp_ua_header()),
+            "Content-Type": "application/json",
+        }
         if vt_param.headers is not None:
-            for hdr, val in vt_param.headers.items():
-                headers[hdr] = val
+            headers.update(vt_param.headers)
 
         if vt_param.http_verb == "post":
-            response = httpx.post(
+            response: httpx.Response = httpx.post(
                 submit_url,
                 data=params,
                 headers=headers,
@@ -804,7 +871,7 @@ class VTLookup:
                 headers=headers,
                 timeout=get_http_timeout(),
             )
-        if response.status_code == 200:
+        if response.is_success:
             return response.json(), response.status_code
 
         if response:
@@ -815,24 +882,25 @@ class VTLookup:
         return None, response.status_code
 
     @classmethod
-    def _get_vt_api_url(cls, api_type: str) -> str:
+    def _get_vt_api_url(cls: type[Self], api_type: str) -> str:
         """
         Return the VirusTotal API URL for the supplied type.
 
             :param api_type: The IoC type
         """
         if api_type not in cls._VT_API_TYPES:
-            raise LookupError(f"Unknown api type '{api_type}'")
+            error_msg: str = f"Unknown api type '{api_type}'"
+            raise LookupError(error_msg)
         return cls._VT_API.format(type=api_type)
 
     @classmethod
-    def _get_supported_vt_ioc_types(cls) -> List[str]:
+    def _get_supported_vt_ioc_types(cls: type[VTLookup]) -> list[str]:
         """Return the subset of IoC types supported by VT."""
         return [
             t for t in cls._SUPPORTED_INPUT_TYPES if cls._VT_TYPE_MAP[t] is not None
         ]
 
-    def _print_status(self, message: str, verbosity_level: int):
+    def _print_status(self: Self, message: str, verbosity_level: int) -> None:
         """
         Print a status message depending on the current level of verbosity.
 
@@ -845,4 +913,4 @@ class VTLookup:
 
         """
         if verbosity_level <= self._verbosity:
-            print(message)
+            logger.info(message)

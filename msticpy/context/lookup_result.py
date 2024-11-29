@@ -4,8 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """Lookup Status class."""
+from __future__ import annotations
+
 from enum import Enum
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from .._version import VERSION
 
@@ -16,8 +18,8 @@ __author__ = "Ian Hellen"
 class SanitizedObservable(NamedTuple):
     """Encoded version of observable."""
 
-    observable: Optional[str]
-    status: Optional[str]
+    observable: str | None
+    status: str | None
 
 
 class LookupStatus(Enum):

@@ -22,15 +22,18 @@ The following types are built-in:
    regular expressions used at runtime.
 
 """
+from __future__ import annotations
 
 import re
 import warnings
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any
 from urllib.parse import unquote
 
 import pandas as pd
+from attr import dataclass
+from typing_extensions import Self
 
 from .._version import VERSION
 from ..common.utility import check_kwargs, export
@@ -40,13 +43,21 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-def _compile_regex(regex):
-    return re.compile(regex, re.I | re.X | re.M)
+def _compile_regex(regex) -> re.Pattern[str]:
+    return re.compile(regex, re.IGNORECASE | re.VERBOSE | re.MULTILINE)
 
 
-IoCPattern = namedtuple("IoCPattern", ["ioc_type", "comp_regex", "priority", "group"])
+@dataclass
+class IoCPattern:
+    """Define patterns for IOC."""
 
-_RESULT_COLS = ["IoCType", "Observable", "SourceIndex", "Input"]
+    ioc_type: str
+    comp_regex: re.Pattern[str]
+    priority: int
+    group: str | None
+
+
+_RESULT_COLS: list[str] = ["IoCType", "Observable", "SourceIndex", "Input"]
 
 
 @export
@@ -71,7 +82,7 @@ class IoCType(Enum):
     # pylint: enable=invalid-name
 
     @classmethod
-    def parse(cls, value: str) -> "IoCType":
+    def parse(cls: type[Self], value: str) -> IoCType:
         """
         Return parsed IoCType of string.
 
@@ -175,16 +186,16 @@ class IoCExtract:
     SHA1_REGEX = r"(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{40})(?:$|[^A-Fa-f0-9])"
     SHA256_REGEX = r"(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{64})(?:$|[^A-Fa-f0-9])"
 
-    _content_regex: Dict[str, IoCPattern] = {}
-    _content_df_regex: Dict[str, IoCPattern] = {}
+    _content_regex: dict[str, IoCPattern] = {}
+    _content_df_regex: dict[str, IoCPattern] = {}
 
-    def __init__(self, defanged: bool = True):
+    def __init__(self: IoCExtract, defanged: bool = True) -> None:
         """
         Initialize new instance of IoCExtract.
 
         Parameters
         ----------
-        defanged : bool, optional
+        defanged : bool
             If True, the regex will be used to match defanged IoC patterns
 
         """
@@ -214,7 +225,10 @@ class IoCExtract:
         # Email addresses (lower priority than URLs)
         self.add_ioc_type(IoCType.email.name, self.EMAIL_REGEX, 1, defang_pattern=False)
         self.add_ioc_type(
-            IoCType.email.name, self.EMAIL_DF_REGEX, 1, defang_pattern=True
+            IoCType.email.name,
+            self.EMAIL_DF_REGEX,
+            1,
+            defang_pattern=True,
         )
         # File paths
         self.add_ioc_type(IoCType.windows_path.name, self.WINPATH_REGEX, 3)
@@ -236,13 +250,13 @@ class IoCExtract:
 
     # Public members
     def add_ioc_type(
-        self,
+        self: Self,
         ioc_type: str,
         ioc_regex: str,
         priority: int = 0,
-        group: str = None,
-        defang_pattern: Optional[bool] = None,
-    ):
+        group: str | None = None,
+        defang_pattern: bool | None = None,
+    ) -> None:
         """
         Add an IoC type and regular expression to use to the built-in set.
 
@@ -315,14 +329,13 @@ class IoCExtract:
         """
         return self._content_df_regex
 
-    # pylint: disable=too-many-locals
     def extract(
         self,
-        src: str = None,
-        data: pd.DataFrame = None,
-        columns: List[str] = None,
+        src: str | None = None,
+        data: pd.DataFrame | None = None,
+        columns: list[str] | None = None,
         **kwargs,
-    ) -> Union[Dict[str, Set[str]], pd.DataFrame]:
+    ) -> dict[str, set[str]] | pd.DataFrame:
         """
         Extract IoCs from either a string or pandas DataFrame.
 
@@ -408,7 +421,7 @@ class IoCExtract:
                 " in supplied DataFrame",
             )
 
-        result_rows: List[pd.Series] = []
+        result_rows: list[pd.Series] = []
         for idx, datarow in data.iterrows():
             result_rows.extend(
                 self._search_in_row(datarow, idx, columns, ioc_types_to_use, defanged)
@@ -416,15 +429,14 @@ class IoCExtract:
         self._ignore_tld = ignore_tld_current
         return pd.DataFrame(data=result_rows, columns=_RESULT_COLS)
 
-    # pylint: disable=too-many-arguments
     def _search_in_row(
         self,
         datarow: pd.Series,
         idx: Any,
-        columns: List[str],
-        ioc_types_to_use: List[str],
+        columns: list[str],
+        ioc_types_to_use: list[str],
         defanged: bool = True,
-    ) -> List[pd.Series]:
+    ) -> list[pd.Series]:
         """Return results for a single input row."""
         result_rows = []
         for col in columns:
@@ -440,7 +452,7 @@ class IoCExtract:
         return result_rows
 
     def extract_df(
-        self, data: pd.DataFrame, columns: Union[str, List[str]], **kwargs
+        self, data: pd.DataFrame, columns: str | list[str], **kwargs
     ) -> pd.DataFrame:
         """
         Extract IoCs from either a pandas DataFrame.
@@ -521,8 +533,8 @@ class IoCExtract:
         return pd.DataFrame(data=result_rows, columns=_RESULT_COLS)
 
     def _get_ioc_types_to_use(
-        self, ioc_types: Optional[List[str]], include_paths: bool
-    ) -> List[str]:
+        self, ioc_types: list[str] | None, include_paths: bool
+    ) -> list[str]:
         # Use only requested IoC Type patterns
         if ioc_types:
             ioc_types_to_use = list(set(ioc_types))
@@ -540,7 +552,7 @@ class IoCExtract:
         input_str: str,
         ioc_type: str,
         ignore_tlds: bool = False,
-        defanged: Optional[bool] = None,
+        defanged: bool | None = None,
     ) -> bool:
         """
         Check that `input_str` matches the regex for the specified `ioc_type`.
@@ -586,7 +598,7 @@ class IoCExtract:
         pattern_match = rgx.comp_regex.fullmatch(input_str)
         validated = self._validate_tld(input_str) if val_type == "dns" else True
         self._ignore_tld = ignore_tld_current
-        return pattern_match and validated
+        return bool(pattern_match) and validated
 
     @staticmethod
     def file_hash_type(file_hash: str) -> IoCType:
@@ -652,15 +664,17 @@ class IoCExtract:
     def _scan_for_iocs(
         self,
         src: str,
-        ioc_types: List[str] = None,
+        ioc_types: list[str] | None = None,
         defanged: bool = True,
-    ) -> Dict[str, Set[str]]:
+    ) -> dict[str, set[str]]:
         """Return IoCs found in the string."""
-        ioc_results: Dict[str, Set] = defaultdict(set)
-        iocs_found: Dict[str, Tuple[str, int]] = {}
+        ioc_results: dict[str, set] = defaultdict(set)
+        iocs_found: dict[str, tuple[str, int]] = {}
 
         # pylint: disable=too-many-nested-blocks
-        ioc_regexes = self._content_df_regex if defanged else self._content_regex
+        ioc_regexes: dict[str, IoCPattern] = (
+            self._content_df_regex if defanged else self._content_regex
+        )
         for ioc_type, rgx_def in ioc_regexes.items():
             if ioc_types and ioc_type not in ioc_types:
                 continue

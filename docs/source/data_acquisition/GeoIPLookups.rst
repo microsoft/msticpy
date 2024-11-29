@@ -33,6 +33,10 @@ service. Again, the paid tiers offer greater accuracy, more detailed
 information and higher throughput. Please check out their site for more
 details.
 
+.. note:: The free tier of IPStack is now extremely limited and not
+  practical for use other than brief experimentation. If you want to
+  use this option, you should sign up for a paid tier of service.
+
 Importing the GeoIP classes
 ---------------------------
 
@@ -61,7 +65,7 @@ Maxmind Geo-IP Lite Lookup Class
 
 See :py:class:`GeoLiteLookup<msticpy.context.geoip.GeoLiteLookup>`
 
-.. note:: Maxmind now require an API Key to download database
+.. note:: Maxmind requires an Account ID and API Key to download database
    updates. You can create a free account or opt for a paid tier,
    which gives you greater accuracy and more features.
 
@@ -78,11 +82,14 @@ The example shown here shows part of the ``OtherProviders`` section of
 msticpyconfig.yaml. You can specify an API key in the ``AuthKey`` setting.
 For example, ``AuthKey: abcd424246789`` or use a reference to an
 environment variable holding the key value.
-The API key you need to specify in the ``AuthKey`` setting is you MaxMind
-License Key that can be found on the MaxMind website under Account > Services.
+The API key you need to specify in the ``AuthKey`` setting is your MaxMind
+License Key that can be found on the MaxMind website under Account/Services.
+Set the ``AccountID`` field to your MaxMind Account ID. (this is typically
+not a secret value but you can opt to store this in an environment variable
+or Azure Key Vault).
 
 The DBFolder setting specifies a folder where the downloaded Maxmind
-database files will be stored and referenced from. Thefolder path
+database files will be stored and referenced from. The folder path
 can be prefixed with "~" to specify a path relative to the current
 users home directory (this works cross-platform).
 
@@ -95,6 +102,7 @@ users home directory (this works cross-platform).
     OtherProviders:
       GeoIPLite:
         Args:
+          AccountID: "1234567"
           AuthKey:
             EnvironmentVar: "MAXMIND_AUTH"
           DBFolder: "~/.msticpy"
@@ -121,7 +129,7 @@ not work reliably cross-platform.
 
 .. code:: ipython3
 
-    iplocation = GeoLiteLookup(api_key="mykey", db_folder="/tmp/mmdb")
+    iplocation = GeoLiteLookup(api_key="mykey", account_id="1234567", db_folder="/tmp/mmdb")
 
 
 GeoLite Usage
@@ -138,6 +146,7 @@ You can also supply options to customize the behavior of the
 local maxmind database.
 
 * ``api_key``: described above
+* ``account_id``: described above
 * ``db_folder`` : Specify custom path containing local Maxmind city
   database. If not specified, download to .msticpy dir under user's home
   directory.

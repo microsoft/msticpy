@@ -442,6 +442,39 @@ class PivotAccessor:
             data = data.drop([col], axis=1).rename(columns={col_parsed: col})
         return data
 
+    def dict_to_dataframe(self, col: str) -> pd.DataFrame:
+        """
+        Construct a new dataframe having keys as column and values as row.
+
+        Parameters
+        ----------
+        col : str
+            Name of the column which contains json data
+
+        Returns
+        -------
+        pd.DataFrame
+            A new dataframe containing the json data in tabular form.
+
+        """
+        unnested_col = []
+
+        for row_value in self._df[col]:
+            unnest_row = {}
+            record = {}
+            if isinstance(row_value, dict):
+                record = row_value
+            elif isinstance(row_value, str):
+                try:
+                    record = json.loads(row_value)
+                except json.JSONDecodeError:
+                    continue
+            for key in record.keys():
+                unnest_row.update(_extract_values(record[key], key))
+            unnested_col.append(unnest_row)
+
+        return pd.DataFrame(unnested_col)
+
 
 def _name_match(cur_cols: Iterable[str], col_filter, match_case):
     col_filter = re.sub(r"[^.]\*", ".*", col_filter)
@@ -455,3 +488,33 @@ def _json_safe_conv(val):
         with contextlib.suppress(TypeError, JSONDecodeError):
             return json.loads(val)
     return val
+
+
+def _extract_values(data: Union[dict, list, str], key_name: str = "") -> dict:
+    """
+    Recursively extracts column values from the given key's values.
+
+    Parameters
+    ----------
+    data: Union[dict, list, str]
+        Values for the given key in the dictionary.
+    key_name : str
+        Key for unnested and is obtained by joining all parent key names.
+
+    Returns
+    -------
+    unnested : dict
+        A dict containing unnested json for a specific key.
+    """
+    unnested = {}
+
+    if isinstance(data, dict):
+        for key in data.keys():
+            unnested.update(_extract_values(data[key], f"{key_name}.{key}"))
+    elif isinstance(data, list):
+        for idx, elm in enumerate(data):
+            unnested.update(_extract_values(elm, f"{key_name}.{idx}"))
+    else:
+        unnested.update({key_name: data})
+
+    return unnested

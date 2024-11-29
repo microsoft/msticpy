@@ -55,6 +55,7 @@ class PeriodogramPollingDetector:
 
         copy: bool
             A bool to indicate whether to copy the dataframe supplied to data
+
         """
         if copy:
             self.data = data.copy()
@@ -201,6 +202,7 @@ class PeriodogramPollingDetector:
             The name of the column that contains timestamps
         groupby: str or list[str], optional
             Column(s) to group by
+
         """
         ts_col = self.data[time_column]
 

@@ -4,9 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """Reads pivot registration config files."""
+from __future__ import annotations
+
 import importlib
 import warnings
-from typing import Any, Callable, Dict, Type
+from typing import Any, Callable, Generator
 
 import yaml
 
@@ -24,13 +26,13 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-def register_pivots(  # noqa: MC0001
+def register_pivots(
     file_path: str,
-    namespace: Dict[str, Any] = None,
+    namespace: dict[str, Any] | None = None,
     container: str = "other",
     force_container: bool = False,
     **kwargs,
-):
+) -> None:
     """
     Register pivot functions from configuration file.
 
@@ -56,7 +58,7 @@ def register_pivots(  # noqa: MC0001
         if "debug" in kwargs:
             print(piv_reg)
 
-        func = None
+        func: Callable | None = None
         if not piv_reg.src_module:
             raise ValueError(
                 f"{piv_reg.src_config_entry} had no 'src_module' value in",
@@ -87,7 +89,9 @@ def register_pivots(  # noqa: MC0001
                 continue
         else:
             # not a class, just get the function from the module
-            func = getattr(src_module, piv_reg.src_func_name, None)
+            src_func_name: str | None = piv_reg.src_func_name
+            if src_func_name:
+                func = getattr(src_module, src_func_name, None)
 
         if not func:
             raise ValueError(
@@ -97,7 +101,7 @@ def register_pivots(  # noqa: MC0001
             )
         # create the pivot function and add to each entity
         if force_container:
-            q_container = container
+            q_container: str = container
         else:
             q_container = piv_reg.entity_container_name or container
         _add_func_to_entities(func, piv_reg, q_container, **kwargs)
@@ -105,10 +109,10 @@ def register_pivots(  # noqa: MC0001
 
 def add_unbound_pivot_function(
     func: Callable[[Any], Any],
-    pivot_reg: PivotRegistration = None,
+    pivot_reg: PivotRegistration | None = None,
     container: str = "other",
     **kwargs,
-):
+) -> None:
     """
     Add a pivot function to entities.
 
@@ -140,7 +144,7 @@ def add_unbound_pivot_function(
     _add_func_to_entities(func, piv_reg=pivot_reg, container=container, **kwargs)
 
 
-def _read_reg_file(file_path: str):
+def _read_reg_file(file_path: str) -> Generator[PivotRegistration, Any, None]:
     """Read the yaml file and return generator of PivotRegistrations."""
     with open(file_path, "r", encoding="utf-8") as f_handle:
         # use safe_load instead load
@@ -159,7 +163,7 @@ def _read_reg_file(file_path: str):
             ) from err
 
 
-def _add_func_to_entities(func, piv_reg, container, **kwargs):
+def _add_func_to_entities(func, piv_reg, container, **kwargs) -> None:
     """Create the pivot function and add to entities."""
     pivot_func = create_pivot_func(func, piv_reg)
 
@@ -207,7 +211,7 @@ def _get_func_from_class(src_module, namespace, piv_reg):
     return getattr(src_obj, piv_reg.src_func_name, None)
 
 
-def _last_instance_of_type(var_type: Type, namespace: Dict[str, Any]):
+def _last_instance_of_type(var_type: type, namespace: dict[str, Any]):
     """Return the most recently created instance of type in namespace."""
     matches = [var for _, var in namespace.items() if isinstance(var, var_type)]
     if matches:
