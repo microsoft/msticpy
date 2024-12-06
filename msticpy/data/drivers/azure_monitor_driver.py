@@ -24,7 +24,7 @@ import httpx
 import pandas as pd
 from azure.core.exceptions import HttpResponseError
 from azure.core.pipeline.policies import UserAgentPolicy
-from packaging.version import parse as parse_version
+from packaging.version import Version, parse as parse_version
 
 from ..._version import VERSION
 from ...auth.azure_auth import AzureCloudConfig, az_connect
@@ -605,13 +605,25 @@ class AzureMonitorDriver(DriverBase):
         token = credentials.modern.get_token(f"{mgmt_endpoint}/.default")
         headers = {"Authorization": f"Bearer {token.token}", **mp_ua_header()}
         logger.info("Schema request to %s", fmt_url)
-        response = httpx.get(
-            fmt_url,
-            headers=headers,
+
+        # Handle proxies (parameter changes in httpx 0.25.0)
+        httpx_version: Version = parse_version(httpx.__version__)
+        proxies: dict[str, str] = self._def_proxies or {}
+        httpx_proxy_kwargs: dict[str, Any] = {}
+        if proxies:
+            if httpx_version < parse_version("0.25.0"):
+                httpx_proxy_kwargs = {"proxies": proxies}
+            else:
+                httpx_proxy_kwargs = {"mounts": proxies}
+        with httpx.Client(
             timeout=get_http_timeout(),
-            proxies=self._def_proxies or {},
-        )
-        if response.status_code != 200:
+            **httpx_proxy_kwargs,
+        ) as httpx_client:
+            response: httpx.Response = httpx_client.get(
+                fmt_url,
+                headers=headers,
+            )
+        if response.status_code != httpx.codes.OK:
             logger.info("Schema request failed. Status code: %d", response.status_code)
             return {}
         tables = response.json()
