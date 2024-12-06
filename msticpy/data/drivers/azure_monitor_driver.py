@@ -24,7 +24,7 @@ import httpx
 import pandas as pd
 from azure.core.exceptions import HttpResponseError
 from azure.core.pipeline.policies import UserAgentPolicy
-from packaging.version import parse as parse_version
+from packaging.version import Version, parse as parse_version
 
 from ..._version import VERSION
 from ...auth.azure_auth import AzureCloudConfig, az_connect
@@ -607,18 +607,19 @@ class AzureMonitorDriver(DriverBase):
         logger.info("Schema request to %s", fmt_url)
 
         # Handle proxies (parameter changes in httpx 0.25.0)
-        httpx_version = parse_version(httpx.__version__)
-        proxies = self._def_proxies or {}
-        httpx_proxy_kwargs = {}
+        httpx_version: Version = parse_version(httpx.__version__)
+        proxies: dict[str, str] = self._def_proxies or {}
+        httpx_proxy_kwargs: dict[str, Any] = {}
         if proxies:
             if httpx_version < parse_version("0.25.0"):
                 httpx_proxy_kwargs = {"proxies": proxies}
             else:
                 httpx_proxy_kwargs = {"mounts": proxies}
         with httpx.Client(
-            timeout=get_http_timeout(), **httpx_proxy_kwargs
+            timeout=get_http_timeout(),
+            **httpx_proxy_kwargs,
         ) as httpx_client:
-            response = httpx_client.get(
+            response: httpx.Response = httpx_client.get(
                 fmt_url,
                 headers=headers,
             )
