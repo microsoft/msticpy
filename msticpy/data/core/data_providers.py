@@ -106,7 +106,9 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
 
         self._driver_kwargs: dict[str, Any] = kwargs.copy()
         if driver is None:
-            self.driver_class: str | type = drivers.import_driver(data_environment)
+            self.driver_class: type[DriverBase] = drivers.import_driver(
+                data_environment
+            )
             if issubclass(self.driver_class, DriverBase):
                 driver = self.driver_class(data_environment=data_environment, **kwargs)
             else:
