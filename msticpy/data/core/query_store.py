@@ -4,11 +4,15 @@
 # license information.
 # --------------------------------------------------------------------------
 """QueryStore class - holds a collection of QuerySources."""
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
 from functools import cached_property
 from os import path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Union
+from typing import Any, Callable, Iterable
+
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserConfigError
@@ -19,7 +23,7 @@ from .query_source import QuerySource
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def _get_dot_path(elem_path: str, data_map: dict) -> Any:
@@ -63,13 +67,13 @@ class QueryStore:
     ----------
     environment: str
         The data environment for the queries.
-    data_families: Dict[str, Dict[str, QuerySource]]
+    data_families: dict[str, dict[str, QuerySource]]
         The set of data families and associated queries
         for each.
 
     """
 
-    def __init__(self, environment: str):
+    def __init__(self: QueryStore, environment: str) -> None:
         """
         Initialize a QueryStore for a new environment.
 
@@ -80,20 +84,20 @@ class QueryStore:
 
         """
         self.environment: str = environment
-        self.data_families: Dict[str, Dict[str, QuerySource]] = defaultdict(dict)
-        self.data_family_defaults: Dict[str, Dict[str, Any]] = defaultdict(dict)
-        self._all_sources: List[QuerySource] = []
+        self.data_families: dict[str, dict[str, QuerySource]] = defaultdict(dict)
+        self.data_family_defaults: dict[str, dict[str, Any]] = defaultdict(dict)
+        self._all_sources: list[QuerySource] = []
 
-    def __getattr__(self, name: str):
+    def __getattr__(self: Self, name: str) -> Any:
         """Return the item in dot-separated path `name`."""
         return _get_dot_path(elem_path=name, data_map=self.data_families)
 
-    def __getitem__(self, key: str):
+    def __getitem__(self: Self, key: str) -> Any:
         """Allow query retrieval using dotted key path."""
         return _get_dot_path(elem_path=key, data_map=self.data_families)
 
     @property
-    def query_names(self) -> Iterable[str]:
+    def query_names(self: Self) -> Iterable[str]:
         """
         Return list of family.query in the store.
 
@@ -111,9 +115,9 @@ class QueryStore:
             ]
 
     @cached_property
-    def search_items(self) -> Dict[str, Dict[str, str]]:
+    def search_items(self: Self) -> dict[str, dict[str, str]]:
         """Return searchable metadata and query for all queries."""
-        search_props: Dict[str, Dict[str, str]] = {}
+        search_props: dict[str, dict[str, str]] = {}
         for family, sources in self.data_families.items():
             for query_name, query_source in sources.items():
                 search_props[f"{family}.{query_name}"] = {
@@ -125,7 +129,7 @@ class QueryStore:
                 }
         return search_props
 
-    def add_data_source(self, source: QuerySource):
+    def add_data_source(self: Self, source: QuerySource) -> None:
         """
         Add a datasource/query to the store.
 
@@ -161,12 +165,12 @@ class QueryStore:
                 )
 
     def add_query(
-        self,
+        self: Self,
         name: str,
         query: str,
-        query_paths: Union[str, List[str]],
-        description: str = None,
-    ):
+        query_paths: str | list[str],
+        description: str | None = None,
+    ) -> None:
         """
         Add a query from name/query text.
 
@@ -176,7 +180,7 @@ class QueryStore:
             name of the query
         query : str
             The query string
-        query_paths : Union[str, List[str]]
+        query_paths : Union[str, list[str]]
             The path/data_family to categorize.
             Multiple paths can be specified. If the path is dotted,
             this will cause the query to be displayed in the corresponding
@@ -202,7 +206,7 @@ class QueryStore:
         )
         self.add_data_source(query_source)
 
-    def import_file(self, query_file: str):
+    def import_file(self: Self, query_file: str) -> None:
         """
         Import a yaml data source definition.
 
@@ -230,7 +234,9 @@ class QueryStore:
             new_source = QuerySource(source_name, source, defaults, metadata)
             self.add_data_source(new_source)
 
-    def apply_query_filter(self, query_filter: Callable[[QuerySource], bool]):
+    def apply_query_filter(
+        self: Self, query_filter: Callable[[QuerySource], bool]
+    ) -> None:
         """
         Apply a filter to the query sources.
 
@@ -250,8 +256,8 @@ class QueryStore:
         cls,
         source_path: list,
         recursive: bool = True,
-        driver_query_filter: Optional[Dict[str, Set[str]]] = None,
-    ) -> Dict[str, "QueryStore"]:
+        driver_query_filter: dict[str, set[str]] | None = None,
+    ) -> dict[str, "QueryStore"]:
         """
         Import multiple query definition files from directory path.
 
@@ -262,14 +268,14 @@ class QueryStore:
         recursive : bool, optional
             True to recurse sub-directories
             (the default is False, which only reads from the top level)
-        driver_query_filter : Dict[str, Set[str]]
+        driver_query_filter : dict[str, Set[str]]
             A dictionary of query metadata keys and values. This is used
             to test each read query to see if it is relevant to the driver
             and should be returned in the created QueryStore dictionary.
 
         Returns
         -------
-        Dict[str, 'QueryStore']
+        dict[str, 'QueryStore']
             Dictionary of one or more environments and the
             QueryStore containing the queries for each environment.
 
@@ -280,7 +286,7 @@ class QueryStore:
             a source file.
 
         """
-        env_stores: Dict[str, QueryStore] = {}
+        env_stores: dict[str, QueryStore] = {}
         for query_dir in source_path:
             if not path.isdir(query_dir):
                 raise FileNotFoundError(f"{query_dir} is not a directory")
@@ -317,7 +323,9 @@ class QueryStore:
         return env_stores
 
     def get_query(
-        self, query_name: str, query_path: Union[str, DataFamily] = None
+        self: Self,
+        query_name: str,
+        query_path: str | DataFamily | None = None,
     ) -> "QuerySource":
         """
         Return query with name `data_family` and `query_name`.
@@ -354,7 +362,7 @@ class QueryStore:
             raise LookupError(f"Could not find {query_name} in path {query_path}.")
         return query
 
-    def find_query(self, query_name: str) -> Set[Optional[QuerySource]]:
+    def find_query(self: Self, query_name: str) -> set[QuerySource | None]:
         """
         Return set of queries with name `query_name`.
 
@@ -377,7 +385,7 @@ class QueryStore:
 
 
 def _matches_driver_filter(
-    query_source: QuerySource, filter_spec: Dict[str, Set[str]]
+    query_source: QuerySource, filter_spec: dict[str, set[str]]
 ) -> bool:
     """Return True if the source metadata matches the filter spec."""
     match = True
