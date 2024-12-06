@@ -496,13 +496,13 @@ class TestDataQuery(TestCase):
         """Test method _execute_query when driver is not loaded."""
         self.la_provider._query_provider._loaded = False
         with pytest.raises(ValueError, match="Provider is not loaded."):
-            self.la_provider._execute_query()
+            self.la_provider._execute_query(query_name="test")
 
     def test_execute_query_provider_not_connected(self) -> None:
         """Test method _execute_query when driver is not connected."""
         self.la_provider._query_provider._connected = False
         with pytest.raises(ValueError, match="No connection to a data source."):
-            self.la_provider._execute_query()
+            self.la_provider._execute_query(query_name="test")
 
     def test_check_for_time_params_missing_start(self) -> None:
         """Test method _check_for_time_params when start is missing."""

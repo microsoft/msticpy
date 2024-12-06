@@ -231,7 +231,15 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         """Return the default QueryTime control for queries."""
         return self._query_time
 
-    def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
+    def _execute_query(
+        self: Self,
+        *args: str,
+        query_name: str,
+        query_path: str | DataFamily | None = None,
+        split_query_by: str | None = None,
+        split_by: str | None = None,
+        **kwargs,
+    ) -> pd.DataFrame | str | None:
         if not self._query_provider.loaded:
             err_msg: str = "Provider is not loaded."
             raise ValueError(err_msg)
@@ -246,9 +254,9 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             )
             raise ValueError(err_msg)
 
-
-        query_source = self.query_store.get_query(
-            query_path=family, query_name=query_name
+        query_source: QuerySource = self.query_store.get_query(
+            query_path=query_path,
+            query_name=query_name,
         )
         if _help_flag(*args):
             query_source.help()
@@ -265,7 +273,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             err_msg = f"No values found for these parameters: {missing}"
             raise ValueError(err_msg)
 
-        split_by = kwargs.pop("split_query_by", kwargs.pop("split_by", None))
+        split_by = split_query_by or split_by
         if split_by:
             logger.info("Split query selected - interval - %s", split_by)
             split_result: pd.DataFrame | str | None = self._exec_split_query(
