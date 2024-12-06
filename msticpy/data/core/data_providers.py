@@ -41,6 +41,7 @@ _COMPATIBLE_DRIVER_MAPPINGS: dict[str, list[str]] = {
     "mde": ["m365d"],
     "mssentinel_new": ["mssentinel", "m365d"],
     "kusto_new": ["kusto"],
+    "m365dgraph": ["mde", "m365d"],
 }
 
 logger: logging.Logger = logging.getLogger(__name__)
