@@ -101,7 +101,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         setattr(self.__class__, "_add_pivots", add_data_queries_to_entities)
 
         data_environment, self.environment_name = QueryProvider._check_environment(
-            data_environment
+            data_environment,
         )
 
         self._driver_kwargs: dict[str, Any] = kwargs.copy()
@@ -110,9 +110,10 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             if issubclass(self.driver_class, DriverBase):
                 driver = self.driver_class(data_environment=data_environment, **kwargs)
             else:
-                raise LookupError(
-                    "Could not find suitable data provider for", f" {data_environment}"
+                err_msg: str = (
+                    f"Could not find suitable data provider for {data_environment}"
                 )
+                raise LookupError(err_msg)
         else:
             self.driver_class = driver.__class__
         # allow the driver to override the data environment used for selecting queries
@@ -136,9 +137,11 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         if driver.use_query_paths:
             logger.info("Using query paths %s", query_paths)
             data_env_queries.update(
-                self._read_queries_from_paths(query_paths=query_paths)
+                self._read_queries_from_paths(query_paths=query_paths),
             )
         self.query_store: QueryStore = data_env_queries.get(
+            self.environment_name,
+            QueryStore(self.environment_name),
         )
         logger.info("Adding query functions to provider")
         self._add_query_functions()
@@ -159,13 +162,13 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             elif data_environment in drivers.CUSTOM_PROVIDERS:
                 environment_name = data_environment
             else:
-                raise TypeError(f"Unknown data environment {data_environment}")
+                err_msg: str = f"Unknown data environment {data_environment}"
+                raise TypeError(err_msg)
         elif isinstance(data_environment, DataEnvironment):
             environment_name = data_environment.name
         else:
-            raise TypeError(
-                f"Unknown data environment type {data_environment} ({type(data_environment)})"
-            )
+            err_msg = f"Unknown data environment type {data_environment} ({type(data_environment)})"
+            raise TypeError(err_msg)
         return data_environment, environment_name
 
     def __getattr__(self: Self, name: str) -> Any:
@@ -175,7 +178,8 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             parent = getattr(self, parent_name, None)
             if parent:
                 return getattr(parent, child_name)
-        raise AttributeError(f"{name} is not a valid attribute.")
+        err_msg: str = f"{name} is not a valid attribute."
+        raise AttributeError(err_msg)
 
     @property
     def environment(self: Self) -> str:
@@ -229,18 +233,19 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
 
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:
-            raise ValueError("Provider is not loaded.")
+            err_msg: str = "Provider is not loaded."
+            raise ValueError(err_msg)
         if (
             not self._query_provider.connected
             and not _help_flag(*args)
             and not _debug_flag(*args, **kwargs)
         ):
-            raise ValueError(
-                "No connection to a data source.",
-                "Please call connect(connection_str) and retry.",
+            err_msg = (
+                "No connection to a data source."
+                " Please call connect(connection_str) and retry."
             )
-        query_name = kwargs.pop("query_name")
-        family = kwargs.pop("query_path")
+            raise ValueError(err_msg)
+
 
         query_source = self.query_store.get_query(
             query_path=family, query_name=query_name
@@ -257,7 +262,8 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         }
         if missing:
             query_source.help()
-            raise ValueError(f"No values found for these parameters: {missing}")
+            err_msg = f"No values found for these parameters: {missing}"
+            raise ValueError(err_msg)
 
         split_by = kwargs.pop("split_query_by", kwargs.pop("split_by", None))
         if split_by:
@@ -274,6 +280,8 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
                 return split_result
             # if split queries could not be created, fall back to default
         query_str: str = query_source.create_query(
+            formatters=self._query_provider.formatters,
+            **params,
         )
         # This looks for any of the "print query" debug args in args or kwargs
         if _debug_flag(*args, **kwargs):
@@ -282,7 +290,9 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         # Handle any query options passed and run the query
         query_options.update(self._get_query_options(params, kwargs))
         logger.info(
-            "Running query '%s...' with params: %s", query_str[:40], query_options
+            "Running query '%s...' with params: %s",
+            query_str[:40],
+            query_options,
         )
         return self.exec_query(query_str, query_source=query_source, **query_options)
 
@@ -324,16 +334,24 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         """Fetch queries from YAML files in specified paths."""
         settings: dict[str, Any] = get_config("QueryDefinitions", {})
         all_query_paths: list[Path | str] = []
-        for def_qry_path in settings.get("Default"):  # type: ignore
+        for def_qry_path in settings.get("Default", []):
             # only read queries from environment folder
-            builtin_qry_paths = self._get_query_folder_for_env(
-                def_qry_path, self.environment_name
+            builtin_qry_paths: list[Path] = self._get_query_folder_for_env(
+                def_qry_path,
+                self.environment_name,
             )
             all_query_paths.extend(
                 str(qry_path) for qry_path in builtin_qry_paths if qry_path.is_dir()
             )
 
+        for custom_path in settings.get("Custom", {}):
+            custom_qry_path: str | None = _resolve_path(custom_path)
+            if custom_qry_path:
+                all_query_paths.append(custom_qry_path)
+        for param_path in query_paths or []:
             param_qry_path: str | None = _resolve_path(param_path)
+            if param_qry_path:
+                all_query_paths.append(param_qry_path)
         if all_query_paths:
             logger.info("Reading queries from %s", all_query_paths)
             return QueryStore.import_files(
@@ -363,10 +381,13 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
 
             # Create the partial function
             query_func = partial(
-                self._execute_query, query_path=query_cont_name, query_name=query_name
+                self._execute_query,
+                query_path=query_cont_name,
+                query_name=query_name,
             )
             query_func.__doc__ = self.query_store.get_query(
-                query_path=query_cont_name, query_name=query_name
+                query_path=query_cont_name,
+                query_name=query_name,
             ).create_doc_string()
 
             query_name = valid_pyname(query_name)
@@ -380,7 +401,8 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
                 name=query["name"],
                 query=query["query"],
                 query_paths=query.get(
-                    "query_paths", query.get("query_container", "default")
+                    "query_paths",
+                    query.get("query_container", "default"),
                 ),
                 description=query["description"],
             )
@@ -423,7 +445,10 @@ def _resolve_path(config_path: str) -> str | None:
     if not Path(config_path).is_absolute():
         config_path = str(Path(config_path).expanduser().resolve())
     if not Path(config_path).is_dir():
-        print(f"Warning: Custom query definitions path {config_path} not found")
+        logger.warning(
+            "Warning: Custom query definitions path %s not found",
+            config_path,
+        )
         return None
     return config_path
 
