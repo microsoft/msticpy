@@ -6,6 +6,7 @@
 """dataprovider query test class."""
 import contextlib
 import io
+import logging
 import warnings
 from copy import deepcopy
 from datetime import datetime, timezone
@@ -97,6 +98,10 @@ class TestDataQuery(TestCase):
     """Unit test class."""
 
     provider = None
+
+    @pytest.fixture(autouse=True)
+    def inject_fixtures(self, caplog: pytest.LogCaptureFixture) -> None:
+        self._caplog: pytest.LogCaptureFixture = caplog
 
     def setUp(self):
         """Test initialization."""
@@ -422,15 +427,18 @@ class TestDataQuery(TestCase):
         """Test queries split error conditions."""
         la_provider = self.la_provider
 
-        mssg = io.StringIO()
-        with contextlib.redirect_stdout(mssg):
+        with self._caplog.at_level(logging.WARNING):
+            self._caplog.clear()
             result_queries = la_provider.all_queries.get_alert(
                 "print", system_alert_id="test", split_query_by="1H"
             )
+            self.assertEqual(len(self._caplog.records), 1)
+            for record in self._caplog.records:
+                self.assertIn("Cannot split a query", record.message)
+                self.assertEqual(record.levelno, logging.WARNING)
         queries = result_queries.split("\n\n")
         # if no start and end - provider prints message and returns None
         self.assertEqual(len(queries), 1)
-        self.assertIn("Cannot split a query", mssg.getvalue())
 
         # With invalid split_query_by value it will default to 1D
         start = datetime.now(tz=timezone.utc) - pd.Timedelta("5D")
@@ -496,13 +504,13 @@ class TestDataQuery(TestCase):
         """Test method _execute_query when driver is not loaded."""
         self.la_provider._query_provider._loaded = False
         with pytest.raises(ValueError, match="Provider is not loaded."):
-            self.la_provider._execute_query()
+            self.la_provider._execute_query(query_name="test")
 
     def test_execute_query_provider_not_connected(self) -> None:
         """Test method _execute_query when driver is not connected."""
         self.la_provider._query_provider._connected = False
         with pytest.raises(ValueError, match="No connection to a data source."):
-            self.la_provider._execute_query()
+            self.la_provider._execute_query(query_name="test")
 
     def test_check_for_time_params_missing_start(self) -> None:
         """Test method _check_for_time_params when start is missing."""
