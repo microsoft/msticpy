@@ -623,7 +623,7 @@ class AzureMonitorDriver(DriverBase):
                 fmt_url,
                 headers=headers,
             )
-        if response.status_code != 200:
+        if response.status_code != httpx.codes.OK:
             logger.info("Schema request failed. Status code: %d", response.status_code)
             return {}
         tables = response.json()
