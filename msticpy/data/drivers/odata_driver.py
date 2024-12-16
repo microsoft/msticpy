@@ -7,10 +7,15 @@
 import abc
 import re
 import urllib
+from pathlib import Path
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import httpx
 import pandas as pd
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.serialization import Encoding
+from cryptography.x509 import Certificate, load_der_x509_certificate
+from msal.application import ConfidentialClientApplication
 
 from ..._version import VERSION
 from ...auth.msal_auth import MSALDelegatedAuth
@@ -136,7 +141,11 @@ class OData(DriverBase):
         missing_settings = [
             setting for setting in ("tenant_id", "client_id") if setting not in cs_dict
         ]
-        auth_present = "username" in cs_dict or "client_secret" in cs_dict
+        auth_present = (
+            "username" in cs_dict
+            or "client_secret" in cs_dict
+            or "certificate" in cs_dict
+        )
         if missing_settings:
             raise MsticpyUserConfigError(
                 "You must supply the following required connection parameter(s)",
@@ -160,7 +169,10 @@ class OData(DriverBase):
         if delegated_auth:
             json_response = self._get_token_delegate_auth(kwargs, cs_dict)
         else:
-            json_response = self._get_token_standard_auth(kwargs, cs_dict)
+            if "certificate" in cs_dict:
+                json_response = self._get_token_certificate_auth(cs_dict)
+            else:
+                json_response = self._get_token_standard_auth(kwargs, cs_dict)
 
         self.req_headers["Authorization"] = f"Bearer {self.aad_token}"
         self.api_root = cs_dict.get("apiRoot", self.api_root)
@@ -176,6 +188,40 @@ class OData(DriverBase):
 
         json_response["access_token"] = None
         return json_response
+
+    def _get_token_certificate_auth(self, cs_dict: Dict[str, Any]) -> Dict[str, Any]:
+        _check_config(cs_dict, "certificate", "application authentication")
+        client_id: str = cs_dict["client_id"]
+        certificate: Path = Path(cs_dict["certificate"])
+        private_key: Path = Path(cs_dict["private_key"])
+        certificate_secret: str = cs_dict["certificate_secret"]
+
+        cert_data: Certificate = load_der_x509_certificate(certificate.read_bytes())
+        authority = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
+        if authority.startswith("https://login"):
+            auth_url = urllib.parse.urlparse(authority)
+            authority = f"{auth_url.scheme}://{auth_url.netloc}/{{tenantId}}".format(
+                tenantId=cs_dict["tenant_id"]
+            )
+        app: ConfidentialClientApplication = ConfidentialClientApplication(
+            client_id=client_id,
+            client_credential={
+                "private_key": private_key.read_text(encoding="utf-8"),
+                "thumbprint": cert_data.fingerprint(hashes.SHA1()).hex(),
+                "public_certificate": cert_data.public_bytes(
+                    encoding=Encoding.PEM
+                ).decode("utf-8"),
+                "passphrase": certificate_secret,
+            },
+            authority=authority,
+        )
+        result: dict[str, Any] | None = app.acquire_token_for_client(
+            scopes=[self.api_root + "/.default"]
+        )
+        if not result or "access_token" not in result:
+            raise MsticpyConnectionError(f"Could not obtain access token")
+        self.aad_token = result.get("access_token", None)
+        return result
 
     def _get_token_standard_auth(self, kwargs, cs_dict) -> Dict[str, Any]:
         _check_config(cs_dict, "client_secret", "application authentication")
@@ -353,6 +399,9 @@ _CONFIG_NAME_MAP = {
     "client_id": ("clientid", "client_id"),
     "client_secret": ("clientsecret", "client_secret"),
     "username": ("username", "user_name"),
+    "private_key": ("privatekey", "private_key"),
+    "certificate": ("certificate", "cert"),
+    "certificate_secret": ("certificatesecret", "certificate_secret", "cert_secret"),
 }
 
 
