@@ -194,9 +194,18 @@ class OData(DriverBase):
         client_id: str = cs_dict["client_id"]
         certificate: Path = Path(cs_dict["certificate"])
         private_key: Path = Path(cs_dict["private_key"])
-        certificate_secret: str = cs_dict["certificate_secret"]
 
         cert_data: Certificate = load_der_x509_certificate(certificate.read_bytes())
+
+        client_credential: dict[str, Any] = {
+            "private_key": private_key.read_text(encoding="utf-8"),
+            "thumbprint": cert_data.fingerprint(hashes.SHA1()).hex(),
+            "public_certificate": cert_data.public_bytes(encoding=Encoding.PEM).decode(
+                "utf-8"
+            ),
+        }
+        if "private_key_secret" in cs_dict:
+            client_credential["passphrase"] = cs_dict["private_key_secret"]
         authority = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
         if authority.startswith("https://login"):
             auth_url = urllib.parse.urlparse(authority)
@@ -205,14 +214,7 @@ class OData(DriverBase):
             )
         app: ConfidentialClientApplication = ConfidentialClientApplication(
             client_id=client_id,
-            client_credential={
-                "private_key": private_key.read_text(encoding="utf-8"),
-                "thumbprint": cert_data.fingerprint(hashes.SHA1()).hex(),
-                "public_certificate": cert_data.public_bytes(
-                    encoding=Encoding.PEM
-                ).decode("utf-8"),
-                "passphrase": certificate_secret,
-            },
+            client_credential=client_credential,
             authority=authority,
         )
         result: dict[str, Any] | None = app.acquire_token_for_client(
@@ -401,7 +403,7 @@ _CONFIG_NAME_MAP = {
     "username": ("username", "user_name"),
     "private_key": ("privatekey", "private_key"),
     "certificate": ("certificate", "cert"),
-    "certificate_secret": ("certificatesecret", "certificate_secret", "cert_secret"),
+    "private_key_secret": ("privatekeysecret", "private_key_secret"),
 }
 
 
