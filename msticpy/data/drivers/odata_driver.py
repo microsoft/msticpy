@@ -9,7 +9,7 @@ from __future__ import annotations
 import abc
 import logging
 import re
-import urllib
+import urllib.parse
 from pathlib import Path
 from typing import Any, ClassVar, Iterable
 
@@ -198,11 +198,10 @@ class OData(DriverBase):
 
         if delegated_auth:
             self._get_token_delegate_auth(kwargs, cs_dict)
+        elif "certificate" in cs_dict:
+            self._get_token_certificate_auth(cs_dict)
         else:
-            if "certificate" in cs_dict:
-                self._get_token_certificate_auth(cs_dict)
-            else:
-                self._get_token_standard_auth(kwargs, cs_dict)
+            self._get_token_standard_auth(kwargs, cs_dict)
 
         self.req_headers["Authorization"] = f"Bearer {self.aad_token}"
         self.api_root = cs_dict.get("apiRoot", self.api_root)
@@ -227,27 +226,31 @@ class OData(DriverBase):
             "private_key": private_key.read_text(encoding="utf-8"),
             "thumbprint": cert_data.fingerprint(hashes.SHA1()).hex(),
             "public_certificate": cert_data.public_bytes(encoding=Encoding.PEM).decode(
-                "utf-8"
+                "utf-8",
             ),
         }
         if "private_key_secret" in cs_dict:
             client_credential["passphrase"] = cs_dict["private_key_secret"]
-        authority: str = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
+        result: dict[str, Any] | None = None
+        if not (self.oauth_url and self.api_root):
+            err_msg: str = f"Missing OAuth {self.oauth_url} or api_root {self.api_root}"
+            raise MsticpyConnectionError(err_msg)
+        authority: str = self.oauth_url.format(tenantId=cs_dict["tenant_id"])
         if authority.startswith("https://login"):
             auth_url: urllib.parse.ParseResult = urllib.parse.urlparse(authority)
             authority = f"{auth_url.scheme}://{auth_url.netloc}/{{tenantId}}".format(
-                tenantId=cs_dict["tenant_id"]
+                tenantId=cs_dict["tenant_id"],
             )
         app: ConfidentialClientApplication = ConfidentialClientApplication(
             client_id=client_id,
             client_credential=client_credential,
             authority=authority,
         )
-        result: dict[str, Any] | None = app.acquire_token_for_client(
-            scopes=[self.api_root + "/.default"]
+        result = app.acquire_token_for_client(
+            scopes=[self.api_root + "/.default"],
         )
         if not result or "access_token" not in result:
-            err_msg: str = "Could not obtain access token"
+            err_msg = "Could not obtain access token"
             raise MsticpyConnectionError(err_msg)
         self.aad_token = result.get("access_token", None)
 
@@ -259,8 +262,11 @@ class OData(DriverBase):
         _check_config(cs_dict, "client_secret", "application authentication")
         # self.oauth_url and self.req_body are correctly set in concrete
         # instances __init__
-        req_url: str = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
-        req_body = dict(self.req_body)  # type: ignore
+        if not (self.oauth_url and self.req_body):
+            err_msg: str = f"Missing OAuth {self.oauth_url} or req_body {self.req_body}"
+            raise MsticpyConnectionError(err_msg)
+        req_url: str = self.oauth_url.format(tenantId=cs_dict["tenant_id"])
+        req_body = dict(self.req_body)
         req_body["client_id"] = cs_dict["client_id"]
         req_body["client_secret"] = cs_dict["client_secret"]
 
@@ -273,9 +279,9 @@ class OData(DriverBase):
             headers=mp_ua_header(),
         )
         json_response: dict[str, Any] = response.json()
-        self.aad_token = json_response.get("access_token", None)
+        self.aad_token = json_response.get("access_token")
         if not self.aad_token:
-            err_msg: str = (
+            err_msg = (
                 f"Could not obtain access token - {json_response['error_description']}"
             )
             raise MsticpyConnectionError(err_msg)
@@ -286,11 +292,14 @@ class OData(DriverBase):
         cs_dict: dict[str, Any],
     ) -> None:
         _check_config(cs_dict, "username", "delegated authentication")
-        authority: str = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
+        if not (self.oauth_url and self.scopes):
+            err_msg: str = f"Missing OAuth {self.oauth_url} or scopes {self.scopes}"
+            raise MsticpyConnectionError(err_msg)
+        authority: str = self.oauth_url.format(tenantId=cs_dict["tenant_id"])
         if authority.startswith("https://login"):
             auth_url: urllib.parse.ParseResult = urllib.parse.urlparse(authority)
             authority = f"{auth_url.scheme}://{auth_url.netloc}/{{tenantId}}".format(
-                tenantId=cs_dict["tenant_id"]
+                tenantId=cs_dict["tenant_id"],
             )
         self.msal_auth = MSALDelegatedAuth(
             client_id=cs_dict["client_id"],
@@ -306,8 +315,10 @@ class OData(DriverBase):
 
     # pylint: disable=too-many-branches
     def query_with_results(
-        self: Self, query: str, **kwargs
-    ) -> tuple[pd.DataFrame | None, dict[str, Any] | int]:
+        self: Self,
+        query: str,
+        **kwargs,
+    ) -> tuple[pd.DataFrame | None, dict[str, Any]]:
         """
         Execute query string and return DataFrame of results.
 
@@ -330,7 +341,7 @@ class OData(DriverBase):
             raise ConnectionError(err_msg)
 
         if self._debug:
-            print(query)
+            LOGGER.debug(query)
 
         # Build request based on whether endpoint requires data to be passed in
         # request body in or URL
@@ -357,9 +368,9 @@ class OData(DriverBase):
         json_response: dict[str, Any] | int = response.json()
         if isinstance(json_response, int):
             LOGGER.warning(
-                "Query did not complete successfully. Check returned response."
+                "Query did not complete successfully. Check returned response.",
             )
-            return None, json_response
+            return None, {"response": json_response}
 
         results_key: str = "Results" if "Results" in json_response else "results"
         result: dict[str, Any] = json_response.get(results_key, json_response)
@@ -461,7 +472,7 @@ def _get_driver_settings(
     """Try to retrieve config settings for OAuth drivers."""
     config_key: str = f"{config_name}-{instance}" if instance else config_name
     drv_config: ProviderSettings | None = get_provider_settings("DataProviders").get(
-        config_key
+        config_key,
     )
 
     app_config: dict[str, str] = {}
