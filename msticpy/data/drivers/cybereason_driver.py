@@ -4,22 +4,29 @@
 # license information.
 # --------------------------------------------------------------------------
 """Cybereason Driver class."""
+from __future__ import annotations
+
 import datetime as dt
 import json
 import logging
 import re
-from asyncio import Future, as_completed
+from asyncio import AbstractEventLoop, Future, as_completed
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial, singledispatch
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, ClassVar
 
 import httpx
 import pandas as pd
 from tqdm.auto import tqdm
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserConfigError
-from ...common.provider_settings import ProviderArgs, get_provider_settings
+from ...common.provider_settings import (
+    ProviderArgs,
+    ProviderSettings,
+    get_provider_settings,
+)
 from ...common.utility import mp_ua_header
 from ..core.query_defns import Formatters
 from ..core.query_provider_connections_mixin import _get_event_loop
@@ -35,34 +42,39 @@ _HELP_URI = (
 )
 
 
-CybereasonSettings = Dict[str, Dict[str, Union[str, ProviderArgs]]]
+CybereasonSettings = dict[str, dict[str, str | ProviderArgs]]
 
 
 # pylint: disable=too-many-instance-attributes
 class CybereasonDriver(DriverBase):
     """Class to interact with Cybereason."""
 
-    CONFIG_NAME = "Cybereason"
+    CONFIG_NAME: ClassVar[str] = "Cybereason"
 
-    _CONFIG_NAME_MAP = {
+    _CONFIG_NAME_MAP: ClassVar[dict[str, tuple[str, ...]]] = {
         "tenant_id": ("tenantid", "tenant_id"),
         "client_id": ("clientid", "client_id"),
         "client_secret": ("clientsecret", "client_secret"),
     }
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self: CybereasonDriver,
+        *,
+        timeout: int = 120,
+        max_results: int = 1000,
+        debug: bool = False,
+        **kwargs,
+    ) -> None:
         """
         Instantiate Cybereason driver.
 
         Additional Parameters
         ---------------------
         timeout : int
-            Query timeout in seconds. Defaults to 2min
+            Query timeout in seconds. Defaults to 120 seconds
         max_results : int
             Number of total results to return. Defaults to 1000
             Max is 10,000.
-        page_size : int
-            Number of results to return per page. Defaults to 100
 
         Returns
         -------
@@ -72,13 +84,12 @@ class CybereasonDriver(DriverBase):
 
         """
         super().__init__(**kwargs)
-        timeout = kwargs.get("timeout", 120)  # 2 minutes in milliseconds
         logger.debug("Set timeout to %d", timeout)
-        max_results = min(kwargs.get("max_results", 100000), 100000)
+        max_results = min(max_results, 100000)
         logger.debug("Set maximum results to %d", max_results)
         self.base_url: str = "https://{tenant_id}.cybereason.net"
         self.auth_endpoint: str = "/login.html"
-        self.req_body: Dict[str, Any] = {
+        self.req_body: dict[str, Any] = {
             "queryPath": [],
             "totalResultLimit": max_results,
             "perGroupLimit": 100,
@@ -88,8 +99,8 @@ class CybereasonDriver(DriverBase):
             "customFields": [],
         }
         self.search_endpoint: str = "/rest/visualsearch/query/simple"
-        self._loaded = True
-        self.client = httpx.Client(
+        self._loaded: bool = True
+        self.client: httpx.Client = httpx.Client(
             follow_redirects=True,
             timeout=self.get_http_timeout(timeout=timeout, def_timeout=120),
             headers=mp_ua_header(),
@@ -105,13 +116,19 @@ class CybereasonDriver(DriverBase):
 
         self.set_driver_property(DriverProps.SUPPORTS_THREADING, value=True)
         self.set_driver_property(
-            DriverProps.MAX_PARALLEL, value=kwargs.get("max_threads", 4)
+            DriverProps.MAX_PARALLEL,
+            value=kwargs.get("max_threads", 4),
         )
-        self._debug = kwargs.get("debug", False)
+        self._debug: bool = debug
 
     def query(
-        self, query: str, query_source: QuerySource = None, **kwargs
-    ) -> Union[pd.DataFrame, Any]:
+        self: Self,
+        query: str,
+        query_source: QuerySource | None = None,
+        *,
+        page_size: int = 100,
+        **__,
+    ) -> pd.DataFrame | str | None:
         """
         Execute query string and return DataFrame of results.
 
@@ -121,6 +138,8 @@ class CybereasonDriver(DriverBase):
             The query to execute
         query_source : QuerySource
             The query definition object
+        page_size : int
+            Number of results to return per page. Defaults to 100
 
         Returns
         -------
@@ -133,22 +152,22 @@ class CybereasonDriver(DriverBase):
         if not self._connected:
             raise self._create_not_connected_err(self.__class__.__name__)
 
-        page_size = min(kwargs.get("page_size", 2000), 4000)
+        page_size = min(page_size, 4000)
         logger.debug("Set page size to %d", page_size)
-        json_query = json.loads(query)
-        body = {**self.req_body, **json_query}
+        json_query: dict[str, Any] = json.loads(query)
+        body: dict[str, Any] = {**self.req_body, **json_query}
 
         # The query must be executed at least once to retrieve the number
         # of results and the pagination token.
-        response = self.__execute_query(body, page_size=page_size)
+        response: dict[str, Any] = self.__execute_query(body, page_size=page_size)
 
-        total_results = response["data"]["totalResults"]
-        pagination_token = response["data"]["paginationToken"]
-        results: Dict[str, Any] = response["data"]["resultIdToElementDataMap"]
+        total_results: int = response["data"]["totalResults"]
+        pagination_token: str = response["data"]["paginationToken"]
+        results: dict[str, Any] = response["data"]["resultIdToElementDataMap"]
 
         logger.debug("Retrieved %d/%d results", len(results), total_results)
 
-        df_result: pd.DataFrame = None  # type: ignore
+        df_result: pd.DataFrame | None = None
 
         if len(results) < total_results:
             df_result = self._exec_paginated_queries(
@@ -162,12 +181,15 @@ class CybereasonDriver(DriverBase):
         df_result["instance"] = self.instance
         return df_result
 
-    def _exec_paginated_queries(
-        self,
-        body: Dict[str, Any],
+    def _exec_paginated_queries(  # noqa: PLR0913
+        self: Self,
+        body: dict[str, Any],
         page_size: int,
         pagination_token: str,
         total_results: int,
+        *,
+        progress: bool = True,
+        retry_on_error: bool = False,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -175,8 +197,14 @@ class CybereasonDriver(DriverBase):
 
         Parameters
         ----------
-        body : Dict[str, Any]
+        body : dict[str, Any]
             The body of the query to execute.
+        page_size: int
+            number of results to return per page
+        pagination_token: str
+            Cybereason built-in pagination tracker
+        total_results: int
+            Number of results for the executed query.
 
         Additional Parameters
         ----------
@@ -184,7 +212,7 @@ class CybereasonDriver(DriverBase):
             Show progress bar, by default True
         retry_on_error: bool, optional
             Retry failed queries, by default False
-        **kwargs : Dict[str, Any]
+        **kwargs : dict[str, Any]
             Additional keyword arguments to pass to the query method.
 
         Returns
@@ -199,27 +227,33 @@ class CybereasonDriver(DriverBase):
         The queries are executed asynchronously.
 
         """
-        progress = kwargs.pop("progress", True)
-        retry = kwargs.pop("retry_on_error", False)
-
-        query_tasks = self._create_paginated_query_tasks(
-            body=body,
-            page_size=page_size,
-            pagination_token=pagination_token,
-            total_results=total_results,
+        del kwargs
+        query_tasks: dict[str, partial[dict[str, Any]]] = (
+            self._create_paginated_query_tasks(
+                body=body,
+                page_size=page_size,
+                pagination_token=pagination_token,
+                total_results=total_results,
+            )
         )
 
         logger.info("Running %s paginated queries.", len(query_tasks))
-        event_loop = _get_event_loop()
+        event_loop: AbstractEventLoop = _get_event_loop()
         return event_loop.run_until_complete(
-            self.__run_threaded_queries(query_tasks, progress, retry)
+            self.__run_threaded_queries(
+                query_tasks,
+                progress=progress,
+                retry=retry_on_error,
+            ),
         )
 
     def connect(
-        self,
-        connection_str: Optional[str] = None,
+        self: Self,
+        connection_str: str | None = None,
+        *,
+        instance: str | None = None,
         **kwargs,
-    ):
+    ) -> None:
         """
         Connect to data source.
 
@@ -231,6 +265,8 @@ class CybereasonDriver(DriverBase):
             Optional name of configuration instance - this
             is added as a prefix to the driver configuration key name
             when searching for configuration in the msticpyconfig.yaml
+        kwargs:
+            Extra parameters to connect.
 
         Notes
         -----
@@ -240,11 +276,13 @@ class CybereasonDriver(DriverBase):
             client_secret
 
         """
-        cs_dict: Dict[str, Any] = {}
+        del connection_str
+        cs_dict: dict[str, Any] = {}
 
-        self._instance = kwargs.pop("instance", None)
+        self._instance = instance
         cs_dict = CybereasonDriver._get_driver_settings(
-            self.CONFIG_NAME, self._instance
+            self.CONFIG_NAME,
+            self._instance,
         )
         # let user override config settings with function kwargs
         cs_dict.update(kwargs)
@@ -255,10 +293,13 @@ class CybereasonDriver(DriverBase):
             if setting not in cs_dict
         ]
         if missing_settings:
+            err_msg: str = (
+                "You must supply the following required connection parameter(s) "
+                "to the connect function or add them to your msticpyconfig.yaml. "
+                ", ".join(f"'{param}'" for param in missing_settings)
+            )
             raise MsticpyUserConfigError(
-                "You must supply the following required connection parameter(s)",
-                "to the connect function or add them to your msticpyconfig.yaml.",
-                ", ".join(f"'{param}'" for param in missing_settings),
+                err_msg,
                 title="Missing connection parameters.",
                 help_uri=("Connecting to OData sources.", _HELP_URI),
             )
@@ -266,9 +307,9 @@ class CybereasonDriver(DriverBase):
         # self.auth_endpoint and self.req_body are correctly set in concrete
         # instances __init__
         self.client.base_url = httpx.URL(
-            self.base_url.format(tenant_id=cs_dict["tenant_id"])
+            self.base_url.format(tenant_id=cs_dict["tenant_id"]),
         )
-        req_body: Dict[str, str] = {
+        req_body: dict[str, str] = {
             "username": cs_dict["client_id"],
             "password": cs_dict["client_secret"],
         }
@@ -277,52 +318,53 @@ class CybereasonDriver(DriverBase):
         response = self.client.post(self.auth_endpoint, data=req_body)
         response.raise_for_status()
 
-        print("Connected.")
-        self._connected = True
-        self.current_connection = self._instance
-
-        return self._connected
+        logger.info("Connected.")
+        self._connected: bool = True
+        self.current_connection: str | None = self._instance
 
     @staticmethod
-    def _flatten_result(entry: Dict[str, Any]) -> Dict[str, Any]:
+    def _flatten_result(entry: dict[str, Any]) -> dict[str, Any]:
         """
         Flatten Cybereason result to a format that can be handled by pandas.
 
         Parameters
         ----------
-        entry: Dict[str, Any]
+        entry: dict[str, Any]
             Entry to flatten
 
         Returns
         -------
-        Dict[str, Any]
+        dict[str, Any]
 
         """
-        result = {}
+        result: dict[str, Any] = {}
         # Retrieve simpleValues and add them to the output
-        simple_values: Dict[str, Any] = entry.get("simpleValues", {})
+        simple_values: dict[str, Any] = entry.get("simpleValues", {})
         result = CybereasonDriver._flatten_simple_values(simple_values)
 
-        elt_value = entry.get("elementValues", {})  # List or Dict
+        elt_value: list[dict[str, Any]] | dict[str, Any] = entry.get(
+            "elementValues",
+            {},
+        )
         result.update(**CybereasonDriver._flatten_element_values(elt_value))
         return result
 
     @staticmethod
-    def _flatten_simple_values(simple_values: Dict[str, Any]) -> Dict[str, Any]:
+    def _flatten_simple_values(simple_values: dict[str, Any]) -> dict[str, Any]:
         """
         Flatten "simpleValues from Cybereason result to a format that can be handled by pandas.
 
         Parameters
         ----------
-        simple_values: Dict[str, Any]
+        simple_values: dict[str, Any]
             Entry to flatten
 
         Returns
         -------
-        Dict[str, Any]
+        dict[str, Any]
 
         """
-        result: Dict[str, Any] = {}
+        result: dict[str, Any] = {}
         for name, values in simple_values.items():
             if not values["values"]:
                 return result
@@ -334,7 +376,7 @@ class CybereasonDriver(DriverBase):
                         else value.strip().rstrip("\x00")
                     )
                     for value in values["values"]
-                }
+                },
             )
             if values["totalValues"] == 1:
                 result[name] = result[name][0]
@@ -343,22 +385,22 @@ class CybereasonDriver(DriverBase):
 
     @staticmethod
     def _flatten_element_values(
-        element_values: Union[Dict[str, Any], List[Dict[str, Any]]]
-    ) -> Dict[str, Any]:
+        element_values: dict[str, Any] | list[dict[str, Any]],
+    ) -> dict[str, Any]:
         """
         Flatten "elementValues from Cybereason result to a format that can be handled by pandas.
 
         Parameters
         ----------
-        element_values: Union[Dict[str, Any], List[str]]
+        element_values: Union[dict[str, Any], List[str]]
             Entry to flatten
 
         Returns
         -------
-        Dict[str, Any]
+        dict[str, Any]
 
         """
-        result = {}
+        result: dict[str, Any] = {}
         if isinstance(element_values, list):
             for values in element_values:
                 result[values["elementType"]] = values["name"]
@@ -372,15 +414,15 @@ class CybereasonDriver(DriverBase):
         return result
 
     def _create_paginated_query_tasks(
-        self,
-        body: Dict[str, Any],
+        self: Self,
+        body: dict[str, Any],
         page_size: int,
         pagination_token: str,
         total_results: int,
-    ) -> Dict[str, partial]:
+    ) -> dict[str, partial[dict[str, Any]]]:
         """Return dictionary of partials to execute queries."""
         # Compute the number of queries to execute
-        total_pages = total_results // page_size + 1
+        total_pages: int = total_results // page_size + 1
         # The first query (page 0) as to be re-run due to a bug in
         # Cybereason API. The first query returns less results than the page size
         # when executed without a pagination token.
@@ -392,18 +434,18 @@ class CybereasonDriver(DriverBase):
                 pagination_token=pagination_token,
                 page=page,
             )
-            for page in range(0, total_pages)
+            for page in range(total_pages)
         }
 
     def __execute_query(
-        self,
-        body: Dict[str, Any],
+        self: Self,
+        body: dict[str, Any],
         *,
         page: int = 0,
         page_size: int = 2000,
-        pagination_token: str = None,
+        pagination_token: str | None = None,
         max_retry: int = 3,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Run query with pagination enabled.
 
@@ -411,7 +453,7 @@ class CybereasonDriver(DriverBase):
 
         Parameters
         ----------
-        body: Dict[str, Any]
+        body: dict[str, Any]
             Body of the HTTP Request
         page_size: int
             Size of the page for results
@@ -424,40 +466,41 @@ class CybereasonDriver(DriverBase):
 
         Returns
         -------
-        Dict[str, Any]
+        dict[str, Any]
 
         """
         if pagination_token:
-            pagination = {
+            pagination: dict[str, Any] = {
                 "pagination": {
                     "pageSize": page_size,
                     "page": page + 1,
                     "paginationToken": pagination_token,
                     "skip": page * page_size,
-                }
+                },
             }
-            headers = {"Pagination-Token": pagination_token}
+            headers: dict[str, Any] = {"Pagination-Token": pagination_token}
         else:
             pagination = {"pagination": {"pageSize": page_size}}
             headers = {}
-        params = {"page": page, "itemsPerPage": page_size}
-        status = None
-        cur_try = 0
+        params: dict[str, Any] = {"page": page, "itemsPerPage": page_size}
+        status: str | None = None
+        cur_try: int = 0
         while status != "SUCCESS" and cur_try < max_retry:
-            response = self.client.post(
+            response: httpx.Response = self.client.post(
                 self.search_endpoint,
                 json={**body, **pagination},
                 headers=headers,
                 params=params,
             )
             response.raise_for_status()
-            json_result = response.json()
+            json_result: dict[str, Any] = response.json()
             status = json_result["status"]
             cur_try += 1
 
         if cur_try >= max_retry:
+            err_msg: str = f"{status}: {json_result['message']}"
             raise httpx.HTTPStatusError(
-                f"{status}: {json_result['message']}",
+                err_msg,
                 request=response.request,
                 response=response,
             )
@@ -465,17 +508,18 @@ class CybereasonDriver(DriverBase):
         return json_result
 
     async def __run_threaded_queries(
-        self,
-        query_tasks: Dict[str, partial],
+        self: Self,
+        query_tasks: dict[str, partial],
+        *,
         progress: bool = True,
         retry: bool = False,
     ) -> pd.DataFrame:
         logger.info("Running %d threaded queries.", len(query_tasks))
         event_loop = _get_event_loop()
         with ThreadPoolExecutor(max_workers=4) as executor:
-            results: List[pd.DataFrame] = []
-            failed_tasks: Dict[str, Future] = {}
-            thread_tasks = {
+            results: list[pd.DataFrame] = []
+            failed_tasks: dict[str, Future] = {}
+            thread_tasks: dict[str, Future] = {
                 query_id: event_loop.run_in_executor(executor, query_func)
                 for query_id, query_func in query_tasks.items()
             }
@@ -487,16 +531,18 @@ class CybereasonDriver(DriverBase):
                 )
             else:
                 task_iter = as_completed(thread_tasks.values())
-            ids_and_tasks = dict(zip(thread_tasks, task_iter))
+            ids_and_tasks: dict[str, Future] = dict(zip(thread_tasks, task_iter))
             for query_id, thread_task in ids_and_tasks.items():
                 try:
-                    result = await thread_task
-                    df_result = self._format_result_to_dataframe(result)
+                    result: dict[str, Any] = await thread_task
+                    df_result: pd.DataFrame = self._format_result_to_dataframe(result)
                     logger.info("Query task '%s' completed successfully.", query_id)
                     results.append(df_result)
                 except Exception:  # pylint: disable=broad-except
                     logger.warning(
-                        "Query task '%s' failed with exception", query_id, exc_info=True
+                        "Query task '%s' failed with exception",
+                        query_id,
+                        exc_info=True,
                     )
                     failed_tasks[query_id] = thread_task
 
@@ -518,7 +564,11 @@ class CybereasonDriver(DriverBase):
         return pd.concat(results, ignore_index=True)
 
     # pylint: disable=too-many-branches
-    def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
+    def query_with_results(
+        self: Self,
+        query: str,
+        **__,
+    ) -> tuple[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
 
@@ -534,7 +584,9 @@ class CybereasonDriver(DriverBase):
             Kql ResultSet.
 
         """
-        raise NotImplementedError(f"Not supported for {self.__class__.__name__}")
+        del query
+        err_msg: str = f"Not supported for {self.__class__.__name__}"
+        raise NotImplementedError(err_msg)
 
     # Parameter Formatting method
     @staticmethod
@@ -543,52 +595,58 @@ class CybereasonDriver(DriverBase):
         return int(date_time.timestamp() * 1000)
 
     @staticmethod
-    def _format_list(value: List) -> List:
+    def _format_list(value: list[str]) -> list[str]:
         """Return list as itself."""
         return value
 
     # Parameter Formatting method
     @staticmethod
-    def _format_to_datetime(timestamp: int) -> Union[dt.datetime, int]:
+    def _format_to_datetime(timestamp: int) -> dt.datetime | int:
         """Return datetime from a timestamp in milliseconds."""
         try:
-            return dt.datetime.fromtimestamp(timestamp // 1000)
+            return dt.datetime.fromtimestamp(
+                timestamp // 1000,
+                tz=dt.timezone.utc,
+            )
         except TypeError:
             return timestamp
 
     @staticmethod
-    def _format_result_to_dataframe(result: Dict[str, Any]) -> pd.DataFrame:
+    def _format_result_to_dataframe(result: dict[str, Any]) -> pd.DataFrame:
         """Return a dataframe from a cybereason result object."""
-        df_result = [
-            dict(
-                CybereasonDriver._flatten_result(values),
-                **{"resultId": result_id},
-            )
+        df_result: list[dict[str, Any]] = [
+            {
+                **CybereasonDriver._flatten_result(values),
+                "resultId": result_id,
+            }
             for result_id, values in result["data"]["resultIdToElementDataMap"].items()
         ]
         return pd.json_normalize(df_result)
 
     # Retrieve configuration parameters with aliases
     @staticmethod
-    def _map_config_dict_name(config_dict: Dict[str, str]):
+    def _map_config_dict_name(config_dict: dict[str, str]) -> dict[str, str]:
         """Map configuration parameter names to expected values."""
-        mapped_dict = config_dict.copy()
-        for provided_name in config_dict:
+        mapped_dict: dict[str, str] = config_dict.copy()
+        for provided_name, value in config_dict.items():
             for req_name, alternates in CybereasonDriver._CONFIG_NAME_MAP.items():
                 if provided_name.casefold() in alternates:
-                    mapped_dict[req_name] = config_dict[provided_name]
+                    mapped_dict[req_name] = value
                     break
         return mapped_dict
 
     # Read values from configuration
     @staticmethod
     def _get_driver_settings(
-        config_name: str, instance: Optional[str] = None
-    ) -> Dict[str, str]:
+        config_name: str,
+        instance: str | None = None,
+    ) -> dict[str, str]:
         """Try to retrieve config settings for Cybereason drivers."""
-        config_key = f"{config_name}-{instance}" if instance else config_name
-        drv_config = get_provider_settings("DataProviders").get(config_key)
-        app_config: Dict[str, str] = {}
+        config_key: str = f"{config_name}-{instance}" if instance else config_name
+        drv_config: ProviderSettings | None = get_provider_settings(
+            "DataProviders",
+        ).get(config_key)
+        app_config: dict[str, str] = {}
         if drv_config:
             app_config = dict(drv_config.args)
 
@@ -598,7 +656,7 @@ class CybereasonDriver(DriverBase):
         return CybereasonDriver._map_config_dict_name(app_config)
 
     @staticmethod
-    def _custom_param_handler(query: str, param_dict: Dict[str, Any]) -> str:
+    def _custom_param_handler(query: str, param_dict: dict[str, Any]) -> str:
         """Replace parameters in query template for Cybereason JSON queries."""
         query_dict = json.loads(query)
 
@@ -607,8 +665,9 @@ class CybereasonDriver(DriverBase):
 
 @singledispatch
 def _recursive_find_and_replace(
-    parameters: Union[str, Dict, List], param_dict: Dict[str, Any]
-):
+    parameters: str | dict[str, Any] | list[str],
+    param_dict: dict[str, Any],
+) -> str | dict[str, Any] | list[str]:
     """Recursively find and replace parameters from query."""
     if isinstance(parameters, (list, str, dict)):
         return _recursive_find_and_replace(parameters, param_dict)
@@ -616,7 +675,7 @@ def _recursive_find_and_replace(
 
 
 @_recursive_find_and_replace.register(dict)
-def _(parameters: Dict[str, Any], param_dict: Dict[str, Any]):
+def _(parameters: dict[str, Any], param_dict: dict[str, Any]) -> dict[str, Any]:
     return {
         parameter: _recursive_find_and_replace(value, param_dict)
         for parameter, value in parameters.items()
@@ -624,8 +683,8 @@ def _(parameters: Dict[str, Any], param_dict: Dict[str, Any]):
 
 
 @_recursive_find_and_replace.register(list)
-def _(parameters: List, param_dict: Dict[str, Any]):
-    result = [
+def _(parameters: list[str], param_dict: dict[str, Any]) -> list[str]:
+    result: list[str | dict[str, Any] | list[str]] = [
         _recursive_find_and_replace(parameter, param_dict) for parameter in parameters
     ]
     if all(isinstance(values, list) for values in result):
@@ -634,16 +693,22 @@ def _(parameters: List, param_dict: Dict[str, Any]):
         except TypeError:
             # If we have a list with different types,convert all to string.
             return sorted({str(value) for values in result for value in values})
-    return result
+    elif all(isinstance(values, str) for values in result):
+        return sorted({value for value in result if isinstance(value, str)})
+
+    err_msg: str = "Dicts are not expected in that context"
+    raise TypeError(err_msg)
 
 
 @_recursive_find_and_replace.register(str)
-def _(parameters: str, param_dict: Dict[str, Any]):
+def _(parameters: str, param_dict: dict[str, Any]) -> str | list[str]:
     """Recursively find and replace parameters from query."""
-    param_regex = r"{([^}]+)}"
-    matches = re.match(param_regex, parameters)
+    param_regex: str = r"{([^}]+)}"
+    matches: re.Match[str] | None = re.match(param_regex, parameters)
     if matches:
-        result = [param_dict.get(match, parameters) for match in matches.groups()]
+        result: list[str] = [
+            param_dict.get(match, parameters) for match in matches.groups()
+        ]
         if len(result) == 1:
             return result[0]
         return result
