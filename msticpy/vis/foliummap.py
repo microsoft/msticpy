@@ -907,7 +907,7 @@ def _create_feature_group(
     """Create folium feature group."""
     feature_group = folium.FeatureGroup(name=layer_name)
     if use_marker_cluster:
-        container = MarkerCluster(name=layer_name)
+        container: MarkerCluster = MarkerCluster(name=layer_name)
         container.add_to(feature_group)
     else:
         container = feature_group
