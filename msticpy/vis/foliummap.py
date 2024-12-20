@@ -909,8 +909,6 @@ def _create_feature_group(
     if use_marker_cluster:
         container: MarkerCluster = MarkerCluster(name=layer_name)
         container.add_to(feature_group)
-    else:
-        container = feature_group
     data.apply(
         lambda row: folium.Marker(
             location=(row[lat_column], row[long_column]),
