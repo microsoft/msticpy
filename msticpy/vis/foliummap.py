@@ -623,7 +623,7 @@ def _get_popup_text(ip_entity: IpAddress) -> str:
     )
 
 
-if sys.version_info > (3, 9):
+if sys.version_info > (3, 10):
     from typing import TypeAlias
 
     IconMapper: TypeAlias = (
