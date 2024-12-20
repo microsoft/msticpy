@@ -121,12 +121,6 @@ class FoliumMap:
         """
         ip_entities = _get_location_for_ip_entities(ip_entities)
 
-        if layer:
-            marker_target = folium.FeatureGroup(name=layer)
-            marker_target.add_to(self.folium_map)
-            folium.LayerControl().add_to(self.folium_map)
-        else:
-            marker_target = self.folium_map
         for ip_entity in ip_entities:
             if ip_entity.Location is None:
                 continue
@@ -148,7 +142,14 @@ class FoliumMap:
                 tooltip=tooltip_text,
                 icon=folium.Icon(**kwargs),
             )
-            marker.add_to(marker_target)
+            if layer:
+                marker_target: folium.FeatureGroup = folium.FeatureGroup(name=layer)
+                marker_target.add_to(self.folium_map)
+                folium.LayerControl().add_to(self.folium_map)
+                marker.add_to(marker_target)
+            else:
+                marker_target_map: folium.Map = self.folium_map
+                marker.add_to(marker_target_map)
             self.locations.append(
                 (ip_entity.Location.Latitude, ip_entity.Location.Longitude)
             )
@@ -943,7 +944,7 @@ def _create_mapped_icon(
     def_layer_color: str = "blue",
 ) -> folium.Icon:
     """Return folium Icon from mapping or defaults."""
-    icon_kwargs: dict[str, str] = {}
+    icon_kwargs: dict[str, Any] = {}
     if isinstance(icon_map, dict):
         icon_kwargs = icon_map.get(row[icon_column], icon_map.get("default", {}))
     elif callable(icon_map):
