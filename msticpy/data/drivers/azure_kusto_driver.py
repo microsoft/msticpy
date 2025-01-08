@@ -184,10 +184,9 @@ class AzureKustoDriver(DriverBase):
             (can be overridden in connect method)
 
         """
-        super().__init__(**kwargs)
+        super().__init__(data_environment=data_environment, max_threads=max_threads)
         if debug:
             logger.setLevel(logging.DEBUG)
-        self.environment: DataEnvironment = data_environment
         self._strict_query_match: bool = strict_query_match
         self._kusto_settings: dict[str, dict[str, KustoConfig]] = _get_kusto_settings()
         self._default_database: str | None = None
@@ -196,10 +195,7 @@ class AzureKustoDriver(DriverBase):
         self.client: KustoClient | None = None
         self._az_auth_types: list[str] | None = None
         self._az_tenant_id: str | None = None
-        self._def_timeout: int = min(
-            timeout,
-            _MAX_TIMEOUT,
-        )
+        self._def_timeout: int = min(timeout, _MAX_TIMEOUT)
         self._def_proxies: dict[str, str] | None = proxies or get_http_proxies()
 
         self.add_query_filter("data_environments", "Kusto")
@@ -207,10 +203,6 @@ class AzureKustoDriver(DriverBase):
         self.set_driver_property(DriverProps.FILTER_ON_CONNECT, value=True)
         self.set_driver_property(DriverProps.EFFECTIVE_ENV, DataEnvironment.Kusto.name)
         self.set_driver_property(DriverProps.SUPPORTS_THREADING, value=True)
-        self.set_driver_property(
-            DriverProps.MAX_PARALLEL,
-            value=max_threads,
-        )
         self._loaded = True
 
     def _set_public_attribs(self: Self) -> dict[str, Any]:
