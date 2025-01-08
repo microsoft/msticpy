@@ -46,8 +46,9 @@ try:
     if TYPE_CHECKING:
         from azure.kusto.data.response import KustoResponseDataSet
 except ImportError as imp_err:
+    import_err: str = "Cannot use this feature without Azure Kusto client installed"
     raise MsticpyMissingDependencyError(
-        "Cannot use this feature without Azure Kusto client installed",
+        import_err,
         title="Error importing azure.kusto.data",
         packages="azure-kusto-data",
     ) from imp_err
@@ -104,7 +105,8 @@ class KustoConfig:
         """Return attribute from args if not in self."""
         if attrib in self.args:
             return self.args[attrib]
-        raise AttributeError(f"Invalid attribute '{attrib}'")
+        err_msg: str = f"Invalid attribute '{attrib}'"
+        raise AttributeError(err_msg)
 
     def __contains__(self: Self, attrib: str) -> bool:
         """Return True if attribute in self or args."""
@@ -196,7 +198,7 @@ class AzureKustoDriver(DriverBase):
 
         self.add_query_filter("data_environments", "Kusto")
         self.set_driver_property(DriverProps.PUBLIC_ATTRS, self._set_public_attribs())
-        self.set_driver_property(DriverProps.FILTER_ON_CONNECT, True)
+        self.set_driver_property(DriverProps.FILTER_ON_CONNECT, value=True)
         self.set_driver_property(DriverProps.EFFECTIVE_ENV, DataEnvironment.Kusto.name)
         self.set_driver_property(DriverProps.SUPPORTS_THREADING, value=True)
         self.set_driver_property(
@@ -253,11 +255,12 @@ class AzureKustoDriver(DriverBase):
         try:
             return self.get_database_schema()
         except ValueError:
-            print("Default database not set - unable to retrieve schema.")
+            err_msg: str = "Default database not set - unable to retrieve schema."
         except MsticpyNotConnectedError:
-            print("Not connected to a cluster - unable to retrieve schema.")
+            err_msg = "Not connected to a cluster - unable to retrieve schema."
         except MsticpyDataQueryError:
-            print("Kusto Error retrieving the schema.")
+            err_msg = "Kusto Error retrieving the schema."
+        logger.info(err_msg)
         return {}
 
     @property
@@ -346,8 +349,9 @@ class AzureKustoDriver(DriverBase):
         if connection_str:
             self.current_connection = connection_str
         if not connection_str and not cluster:
+            err_msg: str = "Must specify either a connection string or a cluster name"
             raise MsticpyParameterError(
-                "Must specify either a connection string or a cluster name",
+                err_msg,
                 parameter=["connection_str", "cluster"],
             )
 
@@ -390,7 +394,7 @@ class AzureKustoDriver(DriverBase):
         query: str,
         query_source: QuerySource | None = None,
         **kwargs,
-    ) -> pd.DataFrame | Any:
+    ) -> pd.DataFrame | dict[str, Any] | None:
         """
         Execute query string and return DataFrame of results.
 
@@ -427,7 +431,7 @@ class AzureKustoDriver(DriverBase):
         self: Self,
         query: str,
         **kwargs,
-    ) -> tuple[pd.DataFrame | None, Any]:
+    ) -> tuple[pd.DataFrame | None, dict[str, Any]]:
         """
         Return query results as a DataFrame and the result status.
 
@@ -458,11 +462,14 @@ class AzureKustoDriver(DriverBase):
             query_spec: dict[str, str] = self._get_cluster_spec_from_query_source(
                 query_source,
             )
+            err_msg: str = (
+                "Invalid query source - for this connection."
+                f" Connected cluster is: {self.cluster_uri} ({self.cluster_config_name})"
+                "The cluster in the query definition is: "
+                " ".join([f"{name}: {value}" for name, value in query_spec.items()])
+            )
             raise MsticpyDataQueryError(
-                "Invalid query source - for this connection.",
-                f"Connected cluster is: {self.cluster_uri} ({self.cluster_config_name})",
-                "The cluster in the query definition is:",
-                *[f"{name}: {value}" for name, value in query_spec.items()],
+                err_msg,
                 title="Mismatched cluster for query.",
                 help_uri=_HELP_URL,
             )
@@ -491,10 +498,10 @@ class AzureKustoDriver(DriverBase):
             status = _parse_query_status(response)
             logger.info("Query completed: %s", str(status))
         except KustoApiError as err:
-            logger.error("Query failed: %s", err)
+            logger.exception("Query failed")
             _raise_kusto_error(err)
         except KustoServiceError as err:
-            logger.error("Query failed: %s", err)
+            logger.exception("Query failed")
             _raise_unknown_query_error(err)
         return data, status
 
@@ -521,8 +528,9 @@ class AzureKustoDriver(DriverBase):
             )
             return databases_df["DatabaseName"].tolist()
         except KustoServiceError as err:
+            err_msg: str = "Error getting database names"
             raise MsticpyDataQueryError(
-                "Error getting database names",
+                err_msg,
                 err,
                 title="Kusto error",
                 help_uri=_HELP_URL,
@@ -561,7 +569,8 @@ class AzureKustoDriver(DriverBase):
         if self.client is None:
             _raise_not_connected_error()
         if not db_name:
-            raise ValueError("No database name specified")
+            err_msg: str = "No database name specified"
+            raise ValueError(err_msg)
 
         query: str = f".show database {db_name} schema"
         try:
@@ -573,8 +582,9 @@ class AzureKustoDriver(DriverBase):
                 response.primary_results[0],
             )
         except KustoServiceError as err:
+            err_msg = "Error getting database schema"
             raise MsticpyDataQueryError(
-                "Error getting database schema",
+                err_msg,
                 err,
                 title="Kusto error",
                 help_uri=_HELP_URL,
@@ -583,7 +593,7 @@ class AzureKustoDriver(DriverBase):
         return {
             str(table): {
                 col_name: col_type.replace("System.", "")
-                for col_name, col_type in cols[["ColumnName", "ColumnType"]].values
+                for col_name, col_type in cols[["ColumnName", "ColumnType"]].to_numpy()
                 if col_name is not None
             }
             for table, cols in schema_dataframe.groupby("TableName")
@@ -656,10 +666,11 @@ class AzureKustoDriver(DriverBase):
     ) -> KustoConnectionStringBuilder:
         logger.info("Creating KQL connection string for certificate authentication")
         if not self._az_tenant_id:
-            raise ValueError(
-                "Azure tenant ID must be set in config or connect parameter",
-                "to use certificate authentication",
+            err_msg: str = (
+                "Azure tenant ID must be set in config or connect parameter "
+                "to use certificate authentication"
             )
+            raise ValueError(err_msg)
         cert_bytes: bytes = base64.b64decode(auth_params.params["certificate"])
         (
             private_key,
@@ -667,9 +678,8 @@ class AzureKustoDriver(DriverBase):
             _,
         ) = pkcs12.load_key_and_certificates(data=cert_bytes, password=None)
         if private_key is None or certificate is None:
-            raise ValueError(
-                f"Could not load certificate for cluster {self.cluster_uri}",
-            )
+            err_msg = f"Could not load certificate for cluster {self.cluster_uri}"
+            raise ValueError(err_msg)
         private_cert: bytes = private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -735,12 +745,15 @@ class AzureKustoDriver(DriverBase):
                 tenant_id=self._az_tenant_id,
             )
 
+        err_msg: str = (
+            f"Cluster '{cluster}' not found in msticpyconfig.yaml"
+            " or is not in the correct format for a a cluster URI."
+            " The cluster must be a key, cluster short name of an entry defined"
+            " in the 'KustoClusters' section of the config file,"
+            " or it must be a valid cluster URI."
+        )
         raise MsticpyDataQueryError(
-            f"Cluster '{cluster}' not found in msticpyconfig.yaml",
-            "or is not in the correct format for a a cluster URI",
-            "The cluster must be a key, cluster short name of an entry defined",
-            "in the 'KustoClusters' section of the config file,",
-            "or it must be a valid cluster URI.",
+            err_msg,
             title="Unusable cluster identifier",
             help_uri=_HELP_URL,
         )
@@ -1000,15 +1013,15 @@ def _parse_query_status(response: KustoResponseDataSet) -> dict[str, Any]:
     }
 
 
-def _raise_kusto_error(error) -> None:
+def _raise_kusto_error(error: KustoApiError) -> NoReturn:
     """Raise a Kusto error."""
-    if isinstance(error, KustoApiError):
-        raise MsticpyDataQueryError(
-            error.error.description,
-            f"error code: {error.error.code}",
-            title=error.error.message,
-            help_uri=_HELP_URL,
-        ) from error
+    err_msg: str = f"error code: {error.error.code}"
+    raise MsticpyDataQueryError(
+        error.error.description,
+        err_msg,
+        title=error.error.message,
+        help_uri=_HELP_URL,
+    ) from error
 
 
 def _raise_no_db_error(query_source: QuerySource | None = None) -> NoReturn:
@@ -1037,18 +1050,21 @@ def _raise_no_db_error(query_source: QuerySource | None = None) -> NoReturn:
 
 def _raise_not_connected_error() -> NoReturn:
     """Raise an error if not connected to a cluster."""
+    err_msg: str = "Please connect to the cluster before executing a query."
     raise MsticpyNotConnectedError(
-        "Please connect to the cluster before executing a query.",
+        err_msg,
         title="Not connected to cluster",
         help_uri=_HELP_URL,
     )
 
 
-def _raise_unknown_query_error(err) -> NoReturn:
+def _raise_unknown_query_error(err: Exception) -> NoReturn:
     """Raise an error if unknown exception raised."""
+    err_msg: str = (
+        f"Unknown exception when executing query. Exception type: {type(err)}"
+    )
     raise MsticpyDataQueryError(
-        "Unknown exception when executing query.",
-        f"Exception type: {type(err)}",
+        err_msg,
         *err.args,
         title="Unknown exception during query execution",
         help_uri=_HELP_URL,
