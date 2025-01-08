@@ -184,6 +184,7 @@ class AzureKustoDriver(DriverBase):
             (can be overridden in connect method)
 
         """
+        del kwargs
         super().__init__(data_environment=data_environment, max_threads=max_threads)
         if debug:
             logger.setLevel(logging.DEBUG)
