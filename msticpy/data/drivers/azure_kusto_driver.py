@@ -335,9 +335,24 @@ class AzureKustoDriver(DriverBase):
 
         """
         logger.info(
-            "Connecting to Kusto cluster: connection_str=%s, args=%s",
+            "Connecting to Kusto cluster: connection_str=%s, "
+            "database=%s, "
+            "timeout=%s, "
+            "auth_types=%s, "
+            "mp_az_auth=%s, "
+            "tenant_id=%s, "
+            "mp_az_tenant_id=%s, "
+            "cluster=%s, "
+            "proxies=%s, ",
             connection_str,
-            kwargs,
+            database,
+            timeout,
+            auth_types,
+            mp_az_auth,
+            tenant_id,
+            mp_az_tenant_id,
+            cluster,
+            proxies,
         )
         self._default_database = database
         self._def_timeout = min(timeout or self._def_timeout, _MAX_TIMEOUT)
