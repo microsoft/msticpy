@@ -186,10 +186,12 @@ class AzureKustoDriver(DriverBase):
         self._az_auth_types: list[str] | None = None
         self._az_tenant_id: str | None = None
         self._def_timeout: int = min(
-            kwargs.pop("timeout", _DEFAULT_TIMEOUT), _MAX_TIMEOUT
+            kwargs.pop("timeout", _DEFAULT_TIMEOUT),
+            _MAX_TIMEOUT,
         )
         self._def_proxies: dict[str, str] | None = kwargs.get(
-            "proxies", get_http_proxies()
+            "proxies",
+            get_http_proxies(),
         )
 
         self.add_query_filter("data_environments", "Kusto")
@@ -326,7 +328,8 @@ class AzureKustoDriver(DriverBase):
         self._default_database = kwargs.pop("database", None)
         self._def_timeout = min(kwargs.pop("timeout", self._def_timeout), _MAX_TIMEOUT)
         az_auth_types: bool | str | list[str] = kwargs.pop(
-            "auth_types", kwargs.pop("mp_az_auth", None)
+            "auth_types",
+            kwargs.pop("mp_az_auth", None),
         )
         if isinstance(az_auth_types, bool):
             self._az_auth_types = None
@@ -453,7 +456,7 @@ class AzureKustoDriver(DriverBase):
 
         if query_source and not self.query_usable(query_source):
             query_spec: dict[str, str] = self._get_cluster_spec_from_query_source(
-                query_source
+                query_source,
             )
             raise MsticpyDataQueryError(
                 "Invalid query source - for this connection.",
@@ -465,7 +468,8 @@ class AzureKustoDriver(DriverBase):
             )
 
         database: str = self._get_query_database_name(
-            query_source=query_source, **kwargs
+            query_source=query_source,
+            **kwargs,
         )
         data: pd.DataFrame | None = None
         status: dict[str, bool] = {"success": False}
@@ -513,7 +517,7 @@ class AzureKustoDriver(DriverBase):
 
             # Convert the result to a DataFrame
             databases_df: pd.DataFrame = dataframe_from_result_table(
-                response.primary_results[0]
+                response.primary_results[0],
             )
             return databases_df["DatabaseName"].tolist()
         except KustoServiceError as err:
@@ -525,7 +529,8 @@ class AzureKustoDriver(DriverBase):
             ) from err
 
     def get_database_schema(
-        self: Self, database: str | None = None
+        self: Self,
+        database: str | None = None,
     ) -> dict[str, dict[str, str]]:
         """
         Get table names and schema from the connected cluster/database.
@@ -565,7 +570,7 @@ class AzureKustoDriver(DriverBase):
             response: KustoResponseDataSet = self.client.execute_mgmt(db_name, query)
             # Convert the result to a DataFrame
             schema_dataframe: pd.DataFrame = dataframe_from_result_table(
-                response.primary_results[0]
+                response.primary_results[0],
             )
         except KustoServiceError as err:
             raise MsticpyDataQueryError(
@@ -591,18 +596,22 @@ class AzureKustoDriver(DriverBase):
         """Return cluster details from query source."""
         return {
             QuerySourceFields.CLUSTER: query_source.metadata.get(
-                QuerySourceFields.CLUSTER, "NA"
+                QuerySourceFields.CLUSTER,
+                "NA",
             ),
             QuerySourceFields.CLUSTERS: query_source.metadata.get(
-                QuerySourceFields.CLUSTERS, "NA"
+                QuerySourceFields.CLUSTERS,
+                "NA",
             ),
             QuerySourceFields.CLUSTER_GROUPS: query_source.metadata.get(
-                QuerySourceFields.CLUSTER_GROUPS, "NA"
+                QuerySourceFields.CLUSTER_GROUPS,
+                "NA",
             ),
         }
 
     def _get_connection_string_for_cluster(
-        self: Self, cluster_config: KustoConfig
+        self: Self,
+        cluster_config: KustoConfig,
     ) -> KustoConnectionStringBuilder:
         """Return full cluster URI and credential for cluster name or URI."""
         auth_params: AuthParams = self._get_auth_params_from_config(cluster_config)
@@ -614,23 +623,26 @@ class AzureKustoDriver(DriverBase):
             if "clientsecret" not in connect_auth_types:
                 connect_auth_types.insert(0, "clientsecret")
             credential: AzCredentials = az_connect(
-                auth_types=connect_auth_types, **(auth_params.params)
+                auth_types=connect_auth_types,
+                **(auth_params.params),
             )
         elif auth_params.method == "certificate":
             logger.info("Certificate specified in config - using certificate authn")
             connect_auth_types.insert(0, "certificate")
             credential = az_connect(
-                auth_types=self._az_auth_types, **(auth_params.params)
+                auth_types=self._az_auth_types,
+                **(auth_params.params),
             )
             return self._create_kusto_cert_connection_str(auth_params)
         else:
             logger.info("Using integrated authn")
             credential = az_connect(
-                auth_types=self._az_auth_types, **(auth_params.params)
+                auth_types=self._az_auth_types,
+                **(auth_params.params),
             )
         logger.info("Credentials obtained %s", type(credential.modern).__name__)
         token: AccessToken = credential.modern.get_token(
-            get_default_resource_name(auth_params.uri)
+            get_default_resource_name(auth_params.uri),
         )
         logger.info("Token obtained for %s", auth_params.uri)
         return KustoConnectionStringBuilder.with_aad_user_token_authentication(
@@ -639,7 +651,8 @@ class AzureKustoDriver(DriverBase):
         )
 
     def _create_kql_cert_connection_str(
-        self: Self, auth_params: AuthParams
+        self: Self,
+        auth_params: AuthParams,
     ) -> KustoConnectionStringBuilder:
         logger.info("Creating KQL connection string for certificate authentication")
         if not self._az_tenant_id:
@@ -655,7 +668,7 @@ class AzureKustoDriver(DriverBase):
         ) = pkcs12.load_key_and_certificates(data=cert_bytes, password=None)
         if private_key is None or certificate is None:
             raise ValueError(
-                f"Could not load certificate for cluster {self.cluster_uri}"
+                f"Could not load certificate for cluster {self.cluster_uri}",
             )
         private_cert: bytes = private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
@@ -663,7 +676,7 @@ class AzureKustoDriver(DriverBase):
             encryption_algorithm=serialization.NoEncryption(),
         )
         public_cert: bytes = certificate.public_bytes(
-            encoding=serialization.Encoding.PEM
+            encoding=serialization.Encoding.PEM,
         )
         thumbprint: bytes = certificate.fingerprint(hashes.SHA256())
         return KustoConnectionStringBuilder.with_aad_application_certificate_sni_authentication(
@@ -676,7 +689,8 @@ class AzureKustoDriver(DriverBase):
         )
 
     def _get_auth_params_from_config(
-        self: Self, cluster_config: KustoConfig
+        self: Self,
+        cluster_config: KustoConfig,
     ) -> AuthParams:
         """Get authentication parameters for cluster from KustoConfig values."""
         method = "integrated"
@@ -686,7 +700,7 @@ class AzureKustoDriver(DriverBase):
             auth_params_dict["client_id"] = cluster_config.ClientId
             auth_params_dict["client_secret"] = cluster_config.ClientSecret
             logger.info(
-                "Using client secret authentication because client_secret in config"
+                "Using client secret authentication because client_secret in config",
             )
         elif (
             KFields.CERTIFICATE in cluster_config
@@ -696,7 +710,7 @@ class AzureKustoDriver(DriverBase):
             auth_params_dict["client_id"] = cluster_config.ClientId
             auth_params_dict["certificate"] = cluster_config.Certificate
             logger.info(
-                "Using client secret authentication because client_secret in config"
+                "Using client secret authentication because client_secret in config",
             )
         elif KFields.INTEG_AUTH in cluster_config:
             logger.info("Using integrated auth.")
@@ -791,7 +805,8 @@ class AzureKustoDriver(DriverBase):
     def _cluster_groups_match(self: Self, query_source: QuerySource) -> bool:
         """Return True if query source cluster group is valid for current cluster."""
         source_cluster_groups: str | list[str] = query_source.metadata.get(
-            QuerySourceFields.CLUSTER_GROUPS, []
+            QuerySourceFields.CLUSTER_GROUPS,
+            [],
         )
         if (
             source_cluster_groups
@@ -815,7 +830,8 @@ class AzureKustoDriver(DriverBase):
             self.cluster_config_name.casefold(),
         }
         source_clusters: str | list[str] = query_source.metadata.get(
-            QuerySourceFields.CLUSTERS, []
+            QuerySourceFields.CLUSTERS,
+            [],
         )
         if source_clusters:
             query_source_clusters: set[str] = {
@@ -867,12 +883,14 @@ def _get_kusto_settings() -> dict[str, dict[str, KustoConfig]]:
         for config_id, cluster_conf in get_config("KustoClusters", {}).items()
     }
     defaults: dict[str, Any] = kusto_new_conf.pop(KFields.DEFAULTS, {}).get(
-        KFields.ARGS, {}  # type: ignore[assignment]
+        KFields.ARGS,
+        {},
     )
     kusto_clusters.update(kusto_new_conf)
 
     cluster_by_url: dict[str, KustoConfig] = _create_cluster_config(
-        kusto_clusters=kusto_clusters, defaults=defaults
+        kusto_clusters=kusto_clusters,
+        defaults=defaults,
     )
     return {
         "url": cluster_by_url,
@@ -882,7 +900,8 @@ def _get_kusto_settings() -> dict[str, dict[str, KustoConfig]]:
 
 
 def _create_cluster_config(
-    kusto_clusters: dict[str, Any], defaults: dict[str, Any]
+    kusto_clusters: dict[str, Any],
+    defaults: dict[str, Any],
 ) -> dict[str, KustoConfig]:
     """Return a dictionary of Kusto cluster settings from msticpyconfig.yaml."""
     return {
@@ -890,14 +909,19 @@ def _create_cluster_config(
         .get(KFields.CLUSTER)
         .casefold(): KustoConfig(
             tenant_id=_setting_or_default(
-                config[KFields.ARGS], KFields.TENANT_ID, defaults
+                config[KFields.ARGS],
+                KFields.TENANT_ID,
+                defaults,
             ),
             integrated_auth=_setting_or_default(
-                config[KFields.ARGS], KFields.INTEG_AUTH, defaults
+                config[KFields.ARGS],
+                KFields.INTEG_AUTH,
+                defaults,
             )
             or False,
             args=_create_protected_args(
-                _section_or_default(config[KFields.ARGS], defaults), config["path"]
+                _section_or_default(config[KFields.ARGS], defaults),
+                config["path"],
             ),
             cluster=config[KFields.ARGS].get(KFields.CLUSTER),
             alias=name,
@@ -910,14 +934,17 @@ def _create_cluster_config(
 
 
 def _setting_or_default(
-    settings: dict[str, Any], name: str, default: dict[str, Any]
+    settings: dict[str, Any],
+    name: str,
+    default: dict[str, Any],
 ) -> Any:
     """Return a setting from the settings dictionary or the default."""
     return settings.get(name, default.get(name))
 
 
 def _section_or_default(
-    settings: dict[str, Any], default: dict[str, Any]
+    settings: dict[str, Any],
+    default: dict[str, Any],
 ) -> dict[str, Any]:
     """Return a combined dictionary from the settings dictionary or the default."""
     return {
@@ -931,7 +958,9 @@ def _create_protected_args(args: dict[str, Any], path: str) -> ProviderArgs:
     args_dict: dict[str, Any] = {
         key_name: (
             partial(
-                get_protected_setting, config_path=f"{path}.Args", setting_name=key_name
+                get_protected_setting,
+                config_path=f"{path}.Args",
+                setting_name=key_name,
             )
             if isinstance(value, dict)
             and (value.get("EnvironmentVar") or value.get("KeyVault"))
@@ -958,14 +987,14 @@ def _parse_query_status(response: KustoResponseDataSet) -> dict[str, Any]:
         }
 
     df_status: pd.DataFrame = dataframe_from_result_table(
-        response.tables[query_info_idx]
+        response.tables[query_info_idx],
     )
     results: list[dict[Hashable, Any]] = df_status[
         ["EventTypeName", "Payload"]
     ].to_dict(orient="records")
     return {
         row.get("EventTypeName", "Unknown_field"): json.loads(
-            row.get("Payload", "No Payload")
+            row.get("Payload", "No Payload"),
         )
         for row in results
     }
