@@ -117,6 +117,7 @@ class DataEnvironment(Enum):
     VelociraptorLogs = 18
     Velociraptor = 18
     M365DGraph = 20
+    Prismacloud = 21
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataEnvironment":
