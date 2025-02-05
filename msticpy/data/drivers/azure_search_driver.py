@@ -29,7 +29,7 @@ __author__ = "Ian Hellen"
 
 logger = logging.getLogger(__name__)
 
-_AZURE_TOKEN_SCOPE = "https://api.loganalytics.io/.default"
+_AZURE_TOKEN_SCOPE = "https://api.loganalytics.io/.default"  # nosec
 _SEARCH_ENDPOINT = "https://api.loganalytics.io/v1/workspaces/{workspace_id}/search"
 
 
