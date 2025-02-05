@@ -129,6 +129,7 @@ class AzureMonitorDriver(DriverBase):
         self._def_connection_str: str | None = connection_str
         self._connect_auth_types: list[str] | None = None
         self._try_get_schema: bool = True
+        self._fail_on_partial: bool = kwargs.get("fail_on_partial", False)
         self.add_query_filter(
             "data_environments", ("MSSentinel", "LogAnalytics", "AzureSentinel")
         )
@@ -224,6 +225,8 @@ class AzureMonitorDriver(DriverBase):
             "https://username:password@proxy_host:port"
             If you have a proxy configuration in msticpyconfig.yaml and
             you do not want to use it, set this to an empty dictionary.
+        fail_on_partial: bool
+            Fail queries if only partial results are returned.
 
         Notes
         -----
@@ -236,6 +239,7 @@ class AzureMonitorDriver(DriverBase):
         self._connected = False
         self._query_client = self._create_query_client(connection_str, **kwargs)
 
+        self._fail_on_partial = kwargs.get("fail_on_partial", self._fail_on_partial)
         # get the schema
         if self._try_get_schema:
             self._schema = self._get_schema()
@@ -326,7 +330,7 @@ class AzureMonitorDriver(DriverBase):
             )
         time_span_value = self._get_time_span_value(**kwargs)
         fail_on_partial = kwargs.get(
-            "fail_if_partial", kwargs.get("fail_on_partial", False)
+            "fail_if_partial", kwargs.get("fail_on_partial", self._fail_on_partial)
         )
         server_timeout = kwargs.pop("timeout", self._def_timeout)
 
