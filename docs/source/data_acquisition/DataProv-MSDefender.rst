@@ -105,6 +105,32 @@ an instance string to the "MicrosoftDefender" section name.
             UserName: "USER NAME"
             TenantId: "TENANT ID"
 
+When using a certificate with a private key, the configuration
+should be:
+
+.. code:: yaml
+      MicrosoftDefender:
+          Args:
+            ClientId: "CLIENT ID"
+            TenantId: "TENANT ID"
+            Certificate: "Path to certificate"
+            PrivateKey: "Path to private key"
+
+If connecting to the MS Defender 365 API using application auth,
+we strongly recommend using a secret on the private key and storing it
+in Azure Key Vault. You can replace the text value with a referenced
+to a Key Vault secret using the MSTICPy configuration editor.
+See :doc:`msticpy Settings Editor <../getting_started/SettingsEditor>`.
+
+.. code:: yaml
+      MicrosoftDefender:
+          Args:
+            ClientId: "CLIENT ID"
+            TenantId: "TENANT ID"
+            PrivateKey: "Path to private key"
+            Certificate: "Path to certificate"
+            PrivateKeySecret:
+                KeyVault: 
 
 Loading a QueryProvider for M365 Defender
 -----------------------------------------
