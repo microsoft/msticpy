@@ -588,8 +588,15 @@ Alternatively, you can pass the account_id and api_key to the GeoLiteLookup clas
                 geo_match = self._get_geomatch_non_public(ip_type)
             elif self._reader:
                 try:
-                    geo_match = self._reader.city(ip_input).raw  # type: ignore
-                except (AddressNotFoundError, AttributeError, ValueError):
+                    geo_match_object = self._reader.city(ip_input)
+                    if hasattr(geo_match_object, "raw"):
+                        geo_match = geo_match_object.raw  # type: ignore
+                    elif hasattr(geo_match_object, "to_dict"):
+                        geo_match = geo_match_object.to_dict()
+                    else:
+                        geo_match = None
+                except (AddressNotFoundError, AttributeError, ValueError) as err:
+                    logger.warning("Error looking up IP %s - %s", ip_input, err)
                     continue
                 if geo_match:
                     output_raw.append(geo_match)
