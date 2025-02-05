@@ -142,6 +142,7 @@ class PrismaCloudDriver:
         except httpx.RequestError as request_err:
             self._handle_connection_error(f"Error refreshing token: {request_err}")
 
+    # pylint: disable=inconsistent-return-statements
     def execute_query(
         self, query: str, query_source: Optional[str] = None, **kwargs: QueryArgs
     ) -> pd.DataFrame:
@@ -173,6 +174,7 @@ class PrismaCloudDriver:
             self._handle_connection_error(
                 f"Unexpected error while executing query: {request_err}"
             )
+        return pd.DataFrame()
 
     def _parse_json(self, response: httpx.Response) -> dict:
         """Safely parse JSON response with error handling."""
@@ -184,7 +186,10 @@ class PrismaCloudDriver:
 
     def _handle_http_error(self, err: httpx.HTTPStatusError) -> None:
         """Handle HTTP Status errors."""
-        error_message = f"HTTP error {err.response.status_code} while connecting to {err.request.url}: {err.response.text}"
+        error_message = (
+            f"HTTP error {err.response.status_code} while connecting "
+            f"to {err.request.url}: {err.response.text}"
+        )
         logger.error(error_message)
         raise PrismaCloudQueryError(error_message) from err
 
