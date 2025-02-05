@@ -109,6 +109,7 @@ When using a certificate with a private key, the configuration
 should be:
 
 .. code:: yaml
+
       MicrosoftDefender:
           Args:
             ClientId: "CLIENT ID"
@@ -123,6 +124,7 @@ to a Key Vault secret using the MSTICPy configuration editor.
 See :doc:`msticpy Settings Editor <../getting_started/SettingsEditor>`.
 
 .. code:: yaml
+
       MicrosoftDefender:
           Args:
             ClientId: "CLIENT ID"
@@ -130,7 +132,7 @@ See :doc:`msticpy Settings Editor <../getting_started/SettingsEditor>`.
             PrivateKey: "Path to private key"
             Certificate: "Path to certificate"
             PrivateKeySecret:
-                KeyVault: 
+                KeyVault:
 
 Loading a QueryProvider for M365 Defender
 -----------------------------------------

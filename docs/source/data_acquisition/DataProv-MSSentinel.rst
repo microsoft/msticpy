@@ -36,8 +36,39 @@ Changes from the previous implementation
   * ``mp_az_auth`` is replaced by ``auth_types`` (the former still works
     but will be removed in a future release).
   * ``mp_az_auth_tenant_id`` is replaced by ``tenant_id`` (the former
-    is no longer supported
+    is no longer supported).
 
+
+Querying Base and Auxilary tables in Sentinel
+----------------------------------------------
+
+The Azure Monitor Query SDK does not support querying Base or Auxilary table types.
+MSTICPy has an experimental driver that supports a subset of the operations
+below but uses the "search" endpoint to allow querying these table types.
+To use this, create a QueryProvider with the provider name "MSSentinelSearch",
+instead of "MSSentinel".
+
+.. code:: python3
+
+    qry_prov = QueryProvider("MSSentinelSearch")
+
+    qry_prov.connect()
+
+    qry_prov.exec_query(
+      "SecurityEvent | take 10",
+      start="2023-10-29T00:00:00Z",
+      end="2023-10-29T01:00:00Z"
+    )
+
+.. note:: There are several limitations when using this provider, including:
+  * The KQL query support only a single table - joins, unions, etc are not supported
+  * You **must** provide `start` and `end` times as parameters.
+  * You can only query a single workspace at a time.
+  * The provider only works with the Global Azure cloud
+  * The provider does not support HTTP proxies.
+
+For all other uses, we recommend using the standard "MSSentinel" provider
+as described in the rest of this document.
 
 Sentinel Configuration
 ----------------------
