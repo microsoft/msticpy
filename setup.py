@@ -42,8 +42,8 @@ EXTRAS = {
         "azure-storage-blob>=12.5.0",
         "azure-mgmt-resourcegraph>=8.0.0",
     ],
-    "azure_query": [],
-    "keyvault": [],
+    "azure_query": [],  # now in core install
+    "keyvault": [],  # now in core install
     "ml": [
         "scikit-learn>=1.0.0",
         "scipy>=1.1.0",
@@ -52,7 +52,7 @@ EXTRAS = {
     ],
     "sql2kql": ["mo-sql-parsing>=8, <9.0.0"],
     "riskiq": ["passivetotal>=2.5.3", "requests>=2.31.0"],
-    "panel": ["panel>=0.14.4"],
+    "panel": [],  # now in core install
     "aiagents": ["pyautogen[retrievechat]>=0.2.28"],
 }
 extras_all = [

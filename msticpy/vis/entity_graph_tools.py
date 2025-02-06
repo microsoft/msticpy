@@ -510,7 +510,7 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
     )
 
     graph_renderer.node_renderer.glyph = Circle(
-        size=node_size, fill_color="node_color", fill_alpha=0.5
+        radius=node_size // 2, fill_color="node_color", fill_alpha=0.5
     )
     # pylint: disable=no-member
     plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]

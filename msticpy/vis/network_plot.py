@@ -242,12 +242,14 @@ def _create_edge_hover(
 
 def _create_node_renderer(graph_renderer: Renderer, node_size: int, fill_color: str):
     """Create graph render for nodes."""
-    graph_renderer.node_renderer.glyph = Circle(size=node_size, fill_color=fill_color)
+    graph_renderer.node_renderer.glyph = Circle(
+        radius=node_size // 2, fill_color=fill_color
+    )
     graph_renderer.node_renderer.hover_glyph = Circle(
-        size=node_size, fill_color=Spectral4[1]
+        radius=node_size // 2, fill_color=Spectral4[1]
     )
     graph_renderer.node_renderer.selection_glyph = Circle(
-        size=node_size, fill_color=Spectral4[2]
+        radius=node_size // 2, fill_color=Spectral4[2]
     )
 
 
@@ -332,7 +334,7 @@ def plot_entity_graph(
         entity_graph, nx.spring_layout, scale=scale, center=(0, 0)
     )
     graph_renderer.node_renderer.glyph = Circle(
-        size=node_size, fill_color="node_color", fill_alpha=0.5
+        size=node_size // 2, fill_color="node_color", fill_alpha=0.5
     )
     # pylint: disable=no-member
     plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
