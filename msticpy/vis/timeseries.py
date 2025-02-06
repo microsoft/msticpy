@@ -205,7 +205,7 @@ def display_timeseries_anomalies(
         time_column,
         value_column,
         line_color=color[0],
-        radius=2,
+        size=2,
         source=source,
         legend_label="observed",
     )

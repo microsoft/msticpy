@@ -7,6 +7,7 @@
 from datetime import datetime, timezone
 from typing import List, Optional, Union
 
+import bokeh
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -32,6 +33,8 @@ __author__ = "Pete Bryan"
 
 req_alert_cols = ["DisplayName", "Severity", "AlertType"]
 req_inc_cols = ["id", "name", "properties.severity"]
+
+_BOKEH_VERSION = tuple(int(i) for i in bokeh.__version__.split("."))
 
 # wrap figure function to handle v2/v3 parameter renaming
 figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
@@ -508,10 +511,20 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
     graph_renderer = from_networkx(
         entity_graph_for_plotting, nx.spring_layout, scale=scale, center=(0, 0)
     )
+    if _BOKEH_VERSION > (3, 2, 0):
+        circle_parms = {
+            "radius": node_size // 2,
+            "fill_color": "node_color",
+            "fill_alpha": 0.5,
+        }
+    else:
+        circle_parms = {
+            "size": node_size,
+            "fill_color": "node_color",
+            "fill_alpha": 0.5,
+        }
+    graph_renderer.node_renderer.glyph = Circle(**circle_parms)
 
-    graph_renderer.node_renderer.glyph = Circle(
-        radius=node_size // 2, fill_color="node_color", fill_alpha=0.5
-    )
     # pylint: disable=no-member
     plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
 

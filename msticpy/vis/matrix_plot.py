@@ -202,7 +202,7 @@ def plot_matrix(data: pd.DataFrame, **kwargs) -> LayoutDOM:
             source=source,
             fill_alpha=0.6,
             fill_color=param.color,
-            radius="plt_size",
+            size="plt_size",
         )
     _set_plot_params(plot)
 
