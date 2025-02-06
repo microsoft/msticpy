@@ -10,10 +10,10 @@ This is based on the AzureMonitorDriver but uses the /search endpoint
 to allow limited querying of Basic and Auxilary tables.
 
 """
+
 from __future__ import annotations
 
 import logging
-import warnings
 from typing import Any
 
 import httpx
@@ -196,6 +196,8 @@ class AzureSearchDriver(AzureMonitorDriver):
 
         for column in data_frame.columns:
             azure_type = type_mapping.get(column)
+            if not azure_type:
+                continue
             pandas_type = map_azure_type(azure_type)
             try:
                 if pandas_type.startswith("datetime"):
@@ -203,8 +205,10 @@ class AzureSearchDriver(AzureMonitorDriver):
                 else:
                     data_frame[column] = data_frame[column].astype(pandas_type)
             except Exception as conv_err:  # pylint: disable=broad-except
-                warnings.warn(
-                    f"Could not convert column {column} to {pandas_type}: {conv_err}",
-                    RuntimeWarning,
+                logger.warning(
+                    "Could not convert column %s to %d: %s",
+                    column,
+                    pandas_type,
+                    conv_err,
                 )
         return data_frame
