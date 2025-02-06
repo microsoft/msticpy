@@ -118,6 +118,8 @@ class DataEnvironment(Enum):
     Velociraptor = 18
     M365DGraph = 20
 
+    MSSentinelSearch = 25
+
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataEnvironment":
         """

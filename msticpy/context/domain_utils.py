@@ -256,7 +256,7 @@ class DomainValidator:
                 cert.encode("ascii"),
             )
             cert_sha1: bytes = x509_cert.fingerprint(
-                SHA1()
+                SHA1()  # nosec
             )  # noqa: S303  # CodeQL [SM02167] Compatibility requirement for SSL abuse list
             result = bool(
                 self.ssl_abuse_list["SHA1"].str.contains(cert_sha1.hex()).any(),
