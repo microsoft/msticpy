@@ -224,7 +224,7 @@ class OData(DriverBase):
 
         client_credential: dict[str, Any] = {
             "private_key": private_key.read_text(encoding="utf-8"),
-            "thumbprint": cert_data.fingerprint(hashes.SHA1()).hex(),
+            "thumbprint": cert_data.fingerprint(hashes.SHA1()).hex(),  # nosec
             "public_certificate": cert_data.public_bytes(encoding=Encoding.PEM).decode(
                 "utf-8",
             ),
