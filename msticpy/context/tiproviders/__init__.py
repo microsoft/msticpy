@@ -28,4 +28,5 @@ TI_PROVIDERS: dict[str, tuple[str, str]] = {
     "AbuseIPDB": ("abuseipdb", "AbuseIPDB"),
     "IPQualityScore": ("ip_quality_score", "IPQualityScore"),
     "BinaryEdge": ("binaryedge", "BinaryEdge"),
+    "Cyberint": ("cyberint", "Cyberint"),
 }
