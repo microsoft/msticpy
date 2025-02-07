@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for common display functions."""
+
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import bokeh
@@ -176,8 +177,8 @@ def plot_nx_graph(
     _create_edge_renderer(graph_renderer, edge_color=edge_color)
     _create_node_renderer(graph_renderer, node_size, "node_color")
 
-    graph_renderer.selection_policy = NodesAndLinkedEdges()
-    graph_renderer.inspection_policy = EdgesAndLinkedNodes()
+    graph_renderer.selection_policy = NodesAndLinkedEdges()  # type: ignore[assignment]
+    graph_renderer.inspection_policy = EdgesAndLinkedNodes()  # type: ignore[assignment]
     # pylint: disable=no-member
     plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
 
@@ -192,7 +193,8 @@ def plot_nx_graph(
 
     # Create labels
     # pylint: disable=no-member
-    for index, pos in graph_renderer.layout_provider.graph_layout.items():
+    label_layout = graph_renderer.layout_provider.graph_layout  # type: ignore[attr-defined]
+    for index, pos in label_layout.items():
         label = Label(
             x=pos[0],
             y=pos[1],
@@ -344,14 +346,15 @@ def plot_entity_graph(
         circle_size_param = {"radius": node_size // 2}
     else:
         circle_size_param = {"size": node_size // 2}
-    graph_renderer.node_renderer.glyph = Circle(
+    graph_renderer.node_renderer.glyph = Circle(  # type: ignore[attr-defined]
         **circle_size_param, fill_color="node_color", fill_alpha=0.5
     )
     # pylint: disable=no-member
     plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
 
     # Create labels
-    for name, pos in graph_renderer.layout_provider.graph_layout.items():
+    label_layout = graph_renderer.layout_provider.graph_layout  # type: ignore[attr-defined]
+    for name, pos in label_layout.items():
         label = Label(
             x=pos[0],
             y=pos[1],

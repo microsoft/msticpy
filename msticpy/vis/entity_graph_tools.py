@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Creates an entity graph for a Microsoft Sentinel Incident."""
+
 from datetime import datetime, timezone
 from typing import List, Optional, Union
 
@@ -523,13 +524,14 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
             "fill_color": "node_color",
             "fill_alpha": 0.5,
         }
-    graph_renderer.node_renderer.glyph = Circle(**circle_parms)
+    graph_renderer.node_renderer.glyph = Circle(**circle_parms)  # type: ignore[attr-defined]
 
     # pylint: disable=no-member
     plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
 
     # Create labels
-    for index, pos in graph_renderer.layout_provider.graph_layout.items():
+    label_layout = graph_renderer.layout_provider.graph_layout  # type: ignore[attr-defined]
+    for index, pos in label_layout.items():
         label = Label(
             x=pos[0],
             y=pos[1],
