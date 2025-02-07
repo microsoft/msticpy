@@ -201,7 +201,7 @@ def display_timeseries_anomalies(
     plot.xaxis[0].formatter = get_tick_formatter()
     plot.yaxis.formatter = NumeralTickFormatter(format="00")
 
-    plot.circle(
+    plot.scatter(
         time_column,
         value_column,
         line_color=color[0],
@@ -231,13 +231,13 @@ def display_timeseries_anomalies(
 
     # setting the visualization types for anomalies based on user input to kind
     if kind == "cross":
-        plot.cross(**arg_dict)
+        plot.scatter(marker="cross", **arg_dict)
     elif kind == "diamond":
-        plot.diamond(**arg_dict)
+        plot.scatter(marker="diamond", **arg_dict)
     elif kind == "diamond_cross":
-        plot.diamond_cross(**arg_dict)
+        plot.scatter(marker="diamond_cross", **arg_dict)
     else:
-        plot.circle_x(**arg_dict)
+        plot.scatter(marker="circle_x", **arg_dict)
 
     # interactive legend to hide single/multiple plots if selected
     plot.legend.location = legend_pos

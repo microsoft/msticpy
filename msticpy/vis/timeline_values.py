@@ -259,7 +259,7 @@ def display_timeline_values(  # noqa: C901, MC0001
         if "vbar" in plot_kinds:
             plot.vbar(top=value_col, width=4, **plot_args)
         if "circle" in plot_kinds:
-            plot.circle(y=value_col, size=2, **plot_args)
+            plot.scatter(y=value_col, size=2, **plot_args)
         if "line" in plot_kinds:
             plot.line(y=value_col, line_width=2, **plot_args)
 

@@ -38,7 +38,6 @@ from .timeline_pd_accessor import TimeLineAccessor  # noqa F401
 
 # pylint: enable=unused-import
 
-
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
@@ -211,7 +210,8 @@ def display_timeline_duration(
     plot.rect(x="Center", y=dodge("Row", 0.5), width="Width", **rect_plot_params)
 
     # Plot the individual events as diamonds
-    plot.diamond(
+    plot.scatter(
+        marker="diamond",
         x=time_column,
         y=dodge("Row", 0.5),
         color=param.color,
