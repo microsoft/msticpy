@@ -185,10 +185,10 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
             f"""
             <h4><font color='red'>This notebook requires a later
             (Python) kernel version.</h4></font>
-            Select a kernel from the notebook toolbar (above), that is Python
+            Choose a kernel from the notebook toolbar (above), that is Python
             {minimum_py_version} or later (Python 3.10 recommended)<br>
             """
-        )  # nosec
+        )
         _disp_html(
             f"""
             Please see the <a href="{TROUBLE_SHOOTING}">TroubleShootingNotebooks</a>
@@ -196,9 +196,7 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
             """
         )
         # Bandit SQL inject error found here
-        raise RuntimeError(
-            f"Python {minimum_py_version} or later kernel is required."
-        )  # nosec
+        raise RuntimeError(f"Python {minimum_py_version} or later kernel is required.")
 
     _disp_html(f"Info: Python kernel version {sys_ver} - OK<br>")
 

@@ -119,6 +119,8 @@ class DataEnvironment(Enum):
     M365DGraph = 20
     Prismacloud = 21
 
+    MSSentinelSearch = 25
+
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataEnvironment":
         """
