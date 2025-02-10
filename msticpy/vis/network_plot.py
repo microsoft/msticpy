@@ -5,9 +5,9 @@
 # --------------------------------------------------------------------------
 """Module for common display functions."""
 
+from importlib.metadata import version
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
-import bokeh
 import networkx as nx
 from bokeh.io import output_notebook
 from bokeh.models import (  # type: ignore[attr-defined]
@@ -24,6 +24,7 @@ from bokeh.models import (  # type: ignore[attr-defined]
 )
 from bokeh.palettes import Spectral4
 from bokeh.plotting import figure, from_networkx, show
+from packaging.version import Version, parse
 from typing_extensions import Literal
 
 from .._version import VERSION
@@ -32,7 +33,7 @@ from .figure_dimension import bokeh_figure
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-_BOKEH_VERSION = tuple(int(i) for i in bokeh.__version__.split("."))
+_BOKEH_VERSION: Version = parse(version("bokeh"))
 
 # wrap figure function to handle v2/v3 parameter renaming
 figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
@@ -247,7 +248,7 @@ def _create_edge_hover(
 
 def _create_node_renderer(graph_renderer: Renderer, node_size: int, fill_color: str):
     """Create graph render for nodes."""
-    if _BOKEH_VERSION >= (3, 2, 0):
+    if _BOKEH_VERSION > Version("3.2.0"):
         circle_size_param = {"radius": node_size // 2}
     else:
         circle_size_param = {"size": node_size // 2}
@@ -342,7 +343,7 @@ def plot_entity_graph(
     graph_renderer = from_networkx(
         entity_graph, nx.spring_layout, scale=scale, center=(0, 0)
     )
-    if _BOKEH_VERSION >= (3, 2, 0):
+    if _BOKEH_VERSION > Version("3.2.0"):
         circle_size_param = {"radius": node_size // 2}
     else:
         circle_size_param = {"size": node_size // 2}
