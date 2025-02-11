@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Requirements file writer from setup.py extras."""
+
 import argparse
 import difflib
 import sys
@@ -206,6 +207,10 @@ if __name__ == "__main__":
     if args.diff:
         # If we just wanted to check for a diff, finish here
         if diff_reqs:
+            print(
+                "Differences found for setup.py + requirements.txt",
+                "vs. requirements-all.txt",
+            )
             print("\n".join(diff.strip() for diff in diff_reqs))
             sys.exit(1)
         print("No differences for requirements-all.txt")

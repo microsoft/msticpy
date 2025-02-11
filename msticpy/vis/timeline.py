@@ -351,7 +351,8 @@ def _plot_series(data, plot, legend_pos):
         if "time_column" in series_def:
             time_col = series_def["time_column"]
         if legend_pos == "inline":
-            p_series = plot.diamond(
+            p_series = plot.scatter(
+                marker="diamond",
                 x=time_col,
                 y="y_index",
                 color=series_def["color"],
@@ -361,7 +362,8 @@ def _plot_series(data, plot, legend_pos):
                 legend_label=str(ser_name),
             )
         else:
-            p_series = plot.diamond(
+            p_series = plot.scatter(
+                marker="diamond",
                 x=time_col,
                 y="y_index",
                 color=series_def["color"],
