@@ -377,7 +377,7 @@ class OData(DriverBase):
 
         if not result:
             LOGGER.warning("Query did not return any results.")
-            return None, json_response
+            return pd.DataFrame(), json_response
         return pd.json_normalize(result), json_response
 
     # pylint: enable=too-many-branches
