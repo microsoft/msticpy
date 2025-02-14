@@ -14,17 +14,20 @@ Azure SDK docs: https://learn.microsoft.com/python/api/overview/
 azure/monitor-query-readme?view=azure-python
 
 """
+from __future__ import annotations
+
 import contextlib
 import logging
 import warnings
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, cast
+from typing import Any, Iterable, cast
 
 import httpx
 import pandas as pd
 from azure.core.exceptions import HttpResponseError
 from azure.core.pipeline.policies import UserAgentPolicy
-from packaging.version import Version, parse as parse_version
+from packaging.version import Version
+from packaging.version import parse as parse_version
 
 from ..._version import VERSION
 from ...auth.azure_auth import AzureCloudConfig, az_connect
@@ -63,9 +66,6 @@ except ImportError as imp_err:
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-
-_KQL_CLOUD_MAP = {"global": "public", "cn": "china", "usgov": "government"}
-
 _HELP_URL = (
     "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProv-MSSentinel.html"
 )
@@ -78,7 +78,7 @@ class AzureMonitorDriver(DriverBase):
 
     _DEFAULT_TIMEOUT = 300
 
-    def __init__(self, connection_str: Optional[str] = None, **kwargs):
+    def __init__(self, connection_str: str | None = None, **kwargs):
         """
         Instantiate KqlDriver and optionally connect.
 
@@ -94,7 +94,7 @@ class AzureMonitorDriver(DriverBase):
         timeout : int (seconds)
             Specify a timeout for queries. Default is 300 seconds.
             (can be set here or in connect and overridden in query methods)
-        proxies : Dict[str, str]
+        proxies : dict[str, str]
             Proxy settings for log analytics queries.
             Dictionary format is {protocol: proxy_url}
             Where protocol is https, http, etc. and proxy_url can contain
@@ -109,7 +109,7 @@ class AzureMonitorDriver(DriverBase):
             logger.setLevel(logging.DEBUG)
         super().__init__(**kwargs)
 
-        self._schema: Dict[str, Any] = {}
+        self._schema: dict[str, Any] = {}
         self.set_driver_property(
             DriverProps.FORMATTERS,
             {"datetime": self._format_datetime, "list": self._format_list},
@@ -120,14 +120,16 @@ class AzureMonitorDriver(DriverBase):
             "timeout", kwargs.get("server_timeout", self._DEFAULT_TIMEOUT)
         )
         self._def_proxies = kwargs.get("proxies", get_http_proxies())
-        self._query_client: Optional[LogsQueryClient] = None
-        self._az_tenant_id: Optional[str] = None
-        self._ws_config: Optional[WorkspaceConfig] = None
-        self._ws_name: Optional[str] = None
-        self._workspace_id: Optional[str] = None
-        self._workspace_ids: List[str] = []
-        self._def_connection_str: Optional[str] = connection_str
-        self._connect_auth_types: Optional[List[str]] = None
+        self._query_client: LogsQueryClient | None = None
+        self._az_tenant_id: str | None = None
+        self._ws_config: WorkspaceConfig | None = None
+        self._ws_name: str | None = None
+        self._workspace_id: str | None = None
+        self._workspace_ids: list[str] = []
+        self._def_connection_str: str | None = connection_str
+        self._connect_auth_types: list[str] | None = None
+        self._try_get_schema: bool = True
+        self._fail_on_partial: bool = kwargs.get("fail_on_partial", False)
         self.add_query_filter(
             "data_environments", ("MSSentinel", "LogAnalytics", "AzureSentinel")
         )
@@ -177,13 +179,13 @@ class AzureMonitorDriver(DriverBase):
         """Allow attrib to be set but ignore."""
         del value
 
-    def connect(self, connection_str: Optional[str] = None, **kwargs):
+    def connect(self, connection_str: str | WorkspaceConfig | None = None, **kwargs):
         """
         Connect to data source.
 
         Parameters
         ----------
-        connection_str : Union[str, WorkspaceConfig, None]
+        connection_str : str | WorkspaceConfig | None
             Connection string or WorkspaceConfig for the Sentinel Workspace.
 
         Other Parameters
@@ -192,12 +194,12 @@ class AzureMonitorDriver(DriverBase):
             Authentication (credential) types to use. By default the
             values configured in msticpyconfig.yaml are used. If not set,
             it will use the msticpy defaults.
-        mp_az_auth : Union[bool, str, list, None], optional
+        mp_az_auth : bool | str | list | None, optional
             Deprecated parameter directing driver to use MSTICPy Azure authentication.
             Values can be:
             True or "default": use the settings in msticpyconfig.yaml 'Azure' section
             str: single auth method name
-            List[str]: list of acceptable auth methods from
+            list[str]: list of acceptable auth methods from
             Use `auth_types` parameter instead.
         tenant_id: str, optional
             Optional parameter specifying a Tenant ID for use by MSTICPy Azure
@@ -215,7 +217,7 @@ class AzureMonitorDriver(DriverBase):
         timeout : int (seconds)
             Specify a timeout for queries. Default is 300 seconds.
             (can be overridden query method)
-        proxies : Dict[str, str]
+        proxies : dict[str, str]
             Proxy settings for log analytics queries.
             Dictionary format is {protocol: proxy_url}
             Where protocol is https, http, etc. and proxy_url can contain
@@ -223,6 +225,8 @@ class AzureMonitorDriver(DriverBase):
             "https://username:password@proxy_host:port"
             If you have a proxy configuration in msticpyconfig.yaml and
             you do not want to use it, set this to an empty dictionary.
+        fail_on_partial: bool
+            Fail queries if only partial results are returned.
 
         Notes
         -----
@@ -235,8 +239,10 @@ class AzureMonitorDriver(DriverBase):
         self._connected = False
         self._query_client = self._create_query_client(connection_str, **kwargs)
 
+        self._fail_on_partial = kwargs.get("fail_on_partial", self._fail_on_partial)
         # get the schema
-        self._schema = self._get_schema()
+        if self._try_get_schema:
+            self._schema = self._get_schema()
         self._connected = True
         print("connected")
 
@@ -245,21 +251,21 @@ class AzureMonitorDriver(DriverBase):
     # pylint: disable=too-many-branches
 
     @property
-    def schema(self) -> Dict[str, Dict]:
+    def schema(self) -> dict[str, dict]:
         """
         Return current data schema of connection.
 
         Returns
         -------
-        Dict[str, Dict]
+        dict[str, dict]
             Data schema of current connection.
 
         """
         return self._schema
 
     def query(
-        self, query: str, query_source: Optional[QuerySource] = None, **kwargs
-    ) -> Union[pd.DataFrame, Any]:
+        self, query: str, query_source: QuerySource | None = None, **kwargs
+    ) -> pd.DataFrame | Any:
         """
         Execute query string and return DataFrame of results.
 
@@ -267,7 +273,7 @@ class AzureMonitorDriver(DriverBase):
         ----------
         query : str
             The query to execute
-        query_source : Optional[QuerySource]
+        query_source : QuerySource | None
             The query definition object
 
         Other Parameters
@@ -279,7 +285,7 @@ class AzureMonitorDriver(DriverBase):
 
         Returns
         -------
-        Union[pd.DataFrame, results.ResultSet]
+        pd.DataFrame | Any
             A DataFrame (if successful) or
             the underlying provider result if an error.
 
@@ -299,7 +305,7 @@ class AzureMonitorDriver(DriverBase):
     # pylint: disable=too-many-branches
     def query_with_results(
         self, query: str, **kwargs
-    ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    ) -> tuple[pd.DataFrame, dict[str, Any]]:
         """
         Execute query string and return DataFrame of results.
 
@@ -310,7 +316,7 @@ class AzureMonitorDriver(DriverBase):
 
         Returns
         -------
-        Tuple[pd.DataFrame, Dict[str, Any]]
+        tuple[pd.DataFrame, dict[str, Any]]
             A DataFrame (if successful) and
             Query status dictionary.
 
@@ -324,7 +330,7 @@ class AzureMonitorDriver(DriverBase):
             )
         time_span_value = self._get_time_span_value(**kwargs)
         fail_on_partial = kwargs.get(
-            "fail_if_partial", kwargs.get("fail_on_partial", False)
+            "fail_if_partial", kwargs.get("fail_on_partial", self._fail_on_partial)
         )
         server_timeout = kwargs.pop("timeout", self._def_timeout)
 
@@ -409,7 +415,7 @@ class AzureMonitorDriver(DriverBase):
             proxies=kwargs.get("proxies", self._def_proxies),
         )
 
-    def _get_workspace_settings_args(self) -> Dict[str, Any]:
+    def _get_workspace_settings_args(self) -> dict[str, Any]:
         """Return any Args settings for the current workspace."""
         if not self._ws_config or not self._ws_config.settings_path:
             return {}
@@ -420,7 +426,7 @@ class AzureMonitorDriver(DriverBase):
             for name in args_settings.keys()
         }
 
-    def _get_workspaces(self, connection_str: Optional[str] = None, **kwargs):
+    def _get_workspaces(self, connection_str: str | None = None, **kwargs):
         """Get workspace or workspaces to connect to."""
         self._az_tenant_id = kwargs.get("tenant_id", kwargs.get("mp_az_tenant_id"))
         # multiple workspace IDs
@@ -433,7 +439,7 @@ class AzureMonitorDriver(DriverBase):
 
         # standard - single-workspace configuration
         workspace_name = kwargs.get("workspace")
-        ws_config: Optional[WorkspaceConfig] = None
+        ws_config: WorkspaceConfig | None = None
         connection_str = connection_str or self._def_connection_str
         if workspace_name or connection_str is None:
             ws_config = WorkspaceConfig(workspace=workspace_name)  # type: ignore
@@ -511,7 +517,7 @@ class AzureMonitorDriver(DriverBase):
         time_params = kwargs.get("time_span", {})
         start = time_params.get("start")
         end = time_params.get("end")
-        if default_time_params or start is None or end is None:
+        if default_time_params or (start is None or end is None):
             time_span_value = None
             logger.info("No time parameters supplied.")
         else:
@@ -555,7 +561,7 @@ class AzureMonitorDriver(DriverBase):
                 )
 
     @staticmethod
-    def _get_query_status(result) -> Dict[str, Any]:
+    def _get_query_status(result) -> dict[str, Any]:
         if isinstance(result, LogsQueryResult):
             return {
                 "status": result.status.name,
@@ -568,7 +574,7 @@ class AzureMonitorDriver(DriverBase):
             }
         return {"status": "unknown failure", "tables": 0, "result": result}
 
-    def _get_schema(self) -> Dict[str, Dict]:
+    def _get_schema(self) -> dict[str, dict]:
         """Return the workspace schema."""
         if not self._ws_config:
             logger.info("No workspace config - cannot get schema")
@@ -676,8 +682,8 @@ class AzureMonitorDriver(DriverBase):
 
 
 def _schema_format_tables(
-    ws_tables: Dict[str, Iterable[Dict[str, Any]]]
-) -> Dict[str, Dict[str, str]]:
+    ws_tables: dict[str, Iterable[dict[str, Any]]]
+) -> dict[str, dict[str, str]]:
     """Return a sorted dictionary of table names and column names/types."""
     table_schema = {
         table["name"]: _schema_format_columns(table["properties"]["schema"])
@@ -686,7 +692,7 @@ def _schema_format_tables(
     return dict(sorted(table_schema.items()))
 
 
-def _schema_format_columns(table_schema: Dict[str, Any]) -> Dict[str, str]:
+def _schema_format_columns(table_schema: dict[str, Any]) -> dict[str, str]:
     """Return a sorted dictionary of column names and types."""
     columns = {
         col["name"]: col["type"] for col in table_schema.get("standardColumns", {})

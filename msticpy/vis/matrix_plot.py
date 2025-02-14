@@ -187,7 +187,8 @@ def plot_matrix(data: pd.DataFrame, **kwargs) -> LayoutDOM:
     plot.add_tools(HoverTool(tooltips=tool_tips))
 
     if param.intersect:
-        plot.circle_cross(
+        plot.scatter(
+            marker="circle_cross",
             x=param.x_column,
             y=param.y_column,
             source=source,
@@ -196,7 +197,7 @@ def plot_matrix(data: pd.DataFrame, **kwargs) -> LayoutDOM:
             size=5,
         )
     else:
-        plot.circle(
+        plot.scatter(
             x=param.x_column,
             y=param.y_column,
             source=source,

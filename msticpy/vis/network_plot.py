@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for common display functions."""
+
+from importlib.metadata import version
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import networkx as nx
@@ -22,6 +24,7 @@ from bokeh.models import (  # type: ignore[attr-defined]
 )
 from bokeh.palettes import Spectral4
 from bokeh.plotting import figure, from_networkx, show
+from packaging.version import Version, parse
 from typing_extensions import Literal
 
 from .._version import VERSION
@@ -29,6 +32,8 @@ from .figure_dimension import bokeh_figure
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+_BOKEH_VERSION: Version = parse(version("bokeh"))
 
 # wrap figure function to handle v2/v3 parameter renaming
 figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
@@ -173,8 +178,8 @@ def plot_nx_graph(
     _create_edge_renderer(graph_renderer, edge_color=edge_color)
     _create_node_renderer(graph_renderer, node_size, "node_color")
 
-    graph_renderer.selection_policy = NodesAndLinkedEdges()
-    graph_renderer.inspection_policy = EdgesAndLinkedNodes()
+    graph_renderer.selection_policy = NodesAndLinkedEdges()  # type: ignore[assignment]
+    graph_renderer.inspection_policy = EdgesAndLinkedNodes()  # type: ignore[assignment]
     # pylint: disable=no-member
     plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
 
@@ -189,7 +194,8 @@ def plot_nx_graph(
 
     # Create labels
     # pylint: disable=no-member
-    for index, pos in graph_renderer.layout_provider.graph_layout.items():
+    label_layout = graph_renderer.layout_provider.graph_layout  # type: ignore[attr-defined]
+    for index, pos in label_layout.items():
         label = Label(
             x=pos[0],
             y=pos[1],
@@ -242,12 +248,18 @@ def _create_edge_hover(
 
 def _create_node_renderer(graph_renderer: Renderer, node_size: int, fill_color: str):
     """Create graph render for nodes."""
-    graph_renderer.node_renderer.glyph = Circle(size=node_size, fill_color=fill_color)
+    if _BOKEH_VERSION > Version("3.2.0"):
+        circle_size_param = {"radius": node_size // 2}
+    else:
+        circle_size_param = {"size": node_size // 2}
+    graph_renderer.node_renderer.glyph = Circle(
+        **circle_size_param, fill_color=fill_color
+    )
     graph_renderer.node_renderer.hover_glyph = Circle(
-        size=node_size, fill_color=Spectral4[1]
+        **circle_size_param, fill_color=Spectral4[1]
     )
     graph_renderer.node_renderer.selection_glyph = Circle(
-        size=node_size, fill_color=Spectral4[2]
+        **circle_size_param, fill_color=Spectral4[2]
     )
 
 
@@ -331,14 +343,19 @@ def plot_entity_graph(
     graph_renderer = from_networkx(
         entity_graph, nx.spring_layout, scale=scale, center=(0, 0)
     )
-    graph_renderer.node_renderer.glyph = Circle(
-        size=node_size, fill_color="node_color", fill_alpha=0.5
+    if _BOKEH_VERSION > Version("3.2.0"):
+        circle_size_param = {"radius": node_size // 2}
+    else:
+        circle_size_param = {"size": node_size // 2}
+    graph_renderer.node_renderer.glyph = Circle(  # type: ignore[attr-defined]
+        **circle_size_param, fill_color="node_color", fill_alpha=0.5
     )
     # pylint: disable=no-member
     plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
 
     # Create labels
-    for name, pos in graph_renderer.layout_provider.graph_layout.items():
+    label_layout = graph_renderer.layout_provider.graph_layout  # type: ignore[attr-defined]
+    for name, pos in label_layout.items():
         label = Label(
             x=pos[0],
             y=pos[1],

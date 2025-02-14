@@ -40,6 +40,8 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.MSSentinel_Legacy: ("kql_driver", "KqlDriver"),
     DataEnvironment.Kusto_Legacy: ("kusto_driver", "KustoDriver"),
     DataEnvironment.M365DGraph: ("mdatp_driver", "MDATPDriver"),
+    DataEnvironment.Prismacloud: ("prismacloud_driver", "PrismaCloudDriver"),
+    DataEnvironment.MSSentinelSearch: ("azure_search_driver", "AzureSearchDriver"),
 }
 
 CUSTOM_PROVIDERS: Dict[str, type] = {}

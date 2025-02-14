@@ -23,7 +23,6 @@ from typing_extensions import Self
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserConfigError
 from ...common.provider_settings import (
-    ProviderArgs,
     ProviderSettings,
     get_provider_settings,
 )
@@ -35,14 +34,11 @@ from .driver_base import DriverBase, DriverProps, QuerySource
 __version__ = VERSION
 __author__ = "Florian Bracq"
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 _HELP_URI = (
     "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html"
 )
-
-
-CybereasonSettings = dict[str, dict[str, str | ProviderArgs]]
 
 
 # pylint: disable=too-many-instance-attributes
@@ -658,16 +654,16 @@ class CybereasonDriver(DriverBase):
     @staticmethod
     def _custom_param_handler(query: str, param_dict: dict[str, Any]) -> str:
         """Replace parameters in query template for Cybereason JSON queries."""
-        query_dict = json.loads(query)
+        query_dict: dict[str, Any] = json.loads(query)
 
         return json.dumps(_recursive_find_and_replace(query_dict, param_dict))
 
 
 @singledispatch
 def _recursive_find_and_replace(
-    parameters: str | dict[str, Any] | list[str],
+    parameters: str | dict[str, Any] | list[str] | list[dict[str, Any]],
     param_dict: dict[str, Any],
-) -> str | dict[str, Any] | list[str]:
+) -> str | dict[str, Any] | list[str] | list[dict[str, Any]]:
     """Recursively find and replace parameters from query."""
     if isinstance(parameters, (list, str, dict)):
         return _recursive_find_and_replace(parameters, param_dict)
@@ -683,21 +679,28 @@ def _(parameters: dict[str, Any], param_dict: dict[str, Any]) -> dict[str, Any]:
 
 
 @_recursive_find_and_replace.register(list)
-def _(parameters: list[str], param_dict: dict[str, Any]) -> list[str]:
-    result: list[str | dict[str, Any] | list[str]] = [
-        _recursive_find_and_replace(parameter, param_dict) for parameter in parameters
-    ]
-    if all(isinstance(values, list) for values in result):
-        try:
-            return sorted({value for values in result for value in values})
-        except TypeError:
-            # If we have a list with different types,convert all to string.
-            return sorted({str(value) for values in result for value in values})
-    elif all(isinstance(values, str) for values in result):
-        return sorted({value for value in result if isinstance(value, str)})
-
-    err_msg: str = "Dicts are not expected in that context"
-    raise TypeError(err_msg)
+def _(
+    parameters: list[str] | list[dict[str, Any]], param_dict: dict[str, Any]
+) -> list[str] | list[dict[str, Any]]:
+    result: list[str] = []
+    dict_result: list[dict[str, Any]] = []
+    for parameter in parameters:
+        updated_param: str | dict[str, Any] | list[str] | list[dict[str, Any]] = (
+            _recursive_find_and_replace(
+                parameter,
+                param_dict,
+            )
+        )
+        if isinstance(updated_param, list):
+            result.extend([param for param in updated_param if isinstance(param, str)])
+            dict_result.extend(
+                [param for param in updated_param if isinstance(param, dict)]
+            )
+        elif isinstance(updated_param, dict):
+            dict_result.append(updated_param)
+        else:
+            result.append(updated_param)
+    return result or dict_result
 
 
 @_recursive_find_and_replace.register(str)
