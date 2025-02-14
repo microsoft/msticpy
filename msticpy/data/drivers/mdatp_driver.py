@@ -66,6 +66,7 @@ class MDATPDriver(OData):
         self: MDATPDriver,
         connection_str: str | None = None,
         instance: str = "Default",
+        cloud: str | None = None,
         **kwargs,
     ) -> None:
         """
@@ -77,6 +78,8 @@ class MDATPDriver(OData):
             Connection string
         instance : str, optional
             The instance name from config to use
+        cloud: str
+            Name of the Azure Cloud to connect to.
 
         """
         super().__init__(**kwargs)
@@ -85,9 +88,9 @@ class MDATPDriver(OData):
             self.CONFIG_NAME, self._ALT_CONFIG_NAMES, instance
         )
 
-        self.cloud = cs_dict.pop("cloud", "global")
-        if "cloud" in kwargs and kwargs["cloud"]:
-            self.cloud = kwargs["cloud"]
+        self.cloud: str = cs_dict.pop("cloud", "global")
+        if cloud:
+            self.cloud = cloud
 
         m365d_params: M365DConfiguration = _select_api(
             self.data_environment, self.cloud
