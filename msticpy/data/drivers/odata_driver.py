@@ -49,7 +49,7 @@ class OData(DriverBase):
     """Parent class to retrieve date from an oauth based API."""
 
     CONFIG_NAME: ClassVar[str] = ""
-    _ALT_CONFIG_NAMES: Iterable[str] = []
+    _ALT_CONFIG_NAMES: ClassVar[Iterable[str]] = []
 
     def __init__(
         self: OData,
