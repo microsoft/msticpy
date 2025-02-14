@@ -66,7 +66,11 @@ class MDATPDriver(OData):
         self: MDATPDriver,
         connection_str: str | None = None,
         instance: str = "Default",
+        *,
         cloud: str | None = None,
+        auth_type: str = "interactive",
+        debug: bool = False,
+        max_threads: int = 4,
         **kwargs,
     ) -> None:
         """
@@ -82,7 +86,11 @@ class MDATPDriver(OData):
             Name of the Azure Cloud to connect to.
 
         """
-        super().__init__(**kwargs)
+        super().__init__(
+            debug=debug,
+            max_threads=max_threads,
+            **kwargs,
+        )
 
         cs_dict: dict[str, str] = _get_driver_settings(
             self.CONFIG_NAME, self._ALT_CONFIG_NAMES, instance
@@ -122,7 +130,7 @@ class MDATPDriver(OData):
             self.connect(
                 connection_str,
                 delegated_auth=delegated_auth,
-                auth_type=kwargs.get("auth_type", "interactive"),
+                auth_type=auth_type,
                 location=cs_dict.get("location", "token_cache.bin"),
             )
 
