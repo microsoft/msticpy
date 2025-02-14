@@ -172,7 +172,7 @@ class MDATPDriver(OData):
                 ]
             data = ensure_df_datetimes(data, columns=date_fields)
             return data
-        return response
+        return str(response)
 
 
 def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfiguration:
