@@ -100,7 +100,9 @@ class Cyberint(HttpTIProvider):
 
         data: dict[str, Any] = response["RawResult"].get("data", {})
 
-        score: int = (data.get("risk", {})).get("malicious_score", 0)
+        score: int = 0
+        if data.get("risk"):
+            score = (data.get("risk", {})).get("malicious_score", 0)
 
         if score > self.HIGH_SEVERITY:
             result_severity = ResultSeverity.high
