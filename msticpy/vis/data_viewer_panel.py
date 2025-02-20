@@ -79,7 +79,7 @@ class DataViewer:
                 pn.extension(
                     "tabulator",
                     sizing_mode="stretch_width",
-                    css_files=[pn.io.resources.CSS_URLS["fon832t-awesome"]],
+                    css_files=[pn.io.resources.CSS_URLS["font-awesome"]],
                 )
             except NameError:
                 pn.extension(
