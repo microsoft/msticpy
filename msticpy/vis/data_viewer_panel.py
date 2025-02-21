@@ -10,6 +10,7 @@ from textwrap import wrap
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
 import pandas as pd
+from IPython import get_ipython
 from IPython.display import display
 
 from ..common.exceptions import MsticpyMissingDependencyError
@@ -74,11 +75,19 @@ class DataViewer:
 
         """
         if not pn.extension._loaded:
-            pn.extension(
-                "tabulator",
-                sizing_mode="stretch_width",
-                css_files=[pn.io.resources.CSS_URLS["font-awesome"]],
-            )
+            try:
+                pn.extension(
+                    "tabulator",
+                    sizing_mode="stretch_width",
+                    css_files=[pn.io.resources.CSS_URLS["font-awesome"]],
+                )
+            except NameError:
+                pn.extension(
+                    "tabulator",
+                    sizing_mode="stretch_width",
+                    css_files=[pn.io.resources.CSS_URLS["font-awesome"]],
+                    ip=get_ipython(),
+                )
         if data.empty:
             raise ValueError("No data available in 'data'")
 
