@@ -41,7 +41,7 @@ _DEF_HEADERS: dict[str, str] = {
 @dataclass
 class _ServiceNowParams(APILookupParams):
     # override LookupParams to set common defaults
-    def __attrs_post_init__(self: Self) -> None:
+    def __post_init__(self: Self) -> None:
         self.auth_str = ["{ApiID}", "{AuthKey}"]
         self.auth_type = "HTTPBasic"
 
