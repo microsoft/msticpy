@@ -48,6 +48,7 @@ class QueryArgs(TypedDict, total=False):
     unit: str
     amount: int
     limit: int
+    cloudtype: str
 
 
 class PrismaCloudDriver:
@@ -67,11 +68,11 @@ class PrismaCloudDriver:
         if unknown_keys:
             logger.warning("Unknown configuration keys provided: %s", unknown_keys)
 
-        self.timeout = kwargs.get("timeout", 120)
+        self.timeout = kwargs.get("timeout", 300)
         self.base_url = kwargs.get("base_url", BASE_URL_API)
         self.debug = kwargs.get("debug", False)
         self.connected = False
-        self.max_retries = kwargs.get("max_retries", 2)
+        self.max_retries = kwargs.get("max_retries", 3)
         self.headers = kwargs.get(
             "headers",
             {"User-Agent": "PrismaCloudDriver/1.0", "Accept": "application/json"},
@@ -142,40 +143,6 @@ class PrismaCloudDriver:
         except httpx.RequestError as request_err:
             self._handle_connection_error(f"Error refreshing token: {request_err}")
 
-    # pylint: disable=inconsistent-return-statements
-    def execute_query(
-        self, query: str, query_source: Optional[str] = None, **kwargs: QueryArgs
-    ) -> pd.DataFrame:
-        """Execute a query on Prisma Cloud."""
-        if "X-Redlock-Auth" not in self.client.headers:
-            raise PrismaCloudQueryError("Driver not connected to Prisma Cloud.")
-
-        if query_source not in self.ENDPOINT_MAP:
-            raise MsticpyUserError(f"Invalid query source: {query_source}")
-
-        endpoint = self.ENDPOINT_MAP[query_source]
-        payload = self._build_payload(query, **kwargs)
-
-        logger.info("Executing query on endpoint: %s", endpoint)
-        logger.debug("Query payload: %s", payload)
-
-        try:
-            response = self.client.post(endpoint, json=payload)
-            response.raise_for_status()
-            result = self._parse_json(response)
-            data = result.get("items", [])
-            if not data:
-                logger.warning("No results found for query: %s", query)
-
-            return pd.DataFrame(data)
-        except httpx.HTTPStatusError as http_err:
-            self._handle_http_error(http_err)
-        except httpx.RequestError as request_err:
-            self._handle_connection_error(
-                f"Unexpected error while executing query: {request_err}"
-            )
-        return pd.DataFrame()
-
     def _parse_json(self, response: httpx.Response) -> dict:
         """Safely parse JSON response with error handling."""
         try:
@@ -214,6 +181,230 @@ class PrismaCloudDriver:
             payload["timeRange"] = time_range
 
         return payload
+   
+    def _fetch_prisma_data(
+        self, endpoint: str, payload: dict[str, Any], timeout: int, max_retries: int
+    ) -> dict[str, Any]:
+        """Handle API request and retries for errors."""
+        retries = 0
+        while retries < max_retries:
+            try:
+                response = self.client.post(endpoint, json=payload, timeout=timeout)
+                response.raise_for_status()
+                return self._parse_json(response)
+            except httpx.HTTPStatusError as err:
+                retries += 1
+                if retries >= max_retries:
+                    logger.error("Max retries exceeded for API request.")
+                    self._handle_http_error(err)
+                logger.warning("Retrying API request... Attempt %d/%d", retries, max_retries)
+
+        self._handle_connection_error("Max retries exceeded.")
+        return {}
+
+    def _process_prisma_response(
+        self, data: dict[str, Any], data_key: str
+    ) -> list[dict[str, Any]]:
+        """Extract the relevant records from the Prisma API response."""
+        items = data
+        for key in data_key.split("."):
+            items = items.get(key, {})
+        return items if isinstance(items, list) else []
+    
+    def _paginate_prisma_search(
+        self,
+        endpoint: str,
+        base_payload: dict[str, Any],
+        limitresult: int,
+        limitpage: int,
+        timeout: int,
+        data_key: str,
+    ) -> list[dict[str, Any]]:
+        """Handle pagination for Prisma API query."""
+        results: list[dict[str, Any]] = []
+        next_token = None
+
+        while True:
+            payload = base_payload.copy()
+            payload["limit"] = min(limitpage, limitresult - len(results))
+            payload["nextPageToken"] = next_token
+
+            logger.info("📤 Sending request with payload: %s", payload)
+            data = self._fetch_prisma_data(endpoint, payload, timeout, self.max_retries)
+
+            if not isinstance(data, dict):
+                logger.error("❌ Unexpected API response format.")
+                raise MsticpyConnectionError("Unexpected API response format.")
+
+            items = self._process_prisma_response(data, data_key)
+            if not isinstance(items, list):
+                logger.error("❌ Processed data is not a list.")
+                raise MsticpyConnectionError("Unexpected processed data format.")
+
+            results.extend(items)
+            logger.info("📊 Retrieved %d records so far.", len(results))
+
+            next_token = data.get("nextPageToken")
+            if not next_token or len(results) >= limitresult or not items:
+                logger.info("✅ No more pages left to fetch.")
+                break
+
+        return results
+
+    def prisma_search_network(
+        self,
+        query: str,
+        endpoint: str,
+        unit: str | None = "hour",
+        amount: int = 3,
+        limitresult: int = 10000,
+        limitpage: int = 100,
+        cloudtype: str | None = "aws",
+        timeout: int = 360,
+    ) -> pd.DataFrame:
+        """Search network data from Prisma Cloud with pagination."""
+        base_payload = {
+            "query": query,
+            "limit": limitpage,
+            "cloudType": cloudtype,
+            "saved": False,
+            "default": False,
+            "timeRange": {"type": "relative", "value": {"unit": unit, "amount": amount}},
+        }
+        results = self._paginate_prisma_search(
+            endpoint,
+            base_payload,
+            limitresult,
+            limitpage,
+            timeout,
+            "data.nodes",
+        )
+
+        return pd.DataFrame(results) if results else pd.DataFrame()
+
+    def prisma_search_assets(
+        self,
+        query: str,
+        endpoint: str,
+        **kwargs: QueryArgs,
+    ) -> pd.DataFrame:
+        """Search assets from Prisma Cloud with pagination."""
+        timeout = kwargs.get("timeout", self.timeout)
+        limitresult = kwargs.get("limit", 10000)
+        limitpage: int = 1000
+        unit = kwargs.get("unit", "hour")
+        amount = kwargs.get("amount", 4)
+
+        logger.info("🔍 Executing asset search with query: %s", query)
+
+        base_payload = {
+            "query": query,
+            "limit": limitpage,
+            "timeRange": {"type": "relative", "value": {"unit": unit, "amount": amount}},
+        }
+
+        results = self._paginate_prisma_search(
+            endpoint, base_payload, limitresult, limitpage, timeout, "value"
+        )
+
+        return pd.DataFrame(results) if results else pd.DataFrame()
+
+    def prisma_search_events(
+        self,
+        query: str,
+        endpoint: str,
+        **kwargs: QueryArgs,
+    ) -> pd.DataFrame:
+        """
+        Perform a simple event search from Prisma Cloud.
+        """
+        timeout = kwargs.get("timeout", self.timeout)
+        max_retries = kwargs.get("max_retries", self.max_retries)
+        unit = kwargs.get("unit", "day")
+        amount = kwargs.get("amount", 1)
+        limit = kwargs.get("limit", 5000)
+
+        logger.info("🔍 Executing event search with query: %s", query)
+
+        payload = {
+            "query": query,
+            "limit": limit,
+            "timeRange": {"type": "relative", "value": {"unit": unit, "amount": amount}},
+            **kwargs,
+        }
+
+        logger.info("📤 Sending request with payload: %s", payload)
+        data = self._fetch_prisma_data(endpoint, payload, timeout, max_retries)
+
+        items = data.get("data", {}).get("items", [])
+        logger.info("📊 Retrieved %d event records.", len(items))
+        return pd.DataFrame(items) if items else pd.DataFrame()
+
+    def prisma_search_configurations(
+        self,
+        query: str,
+        endpoint: str,
+        **kwargs: QueryArgs,
+    ) -> pd.DataFrame:
+        """
+        Search configurations from Prisma Cloud.
+        """
+        timeout = kwargs.get("timeout", self.timeout)
+        max_retries = kwargs.get("max_retries", self.max_retries)
+
+        logger.info("Executing configuration search with query: %s", query)
+        payload = {"query": query, "limit": 1000, "withResourceJson": True, **kwargs}
+        data = self._fetch_prisma_data(endpoint, payload, timeout, max_retries)
+        items = data.get("items", [])
+
+        logger.info("Retrieved %d configuration results.", len(items))
+        return pd.DataFrame(items) if items else pd.DataFrame()
+    
+    # pylint: disable=inconsistent-return-statements
+    def execute_query(
+        self, query: str, query_source: Optional[str] = None, **kwargs: QueryArgs
+    ) -> pd.DataFrame:
+        """Execute a query on Prisma Cloud."""
+        if "X-Redlock-Auth" not in self.client.headers:
+            raise PrismaCloudQueryError("Driver not connected to Prisma Cloud.")
+
+        if query_source not in self.ENDPOINT_MAP:
+            raise MsticpyUserError(f"Invalid query source: {query_source}")
+
+        endpoint = self.ENDPOINT_MAP[query_source]
+        if endpoint == "/search/api/v2/config":
+            return self.prisma_search_configurations(query, endpoint, **kwargs)
+        elif endpoint == "/search/api/v1/asset":
+            return self.prisma_search_assets(query, endpoint, **kwargs)
+        elif endpoint == "/search":
+            return self.prisma_search_network(query, endpoint, **kwargs)
+        elif endpoint == "/search/event":
+            return self.prisma_search_events(query, endpoint, **kwargs)
+
+        raise MsticpyUserError(f"Query source {query_source} is not supported.")
+        #payload = self._build_payload(query, **kwargs)
+
+        #logger.info("Executing query on endpoint: %s", endpoint)
+        #logger.debug("Query payload: %s", payload)
+
+        #try:
+         #   response = self.client.post(endpoint, json=payload)
+          #  response.raise_for_status()
+           # result = self._parse_json(response)
+            #data = result.get("items", [])
+            #if not data:
+             #   logger.warning("No results found for query: %s", query)
+
+            #return pd.DataFrame(data)
+        #except httpx.HTTPStatusError as http_err:
+         #   self._handle_http_error(http_err)
+        #except httpx.RequestError as request_err:
+         #   self._handle_connection_error(
+          #      f"Unexpected error while executing query: {request_err}"
+           # )
+        #return pd.DataFrame()
+
+
 
     @staticmethod
     def construct_time(
