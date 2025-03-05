@@ -33,7 +33,7 @@ __author__ = "Ian Hellen"
 @dataclass
 class _OTXParams(APILookupParams):
     # override APILookupParams to set common defaults
-    def __attrs_post_init__(self: Self) -> None:
+    def __post_init__(self: Self) -> None:
         self.headers = {"X-OTX-API-KEY": "{AuthKey}"}
 
 
