@@ -526,7 +526,9 @@ class QueryEditWidget(IPyDisplayMixin):
             The formatted query string.
 
         """
-        return "\n|".join(query.strip().split("|"))
+        return "\n|".join(
+            line.strip() for line in query.strip().split("|") if line.strip()
+        )
 
     def add_query(self, button):
         """
@@ -779,7 +781,8 @@ class QueryEditor(IPyDisplayMixin):
         self.metadata_editor = MetadataEditWidget(self.query_collection.metadata)
         if not self.query_collection.defaults:
             self.query_collection.defaults = QueryDefaults(
-                metadata={}, parameters={}  # type: ignore[call-arg]
+                metadata={},
+                parameters={},  # type: ignore[call-arg]
             )
         self.default_param_editor = QueryParameterEditWidget(
             self.query_collection.defaults
@@ -848,7 +851,8 @@ class QueryEditor(IPyDisplayMixin):
         self.query_editor.set_query_collection(self.query_collection)
         if not self.query_collection.defaults:
             self.query_collection.defaults = QueryDefaults(
-                metadata={}, parameters={}  # type: ignore[call-arg]
+                metadata={},
+                parameters={},  # type: ignore[call-arg]
             )
         self.default_param_editor.set_param_container(self.query_collection.defaults)
         self.metadata_editor.set_metadata(self.query_collection.metadata)
@@ -907,6 +911,38 @@ class QueryEditor(IPyDisplayMixin):
         )
 
 
+class YamlLiteralBlockContext:
+    """Context manager to temporarily force multiline strings to literal style."""
+
+    def __init__(self, dumper: yaml.SafeDumper = yaml.SafeDumper):
+        """Initialize the context manager."""
+        self.dumper = dumper
+        self.old_representer = None
+
+    def __enter__(self):
+        """Enter the context manager."""
+        # Save existing representer for str, if any
+        self.old_representer = self.dumper.yaml_representers.get(str)
+
+        def str_presenter(dumper, data):
+            if "\n" in data:
+                return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
+            return dumper.represent_scalar("tag:yaml.org,2002:str", data)
+
+        self.dumper.add_representer(str, str_presenter)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit the context manager."""
+        del exc_type, exc_val, exc_tb
+        # Restore or remove representer
+        if self.old_representer:
+            self.dumper.add_representer(str, self.old_representer)
+        else:
+            del self.dumper.yaml_representers[str]
+        return False
+
+
 # Read and write the yaml file
 # Define a function to load a YAML file into a QueryCollection
 def load_queries_from_yaml(yaml_file: Union[str, Path]):
@@ -955,7 +991,8 @@ def save_queries_to_yaml(
     if "file_name" in query_dict:
         del query_dict["file_name"]
     _rename_data_type(query_dict)
-    yaml_data = yaml.safe_dump(_remove_none_values(query_dict), sort_keys=False)
+    with YamlLiteralBlockContext():
+        yaml_data = yaml.safe_dump(_remove_none_values(query_dict), sort_keys=False)
     Path(yaml_file).write_text(yaml_data, encoding="utf-8")
 
 

@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Test QueryEditor docstring."""
 import os
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,7 @@ from msticpy.config.query_editor import (
     QueryEditWidget,
     QueryParameterEditWidget,
     load_queries_from_yaml,
+    save_queries_to_yaml,
 )
 from msticpy.data import queries
 from msticpy.data.core.query_template import (
@@ -148,11 +150,13 @@ def test_edit_parameter(query):
 
 @pytest.fixture
 def metadata_editor():
+    """Return a MetadataEditWidget instance."""
     return MetadataEditWidget()
 
 
 @pytest.fixture
 def query_metadata():
+    """Return a QueryMetadata instance."""
     return QueryMetadata(
         version=1,
         description="Test description",
@@ -351,3 +355,45 @@ def test_query_file_schema(file_name, query_file):
         print(f"{folder}/{file_name}")
         print(valid_err)
         raise
+
+
+@pytest.fixture
+def temp_yaml_file():
+    """Create a temporary YAML file for testing."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        test_file = Path(tmp_dir) / "test_queries.yaml"
+        yield test_file
+
+
+def test_save_load_multiline_text(temp_yaml_file):
+    """Test saving and loading multiline text in YAML file."""
+    # Create a QueryCollection with multiline text
+    multiline_text = """line1
+line2
+line3"""
+    qc = QueryCollection(
+        file_name="test_queries.yaml",
+        metadata=QueryMetadata(
+            version=1,
+            description="Test description",
+            data_environments=["AzureSentinel"],
+            data_families=["WindowsSecurity"],
+            cluster="https://contoso.kusto.net",
+            database="test_db",
+        ),
+        sources={
+            "test_query": Query(
+                description="Multiline test",
+                args=QueryArgs(query=multiline_text),
+            )
+        },
+    )
+
+    # Save to a temporary file
+    save_queries_to_yaml(qc, temp_yaml_file)
+
+    # Load from the temporary file
+    qc_loaded = load_queries_from_yaml(temp_yaml_file)
+
+    # Verify the query text remains unchanged
+    assert qc_loaded.sources["test_query"].args.query == multiline_text
