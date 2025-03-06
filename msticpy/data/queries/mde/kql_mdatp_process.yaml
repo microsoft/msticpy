@@ -87,7 +87,7 @@ sources:
         description: full or partial path
         type: str
   process_cmd_line:
-    description: Lists all processes with a command line containing a string (all hosts)
+    description: Lists all processes with a command line containing a list of strings (all hosts)
     metadata:
       pivot:
         short_name: processes_by_cmdline
@@ -96,9 +96,9 @@ sources:
         {table}
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})
-        | where ProcessCommandLine contains "{cmd_line}"
+        | where ProcessCommandLine has_any ({cmd_line})
         {add_query_items}'
     parameters:
       cmd_line:
-        description: Command line artifact to search for
+        description: Command line artifacts to search for
         type: str
