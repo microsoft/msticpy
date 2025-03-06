@@ -4,14 +4,17 @@
 # license information.
 # --------------------------------------------------------------------------
 """Query Editor."""
+from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Literal, cast, Callable
+from types import TracebackType
 
 import ipywidgets as widgets
 import yaml
 from IPython.display import display
+from typing_extensions import Self
 
 from .._version import VERSION
 from ..data.core.query_defns import DataEnvironment, DataFamily
@@ -30,23 +33,23 @@ __author__ = "Ian Hellen"
 # pylint: disable=too-many-instance-attributes, too-many-lines
 
 
-class IPyDisplayMixin:
+class IPyDisplayMixin(widgets.widgets.widget_templates.LayoutProperties):
     """IPython display mixin class."""
 
-    def display(self):
+    def display(self: Self) -> None:
         """Display the interactive widgets."""
         display(self.layout)
 
-    def _ipython_display_(self):
+    def _ipython_display_(self: Self) -> None:
         """Display in IPython."""
         self.display()
 
 
-_PARAM_OPTIONS = ("str", "datetime", "list", "int")
-_DESC_WIDTH = "120px"
+_PARAM_OPTIONS: tuple[str, ...] = ("str", "datetime", "list", "int")
+_DESC_WIDTH: str = "120px"
 
 
-def txt_fmt(width: str = "70%") -> Dict:
+def txt_fmt(width: str = "70%") -> dict[str, Any]:
     """
     Return a dictionary with layout and style for a text widget.
 
@@ -69,7 +72,7 @@ def txt_fmt(width: str = "70%") -> Dict:
     }
 
 
-def txtarea_fmt(width: str = "70%", height: str = "150px") -> Dict:
+def txtarea_fmt(width: str = "70%", height: str = "150px") -> dict[str, Any]:
     """
     Return a dictionary with layout and style for a textarea widget.
 
@@ -92,7 +95,7 @@ def txtarea_fmt(width: str = "70%", height: str = "150px") -> Dict:
     }
 
 
-def sel_fmt(width: str = "40%", height: str = "150px") -> Dict:
+def sel_fmt(width: str = "40%", height: str = "150px") -> dict[str, Any]:
     """
     Return a dictionary with layout and style for a select widget.
 
@@ -115,7 +118,7 @@ def sel_fmt(width: str = "40%", height: str = "150px") -> Dict:
     }
 
 
-def box_layout():
+def box_layout() -> dict[str, Any]:
     """
     Return a dictionary with layout and style for a box widget.
 
@@ -169,11 +172,13 @@ class QueryParameterEditWidget(IPyDisplayMixin):
 
     """
 
-    def __init__(self, container: Union[Query, QueryDefaults]):
+    def __init__(
+        self: QueryParameterEditWidget, container: Query | QueryDefaults
+    ) -> None:
         """Initialize the class."""
-        self._changed_data = False
-        self.param_container = container
-        self.parameter_dropdown = widgets.Select(
+        self._changed_data: bool = False
+        self.param_container: Query | QueryDefaults = container
+        self.parameter_dropdown: widgets.Select = widgets.Select(
             description="Parameters",
             rows=5,
             options=list(
@@ -184,18 +189,37 @@ class QueryParameterEditWidget(IPyDisplayMixin):
             **sel_fmt(height="100px"),
         )
         # Create widgets for the Parameter fields
-        self.parameter_name_widget = widgets.Text(description="Name", **txt_fmt())
-        self.description_widget = widgets.Text(description="Description", **txt_fmt())
-        self.type_widget = widgets.Dropdown(
-            description="Type", options=_PARAM_OPTIONS, **sel_fmt(height="30px")
+        self.parameter_name_widget: widgets.Text = widgets.Text(
+            description="Name",
+            **txt_fmt(),
         )
-        self.default_reqd_widget = widgets.Checkbox(description="Use a default value")
-        self.default_widget = widgets.Text(description="Default Value", **txt_fmt())
+        self.description_widget: widgets.Text = widgets.Text(
+            description="Description",
+            **txt_fmt(),
+        )
+        self.type_widget: widgets.Dropdown = widgets.Dropdown(
+            description="Type",
+            options=_PARAM_OPTIONS,
+            **sel_fmt(height="30px"),
+        )
+        self.default_reqd_widget: widgets.Checkbox = widgets.Checkbox(
+            description="Use a default value",
+        )
+        self.default_widget: widgets.Text = widgets.Text(
+            description="Default Value",
+            **txt_fmt(),
+        )
 
         # Create buttons
-        self.add_parameter_button = widgets.Button(description="New Parameter")
-        self.save_parameter_button = widgets.Button(description="Save Parameter")
-        self.delete_parameter_button = widgets.Button(description="Delete Parameter")
+        self.add_parameter_button: widgets.Button = widgets.Button(
+            description="New Parameter",
+        )
+        self.save_parameter_button: widgets.Button = widgets.Button(
+            description="Save Parameter",
+        )
+        self.delete_parameter_button: widgets.Button = widgets.Button(
+            description="Delete Parameter",
+        )
 
         # Attach the functions to buttons
         self.add_parameter_button.on_click(self.add_parameter)
@@ -204,7 +228,7 @@ class QueryParameterEditWidget(IPyDisplayMixin):
         self.parameter_dropdown.observe(self.populate_widgets, names="value")
 
         # Create a widget for adding, editing, and deleting Parameters
-        self.layout = widgets.VBox(
+        self.layout: widgets.VBox = widgets.VBox(
             [
                 widgets.HBox(
                     [
@@ -234,15 +258,15 @@ class QueryParameterEditWidget(IPyDisplayMixin):
             self.populate_widgets(init_change)
 
     @property
-    def changed_data(self):
+    def changed_data(self: Self) -> bool:
         """Return True if data has changed."""
         return self._changed_data
 
-    def reset_changed_data(self):
+    def reset_changed_data(self: Self) -> None:
         """Reset changed data flag."""
         self._changed_data = False
 
-    def set_param_container(self, container: Union[Query, QueryDefaults]):
+    def set_param_container(self: Self, container: Query | QueryDefaults) -> None:
         """Set the parameter container."""
         self.param_container = container
         if self.param_container and self.param_container.parameters:
@@ -256,14 +280,14 @@ class QueryParameterEditWidget(IPyDisplayMixin):
             self._blank_parameter()
 
     # Define a function to add a new Parameter to the selected Query
-    def add_parameter(self, button):
+    def add_parameter(self: Self, button: widgets.Button) -> None:
         """Add a new parameter."""
         del button
         # Clear the input widgets
         self._blank_parameter()
         self.parameter_name_widget.value = "new_parameter"
 
-    def _blank_parameter(self):
+    def _blank_parameter(self: Self) -> None:
         """Clear the parameter widgets."""
         self.parameter_name_widget.value = ""
         self.description_widget.value = ""
@@ -272,9 +296,12 @@ class QueryParameterEditWidget(IPyDisplayMixin):
         self.default_reqd_widget.value = False
 
     # Define a function to populate the Parameter widgets with the values of the selected Parameter
-    def populate_widgets(self, change):
+    def populate_widgets(self: Self, change: CustomChange) -> None:
         """Populate parameter value in widgets."""
-        parameter = self.param_container.parameters[change.new]
+        if self.param_container.parameters is None:
+            err_msg: str = "Parameters is empty."
+            raise ValueError(err_msg)
+        parameter: QueryParameter = self.param_container.parameters[change.new]
         self.parameter_name_widget.value = change.new
         self.description_widget.value = parameter.description
         self.type_widget.value = parameter.datatype
@@ -282,12 +309,12 @@ class QueryParameterEditWidget(IPyDisplayMixin):
         self.default_widget.value = parameter.default or ""
 
     # Define a function to edit the selected Parameter with the values from the widgets
-    def save_parameter(self, button):
+    def save_parameter(self: Self, button: widgets.Button) -> None:
         """Save currently edited parameter."""
         del button
         if not self.parameter_name_widget.value:
             return
-        param_name = self.parameter_name_widget.value
+        param_name: str = self.parameter_name_widget.value
         parameter = QueryParameter(
             description=self.description_widget.value,
             datatype=self.type_widget.value or _PARAM_OPTIONS[0],
@@ -295,23 +322,29 @@ class QueryParameterEditWidget(IPyDisplayMixin):
         parameter.default = (
             self.default_widget.value if self.default_reqd_widget.value else None
         )
+        if self.param_container.parameters is None:
+            self.param_container.parameters = {}
         self.param_container.parameters[param_name] = parameter
         self.parameter_dropdown.options = list(self.param_container.parameters.keys())
         self.parameter_dropdown.value = param_name
         self._changed_data = True
 
     # Define a function to delete the selected Parameter from the selected Query
-    def delete_parameter(self, button):
+    def delete_parameter(self: Self, button: widgets.Button) -> None:
         """Delete parameter item."""
         del button
-        del self.param_container.parameters[self.parameter_dropdown.value]
+        if self.param_container.parameters is not None:
+            del self.param_container.parameters[str(self.parameter_dropdown.value)]
         # Clear the input widgets
         self._blank_parameter()
         self._changed_data = True
 
 
 def replace_in_query(
-    param_name: str, param: QueryParameter, src_name: str, query: str
+    param_name: str,
+    param: QueryParameter,
+    src_name: str,
+    query: str,
 ) -> str:
     """
     Replace a parameter in a query string with a formatted string.
@@ -333,8 +366,8 @@ def replace_in_query(
         The query string with the source replaced by the formatted parameter string.
 
     """
-    if param.datatype == "datetime":  # type: ignore
-        repl_str = f"datetime({{{param_name}}})"
+    if param.datatype == "datetime":
+        repl_str: str = f"datetime({{{param_name}}})"
     elif param.datatype == "str":
         repl_str = f'"{{{param_name}}}"'
     else:
@@ -345,7 +378,7 @@ def replace_in_query(
 class QueryEditWidget(IPyDisplayMixin):
     """A class for editing queries."""
 
-    def __init__(self, query_collection: QueryCollection):
+    def __init__(self: QueryEditWidget, query_collection: QueryCollection) -> None:
         """
         Initialize a QueryEditWidget object.
 
@@ -355,31 +388,34 @@ class QueryEditWidget(IPyDisplayMixin):
             A collection of queries.
 
         """
-        self._changed_data = False
-        self.query_collection = query_collection
-        self.query_select_widget = widgets.Select(
+        self._changed_data: bool = False
+        self.query_collection: QueryCollection = query_collection
+        self.query_select_widget: widgets.Select = widgets.Select(
             description="Queries",
             options=list(self.query_collection.sources.keys()),
             **sel_fmt(),
         )
-        self.name_widget = widgets.Text(
-            description="Name", placeholder="Python-compatible query name", **txt_fmt()
+        self.name_widget: widgets.Text = widgets.Text(
+            description="Name",
+            placeholder="Python-compatible query name",
+            **txt_fmt(),
         )
-        self.description_widget = widgets.Text(
+        self.description_widget: widgets.Text = widgets.Text(
             description="Description",
             placeholder="Description of query",
             **txt_fmt("90%"),
         )
-        self.metadata_widget = widgets.Textarea(
-            description="Query metadata", **txtarea_fmt("90%", height="70px")
+        self.metadata_widget: widgets.Textarea = widgets.Textarea(
+            description="Query metadata",
+            **txtarea_fmt("90%", height="70px"),
         )
-        self.parameters: Optional[QueryParameterEditWidget] = None
-        self.query_text_widget = widgets.Textarea(
+        self.parameters: QueryParameterEditWidget | None = None
+        self.query_text_widget: widgets.Textarea = widgets.Textarea(
             description="Query",
             placeholder="query text with {parameter}a",
             **txtarea_fmt("90%"),
         )
-        self.query_opts_widget = widgets.Accordion(
+        self.query_opts_widget: widgets.Accordion = widgets.Accordion(
             children=[
                 widgets.Label(value="No parameters"),
                 self.metadata_widget,
@@ -390,10 +426,14 @@ class QueryEditWidget(IPyDisplayMixin):
         self.query_opts_widget.set_title(0, "Query parameters")
         self.query_opts_widget.set_title(1, "Query metadata")
         self.query_opts_widget.selected_index = None
-        self.add_query_button = widgets.Button(description="New Query")
-        self.save_query_button = widgets.Button(description="Save Query")
-        self.delete_query_button = widgets.Button(description="Delete Query")
-        self.queries_widget = widgets.VBox(
+        self.add_query_button: widgets.Button = widgets.Button(description="New Query")
+        self.save_query_button: widgets.Button = widgets.Button(
+            description="Save Query"
+        )
+        self.delete_query_button: widgets.Button = widgets.Button(
+            description="Delete Query"
+        )
+        self.queries_widget: widgets.VBox = widgets.VBox(
             children=[
                 widgets.Label(value="Query"),
                 self.name_widget,
@@ -404,7 +444,7 @@ class QueryEditWidget(IPyDisplayMixin):
             ],
             **box_layout(),
         )
-        self.layout = widgets.VBox(
+        self.layout: widgets.VBox = widgets.VBox(
             [
                 widgets.Label(value="Queries"),
                 widgets.HBox(
@@ -432,19 +472,19 @@ class QueryEditWidget(IPyDisplayMixin):
             self.populate_widgets(init_change)
 
     @property
-    def changed_data(self):
+    def changed_data(self: Self) -> bool:
         """Return True if data has changed."""
         return self._changed_data or (
             self.parameters.changed_data if self.parameters else False
         )
 
-    def reset_changed_data(self):
+    def reset_changed_data(self: Self) -> None:
         """Reset changed data flag."""
         self._changed_data = False
         if self.parameters:
             self.parameters.reset_changed_data()
 
-    def set_query_collection(self, query_collection: QueryCollection):
+    def set_query_collection(self: Self, query_collection: QueryCollection) -> None:
         """Set the query collection."""
         self.query_collection = query_collection
         self.populate_query_dropdown(None)
@@ -452,7 +492,7 @@ class QueryEditWidget(IPyDisplayMixin):
             init_change = CustomChange(new=next(iter(self.query_collection.sources)))
             self.populate_widgets(init_change)
 
-    def populate_query_dropdown(self, change: Any) -> None:
+    def populate_query_dropdown(self: Self, change: Any) -> None:
         """
         Populate the query dropdown widget.
 
@@ -465,7 +505,7 @@ class QueryEditWidget(IPyDisplayMixin):
         del change
         self.query_select_widget.options = list(self.query_collection.sources.keys())
 
-    def _populate_qry_metadata(self, query: Query) -> str:
+    def _populate_qry_metadata(self: Self, query: Query) -> str:
         """
         Populate the metadata widget with the metadata of a query.
 
@@ -477,7 +517,7 @@ class QueryEditWidget(IPyDisplayMixin):
         """
         return yaml.safe_dump(query.metadata) if query.metadata else ""
 
-    def _save_qry_metadata(self, metadata: str) -> Dict[str, Any]:
+    def _save_qry_metadata(self: Self, metadata: str) -> dict[str, Any]:
         """
         Save the metadata of a query.
 
@@ -489,7 +529,7 @@ class QueryEditWidget(IPyDisplayMixin):
         """
         return yaml.safe_load(metadata) if metadata else {}
 
-    def populate_widgets(self, change):
+    def populate_widgets(self: Self, change: CustomChange) -> None:
         """
         Populate the query widgets with the data of a query.
 
@@ -499,7 +539,7 @@ class QueryEditWidget(IPyDisplayMixin):
             The change event.
 
         """
-        query = self.query_collection.sources[change.new]
+        query: Query = self.query_collection.sources[change.new]
         self.name_widget.value = change.new
         self.description_widget.value = query.description
         self.metadata_widget.value = self._populate_qry_metadata(query)
@@ -530,7 +570,7 @@ class QueryEditWidget(IPyDisplayMixin):
             line.strip() for line in query.strip().split("|") if line.strip()
         )
 
-    def add_query(self, button):
+    def add_query(self: Self, button: widgets.Button) -> None:
         """
         Add a new query.
 
@@ -546,7 +586,7 @@ class QueryEditWidget(IPyDisplayMixin):
         self.metadata_widget.value = ""
         self.query_text_widget.value = ""
 
-    def save_query(self, button):
+    def save_query(self: Self, button: widgets.Button) -> None:
         """
         Save the data of a query.
 
@@ -566,14 +606,13 @@ class QueryEditWidget(IPyDisplayMixin):
             )
             self.populate_query_dropdown(None)
         else:
-            query = self.query_collection.sources[self.name_widget.value]
-            query = self.query_collection.sources[self.name_widget.value]
+            query: Query = self.query_collection.sources[self.name_widget.value]
             query.description = self.description_widget.value
             query.metadata = self._save_qry_metadata(self.metadata_widget.value)
             query.args = QueryArgs(query=self.query_text_widget.value)
         self._changed_data = True
 
-    def delete_query(self, button):
+    def delete_query(self: Self, button: widgets.Button) -> None:
         """
         Delete a query.
 
@@ -584,7 +623,7 @@ class QueryEditWidget(IPyDisplayMixin):
 
         """
         del button
-        del self.query_collection.sources[self.query_select_widget.value]
+        del self.query_collection.sources[str(self.query_select_widget.value)]
         self.name_widget.value = ""
         self.description_widget.value = ""
         self.metadata_widget.value = ""
@@ -596,7 +635,9 @@ class QueryEditWidget(IPyDisplayMixin):
 class MetadataEditWidget(IPyDisplayMixin):
     """A class for editing Metadata properties."""
 
-    def __init__(self, metadata: Optional[QueryMetadata] = None):
+    def __init__(
+        self: MetadataEditWidget, metadata: QueryMetadata | None = None
+    ) -> None:
         """
         Initialize a MetadataEditWidget object.
 
@@ -606,47 +647,61 @@ class MetadataEditWidget(IPyDisplayMixin):
             A Metadata object.
 
         """
-        self._changed_data = False
-        self.metadata = metadata or self._new_metadata()
-        self.version_widget = widgets.IntText(description="Version", **txt_fmt())
-        self.description_widget = widgets.Text(description="Description", **txt_fmt())
-        self.data_env_widget = widgets.SelectMultiple(
+        self._changed_data: bool = False
+        self.metadata: QueryMetadata = metadata or self._new_metadata()
+        self.version_widget: widgets.IntText = widgets.IntText(
+            description="Version",
+            **txt_fmt(),
+        )
+        self.description_widget: widgets.Text = widgets.Text(
+            description="Description",
+            **txt_fmt(),
+        )
+        self.data_env_widget: widgets.SelectMultiple = widgets.SelectMultiple(
             options=list(DataEnvironment.__members__),
             description="Data Environments",
             **sel_fmt(),
         )
-        self.data_families_widget = widgets.Textarea(
+        self.data_families_widget: widgets.Textarea = widgets.Textarea(
             description="Data Families",
             **sel_fmt(),
         )
-        self.database_widget = widgets.Text(
-            description="Kusto Database", placeholder="Database name", **txt_fmt()
+        self.database_widget: widgets.Text = widgets.Text(
+            description="Kusto Database",
+            placeholder="Database name",
+            **txt_fmt(),
         )
-        self.cluster_widget = widgets.Text(
+        self.cluster_widget: widgets.Text = widgets.Text(
             description="Kusto Cluster",
             placeholder="URI, hostname or alias",
             **txt_fmt(),
         )
-        self.clusters_widget = widgets.Textarea(
+        self.clusters_widget: widgets.Textarea = widgets.Textarea(
             description="Kusto Clusters",
             placeholder="URI, hostname or alias (one per line)",
             **sel_fmt(width="70%", height="75px"),
         )
-        self.cluster_groups_widget = widgets.Textarea(
+        self.cluster_groups_widget: widgets.Textarea = widgets.Textarea(
             description="Kusto Clusters",
             placeholder="MSTICPy cluster group (one per line)",
             **sel_fmt(width="70%", height="75px"),
         )
-        self.tags_widget = widgets.Text(
-            description="Tags", placeholder="(optional)", **txt_fmt()
+        self.tags_widget: widgets.Text = widgets.Text(
+            description="Tags",
+            placeholder="(optional)",
+            **txt_fmt(),
         )
-        self.data_source_widget = widgets.Text(
-            description="Data Source", placeholder="(optional)", **txt_fmt()
+        self.data_source_widget: widgets.Text = widgets.Text(
+            description="Data Source",
+            placeholder="(optional)",
+            **txt_fmt(),
         )
-        self.save_metadata_widget = widgets.Button(description="Save metadata")
+        self.save_metadata_widget: widgets.Button = widgets.Button(
+            description="Save metadata"
+        )
         self.save_metadata_widget.on_click(self.save_metadata)
 
-        self.layout = widgets.VBox(
+        self.layout: widgets.VBox = widgets.VBox(
             [
                 self.version_widget,
                 self.description_widget,
@@ -670,20 +725,20 @@ class MetadataEditWidget(IPyDisplayMixin):
         self.populate_widgets()
 
     @property
-    def changed_data(self):
+    def changed_data(self: Self) -> bool:
         """Return True if data has changed."""
         return self._changed_data
 
-    def reset_changed_data(self):
+    def reset_changed_data(self: Self) -> None:
         """Reset changed data flag."""
         self._changed_data = False
 
-    def set_metadata(self, metadata: QueryMetadata):
+    def set_metadata(self: Self, metadata: QueryMetadata) -> None:
         """Set the metadata object."""
         self.metadata = metadata
         self.populate_widgets()
 
-    def populate_widgets(self):
+    def populate_widgets(self: Self) -> None:
         """Populate the widgets with the metadata of the Metadata object."""
         self.version_widget.value = self.metadata.version or ""
         self.description_widget.value = self.metadata.description or ""
@@ -706,7 +761,7 @@ class MetadataEditWidget(IPyDisplayMixin):
         )
         self.data_source_widget.value = self.metadata.data_source or ""
 
-    def save_metadata(self, button):
+    def save_metadata(self: Self, button: widgets.Button) -> None:
         """Save the values to the Metadata object."""
         del button
         self.metadata.version = self.version_widget.value
@@ -732,11 +787,11 @@ class MetadataEditWidget(IPyDisplayMixin):
         self.metadata.data_source = self.data_source_widget.value
         self._changed_data = True
 
-    def display(self):
+    def display(self: Self) -> None:
         """Display the GUI widget."""
         display(self.layout)
 
-    def _new_metadata(self):
+    def _new_metadata(self: Self) -> QueryMetadata:
         return QueryMetadata(
             version=1,
             description="Query collection description",
@@ -745,16 +800,16 @@ class MetadataEditWidget(IPyDisplayMixin):
         )
 
 
-_DEF_FILENAME = "new_query_file.yaml"
+_DEF_FILENAME: str = "new_query_file.yaml"
 
 
 class QueryEditor(IPyDisplayMixin):
     """Query template editor."""
 
     def __init__(
-        self,
-        query_file: Union[QueryCollection, Path, str, None] = None,
-    ):
+        self: QueryEditor,
+        query_file: QueryCollection | Path | str | None = None,
+    ) -> None:
         """
         Initialize the QueryEditor.
 
@@ -766,42 +821,47 @@ class QueryEditor(IPyDisplayMixin):
             By default None
 
         """
-        self.filename_widget = widgets.Text(
-            description="Current file", layout=widgets.Layout(width="70%")
+        self.filename_widget: widgets.Text = widgets.Text(
+            description="Current file",
+            layout=widgets.Layout(width="70%"),
         )
         if isinstance(query_file, (Path, str)):
             self.filename_widget.value = str(query_file)
             self._open_initial_file()
         else:
-            self.query_collection = query_file or self._new_collection()
+            self.query_collection: QueryCollection = (
+                query_file or self._new_collection()
+            )
             self.filename_widget.value = (
                 self.query_collection.file_name or _DEF_FILENAME
             )
-        self.query_editor = QueryEditWidget(self.query_collection)
-        self.metadata_editor = MetadataEditWidget(self.query_collection.metadata)
+        self.query_editor: QueryEditWidget = QueryEditWidget(self.query_collection)
+        self.metadata_editor: MetadataEditWidget = MetadataEditWidget(
+            self.query_collection.metadata
+        )
         if not self.query_collection.defaults:
             self.query_collection.defaults = QueryDefaults(
                 metadata={},
-                parameters={},  # type: ignore[call-arg]
+                parameters={},
             )
-        self.default_param_editor = QueryParameterEditWidget(
-            self.query_collection.defaults
+        self.default_param_editor: QueryParameterEditWidget = QueryParameterEditWidget(
+            self.query_collection.defaults,
         )
 
-        self.ignore_changes = widgets.Checkbox(
+        self.ignore_changes: widgets.Checkbox = widgets.Checkbox(
             description="Ignore changes", value=False
         )
-        self.open_button = widgets.Button(description="Open File")
-        self.save_button = widgets.Button(description="Save File")
-        self.new_button = widgets.Button(description="New file")
-        self.collection_accordion = widgets.Accordion(
+        self.open_button: widgets.Button = widgets.Button(description="Open File")
+        self.save_button: widgets.Button = widgets.Button(description="Save File")
+        self.new_button: widgets.Button = widgets.Button(description="New file")
+        self.collection_accordion: widgets.Accordion = widgets.Accordion(
             children=[self.metadata_editor.layout, self.default_param_editor.layout],
             titles=["File metadata", "Default parameters"],
         )
         self.collection_accordion.set_title(0, "File metadata")
         self.collection_accordion.set_title(1, "Default parameters")
         self.collection_accordion.selected_index = None
-        self.layout = widgets.VBox(
+        self.layout: widgets.VBox = widgets.VBox(
             [
                 widgets.HTML("<h1 style='text-indent: 15px'>MSTICPy Query Editor</h1>"),
                 self.collection_accordion,
@@ -814,11 +874,11 @@ class QueryEditor(IPyDisplayMixin):
         self.new_button.on_click(self._new_file)
 
     @property
-    def current_file(self) -> str:
+    def current_file(self: Self) -> str:
         """Return the current file name."""
         return cast(str, self.filename_widget.value) or cast(str, _DEF_FILENAME)
 
-    def _create_file_widget(self):
+    def _create_file_widget(self: Self) -> widgets.HBox:
         """Create the file widget."""
         return widgets.HBox(
             children=[
@@ -835,7 +895,7 @@ class QueryEditor(IPyDisplayMixin):
             ]
         )
 
-    def _new_collection(self):
+    def _new_collection(self: Self) -> QueryCollection:
         """Create a new query collection."""
         return QueryCollection(
             file_name=_DEF_FILENAME,
@@ -845,24 +905,24 @@ class QueryEditor(IPyDisplayMixin):
             defaults=QueryDefaults(),
         )
 
-    def _update_query_collection(self, query_collection: QueryCollection):
+    def _update_query_collection(self: Self, query_collection: QueryCollection) -> None:
         """Update the sub-editors with the current query collection."""
         self.query_collection = query_collection
         self.query_editor.set_query_collection(self.query_collection)
         if not self.query_collection.defaults:
             self.query_collection.defaults = QueryDefaults(
                 metadata={},
-                parameters={},  # type: ignore[call-arg]
+                parameters={},
             )
         self.default_param_editor.set_param_container(self.query_collection.defaults)
         self.metadata_editor.set_metadata(self.query_collection.metadata)
 
-    def _save_file(self, button):
+    def _save_file(self: Self, button: widgets.Button) -> None:
         """Save the current query collection."""
         del button
         save_queries_to_yaml(self.query_collection, self.current_file)
 
-    def _open_file(self, button):
+    def _open_file(self: Self, button: widgets.Button) -> None:
         """Open a new query collection."""
         del button
         if self._unsaved_changes() and not self.ignore_changes.value:
@@ -874,11 +934,11 @@ class QueryEditor(IPyDisplayMixin):
         self.query_collection = load_queries_from_yaml(self.current_file)
         self._update_query_collection(self.query_collection)
 
-    def _open_initial_file(self):
+    def _open_initial_file(self: Self) -> None:
         """Open the initial file."""
         self.query_collection = load_queries_from_yaml(self.current_file)
 
-    def _new_file(self, button):
+    def _new_file(self: Self, button: widgets.Button) -> None:
         """Create a new query collection."""
         del button
         if self._unsaved_changes() and not self.ignore_changes.value:
@@ -896,13 +956,13 @@ class QueryEditor(IPyDisplayMixin):
         self.filename_widget.value = _DEF_FILENAME
         self._update_query_collection(self.query_collection)
 
-    def _reset_change_state(self):
+    def _reset_change_state(self: Self) -> None:
         """Reset the change state of the sub-editors."""
         self.default_param_editor.reset_changed_data()
         self.metadata_editor.reset_changed_data()
         self.query_editor.reset_changed_data()
 
-    def _unsaved_changes(self):
+    def _unsaved_changes(self: Self) -> bool:
         """Check if there are unsaved changes."""
         return (
             self.default_param_editor.changed_data
@@ -914,17 +974,21 @@ class QueryEditor(IPyDisplayMixin):
 class YamlLiteralBlockContext:
     """Context manager to temporarily force multiline strings to literal style."""
 
-    def __init__(self, dumper: yaml.SafeDumper = yaml.SafeDumper):
+    def __init__(
+        self: YamlLiteralBlockContext, dumper: type[yaml.SafeDumper] = yaml.SafeDumper
+    ) -> None:
         """Initialize the context manager."""
-        self.dumper = dumper
-        self.old_representer = None
+        self.dumper: type[yaml.SafeDumper] = dumper
+        self.old_representer: (
+            Callable[[yaml.representer.BaseRepresenter, Any], yaml.Node] | None
+        ) = None
 
-    def __enter__(self):
+    def __enter__(self: Self) -> Self:
         """Enter the context manager."""
         # Save existing representer for str, if any
         self.old_representer = self.dumper.yaml_representers.get(str)
 
-        def str_presenter(dumper, data):
+        def str_presenter(dumper: yaml.SafeDumper, data: str) -> yaml.ScalarNode:
             if "\n" in data:
                 data = "\n".join(
                     line.rstrip() for line in data.splitlines(keepends=True)
@@ -935,7 +999,12 @@ class YamlLiteralBlockContext:
         self.dumper.add_representer(str, str_presenter)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self: Self,
+        exc_type: type[BaseException],
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> Literal[False]:
         """Exit the context manager."""
         del exc_type, exc_val, exc_tb
         # Restore or remove representer
@@ -948,7 +1017,7 @@ class YamlLiteralBlockContext:
 
 # Read and write the yaml file
 # Define a function to load a YAML file into a QueryCollection
-def load_queries_from_yaml(yaml_file: Union[str, Path]):
+def load_queries_from_yaml(yaml_file: str | Path) -> QueryCollection:
     """
     Load a YAML file into a QueryCollection.
 
@@ -964,20 +1033,23 @@ def load_queries_from_yaml(yaml_file: Union[str, Path]):
 
     """
     with open(yaml_file, "r", encoding="utf-8") as f_handle:
-        yaml_data = yaml.safe_load(f_handle)
+        yaml_data: dict[str, Any] = yaml.safe_load(f_handle)
 
     metadata = QueryMetadata(**yaml_data.get("metadata", {}))
-    defaults = _create_query_defaults(yaml_data.get("defaults", {}))
-    queries_dict = yaml_data.get("sources", {})
-    queries = {name: _create_query(query) for name, query in queries_dict.items()}
-    return QueryCollection(  # type: ignore[call-arg]
+    defaults: QueryDefaults = _create_query_defaults(yaml_data.get("defaults", {}))
+    queries_dict: dict[str, Any] = yaml_data.get("sources", {})
+    queries: dict[str, Query] = {
+        name: _create_query(query) for name, query in queries_dict.items()
+    }
+    return QueryCollection(
         file_name=str(yaml_file), metadata=metadata, defaults=defaults, sources=queries
     )
 
 
 def save_queries_to_yaml(
-    query_collection: QueryCollection, yaml_file: Union[str, Path]
-):
+    query_collection: QueryCollection,
+    yaml_file: str | Path,
+) -> None:
     """
     Save a QueryCollection to a YAML file.
 
@@ -989,20 +1061,24 @@ def save_queries_to_yaml(
         The path to the YAML file to save.
 
     """
-    query_dict = asdict(query_collection)
+    query_dict: dict[str, Any] = asdict(query_collection)
     # ordered_dict =
     if "file_name" in query_dict:
         del query_dict["file_name"]
     _rename_data_type(query_dict)
     with YamlLiteralBlockContext():
-        yaml_data = yaml.safe_dump(_remove_none_values(query_dict), sort_keys=False)
+        yaml_data: str = yaml.safe_dump(
+            _remove_none_values(query_dict), sort_keys=False
+        )
     Path(yaml_file).write_text(yaml_data, encoding="utf-8")
 
 
-def _create_query_defaults(defaults):
+def _create_query_defaults(defaults: dict[str, Any]) -> QueryDefaults:
     """Create a QueryDefaults object."""
-    def_metadata = defaults["metadata"] if "metadata" in defaults else {}
-    def_params = (
+    def_metadata: dict[str, Any] = (
+        defaults["metadata"] if "metadata" in defaults else {}
+    )
+    def_params: dict[str, QueryParameter] = (
         {
             name: _create_parameter(param)
             for name, param in defaults["parameters"].items()
@@ -1013,9 +1089,9 @@ def _create_query_defaults(defaults):
     return QueryDefaults(metadata=def_metadata, parameters=def_params)
 
 
-def _create_query(query_data):
+def _create_query(query_data: dict[str, Any]) -> Query:
     """Create a Query object."""
-    parameters = query_data.get("parameters", {})
+    parameters: dict[str, Any] = query_data.get("parameters", {})
     if parameters:
         parameters = {
             name: _create_parameter(param) for name, param in parameters.items()
@@ -1028,7 +1104,7 @@ def _create_query(query_data):
     )
 
 
-def _create_parameter(param_data):
+def _create_parameter(param_data: dict[str, Any]) -> QueryParameter:
     """Create a Parameter object."""
     return QueryParameter(
         description=param_data.get("description", ""),
@@ -1037,7 +1113,9 @@ def _create_parameter(param_data):
     )
 
 
-def _remove_none_values(source_obj):
+def _remove_none_values(
+    source_obj: dict[str, Any] | list[Any] | tuple[Any, ...]
+) -> dict[str, Any] | list[Any] | tuple[Any, ...]:
     """Recursively remove any item with a None value from a nested dictionary."""
     if isinstance(source_obj, dict):
         return {
@@ -1045,14 +1123,14 @@ def _remove_none_values(source_obj):
             for key, val in source_obj.items()
             if val is not None or (isinstance(val, (list, dict)) and len(val) > 0)
         }
-    if isinstance(source_obj, (list, tuple)):
-        return type(source_obj)(
-            _remove_none_values(val) for val in source_obj if val is not None
-        )
+    if isinstance(source_obj, list):
+        return [_remove_none_values(val) for val in source_obj if val is not None]
+    if isinstance(source_obj, tuple):
+        return tuple(_remove_none_values(val) for val in source_obj if val is not None)
     return source_obj
 
 
-def _rename_data_type(source_obj):
+def _rename_data_type(source_obj: dict[str, Any] | list[Any] | tuple[Any]) -> None:
     """Recursively rename the 'datatype' key to 'type' in a nested dictionary."""
     if isinstance(source_obj, dict):
         if "datatype" in source_obj:
