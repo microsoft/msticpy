@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """PrismaCloud Driver class."""
 
+__author__ = "Rajamani R"
+
 import logging
 from typing import TYPE_CHECKING, Any, ClassVar, TypedDict
 
@@ -163,16 +165,17 @@ class PrismaCloudDriver:
         if unknown_keys:
             logger.warning("Unknown configuration keys provided: %s", unknown_keys)
 
-        self.timeout: int = int(kwargs.get("timeout", 300))
+        self.timeout: int = int(kwargs.get("timeout", 300))  # type: ignore[arg-type]
         self.base_url: str = str(kwargs.get("base_url", BASE_URL_API))
         self.debug: bool = bool(kwargs.get("debug", False))
-        self.max_retries: int = int(kwargs.get("max_retries", 3))
+        self.max_retries: int = int(kwargs.get("max_retries", 3))  # type: ignore[arg-type]
+        self.connected: bool = False
         self.headers: dict[str, str] = dict(
             kwargs.get(
                 "headers",
                 {"User-Agent": "PrismaCloudDriver/1.0", "Accept": "application/json"},
             ),
-        )
+        )  # type: ignore[arg-type]
 
         transport = httpx.HTTPTransport(retries=int(self.max_retries))
         self.client = httpx.Client(
@@ -546,9 +549,9 @@ class PrismaCloudDriver:
             A DataFrame containing the retrieved network data.
             Returns an empty DataFrame if no results are found.
         """
-        timeout = int(kwargs.get("timeout", self.timeout))
+        timeout = int(kwargs.get("timeout", self.timeout))  # type: ignore[arg-type]
         unit = str(kwargs.get("unit", "hour"))
-        amount = int(kwargs.get("amount", 4))
+        amount = int(kwargs.get("amount", 4))  # type: ignore[arg-type]
         cloudtype = str(kwargs.get("cloudtype", "aws"))
         base_payload = {
             "query": query,
@@ -633,11 +636,11 @@ class PrismaCloudDriver:
             A DataFrame containing the retrieved asset data.
             Returns an empty DataFrame if no results are found.
         """
-        timeout = int(kwargs.get("timeout", self.timeout))
-        limitresult = int(kwargs.get("limit", 10000))
+        timeout = int(kwargs.get("timeout", self.timeout))  # type: ignore[arg-type]
+        limitresult = int(kwargs.get("limit", 10000))  # type: ignore[arg-type]
         limitpage: int = 1000
         unit = str(kwargs.get("unit", "hour"))
-        amount = int(kwargs.get("amount", 4))
+        amount = int(kwargs.get("amount", 4))  # type: ignore[arg-type]
 
         logger.info("Executing asset search with query: %s", query)
 
@@ -724,11 +727,11 @@ class PrismaCloudDriver:
             A DataFrame containing the retrieved event data.
             Returns an empty DataFrame if no results are found.
         """
-        timeout = int(kwargs.get("timeout", self.timeout))
-        max_retries = int(kwargs.get("max_retries", self.max_retries))
+        timeout = int(kwargs.get("timeout", self.timeout))  # type: ignore[arg-type]
+        max_retries = int(kwargs.get("max_retries", self.max_retries))  # type: ignore[arg-type]
         unit = str(kwargs.get("unit", "day"))
-        amount = int(kwargs.get("amount", 1))
-        limit = int(kwargs.get("limit", 5000))
+        amount = int(kwargs.get("amount", 1))  # type: ignore[arg-type]
+        limit = int(kwargs.get("limit", 5000))  # type: ignore[arg-type]
 
         logger.info("Executing event search with query: %s", query)
 
@@ -809,8 +812,8 @@ class PrismaCloudDriver:
             A DataFrame containing the retrieved configuration data.
             Returns an empty DataFrame if no results are found.
         """
-        timeout = int(kwargs.get("timeout", self.timeout))
-        max_retries = int(kwargs.get("max_retries", self.max_retries))
+        timeout = int(kwargs.get("timeout", self.timeout))  # type: ignore[arg-type]
+        max_retries = int(kwargs.get("max_retries", self.max_retries))  # type: ignore[arg-type]
 
         logger.info("Executing configuration search with query: %s", query)
         payload = {"query": query, "limit": 1000, "withResourceJson": True, **kwargs}
