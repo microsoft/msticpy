@@ -142,6 +142,7 @@ class CustomChange:
     new: Any
 
 
+# pylint: disable=super-init-not-called
 class QueryParameterEditWidget(IPyDisplayMixin):
     """
     Class to manage editing of query parameters.
@@ -342,6 +343,7 @@ def replace_in_query(
     return query.replace(src_name, repl_str)
 
 
+# pylint: disable=super-init-not-called
 class QueryEditWidget(IPyDisplayMixin):
     """A class for editing queries."""
 
@@ -593,6 +595,7 @@ class QueryEditWidget(IPyDisplayMixin):
         self._changed_data = True
 
 
+# pylint: disable=super-init-not-called
 class MetadataEditWidget(IPyDisplayMixin):
     """A class for editing Metadata properties."""
 
@@ -748,6 +751,7 @@ class MetadataEditWidget(IPyDisplayMixin):
 _DEF_FILENAME = "new_query_file.yaml"
 
 
+# pylint: disable=super-init-not-called
 class QueryEditor(IPyDisplayMixin):
     """Query template editor."""
 
