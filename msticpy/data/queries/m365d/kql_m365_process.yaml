@@ -71,16 +71,16 @@ sources:
         description: full or partial path
         type: str
   process_cmd_line:
-    description: Lists all processes with a command line containing a string (all hosts)
+    description: Lists all processes with a command line containing a list of strings (all hosts)
     metadata:
     args:
       query: '
         {table}
         | where {time_column} >= datetime({start})
         | where {time_column} <= datetime({end})
-        | where ProcessCommandLine contains "{cmd_line}"
+        | where ProcessCommandLine has_any ({cmd_line})
         {add_query_items}'
     parameters:
       cmd_line:
-        description: Command line artifact to search for
-        type: str
+        description: Command line artifacts to search for
+        type: list
