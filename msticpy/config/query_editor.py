@@ -926,6 +926,9 @@ class YamlLiteralBlockContext:
 
         def str_presenter(dumper, data):
             if "\n" in data:
+                data = "\n".join(
+                    line.rstrip() for line in data.splitlines(keepends=True)
+                )
                 return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
             return dumper.represent_scalar("tag:yaml.org,2002:str", data)
 
