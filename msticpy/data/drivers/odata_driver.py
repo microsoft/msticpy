@@ -49,7 +49,7 @@ class OData(DriverBase):
     """Parent class to retrieve date from an oauth based API."""
 
     CONFIG_NAME: ClassVar[str] = ""
-    _ALT_CONFIG_NAMES: Iterable[str] = []
+    _ALT_CONFIG_NAMES: ClassVar[Iterable[str]] = []
 
     def __init__(
         self: OData,
@@ -377,7 +377,7 @@ class OData(DriverBase):
 
         if not result:
             LOGGER.warning("Query did not return any results.")
-            return None, json_response
+            return pd.DataFrame(), json_response
         return pd.json_normalize(result), json_response
 
     # pylint: enable=too-many-branches
