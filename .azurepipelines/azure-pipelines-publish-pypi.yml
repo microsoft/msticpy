@@ -38,13 +38,14 @@ extends:
     stages:
     - stage: publishTasks
       displayName: PublishTasks
+
       jobs:
       - job: publishJob
         displayName: PublishJob
-        # pool:
-          # name: MSSecurity-1ES-Build-Agents-Pool
-          # image: MSSecurity-1ES-Windows-2022
-          # os: windows
+        pool:
+          name: MSSecurity-1ES-Build-Agents-Pool
+          image: MSSecurity-1ES-Windows-2022
+          os: windows
         variables:
           - name: DistDir
             value: $(Pipeline.Workspace)\${{ parameters.Artifact }}
