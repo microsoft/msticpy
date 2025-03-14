@@ -41,8 +41,8 @@ extends:
       jobs:
       - job: publishJob
         displayName: PublishJob
-        pool:
-          name: MSSecurity-1ES-Build-Agents-Pool
+        # pool:
+          # name: MSSecurity-1ES-Build-Agents-Pool
           # image: MSSecurity-1ES-Windows-2022
           # os: windows
         variables:
