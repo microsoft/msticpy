@@ -39,6 +39,8 @@ extends:
     stages:
     - stage: publishTasks
       displayName: PublishTasks
+      pool:
+        name: MSSecurity-1ES-Build-Agents-Pool
       jobs:
       - job: publishJob
         displayName: PublishJob
