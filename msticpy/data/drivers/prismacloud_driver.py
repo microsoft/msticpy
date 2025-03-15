@@ -5,19 +5,25 @@
 # --------------------------------------------------------------------------
 """PrismaCloud Driver class."""
 
+# pylint: disable=C0302  # Too many lines in module
+
 __author__ = "Rajamani R"
 
 import logging
-from typing import TYPE_CHECKING, Any, ClassVar, TypedDict
-
+from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, cast
+import json
 import httpx
 import pandas as pd
 from msticpy.common.exceptions import MsticpyConnectionError, MsticpyUserError
+from .driver_base import DriverBase
+from ..core.query_store import QuerySource, QueryStore
+from ...common.provider_settings import get_provider_settings
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
 BASE_URL_API = "https://api.prismacloud.io"
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -31,7 +37,7 @@ class PrismaCloudQueryError(MsticpyConnectionError):
 
 class QueryArgs(TypedDict, total=False):
     """
-    Defines optional arguments for Prisma Cloud queries.
+    Define optional arguments for Prisma Cloud queries.
 
     Attributes
     ----------
@@ -57,7 +63,7 @@ class QueryArgs(TypedDict, total=False):
 
 class DriverConfig(TypedDict, total=False):
     """
-    Represents configuration options for the Prisma Cloud Driver.
+    Represent configuration options for the Prisma Cloud Driver.
 
     Attributes
     ----------
@@ -75,66 +81,86 @@ class DriverConfig(TypedDict, total=False):
     headers: dict[str, str]
 
 
-class PrismaCloudDriver:
+class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
     """
     Provide interface to connect and execute queries on Prisma Cloud.
 
     This driver handles authentication, query execution, and data retrieval
-    from Prisma Cloud APIs. It supports multiple query types,
-    including asset searches,
-    configuration checks, event monitoring, and network analysis.
-    The driver also
-    manages authentication tokens and handles API request retries.
+    from Prisma Cloud APIs. It supports multiple query types, including asset
+    searches, configuration checks, event monitoring, and network analysis.
+    The driver also manages authentication tokens and handles API request
+    retries.
 
     Features:
-        - Authenticate with Prisma Cloud using username and password.
-        - Execute predefined queries on different Prisma Cloud data sources.
-        - Retrieve assets, configurations, events, and network-related data.
-        - Automatically refresh authentication tokens.
-        - Handle API request errors and retries gracefully.
-        - Use pagination for large datasets.
+      - Authenticate with Prisma Cloud using username and password.
+      - Authenticate using msticpyconfig configuration file.
+      - Execute predefined queries on different Prisma Cloud data sources.
+      - Retrieve assets, config_resource, events, and network-related data.
+      - Multi cloud hunting
+      - Automatically refresh authentication tokens.
+      - Handle API request errors and retries gracefully.
+      - Use pagination for large datasets.
 
     Attributes
     ----------
-        ENDPOINT_MAP (ClassVar[dict[str, str]]): Maps query sources to their
-        respective API endpoints.
-        timeout (int): Timeout for API requests in seconds (default: 300).
-        base_url (str): Base URL for Prisma Cloud API.
-        debug (bool): Enables or disables debug logging (default: False).
-        connected (bool): Tracks authentication status.
-        max_retries (int): Number of retry attempts for failed API requests.
-        headers (dict[str, str]): HTTP headers used in API requests.
+      ENDPOINT_MAP (ClassVar[dict[str, str]]): Maps query sources to their
+          respective API endpoints.
+      timeout (int): Timeout for API requests in seconds (default: 300).
+      base_url (str): Base URL for Prisma Cloud API.
+      debug (bool): Enables or disables debug logging (default: False).
+      connected (bool): Tracks authentication status.
+      max_retries (int): Number of retry attempts for failed API requests.
+      headers (dict[str, str]): HTTP headers used in API requests.
 
-    Example Usage:
-        ```python
-        driver = PrismaCloudDriver(base_url="https://api.prismacloud.io",
-        timeout=200)
-        driver.connect(username="user@example.com", password="xxxxx")
+    Example Usage direct query:
+      >>> driver = PrismaCloudDriver(base_url="https://api.prismacloud.io", timeout=200)
+      >>> driver.connect(username="user@example.com", password="xxxxx")
+      >>> # Execute a network search query
+      >>> query_result = driver.direct_execute_query("config where cloud.type = 'aws'", "network")
+      >>> print(query_result)
 
-        # Execute a network search query
-        query_result = driver.execute_query("config where cloud.type = 'aws'",
-        "network")
-        print(query_result)
-        ```
+    Example Usage queryprovider:
+      >>> driver = QueryProvider("Prismacloud")
+      >>> driver.connect(debug=True)
+      >>> driver.list_queries()
+
+    Execute loaded queries:
+      >>> driver.Prismacloud.event_sensitive_operation_in_aws_kms(amount_value = 2400 )
+      >>> driver.Prismacloud.search_asset_relative_with_prismafindings(
+            selectasset="asset where cloud.service IN ('azure_sql_database')",
+            finding_types=['INTERNET_EXPOSURE']
+           )
+      >>> driver.Prismacloud.config_resource_firewall_disabled_azurekeyvault(
+            unit_type="hour",
+            amount_value=24
+           )
 
     Raises
     ------
-        PrismaCloudAuthError: If authentication fails.
-        PrismaCloudQueryError: If there is an error in executing a query.
-        MsticpyUserError: If an invalid query source is provided.
-
+      PrismaCloudAuthError: If authentication fails.
+      PrismaCloudQueryError: If there is an error in executing a query.
+      MsticpyUserError: If an invalid query source is provided.
     """
 
     # Disable the warning since this class is expected to have few methods
     # pylint: disable=too-few-public-methods
+
     ENDPOINT_MAP: ClassVar[dict[str, str]] = {
         "assets": "/search/api/v1/asset",
-        "configurations": "/search/api/v2/config",
+        "config_resource": "/search/api/v2/config",
         "events": "/search/event",
         "network": "/search",
     }
+    DEFAULT_HEADER: ClassVar[dict[str, str]] = {
+        "User-Agent": "PrismaCloudDriver/1.0",
+        "Accept": "application/json",
+    }
 
-    def __init__(self, **kwargs: DriverConfig) -> None:
+    CONFIG_NAME: ClassVar[str] = "Prismacloud"
+
+    def __init__(
+        self, **kwargs: DriverConfig
+    ) -> None:  # pylint: disable=too-many-locals
         """
         Initialize the Prisma Cloud Driver and set up the HTTP client.
 
@@ -160,22 +186,43 @@ class PrismaCloudDriver:
                 - Ensures stability during transient network issues.
                 - Controls connection reuse for performance optimization.
         """
-        valid_keys = {"timeout", "base_url", "debug", "max_retries", "headers"}
+        super().__init__(**kwargs)
+        self.config = self._get_driver_settings(self.CONFIG_NAME)
+        valid_keys: set[str] = {
+            "timeout",
+            "base_url",
+            "debug",
+            "max_retries",
+            "headers",
+            "max_results",
+        }
         unknown_keys = set(kwargs) - valid_keys
         if unknown_keys:
             logger.warning("Unknown configuration keys provided: %s", unknown_keys)
-
         self.timeout: int = int(kwargs.get("timeout", 300))  # type: ignore[arg-type]
-        self.base_url: str = str(kwargs.get("base_url", BASE_URL_API))
+
+        # preference 1 as argument , preference 2 from config file , third default value
+        if not kwargs.get("base_url"):
+            self.base_url = (
+                cast(str, self.config.get("base_url")) or BASE_URL_API
+            )  # type: ignore[assignment]
+        else:
+            self.base_url = kwargs.get("base_url", BASE_URL_API)  # type: ignore[assignment]
         self.debug: bool = bool(kwargs.get("debug", False))
         self.max_retries: int = int(kwargs.get("max_retries", 3))  # type: ignore[arg-type]
-        self.connected: bool = False
+        self._connected: bool = False
         self.headers: dict[str, str] = dict(
-            kwargs.get(
-                "headers",
-                {"User-Agent": "PrismaCloudDriver/1.0", "Accept": "application/json"},
-            ),
-        )  # type: ignore[arg-type]
+            cast(
+                dict[str, str],
+                kwargs.get(
+                    "headers",
+                    {
+                        "User-Agent": "PrismaCloudDriver/1.0",
+                        "Accept": "application/json",
+                    },
+                ),
+            )
+        )
 
         transport = httpx.HTTPTransport(retries=int(self.max_retries))
         self.client = httpx.Client(
@@ -187,64 +234,124 @@ class PrismaCloudDriver:
 
         if self.debug:
             logger.setLevel(logging.DEBUG)
-
         logger.debug(
             "PrismaCloudDriver initialized with base_url=%s, timeout=%d, max_retries=%d",
             self.base_url,
             self.timeout,
             self.max_retries,
         )
+        self.public_attribs = self._set_public_attribs()
+        self.query_store: QueryStore = QueryStore(environment="Prismacloud")
+        self.queries_loaded: bool = False
 
-    def connect(self, username: str, password: str) -> "PrismaCloudDriver":
+    @staticmethod
+    def _get_driver_settings(
+        config_name: str, instance: str | None = None
+    ) -> dict[str, str]:
         """
-        Authenticate with Prisma Cloud and establish a session.
-
-        This method sends authentication credentials to the
-        Prisma Cloud API and retrieves an access token if the login is successful.
-        The token is then stored in `self.client.headers` to be used for subsequent
-        authenticated requests.
-
-        If authentication succeeds, the driver sets `self.connected = True`
-        and logs a success message. If authentication fails,
-        an exception is raised with the appropriate error message.
+        Retrieve Prisma Cloud settings from MSTICPY configuration.
 
         Parameters
         ----------
-        username : str
-            The Prisma Cloud account username used for authentication.
-        password : str
+        config_name : str
+            The name of the provider in the MSTICPY config.
+        instance : str | None, optional
+            The specific instance to fetch settings for.
+
+        Returns
+        -------
+        dict[str, str]
+            Dictionary containing configuration settings.
+        """
+        config_key = f"{config_name}-{instance}" if instance else config_name
+        provider_settings = get_provider_settings("DataProviders")
+
+        if provider_settings and config_key in provider_settings:
+            config = dict(provider_settings[config_key].args)
+        else:
+            config = {}
+        return config
+
+    # pylint: disable=arguments-renamed
+    def connect(  # type: ignore[override]
+        self,
+        username: str | None = None,
+        password: str | None = None,
+        connection_str: str | None = None,
+        **kwargs: Any,
+    ) -> "PrismaCloudDriver":
+        """
+        Authenticate with Prisma Cloud and establish an authenticated session.
+
+        This method sends authentication credentials to the Prisma Cloud API and retrieves
+        an access token if the login is successful. The token is stored in
+        `self.client.headers` to enable subsequent authenticated requests. Credentials
+        can be provided directly via the `username` and `password` parameters, or as a
+        single `connection_str` (formatted as "username:password"). If neither is provided,
+        the method attempts to retrieve the credentials from the driver configuration.
+
+        Parameters
+        ----------
+        username : str or None, optional
+            The Prisma Cloud account username for authentication.
+        password : str or None, optional
             The corresponding password for the Prisma Cloud account.
-
-        Behavior
-        --------
-        - Sends a POST request to `/login` with the provided credentials.
-        - Extracts and stores the authentication token from the response.
-        - Logs a debug message indicating an authentication attempt.
-        - If successful, logs an authentication success message.
-        - If authentication fails, logs an error and raises `PrismaCloudAuthError`.
-
-        Raises
-        ------
-        PrismaCloudAuthError
-            If authentication fails due to incorrect credentials or other login issues.
-        MsticpyConnectionError
-            If there is a network or API request failure.
+        connection_str : str or None, optional
+            An alternative connection string in the format "username:password". This
+            parameter is used to extract credentials if `username` and `password` are not provided.
+        **kwargs : Any
+            Additional keyword arguments to be passed to the connection logic.
 
         Returns
         -------
         PrismaCloudDriver
             The instance of the driver with an authenticated session.
 
+        Behavior
+        --------
+        - If `connection_str` is provided, the method extracts the username and password from it.
+        - If either the username or password remains missing,
+        it attempts to retrieve them from the driver configuration.
+        - Sends a POST request to the `/login` endpoint with the provided credentials.
+        - On a successful login (indicated by a "login_successful" message),
+        the authentication token
+        is stored in the HTTP client's headers, and internal flags (`_connected` and `_loaded`)
+        are set accordingly.
+        - If authentication fails, the method logs the error and raises a `PrismaCloudAuthError`.
+        - Network or API request failures are handled by raising a `MsticpyConnectionError`.
+
+        Raises
+        ------
+        PrismaCloudAuthError
+            If authentication fails due to missing or invalid credentials.
+        MsticpyConnectionError
+            If a network or API request failure occurs.
+
         Example
         -------
-        driver = PrismaCloudDriver()
-        driver.connect(username="user@example.com", password="xxx")
-
+        >>> driver = PrismaCloudDriver()
+        >>> # Authenticate using separate username and password parameters
+        >>> driver.connect(username="user@example.com", password="xxxxx")
+        >>> # Alternatively, using a connection string:
+        >>> driver.connect(connection_str="user@example.com:xxxxx")
         """
-        if not username or not password:
-            msg = "Both 'username' and 'password' must be provided."
-            raise PrismaCloudAuthError(msg)
+        # Option 1 provide connection string
 
+        if connection_str:
+            username = username or connection_str.split(":")[0]
+            password = (
+                password or connection_str.split(":")[1]
+                if ":" in connection_str
+                else None
+            )
+        if not username or not password:
+            username = self.config.get("username")
+            password = self.config.get("password")
+            if not username or not password:
+                msg = "Both 'username' and 'password' must be provided."
+                raise PrismaCloudAuthError(msg)
+            msg = "authentication information obtained"
+            logger.debug(msg)
         logger.debug("Attempting to authenticate with username=[REDACTED]")
         try:
             response = self.client.post(
@@ -253,13 +360,19 @@ class PrismaCloudDriver:
             )
             response.raise_for_status()
             result = self._parse_json(response)
+            logger.debug(result)
 
             if result.get("message") == "login_successful":
+                logger.debug("manupulating client")
                 self.client.headers["X-Redlock-Auth"] = result["token"]
-                self.connected = True
+                self._connected = True
+                self._loaded = True
                 logger.info("Prisma Cloud connection successful")
+                if "X-Redlock-Auth" not in self.client.headers:
+                    logger.debug(
+                        "X-Redlock-Auth not in self.client.headers did not match"
+                    )
                 return self
-
             logger.error("Login failed: %s", result.get("message", "Unknown error"))
             msg = f"Login failed: {result.get('message', 'Unknown error')}"
             raise PrismaCloudAuthError(msg)
@@ -462,13 +575,13 @@ class PrismaCloudDriver:
             data = self._fetch_prisma_data(endpoint, payload, timeout, self.max_retries)
 
             if not isinstance(data, dict):
-                logger.error("❌ Unexpected API response format.")
+                logger.error(" Unexpected API response format.")
                 msg = "Unexpected API response format."
                 raise MsticpyConnectionError(msg)
 
             items = self._process_prisma_response(data, data_key)
             if not isinstance(items, list):
-                logger.error("❌ Processed data is not a list.")
+                logger.error(" Processed data is not a list.")
                 msg = "Unexpected processed data format."
                 raise MsticpyConnectionError(msg)
 
@@ -477,7 +590,7 @@ class PrismaCloudDriver:
 
             next_token = data.get("nextPageToken")
             if not next_token or len(results) >= limitresult or not items:
-                logger.info("✅ No more pages left to fetch.")
+                logger.info(" No more pages left to fetch.")
                 break
 
         return results
@@ -752,7 +865,7 @@ class PrismaCloudDriver:
         logger.info("Retrieved %d event records.", len(items))
         return pd.DataFrame(items) if items else pd.DataFrame()
 
-    def prisma_search_configurations(
+    def prisma_search_config_resource(
         self,
         query: str,
         endpoint: str,
@@ -799,7 +912,7 @@ class PrismaCloudDriver:
 
         Example
         -------
-        config_data = driver.prisma_search_configurations(
+        config_data = driver.prisma_search_config_resource(
             query="config where cloud.type = 'aws'",
             endpoint="/search/api/v2/config",
             limit=5000,
@@ -824,10 +937,10 @@ class PrismaCloudDriver:
         return pd.DataFrame(items) if items else pd.DataFrame()
 
     # pylint: disable=inconsistent-return-statements
-    def execute_query(
+    def direct_execute_query(
         self,
         query: str,
-        query_source: str | None = None,
+        query_endpoint: str | None = None,
         **kwargs: QueryArgs,
     ) -> pd.DataFrame:
         """
@@ -846,7 +959,7 @@ class PrismaCloudDriver:
             The Prisma Cloud query string to execute.
         query_source : str | None, optional
             The source of the query, determining which search function to use.
-            Options: `"configurations"`, `"assets"`, `"events"`, `"network"`.
+            Options: `"config_resource"`, `"assets"`, `"events"`, `"network"`.
         **kwargs : QueryArgs
             Additional optional query parameters, such as:
             - timeout (int): API request timeout in seconds.
@@ -877,9 +990,9 @@ class PrismaCloudDriver:
 
         Example
         -------
-        query_result = driver.execute_query(
+        query_result = driver.direct_execute_query(
             query="config where cloud.type = 'aws'",
-            query_source="configurations",
+            query_source="config_resource",
             limit=1000,
             unit="day",
             amount=7
@@ -891,32 +1004,143 @@ class PrismaCloudDriver:
             A DataFrame containing the retrieved query results.
             Returns an empty DataFrame if no results are found.
         """
+        logging.info(
+            "Entering direct_execute_query() with query: %s, query_endpoint: %s, kwargs: %s",
+            query,
+            query_endpoint,
+            kwargs,
+        )
         # Check if authentication token is present
+
         if "X-Redlock-Auth" not in self.client.headers:
             msg = "Driver not connected to Prisma Cloud."
             raise PrismaCloudQueryError(msg)
-
         # Check if query_source is valid
-        if not query_source or query_source not in self.ENDPOINT_MAP:
-            msg = f"Invalid or missing query source: {query_source}"
-            raise MsticpyUserError(msg)
 
+        if not query_endpoint or query_endpoint not in self.ENDPOINT_MAP:
+            msg = f"Invalid or missing query endpoint: {query_endpoint}"
+            raise MsticpyUserError(msg)
         # Find the API endpoint for the given query_source
-        endpoint: str = self.ENDPOINT_MAP[query_source]
+
+        endpoint: str = self.ENDPOINT_MAP[query_endpoint]
 
         # Dictionary that maps endpoints to their respective functions
+
         query_methods: dict[str, Callable[..., pd.DataFrame]] = {
-            "/search/api/v2/config": self.prisma_search_configurations,
+            "/search/api/v2/config": self.prisma_search_config_resource,
             "/search/api/v1/asset": self.prisma_search_assets,
             "/search": self.prisma_search_network,
             "/search/event": self.prisma_search_events,
         }
 
         # Fetch function from dictionary and execute it
+
         query_function = query_methods.get(endpoint)
         if query_function:
             return query_function(query, endpoint, **kwargs)
-
         # If endpoint is not recognized, raise an error
-        msg = f"Unsupported query source: {query_source}"
+
+        msg = f"Unsupported query endpoint: {query_endpoint}"
         raise MsticpyUserError(msg)
+
+    def query(
+        self, query: str, query_source: QuerySource | None = None, **kwargs
+    ) -> pd.DataFrame:
+        """
+        Execute a Prisma Cloud query and return the results as a Pandas DataFrame.
+
+        This method is the primary interface for executing queries via the Prisma Cloud driver.
+        The query must be provided as a JSON-formatted string that contains a "querymetadata"
+        section. This metadata should include keys such as "unit", "amount", "start_time",
+        "end_time", "query_by_user", and "endpoint" to specify the query details.
+
+        The method parses the JSON query string and extracts the necessary parameters. If an
+        "endpoint" is provided in the query metadata, it updates the keyword arguments with
+        the extracted time range values and calls the `direct_execute_query()` method to perform
+        the query. If the query string cannot be parsed as valid JSON or the "endpoint" is missing,
+        an empty DataFrame is returned.
+
+        Parameters
+        ----------
+        query : str
+            A JSON-formatted string containing the query details and metadata.
+        query_source : QuerySource or None, optional
+            This parameter is ignored in this implementation and is maintained only for
+            compatibility with QueryProvider usage.
+        **kwargs : Any
+            Additional keyword arguments to be passed to the underlying query execution method.
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame containing the results of the executed query. If the query string is
+            invalid or lacks a required endpoint, an empty DataFrame is returned.
+
+        Notes
+        -----
+        - The method expects the query string to include a "querymetadata" with the following keys:
+            - "unit": The time unit for the query (e.g., "minute", "hour").
+            - "amount": The quantity of the time unit.
+            - "start_time": The start of the time range in ISO 8601 format.
+            - "end_time": The end of the time range in ISO 8601 format.
+            - "query_by_user": The actual query to execute.
+            - "endpoint": The target API endpoint for the query.
+        - If an error occurs during JSON parsing (a broad exception is caught),
+        the error is logged and the method returns an empty DataFrame.
+        """
+        del query_source
+        logging.warning("Entering query() with query: %s, kwargs: %s", query, kwargs)
+        try:
+            # Parse the query string as JSON.
+            query_obj = json.loads(query)
+        except json.JSONDecodeError as err:
+            logging.error("Failed to parse query as JSON: %s", err)
+            return pd.DataFrame()
+        qm = query_obj.get("querymetadata", {})
+        # Explicitly check for each key; if present, retrieve the value, otherwise assign None.
+        unit = qm.get("unit") if "unit" in qm else None
+        amount = qm.get("amount") if "amount" in qm else None
+        start_abs = qm.get("start_time") if "start_time" in qm else None
+        end_abs = qm.get("end_time") if "end_time" in qm else None
+        query_text = qm.get("query_by_user") if "query_by_user" in qm else None
+        if query_text is None:
+            raise ValueError("Missing required 'query_by_user' in query metadata.")
+        query_endpoint = qm.get("endpoint") if "endpoint" in qm else None
+        if query_endpoint:
+            kwargs.update(
+                {
+                    "unit": unit,
+                    "amount": amount,
+                    "start_time": start_abs,
+                    "end_time": end_abs,
+                }
+            )
+            return self.direct_execute_query(query_text, query_endpoint, **kwargs)
+        logging.warning("No query_endpoint provided; returning empty DataFrame")
+        # Return an empty DataFrame if query_source is None or invalid
+
+        return pd.DataFrame()
+
+    def query_with_results(
+        self, query: str, query_source: str | None = None, **kwargs
+    ) -> tuple[pd.DataFrame, Any]:
+        """Place holder.Not used."""
+        del query_source
+        query_endpoint = "config_resource"
+        query_result = self.direct_execute_query(query, query_endpoint, **kwargs)
+        return query_result, query_result.to_dict(orient="records")
+
+    def _set_public_attribs(self) -> dict[str, Any]:
+        """Expose subset of attributes relevant for Prisma Cloud."""
+        return {
+            "direct_execute_query": self.direct_execute_query,
+            "prisma_search_network": self.prisma_search_network,
+            "prisma_search_assets": self.prisma_search_assets,
+            "prisma_search_events": self.prisma_search_events,
+            "prisma_search_config_resource": self.prisma_search_config_resource,
+            "refresh_token": self.refresh_token,
+            "base_url": self.base_url,
+            "timeout": self.timeout,
+            "max_retries": self.max_retries,
+            "headers": self.headers,
+        }

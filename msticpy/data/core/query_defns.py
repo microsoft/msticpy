@@ -38,6 +38,7 @@ class DataFamily(Enum):
     Sumologic = 10
     Cybereason = 11
     Elastic = 14
+    Prismacloud = 21
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataFamily":
