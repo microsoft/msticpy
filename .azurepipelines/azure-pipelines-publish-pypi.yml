@@ -1,0 +1,91 @@
+# MSTICPy PyPI Production pipeline
+
+# This pipeline is used to publish the MSTICPy package to PyPI
+name: 1ES-MSTICPy-Publish-$(date:yyyyMMdd)$(rev:.r)
+
+parameters:
+  - name: Artifact
+    type: string
+    default: dist
+    displayName: Directory to store the built artifacts
+  - name: Feed
+    type: string
+    default: testpypi
+    displayName: The feed to publish to
+    values:
+      - testpypi
+      - pypi
+
+resources:
+  repositories:
+  - repository: msticpy
+    name: microsoft/msticpy
+    type: github
+    ref: main
+    endpoint: Microsoft
+  - repository: 1ESPipelineTemplates
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
+
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  parameters:
+    pool:
+      name: MSSecurity-1ES-Build-Agents-Pool
+      image: MSSecurity-1ES-Windows-2022
+      os: windows
+    stages:
+    - stage: publishTasks
+      displayName: PublishTasks
+      jobs:
+      - job: publishJob
+        displayName: PublishJob
+        variables:
+          - name: DistDir
+            value: $(Pipeline.Workspace)\${{ parameters.Artifact }}
+        steps:
+        - checkout: self
+        
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '>=3.10'
+            architecture: 'x64'
+          displayName: 'Use latest Python'
+
+        - powershell: python -m pip install --upgrade pip
+          displayName: 'Upgrade pip'
+        - powershell: python -m pip install --upgrade build twine
+          displayName: 'Install build and twine'
+        - powershell: python -m pip install --upgrade keyring artifacts-keyring
+          displayName: 'Install keyring and artifacts-keyring'
+
+        - powershell: python -m build --sdist --wheel --outdir "$(DistDir)"
+          displayName: 'Build package wheel and sdist'
+
+        - task: PipAuthenticate@1
+          inputs:
+            artifactFeeds: PyPIInternalFeed
+          displayName: 'Authenticate pip for internal feed'
+
+        - task: TwineAuthenticate@1
+          inputs:
+            artifactFeed: ${{ parameters.Feed }}
+          displayName: 'Authenticate Twine for PyPI feed'
+
+        - powershell: python -m twine upload --skip-existing --verbose "$(DistDir)/*"
+          condition: eq('${{ parameters.Feed }}', 'testpypi')
+          displayName: 'Push to PyPI Test feed'
+          env:
+            TWINE_REPOSITORY: ${{ parameters.Feed }}
+            TWINE_USERNAME: __token__
+            TWINE_PASSWORD: $(TEST_TWINE_PASSWORD)
+
+        - powershell: python -m twine upload --skip-existing --verbose "$(DistDir)/*"
+          condition: eq('${{ parameters.Feed }}', 'pypi')
+          displayName: 'Push to PyPI Test feed'
+          env:
+            TWINE_REPOSITORY: ${{ parameters.Feed }}
+            TWINE_USERNAME: __token__
+            TWINE_PASSWORD: $(TWINE_PASSWORD)
+        - powershell: echo Unrecognized feed "$( parameters.Feed )"
