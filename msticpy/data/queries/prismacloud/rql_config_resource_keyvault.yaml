@@ -1,6 +1,6 @@
 metadata:
   version: 1
-  name: PrismaCloud Queries
+  # name: PrismaCloud Queries
   description: Queries for Prisma Cloud Data Provider
   data_environments: [Prismacloud]
   data_families: [Prismacloud]

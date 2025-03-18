@@ -1,6 +1,6 @@
 metadata:
   version: 1
-  name: PrismaCloud Queries
+  # name: PrismaCloud Queries
   description: Queries for Prisma Cloud Data Provider
   data_environments: [Prismacloud]
   data_families: [Prismacloud]
@@ -99,7 +99,7 @@ sources:
     description: |-
       AWS KMS sensitive configuration updates
       Sensitive permission exposed for website configuration updates of S3 Buckets
-      List of Key Management Operations Audit Events.  
+      List of Key Management Operations Audit Events.
       If this query returns results, investigate events where key policies are modified,
       grants are retired or revoked, or keys are disabled or scheduled
       for deletion. Such activities could indicate unauthorized key management
