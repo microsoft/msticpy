@@ -38,14 +38,9 @@ extends:
     stages:
     - stage: publishTasks
       displayName: PublishTasks
-
       jobs:
       - job: publishJob
         displayName: PublishJob
-        pool:
-          name: MSSecurity-1ES-Build-Agents-Pool
-          image: MSSecurity-1ES-Windows-2022
-          os: windows
         variables:
           - name: DistDir
             value: $(Pipeline.Workspace)\${{ parameters.Artifact }}
@@ -70,7 +65,7 @@ extends:
 
         - task: PipAuthenticate@1
           inputs:
-            artifactFeeds: 1ESToolsOrgFeed
+            artifactFeeds: PyPIInternalFeed
           displayName: 'Authenticate pip for internal feed'
 
         - task: TwineAuthenticate@1
