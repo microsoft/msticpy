@@ -1,0 +1,202 @@
+metadata:
+  version: 1
+  # name: PrismaCloud Queries
+  description: Queries for Prisma Cloud Data Provider
+  data_environments: [Prismacloud]
+  data_families: [Prismacloud]
+  tags: [Prisma_config_resource_azure_keyvault]
+  aliases:
+    - &config_resource_query_relative |-
+      {{
+        "querymetadata" :
+            {{
+                "queryType": "config_resource_query_relative",
+                "unit": "{unit_type}",
+                "amount": "{amount_value}",
+                "endpoint": "config_resource",
+                $<query_conditions>$,
+                "isParsedinDriver": true
+            }}
+      }}
+    - &config_resource_query_absolute |-
+      {{
+        "querymetadata" :
+            {{
+                "queryType": "config_resource_query_relative",
+                "start_time": "{start}",
+                "end_time": "{end}",
+                "endpoint": "config_resource",
+                $<query_conditions>$,
+                "isParsedinDriver": true
+            }}
+      }}
+defaults:
+  metadata:
+    data_source: "Prismacloud"
+  parameters:
+    unit_type:
+      description: Field to use for time
+      type: str
+      default: minute
+    amount_value:
+      description: Field to use for time
+      type: int
+      default: 60
+    start:
+      description: Query start time
+      type: datetime
+      default: -7
+    end:
+      description: Query end time
+      type: datetime
+      default: 0
+sources:
+  search_config_resource_relative:
+    description: Retrieve configuration data from Prisma Cloud using relative time using dynamic queries.
+    metadata:
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "{query_condition}"
+    parameters:
+      query_condition:
+        description: enter query
+        type: str
+  search_config_resource_absolute:
+    description: Retrieve configuration data from Prisma Cloud using relative time using dynamic queries.
+    metadata:
+    args:
+      query: *config_resource_query_absolute
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "{query_condition}"
+    parameters:
+      query_condition:
+        description: enter query
+        type: str
+  config_resource_list_azurekeyvault:
+    description: Retrieve azurekeyvault configuration data from Prisma Cloud using relative time
+    metadata:
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'azure' AND api.name = 'azure-key-vault-list'"
+  config_resource_firewall_disabled_azurekeyvault:
+    description: |-
+      List of Azure Key Vault which has Firewall disabled.
+      If this query returns results, investigate Azure Key Vault resources with disabled
+      or overly permissive firewall settings, as these indicate potentially exposed sensitive data
+      that could lead to unauthorized access or compromise.
+    metadata:
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'azure' AND api.name = 'azure-key-vault-list' AND json.rule = (properties.publicNetworkAccess does not equal ignore case disabled and properties.networkAcls does not exist) or (properties.publicNetworkAccess does not equal ignore case disabled and properties.networkAcls.defaultAction equal ignore case allow )"
+  config_resource_rbac_disabled_azurekeyvault:
+    description: |-
+      List of Azure Key Vault instances where Role-Based Access Control (RBAC) is not enabled.
+      If this query returns results, investigate Azure Key Vault instances where Role-Based Access Control (RBAC)
+      is disabled or not enforced. This condition can expose sensitive information, such as encryption keys,
+      secrets, or credentials, to unauthorized access due to inadequate access restrictions.
+      Security analysts should verify these instances for suspicious activities or unauthorized access attempts
+    metadata:
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'azure' AND api.name = 'azure-key-vault-list' AND json.rule = properties.provisioningState equal ignore case Succeeded AND (properties.enableRbacAuthorization does not exist or properties.enableRbacAuthorization is false)"
+  config_resource_no_private_endpoint_azurekeyvault:
+    description: |-
+      List of Azure Key vaults that are not configured with a private endpoint connection
+      If this query returns results, investigate Azure Key Vault resources without configured private endpoint connections.
+      Missing private endpoints can expose key vaults to public networks,
+      increasing risks of unauthorized access, data breaches, or compromise of sensitive data.
+      Identify any unauthorized or unexpected access attempts to these key vaults, and ensure private endpoints are correctly
+      configured to restrict access strictly to trusted networks.
+    metadata:
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'azure' AND api.name = 'azure-key-vault-list' AND json.rule = properties.provisioningState equals Succeeded and properties.privateEndpointConnections[*] does not exist"
+  config_resource_noexpiry_nonrbac_azurekeyvault:
+    description: |-
+      List of Azure Key Vault keys that do not have an expiration date for the Non-RBAC Key vaults
+      If this query returns results, investigate Azure Key Vault keys in Non-RBAC vaults that have no expiration date configured.
+      Keys without expiration dates pose security risks by potentially enabling long-term unauthorized access if compromised.
+      Security teams should verify these keys for legitimacy, assess if they are still necessary,
+      and implement expiration dates to enforce regular key rotation.
+    metadata:
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'azure' AND api.name = 'azure-key-vault-list' and json.rule = keys[?any(attributes.exp equals -1 and attributes.enabled contains true)] exists and properties.enableRbacAuthorization is false"
+  config_resource_noexpiry_nonrbac_secret_azurekeyvault:
+    description: |-
+      List of Azure Key Vault secrets that do not have an expiry date for the Non-RBAC Key vaults
+      If this query returns results, investigate Azure Key Vault secrets without expiry dates in non-RBAC vaults.
+      Secrets without expiry can pose prolonged security risks if compromised, as attackers may exploit them indefinitely.
+      Identify and review these secrets for unusual access patterns or unauthorized usage.
+      Ensure secret rotation policies or expiry dates are enforced to mitigate potential risks
+      associated with compromised credentials.
+    metadata:
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'azure' AND api.name = 'azure-key-vault-list' and json.rule = secrets[?any(attributes.exp equals -1 and attributes.enabled contains true)] exists and properties.enableRbacAuthorization is false"
+  config_resource_noexpiry_rbac_azurekeyvault:
+    description: |-
+      Lists of Azure Key Vault Keys that have no expiration date (RBAC Key vault)
+      If this query returns results, investigate Azure Key Vault keys without expiration dates specifically
+      in RBAC-enabled vaults. Keys without expiry in RBAC-enabled vaults pose distinct security risks compared
+      to non-RBAC vaults, as RBAC-controlled vaults rely on role assignments and permissions which
+      could potentially grant prolonged unauthorized access if compromised keys are not rotated or expired.
+      Analyze any suspicious or unauthorized access patterns associated with these keys and ensure proper
+      lifecycle management, particularly distinguishing them from non-RBAC vaults
+      where permission structures differ.
+    metadata:
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'azure' AND api.name = 'azure-key-vault-list' and json.rule = keys[?any(attributes.exp equals -1 and attributes.enabled contains true)] exists and properties.enableRbacAuthorization is true"
+  config_resource_noexpiry_rbac_secret_azurekeyvault:
+    description: |-
+      Lists of Azure Key Vault secrets that have no expiration date (RBAC Key vault)
+      If this query returns results, investigate Azure Key Vault secrets without expiration dates specifically
+      in RBAC-enabled vaults. Secrets lacking expiration pose heightened risks as they remain potentially
+      exploitable indefinitely if compromised. RBAC-enabled vaults offer more granular access control,
+      but prolonged validity without expiration can weaken security controls.
+      Analysts should proactively assess these secrets, monitor for unauthorized access attempts, and
+      implement expiration policies.
+    metadata:
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'azure' AND api.name = 'azure-key-vault-list' and json.rule = secrets[?any(attributes.exp equals -1 and attributes.enabled contains true)] exists and properties.enableRbacAuthorization is true"
