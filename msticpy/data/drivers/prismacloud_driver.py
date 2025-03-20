@@ -23,7 +23,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 BASE_URL_API = "https://api.prismacloud.io"
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -1004,7 +1003,7 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
             A DataFrame containing the retrieved query results.
             Returns an empty DataFrame if no results are found.
         """
-        logging.info(
+        logger.info(
             "Entering direct_execute_query() with query: %s, query_endpoint: %s, kwargs: %s",
             query,
             query_endpoint,
@@ -1089,12 +1088,12 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         the error is logged and the method returns an empty DataFrame.
         """
         del query_source
-        logging.warning("Entering query() with query: %s, kwargs: %s", query, kwargs)
+        logger.info("Entering query() with query: %s, kwargs: %s", query, kwargs)
         try:
             # Parse the query string as JSON.
             query_obj = json.loads(query)
         except json.JSONDecodeError as err:
-            logging.error("Failed to parse query as JSON: %s", err)
+            logger.error("Failed to parse query as JSON: %s", err)
             return pd.DataFrame()
         qm = query_obj.get("querymetadata", {})
         # Explicitly check for each key; if present, retrieve the value, otherwise assign None.
@@ -1116,7 +1115,7 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
                 }
             )
             return self.direct_execute_query(query_text, query_endpoint, **kwargs)
-        logging.warning("No query_endpoint provided; returning empty DataFrame")
+        logger.warning("No query_endpoint provided; returning empty DataFrame")
         # Return an empty DataFrame if query_source is None or invalid
 
         return pd.DataFrame()
