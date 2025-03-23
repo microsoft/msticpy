@@ -42,6 +42,7 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.M365DGraph: ("mdatp_driver", "MDATPDriver"),
     DataEnvironment.Prismacloud: ("prismacloud_driver", "PrismaCloudDriver"),
     DataEnvironment.MSSentinelSearch: ("azure_search_driver", "AzureSearchDriver"),
+    DataEnvironment.OpenObserve: ("openobserve_driver", "OpenObserveDriver"),
 }
 
 CUSTOM_PROVIDERS: Dict[str, type] = {}
