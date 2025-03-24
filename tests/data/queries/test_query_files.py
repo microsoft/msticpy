@@ -20,10 +20,20 @@ def validate_queries_file_structure(query_file: Path, expected: bool = True):
     with query_file.open(mode="r", encoding="utf-8") as queries:
         queries_yaml = yaml.safe_load(queries)
         if expected:
-            check.is_true(
+            result = check.is_true(
                 Draft7Validator(_QUERIES_SCHEMA).is_valid(queries_yaml),
                 msg=f"File {query_file} is not a valid query file",
             )
+            if not result:
+                errors = list(
+                    Draft7Validator(_QUERIES_SCHEMA).iter_errors(queries_yaml)
+                )
+                print(
+                    f"File {query_file} is not a valid query file - failed JSON schema "
+                    f"validation.\nPlease check the following validation errors.\n"
+                    f"Default schema file: '<reporoot>/.schemas/queries.json'.\n"
+                    f"Validation errors: {errors}"
+                )
         else:
             check.is_false(
                 Draft7Validator(_QUERIES_SCHEMA).is_valid(queries_yaml),
