@@ -1,0 +1,115 @@
+metadata:
+  version: 1
+  # name: PrismaCloud Queries
+  description: Queries for Prisma Cloud Data Provider
+  data_environments: [Prismacloud]
+  data_families: [Prismacloud]
+  tags: [Prisma_event]
+  aliases:
+    - &event_query_relative |-
+      {{
+        "querymetadata" :
+            {{
+                "queryType": "event_query_relative",
+                "unit": "{unit_type}",
+                "amount": "{amount_value}",
+                "endpoint": "events",
+                $<query_conditions>$,
+                "isParsedinDriver": true
+            }}
+      }}
+    - &event_query_absolute |-
+      {{
+        "querymetadata" :
+            {{
+                "queryType": "events_query_relative",
+                "start_time": "{start}",
+                "end_time": "{end}",
+                "endpoint": "events",
+                $<query_conditions>$,
+                "isParsedinDriver": true
+            }}
+      }}
+defaults:
+  metadata:
+    data_source: "Prismacloud"
+  parameters:
+    unit_type:
+      description: Field to use for time
+      type: str
+      default: minute
+    amount_value:
+      description: Field to use for time
+      type: int
+      default: 60
+    start:
+      description: Query start time
+      type: datetime
+      default: -7
+    end:
+      description: Query end time
+      type: datetime
+      default: 0
+sources:
+  search_event_relative:
+    description: Retrieve event data from Prisma Cloud using relative time using dynamic queries.
+    metadata:
+    args:
+      query: *event_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "{query_condition}"
+    parameters:
+      query_condition:
+        description: enter query
+        type: str
+  search_event_absolute:
+    description: Retrieve event data from Prisma Cloud using relative time using dynamic queries.
+    metadata:
+    args:
+      query: *event_query_absolute
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "{query_condition}"
+    parameters:
+      query_condition:
+        description: enter query
+        type: str
+  event_sensitive_permission_in_aws_s3:
+    description: |-
+      Sensitive permission exposed for website configuration updates of S3 Buckets
+      List of Cloud Storage Bucket Website Operations observered in event logs
+      If this query returns results, investigate any events where
+      bucket website configurations are retrieved, modified, or deleted,
+      as these actions could indicate unauthorized attempts to expose
+      or alter website settings, potentially leading to data compromise.
+    metadata:
+    args:
+      query: *event_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "event from cloud.audit_logs where operation IN ( 'GetBucketWebsite', 'PutBucketWebsite', 'DeleteBucketWebsite')"
+  event_sensitive_operation_in_aws_kms:
+    description: |-
+      AWS KMS sensitive configuration updates
+      Sensitive permission exposed for website configuration updates of S3 Buckets
+      List of Key Management Operations Audit Events.
+      If this query returns results, investigate events where key policies are modified,
+      grants are retired or revoked, or keys are disabled or scheduled
+      for deletion. Such activities could indicate unauthorized key management
+      actions that may lead to compromise of cryptographic materials or
+      sensitive data.
+    metadata:
+    args:
+      query: *event_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "event from cloud.audit_logs where operation IN ( 'PutKeyPolicy', 'RetireGrant', 'ScheduleKeyDeletion', 'RevokeGrant', 'DisableKey', 'DeleteImportedKeyMaterial' )"
