@@ -57,6 +57,10 @@ extends:
             versionSpec: '>=3.10'
             architecture: 'x64'
           displayName: 'Use latest Python'
+        - task: PipAuthenticate@1
+          inputs:
+            artifactFeeds: PyPIInternalFeed
+          displayName: 'Authenticate pip for internal feed'
 
         - powershell: python -m pip install --upgrade pip
           displayName: 'Upgrade pip'
@@ -68,15 +72,10 @@ extends:
         - powershell: python -m build --sdist --wheel --outdir "$(DistDir)"
           displayName: 'Build package wheel and sdist'
 
-        - task: PipAuthenticate@1
-          inputs:
-            artifactFeeds: PyPIInternalFeed
-          displayName: 'Authenticate pip for internal feed'
-
         - task: TwineAuthenticate@1
           inputs:
             artifactFeed: ${{ parameters.Feed }}
-          displayName: 'Authenticate Twine for PyPI feed'
+          displayName: 'Authenticate Twine for internal artifacts feed (if needed)'
 
         - powershell: python -m twine upload --skip-existing --verbose "$(DistDir)/*"
           condition: eq('${{ parameters.Feed }}', 'testpypi')
