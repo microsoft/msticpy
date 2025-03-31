@@ -42,7 +42,7 @@ extends:
     - stage: publishTasks
       displayName: PublishTasks
       dependsOn: SDLSources
-      environment: Production
+
       jobs:
       - job: publishJob
         displayName: PublishJob
@@ -94,7 +94,7 @@ extends:
             TWINE_USERNAME: __token__
             TWINE_PASSWORD: $(TWINE_PASSWORD)
         - powershell: |
-            echo Unrecognized feed "$( parameters.Feed )"
+            echo Unrecognized feed
             exit 1
           # This is a catch-all for any unrecognized feed
           condition: and(succeeded(), ne('${{ parameters.Feed }}', 'testpypi'), ne('${{ parameters.Feed }}', 'pypi'))
