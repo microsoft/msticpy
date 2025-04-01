@@ -280,7 +280,6 @@ def singleton(cls: type) -> Callable:
     instances: dict[type[object], object] = {}
 
     def get_instance(*args, **kwargs) -> object:
-        nonlocal instances
         if cls not in instances:
             instances[cls] = cls(*args, **kwargs)
         return instances[cls]

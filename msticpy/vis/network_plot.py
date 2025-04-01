@@ -33,6 +33,9 @@ from .figure_dimension import bokeh_figure
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+# mypy and Bokeh are not best friends
+# mypy: disable-error-code="arg-type"
+
 _BOKEH_VERSION: Version = parse(version("bokeh"))
 
 # wrap figure function to handle v2/v3 parameter renaming

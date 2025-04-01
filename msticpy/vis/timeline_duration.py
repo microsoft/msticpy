@@ -41,6 +41,9 @@ from .timeline_pd_accessor import TimeLineAccessor  # noqa F401
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+# mypy and Bokeh are not best friends
+# mypy: disable-error-code="arg-type, call-arg"
+
 _TIMELINE_HELP = (
     "https://msticpy.readthedocs.io/en/latest/msticpy.init.html"
     "#msticpy.init.timeline_duration.{plot_type}"
