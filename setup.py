@@ -59,7 +59,7 @@ EXTRAS = {
     "openobserve": [
         (
             "python_openobserve@git+https://github.com/juju4/python-openobserve.git"
-            "@79107c3a357ea4bbfe88a7163a06191b145c9314"
+            "@5a20a575b1f326179a8ac2554706206252383d31"
         )
     ],
 }

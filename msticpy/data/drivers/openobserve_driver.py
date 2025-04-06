@@ -191,8 +191,6 @@ class OpenObserveDriver(DriverBase):
             Provide more verbose state. from 0 least verbose to 4 most one.
         timeout : int
             timeout in seconds when gathering results
-        outformat: str
-            output format. json, dataframe.
 
         Returns
         -------
@@ -208,7 +206,6 @@ class OpenObserveDriver(DriverBase):
         verbosity = kwargs.pop("verbosity", 0)
         timezone = kwargs.pop("timezone", "UTC")
         self.timeout = kwargs.pop("timeout", self._DEF_TIMEOUT)
-        outformat = kwargs.pop("outformat", "df")
 
         start_time, end_time = self._get_time_params(**kwargs)
 
@@ -229,12 +226,11 @@ class OpenObserveDriver(DriverBase):
             print(f"DEBUG: query {query}")
         # submit the search job
         try:
-            searchresults = self.service.search(
+            searchresults = self.service.search2df(
                 query,
                 start_time=start_time,
                 end_time=end_time,
                 verbosity=verbosity,
-                outformat=outformat,
             )
         except Exception as err:
             self._raise_qry_except(err, "search_job", "to search job")
@@ -314,11 +310,6 @@ class OpenObserveDriver(DriverBase):
             An integer describing the max number of search results to return.
         verbosity : int
             Provide more verbose state. from 0 least verbose to 4 most one.
-        normalize : bool
-            If set to True, fields containing structures (i.e. subfields)
-            will be flattened such that each field has it's own column in
-            the dataframe. If False, there will be a single column for the
-            structure, with a JSON string encoding all the contents.
         exporting : bool
             Export result to file.
         export_path : str
@@ -337,21 +328,16 @@ class OpenObserveDriver(DriverBase):
         """
         limit = kwargs.get("limit", None)
         verbosity = kwargs.get("verbosity", 0)
-        normalize = kwargs.pop("normalize", True)
         exporting = kwargs.pop("exporting", False)
         export_path = kwargs.pop("export_path", "")
         time_columns = kwargs.pop("time_columns", [])
         numeric_columns = kwargs.pop("numeric_columns", [])
 
-        results = self._query(query, outformat="json", **kwargs)
+        dataframe_res = self._query(query, **kwargs)
         if verbosity >= 1:
-            print("DEBUG: results shape {results.shape}")
+            print(f"DEBUG: results shape {dataframe_res.shape}")
         if verbosity >= 3:
-            print("DEBUG: {results}")
-        if normalize:
-            dataframe_res = pd.json_normalize(results)  # type: ignore
-        else:
-            dataframe_res = pd.DataFrame(results)
+            print(f"DEBUG: {dataframe_res}")
 
         if limit is not None and dataframe_res.shape[0] > limit:
             dataframe_res = dataframe_res.head(limit)
@@ -403,7 +389,7 @@ class OpenObserveDriver(DriverBase):
 
     # Parameter Formatting methods
     @staticmethod
-    def _format_datetime(date_time: datetime) -> str:
+    def _format_datetime(date_time: datetime) -> datetime:
         """
         Return datetime-formatted string.
 
