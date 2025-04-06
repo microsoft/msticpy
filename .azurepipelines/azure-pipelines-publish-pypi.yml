@@ -1,5 +1,8 @@
 # MSTICPy PyPI Production pipeline
 
+trigger: none
+pr: none
+
 # This pipeline is used to publish the MSTICPy package to PyPI
 name: 1ES-MSTICPy-Publish-$(date:yyyyMMdd)$(rev:.r)
 
@@ -38,6 +41,8 @@ extends:
     stages:
     - stage: publishTasks
       displayName: PublishTasks
+      dependsOn: SDLSources
+
       jobs:
       - job: publishJob
         displayName: PublishJob
@@ -46,12 +51,16 @@ extends:
             value: $(Pipeline.Workspace)\${{ parameters.Artifact }}
         steps:
         - checkout: self
-        
+
         - task: UsePythonVersion@0
           inputs:
             versionSpec: '>=3.10'
             architecture: 'x64'
           displayName: 'Use latest Python'
+        - task: PipAuthenticate@1
+          inputs:
+            artifactFeeds: PyPIInternalFeed
+          displayName: 'Authenticate pip for internal feed'
 
         - powershell: python -m pip install --upgrade pip
           displayName: 'Upgrade pip'
@@ -63,15 +72,10 @@ extends:
         - powershell: python -m build --sdist --wheel --outdir "$(DistDir)"
           displayName: 'Build package wheel and sdist'
 
-        - task: PipAuthenticate@1
-          inputs:
-            artifactFeeds: PyPIInternalFeed
-          displayName: 'Authenticate pip for internal feed'
-
         - task: TwineAuthenticate@1
           inputs:
             artifactFeed: ${{ parameters.Feed }}
-          displayName: 'Authenticate Twine for PyPI feed'
+          displayName: 'Authenticate Twine for internal artifacts feed (if needed)'
 
         - powershell: python -m twine upload --skip-existing --verbose "$(DistDir)/*"
           condition: eq('${{ parameters.Feed }}', 'testpypi')
@@ -88,4 +92,10 @@ extends:
             TWINE_REPOSITORY: ${{ parameters.Feed }}
             TWINE_USERNAME: __token__
             TWINE_PASSWORD: $(TWINE_PASSWORD)
-        - powershell: echo Unrecognized feed "$( parameters.Feed )"
+        - powershell: |
+            echo Unrecognized feed
+            exit 1
+          # This is a catch-all for any unrecognized feed
+          condition: and(succeeded(), ne('${{ parameters.Feed }}', 'testpypi'), ne('${{ parameters.Feed }}', 'pypi'))
+          displayName: 'Check for unrecognized feed'
+
