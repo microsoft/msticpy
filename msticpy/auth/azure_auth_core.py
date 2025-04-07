@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Azure KeyVault pre-authentication."""
+
 from __future__ import annotations
 
 import logging
@@ -16,6 +17,7 @@ from typing import Any, Callable, ClassVar, Iterator
 
 from azure.common.credentials import get_cli_profile
 from azure.core.credentials import TokenCredential
+from azure.core.exceptions import ClientAuthenticationError
 from azure.identity import (
     AzureCliCredential,
     AzurePowerShellCredential,
@@ -150,14 +152,24 @@ def _build_cli_client(
 ) -> AzureCliCredential:
     """Build a credential from Azure CLI."""
     del kwargs
-    if tenant_id:
-        return AzureCliCredential(tenant_id=tenant_id)
-    return AzureCliCredential()
+    try:
+        cred = AzureCliCredential(tenant_id=tenant_id)
+        # Attempt to get a token immediately to validate the credential
+        cred.get_token("https://management.azure.com/.default")
+        return cred
+    except ClientAuthenticationError as ex:
+        logger.info("Azure CLI credential failed to authenticate: %s", str(ex))
+        if "Tenant" in str(ex).lower():
+            # Retry without tenant_id
+            logger.info("Retrying Azure CLI credential without tenant_id")
+            cred = AzureCliCredential()
+            cred.get_token("https://management.azure.com/.default")
+            return cred
+        raise ex  # re-raise if it's a different error
 
 
 def _build_msi_client(
     tenant_id: str | None = None,
-    aad_uri: str | None = None,
     client_id: str | None = None,
     **kwargs,
 ) -> ManagedIdentityCredential:
@@ -165,12 +177,35 @@ def _build_msi_client(
     msi_kwargs: dict[str, Any] = kwargs.copy()
     client_id = client_id or os.environ.get(AzureCredEnvNames.AZURE_CLIENT_ID)
 
-    return ManagedIdentityCredential(
-        tenant_id=tenant_id,
-        authority=aad_uri,
-        client_id=client_id,
-        **msi_kwargs,
-    )
+    try:
+        cred = ManagedIdentityCredential(client_id=client_id)
+        cred.get_token("https://management.azure.com/.default")
+        return cred
+    except ClientAuthenticationError as ex:
+        logger.info(
+            (
+                "Managed Identity credential failed to authenticate: %s, retrying with args "
+                "tenant_id=%s, client_id=%s, kwargs=%s"
+            ),
+            str(ex),
+            tenant_id,
+            client_id,
+            msi_kwargs,
+        )
+
+        try:
+            # Retry passing previous parameter set
+            cred = ManagedIdentityCredential(
+                client_id=client_id, tenant_id=tenant_id, **msi_kwargs
+            )
+            cred.get_token("https://management.azure.com/.default")
+            return cred
+        except ClientAuthenticationError:
+            # If we fail again, just create with no params
+            logger.info(
+                "Managed Identity credential failed auth - retrying with no params"
+            )
+            return ManagedIdentityCredential()
 
 
 def _build_vscode_client(
@@ -380,7 +415,8 @@ def _az_connect_core(
     # Create the wrapped credential using the passed credential
     wrapped_credentials = CredentialWrapper(credential, resource_id=az_config.token_uri)
     return AzCredentials(
-        wrapped_credentials, ChainedTokenCredential(credential)  # type: ignore[arg-type]
+        wrapped_credentials,
+        ChainedTokenCredential(credential),  # type: ignore[arg-type]
     )
 
 
