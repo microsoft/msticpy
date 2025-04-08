@@ -60,7 +60,7 @@ extends:
         - powershell: |
             # Define the content for pip.conf
             # Define the content for pip.conf
-            $pipConfContent = "[global]`nindex-url=https://pkgs.dev.azure.com/mstic-detections/mstic-jupyter/_packaging/PyPIInternalFeed/pypi/simple/"
+            $pipConfContent = "[global]`nindex-url=https://pkgs.dev.azure.com/mstic-detections/mstic-jupyter/_packaging/PyPIInternalFeed/pypi/simple/`nextra-index-url=https://pypi.org/simple"
             # Create the .pip directory if it doesn't exist
             New-Item -ItemType Directory -Force -Path "$HOME\.pip"
             # Write the content to pip.conf
