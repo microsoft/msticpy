@@ -152,20 +152,22 @@ def _build_cli_client(
 ) -> AzureCliCredential:
     """Build a credential from Azure CLI."""
     del kwargs
-    try:
-        cred = AzureCliCredential(tenant_id=tenant_id)
-        # Attempt to get a token immediately to validate the credential
-        cred.get_token("https://management.azure.com/.default")
-        return cred
-    except ClientAuthenticationError as ex:
-        logger.info("Azure CLI credential failed to authenticate: %s", str(ex))
-        if "Tenant" in str(ex).lower():
-            # Retry without tenant_id
-            logger.info("Retrying Azure CLI credential without tenant_id")
-            cred = AzureCliCredential()
+    if tenant_id is not None:
+        try:
+            logger.info("Creating Azure CLI credential with tenant_id")
+            cred = AzureCliCredential(tenant_id=tenant_id)
+            # Attempt to get a token immediately to validate the credential
             cred.get_token("https://management.azure.com/.default")
             return cred
-        raise ex  # re-raise if it's a different error
+        except ClientAuthenticationError as ex:
+            logger.info("Azure CLI credential failed to authenticate: %s", str(ex))
+            # Check if the error is related to tenant ID
+            if "Tenant" not in str(ex).lower():
+                raise  # re-raise if it's a different error
+    logger.info("Creating Azure CLI credential without tenant_id")
+    cred = AzureCliCredential()
+    cred.get_token("https://management.azure.com/.default")
+    return cred
 
 
 def _build_msi_client(
@@ -415,7 +417,7 @@ def _az_connect_core(
     # Create the wrapped credential using the passed credential
     wrapped_credentials = CredentialWrapper(credential, resource_id=az_config.token_uri)
     return AzCredentials(
-        wrapped_credentials,
+        wrapped_credentials,  # type: ignore[arg-type]
         ChainedTokenCredential(credential),  # type: ignore[arg-type]
     )
 
