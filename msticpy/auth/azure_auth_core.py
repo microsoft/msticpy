@@ -162,7 +162,7 @@ def _build_cli_client(
         except ClientAuthenticationError as ex:
             logger.info("Azure CLI credential failed to authenticate: %s", str(ex))
             # Check if the error is related to tenant ID
-            if "Tenant" not in str(ex).lower():
+            if "tenant" not in str(ex).casefold():
                 raise  # re-raise if it's a different error
     logger.info("Creating Azure CLI credential without tenant_id")
     cred = AzureCliCredential()
