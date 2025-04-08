@@ -14,7 +14,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import pytest_check as check
-from azure.identity import ChainedTokenCredential, DeviceCodeCredential
+from azure.identity import (
+    AzureCliCredential,
+    ChainedTokenCredential,
+    DeviceCodeCredential,
+)
 
 from msticpy.auth.azure_auth_core import (
     AzCredentials,
@@ -303,14 +307,6 @@ def test_build_env_client_alt(
     else:
         mock_env_credential.assert_not_called()
         assert result is None
-
-
-@patch("msticpy.auth.azure_auth_core.AzureCliCredential", autospec=True)
-def test_build_cli_client(mock_cli_credential):
-    """Test _build_cli_client function."""
-    _build_cli_client()
-    # assert isinstance(result, mock_cli_credential)
-    mock_cli_credential.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -812,8 +808,94 @@ def test_build_msi_client_with_exceptions(
             1 for instance in mock_instances if instance.get_token.called
         )
         assert token_calls_made > 0
-    # This assertion was already done above when checking mock_instances, so no need to do it twice
+    # This assertion was already done above when checking mock_instances,
+    # so no need to do it twice
     # with different instances that may not have been called properly
     elif side_effect is None:
         # Simple case: verify the token was requested at least once
         assert mock_msi_credential.return_value.get_token.called
+
+
+@pytest.mark.parametrize(
+    "tenant_id, token_side_effects, expected_exception, expected_logs",
+    [
+        # Case 1: tenant_id provided, get_token succeeds
+        (
+            "some-tenant-id",
+            [None],  # No exception from get_token
+            None,
+            ["Creating Azure CLI credential with tenant_id"],
+        ),
+        # Case 2: tenant_id provided, get_token fails with a non-tenant error
+        (
+            "some-tenant-id",
+            [ClientAuthenticationError("Some other error")],
+            ClientAuthenticationError,
+            [
+                "Creating Azure CLI credential with tenant_id",
+                "Azure CLI credential failed to authenticate: Some other error",
+            ],
+        ),
+        # Case 3: tenant_id provided, get_token fails due to tenant error
+        (
+            "some-tenant-id",
+            [ClientAuthenticationError("tenant error")],
+            None,
+            [
+                "Creating Azure CLI credential with tenant_id",
+                "Azure CLI credential failed to authenticate: tenant error",
+                "Creating Azure CLI credential without tenant_id",
+            ],
+        ),
+        # Case 4: no tenant_id, get_token succeeds
+        (
+            None,
+            [None],
+            None,
+            ["Creating Azure CLI credential without tenant_id"],
+        ),
+        # Case 5: no tenant_id, get_token fails
+        (
+            None,
+            [ClientAuthenticationError("No tenant set error")],
+            ClientAuthenticationError,
+            ["Creating Azure CLI credential without tenant_id"],
+        ),
+    ],
+)
+def test_build_cli_client(
+    tenant_id,
+    token_side_effects,
+    expected_exception,
+    expected_logs,
+    caplog,
+    monkeypatch,
+):
+    """Test _build_cli_client with various tenant_id cases and token side effects."""
+    # Set caplog level to capture INFO messages
+    caplog.set_level(logging.INFO)
+
+    mock_cred = MagicMock(spec=AzureCliCredential)
+    # Configure the mock to apply side effect only on first call
+    if token_side_effects:
+        mock_cred.get_token.side_effect = token_side_effects + [
+            None
+        ]  # First call uses side effect, then return None
+
+    # Patch the AzureCliCredential constructor to return the mock
+    with patch(
+        "msticpy.auth.azure_auth_core.AzureCliCredential", return_value=mock_cred
+    ):
+        if expected_exception:
+            with pytest.raises(expected_exception):
+                _build_cli_client(tenant_id=tenant_id)
+        else:
+            returned_cred = _build_cli_client(tenant_id=tenant_id)
+            # We should get our mock credential or a new one if it tries fallback
+            assert isinstance(returned_cred, AzureCliCredential)
+
+    found_logs = [rec.message for rec in caplog.records if rec.levelname == "INFO"]
+    for log_msg in expected_logs:
+        assert any(
+            log_msg in msg for msg in found_logs
+        ), f"Expected log message not found: {log_msg}"

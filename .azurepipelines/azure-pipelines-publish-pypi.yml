@@ -57,21 +57,10 @@ extends:
             versionSpec: '>=3.10'
             architecture: 'x64'
           displayName: 'Use latest Python'
-        - powershell: |
-            # Define the content for pip.conf
-            # Define the content for pip.conf
-            $pipConfContent = "[global]`nindex-url=https://pkgs.dev.azure.com/mstic-detections/mstic-jupyter/_packaging/PyPIInternalFeed/pypi/simple/`nextra-index-url=https://pypi.org/simple"
-            # Create the .pip directory if it doesn't exist
-            New-Item -ItemType Directory -Force -Path "$HOME\.pip"
-            # Write the content to pip.conf
-            $pipConfContent | Out-File -FilePath "$HOME\.pip\pip.conf" -Encoding UTF8
-            # Verify the creation
-            Get-Content "$HOME\.pip\pip.conf"
-          displayName: Create pip.conf
-        - task: PipAuthenticate@1
-          inputs:
-            artifactFeeds: PyPIInternalFeed
-          displayName: 'Authenticate pip for internal feed'
+        #- task: PipAuthenticate@1
+        #  inputs:
+        #    artifactFeeds: PyPIInternalFeed
+        #  displayName: 'Authenticate pip for internal feed'
 
         - powershell: python -m pip install --upgrade pip
           displayName: 'Upgrade pip'
