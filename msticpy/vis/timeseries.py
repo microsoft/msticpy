@@ -28,6 +28,9 @@ from .timeline_common import (
     plot_ref_line,
 )
 
+# mypy and Bokeh are not best friends
+# mypy: disable-error-code="arg-type, call-arg, attr-defined"
+
 __version__ = VERSION
 __author__ = "Ashwin Patil"
 

@@ -33,6 +33,9 @@ from .figure_dimension import bokeh_figure
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
+# mypy and Bokeh are not best friends
+# mypy: disable-error-code="arg-type"
+
 req_alert_cols = ["DisplayName", "Severity", "AlertType"]
 req_inc_cols = ["id", "name", "properties.severity"]
 
@@ -140,6 +143,7 @@ class EntityGraph:
         """
         timeline = None
         tl_df = self.to_df()
+
         tl_type = "duration"
         # pylint: disable=unsubscriptable-object
         if len(tl_df["EndTime"].unique()) == 1 and not tl_df["EndTime"].unique()[0]:
@@ -150,22 +154,22 @@ class EntityGraph:
             ):
                 print("No timestamps available to create timeline")
                 return self._plot_no_timeline(timeline=False, hide=hide, **kwargs)
-        # tl_df["TimeGenerated"] = pd.to_datetime(tl_df["TimeGenerated"], utc=True)
-        # tl_df["StartTime"] = pd.to_datetime(tl_df["StartTime"], utc=True)
-        # tl_df["EndTime"] = pd.to_datetime(tl_df["EndTime"], utc=True)
+
         graph = self._plot_no_timeline(hide=True, **kwargs)
         if tl_type == "duration":
+            # remove missing time values
             timeline = display_timeline_duration(
-                tl_df.dropna(subset=["TimeGenerated"]),
+                tl_df.dropna(subset=["StartTime", "EndTime"]),
                 group_by="Name",
                 title="Entity Timeline",
                 time_column="StartTime",
                 end_time_column="EndTime",
-                source_columns=["Name", "Description", "Type", "TimeGenerated"],
+                source_columns=["Name", "Description", "Type", "StartTime", "EndTime"],
                 hide=True,
                 width=800,
             )
         elif tl_type == "discreet":
+            tl_df = tl_df.dropna(subset=["TimeGenerated"])
             timeline = display_timeline(
                 tl_df.dropna(subset=["TimeGenerated"]),
                 group_by="Type",

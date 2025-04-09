@@ -1,0 +1,147 @@
+metadata:
+  version: 1
+  # name: PrismaCloud Queries
+  description: Queries for Prisma Cloud Data Provider
+  data_environments: [Prismacloud]
+  data_families: [Prismacloud]
+  tags: [Prisma_asset]
+  aliases:
+    - &asset_query_relative |-
+      {{
+        "querymetadata" :
+            {{
+                "queryType": "asset_query_relative",
+                "unit": "{unit_type}",
+                "amount": "{amount_value}",
+                "endpoint": "assets",
+                $<query_conditions>$,
+                "isParsedinDriver": true
+            }}
+      }}
+defaults:
+  metadata:
+    data_source: "Prismacloud"
+  parameters:
+    unit_type:
+      description: Field to use for time
+      type: str
+      default: minute
+    amount_value:
+      description: Field to use for time
+      type: int
+      default: 1440
+sources:
+  search_asset_relative:
+    description: |-
+      Retrieve asset data from Prisma Cloud using relative time using dynamic queries.
+      final_query_df = prismacloud_qp.Prismacloud.search_asset_relative(query_condition="asset where cloud.service IN ('azure_sql_database')")
+      final_query_df = prismacloud_qp.Prismacloud.search_asset_relative_with_prismafindings(selectasset="asset where cloud.service IN ('azure_sql_database')",finding_types=['INTERNET_EXPOSURE'])
+    metadata:
+    args:
+      query: *asset_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "{query_condition}"
+    parameters:
+      query_condition:
+        description: enter query
+        type: str
+  search_asset_relative_with_prismafindings:
+    description: |-
+      Retrieve asset data from Prisma Cloud using relative time using dynamic queries.
+      final_query_df = prismacloud_qp.Prismacloud.search_asset_relative_with_prismafindings(selectasset="asset where cloud.service IN ('azure_sql_database')")
+    metadata:
+    args:
+      query: *asset_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "{selectasset} and finding.type IN ({finding_types})"
+    parameters:
+      selectasset:
+        description: |-
+          selecting asset syntax, there are 456 asset types in 5 cloud providers
+          asset where cloud.service IN ('azure_sql_database')
+          asset where cloud.asset IN ('azure-ad-user-list')
+          asset where cloud.class IN ('Compute')
+        type: str
+      finding_types:
+        description: |-
+          List of security finding types of prisma cloud
+        type: list
+        default:
+          - MALWARE
+          - BOT_ACTIVITY
+          - COMMAND_AND_CONTROL
+          - CREDENTIAL_ACCESS
+          - CROSS_ACCOUNT_TRUST
+          - DATA_EXFILTRATION
+          - DEFENSE_EVASION
+          - DISCOVERY
+          - HIGH_PRIVILEGED_ROLE
+          - INITIAL_ACCESS
+          - INTERNET_EXPOSURE
+          - KEYS_AND_SECRETS
+          - LATERAL_MOVEMENT
+          - MFA
+          - MISCONFIGURATION
+          - NETWORK_ANOMALY
+          - PRIVILEGE_ESCALATION
+          - RECONNAISSANCE
+          - RESOURCE_HIJACKING
+          - SECRETS
+          - SSH_BRUTE_FORCE
+          - UNAUTHORIZED_ACCESS
+          - UNENCRYPTED_DATA
+          - UNUSED_PRIVILEGES
+          - USER_ANOMALY
+          - WEAK_PASSWORD
+          - WEB_ATTACK
+          - WEB_SCRAPING
+  asset_host_with_high_cve:
+    description: |-
+      List of high severity vulnerable assets Hosts asset type
+    metadata:
+    args:
+      query: *asset_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "asset where asset.type IN ( 'aws-ec2-describe-instances', 'azure-vm-list', 'gcloud-compute-instances-list') AND with : (Vuln where SEVERITY >= HIGH)"
+  asset_hostimage_with_high_cve:
+    description: |-
+      List of high severity vulnerable assets Host image asset type
+    metadata:
+    args:
+      query: *asset_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "asset where asset.type IN ( 'aws-ec2-describe-images', 'azure-compute-image', 'gcloud-compute-image') AND with : (Vuln where SEVERITY >= HIGH)"
+  asset_registryimage_with_high_cve:
+    description: |-
+      List of high severity vulnerable assets registry image asset type
+    metadata:
+    args:
+      query: *asset_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "asset where asset.type IN ( 'aws-ecr-registry', 'azure-container-registry', 'gcloud-gcr-image', 'container-registry-image') AND with : (Vuln where SEVERITY >= HIGH)"
+  asset_serverless_functions_with_high_cve:
+    description: |-
+      List of high severity vulnerable assets serverless functions asset type
+    metadata:
+    args:
+      query: *asset_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "asset where asset.type IN ( 'aws-lambda-list-functions', 'gcloud-cloud-function-v2', 'gcloud-cloud-function', 'azure-cloud-function') AND with : (Vuln where SEVERITY >= HIGH)"

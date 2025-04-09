@@ -42,6 +42,9 @@ from .figure_dimension import bokeh_figure
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+# mypy and Bokeh are not best friends
+# mypy: disable-error-code="arg-type, call-arg, attr-defined"
+
 TIMELINE_HELP = (
     "https://msticpy.readthedocs.io/en/latest/msticpy.vis.html"
     "#msticpy.vis.timeline.{plot_type}"
@@ -298,10 +301,11 @@ def create_range_tool(
                 y=y,
                 color=series_def["color"],
                 source=series_def["source"],
+                radius=1,
             )
     elif isinstance(data, pd.DataFrame):
         rng_select.circle(
-            x=time_column, y=y, color="blue", source=ColumnDataSource(data)
+            x=time_column, y=y, color="blue", source=ColumnDataSource(data), radius=1
         )
 
     range_tool = RangeTool(x_range=plot_range)
