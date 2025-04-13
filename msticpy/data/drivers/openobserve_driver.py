@@ -32,6 +32,7 @@ OPENOBSERVE_CONNECT_ARGS = {
     "user": "(string) OpenObserve user, which is used to authenticate.",
     "password": "(string) The matching OpenObserve password.",
     "verify": "(bool) Validate TLS certificate (default True).",
+    "timeout": "(int) requests timeout (default 300).",
 }
 
 _HELP_URI = "https://msticpy.readthedocs.io/en/latest/DataProviders.html"
@@ -45,13 +46,14 @@ _SL_NB_URI = (
 class OpenObserveDriver(DriverBase):
     """Driver to connect and query from OpenObserve."""
 
+    _DEF_TIMEOUT = 300
     _OPENOBSERVE_REQD_ARGS = ["connection_str", "user", "password", "verify"]
     _CONNECT_DEFAULTS: Dict[str, Any] = {
         "connection_str": "https://localhost:5080",
         "verify": True,
+        "timeout": _DEF_TIMEOUT,
     }
     _TIME_FORMAT = '"%Y-%m-%d %H:%M:%S.%6N"'
-    _DEF_TIMEOUT = 300
 
     def __init__(self, **kwargs):
         """Instantiate OpenObserve Driver."""
@@ -98,6 +100,7 @@ class OpenObserveDriver(DriverBase):
                 user=arg_dict["user"],
                 password=arg_dict["password"],
                 verify=arg_dict["verify"],
+                timeout=arg_dict["timeout"],
             )
         except httpx.ConnectError as err:
             raise MsticpyConnectionError(
@@ -231,6 +234,7 @@ class OpenObserveDriver(DriverBase):
                 start_time=start_time,
                 end_time=end_time,
                 verbosity=verbosity,
+                timeout=self.timeout,
             )
         except Exception as err:
             self._raise_qry_except(err, "search_job", "to search job")
@@ -310,6 +314,8 @@ class OpenObserveDriver(DriverBase):
             An integer describing the max number of search results to return.
         verbosity : int
             Provide more verbose state. from 0 least verbose to 4 most one.
+        timeout : int
+            timeout in seconds when gathering results
         exporting : bool
             Export result to file.
         export_path : str
