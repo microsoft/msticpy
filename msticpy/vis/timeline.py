@@ -43,6 +43,9 @@ from .timeline_values import display_timeline_values  # noqa F401
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+# mypy and Bokeh are not best friends
+# mypy: disable-error-code="arg-type, call-arg"
+
 # wrap figure function to handle v2/v3 parameter renaming
 figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
