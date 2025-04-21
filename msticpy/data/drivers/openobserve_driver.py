@@ -84,8 +84,10 @@ class OpenObserveDriver(DriverBase):
 
         Notes
         -----
-        Default configuration is read from the DataProviders/Sumologic
+        Default configuration is read from the DataProviders/OpenObserve
         section of msticpyconfig.yaml, if available.
+        There is not doing an http(s) connection, just filling underlying
+        class properties.
 
         """
         cs_dict = self._get_connect_args(connection_str, **kwargs)
