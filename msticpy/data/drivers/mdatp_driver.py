@@ -4,9 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """MDATP OData Driver class."""
-from typing import Any, Optional, Union
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any, ClassVar, Iterable
 
 import pandas as pd
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...auth.azure_auth_core import AzureCloudConfig
@@ -24,16 +28,51 @@ __version__ = VERSION
 __author__ = "Pete Bryan"
 
 
+@dataclass
+class M365DConfiguration:
+    """A container for M365D API settings.
+
+    This is based on the data environment of the query provider.
+    """
+
+    login_uri: str
+    resource_uri: str
+    api_version: str
+    api_endpoint: str
+    api_uri: str
+    scopes: list[str]
+    oauth_v2: bool = field(init=False)
+
+    def __post_init__(self: Self) -> None:
+        """Determine if the selected API supports Entra ID OAuth v2.0.
+
+        This is important because the fields in the request body
+        are different between the two versions.
+        """
+        if "/oauth2/v2.0" in self.login_uri:
+            self.oauth_v2 = True
+        else:
+            self.oauth_v2 = False
+
+
 @export
 class MDATPDriver(OData):
     """KqlDriver class to retrieve date from MS Defender APIs."""
 
-    CONFIG_NAME = "MicrosoftDefender"
-    _ALT_CONFIG_NAMES = ["MDATPApp"]
+    CONFIG_NAME: ClassVar[str] = "MicrosoftDefender"
+    _ALT_CONFIG_NAMES: ClassVar[Iterable[str]] = ["MDATPApp"]
 
     def __init__(
-        self, connection_str: Optional[str] = None, instance: str = "Default", **kwargs
-    ):
+        self: MDATPDriver,
+        connection_str: str | None = None,
+        instance: str = "Default",
+        *,
+        cloud: str | None = None,
+        auth_type: str = "interactive",
+        debug: bool = False,
+        max_threads: int = 4,
+        **kwargs,
+    ) -> None:
         """
         Instantiate MSDefenderDriver and optionally connect.
 
@@ -43,55 +82,64 @@ class MDATPDriver(OData):
             Connection string
         instance : str, optional
             The instance name from config to use
+        cloud: str
+            Name of the Azure Cloud to connect to.
 
         """
-        super().__init__(**kwargs)
-        cs_dict = _get_driver_settings(
+        super().__init__(
+            debug=debug,
+            max_threads=max_threads,
+            **kwargs,
+        )
+
+        cs_dict: dict[str, str] = _get_driver_settings(
             self.CONFIG_NAME, self._ALT_CONFIG_NAMES, instance
         )
 
-        self.cloud = cs_dict.pop("cloud", "global")
-        if "cloud" in kwargs and kwargs["cloud"]:
-            self.cloud = kwargs["cloud"]
+        self.cloud: str = cs_dict.pop("cloud", "global")
+        if cloud:
+            self.cloud = cloud
 
-        api_uri, oauth_uri, api_suffix = _select_api_uris(
+        m365d_params: M365DConfiguration = _select_api(
             self.data_environment, self.cloud
         )
+        self._m365d_params: M365DConfiguration = m365d_params
+        self.oauth_url = m365d_params.login_uri
+        self.api_root = m365d_params.resource_uri
+        self.api_ver = m365d_params.api_version
+        self.api_suffix: str = m365d_params.api_endpoint
+        self.scopes = m365d_params.scopes
+
         self.add_query_filter(
-            "data_environments", ("MDE", "M365D", "MDATP", "GraphHunting")
+            "data_environments", ("MDE", "M365D", "MDATP", "M365DGraph", "GraphHunting")
         )
 
-        self.req_body = {
-            "client_id": None,
-            "client_secret": None,
-            "grant_type": "client_credentials",
-            "resource": api_uri,
-        }
-        self.oauth_url = oauth_uri
-        self.api_root = api_uri
-        self.api_ver = "api"
-        self.api_suffix = api_suffix
-        if self.data_environment == DataEnvironment.M365D:
-            self.scopes = [f"{api_uri}/AdvancedHunting.Read"]
-        elif self.data_environment == DataEnvironment.M365DGraph:
-            self.api_ver = kwargs.get("api_ver", "v1.0")
-            self.req_body = {
-                "client_id": None,
-                "client_secret": None,
-                "grant_type": "client_credentials",
-                "scope": f"{self.api_root}.default",
-            }
-            self.scopes = [f"{api_uri}/ThreatHunting.Read.All"]
+        self.req_body: dict[str, Any] = {}
+        if "username" in cs_dict:
+            delegated_auth = True
+
         else:
-            self.scopes = [f"{api_uri}/AdvancedQuery.Read"]
+            delegated_auth = False
+            self.req_body["grant_type"] = "client_credentials"
+
+        if not m365d_params.oauth_v2:
+            self.req_body["resource"] = self.scopes
 
         if connection_str:
             self.current_connection = connection_str
-            self.connect(connection_str)
+            self.connect(
+                connection_str,
+                delegated_auth=delegated_auth,
+                auth_type=auth_type,
+                location=cs_dict.get("location", "token_cache.bin"),
+            )
 
     def query(
-        self, query: str, query_source: Optional[QuerySource] = None, **kwargs
-    ) -> Union[pd.DataFrame, Any]:
+        self: Self,
+        query: str,
+        query_source: QuerySource | None = None,
+        **kwargs,
+    ) -> pd.DataFrame | str | None:
         """
         Execute query string and return DataFrame of results.
 
@@ -119,7 +167,7 @@ class MDATPDriver(OData):
                 return data
 
             if self.data_environment == DataEnvironment.M365DGraph:
-                date_fields = [
+                date_fields: list[str] = [
                     field["name"]
                     for field in response["schema"]
                     if field["type"] == "DateTime"
@@ -132,29 +180,54 @@ class MDATPDriver(OData):
                 ]
             data = ensure_df_datetimes(data, columns=date_fields)
             return data
-        return response
+        return str(response)
 
 
-def _select_api_uris(data_environment, cloud):
-    """Return API and login URIs for selected provider type."""
-    login_uri = get_m365d_login_endpoint(cloud)
-    if data_environment == DataEnvironment.M365D:
-        return (
-            get_m365d_endpoint(cloud),
-            f"{login_uri}{{tenantId}}/oauth2/token",
-            "/advancedhunting/run",
-        )
+def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfiguration:
+    # pylint: disable=line-too-long
+    """Return API and login URIs for selected provider type.
+
+    Note that the Microsoft Graph is the preferred API.
+
+    | API Name | Resource ID | Scopes Requested | API URI (global cloud) | API Endpoint | Login URI | MSTICpy Data Environment |
+    | -------- | ----------- | ---------------- | ---------------------- | ------------ | --------- | ------------------------ |
+    | WindowsDefenderATP | fc780465-2017-40d4-a0c5-307022471b92 | `AdvancedQuery.Read` | `https://api.securitycenter.microsoft.com` | `/advancedqueries/run` | `https://login.microsoftonline.com/<tenantId>/oauth2/token` | `MDE`, `MDATP` |
+    | Microsoft Threat Protection | 8ee8fdad-f234-4243-8f3b-15c294843740 | `AdvancedHunting.Read` | `https://api.security.microsoft.com` | `/advancedhunting/run` | `https://login.microsoftonline.com/<tenantId>/oauth2/token` | `M365D` |
+    | Microsoft Graph | 00000003-0000-0000-c000-000000000000 | `ThreatHunting.Read.All` | `https://graph.microsoft.com/<version>/` | `/security/runHuntingQuery` | `https://login.microsoftonline.com/<tenantId>/oauth2/v2.0/token` | `M365DGraph` |
+
+    """
+    # pylint: enable=line-too-long
     if data_environment == DataEnvironment.M365DGraph:
         az_cloud_config = AzureCloudConfig(cloud=cloud)
-        api_uri = az_cloud_config.endpoints.get("microsoftGraphResourceId")
-        graph_login = az_cloud_config.authority_uri
-        return (
-            api_uri,
-            f"{graph_login}{{tenantId}}/oauth2/v2.0/token",
-            "/security/runHuntingQuery",
+        login_uri: str = (
+            f"{az_cloud_config.authority_uri}{{tenantId}}/oauth2/v2.0/token"
         )
-    return (
-        get_defender_endpoint(cloud),
-        f"{login_uri}{{tenantId}}/oauth2/token",
-        "/advancedqueries/run",
+        resource_uri: str = az_cloud_config.endpoints["microsoftGraphResourceId"]
+        api_version = "v1.0"
+        api_endpoint = "/security/runHuntingQuery"
+        scopes: list[str] = [f"{resource_uri}ThreatHunting.Read.All"]
+
+    elif data_environment == DataEnvironment.M365D:
+        login_uri = f"{get_m365d_login_endpoint(cloud)}{{tenantId}}/oauth2/token"
+        resource_uri = get_m365d_endpoint(cloud)
+        api_version = "api"
+        api_endpoint = "/advancedhunting/run"
+        scopes = [f"{resource_uri}AdvancedHunting.Read"]
+
+    else:
+        login_uri = f"{get_m365d_login_endpoint(cloud)}{{tenantId}}/oauth2/token"
+        resource_uri = get_defender_endpoint(cloud)
+        api_version = "api"
+        api_endpoint = "/advancedqueries/run"
+        scopes = [f"{resource_uri}AdvancedQuery.Read"]
+
+    api_uri: str = f"{resource_uri}{api_version}{api_endpoint}"
+
+    return M365DConfiguration(
+        login_uri=login_uri,
+        resource_uri=resource_uri,
+        api_version=api_version,
+        api_endpoint=api_endpoint,
+        api_uri=api_uri,
+        scopes=scopes,
     )

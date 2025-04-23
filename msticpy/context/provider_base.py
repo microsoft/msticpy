@@ -20,7 +20,7 @@ from abc import ABC, abstractmethod
 from asyncio import get_event_loop
 from collections.abc import Iterable as C_Iterable
 from functools import lru_cache, partial, singledispatch
-from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Generator, Iterable
+from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Generator, Iterable, cast
 
 import pandas as pd
 from typing_extensions import Self
@@ -368,7 +368,7 @@ class Provider(ABC):
 
     async def _lookup_items_async_wrapper(  # pylint: disable=too-many-arguments # noqa: PLR0913
         self: Self,
-        data: pd.DataFrame | dict[str, str] | list[str],
+        data: pd.DataFrame | dict[str, str] | Iterable[str],
         item_col: str | None = None,
         item_type_col: str | None = None,
         query_type: str | None = None,
@@ -395,7 +395,7 @@ class Provider(ABC):
             If not specified the default record type for the IoitemC type
             will be returned.
         prog_counter: ProgressCounter; Optional
-            Progress Counter to display progess of IOC searches.
+            Progress Counter to display progress of IOC searches.
 
         Returns
         -------
@@ -413,7 +413,7 @@ class Provider(ABC):
         )
         result: pd.DataFrame = await event_loop.run_in_executor(None, get_items)
         if prog_counter:
-            await prog_counter.decrement(len(data))
+            await prog_counter.decrement(len(data))  # type: ignore[arg-type]
         return result
 
 
@@ -466,7 +466,7 @@ def generate_items(
 
     if isinstance(data, C_Iterable):
         for item in data:
-            yield item, Provider.resolve_item_type(item)
+            yield cast(str, item), Provider.resolve_item_type(item)
     else:
         yield None, None
 

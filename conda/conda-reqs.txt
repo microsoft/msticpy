@@ -13,8 +13,8 @@ azure-mgmt-resource>=16.1.0
 azure-storage-blob>=12.5.0
 azure-mgmt-subscription
 beautifulsoup4>=4.0.0
-bokeh>=1.4.0, <3.4.0
-cryptography>=3.1
+bokeh>=3.0.0
+cryptography>=43.0.1
 deprecated>=1.2.4
 dnspython>=2.0.0, <3.0.0
 folium>=0.9.0
@@ -23,6 +23,7 @@ html5lib
 httpx>=0.23.0, <1.0.0
 ipython>=7.23.1
 ipywidgets>=7.4.2, <9.0.0
+jinja2>=3.1.5  # (sec vuln) transitive dependency via multiple packages
 keyring>=13.2.1
 lxml>=4.6.5
 matplotlib>=3.0.0
@@ -33,7 +34,7 @@ msrestazure>=0.6.0
 networkx>=2.2
 numpy>=1.15.4
 pandas>=1.4.0, <3.0.0
-panel>=0.14.4
+panel>=1.2.1
 pydantic>=1.8.0, <3.0.0
 pygments>=2.0.0
 pyjwt>=2.3.0
@@ -45,6 +46,7 @@ scipy
 setuptools>=40.6.3
 statsmodels
 tldextract>=2.2.2
+tornado>=6.4.2  # (sec vuln) transitive dependency via bokeh
 tqdm>=4.36.1
 typing-extensions>=4.2.0
 urllib3>=1.23

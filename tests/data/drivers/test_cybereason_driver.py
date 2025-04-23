@@ -12,6 +12,7 @@ import pandas as pd
 import pytest
 import pytest_check as check
 import respx
+import httpx
 
 from msticpy.data.core.query_defns import Formatters
 from msticpy.data.drivers.cybereason_driver import CybereasonDriver
@@ -140,6 +141,46 @@ _CR_PAGINATED_RESULT = [
     },
 ]
 
+_CR_PARTIAL_SUCCESS_RESULT = {
+    "data": {
+        "resultIdToElementDataMap": {},
+        "suspicionsMap": {},
+        "evidenceMap": {},
+        "totalResults": 0,
+        "totalPossibleResults": 0,
+        "guessedPossibleResults": 0,
+        "queryLimits": {
+            "totalResultLimit": 1000,
+            "perGroupLimit": 100,
+            "perFeatureLimit": 100,
+            "groupingFeature": {
+                "elementInstanceType": "Process",
+                "featureName": "imageFileHash",
+            },
+            "sortInGroupFeature": None,
+        },
+        "queryTerminated": False,
+        "pathResultCounts": None,
+        "guids": [],
+        "paginationToken": None,
+        "executionUUID": None,
+        "quapiMeasurementData": {
+            "timeToGetGuids": [],
+            "timeToGetData": [],
+            "timeToGetAdditionalData": [],
+            "totalQuapiQueryTime": [],
+            "startTime": [],
+            "endTime": [],
+        },
+    },
+    "status": "PARTIAL_SUCCESS",
+    "hidePartialSuccess": False,
+    "message": "Received Non-OK status code HTTP/1.1 500 Internal Server Error",
+    "expectedResults": 0,
+    "failures": 0,
+    "failedServersInfo": None,
+}
+
 _CR_QUERY = {
     "query": """
     {
@@ -240,7 +281,33 @@ def test_query(driver):
         check.is_true(connect.called or driver.connected)
         check.is_true(query.called)
         check.is_instance(data, pd.DataFrame)
+        check.is_true("instance" in data.columns)
 
+@respx.mock
+def test_partial_success_query(driver):
+    """Test query calling returns data in expected format."""
+    connect = respx.post(
+        re.compile(r"^https://[a-zA-Z0-9\-]+\.cybereason\.net/login\.html")
+    ).respond(200)
+    query = respx.post(
+        re.compile(
+            r"^https://[a-zA-Z0-9\-]+\.cybereason\.net/rest/visualsearch/query/simple"
+        )
+    )
+    query.side_effect = [
+        httpx.Response(200, json=_CR_PARTIAL_SUCCESS_RESULT),
+        httpx.Response(200, json=_CR_PARTIAL_SUCCESS_RESULT),
+        httpx.Response(200, json=_CR_PARTIAL_SUCCESS_RESULT),
+        httpx.Response(200, json=_CR_PARTIAL_SUCCESS_RESULT),
+    ]
+    with custom_mp_config(MP_PATH):
+        with pytest.raises(httpx.HTTPStatusError, match=r"PARTIAL_SUCCESS:.*"):
+            driver.connect()
+            driver.query('{"test": "test"}')
+
+        check.is_true(connect.called or driver.connected)
+        check.is_true(query.called)
+        check.equal(query.call_count, 3)
 
 @respx.mock
 def test_paginated_query(driver):

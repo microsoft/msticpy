@@ -38,9 +38,11 @@ from .timeline_pd_accessor import TimeLineAccessor  # noqa F401
 
 # pylint: enable=unused-import
 
-
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+# mypy and Bokeh are not best friends
+# mypy: disable-error-code="arg-type, call-arg"
 
 _TIMELINE_HELP = (
     "https://msticpy.readthedocs.io/en/latest/msticpy.init.html"
@@ -211,7 +213,8 @@ def display_timeline_duration(
     plot.rect(x="Center", y=dodge("Row", 0.5), width="Width", **rect_plot_params)
 
     # Plot the individual events as diamonds
-    plot.diamond(
+    plot.scatter(
+        marker="diamond",
         x=time_column,
         y=dodge("Row", 0.5),
         color=param.color,

@@ -39,6 +39,9 @@ from .timeline_common import (
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+# mypy and Bokeh are not best friends
+# mypy: disable-error-code="arg-type, call-arg, attr-defined"
+
 # wrap figure function to handle v2/v3 parameter renaming
 figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
@@ -259,7 +262,7 @@ def display_timeline_values(  # noqa: C901, MC0001
         if "vbar" in plot_kinds:
             plot.vbar(top=value_col, width=4, **plot_args)
         if "circle" in plot_kinds:
-            plot.circle(y=value_col, size=4, **plot_args)
+            plot.scatter(y=value_col, size=2, **plot_args)
         if "line" in plot_kinds:
             plot.line(y=value_col, line_width=2, **plot_args)
 
@@ -341,7 +344,7 @@ def _plot_param_group(
             )
         if "circle" in plot_kinds:
             p_series.append(
-                plot.circle(y=value_col, size=4, color="color", **plot_args)
+                plot.circle(y=value_col, radius=2, color="color", **plot_args)
             )
         if "line" in plot_kinds:
             p_series.append(

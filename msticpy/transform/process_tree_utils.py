@@ -423,7 +423,7 @@ def tree_to_text(
     Raises
     ------
     ValueError
-        If neither of
+        If neither schema nor template are supplied as parameters.
 
     """
     if not schema and not template:

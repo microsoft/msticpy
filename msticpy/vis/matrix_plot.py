@@ -21,6 +21,9 @@ from .figure_dimension import bokeh_figure
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+# mypy and Bokeh are not best friends
+# mypy: disable-error-code="call-arg, attr-defined"
+
 # wrap figure function to handle v2/v3 parameter renaming
 figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
@@ -187,7 +190,8 @@ def plot_matrix(data: pd.DataFrame, **kwargs) -> LayoutDOM:
     plot.add_tools(HoverTool(tooltips=tool_tips))
 
     if param.intersect:
-        plot.circle_cross(
+        plot.scatter(
+            marker="circle_cross",
             x=param.x_column,
             y=param.y_column,
             source=source,
@@ -196,7 +200,7 @@ def plot_matrix(data: pd.DataFrame, **kwargs) -> LayoutDOM:
             size=5,
         )
     else:
-        plot.circle(
+        plot.scatter(
             x=param.x_column,
             y=param.y_column,
             source=source,

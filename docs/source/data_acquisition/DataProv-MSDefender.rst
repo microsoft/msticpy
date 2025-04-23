@@ -16,10 +16,37 @@ M365 Defender Configuration
 Creating a Client App for M365 Defender
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Details on registering an Azure AD application for MS 365 Defender can be found
-`here <https://docs.microsoft.com/windows/security/threat-protection/microsoft-defender-atp/exposed-apis-create-app-webapp>`__.
+Microsoft 365 Defender APIs can be accessed in both `application <https://learn.microsoft.com/en-us/defender-endpoint/api/exposed-apis-create-app-webapp>`
+and `delegated user contexts <https://learn.microsoft.com/en-us/defender-endpoint/api/exposed-apis-create-app-nativeapp>`.
+Accessing Microsoft 365 Defender APIs as an application requires
+either a client secret or certificate, while delegated user auth requires
+an interactive signin through a browser or via device code.
+
+As such, the details on registering an Azure AD application for MS 365 Defender
+are different for application and delegated user auth scenarios. Please
+see the above links for more information. Notably, delegated user auth
+scenarios do not require a application credential and thus is preferrable.
+
+For delegated user auth scenarios, ensure that the application has a
+"Mobile or Desktop Application" redirect URI configured as `http://localhost`.
+A redirect URI is not required for applications with their own credentials.
+
+API permissions for the client application will require tenant admin consent.
+Ensure that the consented permissions are correct for the chosen data environment
+and auth scenario (application or delegated user):
+
++-----------------------------+------------------------+------------------+
+| API Name                    | Permission             | Data Environment |
++=============================+========================+==================+
+| WindowsDefenderATP          | AdvancedQuery.Read     | MDE, MDATP       |
++-----------------------------+------------------------+------------------+
+| Microsoft Threat Protection | AdvancedHunting.Read   | M365D            |
++-----------------------------+------------------------+------------------+
+| Microsoft Graph             | ThreatHunting.Read.All | M365DGraph       |
++-----------------------------+------------------------+------------------+
+
 Once you have registered the application, you can use it to connect to
-the MS Defender API.
+the MS Defender API using the chosen data environment.
 
 M365 Defender Configuration in MSTICPy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -39,13 +66,13 @@ The settings in the file should look like the following:
       MicrosoftDefender:
           Args:
             ClientId: "CLIENT ID"
-            ClientSecret: "CLIENT SECRET"
             TenantId: "TENANT ID"
             UserName: "User Name"
             Cloud: "global"
 
 
-We strongly recommend storing the client secret value
+If connecting to the MS Defender 365 API using application auth,
+we strongly recommend storing the client secret value
 in Azure Key Vault. You can replace the text value with a referenced
 to a Key Vault secret using the MSTICPy configuration editor.
 See :doc:`msticpy Settings Editor <../getting_started/SettingsEditor>`)
@@ -78,6 +105,34 @@ an instance string to the "MicrosoftDefender" section name.
             UserName: "USER NAME"
             TenantId: "TENANT ID"
 
+When using a certificate with a private key, the configuration
+should be:
+
+.. code:: yaml
+
+      MicrosoftDefender:
+          Args:
+            ClientId: "CLIENT ID"
+            TenantId: "TENANT ID"
+            Certificate: "Path to certificate"
+            PrivateKey: "Path to private key"
+
+If connecting to the MS Defender 365 API using application auth,
+we strongly recommend using a secret on the private key and storing it
+in Azure Key Vault. You can replace the text value with a referenced
+to a Key Vault secret using the MSTICPy configuration editor.
+See :doc:`msticpy Settings Editor <../getting_started/SettingsEditor>`.
+
+.. code:: yaml
+
+      MicrosoftDefender:
+          Args:
+            ClientId: "CLIENT ID"
+            TenantId: "TENANT ID"
+            PrivateKey: "Path to private key"
+            Certificate: "Path to certificate"
+            PrivateKeySecret:
+                KeyVault:
 
 Loading a QueryProvider for M365 Defender
 -----------------------------------------
@@ -166,6 +221,7 @@ the required parameters are:
 * client_secret -- The secret used for by the application.
 * username -- If using delegated auth for your application.
 
+The client_secret and username parameters are mutually exclusive.
 
 .. code:: ipython3
 

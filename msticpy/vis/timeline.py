@@ -43,6 +43,9 @@ from .timeline_values import display_timeline_values  # noqa F401
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+# mypy and Bokeh are not best friends
+# mypy: disable-error-code="arg-type, call-arg"
+
 # wrap figure function to handle v2/v3 parameter renaming
 figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
@@ -351,7 +354,8 @@ def _plot_series(data, plot, legend_pos):
         if "time_column" in series_def:
             time_col = series_def["time_column"]
         if legend_pos == "inline":
-            p_series = plot.diamond(
+            p_series = plot.scatter(
+                marker="diamond",
                 x=time_col,
                 y="y_index",
                 color=series_def["color"],
@@ -361,7 +365,8 @@ def _plot_series(data, plot, legend_pos):
                 legend_label=str(ser_name),
             )
         else:
-            p_series = plot.diamond(
+            p_series = plot.scatter(
+                marker="diamond",
                 x=time_col,
                 y="y_index",
                 color=series_def["color"],

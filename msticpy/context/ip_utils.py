@@ -81,7 +81,7 @@ def _fetch_asns() -> Callable[[], dict[str, str]]:
             asns_soup = BeautifulSoup(asns_resp.content, features="lxml")
             asns_dict = {
                 str(asn.next_element)
-                .strip(): str(asn.next_element.next_element)
+                .strip(): str(asn.next_element.next_element if asn.next_element else "")
                 .strip()
                 for asn in asns_soup.find_all("a")
             }
@@ -201,8 +201,11 @@ def create_ip_record(
     ip_entity.SubscriptionId = ip_hb["SubscriptionId"]
     geoloc_entity: GeoLocation = GeoLocation()
     geoloc_entity.CountryOrRegionName = ip_hb["RemoteIPCountry"]
-    geoloc_entity.Longitude = ip_hb["RemoteIPLongitude"]
-    geoloc_entity.Latitude = ip_hb["RemoteIPLatitude"]
+    try:
+        geoloc_entity.Longitude = float(ip_hb["RemoteIPLongitude"])
+        geoloc_entity.Latitude = float(ip_hb["RemoteIPLatitude"])
+    except TypeError:
+        pass
     ip_entity.Location = geoloc_entity
 
     # If Azure network data present add this to host record
@@ -493,7 +496,7 @@ def ip_whois(
         for ip_addr in ip:
             if rate_limit:
                 sleep(query_rate)
-            whois_results[ip_addr] = _whois_lookup(
+            whois_results[ip_addr] = _whois_lookup(  # type: ignore[index]
                 ip_addr,
                 raw=raw,
                 retry_count=retry_count,

@@ -191,7 +191,7 @@ class VTLookupV3:
                 }
             else:
                 obj = attributes
-            vt_df: pd.DataFrame = pd.json_normalize(data=[obj])
+            vt_df: pd.DataFrame = pd.json_normalize(data=[obj], max_level=0)
             last_analysis_stats: dict[str, Any] | None = attributes.get(
                 VTObjectProperties.LAST_ANALYSIS_STATS.value,
             )
@@ -207,7 +207,7 @@ class VTLookupV3:
             # Format dates for pandas
             vt_df = timestamps_to_utcdate(vt_df)
         elif obj_dict:
-            vt_df = pd.json_normalize([obj_dict])
+            vt_df = pd.json_normalize([obj_dict], max_level=0)
         else:
             vt_df = cls._item_not_found_df(
                 vt_type=vt_object.type,
@@ -885,7 +885,7 @@ class VTLookupV3:
                     "type": [response.type],
                 },
             )
-            attribs = pd.json_normalize(response.to_dict()["attributes"])
+            attribs = pd.json_normalize(response.to_dict()["attributes"], max_level=0)
             result_df = pd.concat([result_df, attribs], axis=1)
             result_df["context_attributes"] = response.to_dict().get(
                 "context_attributes",
@@ -1051,7 +1051,9 @@ class VTLookupV3:
         response_rows = []
         for response_item in response_list:
             # flatten nested dictionary and append id, type values
-            response_item_df = pd.json_normalize(response_item["attributes"])
+            response_item_df = pd.json_normalize(
+                response_item["attributes"], max_level=0
+            )
             response_item_df["id"] = response_item["id"]
             response_item_df["type"] = response_item["type"]
 
@@ -1222,7 +1224,7 @@ def _get_vt_api_key() -> str | None:
 
 def timestamps_to_utcdate(data: pd.DataFrame) -> pd.DataFrame:
     """Replace Unix timestamps in VT data with Py/pandas Timestamp."""
-    columns: pd.Index[str] = data.columns
+    columns: pd.Index = data.columns
     for date_col in (
         col for col in columns if isinstance(col, str) and col.endswith("_date")
     ):

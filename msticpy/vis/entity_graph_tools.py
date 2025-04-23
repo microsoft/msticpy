@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Creates an entity graph for a Microsoft Sentinel Incident."""
+
 from datetime import datetime, timezone
+from importlib.metadata import version
 from typing import List, Optional, Union
 
 import networkx as nx
@@ -15,6 +17,7 @@ from bokeh.layouts import column
 from bokeh.models import Circle, HoverTool, Label, LayoutDOM  # type: ignore
 from bokeh.plotting import figure, from_networkx
 from dateutil import parser
+from packaging.version import Version, parse
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
@@ -30,8 +33,13 @@ from .figure_dimension import bokeh_figure
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
+# mypy and Bokeh are not best friends
+# mypy: disable-error-code="arg-type"
+
 req_alert_cols = ["DisplayName", "Severity", "AlertType"]
 req_inc_cols = ["id", "name", "properties.severity"]
+
+_BOKEH_VERSION: Version = parse(version("bokeh"))
 
 # wrap figure function to handle v2/v3 parameter renaming
 figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
@@ -135,6 +143,7 @@ class EntityGraph:
         """
         timeline = None
         tl_df = self.to_df()
+
         tl_type = "duration"
         # pylint: disable=unsubscriptable-object
         if len(tl_df["EndTime"].unique()) == 1 and not tl_df["EndTime"].unique()[0]:
@@ -145,22 +154,22 @@ class EntityGraph:
             ):
                 print("No timestamps available to create timeline")
                 return self._plot_no_timeline(timeline=False, hide=hide, **kwargs)
-        # tl_df["TimeGenerated"] = pd.to_datetime(tl_df["TimeGenerated"], utc=True)
-        # tl_df["StartTime"] = pd.to_datetime(tl_df["StartTime"], utc=True)
-        # tl_df["EndTime"] = pd.to_datetime(tl_df["EndTime"], utc=True)
+
         graph = self._plot_no_timeline(hide=True, **kwargs)
         if tl_type == "duration":
+            # remove missing time values
             timeline = display_timeline_duration(
-                tl_df.dropna(subset=["TimeGenerated"]),
+                tl_df.dropna(subset=["StartTime", "EndTime"]),
                 group_by="Name",
                 title="Entity Timeline",
                 time_column="StartTime",
                 end_time_column="EndTime",
-                source_columns=["Name", "Description", "Type", "TimeGenerated"],
+                source_columns=["Name", "Description", "Type", "StartTime", "EndTime"],
                 hide=True,
                 width=800,
             )
         elif tl_type == "discreet":
+            tl_df = tl_df.dropna(subset=["TimeGenerated"])
             timeline = display_timeline(
                 tl_df.dropna(subset=["TimeGenerated"]),
                 group_by="Type",
@@ -508,15 +517,26 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
     graph_renderer = from_networkx(
         entity_graph_for_plotting, nx.spring_layout, scale=scale, center=(0, 0)
     )
+    if _BOKEH_VERSION > Version("3.2.0"):
+        circle_parms = {
+            "radius": node_size // 2,
+            "fill_color": "node_color",
+            "fill_alpha": 0.5,
+        }
+    else:
+        circle_parms = {
+            "size": node_size,
+            "fill_color": "node_color",
+            "fill_alpha": 0.5,
+        }
+    graph_renderer.node_renderer.glyph = Circle(**circle_parms)  # type: ignore[attr-defined]
 
-    graph_renderer.node_renderer.glyph = Circle(
-        size=node_size, fill_color="node_color", fill_alpha=0.5
-    )
     # pylint: disable=no-member
     plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
 
     # Create labels
-    for index, pos in graph_renderer.layout_provider.graph_layout.items():
+    label_layout = graph_renderer.layout_provider.graph_layout  # type: ignore[attr-defined]
+    for index, pos in label_layout.items():
         label = Label(
             x=pos[0],
             y=pos[1],
