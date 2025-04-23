@@ -79,6 +79,9 @@ __all__ = [
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+# mypy and Bokeh are not best friends
+# mypy: disable-error-code="arg-type, call-arg, attr-defined"
+
 _DEFAULT_KWARGS = ["height", "title", "width", "hide_legend", "pid_fmt"]
 
 # wrap figure function to handle v2/v3 parameter renaming
