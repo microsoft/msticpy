@@ -10,3 +10,4 @@ packaging>=24.0
 requests>=2.31.0
 autogen-agentchat[retrievechat]~=0.2.0
 importlib-resources >= 6.4.0; python_version <= "3.8"
+-e git+https://github.com/juju4/python-openobserve.git@181ef789ca248f2274cd89e44e6a3b12624f8955#egg=python_openobserve
