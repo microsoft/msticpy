@@ -11,18 +11,20 @@ Similar to the eventcluster module but a little bit more experimental
 outlier events in a single data set or using one data set as training
 data and another on which to predict outliers.
 
-In addition, Robust Random Cut Forest implemented after msticpy 2.16.x.
+In addition, kLabUM's Robust Random Cut Forest implemented since version 2.16.x.
 It's slower than SkLearn Isolation Forest however more considerable for
-time series structure and can also process by streaming.
+time series structure and can also process by streaming if you need.
 
-importted Robust Random Cut Forest python library
-MIT License Copyright (c) 2018 kLabUM
-https://klabum.github.io/rrcf/
+Imported Robust Random Cut Forest python library
+- MIT License Copyright (c) 2018 kLabUM
+- - https://klabum.github.io/rrcf/
 
 """
 
+from __future__ import annotations
+
+import logging
 import math
-from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -47,7 +49,7 @@ try:
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
         "To use RRCF algorism feature for anomaly detection,\
-             'pip install rrcf==0.4.4'",
+             'pip install rrcf==0.4.4' or pip install msticpy[ml]",
         title="Error importing rrcf (Robust Random Cut Forest)",
         extra="ml",
     ) from imp_err
@@ -55,22 +57,24 @@ except ImportError as imp_err:
 __version__ = VERSION
 __author__ = "Ian Hellen, Tatsuya Hasegawa"
 
+logger: logging.Logger = logging.getLogger(__name__)
+
 
 # pylint: disable=invalid-name
 def identify_outliers(
     x: np.ndarray,
     x_predict: np.ndarray,
     contamination: float = 0.05,
-    max_features: Optional[Union[int, float]] = None,
-    max_samples: Optional[Union[int, float]] = None,
-) -> Tuple[IsolationForest, np.ndarray, np.ndarray]:
+    max_features: int | float | None = None,
+    max_samples: int | float | None = None,
+) -> tuple[IsolationForest, np.ndarray, np.ndarray]:
     """
     Identify outlier items using SkLearn IsolationForest.
 
-    Arguments:
-    ---------
+    Parameters
+    ----------
     x : np.ndarray
-            Input data
+        Input data
     x_predict : np.ndarray
         Model
     contamination : float
@@ -86,9 +90,8 @@ def identify_outliers(
 
     Returns
     -------
-    Tuple[IsolationForest, np.ndarray, np.ndarray]
-        IsolationForest model, x_Outliers,
-        y_pred_outliers
+    tuple[IsolationForest, np.ndarray, np.ndarray]
+        IsolationForest model, x_Outliers, y_pred_outliers
 
     """
     # pylint: disable=no-member
@@ -129,7 +132,7 @@ class RobustRandomCutForest:
     """
     RobustRandomCutForest Class used in identify_outliers_rrcf().
 
-    It is similar structure to SKlearn IsolationForest.
+    With similar structure to SKlearn IsolationForest.
     """
 
     def __init__(
@@ -137,19 +140,29 @@ class RobustRandomCutForest:
         num_trees: int = 100,
         tree_size: int = 256,
         contamination: float = 0.05,
-        max_samples: Optional[Union[int, float]] = None,
-        max_features: Optional[Union[int, float]] = None,
+        max_samples: int | float | None = None,
+        max_features: int | float | None = None,
     ):
         """
         Initialize Robust Random Cut Forest model.
 
         Parameters
         ----------
-        num_trees: Number of trees in the forest
-        tree_size: Maximum number of points in each tree
-        contamination: Proportion of outliers in the data
-        max_samples: Number of samples to build each tree
-        max_features: Number of features to consider for splitting
+        num_trees: int
+            Number of trees in the forest
+        tree_size: int
+            Maximum number of points in each tree
+        contamination: float
+            Proportion of outliers in the data
+        max_samples: int or float, optional
+            Number of samples to build each tree
+        max_features: int or float, optional
+            Number of features to consider for splitting
+
+        Returns
+        -------
+        Class instance
+            self
         """
         self.num_trees = num_trees
         self.tree_size = tree_size
@@ -163,7 +176,20 @@ class RobustRandomCutForest:
         self.x_train = None
 
     def _select_features(self, cols: int) -> np.ndarray:
-        """Randomly select features for each tree."""
+        """
+        Randomly select features for each tree.
+
+        Parameters
+        ----------
+        cols : int
+            feature columns
+
+        Returns
+        -------
+        np.ndarray
+            seleted features
+
+        """
         if self.max_features is None:
             self.max_features = math.floor(math.sqrt(cols))
 
@@ -171,7 +197,19 @@ class RobustRandomCutForest:
         return rng.choice(cols, size=self.max_features, replace=False)
 
     def fit(self, x: np.ndarray) -> "RobustRandomCutForest":
-        """Build the forest from training data."""
+        """
+        Build the forest from training data.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            input data to train
+
+        Returns
+        -------
+        Class instance
+            RobustRandomCutForest
+        """
         self.x_train = x.copy()
         rows, cols = x.shape
         self.n_features_in_ = cols
@@ -183,7 +221,7 @@ class RobustRandomCutForest:
             n_samples = min(100, rows)
         elif (
             isinstance(self.max_samples, float) and self.max_samples < 1
-        ):  # rate: 0.1 - 1
+        ):  # rate: 0.1 ~ 1
             n_samples = int(self.max_samples * rows)
         else:
             n_samples = min(self.max_samples, rows)
@@ -203,12 +241,25 @@ class RobustRandomCutForest:
         return self
 
     def decision_function(self, x: np.ndarray) -> np.ndarray:
-        """Compute anomaly scores for input data."""
+        """
+        Compute anomaly scores for input data.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            input data for decision
+
+        Returns
+        -------
+        np.ndarray
+            anomalious scores, lower = less anomalous, higher = more anomalous
+
+        """
         # Score aggrigation in tree by parallel job.
-        print("Warning: RRCF decision_function may be too slow so takes long time.")
-        print("Warning: its Parallel jobs will use full CPU cores..")
-        print(
-            "Advice: Make sure your max_features and max_samples are what you really need."
+        logger.info(
+            "RRCF decision_function may be too slow so takes long time.\n \
+            The Parallel jobs will use full CPU cores..\n \
+            Advice: Make sure your max_features and max_samples are what you really need."
         )
 
         x_sub = x[:, self._feature_indices]
@@ -231,12 +282,29 @@ class RobustRandomCutForest:
 
         # Aggregate scores
         scores = np.sum(tree_scores, axis=0) / self.num_trees
-        return scores  # Lower = less anomalous, higher = more anomalous
+        return scores
 
     def _process_tree(
         self, tree: rrcf.RCTree, x_sub: np.ndarray, batches: list
     ) -> np.ndarray:
-        """Process a single tree with batched operations."""
+        """
+        Process a single tree with batched operations.
+
+        Parameters
+        ----------
+        tree: rrcf.RCTree
+            rrcf tree object
+        x_sub: np.ndarray
+            input data of selected features
+        batches: list
+            batch processing list
+
+        Returns
+        -------
+        np.ndarray
+            RRCF CoDisp scores updated with tree
+
+        """
         scores = np.zeros(x_sub.shape[0])
         for start, end in batches:
             batch = x_sub[start:end]
@@ -256,8 +324,21 @@ class RobustRandomCutForest:
 
         return scores
 
-    def predict(self, x: Optional[np.ndarray] = None) -> np.ndarray:
-        """Predict anomaly labels (-1 for outliers, 1 for inliers)."""
+    def predict(self, x: np.ndarray | None) -> np.ndarray | None:
+        """
+        Predict anomaly labels (-1 for outliers, 1 for inliers).
+
+        Parameters
+        ----------
+        x : np.ndarray
+            input data to predict
+
+        Returns
+        -------
+        np.ndarray
+            index number list predicted as anomaly
+
+        """
         if x is None or np.array_equal(x, self.x_train):
             scores = self._train_scores
         else:
@@ -281,21 +362,21 @@ def identify_outliers_rrcf(
     x: np.ndarray,
     x_predict: np.ndarray,
     contamination: float = 0.05,
-    max_features: Optional[Union[int, float]] = None,
     num_trees: int = 100,
     tree_size: int = 256,
-    max_samples: Optional[Union[int, float]] = None,
-) -> Tuple[RobustRandomCutForest, np.ndarray, np.ndarray]:
+    max_features: int | float | None = None,
+    max_samples: int | float | None = None,
+) -> tuple[RobustRandomCutForest, np.ndarray, np.ndarray]:
     """
     Identify outlier items using RobustRandomCutForest.
 
     MIT License Copyright (c) 2018 kLabUM.
     (https://klabum.github.io/rrcf/).
 
-    Arguments:
-    ---------
+    Parameters
+    ----------
     x : np.ndarray
-            Input data
+        Input data
     x_predict : np.ndarray
         Model
     contamination : float
@@ -311,7 +392,7 @@ def identify_outliers_rrcf(
 
     Returns
     -------
-    Tuple[RobustRandomCutForest, np.ndarray, np.ndarray]
+    tuple[RobustRandomCutForest, np.ndarray, np.ndarray]
         RobustRandomCutForest model, x_Outliers,
         y_pred_outliers
 
@@ -344,11 +425,11 @@ def identify_outliers_rrcf(
 
 # pylint: disable=too-many-arguments, too-many-locals
 def plot_outlier_results(
-    clf: Union[IsolationForest, RobustRandomCutForest],
+    clf: IsolationForest | RobustRandomCutForest,
     x: np.ndarray,
     x_predict: np.ndarray,
     x_outliers: np.ndarray,
-    feature_columns: List[int],
+    feature_columns: list[int],
     plt_title: str,
 ):
     """
@@ -364,7 +445,7 @@ def plot_outlier_results(
         Prediction
     x_outliers : np.ndarray
         Set of outliers
-    feature_columns : List[int]
+    feature_columns : list[int]
         list of feature columns to display
     plt_title : str
         Plot title
@@ -492,7 +573,7 @@ def plot_outlier_results(
         raise ValueError("plot_outlier_results function needs more than two features.")
 
 
-def remove_common_items(data: pd.DataFrame, columns: List[str]) -> pd.DataFrame:
+def remove_common_items(data: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
     """
     Remove rows from input DataFrame.
 
@@ -500,7 +581,7 @@ def remove_common_items(data: pd.DataFrame, columns: List[str]) -> pd.DataFrame:
     ----------
     data : pd.DataFrame
         Input dataframe
-    columns : List[str]
+    columns : list[str]
         Column list to filter
 
     Returns

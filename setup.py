@@ -49,6 +49,7 @@ EXTRAS = {
         "scipy>=1.1.0",
         "statsmodels>=0.11.1",
         "matplotlib>=3.0.0",
+        "rrcf==0.4.4",
     ],
     "sql2kql": ["mo-sql-parsing>=8, <9.0.0"],
     "riskiq": ["passivetotal>=2.5.3", "requests>=2.31.0"],
