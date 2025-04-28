@@ -103,13 +103,16 @@ def identify_outliers(
     # Determine sample size
     if max_samples is None:
         n_samples = min(100, rows)
-    elif isinstance(max_samples, float) and max_samples < 1:  # rate: 0.1 - 1
+    elif isinstance(max_samples, float) and 0 < max_samples < 1:
         n_samples = int(max_samples * rows)
     else:
         n_samples = min(max_samples, rows)
 
     if not max_features:
         max_features = math.floor(math.sqrt(cols))
+
+    logger.info("max_samples parameter => %d", n_samples)
+    logger.info("max_features parameter => %d", max_features)
 
     clf = IsolationForest(
         max_samples=n_samples,
@@ -173,7 +176,7 @@ class RobustRandomCutForest:
         self._feature_indices = None
         self.n_features_in_ = None
         self._train_scores = None
-        self.x_train = None
+        self._train_samples = None
 
     def _select_features(self, cols: int) -> np.ndarray:
         """
@@ -187,7 +190,7 @@ class RobustRandomCutForest:
         Returns
         -------
         np.ndarray
-            seleted features
+            seleted features indices
 
         """
         if self.max_features is None:
@@ -195,6 +198,32 @@ class RobustRandomCutForest:
 
         rng = np.random.RandomState(42)
         return rng.choice(cols, size=self.max_features, replace=False)
+
+    def _select_train_samples(self, rows: int) -> np.ndarray:
+        """
+        Randomly select train sample indices for each tree.
+
+        Parameters
+        ----------
+        rows : int
+            number of data points
+
+        Returns
+        -------
+        np.ndarray
+            seleted train sample indices
+
+        """
+        # Determine sample size
+        if self.max_samples is None:
+            n_samples = min(100, rows)
+        elif isinstance(self.max_samples, float) and 0 < self.max_samples < 1:
+            n_samples = int(self.max_samples * rows)
+        else:
+            n_samples = min(self.max_samples, rows)
+
+        rng = np.random.RandomState(42)
+        return rng.choice(rows, n_samples, replace=False)
 
     def fit(self, x: np.ndarray) -> "RobustRandomCutForest":
         """
@@ -210,25 +239,31 @@ class RobustRandomCutForest:
         Class instance
             RobustRandomCutForest
         """
-        self.x_train = x.copy()
+        logger.info("max_samples parameter => %d", self.max_samples)
+        logger.info("max_features parameter => %d", self.max_features)
+
         rows, cols = x.shape
+        train_indices = self._select_train_samples(rows)
+        self._train_samples = x[train_indices, :]
+        logger.info(
+            "training samples (%d): indices %s",
+            self._train_samples.shape[0],
+            train_indices,
+        )
+
         self.n_features_in_ = cols
         self._feature_indices = self._select_features(cols)
-        x_sub = x[:, self._feature_indices]
+        logger.info(
+            "training features (%d): indices %s",
+            len(self._feature_indices),
+            self._feature_indices,
+        )
 
-        # Determine sample size
-        if self.max_samples is None:
-            n_samples = min(100, rows)
-        elif (
-            isinstance(self.max_samples, float) and self.max_samples < 1
-        ):  # rate: 0.1 ~ 1
-            n_samples = int(self.max_samples * rows)
-        else:
-            n_samples = min(self.max_samples, rows)
+        x_sub = self._train_samples[:, self._feature_indices]
 
         # Building Tree
         self.forest = []
-        self._train_scores = np.zeros(n_samples)
+        self._train_scores = np.zeros(self._train_samples.shape[0])
         for _ in tqdm(range(self.num_trees), desc="Building trees"):
             tree = rrcf.RCTree()
             self.forest.append(tree)
@@ -258,7 +293,6 @@ class RobustRandomCutForest:
         # Score aggrigation in tree by parallel job.
         logger.info(
             "RRCF decision_function may be too slow so takes long time.\n \
-            The Parallel jobs will use full CPU cores..\n \
             Advice: Make sure your max_features and max_samples are what you really need."
         )
 
@@ -266,18 +300,20 @@ class RobustRandomCutForest:
         n_points = x_sub.shape[0]
 
         # Create batches
-        # batch_size: Number of points to process at once
-        batch_size = 500
+        # batch_size: Number of points to process at once, tree_size = 256 by default
+        batch_size = self.tree_size
         batches = [
             (start, min(start + batch_size, n_points))
             for start in range(0, n_points, batch_size)
         ]
 
+        logger.debug("RRCF current forest structure is following. \n{self.forest}")
+
         # Process trees in parallel
         # n_jobs: Number of parallel jobs (-1 = use all cores)
         tree_scores = Parallel(n_jobs=-1)(
             delayed(self._process_tree)(tree, x_sub, batches)
-            for tree in tqdm(self.forest, desc="Scoring trees")
+            for tree in tqdm(self.forest, desc=f"Scoring trees per {batch_size} rows")
         )
 
         # Aggregate scores
@@ -339,7 +375,7 @@ class RobustRandomCutForest:
             index number list predicted as anomaly
 
         """
-        if x is None or np.array_equal(x, self.x_train):
+        if x is None or x.shape == self._train_samples.shape:
             scores = self._train_scores
         else:
             scores = self.decision_function(x)
@@ -355,6 +391,22 @@ class RobustRandomCutForest:
         labels[anomaly_indices] = -1
 
         return labels
+
+    def get_train_samples(self):
+        """
+        Accessor to training datasets.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        np.ndarray
+            training data stored in _train_samples member
+
+        """
+        return self._train_samples
 
 
 # pylint: disable=invalid-name
@@ -399,12 +451,7 @@ def identify_outliers_rrcf(
     """
     # pylint: disable=no-member
 
-    # fit the model
-    rows, cols = x.shape
-    max_samples = min(100, rows)
-    if not max_features:
-        max_features = math.floor(math.sqrt(cols))
-
+    # initiate the model
     clf = RobustRandomCutForest(
         num_trees=num_trees,
         tree_size=tree_size,
