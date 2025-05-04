@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """OpenObserve query test class."""
 # pylint: disable=missing-function-docstring,redefined-outer-name,unused-argument
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -21,6 +21,7 @@ from msticpy.common.exceptions import (
 )
 from msticpy.data.drivers.openobserve_driver import OpenObserveDriver
 
+UTC = timezone.utc
 OO_HOST = OO_USER = OO_PASS = "MOCK_INPUT"
 
 
