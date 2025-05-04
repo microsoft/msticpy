@@ -26,11 +26,11 @@ OO_HOST = OO_USER = OO_PASS = "MOCK_INPUT"
 
 
 def mock_post(*args, **kwargs):
-    """MockResponse function for openobserve calls of requests.post"""
+    """MockResponse function for openobserve calls of requests.post."""
     url = args[0]
 
     class MockResponse:
-        """MockResponse class for openobserve calls of requests.post"""
+        """MockResponse class for openobserve calls of requests.post."""
 
         def __init__(self, json_data, status_code):
             self.json_data = json_data
