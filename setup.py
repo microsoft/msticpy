@@ -54,14 +54,7 @@ EXTRAS = {
     "riskiq": ["passivetotal>=2.5.3", "requests>=2.31.0"],
     "panel": [],  # now in core install
     "aiagents": ["autogen-agentchat[retrievechat]~=0.2.0"],
-    # Pending PR merge https://github.com/JustinGuese/python-openobserve/pulls
-    # "openobserve": ["python_openobserve"],
-    "openobserve": [
-        (
-            "python_openobserve@git+https://github.com/juju4/python-openobserve.git"
-            "@181ef789ca248f2274cd89e44e6a3b12624f8955"
-        )
-    ],
+    "openobserve": ["python_openobserve>=0.2.0"],
 }
 extras_all = [
     extra for name, extras in EXTRAS.items() for extra in extras if name != "dev"
