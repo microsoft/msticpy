@@ -1,0 +1,45 @@
+metadata:
+  version: 1
+  description: OpenObserve Queries
+  data_environments: [OpenObserve]
+  data_families: [OpenObserveGeneral]
+  tags: ['alert', 'securityalert', 'process', 'account', 'network']
+defaults:
+  metadata:
+    data_source: 'bots'
+  parameters:
+    stream:
+      description: 'OpenObserve stream/index name'
+      type: str
+      default: 'default'
+    start:
+      description: Query start time
+      type: datetime
+    end:
+      description: Query end time
+      type: datetime
+    project_fields:
+      description: Project Field names
+      type: str
+      default: '_timestamp'
+    add_query_items:
+      description: Additional query clauses
+      type: str
+      default: 'limit 100'
+    timeformat:
+      description: 'Datetime format to use in OpenObserve query'
+      type: str
+      default: '"%Y-%m-%dT%H:%M:%S.%6N"'
+sources:
+  list_default_log_file_name:
+    description: Summary of default stream events by log_file_name
+    metadata:
+      data_families: [OpenObserveGeneral]
+    args:
+      query: 'SELECT os_type,log_file_name,count(*) FROM "default" GROUP BY os_type,log_file_name ORDER BY count(*) desc'
+  list_journald_units:
+    description: Summary of journald stream events by hostname and comm/unit process
+    metadata:
+      data_families: [OpenObserveGeneral]
+    args:
+      query: 'SELECT body__hostname,body__comm,count(*) FROM "journald" GROUP BY body__hostname,body__comm ORDER BY count(*) desc'
