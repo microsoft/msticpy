@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Union
 
 import ipywidgets as widgets
@@ -123,7 +123,7 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
         self.after = kwargs.pop("after", None)
         self._query_start: Optional[datetime] = None
         self._query_end: Optional[datetime] = None
-        self.origin_time = kwargs.pop("origin_time", datetime.utcnow())
+        self.origin_time = kwargs.pop("origin_time", datetime.now(timezone.utc))
         self._get_time_parameters(**kwargs)
 
         self.max_before = kwargs.pop("max_before", None)
