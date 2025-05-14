@@ -257,3 +257,88 @@ sources:
         description: query search conditions
         value: |-
           "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-ec2-describe-network-acls' AND json.rule = \"entries[?any(egress equals false and ((protocol equals 6 and ((portRange.to equals 22 or portRange.to equals 3389 or portRange.from equals 22 or portRange.from equals 3389) or (portRange.to > 22 and portRange.from < 22) or (portRange.to > 3389 and portRange.from < 3389))) or protocol equals -1) and (cidrBlock equals 0.0.0.0/0 or ipv6CidrBlock equals ::/0) and ruleAction equals allow)] exists\""
+  config_resource_puclicly_accessible_all_tcp_udp_aws_ec2_security_group:
+    description: |-
+      Identifies non-shared AWS Security Groups that allow inbound access from any public IPv4 (0.0.0.0/0) or 
+      IPv6 (::/0) address using standard protocols such as TCP, UDP, ICMP, or ICMPv6. While these protocols are 
+      commonly used for legitimate traffic, exposing them broadly to the internet can lead to unauthorized access, 
+      DDoS exploitation, or reconnaissance activity if specific ports and sources are not restricted. This rule 
+      highlights security groups with overly permissive rules that can increase the attack surface of cloud assets. 
+      Security teams should review these rules and apply least privilege by tightening IP ranges, specifying required 
+      ports, or restricting access to known sources such as bastion hosts, VPNs, or corporate CIDRs.
+    metadata:
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name= 'aws-ec2-describe-security-groups' AND json.rule = isShared is false and (ipPermissions[?any((ipProtocol equals tcp or ipProtocol equals udp) and (ipRanges[*] contains 0.0.0.0/0 or ipv6Ranges[*].cidrIpv6 contains ::/0))] exists)"
+  config_resource_default_group_permiting_inbound_traffic_aws_ec2_security_group:
+    description: |-
+      Identifies default AWS Security Groups that have one or more inbound or outbound rules configured. 
+      By default, AWS creates a "default" Security Group for each VPC, and it allows unrestricted communication 
+      between resources associated with it. If additional rules are added to this default group — especially those 
+      permitting access from the internet or open egress — it increases the attack surface and can lead to 
+      unintended exposure. Since the default group is often overlooked in security audits, misconfigurations 
+      can persist undetected. Security teams should avoid using the default Security Group for production workloads, 
+      remove any permissive rules, and enforce segmentation by creating custom, least-privilege security groups.
+    metadata:
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-ec2-describe-security-groups' AND json.rule = '((groupName == default) and (ipPermissions[*] is not empty or ipPermissionsEgress[*] is not empty))'"
+  config_resource_all_protocols_egress_allowed_aws_ec2_network_acl:
+    description: |-
+      Identifies AWS Network ACLs that allow outbound (egress) traffic to any public IPv4 (0.0.0.0/0) or IPv6 (::/0) 
+      address across all protocols (protocol = -1). This configuration enables unrestricted internet-bound communication 
+      from resources within the subnet, which can be exploited by malware, reverse shells, or unauthorized data exfiltration. 
+      Because Network ACLs are stateless, allowing broad egress also implicitly opens the network path for callbacks and 
+      outbound command-and-control (C2) traffic. Security teams should evaluate whether such unrestricted egress is necessary, 
+      and where possible, limit outbound traffic by specific destination IPs, ports, and protocols to enforce outbound controls 
+      and reduce lateral movement and exfiltration risks.
+    metadata:
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-ec2-describe-network-acls' and json.rule = associations[*] is not empty and entries[?any( ruleAction equals allow and protocol equals -1 and (ipv6CidrBlock equals ::/0 or cidrBlock equals 0.0.0.0/0) and egress is true )] exists"
+  config_resource_publicly_accessible_sql_server_1433_aws_ec2_security_group:
+    description: |-
+      Identifies non-shared AWS Security Groups that allow inbound access to Microsoft SQL Server's default port 1433, 
+      or a port range that includes 1433, from any public IPv4 (0.0.0.0/0) or IPv6 (::/0) address. Exposure of database 
+      ports to the internet is a serious security concern, as it opens the door to brute-force attacks, SQL injection attempts, 
+      and exploitation of known or unknown database service vulnerabilities. Attackers commonly scan for open database ports 
+      across cloud environments to gain initial foothold or exfiltrate sensitive data. Security teams should immediately restrict 
+      access to trusted IP ranges, isolate database instances within private subnets, and disable public exposure where not required. 
+      For cloud-native best practices, access to SQL servers should be routed through bastion hosts, VPNs, or managed proxy layers.
+    metadata:
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name= 'aws-ec2-describe-security-groups' AND json.rule = isShared is false and (ipPermissions[?any((ipRanges[*] contains 0.0.0.0/0 or ipv6Ranges[*].cidrIpv6 contains ::/0) and ((toPort == 1433 or fromPort == 1433) or (toPort > 1433 and fromPort < 1433)))] exists)"
+  config_resource_publicly_accessible_sql_server_1434_aws_ec2_security_group:
+    description: |-
+      Identifies non-shared AWS Security Groups that allow inbound access to port 1434, used by the Microsoft SQL Server 
+      Browser Service, or to a port range that includes 1434, from any public IPv4 (0.0.0.0/0) or IPv6 (::/0) address. 
+      Port 1434 is used to help clients identify the correct SQL Server instance and port, especially in environments using dynamic ports. 
+      Exposure of this service to the internet poses a significant risk, as it can aid attackers in identifying and fingerprinting 
+      SQL Server instances, making them easier targets for further exploitation. This misconfiguration is often seen in poorly secured 
+      legacy or lift-and-shift workloads. Security teams should restrict access to this port to trusted IPs only, isolate database 
+      workloads in private subnets, and ensure SQL Browser is disabled if not needed.
+    metadata:
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name= 'aws-ec2-describe-security-groups' AND json.rule = isShared is false and (ipPermissions[?any((ipRanges[*] contains 0.0.0.0/0 or ipv6Ranges[*].cidrIpv6 contains ::/0) and ((toPort == 1434 or fromPort == 1434) or (toPort > 1434 and fromPort < 1434)))] exists)"

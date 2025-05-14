@@ -145,3 +145,41 @@ sources:
         description: query search conditions
         value: |-
           "query_by_user": "asset where asset.type IN ( 'aws-lambda-list-functions', 'gcloud-cloud-function-v2', 'gcloud-cloud-function', 'azure-cloud-function') AND with : (Vuln where SEVERITY >= HIGH)"
+  search_asset_class_with_asset_id:
+    description: |-
+      Retrieve asset data from Prisma Cloud using asset class and asset id
+      search_asset_class_with_asset_id = prismacloud_qp.Prismacloud.search_asset_class_with_asset_id(asset_id = ["something"])
+    metadata:
+    args:
+      query: *asset_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "asset where asset.class IN ({selectasset}) and asset.id IN ({asset_id})"
+    parameters:
+      selectasset:
+        description: |-
+          selecting asset default will search in all prismacloud asset types
+        type: list
+        default:
+          - Compute
+          - Network
+          - Storage
+          - Database
+          - Analytics
+          - AI and Machine Learning
+          - Application and Content Delivery
+          - Code
+          - Identity & Security
+          - Kubernetes
+          - Management and Governance
+          - Other
+          - Web Application Firewall
+      asset_id:
+        description: |-
+          List of asset ids to search
+        type: list
+        default:
+          - foo
+          - testasset
