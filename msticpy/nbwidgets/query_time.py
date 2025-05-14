@@ -4,8 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Union
+from typing import Any
+from typing_extensions import Self
 
 import ipywidgets as widgets
 from ipywidgets import Layout
@@ -40,7 +43,7 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
 
     """
 
-    _ALLOWED_KWARGS = [
+    _ALLOWED_KWARGS: list[str] = [
         "origin_time",
         "before",
         "after",
@@ -57,9 +60,9 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
         *(RegisteredWidget.ALLOWED_KWARGS),
     ]
 
-    _label_style = {"description_width": "initial"}
+    _label_style: dict[str, str] = {"description_width": "initial"}
 
-    IDS_ATTRIBS = [
+    IDS_ATTRIBS: list[str] = [
         "before",
         "after",
         "_query_start",
@@ -67,12 +70,16 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
         "_label",
     ]
 
-    _NB_PARAMS = {"start": "_query_start", "end": "_query_end", "timespan": "timespan"}
+    _NB_PARAMS: dict[str, str] = {
+        "start": "_query_start",
+        "end": "_query_end",
+        "timespan": "timespan",
+    }
 
     def __init__(
-        self,
+        self: QueryTime,
         **kwargs,
-    ):
+    ) -> None:
         """
         Create new instance of QueryTime.
 
@@ -200,16 +207,16 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
         self._update_ui_controls()
         self._enable_handlers()
 
-        self.layout = self._create_layout()
+        self.layout: widgets.VBox = self._create_layout()
         if kwargs.pop("auto_display", False):
             self.display()
 
     def set_time(
-        self,
-        timespan: Optional[TimeSpan] = None,
-        start: Union[datetime, str, None] = None,
-        end: Union[datetime, str, None] = None,
-    ):
+        self: Self,
+        timespan: TimeSpan | None = None,
+        start: datetime | str | None = None,
+        end: datetime | str | None = None,
+    ) -> None:
         """
         Change the time attributes.
 
@@ -231,7 +238,7 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
             )
         self._update_ui_controls()
 
-    def _create_layout(self):
+    def _create_layout(self) -> widgets.VBox:
         return widgets.VBox(
             [
                 widgets.HTML(f"<h4>{self._label}</h4>"),
@@ -246,11 +253,11 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
             ]
         )
 
-    def _get_time_parameters(self, **kwargs):
+    def _get_time_parameters(self: Self, **kwargs) -> None:
         """Process different init time parameters from kwargs."""
         timespan: TimeSpan = kwargs.pop("timespan", None)
-        start = kwargs.pop("start", None)
-        end = kwargs.pop("end", None)
+        start: datetime | None = kwargs.pop("start", None)
+        end: datetime | None = kwargs.pop("end", None)
         if timespan:
             self._query_end = self.origin_time = timespan.end
             self._query_start = timespan.start
@@ -279,7 +286,7 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
             )
 
     # Utility functions
-    def _infer_time_units(self):
+    def _infer_time_units(self: Self) -> None:
         """Infer reasonable time unit from current timespan."""
         # If time units not set explicitly, set to something sensible,
         # based on start/end times
@@ -290,7 +297,11 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
         else:
             self._time_unit = TimeUnit.MINUTE
 
-    def _adjust_max_before_after(self, max_before, max_after):
+    def _adjust_max_before_after(
+        self: Self,
+        max_before: int | None,
+        max_after: int | None,
+    ) -> None:
         """Adjust the max values so the are always bigger than the defaults."""
         self.max_before = default_max_buffer(
             max_before, self.before or 1, self._time_unit
@@ -298,20 +309,20 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
         self.max_after = default_max_buffer(max_after, self.after or 1, self._time_unit)
 
     # Widget event handlers
-    def _enable_handlers(self):
+    def _enable_handlers(self: Self) -> None:
         # Add change event handlers
         self._w_tm_range.observe(self._time_range_change, names="value")
         self._w_origin_dt.observe(self._update_origin, names="value")
         self._w_origin_tm.observe(self._update_origin, names="value")
         self._w_time_unit.observe(self._change_time_unit, names="value")
 
-    def _disable_handlers(self):
+    def _disable_handlers(self: Self) -> None:
         self._w_tm_range.unobserve_all()
         self._w_origin_dt.unobserve_all()
         self._w_origin_tm.unobserve_all()
         self._w_time_unit.unobserve_all()
 
-    def _change_time_unit(self, change):
+    def _change_time_unit(self: Self, change: dict[str, Any]) -> None:
         """Handle change event from time unit control."""
         # Reset before/after and max buffers to defaults.
         unit = change["new"]
@@ -322,9 +333,8 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
         self._set_time_slider_settings()
         self._update_start_and_end_from_slider()
 
-    def _update_origin(self, change):
+    def _update_origin(self: Self, _) -> None:
         """Handle change events for origin date and time controls."""
-        del change
         try:
             tm_value = datetime.strptime(self._w_origin_tm.value, "%H:%M:%S.%f").time()
             self.origin_time = datetime.combine(self._w_origin_dt.value, tm_value)
@@ -334,14 +344,13 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
             self._w_origin_dt.value = self.origin_time.date()
             self._w_origin_tm.value = self.origin_time.time().isoformat()
 
-    def _time_range_change(self, change):
+    def _time_range_change(self: Self, _) -> None:
         """Handle change event for time slider control."""
-        del change
         self._update_start_and_end_from_slider()
         self.before = abs(self._w_tm_range.value[0])
         self.after = abs(self._w_tm_range.value[1])
 
-    def _update_start_and_end_from_slider(self):
+    def _update_start_and_end_from_slider(self: Self) -> None:
         """Update timespan and start and end text controls."""
         self._query_start = self.origin_time + timedelta(
             0, self._w_tm_range.value[0] * self._time_unit.value
@@ -355,7 +364,7 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
     # end - event handlers
 
     # control updates from attributes
-    def _update_ui_controls(self):
+    def _update_ui_controls(self: Self) -> None:
         """Update UI controls from attributes."""
         self._disable_handlers()
         self._w_start_time_txt.value = self._query_start.isoformat(sep=" ")
@@ -366,7 +375,7 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
         self._w_time_unit.value = self._time_unit.name.capitalize()
         self._enable_handlers()
 
-    def _set_time_slider_settings(self):
+    def _set_time_slider_settings(self: Self) -> None:
         """Set slider properties based on current before and after values."""
         self._w_tm_range.value = (
             -self.before,  # pylint: disable=invalid-unary-operand-type
@@ -378,36 +387,36 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
     # end control updates from attributes
 
     @property
-    def start(self):
+    def start(self: Self) -> datetime | None:
         """Query start time."""
         return self._query_start
 
     @property
-    def end(self):
+    def end(self: Self) -> datetime | None:
         """Query end time."""
         return self._query_end
 
     @property
-    def units(self):
+    def units(self: Self) -> str:
         """Time units used by control."""
         return self._time_unit.name.capitalize()
 
     @property
-    def timespan(self):
+    def timespan(self: Self) -> TimeSpan:
         """Return the timespan as a TimeSpan object."""
         return TimeSpan(start=self.start, end=self.end)
 
     @timespan.setter
-    def timespan(self, value: TimeSpan):
+    def timespan(self: Self, value: TimeSpan) -> None:
         """Set the timespan of the QueryTime widget."""
         self.set_time(timespan=value)
 
     @property
-    def value(self):
+    def value(self: Self) -> TimeSpan:
         """Return the timespan as a TimeSpan object."""
         return self.timespan
 
     @value.setter
-    def value(self, value: TimeSpan):
+    def value(self: Self, value: TimeSpan) -> None:
         """Set the timespan of the QueryTime widget."""
         self.set_time(timespan=value)
