@@ -928,7 +928,7 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         max_retries = int(kwargs.get("max_retries", self.max_retries))  # type: ignore[arg-type]
 
         logger.info("Executing configuration search with query: %s", query)
-        payload = {"query": query, "limit": 1000, "withResourceJson": True, **kwargs}
+        payload = {"query": query, "limit": 10000, "withResourceJson": True, **kwargs}
         data = self._fetch_prisma_data(endpoint, payload, timeout, max_retries)
         items = data.get("items", [])
 
