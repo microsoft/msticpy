@@ -4,7 +4,7 @@ metadata:
   description: Queries for Prisma Cloud Data Provider
   data_environments: [Prismacloud]
   data_families: [Prismacloud]
-  tags: [Prisma_config_resource_azure_keyvault]
+  tags: [Prisma_config_resource_aws_s3]
   aliases:
     - &config_resource_query_relative |-
       {{
