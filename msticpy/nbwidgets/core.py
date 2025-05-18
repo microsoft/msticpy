@@ -6,7 +6,7 @@
 """Module for pre-defined widget layouts."""
 from abc import ABC
 from enum import IntEnum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, ClassVar
 from weakref import WeakValueDictionary
 
 from IPython.display import display
@@ -34,8 +34,14 @@ class RegisteredWidget(ABC):
     the same cell after entering values.
     """
 
-    ALLOWED_KWARGS = ["id_vals", "val_attrs", "nb_params", "name_space", "register"]
-    _NB_PARAMS: Dict[str, str] = {}
+    ALLOWED_KWARGS: ClassVar[List[str]] = [
+        "id_vals",
+        "val_attrs",
+        "nb_params",
+        "name_space",
+        "register",
+    ]
+    _NB_PARAMS: ClassVar[Dict[str, str]] = {}
 
     def __init__(
         self,
