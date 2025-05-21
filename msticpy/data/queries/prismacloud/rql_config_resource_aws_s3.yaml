@@ -65,7 +65,15 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "config from cloud.resource where api.name = 'aws-cloudtrail-describe-trails' as X; config from cloud.resource where api.name = 'aws-s3api-get-bucket-acl' AND json.rule = loggingConfiguration.targetBucket does not exist as Y; filter '$.X.s3BucketName equals $.Y.bucketName'; show Y;"
+          "query_by_user": "config from cloud.resource where api.name = 'aws-cloudtrail-describe-trails' as X; config from cloud.resource where api.name = 'aws-s3api-get-bucket-acl' AND json.rule = loggingConfiguration.targetBucket does not exist as Y; filter '$.X.s3BucketName equals $.Y.bucketName'; show Y; {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
   config_resource_route53_cname_reference_unknown_s3bucket:
     description: |-
       Route53 holds all dns rescords for an organization.We are looking for CNAME records that point to S3-website.
@@ -79,7 +87,15 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "config from cloud.resource where api.name = 'aws-route53-list-hosted-zones' AND json.rule = hostedZone.config.privateZone is false and resourceRecordSet[?any( type equals CNAME and resourceRecords[*].value contains s3-website )] exists as X; config from cloud.resource where api.name = 'aws-s3api-get-bucket-acl' as Y; filter 'not ($.X.resourceRecordSet[*].name intersects $.Y.bucketName)'; show X;"
+          "query_by_user": "config from cloud.resource where api.name = 'aws-route53-list-hosted-zones' AND json.rule = hostedZone.config.privateZone is false and resourceRecordSet[?any( type equals CNAME and resourceRecords[*].value contains s3-website )] exists as X; config from cloud.resource where api.name = 'aws-s3api-get-bucket-acl' as Y; filter 'not ($.X.resourceRecordSet[*].name intersects $.Y.bucketName)'; show X; {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
   config_resource_website_hosted_in_aws_s3bucket:
     description: |-
       List of AWS s3 buckets with website hosting enabled.
@@ -94,7 +110,15 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "config from cloud.resource where cloud.type = 'azure' AND api.name = 'azure-key-vault-list' AND json.rule = properties.provisioningState equals Succeeded and properties.privateEndpointConnections[*] does not exist"
+          "query_by_user": "config from cloud.resource where cloud.type = 'azure' AND api.name = 'azure-key-vault-list' AND json.rule = properties.provisioningState equals Succeeded and properties.privateEndpointConnections[*] does not exist {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
   config_resource_publicly_readable_aws_s3bucket:
     description: |-
       List of AWS s3 buckets with public read access.
@@ -109,7 +133,15 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-s3api-get-bucket-acl' AND json.rule = ((((publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false) or (publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false)) and (acl.grantsAsList[?any(grantee equals AllUsers and permission is member of (ReadAcp,Read,FullControl))] exists or acl.grantsAsList[?any(grantee equals AuthenticatedUsers and permission is member of (ReadAcp,Read,FullControl))] exists)) or ((policyStatus.isPublic is true and ((publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false) or (publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false))) and (policy.Statement[?any(Effect equals Allow and (Principal equals * or Principal.AWS equals *) and (Action contains s3:* or Action contains s3:Get or Action contains s3:List) and (Condition does not exist))] exists))) and websiteConfiguration does not exist"
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-s3api-get-bucket-acl' AND json.rule = ((((publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false) or (publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false)) and (acl.grantsAsList[?any(grantee equals AllUsers and permission is member of (ReadAcp,Read,FullControl))] exists or acl.grantsAsList[?any(grantee equals AuthenticatedUsers and permission is member of (ReadAcp,Read,FullControl))] exists)) or ((policyStatus.isPublic is true and ((publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false) or (publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false))) and (policy.Statement[?any(Effect equals Allow and (Principal equals * or Principal.AWS equals *) and (Action contains s3:* or Action contains s3:Get or Action contains s3:List) and (Condition does not exist))] exists))) and websiteConfiguration does not exist {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
   config_resource_publicly_writable_aws_s3bucket:
     description: |-
       List of AWS s3 buckets with public write access.
@@ -124,7 +156,15 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-s3api-get-bucket-acl' AND json.rule = ((((publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false) or (publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false)) and (acl.grantsAsList[?any(grantee equals AllUsers and permission is member of (WriteAcp,Write,FullControl))] exists or acl.grantsAsList[?any(grantee equals AuthenticatedUsers and permission is member of (WriteAcp,Write,FullControl))] exists)) or ((policyStatus.isPublic is true and ((publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false) or (publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false))) and (policy.Statement[?any(Effect equals Allow and (Principal equals * or Principal.AWS equals *) and (Action contains s3:* or Action contains s3:Put or Action contains s3:Create or Action contains s3:Replicate or Action contains s3:Update or Action contains s3:Delete) and (Condition does not exist))] exists))) and websiteConfiguration does not exist"
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-s3api-get-bucket-acl' AND json.rule = ((((publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false) or (publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false)) and (acl.grantsAsList[?any(grantee equals AllUsers and permission is member of (WriteAcp,Write,FullControl))] exists or acl.grantsAsList[?any(grantee equals AuthenticatedUsers and permission is member of (WriteAcp,Write,FullControl))] exists)) or ((policyStatus.isPublic is true and ((publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false) or (publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false))) and (policy.Statement[?any(Effect equals Allow and (Principal equals * or Principal.AWS equals *) and (Action contains s3:* or Action contains s3:Put or Action contains s3:Create or Action contains s3:Replicate or Action contains s3:Update or Action contains s3:Delete) and (Condition does not exist))] exists))) and websiteConfiguration does not exist {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
   config_resource_acl_without_bucketownerenforced_aws_s3bucket:
     description: |-
       List of AWS s3 buckets with ACLs that do not enforce bucket owner enforced.
@@ -138,7 +178,15 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-s3api-get-bucket-acl' AND json.rule = ownershipControls.rules[*] does not contain BucketOwnerEnforced"
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-s3api-get-bucket-acl' AND json.rule = ownershipControls.rules[*] does not contain BucketOwnerEnforced {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
   config_resource_cross_account_write_aws_s3bucket:
     description: |-
       List of AWS S3 buckets with public or cross-account write permissions.
@@ -155,7 +203,15 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-s3api-get-bucket-acl' AND json.rule = policy.Statement[?any(Effect equals Allow and (Principal.AWS does not equal * and Principal does not equal * and Principal.AWS contains arn and Principal.AWS does not contain $.accountId) and (Action contains \"s3:Put*\" or Action contains \"s3:Delete*\" or Action equals \"*\" or Action contains \"s3:*\" or Action is member of ('s3:DeleteBucketPolicy','s3:PutBucketAcl','s3:PutBucketPolicy','s3:PutEncryptionConfiguration','s3:PutObjectAcl') ))] exists"
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-s3api-get-bucket-acl' AND json.rule = policy.Statement[?any(Effect equals Allow and (Principal.AWS does not equal * and Principal does not equal * and Principal.AWS contains arn and Principal.AWS does not contain $.accountId) and (Action contains \"s3:Put*\" or Action contains \"s3:Delete*\" or Action equals \"*\" or Action contains \"s3:*\" or Action is member of ('s3:DeleteBucketPolicy','s3:PutBucketAcl','s3:PutBucketPolicy','s3:PutEncryptionConfiguration','s3:PutObjectAcl') ))] exists {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
   config_resource_allow_all_principals_for_all_actions_aws_s3bucket:
     description: |-
       List of AWS S3 buckets whose bucket policies allow any principal to perform any S3 action without conditions.
@@ -174,7 +230,15 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name='aws-s3api-get-bucket-acl' AND json.rule = ( ( publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration does not exist ) or ( publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false ) or ( publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false ) or ( publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration does not exist ) )AND policy.Statement[?any(Effect equals Allow and Action anyStartWith s3: and (Principal.AWS contains * or Principal equals *) and (Condition does not exist or Condition[*] is empty) )] exists"
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name='aws-s3api-get-bucket-acl' AND json.rule = ( ( publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration does not exist ) or ( publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false ) or ( publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false ) or ( publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration does not exist ) )AND policy.Statement[?any(Effect equals Allow and Action anyStartWith s3: and (Principal.AWS contains * or Principal equals *) and (Condition does not exist or Condition[*] is empty) )] exists {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
   config_resource_public_access_block_disabled_aws_s3bucket:
     description: |-
       List of AWS S3 buckets with public ACL or policy-based access not blocked by Public Access Block settings.
@@ -190,7 +254,15 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name='aws-s3api-get-bucket-acl' AND json.rule = \"((((acl.grants[?(@.grantee=='AllUsers')] size > 0) or policyStatus.isPublic is true) and publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration does not exist) or ((acl.grants[?(@.grantee=='AllUsers')] size > 0) and ((publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false) or (publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false))) or (policyStatus.isPublic is true and ((publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false) or (publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false)))) and websiteConfiguration does not exist\""
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name='aws-s3api-get-bucket-acl' AND json.rule = \"((((acl.grants[?(@.grantee=='AllUsers')] size > 0) or policyStatus.isPublic is true) and publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration does not exist) or ((acl.grants[?(@.grantee=='AllUsers')] size > 0) and ((publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false) or (publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false))) or (policyStatus.isPublic is true and ((publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false) or (publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false)))) and websiteConfiguration does not exist\" {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
   config_resource_publicly_access_to_cloudtrail_s3bucket:
     description: |-
       List of AWS S3 buckets used by CloudTrail that are publicly accessible via ACL or bucket policy.
@@ -208,7 +280,15 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name='aws-s3api-get-bucket-acl' AND json.rule = \"((((acl.grants[?(@.grantee=='AllUsers')] size > 0) or policyStatus.isPublic is true) and publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration does not exist) or ((acl.grants[?(@.grantee=='AllUsers')] size > 0) and ((publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false) or (publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false))) or (policyStatus.isPublic is true and ((publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false) or (publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false))))\" as X; config from cloud.resource where api.name = 'aws-cloudtrail-describe-trails' as Y; filter'$.X.bucketName equals $.Y.s3BucketName'; show X;"
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name='aws-s3api-get-bucket-acl' AND json.rule = \"((((acl.grants[?(@.grantee=='AllUsers')] size > 0) or policyStatus.isPublic is true) and publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration does not exist) or ((acl.grants[?(@.grantee=='AllUsers')] size > 0) and ((publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false) or (publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false))) or (policyStatus.isPublic is true and ((publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false) or (publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false))))\" as X; config from cloud.resource where api.name = 'aws-cloudtrail-describe-trails' as Y; filter'$.X.bucketName equals $.Y.s3BucketName'; show X; {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
   config_resource_enforced_access_via_vpc_endpoint_aws_s3_bucket:
     description: |-
       List of AWS S3 buckets whose bucket policies include VPC endpoint based conditions (`aws:SourceVpce`).
@@ -228,7 +308,15 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name='aws-s3api-get-bucket-acl' AND json.rule = 'policy.Statement[?any((Condition.StringNotEquals contains aws:SourceVpce and Effect equals Deny and (Action contains s3:* or Action[*] contains s3:*)) or (Condition.StringEquals contains aws:SourceVpce and Effect equals Allow and (Action contains s3:* or Action[*] contains s3:*)))] exists'"
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name='aws-s3api-get-bucket-acl' AND json.rule = 'policy.Statement[?any((Condition.StringNotEquals contains aws:SourceVpce and Effect equals Deny and (Action contains s3:* or Action[*] contains s3:*)) or (Condition.StringEquals contains aws:SourceVpce and Effect equals Allow and (Action contains s3:* or Action[*] contains s3:*)))] exists' {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
   config_resource_cmk_with_overly_permissive_access_for_aws_s3bucket:
     description: |-
       List of AWS S3 buckets encrypted with a customer-managed KMS key whose default key
@@ -246,4 +334,12 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name= 'aws-s3api-get-bucket-acl' AND json.rule = (sseAlgorithm contains \"aws:kms\" or sseAlgorithm contains \"aws:kms:dsse\") and kmsMasterKeyID exists as X; config from cloud.resource where api.name = 'aws-kms-get-key-rotation-status' AND json.rule = keyMetadata.keyState equals Enabled and keyMetadata.keyManager equals CUSTOMER and policies.default.Statement[?any((Principal.AWS equals * or Principal equals *)and Condition does not exist)] exists as Y; filter '$.X.kmsMasterKeyID contains $.Y.key.keyArn' ; show X;"
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name= 'aws-s3api-get-bucket-acl' AND json.rule = (sseAlgorithm contains \"aws:kms\" or sseAlgorithm contains \"aws:kms:dsse\") and kmsMasterKeyID exists as X; config from cloud.resource where api.name = 'aws-kms-get-key-rotation-status' AND json.rule = keyMetadata.keyState equals Enabled and keyMetadata.keyManager equals CUSTOMER and policies.default.Statement[?any((Principal.AWS equals * or Principal equals *)and Condition does not exist)] exists as Y; filter '$.X.kmsMasterKeyID contains $.Y.key.keyArn' ; show X; {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str

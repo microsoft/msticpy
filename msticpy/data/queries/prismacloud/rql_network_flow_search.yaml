@@ -90,7 +90,7 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "network from vpc.flow_record where cloud.account IN ({selectaccount_name})"
+          "query_by_user": "network from vpc.flow_record where cloud.account IN ({selectaccount_name}) {additional_query_condition}{optional_limit}"
     parameters:
       selectaccount_name:
         description: |-
@@ -99,6 +99,13 @@ sources:
         default:
           - foo
           - testasset
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
   search_network_with_account_name_and_securitygroup:
     description: |-
       Retrieve network flow data from Prisma Cloud using by providing cloud account name and security group.
@@ -110,7 +117,7 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "network from vpc.flow_record where cloud.account IN ({selectaccount_name_list}) AND dest.resource IN ( resource where securitygroup.name IN ({security_group_list}))"
+          "query_by_user": "network from vpc.flow_record where cloud.account IN ({selectaccount_name_list}) AND dest.resource IN ( resource where securitygroup.name IN ({security_group_list})) {additional_query_condition}{optional_limit}"
     parameters:
       selectaccount_name_list:
         description: |-
@@ -126,6 +133,13 @@ sources:
         default:
           - foo
           - testgroup
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
   search_network_with_account_name_and_virtualnetwork:
     description: |-
       Retrieve network flow data from Prisma Cloud using by providing cloud account name and virtual network name.
@@ -137,7 +151,7 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "network from vpc.flow_record where cloud.account IN ({selectaccount_name_list}) AND dest.resource IN ( resource where virtualnetwork.name IN ({network_list}))"
+          "query_by_user": "network from vpc.flow_record where cloud.account IN ({selectaccount_name_list}) AND dest.resource IN ( resource where virtualnetwork.name IN ({network_list})) {additional_query_condition}{optional_limit}"
     parameters:
       selectaccount_name_list:
         description: |-
@@ -153,3 +167,10 @@ sources:
         default:
           - foo
           - testgroup
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str

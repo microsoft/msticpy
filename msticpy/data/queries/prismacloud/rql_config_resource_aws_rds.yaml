@@ -67,4 +67,12 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "config from cloud.resource where api.name = 'aws-rds-describe-db-instances' as X; config from cloud.resource where api.name = 'aws-ec2-describe-route-tables' AND json.rule = associations[*].subnetId exists and routes[?any( state equals active and gatewayId starts with igw- and (destinationCidrBlock equals \"0.0.0.0/0\" or destinationIpv6CidrBlock equals \"::/0\"))] exists as Y; filter '$.X.dbsubnetGroup.subnets[*].subnetIdentifier intersects $.Y.associations[*].subnetId'; show X;"
+          "query_by_user": "config from cloud.resource where api.name = 'aws-rds-describe-db-instances' as X; config from cloud.resource where api.name = 'aws-ec2-describe-route-tables' AND json.rule = associations[*].subnetId exists and routes[?any( state equals active and gatewayId starts with igw- and (destinationCidrBlock equals \"0.0.0.0/0\" or destinationIpv6CidrBlock equals \"::/0\"))] exists as Y; filter '$.X.dbsubnetGroup.subnets[*].subnetIdentifier intersects $.Y.associations[*].subnetId'; show X; {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
