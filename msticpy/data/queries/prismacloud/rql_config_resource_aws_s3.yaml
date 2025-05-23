@@ -50,6 +50,19 @@ defaults:
       description: Query end time
       type: datetime
       default: 0
+    optional_limit:
+      description: |-
+        enter limit using command - limit search records to |number|
+        default is empty - not used
+      type: str
+      default: |-
+         
+    additional_query_condition:
+      description: |-
+        Additional query condition to search default is empty
+      type: str
+      default: |-
+         
 sources:
   config_resource_logging_disabled_aws_s3bucket:
     description: |-
@@ -343,3 +356,29 @@ sources:
         description: |-
           Additional query condition to search
         type: str
+  search_config_resource_s3_full_from_accountname_and_regionname:
+    description: |-
+      Retrieve config resource data from Prisma Cloud using by providing cloud account name and region name.
+      out = driver.Prismacloud.search_config_resource_s3_full(account_name = ["something"], region_name = ["something"])
+      out = driver.Prismacloud.search_config_resource_s3_full(account_name = ["something"], region_name = ["something"], additional_query_condition = "something")
+    metadata:
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.service = 'Amazon S3' AND cloud.account IN ( {account_name}) and cloud.region IN ( {region_name} ) {additional_query_condition}{optional_limit}"
+    parameters:
+      region_name:
+        description: enter limit using command - limit search records to |number|
+        type: list
+        default:
+          - testregion
+          - testregion1
+      account_name:
+        description: enter limit using command - limit search records to |number|
+        type: list
+        default:
+          - testaccount
+          - testaccount1
