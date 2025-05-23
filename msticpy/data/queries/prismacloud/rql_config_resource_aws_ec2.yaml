@@ -74,10 +74,12 @@ sources:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
   config_resource_running_instance_with_public_ip_and_allow_all_inbound_aws_ec2_security_group:
     description: |-
       Identifies AWS EC2 instances that are in a running state, have a public IP address, and are associated with Security Groups 
@@ -93,15 +95,22 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "config from cloud.resource where api.name = 'aws-ec2-describe-instances' AND json.rule = state.name equals running and publicIpAddress exists and publicIpAddress is not empty as X; config from cloud.resource where api.name = 'aws-ec2-describe-security-groups' AND json.rule = ipPermissions[?any(ipRanges[*] contains 0.0.0.0/0 or ipv6Ranges[*].cidrIpv6 contains ::/0)] exists as Y; filter '$.X.securityGroups[*].groupName equals $.Y.groupName'; show X; {additional_query_condition}{optional_limit}"
+          "query_by_user": "config from cloud.resource where api.name = 'aws-ec2-describe-instances' AND json.rule = state.name equals running and publicIpAddress exists and publicIpAddress is not empty as X; config from cloud.resource where api.name = 'aws-ec2-describe-security-groups' AND json.rule = ipPermissions[?any(ipRanges[*] contains 0.0.0.0/0 or ipv6Ranges[*].cidrIpv6 contains ::/0)] exists as Y; filter '$.X.securityGroups[*].groupName equals $.Y.groupName'; show {variable_name}; {additional_query_condition}{optional_limit}"
     parameters:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
+      variable_name:
+        description: |-
+          show outcome of filtered variable
+        type: str
+        default: X
   config_resource_automatically_assigned_public_ip_aws_ec2_instance:
     description: |-
       Identifies AWS EC2 instances in the 'running' state (state.code = 16) that reside in subnets 
@@ -118,15 +127,22 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "config from cloud.resource where api.name = 'aws-ec2-describe-instances' AND json.rule = state.code equals 16 as X; config from cloud.resource where api.name = 'aws-ec2-describe-subnets' AND json.rule = mapPublicIpOnLaunch is true as Y; filter '$.X.subnetId equals $.Y.subnetId'; show X; {additional_query_condition}{optional_limit}"
+          "query_by_user": "config from cloud.resource where api.name = 'aws-ec2-describe-instances' AND json.rule = state.code equals 16 as X; config from cloud.resource where api.name = 'aws-ec2-describe-subnets' AND json.rule = mapPublicIpOnLaunch is true as Y; filter '$.X.subnetId equals $.Y.subnetId'; show {variable_name}; {additional_query_condition}{optional_limit}"
     parameters:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
+      variable_name:
+        description: |-
+          show outcome of filtered variable
+        type: str
+        default: X
   config_resource_has_public_ip_aws_ec2_instance:
     description: |-
       Identifies AWS EC2 instances that have a public IP address associated via a network interface. 
@@ -148,10 +164,12 @@ sources:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
   config_resource_allow_all_inbound_aws_ec2_network_acl:
     description: |-
       Identifies AWS Network ACLs that allow inbound traffic (egress = false) from any IPv4 (0.0.0.0/0) or IPv6 (::/0) source 
@@ -167,15 +185,22 @@ sources:
       query_conditions:
         description: query search conditions
         value: |-
-          "query_by_user": "config from cloud.resource where api.name = 'aws-rds-describe-db-instances' as X; config from cloud.resource where api.name = 'aws-ec2-describe-route-tables' AND json.rule = associations[*].subnetId exists and routes[?any( state equals active and gatewayId starts with igw- and (destinationCidrBlock equals \"0.0.0.0/0\" or destinationIpv6CidrBlock equals \"::/0\"))] exists as Y; filter '$.X.dbsubnetGroup.subnets[*].subnetIdentifier intersects $.Y.associations[*].subnetId'; show X; {additional_query_condition}{optional_limit}"
+          "query_by_user": "config from cloud.resource where api.name = 'aws-rds-describe-db-instances' as X; config from cloud.resource where api.name = 'aws-ec2-describe-route-tables' AND json.rule = associations[*].subnetId exists and routes[?any( state equals active and gatewayId starts with igw- and (destinationCidrBlock equals \"0.0.0.0/0\" or destinationIpv6CidrBlock equals \"::/0\"))] exists as Y; filter '$.X.dbsubnetGroup.subnets[*].subnetIdentifier intersects $.Y.associations[*].subnetId'; show {variable_name}; {additional_query_condition}{optional_limit}"
     parameters:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
+      variable_name:
+        description: |-
+          show outcome of filtered variable
+        type: str
+        default: X
   config_resource_publicly_accessible_aws_ec2_autoscaling_launch_configuration:
     description: |-
       Identifies AWS Auto Scaling launch configurations that are set to automatically associate public IP addresses 
@@ -197,10 +222,12 @@ sources:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
   config_resource_rdp_allow_all_inbound_aws_ec2_security_group:
     description: |-
       Identifies non-shared AWS Security Groups that allow inbound access to port 3389 (Remote Desktop Protocol) 
@@ -221,10 +248,12 @@ sources:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
   config_resource_telnet_allow_all_inbound_aws_ec2_security_group:
     description: |-
       Identifies non-shared AWS Security Groups that allow inbound access to port 23 (Telnet) or a port range 
@@ -247,10 +276,12 @@ sources:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
   config_resource_vnc_listener_allow_all_inbound_aws_ec2_security_group:
     description: |-
       Identifies non-shared AWS Security Groups that allow inbound access to port 5500 or a port range 
@@ -273,10 +304,12 @@ sources:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
   config_resource_vnc_server_allow_all_inbound_aws_ec2_security_group:
     description: |-
       Identifies non-shared AWS Security Groups that allow inbound access to port 5900 or a port range 
@@ -299,10 +332,12 @@ sources:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
   config_resource_ssh_allow_all_inbound_aws_ec2_security_group:
     description: |-
       Identifies non-shared AWS Security Groups that allow inbound access to port 22 (SSH) or a port range 
@@ -324,10 +359,12 @@ sources:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
   config_resource_rdp_ssh_allow_all_inbound_aws_ec2_nacl:
     description: |-
       Identifies AWS Network ACLs that allow inbound traffic (egress = false) from the public internet 
@@ -349,10 +386,12 @@ sources:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
   config_resource_puclicly_accessible_all_tcp_udp_aws_ec2_security_group:
     description: |-
       Identifies non-shared AWS Security Groups that allow inbound access from any public IPv4 (0.0.0.0/0) or 
@@ -374,10 +413,12 @@ sources:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
   config_resource_default_group_permiting_inbound_traffic_aws_ec2_security_group:
     description: |-
       Identifies default AWS Security Groups that have one or more inbound or outbound rules configured. 
@@ -399,10 +440,12 @@ sources:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
   config_resource_all_protocols_egress_allowed_aws_ec2_network_acl:
     description: |-
       Identifies AWS Network ACLs that allow outbound (egress) traffic to any public IPv4 (0.0.0.0/0) or IPv6 (::/0) 
@@ -424,10 +467,12 @@ sources:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
   config_resource_publicly_accessible_sql_server_1433_aws_ec2_security_group:
     description: |-
       Identifies non-shared AWS Security Groups that allow inbound access to Microsoft SQL Server's default port 1433, 
@@ -449,10 +494,12 @@ sources:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
   config_resource_publicly_accessible_sql_server_1434_aws_ec2_security_group:
     description: |-
       Identifies non-shared AWS Security Groups that allow inbound access to port 1434, used by the Microsoft SQL Server 
@@ -474,7 +521,9 @@ sources:
       optional_limit:
         description: enter limit using command - limit search records to |number|
         type: str
+        default:  
       additional_query_condition:
         description: |-
           Additional query condition to search
         type: str
+        default:  
