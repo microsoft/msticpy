@@ -37,6 +37,8 @@ _GEO_LITE: GeoLiteLookup = GeoLiteLookup()
 
 
 # pylint: disable=too-many-lines
+
+
 @export
 class FoliumMap:
     """Wrapper class for Folium/Leaflet mapping."""
