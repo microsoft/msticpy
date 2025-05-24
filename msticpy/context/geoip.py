@@ -1,3 +1,4 @@
+# pylint:disable=too-many-lines
 # -------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See License.txt in the project root for
@@ -55,8 +56,6 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-# pylint:disable=too-many-lines
 
 
 class GeoIPDatabaseError(Exception):
