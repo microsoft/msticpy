@@ -8,7 +8,6 @@ from itertools import zip_longest
 from typing import Any, Dict
 
 import pandas as pd
-from bokeh.core.enums import LegendLocationType
 from bokeh.io import output_notebook, show
 from bokeh.layouts import column
 from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM, NumeralTickFormatter
@@ -146,7 +145,7 @@ def display_timeseries_anomalies(
         col1 or col2
         for col1, col2 in zip_longest(color[:3], ["navy", "green", "firebrick"])
     ]
-    legend_pos: LegendLocationType = kwargs.pop("legend", "top_left")
+    legend_pos: str = kwargs.pop("legend", "top_left")
     xgrid: bool = kwargs.pop("xgrid", False)
     ygrid: bool = kwargs.pop("ygrid", False)
     kind: str = kwargs.pop("kind", "circle_x")
@@ -244,7 +243,7 @@ def display_timeseries_anomalies(
         plot.scatter(marker="circle_x", **arg_dict)
 
     # interactive legend to hide single/multiple plots if selected
-    plot.legend.location = legend_pos
+    plot.legend.location = legend_pos  # type: ignore[arg-type]
     plot.legend.click_policy = "hide"
 
     # Create plot for the score column to act as as range selector

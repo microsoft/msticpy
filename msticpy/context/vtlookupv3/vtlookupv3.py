@@ -1,3 +1,4 @@
+# pylint:disable=too-many-lines
 """VirusTotal v3 API."""
 
 from __future__ import annotations
@@ -42,7 +43,6 @@ except ImportError as imp_err:
     ) from imp_err
 
 logger: logging.Logger = logging.getLogger(__name__)
-# pylint: disable=too-many-lines
 
 
 class MsticpyVTNoDataError(Exception):
