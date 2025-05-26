@@ -102,11 +102,11 @@ def identify_outliers(
 
     # Determine sample size
     if max_samples is None:
-        n_samples = min(100, rows)
+        n_samples = int(min(100, rows))
     elif isinstance(max_samples, float) and 0 < max_samples < 1:
         n_samples = int(max_samples * rows)
     else:
-        n_samples = min(max_samples, rows)
+        n_samples = int(min(max_samples, rows))
 
     if not max_features:
         max_features = math.floor(math.sqrt(cols))
@@ -172,11 +172,11 @@ class RobustRandomCutForest:
         self.contamination = contamination
         self.max_samples = max_samples
         self.max_features = max_features
-        self.forest = []
         self._feature_indices = None
-        self.n_features_in_ = None
-        self._train_scores = None
-        self._train_samples = None
+        self.n_features_in_ = 2
+        self.forest: list | None = None
+        self._train_scores: np.ndarray | None
+        self._train_samples: np.ndarray | None
 
     def _select_features(self, cols: int) -> np.ndarray:
         """
@@ -197,7 +197,7 @@ class RobustRandomCutForest:
             self.max_features = math.floor(math.sqrt(cols))
 
         rng = np.random.RandomState(42)
-        return rng.choice(cols, size=self.max_features, replace=False)
+        return rng.choice(cols, size=int(self.max_features), replace=False)
 
     def _select_train_samples(self, rows: int) -> np.ndarray:
         """
@@ -220,7 +220,7 @@ class RobustRandomCutForest:
         elif isinstance(self.max_samples, float) and 0 < self.max_samples < 1:
             n_samples = int(self.max_samples * rows)
         else:
-            n_samples = min(self.max_samples, rows)
+            n_samples = int(min(self.max_samples, rows))
 
         rng = np.random.RandomState(42)
         return rng.choice(rows, n_samples, replace=False)
@@ -375,20 +375,23 @@ class RobustRandomCutForest:
             index number list predicted as anomaly
 
         """
-        if x is None or x.shape == self._train_samples.shape:
+        if x is None:
+            logger.info("Using training data for predict()")
+            scores = self._train_scores
+        elif x.shape == self._train_samples.shape:
             scores = self._train_scores
         else:
             scores = self.decision_function(x)
 
-        # Calculate number of anomalies
-        n_anomalies = int(np.ceil(len(scores) * self.contamination))
-
-        # Get indices of top anomalies
-        anomaly_indices = np.argpartition(scores, -n_anomalies)[-n_anomalies:]
-
         # Create label array
         labels = np.ones(len(scores), dtype=int)
-        labels[anomaly_indices] = -1
+
+        if scores is not None:
+            # Calculate number of anomalies
+            n_anomalies = int(np.ceil(len(scores) * self.contamination))
+            # Get indices of top anomalies
+            anomaly_indices = np.argpartition(scores, -n_anomalies)[-n_anomalies:]
+            labels[anomaly_indices] = -1
 
         return labels
 
