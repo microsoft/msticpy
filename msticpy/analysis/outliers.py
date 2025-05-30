@@ -172,11 +172,11 @@ class RobustRandomCutForest:
         self.contamination = contamination
         self.max_samples = max_samples
         self.max_features = max_features
-        self._feature_indices = None
+        self._feature_indices = np.ndarray
         self.n_features_in_ = 2
         self.forest: list | None = None
-        self._train_scores: np.ndarray | None
-        self._train_samples: np.ndarray | None
+        self._train_scores: np.ndarray
+        self._train_samples: np.ndarray
 
     def _select_features(self, cols: int) -> np.ndarray:
         """
@@ -448,7 +448,7 @@ def identify_outliers_rrcf(
     Returns
     -------
     tuple[RobustRandomCutForest, np.ndarray, np.ndarray]
-        RobustRandomCutForest model, x_Outliers,
+        RobustRandomCutForest model, x_outliers,
         y_pred_outliers
 
     """
