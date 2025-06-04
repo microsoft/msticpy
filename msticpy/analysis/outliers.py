@@ -196,6 +196,7 @@ class RobustRandomCutForest:
         if self.max_features is None:
             self.max_features = math.floor(math.sqrt(cols))
 
+        # pylint: disable=no-member
         rng = np.random.RandomState(42)
         return rng.choice(cols, size=int(self.max_features), replace=False)
 
@@ -222,6 +223,7 @@ class RobustRandomCutForest:
         else:
             n_samples = int(min(self.max_samples, rows))
 
+        # pylint: disable=no-member
         rng = np.random.RandomState(42)
         return rng.choice(rows, n_samples, replace=False)
 
