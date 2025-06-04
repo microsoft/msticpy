@@ -28,7 +28,6 @@ import math
 
 import numpy as np
 import pandas as pd
-from joblib import Parallel, delayed
 from tqdm.auto import tqdm
 
 from .._version import VERSION
@@ -36,6 +35,7 @@ from ..common.exceptions import MsticpyImportExtraError
 
 try:
     import matplotlib.pyplot as plt
+    from joblib import Parallel, delayed
     from sklearn.ensemble import IsolationForest
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
@@ -252,14 +252,14 @@ class RobustRandomCutForest:
         )
 
         self.n_features_in_ = cols
-        self._feature_indices = self._select_features(cols)
+        self._feature_indices = self._select_features(cols)  # type: ignore[assignment]
         logger.info(
             "training features (%d): indices %s",
-            len(self._feature_indices),
+            len(self._feature_indices),  # type: ignore[arg-type]
             self._feature_indices,
         )
 
-        x_sub = self._train_samples[:, self._feature_indices]
+        x_sub = self._train_samples[:, self._feature_indices]  # type: ignore[index]
 
         # Building Tree
         self.forest = []
@@ -296,7 +296,7 @@ class RobustRandomCutForest:
             Advice: Make sure your max_features and max_samples are what you really need."
         )
 
-        x_sub = x[:, self._feature_indices]
+        x_sub = x[:, self._feature_indices]  # type: ignore[index]
         n_points = x_sub.shape[0]
 
         # Create batches
@@ -421,7 +421,7 @@ def identify_outliers_rrcf(
     tree_size: int = 256,
     max_features: int | float | None = None,
     max_samples: int | float | None = None,
-) -> tuple[RobustRandomCutForest, np.ndarray, np.ndarray]:
+) -> tuple[RobustRandomCutForest, np.ndarray, np.ndarray | None]:
     """
     Identify outlier items using RobustRandomCutForest.
 
