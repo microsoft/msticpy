@@ -76,6 +76,7 @@ class VirusTotal(HttpTIProvider):
         "detected_communicating_samples": ("sha256", "date"),
     }
 
+    # pylint: disable=duplicate-code, too-many-branches
     def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
@@ -128,9 +129,19 @@ class VirusTotal(HttpTIProvider):
                     )
 
         if "positives" in result_dict:
-            if result_dict["positives"] > 1:
+            positives = result_dict.get("positives", 0)
+            if not isinstance(positives, (int, float)):
+                positives = 0
+            elif isinstance(positives, str):
+                # sometimes the API returns a string with a number in it
+                try:
+                    positives = int(positives)
+                except ValueError:
+                    positives = 0
+
+            if positives > 1:
                 severity = ResultSeverity.high
-            elif result_dict["positives"] > 0:
+            elif positives > 0:
                 severity = ResultSeverity.warning
             else:
                 severity = ResultSeverity.information

@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Intake kql driver."""
+from __future__ import annotations
+
 import json
 import re
 
@@ -11,7 +13,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from json.decoder import JSONDecodeError
 from numbers import Number
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable
 
 from dateutil.parser import ParserError, parse  # type: ignore
 from dateutil.relativedelta import relativedelta
@@ -24,7 +26,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-def _value_or_default(src_dict: Dict, prop_name: str, default: Dict):
+def _value_or_default(src_dict: dict, prop_name: str, default: dict):
     """Return value from dict or emtpy dict."""
     src_value = src_dict.get(prop_name)
     return src_value if src_value is not None else default
@@ -50,7 +52,7 @@ class QuerySource:
     ----------
     name: str
         The query name
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
         The consolidated metadata for the query
     params: dict[str, Any]
         The dictionary of parameter definitions for the query.
@@ -62,9 +64,9 @@ class QuerySource:
     def __init__(
         self,
         name: str,
-        source: Dict[str, Any],
-        defaults: Dict[str, Any],
-        metadata: Dict[str, Any],
+        source: dict[str, Any],
+        defaults: dict[str, Any],
+        metadata: dict[str, Any],
     ):
         """
         Initialize query source definition.
@@ -89,10 +91,10 @@ class QuerySource:
         """
         self.show = True
         self.name = name
-        self._source: Dict[str, Any] = source or {}
-        self.defaults: Dict[str, Any] = defaults or {}
-        self._global_metadata: Dict[str, Any] = dict(metadata) if metadata else {}
-        self.query_store: Optional["QueryStore"] = None  # type: ignore  # noqa: F821
+        self._source: dict[str, Any] = source or {}
+        self.defaults: dict[str, Any] = defaults or {}
+        self._global_metadata: dict[str, Any] = dict(metadata) if metadata else {}
+        self.query_store: "QueryStore" | None = None  # type: ignore  # noqa: F821
 
         # consolidate source metadata - source-specific
         # overrides global
@@ -124,9 +126,10 @@ class QuerySource:
 
         """
         path_elems = key.split(".")
-        cur_node = self._source
+        cur_node: dict[str, Any] | None = self._source
         for elem in path_elems:
-            cur_node = cur_node.get(elem, None)
+            if isinstance(cur_node, dict):
+                cur_node = cur_node.get(elem, None)
             if cur_node is None:
                 raise KeyError(f"{elem} value of {key} is not a valid path")
         return cur_node
@@ -161,7 +164,7 @@ class QuerySource:
         return self._query
 
     @property
-    def default_params(self) -> Dict[str, dict]:
+    def default_params(self) -> dict[str, dict]:
         """
         Return the set of parameters with default values.
 
@@ -178,7 +181,7 @@ class QuerySource:
         }
 
     @property
-    def required_params(self) -> Dict[str, dict]:
+    def required_params(self) -> dict[str, dict]:
         """
         Return the set of parameters with no default values.
 
@@ -195,13 +198,13 @@ class QuerySource:
         }
 
     @property
-    def data_families(self) -> List[str]:
+    def data_families(self) -> list[str]:
         """
         Return the list of data families used by the query.
 
         Returns
         -------
-        List[str]
+        list[str]
             The list of data families. A data family is
             usually equivalent to a table or entity set.
 
@@ -209,15 +212,15 @@ class QuerySource:
         return self.metadata["data_families"]
 
     def create_query(
-        self, formatters: Dict[str, Callable] = None, **kwargs
+        self, formatters: dict[str, Callable] = None, **kwargs
     ) -> str:  # noqa: MC0001
         """
         Return query with values from kwargs and defaults substituted.
 
         Parameters
         ----------
-        formatters : Dict[str, Callable]
-            Dictionary of custom parameter formatters indexed
+        formatters : dict[str, Callable]
+            dictionary of custom parameter formatters indexed
             by data type
         kwargs: Mapping[str, Any]
             Set of parameter name, value pairs used to
@@ -317,7 +320,7 @@ class QuerySource:
             # If none of these, assume a time delta
             return self._calc_timeoffset(str(param_value))
 
-    def resolve_param_aliases(self, param_dict: Dict[str, Any]) -> Dict[str, Any]:
+    def resolve_param_aliases(self, param_dict: dict[str, Any]) -> dict[str, Any]:
         """Try to resolve any parameters in `param_dict` that are aliases."""
         out_dict = {}
         for param, value in param_dict.items():
@@ -331,7 +334,7 @@ class QuerySource:
                     out_dict[param] = value
         return out_dict
 
-    def _get_aliased_param(self, alias: str) -> Optional[str]:
+    def _get_aliased_param(self, alias: str) -> str | None:
         """Return first parameter with a matching alias."""
         aliased_params = {
             p_name: p_prop
@@ -402,7 +405,7 @@ class QuerySource:
         return relativedelta(**({unit_param: tm_val}))  # type: ignore
 
     @staticmethod
-    def _parse_param_list(param_value: Union[str, List]) -> List[Any]:
+    def _parse_param_list(param_value: str | list) -> list[Any]:
         """Parse list, comma-delim str or str."""
         if isinstance(param_value, list):
             return param_value
@@ -415,7 +418,7 @@ class QuerySource:
         return date_time.isoformat(sep="T") + "Z"
 
     @staticmethod
-    def _format_list_default(item_list: List[Any]) -> str:
+    def _format_list_default(item_list: list[Any]) -> str:
         """Return formatted list parameter."""
         fmt_list = []
         for item in item_list:
@@ -473,7 +476,7 @@ class QuerySource:
         doc_string = [f"{self.description}", ""]
         return "\n".join(doc_string + param_block)
 
-    def validate(self) -> Tuple[bool, List[str]]:
+    def validate(self) -> tuple[bool, list[str]]:
         """
         Validate the source to ensure that all required properties are present.
 

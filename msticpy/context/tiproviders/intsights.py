@@ -124,25 +124,37 @@ class IntSights(HttpTIProvider):
         sev: str = response["RawResult"].get("severity", "Low")
         result_dict: dict[str, Any] = {
             "threat_actors": response["RawResult"].get("relatedThreatActors", ""),
-            "geolocation": response["RawResult"].get("geolocation", None),
+            "geolocation": response["RawResult"].get("geolocation"),
             "response_code": response["Status"],
             "tags": response["RawResult"].get("tags", [])
             + response["RawResult"].get("SystemTags", []),
             "malware": response["RawResult"].get("relatedMalware", []),
             "campaigns": response["RawResult"].get("relatedCampaigns", []),
             "score": response["RawResult"].get("score", 0),
-            "first_seen": dt.datetime.strptime(
-                response["RawResult"].get("firstSeen", None),
-                "%Y-%m-%dT%H:%M:%S.%fZ",
-            ).replace(tzinfo=dt.timezone.utc),
-            "last_seen": dt.datetime.strptime(
-                response["RawResult"].get("lastSeen", None),
-                "%Y-%m-%dT%H:%M:%S.%fZ",
-            ).replace(tzinfo=dt.timezone.utc),
-            "last_update": dt.datetime.strptime(
-                response["RawResult"].get("lastUpdateDate", None),
-                "%Y-%m-%dT%H:%M:%S.%fZ",
-            ).replace(tzinfo=dt.timezone.utc),
+            "first_seen": (
+                dt.datetime.strptime(
+                    response["RawResult"].get("firstSeen"),  # type: ignore[arg-type]
+                    "%Y-%m-%dT%H:%M:%S.%fZ",
+                ).replace(tzinfo=dt.timezone.utc)
+                if response["RawResult"].get("firstSeen")
+                else None
+            ),
+            "last_seen": (
+                dt.datetime.strptime(
+                    response["RawResult"].get("lastSeen"),  # type: ignore[arg-type]
+                    "%Y-%m-%dT%H:%M:%S.%fZ",
+                ).replace(tzinfo=dt.timezone.utc)
+                if response["RawResult"].get("lastSeen")
+                else None
+            ),
+            "last_update": (
+                dt.datetime.strptime(
+                    response["RawResult"].get("lastUpdateDate"),  # type: ignore[arg-type]
+                    "%Y-%m-%dT%H:%M:%S.%fZ",
+                ).replace(tzinfo=dt.timezone.utc)
+                if response["RawResult"].get("lastUpdateDate")
+                else None
+            ),
         }
 
         severity: ResultSeverity = (

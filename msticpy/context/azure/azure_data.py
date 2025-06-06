@@ -1,3 +1,4 @@
+# pylint:disable=too-many-lines
 # -------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See License.txt in the project root for
@@ -68,8 +69,6 @@ except ImportError as imp_err:
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
-
-# pylint:disable=too-many-lines
 
 logger: logging.Logger = logging.getLogger(__name__)
 

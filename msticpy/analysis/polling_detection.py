@@ -19,12 +19,13 @@ from typing import List, Optional, Tuple, Union
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+from pkg_resources import parse_version
 from scipy import signal, special
 
 from ..common.utility import export
 
-_PD_VERSION = tuple(int(v) for v in pd.__version__.split("."))
-if _PD_VERSION >= (2, 2, 1):
+_PD_VERSION = parse_version(pd.__version__)
+if _PD_VERSION >= parse_version("2.2.1"):
     GROUP_APPLY_PARAMS = {"include_groups": False}
 else:
     GROUP_APPLY_PARAMS = {}

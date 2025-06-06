@@ -9,13 +9,15 @@ from __future__ import annotations
 import logging
 from collections import Counter
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Dict, cast
 
 import httpx
 import pandas as pd
 from azure.common.exceptions import CloudError
 from azure.mgmt.core import tools as az_tools
-from typing_extensions import Dict, Self, cast
+
+# pylint: disable=import-error, no-name-in-module
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...auth.azure_auth_core import AzureCloudConfig
@@ -339,7 +341,7 @@ def parse_resource_id(res_id: str) -> dict[str, Any]:
     """Extract components from workspace resource ID."""
     if not res_id.startswith("/"):
         res_id = f"/{res_id}"
-    res_id_parts: Dict[str, str] = cast(
+    res_id_parts: dict[str, str] = cast(
         Dict[str, str], az_tools.parse_resource_id(res_id)
     )
     workspace_name: str | None = None

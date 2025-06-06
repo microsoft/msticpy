@@ -1,3 +1,4 @@
+# pylint:disable=too-many-lines
 # -------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See License.txt in the project root for
@@ -8,8 +9,8 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Literal, cast, Callable
 from types import TracebackType
+from typing import Any, Callable, Literal, cast
 
 import ipywidgets as widgets
 import yaml
@@ -30,7 +31,7 @@ from ..data.core.query_template import (
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-# pylint: disable=too-many-instance-attributes, too-many-lines
+# pylint: disable=too-many-instance-attributes
 
 
 class IPyDisplayMixin(widgets.widgets.widget_templates.LayoutProperties):

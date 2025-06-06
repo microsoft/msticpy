@@ -1,3 +1,4 @@
+# pylint:disable=too-many-lines
 # -------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See License.txt in the project root for
@@ -65,8 +66,6 @@ __author__: str = "Ian Hellen"
 _HELP_URL: str = (
     "https://msticpy.readthedocs.io/en/latest/DataProviders/DataProv-Kusto.html"
 )
-
-# pylint:disable=too-many-lines
 
 logger: logging.Logger = logging.getLogger(__name__)
 
