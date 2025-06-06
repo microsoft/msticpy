@@ -944,7 +944,9 @@ def _create_mapped_icon(
     """Return folium Icon from mapping or defaults."""
     icon_kwargs: dict[str, Any] = {}
     if isinstance(icon_map, dict):
-        icon_kwargs = icon_map.get(row[icon_column], icon_map.get("default", {}))
+        icon_kwargs = icon_map.get(  # type: ignore[assignment]
+            row[icon_column], icon_map.get("default", {})
+        )
     elif callable(icon_map):
         icon_kwargs = icon_map(row[icon_column])
     elif icon_column:
