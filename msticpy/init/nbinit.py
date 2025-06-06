@@ -876,8 +876,8 @@ def _check_and_reload_pkg(
     if not hasattr(pkg, "__version__"):
         raise MsticpyException(f"Package {pkg_name} has no version data.")
     pkg_version = parse_version(pkg.__version__)
-    req_version_str = ".".join(str(elem) for elem in req_version)
-    if pkg_version < req_version_str:
+    required_version = parse_version(".".join(str(elem) for elem in req_version))
+    if pkg_version < required_version:
         _err_output(_MISSING_PKG_WARN.format(package=pkg_name))
         # sourcery skip: swap-if-expression
         resp = (
@@ -885,7 +885,7 @@ def _check_and_reload_pkg(
         )  # nosec
         if resp.casefold().startswith("y"):
             warn_mssg.append(f"{pkg_name} was installed or upgraded.")
-            pkg_spec = f"{pkg_name}>={req_version_str}"
+            pkg_spec = f"{pkg_name}>={required_version}"
             check_and_install_missing_packages(required_packages=[pkg_spec], user=True)
 
             if pkg_name in sys.modules:
