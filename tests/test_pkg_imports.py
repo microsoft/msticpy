@@ -39,7 +39,7 @@ CONDA_PKG_EXCEPTIONS = {
     "kqlmagiccustom",
     "sumologic-sdk",
     "openpyxl",
-    "git+https://github.com/juju4/python-openobserve.git@devel-all",
+    "python-openobserve",
 }
 
 
