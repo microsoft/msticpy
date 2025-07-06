@@ -59,6 +59,7 @@ import pandas as pd
 from IPython import get_ipython
 from IPython.core.interactiveshell import InteractiveShell
 from IPython.display import HTML, display
+from pkg_resources import parse_version
 
 try:
     import seaborn as sns
@@ -874,8 +875,9 @@ def _check_and_reload_pkg(
     pkg_name = pkg.__name__
     if not hasattr(pkg, "__version__"):
         raise MsticpyException(f"Package {pkg_name} has no version data.")
-    pkg_version = tuple(int(v) for v in pkg.__version__.split("."))
-    if pkg_version < req_version:
+    pkg_version = parse_version(pkg.__version__)
+    required_version = parse_version(".".join(str(elem) for elem in req_version))
+    if pkg_version < required_version:
         _err_output(_MISSING_PKG_WARN.format(package=pkg_name))
         # sourcery skip: swap-if-expression
         resp = (
@@ -883,8 +885,7 @@ def _check_and_reload_pkg(
         )  # nosec
         if resp.casefold().startswith("y"):
             warn_mssg.append(f"{pkg_name} was installed or upgraded.")
-            pip_ver = ".".join(str(elem) for elem in req_version)
-            pkg_spec = f"{pkg_name}>={pip_ver}"
+            pkg_spec = f"{pkg_name}>={required_version}"
             check_and_install_missing_packages(required_packages=[pkg_spec], user=True)
 
             if pkg_name in sys.modules:

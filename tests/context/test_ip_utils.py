@@ -13,6 +13,7 @@ import pytest
 import pytest_check as check
 import respx
 
+import msticpy.init.mp_pandas_accessors  # noqa: F401
 from msticpy.context.ip_utils import (
     _IpWhoIsResult,
     get_asn_details,
@@ -457,9 +458,9 @@ def test_get_whois(mock_asn_whois_query):
     check.is_in(ms_asn, asn.name)
 
 
+# @pytest.fixture(scope="module")
 @respx.mock
 @patch("msticpy.context.ip_utils._asn_whois_query")
-@pytest.fixture(scope="module")
 def test_get_whois_df(mock_asn_whois_query, net_df):
     """Test IP Whois."""
     net_df = net_df.head(25)
@@ -479,17 +480,17 @@ def test_get_whois_df(mock_asn_whois_query, net_df):
     check.equal(len(results2[~results2["whois"].isna()]), len(net_df))
 
 
+# @pytest.fixture(scope="module")
 @respx.mock
-@pytest.fixture(scope="module")
 @patch("msticpy.context.ip_utils._asn_whois_query")
-def test_whois_pdext(net_df, mock_asn_whois_query):
+def test_whois_pdext(mock_asn_whois_query, net_df):
     """Test IP Whois."""
     net_df = net_df.head(25)
     mock_asn_whois_query.return_value = ASN_RESPONSE
     respx.get(re.compile(r"http://rdap\.arin\.net/.*")).respond(200, json=RDAP_RESPONSE)
     results = net_df.mp_whois.lookup(ip_column="AllExtIPs")
     check.equal(len(results), len(net_df))
-    check.is_in("AsnDescription", results.columns)
+    check.is_in("ASNDescription", results.columns)
 
     results2 = net_df.mp.whois(ip_column="AllExtIPs", asn_col="asn", whois_col="whois")
     check.equal(len(results2), len(net_df))
@@ -502,7 +503,7 @@ def test_whois_pdext(net_df, mock_asn_whois_query):
 @respx.mock
 @patch("msticpy.context.ip_utils._asn_whois_query")
 def test_asn_query_features(mock_asn_whois_query):
-    """Test ASN query features"""
+    """Test ASN query features."""
     # mock the potaroo request
     html_resp = get_test_data_path().joinpath("potaroo.html").read_bytes()
     respx.get("https://bgp.potaroo.net/cidr/autnums.html").respond(

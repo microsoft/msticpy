@@ -10,10 +10,11 @@ from typing import List
 import numpy as np
 import pandas as pd
 from pandas.core.dtypes.dtypes import DatetimeTZDtype
+from pkg_resources import parse_version
 
 # mypy: ignore-errors
-_PD_VERSION = tuple(int(v) for v in pd.__version__.split("."))
-if _PD_VERSION >= (2, 2, 0):
+_PD_VERSION = parse_version(pd.__version__)
+if _PD_VERSION >= parse_version("2.2.0"):
     pd.set_option("future.no_silent_downcasting", True)
 
 
