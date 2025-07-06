@@ -10,4 +10,4 @@ packaging>=24.0
 requests>=2.31.0
 autogen-agentchat[retrievechat]~=0.2.0
 importlib-resources >= 6.4.0; python_version <= "3.8"
-python_openobserve>=0.2.0
+python_openobserve>=0.3.0
