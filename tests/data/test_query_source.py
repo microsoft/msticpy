@@ -88,7 +88,7 @@ class TestQuerySource(unittest.TestCase):
         # standard date
         test_end = datetime.now(tz=timezone.utc)
         test_start = test_end - timedelta(days=1)
-        check_dt_str = test_start.isoformat(sep="T") + "Z"
+        check_dt_str = test_start.isoformat(sep="T")
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
         query = q_src.create_query(start=test_start, end=test_end)
         self.assertIn(check_dt_str, query)
@@ -97,7 +97,7 @@ class TestQuerySource(unittest.TestCase):
         """Test date formatting ISO date string."""
         test_end = datetime.now(tz=timezone.utc)
         test_start = test_end - timedelta(days=1)
-        check_dt_str = test_start.isoformat(sep="T") + "Z"
+        check_dt_str = test_start.isoformat(sep="T")
         start = test_start.isoformat()
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
         query = q_src.create_query(start=start, end=test_end)
