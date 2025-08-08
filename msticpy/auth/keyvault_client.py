@@ -387,7 +387,7 @@ class BHKeyVaultMgmtClient:
         mgmt = KeyVaultManagementClient(self.auth_client.modern, self.subscription_id)
         # vaults.list does not require api_version or filter parameters
         # pylint: disable=no-value-for-parameter
-        return [v.name for v in mgmt.vaults.list()]
+        return [v.name for v in mgmt.vaults.list() or [] if v.name]
 
     def get_vault_uri(self, vault_name: str) -> str:
         """
@@ -414,6 +414,12 @@ class BHKeyVaultMgmtClient:
                 f"Error returned from provider was {cloud_err}",
                 title=f"Key Vault vault '{vault_name}' not found.",
             ) from cloud_err
+        if not vault.properties.vault_uri:
+            raise MsticpyKeyVaultConfigError(
+                f"Vault '{vault_name}' does not have a URI.",
+                "Please check the vault configuration.",
+                title="missing Vault URI",
+            )
         return vault.properties.vault_uri
 
     def create_vault(self, vault_name: str) -> Vault:
@@ -445,7 +451,7 @@ class BHKeyVaultMgmtClient:
                 title="missing ResourceGroup value.",
             )
         mgmt = KeyVaultManagementClient(self.auth_client.modern, self.subscription_id)
-        return mgmt.vaults.create_or_update(
+        return mgmt.vaults.create_or_update(  # type: ignore[attr-defined]
             self.resource_group, vault_name, parameters
         ).result()
 
