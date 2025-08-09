@@ -10,6 +10,7 @@ import base64
 import json
 from typing import Any, ClassVar
 
+from azure.core.credentials import TokenCredential
 from azure.core.exceptions import ClientAuthenticationError, ResourceNotFoundError
 from azure.keyvault.secrets import KeyVaultSecret, SecretClient
 from azure.mgmt.keyvault import KeyVaultManagementClient
@@ -67,6 +68,12 @@ class BHKeyVaultClient:
         vault_uri: str | None = None,
         vault_name: str | None = None,
         settings: KeyVaultSettings | None = None,
+        *,
+        debug: bool = False,
+        authn_type: str | None = None,
+        auth_methods: list[str] | None = None,
+        authority: str | None = None,
+        authority_uri: str | None = None,
         **kwargs,
     ) -> None:
         """
@@ -129,32 +136,33 @@ class BHKeyVaultClient:
 
 
         """
-        self.debug: bool = kwargs.pop("debug", False)
+        self.debug: bool = debug
         self.settings: KeyVaultSettings = settings or KeyVaultSettings()
 
-        self.tenant_id = tenant_id or self.settings.get("tenantid")
-        if not self.tenant_id:
+        tenant_id = tenant_id or self.settings.get("tenantid")
+        if not tenant_id:
             raise MsticpyKeyVaultConfigError(
                 "Could not get TenantId from function parameters or configuration.",
                 "Please add this to the KeyVault section of msticpyconfig.yaml",
                 title="missing tenant ID value.",
                 azcli_uri="https://docs.microsoft.com/cli/azure/authenticate-azure-cli",
             )
-        self.authn_type:str = kwargs.pop(
-            "authn_type",
-            self.settings.get("authntype", "interactive"),
+        self.tenant_id: str = tenant_id
+        self.authn_type: str = authn_type or self.settings.get(
+            "authntype",
+            "interactive",
         )
-        self.auth_methods: list[str] = kwargs.pop(
+        self.auth_methods: list[str] = auth_methods or self.settings.get(
             "auth_methods",
-            self.settings.get("auth_methods", ["interactive"]),
+            ["interactive"],
         )
 
         # for authority and authority_uri, any parameters take priority
         # and fall back on settings if not specified.
-        if "authority" in kwargs:
-            self.settings["authority"] = kwargs.pop("authority")
-        self.authority_uri :str= self.settings.get_tenant_authority_host(
-            authority_uri=kwargs.get("authority_uri"),
+        if authority:
+            self.settings["authority"] = authority
+        self.authority_uri: str = self.settings.get_tenant_authority_host(
+            authority_uri=authority_uri,
             tenant=self.tenant_id,
         )
 
@@ -164,9 +172,13 @@ class BHKeyVaultClient:
         )
         self.kv_client: SecretClient = self._try_credential_types(**kwargs)
 
-    def _try_credential_types(self: Self, **kwargs) -> SecretClient|None:
+    def _try_credential_types(
+        self: Self,
+        *,
+        credential: TokenCredential | None = None,
+        **kwargs,
+    ) -> SecretClient | None:
         """Try to access Key Vault to establish usable authentication method."""
-        credential = kwargs.pop("credential", None)
         if credential:
             kv_client: SecretClient = SecretClient(
                 self.vault_uri,
@@ -185,8 +197,11 @@ class BHKeyVaultClient:
                 f"Attempting connection to Key Vault using {auth_method} credentials...",
                 newline=False,
             )
-            credential:AzCredentials = az_connect_core(auth_methods=[auth_method], **kwargs)
-            kv_client:SecretClient = SecretClient(self.vault_uri, credential.modern)
+            credential: AzCredentials = az_connect_core(
+                auth_methods=[auth_method],
+                **kwargs,
+            )
+            kv_client: SecretClient = SecretClient(self.vault_uri, credential.modern)
             try:
                 return self._get_working_kv_client(kv_client)
             except ClientAuthenticationError as client_err:
@@ -332,7 +347,9 @@ class BHKeyVaultMgmtClient:
         resource_group: str | None = None,
         azure_region: str | None = None,
         settings: KeyVaultSettings | None = None,
-        **kwargs,
+        *,
+        debug: bool = False,
+        mgmt_uri: str | None = None,
     ) -> None:
         """
         Initialize BH KeyVault Management Client.
@@ -359,7 +376,7 @@ class BHKeyVaultMgmtClient:
         KeyVault section of msticpyconfig.yaml.
 
         """
-        self.debug: bool = kwargs.pop("debug", False)
+        self.debug: bool = debug
         self.settings: KeyVaultSettings = settings or KeyVaultSettings()
         self.tenant_id: str = tenant_id or self.settings.get("tenantid")
         if not self.tenant_id:
@@ -368,24 +385,26 @@ class BHKeyVaultMgmtClient:
                 "Please add this to the KeyVault section of msticpyconfig.yaml",
                 title="missing tenant ID value.",
             )
-        self.subscription_id: str = subscription_id or self.settings.get(
+        subscription_id = subscription_id or self.settings.get(
             "subscriptionid",
         )
-        if not self.subscription_id:
+        if not subscription_id:
             raise MsticpyKeyVaultConfigError(
                 "Could not get SubscriptionId from function parameters or configuration.",
                 "Please add this to the KeyVault section of msticpyconfig.yaml",
                 title="missing SubscriptionId value.",
             )
-        self._client_uri: str = kwargs.pop("mgmt_uri", None) or self.settings.mgmt_uri
-        if not self._client_uri:
-            cloud:str = self.settings.cloud
+        self.subscription_id: str = subscription_id
+        mgmt_uri: str = mgmt_uri or self.settings.mgmt_uri
+        if not mgmt_uri:
+            cloud: str = self.settings.cloud
             raise MsticpyKeyVaultConfigError(
                 f"Could not obtain an azure management URI for national cloud {cloud}.",
                 "Please verify that you have the correct national cloud"
                 + "specified in the KeyVault section of msticpyconfig.yaml",
                 title="no Azure Management URI for national cloud",
             )
+        self._client_uri: str = mgmt_uri
 
         self.auth_client: AzCredentials = az_connect_core()
         self.resource_group: str = resource_group or self.settings.get("resourcegroup")
