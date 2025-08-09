@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 from typing import Any, ClassVar
 
 from azure.core.credentials import TokenCredential
@@ -41,6 +42,8 @@ from .keyvault_settings import KeyVaultSettings
 
 __version__ = VERSION
 __author__ = "Matt Richard, Ian Hellen"
+
+LOGGER: logging.Logger = logging.getLogger(__name__)
 
 _KV_CLIENT_AUTH_ERROR: tuple[str] = [
     "Retry authentication with msticpy.settings.auth_secrets_client",
@@ -254,7 +257,7 @@ class BHKeyVaultClient:
                     title="no Key Vault URI for national cloud",
                 )
         if self.debug:
-            print(f"Using Vault URI {vault_uri}")
+            LOGGER.debug("Using Vault URI %s", vault_uri)
         return vault_name, vault_uri
 
     @property
@@ -298,7 +301,7 @@ class BHKeyVaultClient:
             secret_bundle: KeyVaultSecret = self.kv_client.get_secret(name=secret_name)
         except ResourceNotFoundError as err:
             if self.debug:
-                print(f"Secret: '{secret_name}' missing from vault: {self.vault_uri}")
+                LOGGER.debug("Secret: '%s' missing from vault: %s", secret_name, self.vault_uri)
             raise MsticpyKeyVaultMissingSecretError(
                 f"Secret name {secret_name} could not be found in {self.vault_uri}",
                 f"Provider returned: {err}",
@@ -306,7 +309,7 @@ class BHKeyVaultClient:
             ) from err
         if secret_bundle.value is None or not secret_bundle.value:
             if self.debug:
-                print(f"Secret: '{secret_name}' was empty in vault {self.vault_uri}")
+                LOGGER.debug("Secret: '%s' was empty in vault %s", secret_name, self.vault_uri)
             raise MsticpyKeyVaultMissingSecretError(
                 f"Secret name {secret_name} in {self.vault_uri}",
                 "has blank or null value.",
@@ -332,7 +335,7 @@ class BHKeyVaultClient:
 
         """
         if self.debug:
-            print(f"Storing {secret_name} in {self.vault_uri}")
+            LOGGER.debug("Storing %s in %s", secret_name, self.vault_uri)
         return self.kv_client.set_secret(name=secret_name, value=value)
 
 
@@ -562,4 +565,4 @@ def _print_status(message: str, *, newline: bool = True) -> None:
         display(HTML(f"{message}{line_break}"))
     else:
         line_break = "\n" if newline else ""
-        print(message, end=line_break)
+        LOGGER.info(message, end=line_break)
