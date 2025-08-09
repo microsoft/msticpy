@@ -553,7 +553,7 @@ class BHKeyVaultMgmtClient:
             self.auth_client.modern,
             self.subscription_id,
         )
-        return mgmt.vaults.create_or_update(
+        return mgmt.vaults.create_or_update(  # type: ignore[attr-defined]
             self.resource_group,
             vault_name,
             parameters,
