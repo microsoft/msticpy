@@ -24,8 +24,9 @@ from __future__ import annotations
 import contextlib
 import json
 import logging
+from collections.abc import Hashable
 from json import JSONDecodeError
-from typing import Any, ClassVar, Hashable, Mapping, NamedTuple
+from typing import Any, ClassVar, Mapping, NamedTuple
 
 import httpx
 import pandas as pd
@@ -403,7 +404,7 @@ class VTLookup:
         for row_num, (idx, row) in enumerate(input_frame[src_cols].iterrows(), start=1):
             observable: str = row[src_col]
 
-            index: Hashable = idx
+            index: object = idx
             # Use the user-specified index if possible
             if src_index_col:
                 index = row[src_index_col]

@@ -10,9 +10,10 @@ import dataclasses
 import json
 import logging
 import uuid
+from collections.abc import Hashable
 from datetime import datetime
 from functools import singledispatchmethod
-from typing import Any, Callable, ClassVar, Hashable, Iterable
+from typing import Any, Callable, ClassVar, Iterable
 
 import numpy as np
 import pandas as pd

@@ -6,18 +6,23 @@
 """Txt2df core code."""
 import argparse
 import io
-from typing import Dict, Union
 
 import pandas as pd
 from pandas.errors import ParserError
-from pkg_resources import parse_version
+
+try:
+    from packaging.version import Version
+except ImportError:
+    # Fallback for older environments
+    # pylint: disable=deprecated-module
+    from distutils.version import LooseVersion as Version
 
 from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-_PD_VER = parse_version(pd.__version__)
+_PD_VER = Version(pd.__version__)
 
 
 def _add_parser_args():
@@ -59,7 +64,7 @@ def _add_parser_args():
     return parser
 
 
-def run_txt2df(line, cell, local_ns) -> pd.DataFrame:
+def run_txt2df(line: str, cell: str, local_ns: dict | None) -> pd.DataFrame:
     """Convert cell text to pandas DataFrame."""
     arg_parser = _add_parser_args()
     try:
@@ -73,8 +78,8 @@ def run_txt2df(line, cell, local_ns) -> pd.DataFrame:
     if not cell:
         return pd.DataFrame()
     cell_text = io.StringIO(cell)
-    warn_args: Dict[str, Union[str, bool]]
-    if _PD_VER < parse_version("1.3.0"):  # type: ignore
+    warn_args: dict[str, str | bool]
+    if _PD_VER < Version("1.3.0"):  # type: ignore
         warn_args = {"warn_bad_lines": True}
     else:
         warn_args = {"on_bad_lines": "warn"}

@@ -356,7 +356,7 @@ class SumologicDriver(DriverBase):
                 self._raise_qry_except(
                     err,
                     "search_job_records",
-                    f"to get search records (paging i {i*job_limit} / {count})",
+                    f"to get search records (paging i {i * job_limit} / {count})",
                 )
 
     # pylint: disable=inconsistent-return-statements

@@ -8,13 +8,41 @@ import logging
 import os
 import sys
 import warnings
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, List, Mapping, Optional, Tuple, Union
+from typing import Any
 
 import yaml
 from IPython import get_ipython
 from IPython.display import HTML, display
-from pkg_resources import Requirement, WorkingSet, parse_version  # type: ignore
+
+try:
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version as get_version
+
+    from packaging.version import Version
+except ImportError:
+    # Fallback for older environments
+    # pylint: disable=deprecated-module
+    from distutils.version import LooseVersion as Version
+
+    try:
+        from importlib_metadata import PackageNotFoundError
+        from importlib_metadata import version as get_version
+    except ImportError:
+        # Last resort fallback for very old environments
+        try:
+            from pkg_resources import get_distribution
+
+            def get_version(package_name: str) -> str:
+                """Get package version using pkg_resources fallback."""
+                return get_distribution(package_name).version
+
+            PackageNotFoundError = Exception
+        except ImportError:
+            # pylint: disable=invalid-name
+            get_version = None
+            PackageNotFoundError = Exception
 
 from .._version import VERSION
 from ..common.pkg_config import _HOME_PATH, get_config, refresh_config
@@ -90,10 +118,10 @@ def is_in_aml():
 
 
 def check_aml_settings(
-    min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF,
-    min_mp_ver: Union[str, Tuple] = MSTICPY_REQ_VERSION,
-    extras: Optional[List[str]] = None,
-    mp_release: Optional[str] = None,
+    min_py_ver: str | tuple = MIN_PYTHON_VER_DEF,
+    min_mp_ver: str | tuple = MSTICPY_REQ_VERSION,
+    extras: list[str] | None = None,
+    mp_release: str | None = None,
     **kwargs,
 ):
     """
@@ -159,7 +187,7 @@ def _kql_magic_installed():
         return False
 
 
-def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
+def check_python_ver(min_py_ver: str | tuple = MIN_PYTHON_VER_DEF):
     """
     Check the current version of the Python kernel.
 
@@ -201,7 +229,7 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
     _disp_html(f"Info: Python kernel version {sys_ver} - OK<br>")
 
 
-def check_mp_ver(min_msticpy_ver: Union[str, Tuple], extras: Optional[List[str]]):
+def check_mp_ver(min_msticpy_ver: str | tuple, extras: list[str] | None):
     """
     Check and optionally update the current version of msticpy.
 
@@ -301,9 +329,9 @@ def populate_config_to_mp_config(mp_path):
 
 
 def _check_mp_install(
-    min_mp_ver: Union[str, Tuple],
-    mp_release: Optional[str],
-    extras: Optional[List[str]],
+    min_mp_ver: str | tuple,
+    mp_release: str | None,
+    extras: list[str] | None,
 ):
     """Check for and try to install required MSTICPy version."""
     # Use the release ver specified in params, in the environment or
@@ -314,7 +342,7 @@ def _check_mp_install(
     check_mp_ver(min_msticpy_ver=mp_install_version, extras=extras)
 
 
-def _set_kql_env_vars(extras: Optional[List[str]]):
+def _set_kql_env_vars(extras: list[str] | None):
     """Set environment variables for Kqlmagic based on MP extras."""
     jp_extended = ("azsentinel", "azuresentinel", "kql")
     if extras and any(extra for extra in extras if extra in jp_extended):
@@ -325,30 +353,46 @@ def _set_kql_env_vars(extras: Optional[List[str]]):
         os.environ["KQLMAGIC_AZUREML_COMPUTE"] = _get_vm_fqdn()
 
 
-def _get_pkg_version(version: Union[str, Tuple]):
-    """Return pkg_resources parsed version from string or tuple."""
+def _get_pkg_version(version: str | tuple) -> Version:
+    """
+    Return comparable package version.
+
+    Parameters
+    ----------
+    version : str | tuple
+        Version string or tuple
+
+    Returns
+    -------
+    Version
+        Parsed version object
+
+    """
     if isinstance(version, str):
-        return parse_version(version)
+        return Version(version)
     if isinstance(version, tuple):
-        return parse_version(".".join(str(ver) for ver in version))
-    raise TypeError(f"Version {version} not cannot be parsed.")
+        return Version(".".join(str(ver) for ver in version))
+    raise TypeError(f"Version {version} cannot be parsed.")
 
 
-def _get_installed_mp_version():
+def _get_installed_mp_version() -> Version | None:
     """Return the installed version of MSTICPY."""
-    working_set = WorkingSet()
-    mp_installed = working_set.find(Requirement("msticpy"))  # type: ignore
-    if mp_installed:
-        return mp_installed.parsed_version
+    if get_version:
+        try:
+            version_str = get_version("msticpy")
+            return Version(version_str)
+        # pylint: disable=broad-exception-caught
+        except (PackageNotFoundError, Exception):
+            pass
     return None
 
 
-def _disp_html(text: str):
+def _disp_html(text: str) -> None:
     """Display the HTML text."""
     display(HTML(text))
 
 
-def get_aml_user_folder() -> Optional[Path]:
+def get_aml_user_folder() -> Path | None:
     """Return the root of the user folder."""
     path_parts = Path(".").absolute().parts
     if "Users" not in path_parts:
@@ -404,12 +448,18 @@ _NBVM_PATH = "/mnt/azmnt/.nbvm"
 
 def _get_vm_metadata() -> Mapping[str, Any]:
     """Read VM metadata from definition file."""
-    with open(_NBVM_PATH, "r", encoding="utf-8") as nbvm_handle:
-        nbvm_lines = nbvm_handle.readlines()
+    nbvm_path = Path(_NBVM_PATH)
+    if not nbvm_path.exists():
+        return {}
+
+    content = nbvm_path.read_text(encoding="utf-8")
+    lines = content.strip().split("\n")
+
     return {
         item[0]: item[1]
-        for item in map(lambda x: x.split("=", maxsplit=1), nbvm_lines)
-        if item
+        for line in lines
+        for item in [line.split("=", 1)]
+        if len(item) == 2
     }
 
 

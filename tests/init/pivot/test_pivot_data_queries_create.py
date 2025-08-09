@@ -7,7 +7,7 @@
 
 import contextlib
 import warnings
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import partial
 
 import pandas as pd
@@ -116,7 +116,7 @@ class _PType:
 
 
 def _get_timespan():
-    end = datetime.utcnow()
+    end = datetime.now(timezone.utc)
     return TimeSpan(start=(end - timedelta(1)), end=end)
 
 

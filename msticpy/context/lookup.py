@@ -19,7 +19,8 @@ import importlib
 import logging
 import warnings
 from collections import ChainMap
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Mapping, Sized
+from collections.abc import Sized
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Mapping
 
 import nest_asyncio
 import pandas as pd

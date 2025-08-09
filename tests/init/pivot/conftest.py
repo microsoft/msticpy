@@ -13,7 +13,7 @@ import pytest
 
 from msticpy.context.geoip import GeoLiteLookup
 from msticpy.context.tilookup import TILookup
-from msticpy.data import QueryProvider
+from msticpy.data import QueryProvider  # pylint: disable=no-name-in-module
 from msticpy.init.pivot import Pivot
 
 from ...unit_test_lib import custom_mp_config, get_test_data_path

@@ -4,13 +4,23 @@
 # license information.
 # --------------------------------------------------------------------------
 """Script to test msticpy extras."""
+from __future__ import annotations
+
 import argparse
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 
-import pkg_resources
+try:
+    from packaging.requirements import Requirement
+except ImportError:
+    # Fallback for older environments
+    try:
+        from importlib_metadata import Requirement
+    except ImportError:
+        # Last resort fallback
+        from pkg_resources import Requirement
 
 __author__ = "Ian Hellen"
 
@@ -208,12 +218,13 @@ def make_dist(path: str, verbose: bool):
     subprocess.run(sp_run, cwd=path, **(VERB_ARGS if verbose else {}))  # type: ignore
 
 
-def _read_base_pkg_list(pkg_file):
+def _read_base_pkg_list(pkg_file: str):
+    """Read base package list from file."""
     with open(pkg_file, "r", encoding="utf-8") as pkg_fh:
         pkg_lines = pkg_fh.readlines()
     for pkg_line in pkg_lines:
         try:
-            req = pkg_resources.Requirement.parse(pkg_line.strip())
+            req = Requirement(pkg_line.strip())
         except Exception:  # pylint: disable=broad-except
             pass
         yield req.name

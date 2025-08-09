@@ -51,7 +51,7 @@ def save_folder(tmp_path_factory):
     mordor_cache_file = Path(cache_folder).joinpath("mordor_cache.json")
     mdr_cache = json.loads(mordor_cache_file.read_text(encoding="utf-8"))
     for item in mdr_cache.values():
-        item["mp_last_updated"] = pd.Timestamp.utcnow().isoformat()
+        item["mp_last_updated"] = pd.Timestamp.now(tz="UTC").isoformat()
     Path(mordor_cache_file).write_text(
         json.dumps(mdr_cache, indent=4), encoding="utf-8"
     )

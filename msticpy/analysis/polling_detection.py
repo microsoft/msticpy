@@ -14,18 +14,23 @@ There is currently only one technique available for filtering polling data which
 the class PeriodogramPollingDetector.
 """
 from collections import Counter
-from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from pkg_resources import parse_version
 from scipy import signal, special
+
+try:
+    from packaging.version import Version
+except ImportError:
+    # Fallback for older environments
+    # pylint: disable=deprecated-module
+    from distutils.version import LooseVersion as Version
 
 from ..common.utility import export
 
-_PD_VERSION = parse_version(pd.__version__)
-if _PD_VERSION >= parse_version("2.2.1"):
+_PD_VERSION = Version(pd.__version__)
+if _PD_VERSION >= Version("2.2.1"):
     GROUP_APPLY_PARAMS = {"include_groups": False}
 else:
     GROUP_APPLY_PARAMS = {}
@@ -63,7 +68,7 @@ class PeriodogramPollingDetector:
         else:
             self.data = data
 
-    def _g_test(self, pxx: npt.NDArray, exclude_pi: bool) -> Tuple[float, float]:
+    def _g_test(self, pxx: npt.NDArray, exclude_pi: bool) -> tuple[float, float]:
         """
         Carry out fishers g test for periodicity.
 
@@ -131,7 +136,7 @@ class PeriodogramPollingDetector:
         process_start: int,
         process_end: int,
         interval: int = 1,
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         """
         Carry out periodogram polling detecton on an array of timestamps.
 
@@ -186,7 +191,7 @@ class PeriodogramPollingDetector:
         return p_val, max_pxx_freq, 1 / max_pxx_freq
 
     def detect_polling(
-        self, time_column: str, groupby: Optional[Union[List[str], str]] = None
+        self, time_column: str, groupby: list[str] | str | None = None
     ) -> None:
         """
         Detect the time interval which is highly periodic.

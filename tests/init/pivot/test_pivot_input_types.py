@@ -14,10 +14,6 @@ import pytest_check as check
 from msticpy.context.geoip import GeoLiteLookup
 from msticpy.context.tilookup import TILookup
 from msticpy.datamodel import entities
-from msticpy.init.pivot_core.pivot_container import PivotContainer
-
-# pylint: disable=redefined-outer-name, unused-import, unused-argument
-from .pivot_fixtures import create_pivot
 
 __author__ = "Ian Hellen"
 

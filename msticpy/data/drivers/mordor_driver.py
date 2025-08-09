@@ -598,7 +598,7 @@ def _create_mdr_metadata_cache():
 _GET_MORDOR_METADATA = _create_mdr_metadata_cache()
 
 _LAST_UPDATE_KEY = "mp_last_updated"
-_DEFAULT_TS = pd.Timestamp(pd.Timestamp.utcnow() - pd.Timedelta(days=60))
+_DEFAULT_TS = pd.Timestamp(pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=60))
 
 
 # pylint: disable=global-statement
@@ -634,7 +634,7 @@ def _fetch_mdr_metadata(cache_folder: Optional[str] = None) -> Dict[str, MordorE
             last_timestamp = pd.Timestamp(
                 metadata_doc.get(_LAST_UPDATE_KEY, _DEFAULT_TS)
             )
-            cache_valid = (pd.Timestamp.utcnow() - last_timestamp).days < 30
+            cache_valid = (pd.Timestamp.now(tz="UTC") - last_timestamp).days < 30
 
         if not cache_valid:
             gh_file_content = _get_mdr_file(filename)
@@ -642,7 +642,7 @@ def _fetch_mdr_metadata(cache_folder: Optional[str] = None) -> Dict[str, MordorE
                 metadata_doc = yaml.safe_load(gh_file_content)
             except yaml.error.YAMLError:
                 continue
-            metadata_doc[_LAST_UPDATE_KEY] = pd.Timestamp.utcnow().isoformat()
+            metadata_doc[_LAST_UPDATE_KEY] = pd.Timestamp.now(tz="UTC").isoformat()
             md_cached_metadata[filename] = metadata_doc
         doc_id = metadata_doc.get("id")
         mdr_entry = metadata_doc.copy()
