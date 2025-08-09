@@ -144,9 +144,12 @@ class BHKeyVaultClient:
 
         tenant_id = tenant_id or self.settings.get("tenantid")
         if not tenant_id:
+            err_msg: str = (
+                "Could not get TenantId from function parameters or configuration."
+                " Please add this to the KeyVault section of msticpyconfig.yaml"
+            )
             raise MsticpyKeyVaultConfigError(
-                "Could not get TenantId from function parameters or configuration.",
-                "Please add this to the KeyVault section of msticpyconfig.yaml",
+                err_msg,
                 title="missing tenant ID value.",
                 azcli_uri="https://docs.microsoft.com/cli/azure/authenticate-azure-cli",
             )
@@ -222,9 +225,12 @@ class BHKeyVaultClient:
         return kv_client
 
     def _raise_auth_failed_error(self: Self, client_err: Exception) -> None:
-        raise MsticpyUserConfigError(
+        err_msg: str = (
             "No configured authentication methods found with credentials "
-            f"with access the Key Vault '{self._vault_name}'",
+            f"with access the Key Vault '{self._vault_name}'"
+        )
+        raise MsticpyUserConfigError(
+            err_msg,
             *_KV_CLIENT_AUTH_ERROR,
             title="Key Vault authentication configuration failed.",
         ) from client_err
@@ -239,9 +245,12 @@ class BHKeyVaultClient:
             if "vaultname" in self.settings:
                 vault_name = self.settings["vaultname"]
             else:
-                raise MsticpyKeyVaultConfigError(
+                err_msg: str = (
                     "Check that you have specified the right value for VaultName"
-                    + " in your configuration",
+                    " in your configuration",
+                )
+                raise MsticpyKeyVaultConfigError(
+                    err_msg,
                     title="Key Vault vault name not found.",
                 )
         if not vault_uri:
@@ -250,10 +259,13 @@ class BHKeyVaultClient:
                 vault_uri = vault_uri.format(vault=vault_name)
             else:
                 cloud = self.settings.cloud
+                err_msg = (
+                    f"Could not determine keyvault URI for national cloud {cloud}."
+                    " Please verify that you have the correct national cloud"
+                    " specified in the KeyVault section of msticpyconfig.yaml",
+                )
                 raise MsticpyKeyVaultConfigError(
-                    f"Could not determine keyvault URI for national cloud {cloud}.",
-                    "Please verify that you have the correct national cloud"
-                    + "specified in the KeyVault section of msticpyconfig.yaml",
+                    err_msg,
                     title="no Key Vault URI for national cloud",
                 )
         if self.debug:
@@ -301,18 +313,22 @@ class BHKeyVaultClient:
             secret_bundle: KeyVaultSecret = self.kv_client.get_secret(name=secret_name)
         except ResourceNotFoundError as err:
             if self.debug:
-                LOGGER.debug("Secret: '%s' missing from vault: %s", secret_name, self.vault_uri)
+            err_msg: str = (
+                f"Secret name {secret_name} could not be found in {self.vault_uri}"
+                f" Provider returned: {err}"
+            )
             raise MsticpyKeyVaultMissingSecretError(
-                f"Secret name {secret_name} could not be found in {self.vault_uri}",
-                f"Provider returned: {err}",
+                err_msg,
                 title=f"secret {secret_name} not found.",
             ) from err
         if secret_bundle.value is None or not secret_bundle.value:
             if self.debug:
-                LOGGER.debug("Secret: '%s' was empty in vault %s", secret_name, self.vault_uri)
+            err_msg = (
+                f"Secret name {secret_name} in {self.vault_uri}"
+                "has blank or null value."
+            )
             raise MsticpyKeyVaultMissingSecretError(
-                f"Secret name {secret_name} in {self.vault_uri}",
-                "has blank or null value.",
+                err_msg,
                 title=f"secret {secret_name} empty.",
             )
         return secret_bundle.value
@@ -383,28 +399,37 @@ class BHKeyVaultMgmtClient:
         self.settings: KeyVaultSettings = settings or KeyVaultSettings()
         self.tenant_id: str = tenant_id or self.settings.get("tenantid")
         if not self.tenant_id:
+            err_msg: str = (
+                "Could not get TenantId from function parameters or configuration."
+                "Please add this to the KeyVault section of msticpyconfig.yaml"
+            )
             raise MsticpyKeyVaultConfigError(
-                "Could not get TenantId from function parameters or configuration.",
-                "Please add this to the KeyVault section of msticpyconfig.yaml",
+                err_msg,
                 title="missing tenant ID value.",
             )
         subscription_id = subscription_id or self.settings.get(
             "subscriptionid",
         )
         if not subscription_id:
+            err_msg = (
+                "Could not get SubscriptionId from function parameters or configuration."
+                " Please add this to the KeyVault section of msticpyconfig.yaml"
+            )
             raise MsticpyKeyVaultConfigError(
-                "Could not get SubscriptionId from function parameters or configuration.",
-                "Please add this to the KeyVault section of msticpyconfig.yaml",
+                err_msg,
                 title="missing SubscriptionId value.",
             )
         self.subscription_id: str = subscription_id
         mgmt_uri: str = mgmt_uri or self.settings.mgmt_uri
         if not mgmt_uri:
             cloud: str = self.settings.cloud
-            raise MsticpyKeyVaultConfigError(
+            err_msg = (
                 f"Could not obtain an azure management URI for national cloud {cloud}.",
-                "Please verify that you have the correct national cloud"
-                + "specified in the KeyVault section of msticpyconfig.yaml",
+                " Please verify that you have the correct national cloud"
+                " specified in the KeyVault section of msticpyconfig.yaml",
+            )
+            raise MsticpyKeyVaultConfigError(
+                err_msg,
                 title="no Azure Management URI for national cloud",
             )
         self._client_uri: str = mgmt_uri
@@ -453,16 +478,22 @@ class BHKeyVaultMgmtClient:
         try:
             vault = mgmt.vaults.get(self.resource_group, vault_name)
         except ResourceNotFoundError as cloud_err:
-            raise MsticpyKeyVaultConfigError(
+            err_msg: str = (
                 "Check that you have specified the right value for VaultName"
-                + " in your configuration",
-                f"Error returned from provider was {cloud_err}",
+                " in your configuration"
+                f" Error returned from provider was {cloud_err}"
+            )
+            raise MsticpyKeyVaultConfigError(
+                err_msg,
                 title=f"Key Vault vault '{vault_name}' not found.",
             ) from cloud_err
         if not vault.properties.vault_uri:
+            err_msg = (
+                f"Vault '{vault_name}' does not have a URI."
+                " Please check the vault configuration."
+            )
             raise MsticpyKeyVaultConfigError(
-                f"Vault '{vault_name}' does not have a URI.",
-                "Please check the vault configuration.",
+                err_msg,
                 title="missing Vault URI",
             )
         return vault.properties.vault_uri
@@ -483,16 +514,22 @@ class BHKeyVaultMgmtClient:
 
         """
         if not self.azure_region:
+            err_msg: str = (
+                "Could not get Azure region in which to create the vault."
+                " Please add AzureRegion to the KeyVault section of msticpyconfig.yaml"
+            )
             raise MsticpyKeyVaultConfigError(
-                "Could not get Azure region in which to create the vault.",
-                "Please add AzureRegion to the KeyVault section of msticpyconfig.yaml",
+                err_msg,
                 title="missing AzureRegion value.",
             )
         parameters = self._get_params()
         if not self.resource_group:
+            err_msg = (
+                "Could not get Azure resource group in which to create the vault."
+                " Please add ResourceGroup to the KeyVault section of msticpyconfig.yaml"
+            )
             raise MsticpyKeyVaultConfigError(
-                "Could not get Azure resource group in which to create the vault.",
-                "Please add ResourceGroup to the KeyVault section of msticpyconfig.yaml",
+                err_msg,
                 title="missing ResourceGroup value.",
             )
         mgmt: KeyVaultManagementClient = KeyVaultManagementClient(
