@@ -9,9 +9,8 @@ from __future__ import annotations
 import base64
 import json
 import logging
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
-from azure.core.credentials import TokenCredential
 from azure.core.exceptions import ClientAuthenticationError, ResourceNotFoundError
 from azure.keyvault.secrets import KeyVaultSecret, SecretClient
 from azure.mgmt.keyvault import KeyVaultManagementClient
@@ -40,6 +39,9 @@ from ..common.utility import export, is_ipython
 from .azure_auth_core import AzCredentials, az_connect_core
 from .keyvault_settings import KeyVaultSettings
 
+if TYPE_CHECKING:
+    from azure.core.credentials import TokenCredential
+
 __version__ = VERSION
 __author__ = "Matt Richard, Ian Hellen"
 
@@ -65,7 +67,7 @@ class BHKeyVaultClient:
 
     _KEYRING_NAME: ClassVar[str] = "keyvault"
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self: BHKeyVaultClient,
         tenant_id: str | None = None,
         vault_uri: str | None = None,
@@ -77,7 +79,7 @@ class BHKeyVaultClient:
         auth_methods: list[str] | None = None,
         authority: str | None = None,
         authority_uri: str | None = None,
-        **kwargs,
+        **kwargs: str,
     ) -> None:
         """
         Initialize the BHKeyVault client.
@@ -92,9 +94,6 @@ class BHKeyVaultClient:
             The name of the keyvault in the public cloud, by default None
         settings : KeyVaultSettings
             An instance of KeyVaultSettings containing KV parameters.
-
-        Other Parameters
-        ----------------
         auth_methods : list[str]
             The authentication methods to use for Key Vault auth
             Possible values are:
@@ -126,6 +125,8 @@ class BHKeyVaultClient:
             Required if auth_methods is ["clientsecret"]
         debug : bool, optional
             [description], by default False
+        kwargs: str
+            Other parameters
 
         Raises
         ------
@@ -182,7 +183,7 @@ class BHKeyVaultClient:
         self: Self,
         *,
         credential: TokenCredential | None = None,
-        **kwargs,
+        **kwargs: str,
     ) -> SecretClient | None:
         """Try to access Key Vault to establish usable authentication method."""
         if credential:
@@ -313,6 +314,11 @@ class BHKeyVaultClient:
             secret_bundle: KeyVaultSecret = self.kv_client.get_secret(name=secret_name)
         except ResourceNotFoundError as err:
             if self.debug:
+                LOGGER.debug(
+                    "Secret: '%s' missing from vault: %s",
+                    secret_name,
+                    self.vault_uri,
+                )
             err_msg: str = (
                 f"Secret name {secret_name} could not be found in {self.vault_uri}"
                 f" Provider returned: {err}"
@@ -323,6 +329,11 @@ class BHKeyVaultClient:
             ) from err
         if secret_bundle.value is None or not secret_bundle.value:
             if self.debug:
+                LOGGER.debug(
+                    "Secret: '%s' was empty in vault %s",
+                    secret_name,
+                    self.vault_uri,
+                )
             err_msg = (
                 f"Secret name {secret_name} in {self.vault_uri}"
                 "has blank or null value."
@@ -359,7 +370,7 @@ class BHKeyVaultClient:
 class BHKeyVaultMgmtClient:
     """Core KeyVault Management client."""
 
-    def __init__(
+    def __init__(  # noqa:PLR0913
         self: BHKeyVaultMgmtClient,
         tenant_id: str | None = None,
         subscription_id: str | None = None,
@@ -388,6 +399,8 @@ class BHKeyVaultMgmtClient:
             An instance of KeyVaultSettings containing KV parameters.
         mgmt_uri : str, Optional
             The URI for Azure management endpoints.
+        debug: bool, Optional
+            Display additional debug details. Defaults to False
 
         Notes
         -----
