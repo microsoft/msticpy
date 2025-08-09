@@ -9,7 +9,7 @@ from __future__ import annotations
 import base64
 import json
 import logging
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import Any, ClassVar
 
 from azure.core.exceptions import ClientAuthenticationError, ResourceNotFoundError
 from azure.keyvault.secrets import KeyVaultSecret, SecretClient
@@ -39,15 +39,12 @@ from ..common.utility import export, is_ipython
 from .azure_auth_core import AzCredentials, az_connect_core
 from .keyvault_settings import KeyVaultSettings
 
-if TYPE_CHECKING:
-    from azure.core.credentials import TokenCredential
-
 __version__ = VERSION
 __author__ = "Matt Richard, Ian Hellen"
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
-_KV_CLIENT_AUTH_ERROR: tuple[str] = [
+_KV_CLIENT_AUTH_ERROR: list[str] = [
     "Retry authentication with msticpy.settings.auth_secrets_client",
     "using a different credential type.",
     "Alteratively use Azure CLI authentication:",
@@ -79,6 +76,7 @@ class BHKeyVaultClient:
         auth_methods: list[str] | None = None,
         authority: str | None = None,
         authority_uri: str | None = None,
+        credential: AzCredentials | None = None,
         **kwargs: str,
     ) -> None:
         """
@@ -177,19 +175,22 @@ class BHKeyVaultClient:
             vault_name,
             vault_uri,
         )
-        self.kv_client: SecretClient = self._try_credential_types(**kwargs)
+        self.kv_client: SecretClient = self._try_credential_types(
+            credential=credential,
+            **kwargs,
+        )
 
     def _try_credential_types(
         self: Self,
         *,
-        credential: TokenCredential | None = None,
+        credential: AzCredentials | None = None,
         **kwargs: str,
-    ) -> SecretClient | None:
+    ) -> SecretClient:
         """Try to access Key Vault to establish usable authentication method."""
         if credential:
             kv_client: SecretClient = SecretClient(
                 self.vault_uri,
-                credential=credential,
+                credential=credential.modern,
             )
             try:
                 self._get_working_kv_client(kv_client)
@@ -204,11 +205,11 @@ class BHKeyVaultClient:
                 f"Attempting connection to Key Vault using {auth_method} credentials...",
                 newline=False,
             )
-            credential: AzCredentials = az_connect_core(
+            credential = az_connect_core(
                 auth_methods=[auth_method],
                 **kwargs,
             )
-            kv_client: SecretClient = SecretClient(self.vault_uri, credential.modern)
+            kv_client = SecretClient(self.vault_uri, credential.modern)
             try:
                 return self._get_working_kv_client(kv_client)
             except ClientAuthenticationError as client_err:
@@ -216,7 +217,10 @@ class BHKeyVaultClient:
                 if idx + 1 < len(self.auth_methods):
                     continue
                 self._raise_auth_failed_error(client_err)
-        return None
+        err_msg: str = "Failed to obtain token from all provided methods: " + ", ".join(
+            self.auth_methods,
+        )
+        raise ClientAuthenticationError(err_msg)
 
     def _get_working_kv_client(self: Self, kv_client: SecretClient) -> SecretClient:
         """Try to list secrets - will throw ClientAuthentication error on failure."""
@@ -240,7 +244,7 @@ class BHKeyVaultClient:
         self: Self,
         vault_name: str | None,
         vault_uri: str | None,
-    ) -> tuple[str, str]:
+    ) -> tuple[str | None, str]:
         """Validate and return vault name and URI."""
         if not vault_uri and not vault_name:
             if "vaultname" in self.settings:
@@ -248,7 +252,7 @@ class BHKeyVaultClient:
             else:
                 err_msg: str = (
                     "Check that you have specified the right value for VaultName"
-                    " in your configuration",
+                    " in your configuration"
                 )
                 raise MsticpyKeyVaultConfigError(
                     err_msg,
@@ -263,7 +267,7 @@ class BHKeyVaultClient:
                 err_msg = (
                     f"Could not determine keyvault URI for national cloud {cloud}."
                     " Please verify that you have the correct national cloud"
-                    " specified in the KeyVault section of msticpyconfig.yaml",
+                    " specified in the KeyVault section of msticpyconfig.yaml"
                 )
                 raise MsticpyKeyVaultConfigError(
                     err_msg,
@@ -284,7 +288,7 @@ class BHKeyVaultClient:
     @property
     def secrets(self: Self) -> list[str]:
         """Return the list of secret names from the vault."""
-        return [x.id for x in self.kv_client.list_properties_of_secrets()]
+        return [x.id for x in self.kv_client.list_properties_of_secrets() if x.id]
 
     def get_secret(self: Self, secret_name: str) -> str:
         """
@@ -433,13 +437,13 @@ class BHKeyVaultMgmtClient:
                 title="missing SubscriptionId value.",
             )
         self.subscription_id: str = subscription_id
-        mgmt_uri: str = mgmt_uri or self.settings.mgmt_uri
+        mgmt_uri = mgmt_uri or self.settings.mgmt_uri
         if not mgmt_uri:
             cloud: str = self.settings.cloud
             err_msg = (
-                f"Could not obtain an azure management URI for national cloud {cloud}.",
+                f"Could not obtain an azure management URI for national cloud {cloud}."
                 " Please verify that you have the correct national cloud"
-                " specified in the KeyVault section of msticpyconfig.yaml",
+                " specified in the KeyVault section of msticpyconfig.yaml"
             )
             raise MsticpyKeyVaultConfigError(
                 err_msg,
@@ -557,8 +561,7 @@ class BHKeyVaultMgmtClient:
 
     def _get_params(self: Self) -> VaultCreateOrUpdateParameters:
         """Build the vault parameters block."""
-        # pylint: disable=no-member
-        oid: str = _user_oid(self.auth_client.legacy.token)
+        oid: str = _user_oid(self.auth_client.legacy.token)  # type:ignore[arg-type]
         sec_perms_all: list[str] = [perm.value for perm in SecretPermissions]
         key_perms_all: list[str] = [perm.value for perm in KeyPermissions]
         cert_perms_all: list[str] = [perm.value for perm in CertificatePermissions]
@@ -599,7 +602,7 @@ def _user_oid(token: str) -> str:
 
     """
     data = _get_parsed_token_data(token)
-    return data.get("oid")
+    return data["oid"]
 
 
 def _get_parsed_token_data(token: str) -> dict[str, Any]:
@@ -615,4 +618,5 @@ def _print_status(message: str, *, newline: bool = True) -> None:
         display(HTML(f"{message}{line_break}"))
     else:
         line_break = "\n" if newline else ""
-        LOGGER.info(message, end=line_break)
+        message += line_break
+        LOGGER.info(message)
