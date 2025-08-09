@@ -919,6 +919,8 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
             times: list = []
             output = []
             for time in metric.timeseries:
+                if not time or not time.data:
+                    continue
                 for data in time.data:
                     times.append(data.time_stamp)
                     output.append(data.total)
