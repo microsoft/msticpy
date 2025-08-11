@@ -406,7 +406,7 @@ class VTLookup:
         for row_num, (idx, row) in enumerate(input_frame[src_cols].iterrows(), start=1):
             observable: str = row[src_col]
 
-            index: object = idx
+            index: Hashable = idx
             # Use the user-specified index if possible
             if src_index_col:
                 index = row[src_index_col]
