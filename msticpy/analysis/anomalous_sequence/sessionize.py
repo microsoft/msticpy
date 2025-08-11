@@ -20,7 +20,7 @@ except ImportError:
 # mypy: ignore-errors
 _PD_VERSION = Version(pd.__version__)
 if Version("2.2.0") <= _PD_VERSION:
-    pd.set_option(pat="future.no_silent_downcasting", val=True)
+    pd.set_option("future.no_silent_downcasting", True)
 
 
 def sessionize_data(  # noqa: PLR0913
