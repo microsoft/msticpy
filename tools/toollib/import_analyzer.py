@@ -11,7 +11,7 @@ from collections import defaultdict
 from collections.abc import Generator
 from importlib import import_module
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List
 
 import networkx as nx
 import pandas as pd
@@ -36,7 +36,7 @@ __author__ = "Ian Hellen"
 
 
 PKG_TOKENS = r"([^#=><\[]+)(?:\[[^\]]+\])?([~=><]+)(.+)"
-ImportDict = dict[str, dict[str, list[str]]]
+ImportDict = Dict[str, Dict[str, List[str]]]
 
 
 # pylint: disable=too-few-public-methods
