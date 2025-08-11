@@ -650,6 +650,7 @@ class AzureMonitorDriver(DriverBase):
         fmt_list = []
         for item in param_list:
             if isinstance(item, str):
+                item = item.replace("'", r"\'")
                 fmt_list.append(f"'{item}'")
             else:
                 fmt_list.append(f"{item}")
