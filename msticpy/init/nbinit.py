@@ -50,6 +50,8 @@ Configuring your environment notebook
 https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/ConfiguringNotebookEnvironment.ipynb
 
 """
+from __future__ import annotations
+
 import importlib
 import io
 import logging
@@ -74,7 +76,7 @@ try:
 except ImportError:
     # Fallback for older environments
     # pylint: disable=deprecated-module
-    from distutils.version import LooseVersion as Version
+    from distutils.version import LooseVersion as Version  # type: ignore[assignment]
 
 try:
     import seaborn as sns

@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Checker functions for Azure ML notebooks."""
+from __future__ import annotations
+
 import logging
 import os
 import sys
@@ -24,25 +26,15 @@ try:
 except ImportError:
     # Fallback for older environments
     # pylint: disable=deprecated-module
-    from distutils.version import LooseVersion as Version
+    from distutils.version import LooseVersion as Version  # type: ignore[assignment]
 
     try:
-        from importlib_metadata import PackageNotFoundError
+        from importlib_metadata import PackageNotFoundError  # type: ignore[assignment]
         from importlib_metadata import version as get_version
     except ImportError:
-        # Last resort fallback for very old environments
-        try:
-            from pkg_resources import get_distribution
-
-            def get_version(package_name: str) -> str:
-                """Get package version using pkg_resources fallback."""
-                return get_distribution(package_name).version
-
-            PackageNotFoundError = Exception
-        except ImportError:
-            # pylint: disable=invalid-name
-            get_version = None
-            PackageNotFoundError = Exception
+        # pylint: disable=invalid-name
+        get_version = None  # type: ignore[assignment]
+        PackageNotFoundError = Exception  # type: ignore
 
 from .._version import VERSION
 from ..common.pkg_config import _HOME_PATH, get_config, refresh_config
@@ -377,7 +369,7 @@ def _get_pkg_version(version: str | tuple) -> Version:
 
 def _get_installed_mp_version() -> Version | None:
     """Return the installed version of MSTICPY."""
-    if get_version:
+    if get_version is not None:
         try:
             version_str = get_version("msticpy")
             return Version(version_str)

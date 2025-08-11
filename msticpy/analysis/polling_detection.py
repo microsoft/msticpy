@@ -13,6 +13,8 @@ updates or malware beaconing and checking for instructions.
 There is currently only one technique available for filtering polling data which is
 the class PeriodogramPollingDetector.
 """
+from __future__ import annotations
+
 from collections import Counter
 
 import numpy as np
@@ -25,7 +27,7 @@ try:
 except ImportError:
     # Fallback for older environments
     # pylint: disable=deprecated-module
-    from distutils.version import LooseVersion as Version
+    from distutils.version import LooseVersion as Version  # type: ignore[assignment]
 
 from ..common.utility import export
 

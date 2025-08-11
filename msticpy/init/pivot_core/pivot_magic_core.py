@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Txt2df core code."""
+from __future__ import annotations
+
 import argparse
 import io
 
@@ -15,7 +17,7 @@ try:
 except ImportError:
     # Fallback for older environments
     # pylint: disable=deprecated-module
-    from distutils.version import LooseVersion as Version
+    from distutils.version import LooseVersion as Version  # type: ignore[assignment]
 
 from ..._version import VERSION
 
