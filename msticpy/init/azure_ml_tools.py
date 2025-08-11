@@ -281,7 +281,7 @@ def check_mp_ver(min_msticpy_ver: str | tuple, extras: list[str] | None) -> None
     _disp_html(f"Info: msticpy version {loaded_version} (>= {mp_min_pkg_ver}) - OK<br>")
 
 
-def populate_config_to_mp_config(mp_path: str |None) -> str | None:
+def populate_config_to_mp_config(mp_path: str | None) -> str | None:
     """Populate new or existing msticpyconfig with settings from config.json."""
     # Look for a config.json
     config_json = search_for_file("config.json", paths=[get_aml_user_folder()])
@@ -289,7 +289,9 @@ def populate_config_to_mp_config(mp_path: str |None) -> str | None:
         return None
 
     # if we found one, use it to populate msticpyconfig.yaml
-    mp_path = mp_path or str((get_aml_user_folder() or Path()).joinpath("msticpyconfig.yaml"))
+    mp_path = mp_path or str(
+        (get_aml_user_folder() or Path()).joinpath("msticpyconfig.yaml")
+    )
     mp_config_convert = MpConfigFile(file=config_json)
     azs_settings = mp_config_convert.map_json_to_mp_ws()
     def_azs_settings = next(

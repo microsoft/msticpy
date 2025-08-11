@@ -169,8 +169,10 @@ def create_session_col(
         df_with_sesind[col] = df_with_sesind[col].fillna("dummy_str")
 
     df_with_sesind = df_with_sesind.sort_values(
-        *user_identifier_cols,
-        time_col,
+        [
+            *user_identifier_cols,
+            time_col,
+        ],
     ).reset_index(drop=True)
 
     # initialise first row
