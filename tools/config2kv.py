@@ -157,20 +157,12 @@ def _prompt_yn(mssg, confirm):
 def _add_secrets_to_vault(vault_name, secrets, confirm, **kwargs):
     print("Vault management requires authentication")
     kv_mgmt = BHKeyVaultMgmtClient(**kwargs)
-    vault_uri = None
     try:
-        vault_uri = kv_mgmt.get_vault_uri(vault_name)
+        _ = kv_mgmt.get_vault_uri(vault_name)
         print(f"Vault {vault_name} found.")
     except ResourceNotFoundError:
-        mssg = f"Vault {vault_name} not found. Create new vault (y/n)? "
-        if _prompt_yn(mssg, confirm):
-            print("Creating {vault_name}. Please wait...")
-            new_vault = kv_mgmt.create_vault(vault_name=vault_name)
-            vault_uri = new_vault.properties.vault_uri
-            print("New vault {vault_name} created")
-    if not vault_uri:
-        print("Vault name was not created. Aborting.")
-        return
+        print(f"Vault {vault_name} not found. Please check and retry")
+        raise
 
     mssg = f"Add secrets to vault {vault_name} (y/n)? "
     print("Adding secrets to vault requires authentication")
