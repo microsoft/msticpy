@@ -415,6 +415,8 @@ class QuerySource:
 
     @staticmethod
     def _format_datetime_default(date_time: datetime) -> str:
+        if date_time.tzinfo:
+            return date_time.isoformat(sep="T")
         return date_time.isoformat(sep="T") + "Z"
 
     @staticmethod

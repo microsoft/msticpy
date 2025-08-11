@@ -418,10 +418,10 @@ class TestDataQuery(TestCase):
         self.assertEqual(len(queries), 6)
 
         for idx, (st_time, e_time) in enumerate(ranges):
-            self.assertIn(st_time.isoformat(sep="T") + "Z", queries[idx])
-            self.assertIn(e_time.isoformat(sep="T") + "Z", queries[idx])
-        self.assertIn(start.isoformat(sep="T") + "Z", queries[0])
-        self.assertIn(end.isoformat(sep="T") + "Z", queries[-1])
+            self.assertIn(st_time.isoformat(sep="T"), queries[idx])
+            self.assertIn(e_time.isoformat(sep="T"), queries[idx])
+        self.assertIn(start.isoformat(sep="T"), queries[0])
+        self.assertIn(end.isoformat(sep="T"), queries[-1])
 
     def test_split_queries_err(self):
         """Test queries split error conditions."""
