@@ -1,0 +1,384 @@
+metadata:
+  version: 1
+  # name: PrismaCloud Queries
+  description: Queries for Prisma Cloud Data Provider
+  data_environments: [Prismacloud]
+  data_families: [Prismacloud]
+  tags: [Prisma_config_resource_aws_s3]
+  aliases:
+    - &config_resource_query_relative |-
+      {{
+        "querymetadata" :
+            {{
+                "queryType": "config_resource_query_relative",
+                "unit": "{unit_type}",
+                "amount": "{amount_value}",
+                "endpoint": "config_resource",
+                $<query_conditions>$,
+                "isParsedinDriver": true
+            }}
+      }}
+    - &config_resource_query_absolute |-
+      {{
+        "querymetadata" :
+            {{
+                "queryType": "config_resource_query_relative",
+                "start_time": "{start}",
+                "end_time": "{end}",
+                "endpoint": "config_resource",
+                $<query_conditions>$,
+                "isParsedinDriver": true
+            }}
+      }}
+defaults:
+  metadata:
+    data_source: "Prismacloud"
+  parameters:
+    unit_type:
+      description: Field to use for time
+      type: str
+      default: minute
+    amount_value:
+      description: Field to use for time
+      type: int
+      default: 60
+    start:
+      description: Query start time
+      type: datetime
+      default: -7
+    end:
+      description: Query end time
+      type: datetime
+      default: 0
+    optional_limit:
+      description: |-
+        enter limit using command - limit search records to |number|
+        default is empty - not used
+      type: str
+      default: |-
+         
+    additional_query_condition:
+      description: |-
+        Additional query condition to search default is empty
+      type: str
+      default: |-
+         
+sources:
+  config_resource_logging_disabled_aws_s3bucket:
+    description: |-
+      List of AWS s3 buckets with logging disabled.
+      If this query returns results, investigate AWS s3 resources with disabled
+      logging as this risk can lead to undetected unauthorized access or data breaches.
+      Security teams should ensure that logging is enabled for all s3 buckets
+      to maintain a comprehensive audit trail of access and modifications.
+    metadata: {}
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where api.name = 'aws-cloudtrail-describe-trails' as X; config from cloud.resource where api.name = 'aws-s3api-get-bucket-acl' AND json.rule = loggingConfiguration.targetBucket does not exist as Y; filter '$.X.s3BucketName equals $.Y.bucketName'; show Y; {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
+  config_resource_route53_cname_reference_unknown_s3bucket:
+    description: |-
+      Route53 holds all dns rescords for an organization.We are looking for CNAME records that point to S3-website.
+      We are verifying every bucket name an organization owns. cname in route53 pointing towards unknown bucket name is a red flag.
+      If this query returns results, investigate Route53 CNAME records that point to S3-website.
+      This could indicate potential misconfigurations or unauthorized access attempts.
+    metadata: {}
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where api.name = 'aws-route53-list-hosted-zones' AND json.rule = hostedZone.config.privateZone is false and resourceRecordSet[?any( type equals CNAME and resourceRecords[*].value contains s3-website )] exists as X; config from cloud.resource where api.name = 'aws-s3api-get-bucket-acl' as Y; filter 'not ($.X.resourceRecordSet[*].name intersects $.Y.bucketName)'; show X; {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
+  config_resource_website_hosted_in_aws_s3bucket:
+    description: |-
+      List of AWS s3 buckets with website hosting enabled.
+      If this query returns results, investigate AWS s3 resources with website hosting enabled.
+      Enabling website hosting on an S3 bucket means it must allow public GET requests to serve content.
+      This risk can lead to undetected unauthorized access or data breaches.
+      Security teams should ensure that website hosting is disabled for all s3 buckets
+    metadata: {}
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'azure' AND api.name = 'azure-key-vault-list' AND json.rule = properties.provisioningState equals Succeeded and properties.privateEndpointConnections[*] does not exist {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
+  config_resource_publicly_readable_aws_s3bucket:
+    description: |-
+      List of AWS s3 buckets with public read access.
+      This query returns results when the rules looks for bucket acls and it allows read access in permission,
+      investigate AWS s3 resources with public read access.
+      This risk can lead to undetected unauthorized access or data breaches.
+      Security teams should ensure that public read access is disabled for all s3 buckets
+    metadata: {}
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-s3api-get-bucket-acl' AND json.rule = ((((publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false) or (publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false)) and (acl.grantsAsList[?any(grantee equals AllUsers and permission is member of (ReadAcp,Read,FullControl))] exists or acl.grantsAsList[?any(grantee equals AuthenticatedUsers and permission is member of (ReadAcp,Read,FullControl))] exists)) or ((policyStatus.isPublic is true and ((publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false) or (publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false))) and (policy.Statement[?any(Effect equals Allow and (Principal equals * or Principal.AWS equals *) and (Action contains s3:* or Action contains s3:Get or Action contains s3:List) and (Condition does not exist))] exists))) and websiteConfiguration does not exist {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
+  config_resource_publicly_writable_aws_s3bucket:
+    description: |-
+      List of AWS s3 buckets with public write access.
+      This query returns results when the rules looks for bucket acls and it allows write access in permission,
+      investigate AWS s3 resources with public write access.
+      This risk can lead to undetected unauthorized access or data breaches.
+      Security teams should ensure that public write access is disabled for all s3 buckets
+    metadata: {}
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-s3api-get-bucket-acl' AND json.rule = ((((publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false) or (publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false)) and (acl.grantsAsList[?any(grantee equals AllUsers and permission is member of (WriteAcp,Write,FullControl))] exists or acl.grantsAsList[?any(grantee equals AuthenticatedUsers and permission is member of (WriteAcp,Write,FullControl))] exists)) or ((policyStatus.isPublic is true and ((publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false) or (publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false))) and (policy.Statement[?any(Effect equals Allow and (Principal equals * or Principal.AWS equals *) and (Action contains s3:* or Action contains s3:Put or Action contains s3:Create or Action contains s3:Replicate or Action contains s3:Update or Action contains s3:Delete) and (Condition does not exist))] exists))) and websiteConfiguration does not exist {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
+  config_resource_acl_without_bucketownerenforced_aws_s3bucket:
+    description: |-
+      List of AWS s3 buckets with ACLs that do not enforce bucket owner enforced.
+      If this query returns results, investigate AWS s3 resources with ACLs that do not enforce bucket owner enforced.
+      This risk can lead to undetected unauthorized access or data breaches.
+      Security teams should ensure that ACLs are configured to enforce bucket owner enforced for all s3 buckets
+    metadata: {}
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-s3api-get-bucket-acl' AND json.rule = ownershipControls.rules[*] does not contain BucketOwnerEnforced {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
+  config_resource_cross_account_write_aws_s3bucket:
+    description: |-
+      List of AWS S3 buckets with public or cross-account write permissions.
+      If this query returns results, investigate AWS S3 bucket policies granting write actions (e.g. s3:Put*, s3:Delete*, s3:*) to
+      any principal other than the owning account.
+      Granting write access enables unauthorized users to upload, modify, or delete objects and even host malicious content.
+      This risk can lead to data tampering, supply-chain attacks, compliance violations, and operational disruption.
+      Security teams should restrict write permissions to specific IAM roles or ARNs and enable
+      Public Access Block controls for all S3 buckets.
+    metadata: {}
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-s3api-get-bucket-acl' AND json.rule = policy.Statement[?any(Effect equals Allow and (Principal.AWS does not equal * and Principal does not equal * and Principal.AWS contains arn and Principal.AWS does not contain $.accountId) and (Action contains \"s3:Put*\" or Action contains \"s3:Delete*\" or Action equals \"*\" or Action contains \"s3:*\" or Action is member of ('s3:DeleteBucketPolicy','s3:PutBucketAcl','s3:PutBucketPolicy','s3:PutEncryptionConfiguration','s3:PutObjectAcl') ))] exists {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
+  config_resource_allow_all_principals_for_all_actions_aws_s3bucket:
+    description: |-
+      List of AWS S3 buckets whose bucket policies allow any principal to perform any S3 action without conditions.
+      If this query returns results, investigate each buckets policy for unrestricted “Allow” statements granting s3:*
+      or other S3 actions to “*” or external ARNs.
+      Unconditional policy grants enable anonymous or cross-account users to read, write, delete objects,
+      modify bucket ACLs or policies, and change encryption settings.
+      This risk can lead to data exfiltration, tampering of critical assets,
+      hosting of malicious content, and disruption of operations.
+      Security teams should restrict bucket policy principals to specific IAM roles or ARNs, scope allowed actions narrowly,
+      and enforce Public Access Block (`restrictPublicBuckets=true`) at both account and bucket levels.
+    metadata: {}
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name='aws-s3api-get-bucket-acl' AND json.rule = ( ( publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration does not exist ) or ( publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false ) or ( publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false ) or ( publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration does not exist ) )AND policy.Statement[?any(Effect equals Allow and Action anyStartWith s3: and (Principal.AWS contains * or Principal equals *) and (Condition does not exist or Condition[*] is empty) )] exists {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
+  config_resource_public_access_block_disabled_aws_s3bucket:
+    description: |-
+      List of AWS S3 buckets with public ACL or policy-based access not blocked by Public Access Block settings.
+      If this query returns results, investigate buckets where an `AllUsers` ACL grant or `policyStatus.isPublic` is effectively honored.
+      Public access via ACLs or bucket policies can lead to unauthorized enumeration, data exposure, or tampering of S3 objects.
+      This risk can result in compliance violations, data breaches, and reputational damage.
+      Security teams should enable Public Access Block 
+      (BlockPublicAcls, BlockPublicPolicy, RestrictPublicBuckets), disable ACLs, and enforce BucketOwnerEnforced on all S3 buckets.
+    metadata: {}
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name='aws-s3api-get-bucket-acl' AND json.rule = \"((((acl.grants[?(@.grantee=='AllUsers')] size > 0) or policyStatus.isPublic is true) and publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration does not exist) or ((acl.grants[?(@.grantee=='AllUsers')] size > 0) and ((publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false) or (publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false))) or (policyStatus.isPublic is true and ((publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false) or (publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false)))) and websiteConfiguration does not exist\" {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
+  config_resource_publicly_access_to_cloudtrail_s3bucket:
+    description: |-
+      List of AWS S3 buckets used by CloudTrail that are publicly accessible via ACL or bucket policy.
+      If this query returns results, investigate each CloudTrail log bucket where an `AllUsers` ACL grant or
+      `policyStatus.isPublic` is effectively honored despite no Public Access Block settings.
+      Public exposure of CloudTrail buckets risks unauthorized reading or tampering of your audit logs,
+      impairing security monitoring and forensic investigations.
+      This can lead to undetected breaches, loss of critical audit data, and non-compliance with regulatory requirements.
+      Security teams should immediately enable Public Access Block (BlockPublicAcls, BlockPublicPolicy, RestrictPublicBuckets),
+      disable ACLs, enforce BucketOwnerEnforced, and lock down CloudTrail buckets to approved principals only.
+    metadata: {}
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name='aws-s3api-get-bucket-acl' AND json.rule = \"((((acl.grants[?(@.grantee=='AllUsers')] size > 0) or policyStatus.isPublic is true) and publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration does not exist) or ((acl.grants[?(@.grantee=='AllUsers')] size > 0) and ((publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false) or (publicAccessBlockConfiguration.ignorePublicAcls is false and accountLevelPublicAccessBlockConfiguration.ignorePublicAcls is false))) or (policyStatus.isPublic is true and ((publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration does not exist) or (publicAccessBlockConfiguration does not exist and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false) or (publicAccessBlockConfiguration.restrictPublicBuckets is false and accountLevelPublicAccessBlockConfiguration.restrictPublicBuckets is false))))\" as X; config from cloud.resource where api.name = 'aws-cloudtrail-describe-trails' as Y; filter'$.X.bucketName equals $.Y.s3BucketName'; show X; {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
+  config_resource_enforced_access_via_vpc_endpoint_aws_s3_bucket:
+    description: |-
+      List of AWS S3 buckets whose bucket policies include VPC endpoint based conditions (`aws:SourceVpce`).
+      If this query returns results, investigate policy statements using:
+        - `Condition.StringEquals` with `Effect:Allow` to permit traffic only from specified VPC endpoints.
+        - `Condition.StringNotEquals` with `Effect:Deny` to block all other sources.
+      Misconfigured or overly broad endpoint conditions can inadvertently grant access to unauthorized VPCs, peered accounts,
+      or shared endpoints.
+      Attackers who exploit a compromised or misnamed VPC endpoint could exfiltrate data,
+      modify objects, or bypass network controls.
+      Security teams should verify that each policy references only exact, approved endpoint IDs, avoid wildcards,
+      and periodically test enforcement to prevent unauthorized access.
+    metadata: {}
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name='aws-s3api-get-bucket-acl' AND json.rule = 'policy.Statement[?any((Condition.StringNotEquals contains aws:SourceVpce and Effect equals Deny and (Action contains s3:* or Action[*] contains s3:*)) or (Condition.StringEquals contains aws:SourceVpce and Effect equals Allow and (Action contains s3:* or Action[*] contains s3:*)))] exists' {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
+  config_resource_cmk_with_overly_permissive_access_for_aws_s3bucket:
+    description: |-
+      List of AWS S3 buckets encrypted with a customer-managed KMS key whose default key
+      policy grants access to any principal without conditions.
+      If this query returns results, investigate each bucket `kmsMasterKeyID` and 
+      inspect the corresponding CMK default policy for unconditioned `Principal="*"` or wildcard ARNs.
+      An unscoped key policy allows unauthorized AWS principals to decrypt, encrypt, or re-encrypt bucket objects,
+      leading to data exfiltration, tampering, or bypass of encryption controls.
+      Security teams should tighten key policies by restricting principals to specific IAM roles or ARNs,
+      adding conditions (e.g., `aws:SourceVpce`, `aws:MultiFactorAuthPresent`), and enabling key rotation.
+    metadata: {}
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.type = 'aws' AND api.name= 'aws-s3api-get-bucket-acl' AND json.rule = (sseAlgorithm contains \"aws:kms\" or sseAlgorithm contains \"aws:kms:dsse\") and kmsMasterKeyID exists as X; config from cloud.resource where api.name = 'aws-kms-get-key-rotation-status' AND json.rule = keyMetadata.keyState equals Enabled and keyMetadata.keyManager equals CUSTOMER and policies.default.Statement[?any((Principal.AWS equals * or Principal equals *)and Condition does not exist)] exists as Y; filter '$.X.kmsMasterKeyID contains $.Y.key.keyArn' ; show X; {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
+  search_config_resource_s3_full_from_accountname_and_regionname:
+    description: |-
+      Retrieve config resource data from Prisma Cloud using by providing cloud account name and region name.
+      out = driver.Prismacloud.search_config_resource_s3_full(account_name = ["something"], region_name = ["something"])
+      out = driver.Prismacloud.search_config_resource_s3_full(account_name = ["something"], region_name = ["something"], additional_query_condition = "something")
+    metadata: {}
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where cloud.service = 'Amazon S3' AND cloud.account IN ( {account_name}) and cloud.region IN ( {region_name} ) {additional_query_condition}{optional_limit}"
+    parameters:
+      region_name:
+        description: enter limit using command - limit search records to |number|
+        type: list
+        default:
+          - testregion
+          - testregion1
+      account_name:
+        description: enter limit using command - limit search records to |number|
+        type: list
+        default:
+          - testaccount
+          - testaccount1
