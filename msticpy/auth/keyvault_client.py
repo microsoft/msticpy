@@ -261,12 +261,6 @@ class BHKeyVaultClient:
                     err_msg,
                     title="no Key Vault URI for national cloud",
                 )
-        if self.debug:
-            # Mask the vault name in the URI before logging
-            masked_vault_uri = vault_uri
-            if vault_uri and isinstance(vault_name, str) and vault_name:
-                masked_vault_uri = vault_uri.replace(vault_name, "[REDACTED]")
-            LOGGER.debug("Using Vault URI %s", masked_vault_uri)
         return vault_name, vault_uri
 
     @property
