@@ -6,25 +6,13 @@
 """Keyvault client - adapted from Bluehound code."""
 from __future__ import annotations
 
-import base64
-import json
 import logging
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from azure.core.exceptions import ClientAuthenticationError, ResourceNotFoundError
 from azure.keyvault.secrets import KeyVaultSecret, SecretClient
 from azure.mgmt.keyvault import KeyVaultManagementClient
-from azure.mgmt.keyvault.models import (
-    AccessPolicyEntry,
-    CertificatePermissions,
-    KeyPermissions,
-    Permissions,
-    SecretPermissions,
-    Sku,
-    Vault,
-    VaultCreateOrUpdateParameters,
-    VaultProperties,
-)
+from azure.mgmt.keyvault.models import Vault
 from IPython.core.display import HTML
 from IPython.display import display
 from typing_extensions import Self
@@ -323,8 +311,7 @@ class BHKeyVaultClient:
         except ResourceNotFoundError as err:
             if self.debug:
                 LOGGER.debug(
-                    "Secret: '%s' missing from vault: %s",
-                    secret_name,
+                    "Secret: is missing from vault: %s",
                     self.vault_uri,
                 )
             err_msg: str = (
@@ -338,8 +325,7 @@ class BHKeyVaultClient:
         if secret_bundle.value is None or not secret_bundle.value:
             if self.debug:
                 LOGGER.debug(
-                    "Secret: '%s' was empty in vault %s",
-                    secret_name,
+                    "Secret was empty in vault %s",
                     self.vault_uri,
                 )
             err_msg = (
@@ -370,7 +356,7 @@ class BHKeyVaultClient:
 
         """
         if self.debug:
-            LOGGER.debug("Storing %s in %s", secret_name, self.vault_uri)
+            LOGGER.debug("Storing secret in %s", self.vault_uri)
         return self.kv_client.set_secret(name=secret_name, value=value)
 
 
@@ -534,86 +520,10 @@ class BHKeyVaultMgmtClient:
             The Vault object.
 
         """
-        if not self.azure_region:
-            err_msg: str = (
-                "Could not get Azure region in which to create the vault."
-                " Please add AzureRegion to the KeyVault section of msticpyconfig.yaml"
-            )
-            raise MsticpyKeyVaultConfigError(
-                err_msg,
-                title="missing AzureRegion value.",
-            )
-        parameters = self._get_params()
-        if not self.resource_group:
-            err_msg = (
-                "Could not get Azure resource group in which to create the vault."
-                " Please add ResourceGroup to the KeyVault section of msticpyconfig.yaml"
-            )
-            raise MsticpyKeyVaultConfigError(
-                err_msg,
-                title="missing ResourceGroup value.",
-            )
-        mgmt: KeyVaultManagementClient = KeyVaultManagementClient(
-            self.auth_client.modern,
-            self.subscription_id,
+        raise NotImplementedError(
+            "create_vault is no longer supported in msticpy",
+            "Please create the vault manually.",
         )
-        return mgmt.vaults.create_or_update(  # type: ignore[attr-defined]
-            self.resource_group,
-            vault_name,
-            parameters,
-        ).result()
-
-    def _get_params(self: Self) -> VaultCreateOrUpdateParameters:
-        """Build the vault parameters block."""
-        oid: str = _user_oid(self.auth_client.legacy.token)  # type:ignore[arg-type]
-        sec_perms_all: list[str] = [perm.value for perm in SecretPermissions]
-        key_perms_all: list[str] = [perm.value for perm in KeyPermissions]
-        cert_perms_all: list[str] = [perm.value for perm in CertificatePermissions]
-        permissions: Permissions = Permissions()
-        permissions.keys = key_perms_all
-        permissions.secrets = sec_perms_all
-        permissions.certificates = cert_perms_all
-
-        policy: AccessPolicyEntry = AccessPolicyEntry(
-            tenant_id=self.tenant_id,
-            object_id=oid,
-            permissions=permissions,
-        )
-
-        properties: VaultProperties = VaultProperties(
-            tenant_id=self.tenant_id,
-            sku=Sku(name="standard", family="A"),
-            access_policies=[policy],
-        )
-        parameters: VaultCreateOrUpdateParameters = VaultCreateOrUpdateParameters(
-            location=self.azure_region,
-            properties=properties,
-        )
-        parameters.properties.enabled_for_deployment = True
-        parameters.properties.enabled_for_disk_encryption = True
-        parameters.properties.enabled_for_template_deployment = True
-        return parameters
-
-
-def _user_oid(token: str) -> str:
-    """
-    Return the user Object ID.
-
-    Returns
-    -------
-    str
-        User OID.
-
-    """
-    data = _get_parsed_token_data(token)
-    return data["oid"]
-
-
-def _get_parsed_token_data(token: str) -> dict[str, Any]:
-    tok_data = token
-    tok_data = tok_data.split(".")[1]
-    tok_data += "=" * ((4 - len(tok_data) % 4) % 4)
-    return json.loads(base64.b64decode(tok_data))
 
 
 def _print_status(message: str, *, newline: bool = True) -> None:
