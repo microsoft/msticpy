@@ -19,11 +19,11 @@ except ImportError:
 
 # mypy: ignore-errors
 _PD_VERSION = Version(pd.__version__)
-if _PD_VERSION >= Version("2.2.0"):
-    pd.set_option("future.no_silent_downcasting", True)
+if Version("2.2.0") <= _PD_VERSION:
+    pd.set_option("future.no_silent_downcasting", val=True)
 
 
-def sessionize_data(
+def sessionize_data(  # noqa: PLR0913
     data: pd.DataFrame,
     user_identifier_cols: list[str],
     time_col: str,
@@ -84,7 +84,7 @@ def sessionize_data(
     # aggregate by the session_ind column
     agg_df = (
         df_with_sesind.sort_values(["session_ind", time_col])
-        .groupby(["session_ind"] + user_identifier_cols, as_index=False)
+        .groupby([*user_identifier_cols, "session_ind"], as_index=False)
         .agg({time_col: ["min", "max"], event_col: list})
         .reset_index()
     )
@@ -158,7 +158,7 @@ def create_session_col(
     if not isinstance(df_with_sesind[time_col].dtype, DatetimeTZDtype):
         df_with_sesind[time_col] = pd.to_datetime(df_with_sesind[time_col])
 
-    final_cols = list(df_with_sesind.columns) + ["session_ind"]
+    final_cols = [*df_with_sesind.columns, "session_ind"]
 
     if len(df_with_sesind) == 0:
         df_with_sesind["session_ind"] = None
@@ -169,7 +169,8 @@ def create_session_col(
         df_with_sesind[col] = df_with_sesind[col].fillna("dummy_str")
 
     df_with_sesind = df_with_sesind.sort_values(
-        user_identifier_cols + [time_col]
+        *user_identifier_cols,
+        time_col,
     ).reset_index(drop=True)
 
     # initialise first row
