@@ -240,7 +240,7 @@ _CONF_URI = (
 
 _AZNB_GUIDE = (
     "Please run the <i>Getting Started Guide for Azure Sentinel "
-    + "ML Notebooks</i> notebook."
+    "ML Notebooks</i> notebook."
 )
 
 current_providers: dict[str, Any] = {}  # pylint: disable=invalid-name
@@ -420,7 +420,11 @@ def init_notebook(
     # Handle required packages and imports
     _pr_output("Processing imports....")
     imp_ok = _import_packages(
-        namespace, def_imports, additional_packages, extra_imports, user_install
+        namespace,
+        def_imports,
+        additional_packages,
+        extra_imports,
+        user_install,
     )
 
     # Configuration check
@@ -441,7 +445,7 @@ def init_notebook(
         if _VERBOSITY() == 2:  # type: ignore
             _pr_output("Friendly exceptions enabled.")
         InteractiveShell.showtraceback = _hook_ipython_exceptions(  # type: ignore
-            InteractiveShell.showtraceback
+            InteractiveShell.showtraceback,
         )
 
     # load pivots
@@ -473,8 +477,8 @@ def _err_output(*args):
         display(
             HTML(
                 "For more info and options run:"
-                "<pre>import msticpy as mp\nhelp(mp.nbinit)</pre>"
-            )
+                "<pre>import msticpy as mp\nhelp(mp.nbinit)</pre>",
+            ),
         )
     else:
         print(*args)
@@ -517,13 +521,21 @@ def _load_pivot_functions(namespace):
 
 
 def _import_packages(
-    namespace, def_imports, additional_packages, extra_imports, user_install
+    namespace,
+    def_imports,
+    additional_packages,
+    extra_imports,
+    user_install,
 ):
     """Import packages from default set or supplied as parameters."""
     stdout_cap = io.StringIO()
     with redirect_stdout(stdout_cap):
         imp_ok = _global_imports(
-            namespace, additional_packages, user_install, extra_imports, def_imports
+            namespace,
+            additional_packages,
+            user_install,
+            extra_imports,
+            def_imports,
         )
         output = stdout_cap.getvalue()
         if output.strip():
@@ -555,7 +567,7 @@ def _show_init_warnings(imp_ok, conf_ok):
         md("One or more configuration items were missing or set incorrectly.")
         md(
             _AZNB_GUIDE
-            + f" and the <a href='{_CONF_URI}'>msticpy configuration guide</a>."
+            + f" and the <a href='{_CONF_URI}'>msticpy configuration guide</a>.",
         )
     md("This notebook may still run but with reduced functionality.")
     return False
@@ -598,9 +610,9 @@ def list_default_imports():
 
 def _extract_pkg_name(
     imp_pkg: dict[str, str] | None = None,
-    pkg: str = None,
-    tgt: str = None,
-    alias: str = None,
+    pkg: str | None = None,
+    tgt: str | None = None,
+    alias: str | None = None,
 ) -> str:
     """Return string representation of package import."""
     if imp_pkg:
@@ -628,9 +640,9 @@ def _get_aml_globals(namespace: dict[str, Any]) -> tuple[str, str, list[str] | N
 
 def _global_imports(
     namespace: dict[str, Any],
-    additional_packages: list[str] = None,
+    additional_packages: list[str] | None = None,
     user_install: bool = False,
-    extra_imports: list[str] = None,
+    extra_imports: list[str] | None = None,
     def_imports: str = "all",
 ):
     """Import packages from default set (defined statically)."""
@@ -655,19 +667,20 @@ def _global_imports(
 
     if additional_packages:
         pkg_success = check_and_install_missing_packages(
-            additional_packages, user=user_install
+            additional_packages,
+            user=user_install,
         )
         if not pkg_success:
             _err_output("One or more packages failed to install.")
             _err_output(
-                "Please re-run init_notebook() with the parameter user_install=True."
+                "Please re-run init_notebook() with the parameter user_install=True.",
             )
         # We want to force import lib to see anything that we've
         # just installed.
         importlib.invalidate_caches()
     if extra_imports:
         import_list.extend(
-            _import_extras(nm_spc=namespace, extra_imports=extra_imports)
+            _import_extras(nm_spc=namespace, extra_imports=extra_imports),
         )
 
     imported_items = f"Imported:{', '.join(imp for imp in import_list if imp)}"
@@ -797,7 +810,7 @@ def _load_pivots(namespace):
         # pylint: disable=import-outside-toplevel, cyclic-import
         import msticpy
 
-        setattr(msticpy, "pivot", pivot)
+        msticpy.pivot = pivot
 
 
 def _import_extras(nm_spc: dict[str, Any], extra_imports: list[str]):
@@ -812,14 +825,17 @@ def _import_extras(nm_spc: dict[str, Any], extra_imports: list[str]):
 
         if params[0] is None:
             raise MsticpyException(
-                f"First parameter in extra_imports is mandatory: {imp_spec}"
+                f"First parameter in extra_imports is mandatory: {imp_spec}",
             )
         try:
             _imp_from_package(
-                nm_spc=nm_spc, pkg=params[0], tgt=params[1], alias=params[2]
+                nm_spc=nm_spc,
+                pkg=params[0],
+                tgt=params[1],
+                alias=params[2],
             )
             added_imports.append(
-                _extract_pkg_name(pkg=params[0], tgt=params[1], alias=params[2])
+                _extract_pkg_name(pkg=params[0], tgt=params[1], alias=params[2]),
             )
         except ImportError as imp_err:
             display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
@@ -827,7 +843,7 @@ def _import_extras(nm_spc: dict[str, Any], extra_imports: list[str]):
     return added_imports
 
 
-def _imp_module(nm_spc: dict[str, Any], module_name: str, alias: str = None):
+def _imp_module(nm_spc: dict[str, Any], module_name: str, alias: str | None = None):
     """Import named module and assign to global alias."""
     try:
         mod = importlib.import_module(module_name)
@@ -859,7 +875,10 @@ def _imp_module_all(nm_spc: dict[str, Any], module_name):
 
 
 def _imp_from_package(
-    nm_spc: dict[str, Any], pkg: str, tgt: str = None, alias: str = None
+    nm_spc: dict[str, Any],
+    pkg: str,
+    tgt: str | None = None,
+    alias: str | None = None,
 ):
     """Import object or submodule from `pkg`."""
     if not tgt:
@@ -885,7 +904,10 @@ def _imp_from_package(
 
 
 def _check_and_reload_pkg(
-    nm_spc: dict[str, Any], pkg: Any, req_version: tuple[int, ...], alias: str = None
+    nm_spc: dict[str, Any],
+    pkg: Any,
+    req_version: tuple[int, ...],
+    alias: str | None = None,
 ):
     """Check package version matches required version and reload."""
     warn_mssg = []

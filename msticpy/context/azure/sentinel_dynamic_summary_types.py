@@ -10,10 +10,9 @@ import dataclasses
 import json
 import logging
 import uuid
-from collections.abc import Hashable
 from datetime import datetime
 from functools import singledispatchmethod
-from typing import Any, Callable, ClassVar, Iterable
+from typing import TYPE_CHECKING, Any, Callable, ClassVar
 
 import numpy as np
 import pandas as pd
@@ -21,6 +20,9 @@ from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
+
+if TYPE_CHECKING:
+    from collections.abc import Hashable, Iterable
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
