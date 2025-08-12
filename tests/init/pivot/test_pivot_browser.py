@@ -15,10 +15,7 @@ except ImportError:
 
 # pylint: disable=redefined-outer-name, protected-access, unused-import
 # pylint: disable=unused-argument
-from msticpy.init.pivot import Pivot
 from msticpy.init.pivot_core.pivot_browser import PivotBrowser
-
-from .pivot_fixtures import create_data_providers, create_pivot, data_providers
 
 __author__ = "Ian Hellen"
 

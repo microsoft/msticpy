@@ -4,15 +4,27 @@
 # license information.
 # --------------------------------------------------------------------------
 """Python file import analyzer."""
+from __future__ import annotations
+
 import sys
 from collections import defaultdict
+from collections.abc import Generator
 from importlib import import_module
 from pathlib import Path
-from typing import Any, DefaultDict, Dict, Generator, List, Optional, Set, Tuple
+from typing import Any, Dict, List
 
 import networkx as nx
 import pandas as pd
-import pkg_resources
+
+try:
+    from packaging.requirements import Requirement
+except ImportError:
+    # Fallback for older environments
+    try:
+        from importlib_metadata import Requirement
+    except ImportError:
+        # Last resort fallback
+        from pkg_resources import Requirement
 
 from . import VERSION
 
@@ -33,12 +45,12 @@ class ModuleImports:
 
     def __init__(self):
         """Initialize class."""
-        self.internal: Set[str] = set()
-        self.external: Set[str] = set()
-        self.standard: Set[str] = set()
-        self.setup_reqs: Set[str] = set()
-        self.missing_reqs: Set[str] = set()
-        self.unknown: Set[str] = set()
+        self.internal: set[str] = set()
+        self.external: set[str] = set()
+        self.standard: set[str] = set()
+        self.setup_reqs: set[str] = set()
+        self.missing_reqs: set[str] = set()
+        self.unknown: set[str] = set()
 
 
 _PKG_RENAME_NAME = {
@@ -61,9 +73,9 @@ def analyze_imports(
     package_root: str,
     package_name: str,
     req_file: str = "requirements.txt",
-    extras: Optional[List[str]] = None,
+    extras: list[str] | None = None,
     process_setup_py: bool = True,
-) -> Dict[str, ModuleImports]:
+) -> dict[str, ModuleImports]:
     """
     Analyze imports for package.
 
@@ -91,7 +103,7 @@ def analyze_imports(
         package_root, req_file, extras, skip_setup=(not process_setup_py)
     )
     pkg_root = Path(package_root) / package_name
-    all_mod_imports: Dict[str, ModuleImports] = {}
+    all_mod_imports: dict[str, ModuleImports] = {}
     pkg_modules = _get_pkg_modules(pkg_root)
 
     pkg_py_files = list(pkg_root.glob("**/*.py"))
@@ -132,7 +144,7 @@ def analyze_local_imports(
     # get all the module names in the package
     pkg_module_names = _get_pkg_module_paths(pkg_root)
     # generate relative variants - e.g. a.b.c -> {a.b.c, b.c, c}
-    pkg_modules: Set[str] = set()
+    pkg_modules: set[str] = set()
     for mod_variants in pkg_module_names.values():
         pkg_modules.update(mod_variants)
 
@@ -157,7 +169,9 @@ def analyze_local_imports(
     return pd.DataFrame(all_mod_imports)
 
 
-def print_module_imports(modules: Dict[str, ModuleImports], imp_type="setup_reqs"):
+def print_module_imports(
+    modules: dict[str, ModuleImports], imp_type: str = "setup_reqs"
+) -> None:
     """
     Print module imports of type.
 
@@ -173,7 +187,7 @@ def print_module_imports(modules: Dict[str, ModuleImports], imp_type="setup_reqs
         print(py_mod_name, getattr(py_mod, imp_type))
 
 
-def build_import_graph(modules: Dict[str, ModuleImports]) -> nx.Graph:
+def build_import_graph(modules: dict[str, ModuleImports]) -> nx.Graph:
     """
     Build Networkx graph of imports.
 
@@ -206,10 +220,10 @@ def build_import_graph(modules: Dict[str, ModuleImports]) -> nx.Graph:
 
 def get_setup_reqs(
     package_root: str,
-    req_file="requirements.txt",
-    extras: Optional[List[str]] = None,
-    skip_setup=True,
-) -> Tuple[Dict[str, Any], Dict[str, str]]:
+    req_file: str = "requirements.txt",
+    extras: list[str] | None = None,
+    skip_setup: bool = True,
+) -> tuple[dict[str, Any], dict[str, str]]:
     """
     Return list of extras from setup.py.
 
@@ -277,7 +291,7 @@ def get_setup_reqs(
 def get_extras_from_setup(
     extra: str = "all",
     include_base: bool = False,
-) -> List[str]:
+) -> list[str]:
     """
     Return list of extras from setup.py.
 
@@ -377,7 +391,7 @@ def _filter_none_local_imports(module_imports: ImportDict) -> ImportDict:
 
 def _filter_exclusions(
     module_imports: ImportDict,
-    excl_prefixes: List[str],
+    excl_prefixes: list[str],
 ) -> ImportDict:
     """Remove any imports that start with items in `excl_prefixes`."""
     return {
@@ -396,7 +410,7 @@ def _filter_exclusions(
 
 
 def _remap_partial_module_names(
-    module_imports: ImportDict, name_mapping: Dict[str, str]
+    module_imports: ImportDict, name_mapping: dict[str, str]
 ) -> ImportDict:
     """Map partial names of module imports to full names."""
     remapped: ImportDict = {}
@@ -410,12 +424,32 @@ def _remap_partial_module_names(
     return remapped
 
 
-def _extract_pkg_specs(pkg_specs: List[str]) -> pkg_resources.Requirement:
-    return {
-        pkg_resources.Requirement.parse(req)  # type: ignore
-        for req in pkg_specs
-        if (req and not req.strip().startswith("#"))
-    }
+def _extract_pkg_specs(pkg_specs: list[str]) -> set[Requirement]:
+    """
+    Extract package specifications from requirements strings.
+
+    Parameters
+    ----------
+    pkg_specs : list[str]
+        List of requirement specification strings
+
+    Returns
+    -------
+    set[Requirement]
+        Set of parsed Requirement objects
+
+    """
+    requirements = set()
+    for req in pkg_specs:
+        if not req.strip() or req.strip().startswith("#"):
+            continue
+
+        # Remove trailing comments and strip whitespace
+        req_clean = req.split("#")[0].strip()
+        if req_clean:
+            requirements.add(Requirement(req_clean))
+
+    return requirements
 
 
 # Adapted from code on stackoverflow (url split over 3 lines)
@@ -501,7 +535,7 @@ def _get_pkg_from_path(pkg_file: str, pkg_root: str) -> Generator[str, None, Non
         yield module
 
 
-def _get_pkg_modules(pkg_root) -> Set[str]:
+def _get_pkg_modules(pkg_root) -> set[str]:
     """Get the list of all modules from file paths."""
     pkg_modules = set()
     for py_file in pkg_root.glob("**/*.py"):
@@ -511,7 +545,7 @@ def _get_pkg_modules(pkg_root) -> Set[str]:
     return pkg_modules
 
 
-def _get_pkg_module_paths(pkg_root) -> DefaultDict[str, Set[str]]:
+def _get_pkg_module_paths(pkg_root) -> defaultdict[str, set[str]]:
     """Get the list of all modules from file paths."""
     pkg_modules = defaultdict(set)
     for py_file in pkg_root.glob("**/*.py"):

@@ -51,7 +51,7 @@ def test_g_test_small_sample(exclude_pi, expected):
     null_df = pd.DataFrame()
 
     per = poll.PeriodogramPollingDetector(null_df)
-    _, pval = per._g_test(test_power_spectral_density, exclude_pi)
+    _, pval = per._g_test(test_power_spectral_density, exclude_pi=exclude_pi)
 
     assert round(pval, 7) == expected
 
@@ -63,7 +63,7 @@ def test_g_test_large_sample(exclude_pi, expected):
     null_df = pd.DataFrame()
 
     per = poll.PeriodogramPollingDetector(null_df)
-    _, pval = per._g_test(test_power_spectral_density, exclude_pi)
+    _, pval = per._g_test(test_power_spectral_density,  exclude_pi=exclude_pi)
 
     assert round(pval, 7) == expected
 
@@ -180,6 +180,6 @@ def test_pi_freq_exclusion(g_test, periodic_data, offset, pi_excluded):
     per = poll.PeriodogramPollingDetector(periodic_data)
     per.detect_polling("timestamps")
 
-    args = g_test.call_args.args
+    kwargs = g_test.call_args.kwargs
 
-    assert args[1] == pi_excluded
+    assert kwargs["exclude_pi"] == pi_excluded

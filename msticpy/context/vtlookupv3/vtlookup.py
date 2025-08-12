@@ -25,7 +25,7 @@ import contextlib
 import json
 import logging
 from json import JSONDecodeError
-from typing import Any, ClassVar, Hashable, Mapping, NamedTuple
+from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
 
 import httpx
 import pandas as pd
@@ -36,6 +36,9 @@ from ...common.pkg_config import get_http_timeout
 from ...common.utility import export, mp_ua_header
 from ..lookup_result import SanitizedObservable
 from ..preprocess_observable import preprocess_observable
+
+if TYPE_CHECKING:
+    from collections.abc import Hashable, Mapping
 
 logger: logging.Logger = logging.getLogger(__name__)
 __version__ = VERSION

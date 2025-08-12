@@ -9,9 +9,6 @@ import pytest_check as check
 
 from msticpy.datamodel import entities
 
-# pylint: disable=unused-import, unused-argument, redefined-outer-name
-from .pivot_fixtures import create_data_providers, create_pivot, data_providers
-
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_import_vt_funcs(create_pivot):

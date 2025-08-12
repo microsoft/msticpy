@@ -6,7 +6,7 @@
 """datq query test class."""
 import io
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict
 from unittest.mock import MagicMock, patch
@@ -289,8 +289,8 @@ _TIMEOUT_PARAMS: Dict[str, Any] = {
 }
 
 _DEF_DATE_PARAMS: Dict[str, Any] = {
-    "start": datetime.utcnow() - timedelta(1),
-    "end": datetime.utcnow(),
+    "start": datetime.now(timezone.utc) - timedelta(1),
+    "end": datetime.now(timezone.utc),
     **_TIMEOUT_PARAMS,
 }
 
@@ -298,11 +298,16 @@ _DEF_DATE_PARAMS: Dict[str, Any] = {
 _PARAM_TESTS = [
     pytest.param({"days": 5, **_TIMEOUT_PARAMS}, True, id="days"),
     pytest.param(
-        {"start": datetime.utcnow() - timedelta(1), **_TIMEOUT_PARAMS}, True, id="start"
+        {"start": datetime.now(timezone.utc) - timedelta(1), **_TIMEOUT_PARAMS},
+        True,
+        id="start",
     ),
     pytest.param(_DEF_DATE_PARAMS, True, id="start/end"),
     pytest.param(
-        {"start_time": datetime.utcnow() - timedelta(1), "end_time": datetime.utcnow()},
+        {
+            "start_time": datetime.now(timezone.utc) - timedelta(1),
+            "end_time": datetime.now(timezone.utc),
+        },
         True,
         id="start_time/end_time",
     ),

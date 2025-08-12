@@ -15,7 +15,7 @@ line arguments into a single string). This is still a work-in-progress.
 """
 import codecs
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
 
 import pandas as pd
@@ -296,9 +296,9 @@ def extract_events_to_df(
 
     """
     if verbose:
-        start_time = datetime.utcnow()
         print(f"Unpacking auditd messages for {len(data)} events...")
 
+    start_time = datetime.now(timezone.utc)
     # If the provided table has auditd messages as a string format and
     # extract key elements.
     if isinstance(data[input_column].head(1)[0], str):
@@ -349,7 +349,10 @@ def extract_events_to_df(
 
     # extract real timestamp from mssg_id
     tmp_df["TimeStamp"] = tmp_df.apply(
-        lambda x: datetime.utcfromtimestamp(float(x["mssg_id"].split(":")[0])), axis=1
+        lambda x: datetime.fromtimestamp(
+            float(x["mssg_id"].split(":")[0]), tz=timezone.utc
+        ),
+        axis=1,
     )
     if "TimeGenerated" in tmp_df:
         tmp_df = tmp_df.drop(["TimeGenerated"], axis=1)
@@ -358,8 +361,8 @@ def extract_events_to_df(
     )
     if verbose:
         print(f"Complete. {len(tmp_df)} output rows", end=" ")
-        delta = datetime.utcnow() - start_time
-        print(f"time: {delta.seconds + delta.microseconds/1_000_000} sec")
+    delta = datetime.now(timezone.utc) - start_time
+    print(f"time: {delta.seconds + delta.microseconds / 1_000_000} sec")
 
     return tmp_df
 
