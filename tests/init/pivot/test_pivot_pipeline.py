@@ -9,9 +9,6 @@ import yaml
 
 from msticpy.init.pivot_core.pivot_pipeline import Pipeline
 
-# pylint: disable=redefined-outer-name, unused-import, unused-argument
-from .pivot_fixtures import create_data_providers, create_pivot, data_providers
-
 __author__ = "Ian Hellen"
 
 # pylint: disable=redefined-outer-name

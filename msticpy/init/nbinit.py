@@ -15,7 +15,15 @@ This module performs several steps to initialize MSTICPy:
 In the Azure ML and Azure Synapse environments, some additional
 initialization and checks are performed.
 
-One frequent problem in bootstrapping MSTICPy is obtaining or
+One frequent problem in bootstrapping MSTICPy    for imp_spec in extra_imports:
+        params: list[str | None] = [None, None, None]
+        for idx, param in enumerate(imp_spec.split(",")):
+            params[idx] = param.strip() or None
+
+        if params[0] is None:
+            raise MsticpyException(
+                f"First parameter in extra_imports is mandatory: {imp_spec}"
+            )ning or
 creating a valid `msticpyconfig.yaml`. This is needed for many
 configuration settings such as MS Sentinel workspaces, Threat
 Intelligence (TI) providers, Azure authentication, Key Vault
@@ -42,6 +50,8 @@ Configuring your environment notebook
 https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/ConfiguringNotebookEnvironment.ipynb
 
 """
+from __future__ import annotations
+
 import importlib
 import io
 import logging
@@ -49,17 +59,24 @@ import os
 import sys
 import traceback
 import warnings
+from collections.abc import Callable
 from contextlib import redirect_stdout
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple
+from typing import Any, Literal
 
 import ipywidgets as widgets
 import pandas as pd
 from IPython import get_ipython
 from IPython.core.interactiveshell import InteractiveShell
 from IPython.display import HTML, display
-from pkg_resources import parse_version
+
+try:
+    from packaging.version import Version
+except ImportError:
+    # Fallback for older environments
+    # pylint: disable=deprecated-module
+    from distutils.version import LooseVersion as Version  # type: ignore[assignment]
 
 try:
     import seaborn as sns
@@ -162,11 +179,11 @@ another tab.
 _PANDAS_REQ_VERSION = (0, 25, 0)
 
 
-def _get_verbosity_setting() -> Callable[[Optional[int]], int]:
+def _get_verbosity_setting() -> Callable[[int | None], int]:
     """Closure for holding trace setting."""
     _verbosity = 1
 
-    def _verbose(verbosity: Optional[int] = None) -> int:
+    def _verbose(verbosity: int | None = None) -> int:
         nonlocal _verbosity
         if verbosity is not None:
             _verbosity = verbosity
@@ -175,7 +192,7 @@ def _get_verbosity_setting() -> Callable[[Optional[int]], int]:
     return _verbose
 
 
-_VERBOSITY: Callable[[Optional[int]], int] = _get_verbosity_setting()
+_VERBOSITY: Callable[[int | None], int] = _get_verbosity_setting()
 
 # pylint: disable=use-dict-literal
 _NB_IMPORTS = [
@@ -212,7 +229,7 @@ _MP_IMPORTS = [
     # dict(pkg="msticpy", tgt="nbwidgets"),
 ]
 
-_MP_IMPORT_ALL: List[Dict[str, str]] = [
+_MP_IMPORT_ALL: list[dict[str, str]] = [
     dict(module_name="msticpy.datamodel.entities"),
 ]
 # pylint: enable=use-dict-literal
@@ -223,20 +240,20 @@ _CONF_URI = (
 
 _AZNB_GUIDE = (
     "Please run the <i>Getting Started Guide for Azure Sentinel "
-    + "ML Notebooks</i> notebook."
+    "ML Notebooks</i> notebook."
 )
 
-current_providers: Dict[str, Any] = {}  # pylint: disable=invalid-name
+current_providers: dict[str, Any] = {}  # pylint: disable=invalid-name
 
 _SYNAPSE_KWARGS = ["identity_type", "storage_svc_name", "tenant_id", "cloud"]
 
 
 # pylint: disable=too-many-statements, too-many-branches
 def init_notebook(
-    namespace: Optional[Dict[str, Any]] = None,
+    namespace: dict[str, Any] | None = None,
     def_imports: str = "all",
-    additional_packages: List[str] = None,
-    extra_imports: List[str] = None,
+    additional_packages: list[str] | None = None,
+    extra_imports: list[str] | None = None,
     **kwargs,
 ):
     """
@@ -372,7 +389,7 @@ def init_notebook(
         ],
     )
     user_install: bool = kwargs.pop("user_install", False)
-    friendly_exceptions: Optional[bool] = kwargs.pop("friendly_exceptions", None)
+    friendly_exceptions: bool | None = kwargs.pop("friendly_exceptions", None)
     no_config_check: bool = kwargs.pop("no_config_check", False)
     if "config" in kwargs:
         _use_custom_config(kwargs.pop("config", None))
@@ -403,7 +420,11 @@ def init_notebook(
     # Handle required packages and imports
     _pr_output("Processing imports....")
     imp_ok = _import_packages(
-        namespace, def_imports, additional_packages, extra_imports, user_install
+        namespace,
+        def_imports,
+        additional_packages,
+        extra_imports,
+        user_install,
     )
 
     # Configuration check
@@ -424,7 +445,7 @@ def init_notebook(
         if _VERBOSITY() == 2:  # type: ignore
             _pr_output("Friendly exceptions enabled.")
         InteractiveShell.showtraceback = _hook_ipython_exceptions(  # type: ignore
-            InteractiveShell.showtraceback
+            InteractiveShell.showtraceback,
         )
 
     # load pivots
@@ -456,8 +477,8 @@ def _err_output(*args):
         display(
             HTML(
                 "For more info and options run:"
-                "<pre>import msticpy as mp\nhelp(mp.nbinit)</pre>"
-            )
+                "<pre>import msticpy as mp\nhelp(mp.nbinit)</pre>",
+            ),
         )
     else:
         print(*args)
@@ -500,13 +521,21 @@ def _load_pivot_functions(namespace):
 
 
 def _import_packages(
-    namespace, def_imports, additional_packages, extra_imports, user_install
+    namespace,
+    def_imports,
+    additional_packages,
+    extra_imports,
+    user_install,
 ):
     """Import packages from default set or supplied as parameters."""
     stdout_cap = io.StringIO()
     with redirect_stdout(stdout_cap):
         imp_ok = _global_imports(
-            namespace, additional_packages, user_install, extra_imports, def_imports
+            namespace,
+            additional_packages,
+            user_install,
+            extra_imports,
+            def_imports,
         )
         output = stdout_cap.getvalue()
         if output.strip():
@@ -538,7 +567,7 @@ def _show_init_warnings(imp_ok, conf_ok):
         md("One or more configuration items were missing or set incorrectly.")
         md(
             _AZNB_GUIDE
-            + f" and the <a href='{_CONF_URI}'>msticpy configuration guide</a>."
+            + f" and the <a href='{_CONF_URI}'>msticpy configuration guide</a>.",
         )
     md("This notebook may still run but with reduced functionality.")
     return False
@@ -580,10 +609,10 @@ def list_default_imports():
 
 
 def _extract_pkg_name(
-    imp_pkg: Optional[Dict[str, str]] = None,
-    pkg: str = None,
-    tgt: str = None,
-    alias: str = None,
+    imp_pkg: dict[str, str] | None = None,
+    pkg: str | None = None,
+    tgt: str | None = None,
+    alias: str | None = None,
 ) -> str:
     """Return string representation of package import."""
     if imp_pkg:
@@ -601,7 +630,7 @@ MP_VER_VAR = "REQ_MSTICPY_VER"
 MP_EXTRAS = "REQ_MP_EXTRAS"
 
 
-def _get_aml_globals(namespace: Dict[str, Any]):
+def _get_aml_globals(namespace: dict[str, Any]) -> tuple[str, str, list[str] | None]:
     """Return global values if found."""
     py_ver = namespace.get(PY_VER_VAR, "3.8")
     mp_ver = namespace.get(MP_VER_VAR, __version__)
@@ -610,10 +639,10 @@ def _get_aml_globals(namespace: Dict[str, Any]):
 
 
 def _global_imports(
-    namespace: Dict[str, Any],
-    additional_packages: List[str] = None,
+    namespace: dict[str, Any],
+    additional_packages: list[str] | None = None,
     user_install: bool = False,
-    extra_imports: List[str] = None,
+    extra_imports: list[str] | None = None,
     def_imports: str = "all",
 ):
     """Import packages from default set (defined statically)."""
@@ -638,19 +667,20 @@ def _global_imports(
 
     if additional_packages:
         pkg_success = check_and_install_missing_packages(
-            additional_packages, user=user_install
+            additional_packages,
+            user=user_install,
         )
         if not pkg_success:
             _err_output("One or more packages failed to install.")
             _err_output(
-                "Please re-run init_notebook() with the parameter user_install=True."
+                "Please re-run init_notebook() with the parameter user_install=True.",
             )
         # We want to force import lib to see anything that we've
         # just installed.
         importlib.invalidate_caches()
     if extra_imports:
         import_list.extend(
-            _import_extras(nm_spc=namespace, extra_imports=extra_imports)
+            _import_extras(nm_spc=namespace, extra_imports=extra_imports),
         )
 
     imported_items = f"Imported:{', '.join(imp for imp in import_list if imp)}"
@@ -661,7 +691,7 @@ def _global_imports(
 
 def _build_import_list(
     def_imports: str,
-) -> Tuple[List[Dict[str, str]], List[Dict[str, str]]]:
+) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
     imports = []
     imports_all = []
     if def_imports.casefold() in {"all", "nb"}:
@@ -714,7 +744,7 @@ def _get_or_create_config() -> bool:
 
     if mp_path:
         logger.info("msticpyconfig found %s", mp_path)
-        errs: List[str] = []
+        errs: list[str] = []
         try:
             std_out_cap = io.StringIO()
             with redirect_stdout(std_out_cap):
@@ -780,14 +810,14 @@ def _load_pivots(namespace):
         # pylint: disable=import-outside-toplevel, cyclic-import
         import msticpy
 
-        setattr(msticpy, "pivot", pivot)
+        msticpy.pivot = pivot
 
 
-def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
+def _import_extras(nm_spc: dict[str, Any], extra_imports: list[str]):
     added_imports = []
     if isinstance(extra_imports, str):
         extra_imports = [extra_imports]
-    params: List[Optional[str]]
+    params: list[str | None]
     for imp_spec in extra_imports:
         params = [None, None, None]
         for idx, param in enumerate(imp_spec.split(",")):
@@ -795,14 +825,17 @@ def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
 
         if params[0] is None:
             raise MsticpyException(
-                f"First parameter in extra_imports is mandatory: {imp_spec}"
+                f"First parameter in extra_imports is mandatory: {imp_spec}",
             )
         try:
             _imp_from_package(
-                nm_spc=nm_spc, pkg=params[0], tgt=params[1], alias=params[2]
+                nm_spc=nm_spc,
+                pkg=params[0],
+                tgt=params[1],
+                alias=params[2],
             )
             added_imports.append(
-                _extract_pkg_name(pkg=params[0], tgt=params[1], alias=params[2])
+                _extract_pkg_name(pkg=params[0], tgt=params[1], alias=params[2]),
             )
         except ImportError as imp_err:
             display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
@@ -810,7 +843,7 @@ def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
     return added_imports
 
 
-def _imp_module(nm_spc: Dict[str, Any], module_name: str, alias: str = None):
+def _imp_module(nm_spc: dict[str, Any], module_name: str, alias: str | None = None):
     """Import named module and assign to global alias."""
     try:
         mod = importlib.import_module(module_name)
@@ -826,7 +859,7 @@ def _imp_module(nm_spc: Dict[str, Any], module_name: str, alias: str = None):
     return mod
 
 
-def _imp_module_all(nm_spc: Dict[str, Any], module_name):
+def _imp_module_all(nm_spc: dict[str, Any], module_name):
     """Import all from named module add to globals."""
     try:
         imported_mod = importlib.import_module(module_name)
@@ -842,7 +875,10 @@ def _imp_module_all(nm_spc: Dict[str, Any], module_name):
 
 
 def _imp_from_package(
-    nm_spc: Dict[str, Any], pkg: str, tgt: str = None, alias: str = None
+    nm_spc: dict[str, Any],
+    pkg: str,
+    tgt: str | None = None,
+    alias: str | None = None,
 ):
     """Import object or submodule from `pkg`."""
     if not tgt:
@@ -868,15 +904,18 @@ def _imp_from_package(
 
 
 def _check_and_reload_pkg(
-    nm_spc: Dict[str, Any], pkg: Any, req_version: Tuple[int, ...], alias: str = None
+    nm_spc: dict[str, Any],
+    pkg: Any,
+    req_version: tuple[int, ...],
+    alias: str | None = None,
 ):
     """Check package version matches required version and reload."""
     warn_mssg = []
     pkg_name = pkg.__name__
     if not hasattr(pkg, "__version__"):
         raise MsticpyException(f"Package {pkg_name} has no version data.")
-    pkg_version = parse_version(pkg.__version__)
-    required_version = parse_version(".".join(str(elem) for elem in req_version))
+    pkg_version = Version(pkg.__version__)
+    required_version = Version(".".join(str(elem) for elem in req_version))
     if pkg_version < required_version:
         _err_output(_MISSING_PKG_WARN.format(package=pkg_name))
         # sourcery skip: swap-if-expression

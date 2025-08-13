@@ -126,7 +126,7 @@ _FILTER_DEFS = [
     pytest.param("EventID", False, "in", "4624, 4625", 14, id="num_in"),
     pytest.param("EventID", False, "between", "4623, 4625", 14, id="num_between"),
     pytest.param(
-        "TimeGenerated", False, "<", datetime.utcnow().isoformat(), 14, id="date_lt"
+        "TimeGenerated", False, "<", datetime.now().isoformat(), 14, id="date_lt"
     ),
     pytest.param(
         "EventID",

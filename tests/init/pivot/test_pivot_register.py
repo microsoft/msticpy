@@ -22,9 +22,6 @@ from msticpy.datamodel import entities
 
 from ...context.test_ip_utils import ASN_RESPONSE, RDAP_RESPONSE
 
-# pylint: disable=redefined-outer-name, unused-import, unused-argument
-from .pivot_fixtures import create_pivot
-
 __author__ = "Ian Hellen"
 
 # pylint: disable=redefined-outer-name

@@ -8,6 +8,7 @@ Wrapper module for Model class for modelling sessions.
 
 In particular, this module is for both modelling and visualising your session data.
 """
+from __future__ import annotations
 
 import pandas as pd
 

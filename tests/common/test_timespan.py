@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Timespan unit test."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 import pytest_check as check
@@ -27,7 +27,7 @@ def _validate_timespan(timespan, start=None, end=None, period=None):
 
 def test_timespan_parms():
     """Test standard parameters."""
-    end = datetime.utcnow()
+    end = datetime.now(timezone.utc)
     period = timedelta(days=1)
     start = end - period
     tspan = TimeSpan(start=start, end=end)
@@ -75,7 +75,7 @@ def test_timespan_eq():
 
 def test_timespan_timeselector():
     """Test timespan with a time selector object."""
-    end = datetime.utcnow()
+    end = datetime.now(timezone.utc)
     period = timedelta(days=1)
     start = end - period
     tspan = TimeSpan(period=period)

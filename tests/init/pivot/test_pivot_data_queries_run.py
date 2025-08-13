@@ -15,12 +15,10 @@ import pytest_check as check
 from msticpy.data import QueryProvider
 from msticpy.datamodel import entities
 
-# pylint: disable=unused-import
-from msticpy.init.pivot import Pivot
-from msticpy.init.pivot_core.pivot_container import PivotContainer
-
 from ...unit_test_lib import get_test_data_path
-from .pivot_fixtures import create_pivot, data_providers
+
+# pylint: disable=unused-import
+
 
 __author__ = "Ian Hellen"
 
