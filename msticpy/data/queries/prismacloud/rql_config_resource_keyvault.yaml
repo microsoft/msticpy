@@ -53,7 +53,7 @@ defaults:
 sources:
   search_config_resource_relative:
     description: Retrieve configuration data from Prisma Cloud using relative time using dynamic queries.
-    metadata:
+    metadata: {}
     args:
       query: *config_resource_query_relative
     query_macros:
@@ -67,7 +67,7 @@ sources:
         type: str
   search_config_resource_absolute:
     description: Retrieve configuration data from Prisma Cloud using relative time using dynamic queries.
-    metadata:
+    metadata: {}
     args:
       query: *config_resource_query_absolute
     query_macros:
@@ -81,7 +81,7 @@ sources:
         type: str
   config_resource_list_azurekeyvault:
     description: Retrieve azurekeyvault configuration data from Prisma Cloud using relative time
-    metadata:
+    metadata: {}
     args:
       query: *config_resource_query_relative
     query_macros:
@@ -95,7 +95,7 @@ sources:
       If this query returns results, investigate Azure Key Vault resources with disabled
       or overly permissive firewall settings, as these indicate potentially exposed sensitive data
       that could lead to unauthorized access or compromise.
-    metadata:
+    metadata: {}
     args:
       query: *config_resource_query_relative
     query_macros:
@@ -110,7 +110,7 @@ sources:
       is disabled or not enforced. This condition can expose sensitive information, such as encryption keys,
       secrets, or credentials, to unauthorized access due to inadequate access restrictions.
       Security analysts should verify these instances for suspicious activities or unauthorized access attempts
-    metadata:
+    metadata: {}
     args:
       query: *config_resource_query_relative
     query_macros:
@@ -126,7 +126,7 @@ sources:
       increasing risks of unauthorized access, data breaches, or compromise of sensitive data.
       Identify any unauthorized or unexpected access attempts to these key vaults, and ensure private endpoints are correctly
       configured to restrict access strictly to trusted networks.
-    metadata:
+    metadata: {}
     args:
       query: *config_resource_query_relative
     query_macros:
@@ -141,7 +141,7 @@ sources:
       Keys without expiration dates pose security risks by potentially enabling long-term unauthorized access if compromised.
       Security teams should verify these keys for legitimacy, assess if they are still necessary,
       and implement expiration dates to enforce regular key rotation.
-    metadata:
+    metadata: {}
     args:
       query: *config_resource_query_relative
     query_macros:
@@ -157,7 +157,7 @@ sources:
       Identify and review these secrets for unusual access patterns or unauthorized usage.
       Ensure secret rotation policies or expiry dates are enforced to mitigate potential risks
       associated with compromised credentials.
-    metadata:
+    metadata: {}
     args:
       query: *config_resource_query_relative
     query_macros:
@@ -175,7 +175,7 @@ sources:
       Analyze any suspicious or unauthorized access patterns associated with these keys and ensure proper
       lifecycle management, particularly distinguishing them from non-RBAC vaults
       where permission structures differ.
-    metadata:
+    metadata: {}
     args:
       query: *config_resource_query_relative
     query_macros:
@@ -192,7 +192,7 @@ sources:
       but prolonged validity without expiration can weaken security controls.
       Analysts should proactively assess these secrets, monitor for unauthorized access attempts, and
       implement expiration policies.
-    metadata:
+    metadata: {}
     args:
       query: *config_resource_query_relative
     query_macros:

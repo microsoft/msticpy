@@ -50,10 +50,16 @@ defaults:
       description: Query end time
       type: datetime
       default: 0
+    additional_query_condition:
+      description: |-
+        Additional query condition to search default is empty
+      type: str
+      default: |-
+         
 sources:
   search_event_relative:
     description: Retrieve event data from Prisma Cloud using relative time using dynamic queries.
-    metadata:
+    metadata: {}
     args:
       query: *event_query_relative
     query_macros:
@@ -67,7 +73,7 @@ sources:
         type: str
   search_event_absolute:
     description: Retrieve event data from Prisma Cloud using relative time using dynamic queries.
-    metadata:
+    metadata: {}
     args:
       query: *event_query_absolute
     query_macros:
@@ -87,7 +93,7 @@ sources:
       bucket website configurations are retrieved, modified, or deleted,
       as these actions could indicate unauthorized attempts to expose
       or alter website settings, potentially leading to data compromise.
-    metadata:
+    metadata: {}
     args:
       query: *event_query_relative
     query_macros:
@@ -105,7 +111,7 @@ sources:
       for deletion. Such activities could indicate unauthorized key management
       actions that may lead to compromise of cryptographic materials or
       sensitive data.
-    metadata:
+    metadata: {}
     args:
       query: *event_query_relative
     query_macros:
@@ -113,3 +119,221 @@ sources:
         description: query search conditions
         value: |-
           "query_by_user": "event from cloud.audit_logs where operation IN ( 'PutKeyPolicy', 'RetireGrant', 'ScheduleKeyDeletion', 'RevokeGrant', 'DisableKey', 'DeleteImportedKeyMaterial' )"
+  search_event_relative_by_account_name_and_service_type:
+    description: |-
+      Retrieve event data from Prisma Cloud using by providing cloud account name and service name.
+      out = driver.Prismacloud.search_event_relative_by_account_name_and_service_type(account_name = ["something"], service_name = ["something"])
+    metadata: {}
+    args:
+      query: *event_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "event from cloud.audit_logs where cloud.account IN ({account_name}) and cloud.service IN ( {service_name} ) {additional_query_condition}"
+    parameters:
+      account_name:
+        description: enter account name list
+        type: list
+        default:
+          - test
+          - testaccount
+      service_name:
+        description: enter service name list
+        type: list
+        default:
+          - s3.amazonaws.com
+          - signin.amazonaws.com
+  search_event_relative_by_account_name:
+    description: |-
+      Retrieve event data from Prisma Cloud using by providing cloud account name.
+      out = driver.Prismacloud.search_event_relative_by_account_name_and_service_type(account_name = ["something"], service_name = ["something"])
+    metadata: {}
+    args:
+      query: *event_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "event from cloud.audit_logs where cloud.account IN ({account_name}) {additional_query_condition}"
+    parameters:
+      account_name:
+        description: enter account name list
+        type: list
+        default:
+          - test
+          - testaccount
+  search_event_relative_by_service_type:
+    description: |-
+      Retrieve event data from Prisma Cloud using by providing cloud account name and service name.
+      out = driver.Prismacloud.search_event_relative_by_account_name_and_service_type(service_name = ["something"])
+    metadata: {}
+    args:
+      query: *event_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "event from cloud.audit_logs where cloud.service IN ( {service_name} ) {additional_query_condition}"
+    parameters:
+      service_name:
+        description: enter service name list
+        type: list
+        default:
+          - s3.amazonaws.com
+          - signin.amazonaws.com
+  search_event_relative_by_service_type_hasanomaly:
+    description: |-
+      Retrieve event data from Prisma Cloud using by providing cloud account name and service name.
+      out = driver.Prismacloud.search_event_relative_by_account_name_and_service_type(service_name = ["something"])
+    metadata: {}
+    args:
+      query: *event_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "event from cloud.audit_logs where cloud.service IN ( {service_name} ) AND has.anomaly {additional_query_condition}"
+    parameters:
+      service_name:
+        description: enter service name list
+        type: list
+        default:
+          - s3.amazonaws.com
+          - signin.amazonaws.com
+  search_event_relative_by_account_name_hasanomaly:
+    description: |-
+      Retrieve event data from Prisma Cloud using by providing cloud account name.
+      out = driver.Prismacloud.search_event_relative_by_account_name_and_service_type(account_name = ["something"], service_name = ["something"])
+    metadata: {}
+    args:
+      query: *event_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "event from cloud.audit_logs where cloud.account IN ({account_name}) AND has.anomaly {additional_query_condition}"
+    parameters:
+      account_name:
+        description: enter account name list
+        type: list
+        default:
+          - test
+          - testaccount
+  search_event_relative_by_account_name_and_service_type_hasanomaly:
+    description: |-
+      Retrieve event data from Prisma Cloud using by providing cloud account name and service name.
+      out = driver.Prismacloud.search_event_relative_by_account_name_and_service_type(account_name = ["something"], service_name = ["something"])
+    metadata: {}
+    args:
+      query: *event_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "event from cloud.audit_logs where cloud.account IN ({account_name}) and cloud.service IN ( {service_name} ) AND has.anomaly {additional_query_condition}"
+    parameters:
+      account_name:
+        description: enter account name list
+        type: list
+        default:
+          - test
+          - testaccount
+      service_name:
+        description: enter service name list
+        type: list
+        default:
+          - s3.amazonaws.com
+          - signin.amazonaws.com
+  search_all_event_with_anomaly:
+    description: |-
+      Retrieve event data from Prisma Cloud using by providing cloud account name and service name.
+      out = driver.Prismacloud.search_event_relative_by_account_name_and_service_type(service_name = ["something"])
+    metadata: {}
+    args:
+      query: *event_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "event from cloud.audit_logs where has.anomaly AND anomaly.type IN ( 'Activity-based Anomaly (UBA)', 'Device finger print (Account Hijacking)', 'Excessive Login Failures', 'Anomalous Compute Provisioning', 'Impossible time travel (Account Hijacking)', 'Location & Activity-based Anomaly (UBA)', 'Location-based Anomaly (UBA)' )"
+  search_event_relative_by_account_name_service_type_and_region_hasanomaly:
+    description: |-
+      Retrieve event data from Prisma Cloud using by providing cloud account name,Region name and service name with anomaly.
+    metadata: {}
+    args:
+      query: *event_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "event from cloud.audit_logs where cloud.account IN ({account_name}) and cloud.service IN ( {service_name} ) and cloud.region IN ({region_name}) AND has.anomaly {additional_query_condition}"
+    parameters:
+      account_name:
+        description: enter account name list
+        type: list
+        default:
+          - test
+          - testaccount
+      service_name:
+        description: enter service name list
+        type: list
+        default:
+          - s3.amazonaws.com
+          - signin.amazonaws.com
+      region_name:
+        description: enter service name list
+        type: list
+        default:
+          - AWS Frankfurt
+  search_event_relative_by_account_name_and_region_hasanomaly:
+    description: |-
+      Retrieve event data from Prisma Cloud using by providing cloud account name,Region name and service name with anomaly.
+    metadata: {}
+    args:
+      query: *event_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "event from cloud.audit_logs where cloud.account IN ({account_name}) and cloud.region IN ({region_name}) AND has.anomaly {additional_query_condition}"
+    parameters:
+      account_name:
+        description: enter account name list
+        type: list
+        default:
+          - test
+          - testaccount
+      region_name:
+        description: enter service name list
+        type: list
+        default:
+          - AWS Frankfurt
+  search_event_relative_by_account_name_region_and_operation:
+    description: |-
+      Retrieve event data from Prisma Cloud using by providing cloud account name,Region name and operation.
+    metadata: {}
+    args:
+      query: *event_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "event from cloud.audit_logs where cloud.account IN ({account_name}) and cloud.region IN ( {region_name} ) and operation IN ({operation}) AND has.anomaly {additional_query_condition}"
+    parameters:
+      account_name:
+        description: enter account name list
+        type: list
+        default:
+          - test
+          - testaccount
+      operation:
+        description: enter operation list
+        type: list
+        default:
+          - ListBucket
+      region_name:
+        description: enter service name list
+        type: list
+        default:
+          - AWS Frankfurt
