@@ -39,7 +39,7 @@ jobs:
         --wheel
         --outdir dist/
     - name: Publish package
-      uses: pypa/gh-action-pypi-publish@v1.5.1
+      uses: pypa/gh-action-pypi-publish@v1.13.0
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
