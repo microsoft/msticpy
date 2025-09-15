@@ -124,6 +124,8 @@ class MDATPDriver(OData):
 
         if not m365d_params.oauth_v2:
             # For OAuth 1.0, use resource parameter with the base URI (without .default)
+            if not self.scopes:
+                raise ValueError("No scopes provided in configuration; cannot set resource parameter.")
             resource_base = self.scopes[0].rstrip(".default")
             self.req_body["resource"] = resource_base
         # For OAuth 2.0, scopes are handled by the OData parent class authentication methods
