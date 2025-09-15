@@ -3,11 +3,12 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""MDATP OData Driver class."""
+"""MS Defender/Defender 365 OData Driver class."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, ClassVar, Iterable
+from urllib.parse import urljoin
 
 import pandas as pd
 from typing_extensions import Self
@@ -125,7 +126,9 @@ class MDATPDriver(OData):
         if not m365d_params.oauth_v2:
             # For OAuth 1.0, use resource parameter with the base URI (without .default)
             if not self.scopes:
-                raise ValueError("No scopes provided in configuration; cannot set resource parameter.")
+                raise ValueError(
+                    "No scopes provided in configuration; cannot set resource parameter."
+                )
             resource_base = self.scopes[0].rstrip(".default")
             self.req_body["resource"] = resource_base
         # For OAuth 2.0, scopes are handled by the OData parent class authentication methods
@@ -212,27 +215,31 @@ def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfigura
     """
     if data_environment == DataEnvironment.M365DGraph:
         az_cloud_config = AzureCloudConfig(cloud=cloud)
-        login_uri: str = (
-            f"{az_cloud_config.authority_uri}{{tenantId}}/oauth2/v2.0/token"
+        login_uri: str = urljoin(
+            az_cloud_config.authority_uri, "{tenantId}/oauth2/v2.0/token"
         )
         resource_uri: str = az_cloud_config.endpoints["microsoftGraphResourceId"]
         api_version = "v1.0"
         api_endpoint = "/security/runHuntingQuery"
     elif data_environment == DataEnvironment.M365D:
-        login_uri = f"{get_m365d_login_endpoint(cloud)}{{tenantId}}/oauth2/v2.0/token"
+        login_uri = urljoin(
+            get_m365d_login_endpoint(cloud), "{tenantId}/oauth2/v2.0/token"
+        )
         resource_uri = get_m365d_endpoint(cloud)
         api_version = "api"
         api_endpoint = "/advancedhunting/run"
     else:
         # Default to MDE
-        login_uri = f"{get_m365d_login_endpoint(cloud)}{{tenantId}}/oauth2/v2.0/token"
+        login_uri = urljoin(
+            get_m365d_login_endpoint(cloud), "{tenantId}/oauth2/v2.0/token"
+        )
         resource_uri = get_defender_endpoint(cloud)
         api_version = "api"
         api_endpoint = "/advancedqueries/run"
 
     scope_base = resource_uri.rstrip("/")
     scopes: list[str] = [f"{scope_base}/.default"]
-    api_uri: str = f"{resource_uri}{api_version}{api_endpoint}"
+    api_uri: str = urljoin(urljoin(resource_uri, api_version), api_endpoint)
 
     return M365DConfiguration(
         login_uri=login_uri,
