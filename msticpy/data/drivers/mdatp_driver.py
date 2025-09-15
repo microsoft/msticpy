@@ -237,7 +237,7 @@ def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfigura
         api_version = "api"
         api_endpoint = "/advancedqueries/run"
 
-    scope_base = resource_uri.rstrip("/")
+    scope_base = resource_uri.removesuffix("/")
     scopes: list[str] = [f"{scope_base}/.default"]
     api_uri: str = urljoin(urljoin(resource_uri, api_version), api_endpoint)
 
