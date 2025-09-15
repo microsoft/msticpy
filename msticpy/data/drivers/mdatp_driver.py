@@ -123,7 +123,11 @@ class MDATPDriver(OData):
             self.req_body["grant_type"] = "client_credentials"
 
         if not m365d_params.oauth_v2:
-            self.req_body["resource"] = self.scopes
+            # For OAuth 1.0, use resource parameter with the base URI (without .default)
+            resource_base = self.scopes[0].rstrip(".default")
+            self.req_body["resource"] = resource_base
+        # For OAuth 2.0, scopes are handled by the OData parent class authentication methods
+        # No additional processing needed here as self.scopes is already set correctly
 
         if connection_str:
             self.current_connection = connection_str
@@ -184,19 +188,26 @@ class MDATPDriver(OData):
 
 
 def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfiguration:
-    # pylint: disable=line-too-long
     """Return API and login URIs for selected provider type.
 
-    Note that the Microsoft Graph is the preferred API.
+    OAuth 2.0 (v2.0 endpoint + scope) is now the default for all Defender APIs.
 
-    | API Name | Resource ID | Scopes Requested | API URI (global cloud) | API Endpoint | Login URI | MSTICpy Data Environment |
-    | -------- | ----------- | ---------------- | ---------------------- | ------------ | --------- | ------------------------ |
-    | WindowsDefenderATP | fc780465-2017-40d4-a0c5-307022471b92 | `AdvancedQuery.Read` | `https://api.securitycenter.microsoft.com` | `/advancedqueries/run` | `https://login.microsoftonline.com/<tenantId>/oauth2/token` | `MDE`, `MDATP` |
-    | Microsoft Threat Protection | 8ee8fdad-f234-4243-8f3b-15c294843740 | `AdvancedHunting.Read` | `https://api.security.microsoft.com` | `/advancedhunting/run` | `https://login.microsoftonline.com/<tenantId>/oauth2/token` | `M365D` |
-    | Microsoft Graph | 00000003-0000-0000-c000-000000000000 | `ThreatHunting.Read.All` | `https://graph.microsoft.com/<version>/` | `/security/runHuntingQuery` | `https://login.microsoftonline.com/<tenantId>/oauth2/v2.0/token` | `M365DGraph` |
+    Summary (all use /.default scope):
+    - MDE (MDATP): api base https://api.securitycenter.microsoft.com
+      token: https://login.microsoftonline.com/<tenantId>/oauth2/v2.0/token
+      endpoint: /advancedqueries/run
+    - M365D: api base https://api.security.microsoft.com
+      token: https://login.microsoftonline.com/<tenantId>/oauth2/v2.0/token
+      endpoint: /advancedhunting/run
+    - M365DGraph: api base https://graph.microsoft.com (v1.0)
+      token: https://login.microsoftonline.com/<tenantId>/oauth2/v2.0/token
+      endpoint: /security/runHuntingQuery
+
+    Scopes use: {resource_uri}/.default (normalized to avoid double slashes).
+    If a legacy v1 (resource) flow is ever needed, supply a v1 token endpoint
+    (oauth_v2 flag will become False and caller will add resource parameter).
 
     """
-    # pylint: enable=line-too-long
     if data_environment == DataEnvironment.M365DGraph:
         az_cloud_config = AzureCloudConfig(cloud=cloud)
         login_uri: str = (
@@ -205,22 +216,20 @@ def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfigura
         resource_uri: str = az_cloud_config.endpoints["microsoftGraphResourceId"]
         api_version = "v1.0"
         api_endpoint = "/security/runHuntingQuery"
-        scopes: list[str] = [f"{resource_uri}ThreatHunting.Read.All"]
-
     elif data_environment == DataEnvironment.M365D:
-        login_uri = f"{get_m365d_login_endpoint(cloud)}{{tenantId}}/oauth2/token"
+        login_uri = f"{get_m365d_login_endpoint(cloud)}{{tenantId}}/oauth2/v2.0/token"
         resource_uri = get_m365d_endpoint(cloud)
         api_version = "api"
         api_endpoint = "/advancedhunting/run"
-        scopes = [f"{resource_uri}AdvancedHunting.Read"]
-
     else:
-        login_uri = f"{get_m365d_login_endpoint(cloud)}{{tenantId}}/oauth2/token"
+        # Default to MDE
+        login_uri = f"{get_m365d_login_endpoint(cloud)}{{tenantId}}/oauth2/v2.0/token"
         resource_uri = get_defender_endpoint(cloud)
         api_version = "api"
         api_endpoint = "/advancedqueries/run"
-        scopes = [f"{resource_uri}AdvancedQuery.Read"]
 
+    scope_base = resource_uri.rstrip("/")
+    scopes: list[str] = [f"{scope_base}/.default"]
     api_uri: str = f"{resource_uri}{api_version}{api_endpoint}"
 
     return M365DConfiguration(
