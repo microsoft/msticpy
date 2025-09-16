@@ -109,7 +109,9 @@ class MDATPDriver(OData):
         self.api_root = m365d_params.resource_uri
         self.api_ver = m365d_params.api_version
         self.api_suffix: str = m365d_params.api_endpoint
+        # Use scopes from configuration (already normalized '<resource>/.default')
         self.scopes = m365d_params.scopes
+        resource_base = self.api_root.strip().rstrip("/")
 
         self.add_query_filter(
             "data_environments", ("MDE", "M365D", "MDATP", "M365DGraph", "GraphHunting")
@@ -124,15 +126,9 @@ class MDATPDriver(OData):
             self.req_body["grant_type"] = "client_credentials"
 
         if not m365d_params.oauth_v2:
-            # For OAuth 1.0, use resource parameter with the base URI (without .default)
-            if not self.scopes:
-                raise ValueError(
-                    "No scopes provided in configuration; cannot set resource parameter."
-                )
-            resource_base = self.scopes[0].rstrip(".default")
+            # OAuth v1 flow: send 'resource' (base URI, no /.default) not scopes
             self.req_body["resource"] = resource_base
-        # For OAuth 2.0, scopes are handled by the OData parent class authentication methods
-        # No additional processing needed here as self.scopes is already set correctly
+        # OAuth v2: scopes handled by parent auth logic; do not add 'resource'
 
         if connection_str:
             self.current_connection = connection_str
@@ -195,23 +191,23 @@ class MDATPDriver(OData):
 def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfiguration:
     """Return API and login URIs for selected provider type.
 
-    OAuth 2.0 (v2.0 endpoint + scope) is now the default for all Defender APIs.
+    Validated against Microsoft documentation:
+      MDE Advanced Queries:
+        https://learn.microsoft.com/microsoft-365/security/defender-endpoint/run-advanced-query-api
+        POST https://api.securitycenter.microsoft.com/api/advancedqueries/run
+      M365 Defender Advanced Hunting:
+        https://learn.microsoft.com/microsoft-365/security/defender/api/run-advanced-hunting-query
+        POST https://api.security.microsoft.com/api/advancedhunting/run
+      Microsoft Graph Security Hunting:
+        https://learn.microsoft.com/graph/api/security-security-runhuntingquery
+        POST https://graph.microsoft.com/v1.0/security/runHuntingQuery
 
-    Summary (all use /.default scope):
-    - MDE (MDATP): api base https://api.securitycenter.microsoft.com
-      token: https://login.microsoftonline.com/<tenantId>/oauth2/v2.0/token
-      endpoint: /advancedqueries/run
-    - M365D: api base https://api.security.microsoft.com
-      token: https://login.microsoftonline.com/<tenantId>/oauth2/v2.0/token
-      endpoint: /advancedhunting/run
-    - M365DGraph: api base https://graph.microsoft.com (v1.0)
-      token: https://login.microsoftonline.com/<tenantId>/oauth2/v2.0/token
-      endpoint: /security/runHuntingQuery
+    Token acquisition (OAuth 2.0):
+      https://learn.microsoft.com/azure/active-directory/develop/v2-oauth2-client-creds-grant-flow
+      Endpoint: https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token
+      Scope format: https://<resource-host>/.default
 
-    Scopes use: {resource_uri}/.default (normalized to avoid double slashes).
-    If a legacy v1 (resource) flow is ever needed, supply a v1 token endpoint
-    (oauth_v2 flag will become False and caller will add resource parameter).
-
+    Manual path join retained (urljoin would drop api_version if api_endpoint starts with '/').
     """
     if data_environment == DataEnvironment.M365DGraph:
         az_cloud_config = AzureCloudConfig(cloud=cloud)
@@ -237,10 +233,14 @@ def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfigura
         api_version = "api"
         api_endpoint = "/advancedqueries/run"
 
-    scope_base = resource_uri.removesuffix("/")
-    scopes: list[str] = [f"{scope_base}/.default"]
-    api_uri: str = urljoin(urljoin(resource_uri, api_version), api_endpoint)
+    # Do not add '.default' here; keep raw base URI for reuse in both flows.
+    resource_base = resource_uri.strip().rstrip("/")
+    scopes: list[str] = [f"{resource_base}/.default"]
 
+    # Construct final query execution URI:
+    #   <resource_base>/<api_version>/<endpoint-without-leading-slash>
+    api_endpoint_part = api_endpoint.lstrip("/")
+    api_uri: str = f"{resource_base}/{api_version.strip('/')}/{api_endpoint_part}"
     return M365DConfiguration(
         login_uri=login_uri,
         resource_uri=resource_uri,
