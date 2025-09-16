@@ -118,7 +118,10 @@ def test_driver_legacy_oauth_v1_resource_param(
     driver = MDATPDriver()
     assert driver._m365d_params.oauth_v2 is False
     assert "resource" in driver.req_body
-    assert urllib.parse.urlparse(driver.req_body["resource"]).hostname == "api.securitycenter.microsoft.com"
+    assert (
+        urllib.parse.urlparse(driver.req_body["resource"]).hostname
+        == "api.securitycenter.microsoft.com"
+    )
 
     token_url = driver.oauth_url.format(tenantId="tenant123")
     captured_body: dict[str, str] = {}
