@@ -60,7 +60,7 @@ def test_select_api_graph() -> None:
     cfg = _select_api(DataEnvironment.M365DGraph, "global")
     assert cfg.api_version == "v1.0"
     assert cfg.api_endpoint == "/security/runHuntingQuery"
-    assert "graph.microsoft.com" in cfg.resource_uri
+    assert urllib.parse.urlparse(cfg.resource_uri).hostname == "graph.microsoft.com"
 
 
 @respx.mock
