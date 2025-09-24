@@ -215,7 +215,7 @@ class OData(DriverBase):
         else:
             self.request_uri = self.api_root.rstrip("/")
 
-        print("Connected.")
+        LOGGER.info("Connected.")
         self._connected = True
 
     def _get_token_certificate_auth(self: Self, cs_dict: dict[str, Any]) -> None:
