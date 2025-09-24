@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Iterable
+from typing import TYPE_CHECKING, Any, ClassVar
 from urllib.parse import urljoin
 
 import pandas as pd
@@ -24,6 +24,9 @@ from ...common.data_utils import ensure_df_datetimes
 from ...common.utility import export
 from ..core.query_defns import DataEnvironment
 from .odata_driver import OData, QuerySource, _get_driver_settings
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -94,7 +97,9 @@ class MDATPDriver(OData):
         )
 
         cs_dict: dict[str, str] = _get_driver_settings(
-            self.CONFIG_NAME, self._ALT_CONFIG_NAMES, instance
+            self.CONFIG_NAME,
+            self._ALT_CONFIG_NAMES,
+            instance,
         )
 
         self.cloud: str = cs_dict.pop("cloud", "global")
@@ -102,7 +107,8 @@ class MDATPDriver(OData):
             self.cloud = cloud
 
         m365d_params: M365DConfiguration = _select_api(
-            self.data_environment, self.cloud
+            self.data_environment,
+            self.cloud,
         )
         self._m365d_params: M365DConfiguration = m365d_params
         self.oauth_url = m365d_params.login_uri
@@ -114,7 +120,8 @@ class MDATPDriver(OData):
         resource_base = self.api_root.strip().rstrip("/")
 
         self.add_query_filter(
-            "data_environments", ("MDE", "M365D", "MDATP", "M365DGraph", "GraphHunting")
+            "data_environments",
+            ("MDE", "M365D", "MDATP", "M365DGraph", "GraphHunting"),
         )
 
         self.req_body: dict[str, Any] = {}
@@ -164,7 +171,9 @@ class MDATPDriver(OData):
         """
         del query_source, kwargs
         data, response = self.query_with_results(
-            query, body=True, api_end=self.api_suffix
+            query,
+            body=True,
+            api_end=self.api_suffix,
         )
         if isinstance(data, pd.DataFrame):
             # If we got a schema we should convert the DateTimes to pandas datetimes
@@ -183,8 +192,7 @@ class MDATPDriver(OData):
                     for field in response["Schema"]
                     if field["Type"] == "DateTime"
                 ]
-            data = ensure_df_datetimes(data, columns=date_fields)
-            return data
+            return ensure_df_datetimes(data, columns=date_fields)
         return str(response)
 
 
@@ -212,14 +220,16 @@ def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfigura
     if data_environment == DataEnvironment.M365DGraph:
         az_cloud_config = AzureCloudConfig(cloud=cloud)
         login_uri: str = urljoin(
-            az_cloud_config.authority_uri, "{tenantId}/oauth2/v2.0/token"
+            az_cloud_config.authority_uri,
+            "{tenantId}/oauth2/v2.0/token",
         )
         resource_uri: str = az_cloud_config.endpoints["microsoftGraphResourceId"]
         api_version = "v1.0"
         api_endpoint = "/security/runHuntingQuery"
     elif data_environment == DataEnvironment.M365D:
         login_uri = urljoin(
-            get_m365d_login_endpoint(cloud), "{tenantId}/oauth2/v2.0/token"
+            get_m365d_login_endpoint(cloud),
+            "{tenantId}/oauth2/v2.0/token",
         )
         resource_uri = get_m365d_endpoint(cloud)
         api_version = "api"
@@ -227,7 +237,8 @@ def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfigura
     else:
         # Default to MDE
         login_uri = urljoin(
-            get_m365d_login_endpoint(cloud), "{tenantId}/oauth2/v2.0/token"
+            get_m365d_login_endpoint(cloud),
+            "{tenantId}/oauth2/v2.0/token",
         )
         resource_uri = get_defender_endpoint(cloud)
         api_version = "api"

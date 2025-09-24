@@ -11,7 +11,7 @@ import logging
 import re
 import urllib.parse
 from pathlib import Path
-from typing import Any, ClassVar, Iterable
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import httpx
 import pandas as pd
@@ -21,8 +21,6 @@ from cryptography.x509 import Certificate, load_der_x509_certificate
 from msal.application import ConfidentialClientApplication
 from typing_extensions import Self
 
-from msticpy.common.provider_settings import ProviderSettings
-
 from ..._version import VERSION
 from ...auth.msal_auth import MSALDelegatedAuth
 from ...common.exceptions import MsticpyConnectionError, MsticpyUserConfigError
@@ -30,6 +28,11 @@ from ...common.pkg_config import get_config
 from ...common.provider_settings import get_provider_settings
 from ...common.utility import mp_ua_header
 from .driver_base import DriverBase, DriverProps, QuerySource
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from msticpy.common.provider_settings import ProviderSettings
 
 __version__: str = VERSION
 __author__: str = "Pete Bryan"
