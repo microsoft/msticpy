@@ -168,7 +168,7 @@ class MDATPDriver(OData):
         )
         if isinstance(data, pd.DataFrame):
             # If we got a schema we should convert the DateTimes to pandas datetimes
-            if ("Schema" or "schema") not in response:
+            if "Schema" not in response and "schema" not in response:
                 return data
 
             if self.data_environment == DataEnvironment.M365DGraph:
