@@ -21,7 +21,7 @@ from msticpy.data.drivers.mdatp_driver import (
 @pytest.fixture
 def dummy_conn_str() -> str:
     """Return a minimal client credential connection string."""
-    return "tenant_id=tenant123;client_id=client123;client_secret=secret123"
+    return "tenant_id=tenant123;client_id=client123;client_secret=[PLACEHOLDER]"
 
 
 @pytest.fixture
@@ -141,7 +141,7 @@ def test_driver_legacy_oauth_v1_resource_param(
         {  # type: ignore
             "tenant_id": "tenant123",
             "client_id": "client123",
-            "client_secret": "secret123",
+            "client_secret": "[PLACEHOLDER]",
         },
     )
 
