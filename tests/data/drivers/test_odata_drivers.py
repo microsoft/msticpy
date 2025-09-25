@@ -84,7 +84,7 @@ def _mde_post_checks(mde_drv, api, httpx):
     httpx.post.assert_called_once()
     check.equal(
         httpx.post.call_args[1]["url"],
-        "https://login.microsoftonline.com/8360dd21-0294-4240-9128-89611f415c53/oauth2/token",
+        "https://login.microsoftonline.com/8360dd21-0294-4240-9128-89611f415c53/oauth2/v2.0/token",
     )
     check.is_instance(
         httpx.post.call_args[1]["content"],
