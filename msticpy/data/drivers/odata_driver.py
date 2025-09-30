@@ -497,8 +497,8 @@ class OData(DriverBase):
         cs_items: list[str] = connection_str.split(";")
         parsed_dict = {
             prop[0].strip(): prop[1].strip()
-            for prop in [item.strip().split("=") for item in cs_items]
-            if prop[0] and prop[1]
+            for prop in [item.strip().split("=", 1) for item in cs_items]
+            if len(prop) == 2 and prop[0] and prop[1]
         }
         logger.debug("Parsed connection string keys: %s", list(parsed_dict.keys()))
         return parsed_dict
