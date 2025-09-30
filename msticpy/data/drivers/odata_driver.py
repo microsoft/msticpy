@@ -11,7 +11,7 @@ import logging
 import re
 import urllib.parse
 from pathlib import Path
-from typing import Any, ClassVar, Iterable
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import httpx
 import pandas as pd
@@ -21,8 +21,6 @@ from cryptography.x509 import Certificate, load_der_x509_certificate
 from msal.application import ConfidentialClientApplication
 from typing_extensions import Self
 
-from msticpy.common.provider_settings import ProviderSettings
-
 from ..._version import VERSION
 from ...auth.msal_auth import MSALDelegatedAuth
 from ...common.exceptions import MsticpyConnectionError, MsticpyUserConfigError
@@ -30,6 +28,11 @@ from ...common.pkg_config import get_config
 from ...common.provider_settings import get_provider_settings
 from ...common.utility import mp_ua_header
 from .driver_base import DriverBase, DriverProps, QuerySource
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from msticpy.common.provider_settings import ProviderSettings
 
 __version__: str = VERSION
 __author__: str = "Pete Bryan"
@@ -225,10 +228,14 @@ class OData(DriverBase):
             err_msg = f"Sub class {self.__class__.__name__} did not set self.api_root"
             raise ValueError(err_msg)
         api_ver: str | None = cs_dict.get("apiVersion", self.api_ver)
-        self.request_uri = self.api_root + str(api_ver)
+        # Normalize join of api_root and api_ver (api_ver should normally be set)
+        if api_ver:
+            self.request_uri = f"{self.api_root.rstrip('/')}/{api_ver.strip('/')}"
+        else:
+            self.request_uri = self.api_root.rstrip("/")
 
         logger.info("Request URI configured: %s", self.request_uri)
-        print("Connected.")
+        logger.info("Connected.")
         self._connected = True
 
     def _get_token_certificate_auth(self: Self, cs_dict: dict[str, Any]) -> None:
@@ -268,9 +275,14 @@ class OData(DriverBase):
             client_credential=client_credential,
             authority=authority,
         )
-        auth_result: dict[str, Any] | None = app.acquire_token_for_client(
-            scopes=[self.api_root + "/.default"],
-        )
+        # Prefer precomputed scopes (OAuth v2). If not present, derive from api_root.
+        scopes: list[str]
+        if self.scopes:
+            scopes = self.scopes
+        else:
+            base_root = (self.api_root or "").rstrip("/")
+            scopes = [f"{base_root}/.default"]
+        auth_result: dict[str, Any] | None = app.acquire_token_for_client(scopes=scopes)
         if not auth_result or "access_token" not in auth_result:
             err_msg = "Could not obtain access token"
             raise MsticpyConnectionError(err_msg)
@@ -484,7 +496,7 @@ class OData(DriverBase):
         logger.debug("Parsing connection string")
         cs_items: list[str] = connection_str.split(";")
         parsed_dict = {
-            prop[0]: prop[1]
+            prop[0].strip(): prop[1].strip()
             for prop in [item.strip().split("=") for item in cs_items]
             if prop[0] and prop[1]
         }
