@@ -218,12 +218,12 @@ def test_odata_parse_connection_string():
     """Test connection string parsing."""
     from msticpy.data.drivers.odata_driver import OData
 
-    connection_str = "tenant_id=abc123;client_id=def456;client_secret=secret789"
+    connection_str = "tenant_id=abc123;client_id=def456;client_secret=[PLACEHOLDER]"
     parsed = OData._parse_connection_str(connection_str)
 
     check.equal(parsed["tenant_id"], "abc123")
     check.equal(parsed["client_id"], "def456")
-    check.equal(parsed["client_secret"], "secret789")
+    check.equal(parsed["client_secret"], "[PLACEHOLDER]")
 
 
 def test_odata_parse_connection_string_with_spaces():
@@ -231,13 +231,13 @@ def test_odata_parse_connection_string_with_spaces():
     from msticpy.data.drivers.odata_driver import OData
 
     connection_str = (
-        "tenant_id = abc123 ; client_id = def456 ; client_secret = secret789"
+        "tenant_id = abc123 ; client_id = def456 ; client_secret = [PLACEHOLDER]"
     )
     parsed = OData._parse_connection_str(connection_str)
 
     check.equal(parsed["tenant_id"], "abc123")
     check.equal(parsed["client_id"], "def456")
-    check.equal(parsed["client_secret"], "secret789")
+    check.equal(parsed["client_secret"], "[PLACEHOLDER]")
 
 
 def test_odata_prepare_param_dict_from_filter():
@@ -258,7 +258,7 @@ def test_odata_connect_missing_tenant_id():
         mde_drv = driver_cls(data_environment=DataEnvironment.MDE)
 
     with pytest.raises(MsticpyUserConfigError) as exc_info:
-        mde_drv.connect("client_id=abc;client_secret=secret")
+        mde_drv.connect("client_id=abc;client_secret=[PLACEHOLDER]")
 
     check.is_in("tenant_id", str(exc_info.value))
 
@@ -447,13 +447,13 @@ def test_config_name_mapping():
     config = {
         "tenantid": "abc123",
         "clientId": "def456",
-        "clientSecret": "secret789",
+        "clientSecret": "[PLACEHOLDER]",
     }
     mapped = _map_config_dict_name(config)
 
     check.equal(mapped["tenant_id"], "abc123")
     check.equal(mapped["client_id"], "def456")
-    check.equal(mapped["client_secret"], "secret789")
+    check.equal(mapped["client_secret"], "[PLACEHOLDER]")
 
 
 @patch("msticpy.data.drivers.odata_driver.get_provider_settings")
