@@ -6,6 +6,7 @@
 """MS Defender/Defender 365 OData Driver class."""
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar
 from urllib.parse import urljoin
@@ -31,6 +32,8 @@ if TYPE_CHECKING:
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
+logger: logging.Logger = logging.getLogger(__name__)
+
 
 @dataclass
 class M365DConfiguration:
@@ -55,8 +58,10 @@ class M365DConfiguration:
         """
         if "/oauth2/v2.0" in self.login_uri:
             self.oauth_v2 = True
+            logger.debug("OAuth v2.0 flow detected")
         else:
             self.oauth_v2 = False
+            logger.debug("OAuth v1.0 flow detected")
 
 
 @export
@@ -90,12 +95,20 @@ class MDATPDriver(OData):
             Name of the Azure Cloud to connect to.
 
         """
+        logger.info(
+            "Initializing MDATPDriver - Instance: %s, Cloud: %s, AuthType: %s, Debug: %s",
+            instance,
+            cloud,
+            auth_type,
+            debug,
+        )
         super().__init__(
             debug=debug,
             max_threads=max_threads,
             **kwargs,
         )
 
+        logger.debug("Loading driver settings for instance: %s", instance)
         cs_dict: dict[str, str] = _get_driver_settings(
             self.CONFIG_NAME,
             self._ALT_CONFIG_NAMES,
@@ -104,8 +117,14 @@ class MDATPDriver(OData):
 
         self.cloud: str = cs_dict.pop("cloud", "global")
         if cloud:
+            logger.info("Overriding configured cloud with: %s", cloud)
             self.cloud = cloud
+        else:
+            logger.debug("Using cloud from configuration: %s", self.cloud)
 
+        logger.info(
+            "Selecting API configuration for environment: %s", self.data_environment
+        )
         m365d_params: M365DConfiguration = _select_api(
             self.data_environment,
             self.cloud,
@@ -119,6 +138,14 @@ class MDATPDriver(OData):
         self.scopes = m365d_params.scopes
         resource_base = self.api_root.strip().rstrip("/")
 
+        logger.debug(
+            "API configuration - Root: %s, Version: %s, Endpoint: %s, Scopes: %s",
+            self.api_root,
+            self.api_ver,
+            self.api_suffix,
+            self.scopes,
+        )
+
         self.add_query_filter(
             "data_environments",
             ("MDE", "M365D", "MDATP", "M365DGraph", "GraphHunting"),
@@ -126,18 +153,23 @@ class MDATPDriver(OData):
 
         self.req_body: dict[str, Any] = {}
         if "username" in cs_dict:
+            logger.info("Username detected in configuration, using delegated auth")
             delegated_auth = True
-
         else:
+            logger.info("No username in configuration, using application auth")
             delegated_auth = False
             self.req_body["grant_type"] = "client_credentials"
 
         if not m365d_params.oauth_v2:
             # OAuth v1 flow: send 'resource' (base URI, no /.default) not scopes
+            logger.debug("Configuring OAuth v1 request body with resource parameter")
             self.req_body["resource"] = resource_base
-        # OAuth v2: scopes handled by parent auth logic; do not add 'resource'
+        else:
+            logger.debug("Configuring OAuth v2 request body with scope parameter")
+            self.req_body["scope"] = " ".join(self.scopes)
 
         if connection_str:
+            logger.info("Connection string provided, connecting immediately")
             self.current_connection = connection_str
             self.connect(
                 connection_str,
@@ -145,6 +177,8 @@ class MDATPDriver(OData):
                 auth_type=auth_type,
                 location=cs_dict.get("location", "token_cache.bin"),
             )
+        else:
+            logger.debug("No connection string provided, skipping immediate connection")
 
     def query(
         self: Self,
@@ -169,30 +203,53 @@ class MDATPDriver(OData):
             the underlying provider result if an error.
 
         """
+        if self._debug:
+            logger.debug(
+                "Executing query on environment: %s - Query: %s",
+                self.data_environment,
+                query,
+            )
+        else:
+            logger.debug("Executing query on environment: %s", self.data_environment)
+
         del query_source, kwargs
+        logger.info("Sending query to API endpoint: %s", self.api_suffix)
         data, response = self.query_with_results(
             query,
             body=True,
             api_end=self.api_suffix,
         )
         if isinstance(data, pd.DataFrame):
+            logger.debug("Query returned DataFrame with %d rows", len(data))
             # If we got a schema we should convert the DateTimes to pandas datetimes
             if "Schema" not in response and "schema" not in response:
+                logger.debug("No schema in response, returning raw DataFrame")
                 return data
 
             if self.data_environment == DataEnvironment.M365DGraph:
+                logger.debug("Processing M365DGraph response schema")
                 date_fields: list[str] = [
                     field["name"]
                     for field in response["schema"]
                     if field["type"] == "DateTime"
                 ]
             else:
+                logger.debug("Processing MDE/M365D response schema")
                 date_fields = [
                     field["Name"]
                     for field in response["Schema"]
                     if field["Type"] == "DateTime"
                 ]
+            if date_fields:
+                logger.debug(
+                    "Converting %d DateTime field(s): %s", len(date_fields), date_fields
+                )
+            else:
+                logger.debug("No DateTime fields found in schema")
+
             return ensure_df_datetimes(data, columns=date_fields)
+
+        logger.warning("Query did not return a DataFrame, returning response as string")
         return str(response)
 
 
@@ -217,7 +274,14 @@ def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfigura
 
     Manual path join retained (urljoin would drop api_version if api_endpoint starts with '/').
     """
+    logger.debug(
+        "Selecting API configuration for environment: %s, cloud: %s",
+        data_environment,
+        cloud,
+    )
+
     if data_environment == DataEnvironment.M365DGraph:
+        logger.info("Using Microsoft Graph Security Hunting API")
         az_cloud_config = AzureCloudConfig(cloud=cloud)
         login_uri: str = urljoin(
             az_cloud_config.authority_uri,
@@ -227,6 +291,7 @@ def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfigura
         api_version = "v1.0"
         api_endpoint = "/security/runHuntingQuery"
     elif data_environment == DataEnvironment.M365D:
+        logger.info("Using M365 Defender Advanced Hunting API")
         login_uri = urljoin(
             get_m365d_login_endpoint(cloud),
             "{tenantId}/oauth2/v2.0/token",
@@ -235,7 +300,7 @@ def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfigura
         api_version = "api"
         api_endpoint = "/advancedhunting/run"
     else:
-        # Default to MDE
+        logger.info("Using MDE Advanced Queries API (default)")
         login_uri = urljoin(
             get_m365d_login_endpoint(cloud),
             "{tenantId}/oauth2/v2.0/token",
@@ -247,11 +312,19 @@ def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfigura
     # Do not add '.default' here; keep raw base URI for reuse in both flows.
     resource_base = resource_uri.strip().rstrip("/")
     scopes: list[str] = [f"{resource_base}/.default"]
-
     # Construct final query execution URI:
     #   <resource_base>/<api_version>/<endpoint-without-leading-slash>
     api_endpoint_part = api_endpoint.lstrip("/")
     api_uri: str = f"{resource_base}/{api_version.strip('/')}/{api_endpoint_part}"
+
+    logger.debug(
+        "API URIs configured - Login: %s, Resource: %s, Full API: %s, Scopes: %s",
+        login_uri,
+        resource_uri,
+        api_uri,
+        scopes,
+    )
+
     return M365DConfiguration(
         login_uri=login_uri,
         resource_uri=resource_uri,
