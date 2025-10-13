@@ -87,7 +87,7 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
         Parameters
         ----------
         origin_time : datetime, optional
-            The origin time (the default is `datetime.utcnow()`)
+            The origin time (the default is `datetime.now(timezone.utc)`)
         description : str, optional
             The description to display
             (the default is 'Select time ({units}) to look back')
@@ -133,7 +133,12 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
         self.after: int = 0
         self._query_start: datetime
         self._query_end: datetime
-        self.origin_time: datetime = origin_time or datetime.now(timezone.utc)
+
+        # Ensure origin_time is timezone-aware
+        self.origin_time: datetime = self._ensure_timezone_aware(
+            origin_time or datetime.now(timezone.utc)
+        )
+
         self._get_time_parameters(
             timespan=timespan,
             start=start,
@@ -209,13 +214,13 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
         # pylint: enable=no-member
 
         self._w_start_time_txt = widgets.Text(
-            value=self._query_start.isoformat(sep=" "),
+            value=self._format_datetime_display(self._query_start),
             description="Query start time (UTC):",
             layout=Layout(width="50%"),
             style=self._label_style,
         )
         self._w_end_time_txt = widgets.Text(
-            value=self._query_end.isoformat(sep=" "),
+            value=self._format_datetime_display(self._query_end),
             description="Query end time (UTC) :  ",
             layout=Layout(width="50%"),
             style=self._label_style,
@@ -228,6 +233,18 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
         self.layout: widgets.VBox = self._create_layout()
         if auto_display:
             self.display()
+
+    def _ensure_timezone_aware(self, dt: datetime) -> datetime:
+        """Ensure datetime is timezone-aware, defaulting to UTC if naive."""
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt
+
+    def _format_datetime_display(self, dt: datetime) -> str:
+        """Format datetime for display, ensuring UTC timezone."""
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc).isoformat(sep=" ").replace("+00:00", "")
 
     def set_time(
         self: Self,
@@ -285,12 +302,16 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
     ) -> None:
         """Process different init time parameters from kwargs."""
         if timespan:
-            self._query_end = self.origin_time = timespan.end
-            self._query_start = timespan.start
+            self._query_end = self.origin_time = self._ensure_timezone_aware(
+                timespan.end
+            )
+            self._query_start = self._ensure_timezone_aware(timespan.start)
         elif start and end:
             timespan = TimeSpan(start=start, end=end)
-            self._query_start = timespan.start
-            self._query_end = self.origin_time = timespan.end
+            self._query_start = self._ensure_timezone_aware(timespan.start)
+            self._query_end = self.origin_time = self._ensure_timezone_aware(
+                timespan.end
+            )
         else:
             self.before = default_before_after(before, self._time_unit)
             self.after = default_before_after(after, self._time_unit)
@@ -367,7 +388,9 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
         """Handle change events for origin date and time controls."""
         try:
             tm_value = datetime.strptime(self._w_origin_tm.value, "%H:%M:%S.%f").time()
-            self.origin_time = datetime.combine(self._w_origin_dt.value, tm_value)
+            new_origin = datetime.combine(self._w_origin_dt.value, tm_value)
+            # Ensure the new origin time maintains timezone awareness
+            self.origin_time = self._ensure_timezone_aware(new_origin)
             self._time_range_change(None)
         except (ValueError, TypeError):
             # reset on error
@@ -390,8 +413,8 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
             0,
             self._w_tm_range.value[1] * self._time_unit.value,
         )
-        self._w_start_time_txt.value = self._query_start.isoformat(sep=" ")
-        self._w_end_time_txt.value = self._query_end.isoformat(sep=" ")
+        self._w_start_time_txt.value = self._format_datetime_display(self._query_start)
+        self._w_end_time_txt.value = self._format_datetime_display(self._query_end)
 
     # end - event handlers
 
@@ -399,8 +422,8 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
     def _update_ui_controls(self: Self) -> None:
         """Update UI controls from attributes."""
         self._disable_handlers()
-        self._w_start_time_txt.value = self._query_start.isoformat(sep=" ")
-        self._w_end_time_txt.value = self._query_end.isoformat(sep=" ")
+        self._w_start_time_txt.value = self._format_datetime_display(self._query_start)
+        self._w_end_time_txt.value = self._format_datetime_display(self._query_end)
         self._set_time_slider_settings()
         self._w_origin_dt.value = self.origin_time.date()
         self._w_origin_tm.value = self.origin_time.time().isoformat()

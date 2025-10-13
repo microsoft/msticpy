@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Test module for nbwidgets."""
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import ipywidgets as widgets
@@ -73,7 +73,7 @@ def test_default_max_buffer(test, expected):
     check.equal(default_max_buffer(*test), expected)
 
 
-_END_TIME = datetime.utcnow()
+_END_TIME = datetime.now(tz=timezone.utc)
 _START_TIME = _END_TIME - timedelta(1)
 
 _QT_PARAM_TESTS = [
@@ -192,8 +192,8 @@ def test_query_time_set_time(start, end, expected):
     qt.value = new_time
     # check UI values updated correctly
     check.equal(qt._w_tm_range.value, (-expected[0], expected[1]))
-    check.equal(qt._w_start_time_txt.value, new_time.start.isoformat(sep=" "))
-    check.equal(qt._w_end_time_txt.value, new_time.end.isoformat(sep=" "))
+    check.is_in(qt._w_start_time_txt.value, new_time.start.isoformat(sep=" "))
+    check.is_in(qt._w_end_time_txt.value, new_time.end.isoformat(sep=" "))
     check.equal(qt._w_origin_dt.value, new_time.end.date())
     check.equal(qt._w_origin_tm.value, new_time.end.time().isoformat())
     check.equal(qt._w_time_unit.value, expected[2].name.capitalize())

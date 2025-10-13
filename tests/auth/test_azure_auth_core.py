@@ -201,9 +201,8 @@ def test_build_env_client(env_vars, expected, monkeypatch):
         credential = _build_env_client(aad_uri="test_aad_uri")
 
         check.is_true((credential is not None) == expected)
-        check.is_true(
-            mock_env_cred.called_once_with(authority="test_aad_uri") or not expected
-        )
+        if expected:
+            mock_env_cred.assert_called_once_with(authority="test_aad_uri")
 
 
 @pytest.mark.parametrize(

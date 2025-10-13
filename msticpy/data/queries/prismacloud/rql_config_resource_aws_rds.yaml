@@ -1,0 +1,78 @@
+metadata:
+  version: 1
+  # name: PrismaCloud Queries
+  description: Queries for Prisma Cloud Data Provider
+  data_environments: [Prismacloud]
+  data_families: [Prismacloud]
+  tags: [Prisma_config_resource_aws_rds]
+  aliases:
+    - &config_resource_query_relative |-
+      {{
+        "querymetadata" :
+            {{
+                "queryType": "config_resource_query_relative",
+                "unit": "{unit_type}",
+                "amount": "{amount_value}",
+                "endpoint": "config_resource",
+                $<query_conditions>$,
+                "isParsedinDriver": true
+            }}
+      }}
+    - &config_resource_query_absolute |-
+      {{
+        "querymetadata" :
+            {{
+                "queryType": "config_resource_query_relative",
+                "start_time": "{start}",
+                "end_time": "{end}",
+                "endpoint": "config_resource",
+                $<query_conditions>$,
+                "isParsedinDriver": true
+            }}
+      }}
+defaults:
+  metadata:
+    data_source: "Prismacloud"
+  parameters:
+    unit_type:
+      description: Field to use for time
+      type: str
+      default: minute
+    amount_value:
+      description: Field to use for time
+      type: int
+      default: 60
+    start:
+      description: Query start time
+      type: datetime
+      default: -7
+    end:
+      description: Query end time
+      type: datetime
+      default: 0
+sources:
+  config_resource_rds_internet_accessible_aws_rds_db_instance:
+    description: |-
+      Identifies AWS RDS instances whose associated DB subnets are part of route tables with active internet 
+      gateway routes to 0.0.0.0/0 or ::/0. While RDS is typically designed for internal access, placing instances 
+      in subnets with direct internet exposure increases the risk of unintended access or misconfiguration-based 
+      attacks — especially if additional public endpoints or weak authentication is present. This condition 
+      should be reviewed to ensure that database services are isolated within private subnets and that 
+      no default route to the internet exists unless absolutely required. Security teams should assess if 
+      RDS public access is enabled and whether these routes serve a legitimate purpose or expose sensitive data.
+    metadata: {}
+    args:
+      query: *config_resource_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "config from cloud.resource where api.name = 'aws-rds-describe-db-instances' as X; config from cloud.resource where api.name = 'aws-ec2-describe-route-tables' AND json.rule = associations[*].subnetId exists and routes[?any( state equals active and gatewayId starts with igw- and (destinationCidrBlock equals \"0.0.0.0/0\" or destinationIpv6CidrBlock equals \"::/0\"))] exists as Y; filter '$.X.dbsubnetGroup.subnets[*].subnetIdentifier intersects $.Y.associations[*].subnetId'; show X; {additional_query_condition}{optional_limit}"
+    parameters:
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str

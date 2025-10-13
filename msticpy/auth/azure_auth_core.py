@@ -54,7 +54,7 @@ _HELP_URI = (
 class AzCredentials:
     """Class holding legacy(ADAL) and modern(MSAL) credentials."""
 
-    legacy: TokenCredential
+    legacy: CredentialWrapper
     modern: ChainedTokenCredential
 
     # Backward compatibility with namedtuple

@@ -36,7 +36,7 @@ sources:
       Retrieve asset data from Prisma Cloud using relative time using dynamic queries.
       final_query_df = prismacloud_qp.Prismacloud.search_asset_relative(query_condition="asset where cloud.service IN ('azure_sql_database')")
       final_query_df = prismacloud_qp.Prismacloud.search_asset_relative_with_prismafindings(selectasset="asset where cloud.service IN ('azure_sql_database')",finding_types=['INTERNET_EXPOSURE'])
-    metadata:
+    metadata: {}
     args:
       query: *asset_query_relative
     query_macros:
@@ -52,7 +52,7 @@ sources:
     description: |-
       Retrieve asset data from Prisma Cloud using relative time using dynamic queries.
       final_query_df = prismacloud_qp.Prismacloud.search_asset_relative_with_prismafindings(selectasset="asset where cloud.service IN ('azure_sql_database')")
-    metadata:
+    metadata: {}
     args:
       query: *asset_query_relative
     query_macros:
@@ -104,7 +104,7 @@ sources:
   asset_host_with_high_cve:
     description: |-
       List of high severity vulnerable assets Hosts asset type
-    metadata:
+    metadata: {}
     args:
       query: *asset_query_relative
     query_macros:
@@ -115,7 +115,7 @@ sources:
   asset_hostimage_with_high_cve:
     description: |-
       List of high severity vulnerable assets Host image asset type
-    metadata:
+    metadata: {}
     args:
       query: *asset_query_relative
     query_macros:
@@ -126,7 +126,7 @@ sources:
   asset_registryimage_with_high_cve:
     description: |-
       List of high severity vulnerable assets registry image asset type
-    metadata:
+    metadata: {}
     args:
       query: *asset_query_relative
     query_macros:
@@ -137,7 +137,7 @@ sources:
   asset_serverless_functions_with_high_cve:
     description: |-
       List of high severity vulnerable assets serverless functions asset type
-    metadata:
+    metadata: {}
     args:
       query: *asset_query_relative
     query_macros:
@@ -145,3 +145,41 @@ sources:
         description: query search conditions
         value: |-
           "query_by_user": "asset where asset.type IN ( 'aws-lambda-list-functions', 'gcloud-cloud-function-v2', 'gcloud-cloud-function', 'azure-cloud-function') AND with : (Vuln where SEVERITY >= HIGH)"
+  search_asset_class_with_asset_id:
+    description: |-
+      Retrieve asset data from Prisma Cloud using asset class and asset id
+      search_asset_class_with_asset_id = prismacloud_qp.Prismacloud.search_asset_class_with_asset_id(asset_id = ["something"])
+    metadata: {}
+    args:
+      query: *asset_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "asset where asset.class IN ({selectasset}) and asset.id IN ({asset_id})"
+    parameters:
+      selectasset:
+        description: |-
+          selecting asset default will search in all prismacloud asset types
+        type: list
+        default:
+          - Compute
+          - Network
+          - Storage
+          - Database
+          - Analytics
+          - AI and Machine Learning
+          - Application and Content Delivery
+          - Code
+          - Identity & Security
+          - Kubernetes
+          - Management and Governance
+          - Other
+          - Web Application Firewall
+      asset_id:
+        description: |-
+          List of asset ids to search
+        type: list
+        default:
+          - foo
+          - testasset
