@@ -4,6 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot pipeline browser UI."""
+import sys
+
+import pytest
 import pytest_check as check
 
 try:
@@ -20,6 +23,9 @@ from msticpy.init.pivot_core.pivot_browser import PivotBrowser
 __author__ = "Ian Hellen"
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("linux"), reason="Requires powershell.exe (Windows only)"
+)
 def test_pivot_browser(create_pivot):
     """Test pivot browser."""
     browser = PivotBrowser()
