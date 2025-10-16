@@ -4,7 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """MSTICPy core pandas accessor methods."""
-from typing import Any, Dict, List, Mapping, Union
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
 
 import pandas as pd
 
@@ -84,7 +87,7 @@ class MsticpyCoreAccessor:
         """
         return unpack_df(data=self._df, column=column, **kwargs)
 
-    def ioc_extract(self, columns: List[str], **kwargs) -> pd.DataFrame:
+    def ioc_extract(self, columns: list[str], **kwargs) -> pd.DataFrame:
         """
         Extract IoCs from either a pandas DataFrame.
 
@@ -131,7 +134,7 @@ class MsticpyCoreAccessor:
 
     def build_process_tree(
         self,
-        schema: Union[ProcSchema, Dict[str, Any]] = None,
+        schema: ProcSchema | dict[str, Any] | None = None,
         show_summary: bool = False,
         debug: bool = False,
     ) -> pd.DataFrame:
@@ -140,7 +143,7 @@ class MsticpyCoreAccessor:
 
         Parameters
         ----------
-        schema : Union[ProcSchema, Dict[str, Any]], optional
+        schema : Union[ProcSchema, dict[str, Any]], optional
             The column schema to use, by default None.
             If supplied as a dict it must include definitions for the
             required fields in the ProcSchema class
@@ -175,11 +178,11 @@ class MsticpyCoreAccessor:
             Column for source nodes.
         target_col : str
             Column for target nodes.
-        source_attrs : Optional[List[str]], optional
+        source_attrs : Optional[list[str]], optional
             Optional list of columns to use as source node attributes, by default None
-        target_attrs : Optional[List[str]], optional
+        target_attrs : Optional[list[str]], optional
             Optional list of columns to use as target node attributes, by default None
-        edge_attrs : Optional[List[str]], optional
+        edge_attrs : Optional[list[str]], optional
             Optional list of columns to use as edge node attributes, by default None
         graph_type : str
             "graph" or "digraph" (for nx.DiGraph)
@@ -252,12 +255,12 @@ class MsticpyCoreAccessor:
         ----------
         data : pd.DataFrame
             The DataFrame to view
-        selected_cols : List[str], optional
+        selected_cols : list[str], optional
             Initial subset of columns to show, by default None (all cols)
 
         Other Parameters
         ----------------
-        selectable : Union[bool, str], optional
+        selectable : bool | str, optional
             Whether rows should be selectable, by default "checkbox"
         show_index : bool, optional
             If True show the DataFrame index as a column, by default  True.
@@ -265,7 +268,7 @@ class MsticpyCoreAccessor:
             If True show the TenantId column, by default  True.
         max_col_width : int, optional
             Sets the maximum column width to display, by default 500
-        detail_cols : List[str]
+        detail_cols : list[str]
             List of columns for which details are displayed in collapsible
             field beneath each table row.
         kwargs :

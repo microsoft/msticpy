@@ -4,11 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot query functions class."""
+from __future__ import annotations
+
 import itertools
 import warnings
 from collections import abc, defaultdict, namedtuple
+from collections.abc import Iterable
 from functools import wraps
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Any, Callable, Type
 
 import pandas as pd
 
@@ -97,7 +100,7 @@ class PivotQueryFunctions:
     def __init__(
         self,
         query_provider: "QueryProvider",  # type: ignore  # noqa: F821
-        ignore_reqd: List[str] = None,
+        ignore_reqd: list[str] = None,
     ):  # sourcery skip: remove-unnecessary-cast
         """
         Instantiate PivotQueryFunctions class.
@@ -106,15 +109,15 @@ class PivotQueryFunctions:
         ----------
         query_provider : [type]
             The query provider to load
-        ignore_reqd : List[str], optional
+        ignore_reqd : list[str], optional
             List of parameters to ignore when building the required
             parameters list (e.g. ['start', 'end']), by default None
 
         """
         self.__class__.current = self
         self._provider = query_provider
-        self.param_usage: Dict[str, List[ParamAttrs]] = defaultdict(list)
-        self.query_params: Dict[str, QueryParams] = {}
+        self.param_usage: dict[str, list[ParamAttrs]] = defaultdict(list)
+        self.query_params: dict[str, QueryParams] = {}
 
         # specify any parameters to exclude from our list
         ignore_params = set(ignore_reqd) if ignore_reqd else _DEF_IGNORE_PARAM
@@ -154,13 +157,13 @@ class PivotQueryFunctions:
                 )
 
     @property
-    def instance_name(self) -> Optional[str]:
+    def instance_name(self) -> str | None:
         """
         Return instance name, if any for provider.
 
         Returns
         -------
-        Optional[str]
+        str | None
             The instance name or None for drivers that do not
             support multiple instances.
 
@@ -227,7 +230,7 @@ class PivotQueryFunctions:
 
     def get_queries_and_types_for_param(
         self, param: str
-    ) -> Iterable[Tuple[str, str, str, Callable[[Any], Any]]]:
+    ) -> Iterable[tuple[str, str, str, Callable[[Any], Any]]]:
         """
         Get queries and parameter data types for `param`.
 
@@ -238,7 +241,7 @@ class PivotQueryFunctions:
 
         Returns
         -------
-        Iterable[Tuple[str, str, Callable[[Any], Any]]]
+        Iterable[tuple[str, str, Callable[[Any], Any]]]
             Iterable of tuples listing:
             query_name, param_type, query_func
 
@@ -257,7 +260,7 @@ class PivotQueryFunctions:
 
     def get_queries_for_param(
         self, param: str
-    ) -> Iterable[Tuple[str, str, Callable[[Any], Any]]]:
+    ) -> Iterable[tuple[str, str, Callable[[Any], Any]]]:
         """
         Get the list of queries for a parameter.
 
@@ -268,7 +271,7 @@ class PivotQueryFunctions:
 
         Returns
         -------
-        Iterable[Tuple[str, str, Callable[[Any], Any]]]
+        Iterable[tuple[str, str, Callable[[Any], Any]]]
             Iterable of tuples listing:
             query_name, query_func
 
@@ -284,7 +287,7 @@ class PivotQueryFunctions:
             )
         ]
 
-    def get_params(self, query_func_name: str) -> Optional[QueryParams]:
+    def get_params(self, query_func_name: str) -> QueryParams | None:
         """
         Get the parameters for a query function.
 
@@ -303,7 +306,7 @@ class PivotQueryFunctions:
         """
         return self.query_params.get(query_func_name)
 
-    def get_param_attrs(self, param_name: str) -> List[ParamAttrs]:
+    def get_param_attrs(self, param_name: str) -> list[ParamAttrs]:
         """
         Get the attributes for a parameter name.
 
@@ -314,7 +317,7 @@ class PivotQueryFunctions:
 
         Returns
         -------
-        List[ParamAttrs]
+        list[ParamAttrs]
             List of ParamAttrs named tuples:
             (type, query, family, required)
 
@@ -329,7 +332,7 @@ class PivotQueryFunctions:
 
 # Map of query parameter names to entities and the entity attrib
 # corresponding to the query parameter value
-PARAM_ENTITY_MAP: Dict[str, List[Tuple[Type[entities.Entity], str]]] = {
+PARAM_ENTITY_MAP: dict[str, list[tuple[Type[entities.Entity], str]]] = {
     "account_name": [(entities.Account, "Name")],
     "host_name": [(entities.Host, "fqdn")],
     "process_name": [(entities.Process, "ProcessFilePath")],
@@ -360,7 +363,7 @@ PARAM_ENTITY_MAP["cmd_line"] = PARAM_ENTITY_MAP["commandline"]
 
 def add_data_queries_to_entities(
     provider: "QueryProvider",  # type: ignore  # noqa: F821
-    get_timespan: Optional[Callable[[], TimeSpan]],
+    get_timespan: Callable[[Any, TimeSpan], TimeSpan],
 ):
     """
     Add data queries from `provider` to entities.
@@ -369,7 +372,7 @@ def add_data_queries_to_entities(
     ----------
     provider : QueryProvider
         Query provider
-    get_timespan : Optional[Callable[[], TimeSpan]]
+    get_timespan : Callable[[Any, TimeSpan], TimeSpan]
         Callback to get time span. If None
         it will use the Pivot built-in time range.
 
@@ -399,7 +402,7 @@ def add_data_queries_to_entities(
 def add_queries_to_entities(
     prov_qry_funcs: PivotQueryFunctions,
     container: str,
-    get_timespan: Optional[Callable[[], TimeSpan]],
+    get_timespan: Callable[[Any, TimeSpan], TimeSpan],
 ):
     """
     Add data queries to entities.
@@ -410,7 +413,7 @@ def add_queries_to_entities(
         Collection of wrapped query functions
     container : str
         The name of the container to add query functions to
-    get_timespan : Optional[Callable[[], TimeSpan]]
+    get_timespan : Callable[[Any, TimeSpan], TimeSpan]
         Function to get the current timespan. If None
         it will use the Pivot built-in time range.
 
@@ -506,8 +509,8 @@ def _create_piv_properties(name, param_entities, container):
 
 def _create_pivot_func(
     func: Callable[[Any], pd.DataFrame],
-    func_params: Dict[str, ParamAttrs],
-    param_attrib_map: Dict[str, str],
+    func_params: dict[str, ParamAttrs],
+    param_attrib_map: dict[str, str],
     get_timespan: Callable[[], TimeSpan],
 ):
     """
@@ -517,9 +520,9 @@ def _create_pivot_func(
     ----------
     func : Callable[[Any], pd.DataFrame]
         The function to be wrapped
-    func_params : Dict[str, ParamAttrs]
+    func_params : dict[str, ParamAttrs]
         Dict of parameters used by `func`
-    param_attrib_map : Dict[str, str]
+    param_attrib_map : dict[str, str]
         Map of parameter name to entity attribute name.
     get_timespan : Callable[[], TimeSpan]
         The function to get the default timespan to use for queries.
@@ -570,7 +573,7 @@ def _create_pivot_func(
 
 
 def _create_data_func_exec(
-    func: Callable[[Any], pd.DataFrame], func_params: Dict[str, ParamAttrs]
+    func: Callable[[Any], pd.DataFrame], func_params: dict[str, ParamAttrs]
 ) -> Callable[[Any], pd.DataFrame]:
     """
     Wrap func to issue single or multiple calls to query.
@@ -579,7 +582,7 @@ def _create_data_func_exec(
     ----------
     func : Callable[[Any], pd.DataFrame]
         Query function to wrap
-    func_params : Dict[str, ParamAttrs]
+    func_params : dict[str, ParamAttrs]
         Dictionary of function parameter definitions
         for this function.
 
@@ -681,14 +684,14 @@ def _exec_query_for_df(func, func_kwargs, func_params, parent_kwargs):
 
 
 def _check_df_params_require_iter(
-    func_params: Dict[str, ParamAttrs],
+    func_params: dict[str, ParamAttrs],
     src_df: pd.DataFrame,
-    func_kwargs: Dict[str, Any],
+    func_kwargs: dict[str, Any],
     **kwargs,
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+) -> tuple[dict[str, Any], dict[str, Any]]:
     """Return params that require iteration and those that don't."""
-    list_params: Dict[str, Any] = {}
-    df_iter_params: Dict[str, Any] = {}
+    list_params: dict[str, Any] = {}
+    df_iter_params: dict[str, Any] = {}
     for kw_name, arg in kwargs.items():
         if kw_name in _DEF_IGNORE_PARAM:
             continue
@@ -735,11 +738,11 @@ def _exec_query_for_values(func, func_kwargs, func_params, parent_kwargs):
 
 
 def _check_var_params_require_iter(
-    func_params: Dict[str, ParamAttrs], func_kwargs: Dict[str, Any], **kwargs
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    func_params: dict[str, ParamAttrs], func_kwargs: dict[str, Any], **kwargs
+) -> tuple[dict[str, Any], dict[str, Any]]:
     """Return params that require iteration and don't."""
-    simple_params: Dict[str, Any] = {}
-    var_iter_params: Dict[str, Any] = {}
+    simple_params: dict[str, Any] = {}
+    var_iter_params: dict[str, Any] = {}
     for kw_name, arg in kwargs.items():
         if kw_name in _DEF_IGNORE_PARAM:
             continue

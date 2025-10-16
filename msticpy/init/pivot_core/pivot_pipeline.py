@@ -4,8 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot pipeline class."""
+from __future__ import annotations
+
 from collections import namedtuple
-from typing import Any, Dict, Iterable, List, Optional
+from collections.abc import Iterable
+from typing import Any
 
 import attr
 import pandas as pd
@@ -39,11 +42,11 @@ class PipelineStep:
 
     name: str
     step_type: str = attr.ib(validator=attr.validators.in_(_STEP_TYPES))
-    function: Optional[str] = None
-    entity: Optional[str] = None
-    comment: Optional[str] = None
-    pos_params: List[str] = Factory(list)
-    params: Dict[str, Any] = Factory(dict)
+    function: str | None = None
+    entity: str | None = None
+    comment: str | None = None
+    pos_params: list[str] = Factory(list)
+    params: dict[str, Any] = Factory(dict)
 
     def get_exec_step(self) -> PipelineExecStep:
         """
@@ -145,8 +148,8 @@ class Pipeline:
     def __init__(
         self,
         name: str,
-        description: Optional[str] = None,
-        steps: Optional[Iterable[PipelineStep]] = None,
+        description: str | None = None,
+        steps: Iterable[PipelineStep | None] = None,
     ):
         """
         Create Pipeline instance.
@@ -155,17 +158,17 @@ class Pipeline:
         ----------
         name : str
             The pipeline name.
-        description : Optional[str]
+        description : str | None
             The pipeline description, by default None.
-        steps : Optional[Iterable[PipelineStep]]
+        steps : Iterable[PipelineStep | None]
             Pipeline steps, by default None.
 
         """
         self.name = name
         self.description = description
-        self.steps: List[PipelineStep] = []
+        self.steps: list[PipelineStep] = []
         if steps:
-            self.steps.extend(iter(steps))
+            self.steps.extend(iter(steps))  # type: ignore[arg-type]
 
     def __repr__(self) -> str:
         """
@@ -184,13 +187,13 @@ class Pipeline:
         )
 
     @classmethod
-    def parse_pipeline(cls, pipeline: Dict[str, Dict[str, Any]]) -> "Pipeline":
+    def parse_pipeline(cls, pipeline: dict[str, dict[str, Any]]) -> "Pipeline":
         """
         Parse single pipeline from dictionary.
 
         Parameters
         ----------
-        pipeline : Dict[str, Dict[str, Any]]
+        pipeline : dict[str, dict[str, Any]]
             Single pipeline as a dictionary:
             {name: {pipeline_dict...}}.
 
@@ -214,13 +217,13 @@ class Pipeline:
         raise ValueError("Dictionary could not be parsed.")
 
     @staticmethod
-    def parse_pipelines(pipelines: Dict[str, Dict[str, Any]]) -> Iterable["Pipeline"]:
+    def parse_pipelines(pipelines: dict[str, dict[str, Any]]) -> Iterable["Pipeline"]:
         """
         Parse dict of pipelines.
 
         Parameters
         ----------
-        pipelines : Dict[str, Dict[str, Any]]
+        pipelines : dict[str, dict[str, Any]]
             Dict of pipelines.
 
         Yields
@@ -266,7 +269,7 @@ class Pipeline:
 
     def run(
         self, data: pd.DataFrame, verbose: bool = True, debug: bool = False
-    ) -> Optional[Any]:
+    ) -> Any | None:
         """
         Run the pipeline on the supplied DataFrame.
 

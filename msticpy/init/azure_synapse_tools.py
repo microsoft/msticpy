@@ -4,11 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Help functions for Synapse pipelines notebooks."""
+from __future__ import annotations
+
 import logging
 import os
 import re
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Union
+from typing import Literal
 
 import httpx
 import jwt
@@ -62,8 +64,8 @@ IdentityType = Literal["managed", "service_principal"]
 
 def init_synapse(
     identity_type: IdentityType = "service_principal",
-    storage_svc_name: Optional[str] = None,
-    tenant_id: Optional[str] = None,
+    storage_svc_name: str | None = None,
+    tenant_id: str | None = None,
     cloud: str = "global",
 ):
     """
@@ -74,9 +76,9 @@ def init_synapse(
     identity_type : IdentityType, optional
         The authentication type to be used by MSTICPy, by default "managed".
         Options are "managed", "service_principal"
-    storage_svc_name : Optional[str], optional
+    storage_svc_name : str | None, optional
         Override the default storage linked service name, by default None
-    tenant_id : Optional[str], optional
+    tenant_id : str | None, optional
         Override the default tenant_id for the Azure authentication, by default None
     cloud : str
         Azure cloud - default is "global".
@@ -152,7 +154,7 @@ def init_synapse(
     logger.info("Synapse initialization successful")
 
 
-def current_mounts() -> Dict[str, str]:
+def current_mounts() -> dict[str, str]:
     """Return dictionary of current Synapse mount points."""
     return {mnt.mountPoint: mnt.source for mnt in mssparkutils.fs.mounts()}
 
@@ -237,8 +239,8 @@ class LinkedService:
         self.name: str = kwargs.get("name")
         self.entry_type: str = kwargs.get("type")
         self.etag: str = kwargs.get("etag")
-        self.properties: Dict[str, Union[str, Dict[str, Union[Dict, str]]]] = (
-            kwargs.get("properties", {})
+        self.properties: dict[str, str | dict[str, dict | str]] = kwargs.get(
+            "properties", {}
         )
 
     @property
@@ -306,9 +308,7 @@ class MPSparkUtils:
 
     _DEF_MOUNT_POINT = "msticpy"
 
-    def __init__(
-        self, mount_point: Optional[str] = None, container: Optional[str] = None
-    ):
+    def __init__(self, mount_point: str | None = None, container: str | None = None):
         """Initialize MPSparkUtils class."""
         self.linked_services = [
             LinkedService(**props)
@@ -324,7 +324,7 @@ class MPSparkUtils:
         return mssparkutils.env.getWorkspaceName()
 
     @property
-    def fs_mounts(self) -> Dict[str, str]:
+    def fs_mounts(self) -> dict[str, str]:
         """Return a dictionary of mount points and targets."""
         return {mnt.mountPoint: mnt.source for mnt in mssparkutils.fs.mounts()}
 
@@ -338,7 +338,7 @@ class MPSparkUtils:
         """Return mount path for MSTICPy config."""
         return Path(f"/synfs/{self.job_id}/{self.mount_point}")
 
-    def get_service_of_type(self, svc_type: str) -> Optional[LinkedService]:
+    def get_service_of_type(self, svc_type: str) -> LinkedService | None:
         """
         Return the first linked service of specific `svc_type`.
 
@@ -350,7 +350,7 @@ class MPSparkUtils:
 
         Returns
         -------
-        Optional[LinkedService]
+        LinkedService | None
             LinkedService instance for the `svc_type`.
 
         """
@@ -363,7 +363,7 @@ class MPSparkUtils:
             None,
         )
 
-    def get_all_services_of_type(self, svc_type) -> List[LinkedService]:
+    def get_all_services_of_type(self, svc_type) -> list[LinkedService]:
         """
         Return list of Linked services of `svc_type`.
 
@@ -375,7 +375,7 @@ class MPSparkUtils:
 
         Returns
         -------
-        List[LinkedService]
+        list[LinkedService]
             List of LinkedService instances of type `svc_type`.
 
         """
@@ -383,13 +383,13 @@ class MPSparkUtils:
             lnk_svc for lnk_svc in self.linked_services if lnk_svc.svc_type == svc_type
         ]
 
-    def get_ws_default_storage(self) -> Optional[LinkedService]:
+    def get_ws_default_storage(self) -> LinkedService | None:
         """
         Return default storage linked service.
 
         Returns
         -------
-        Optional[LinkedService]
+        LinkedService | None
             Default storage service.
 
         """
@@ -405,13 +405,13 @@ class MPSparkUtils:
         except StopIteration:
             return None
 
-    def get_service(self, svc_name: str) -> Optional[LinkedService]:
+    def get_service(self, svc_name: str) -> LinkedService | None:
         """
         Return named linked service.
 
         Returns
         -------
-        Optional[LinkedService]
+        LinkedService | None
             Named service service.
 
         """
@@ -426,11 +426,9 @@ class MPSparkUtils:
         except StopIteration:
             return None
 
-    def get_storage_service(
-        self, linked_svc_name: Optional[str] = None
-    ) -> LinkedService:
+    def get_storage_service(self, linked_svc_name: str | None = None) -> LinkedService:
         """Return linked storage service (named) or default storage."""
-        storage_svc: Optional[LinkedService] = None
+        storage_svc: LinkedService | None = None
         if linked_svc_name:
             storage_svc = self.get_service(svc_name=linked_svc_name)
         if not storage_svc:
@@ -487,7 +485,7 @@ def _fetch_linked_services(ws_name: str):
     return resp.json().get("value")
 
 
-def _set_azure_env_creds(mp_spark: MPSparkUtils, tenant_id: Optional[str] = None):
+def _set_azure_env_creds(mp_spark: MPSparkUtils, tenant_id: str | None = None):
     """Publish Service Principal credentials to environment variables."""
     os.environ[AzureCredEnvNames.AZURE_TENANT_ID] = tenant_id or mp_spark.tenant_id
     client_id = mp_spark.get_kv_secret(SynapseName.sp_client_id_name)
@@ -515,7 +513,7 @@ def _set_azure_env_creds(mp_spark: MPSparkUtils, tenant_id: Optional[str] = None
     )
 
 
-def _set_msi_client_id(mp_spark: MPSparkUtils, tenant_id: Optional[str] = None):
+def _set_msi_client_id(mp_spark: MPSparkUtils, tenant_id: str | None = None):
     """Publish Service Principal credentials to environment variables."""
     os.environ[AzureCredEnvNames.AZURE_TENANT_ID] = tenant_id or mp_spark.tenant_id
     os.environ[AzureCredEnvNames.AZURE_CLIENT_ID] = mp_spark.application_id

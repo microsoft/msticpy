@@ -3,8 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Pivot browser widget."""
-from typing import Dict, List
+"""Pivot browser."""
+from __future__ import annotations
 
 import ipywidgets as widgets
 from IPython import get_ipython
@@ -78,13 +78,13 @@ class PivotBrowser:
 
     def __init__(self):
         """Create an instance of the Pivot browser."""
-        self._text: Dict[str, widgets.Widget] = {}
-        self._select: Dict[str, widgets.Widget] = {}
-        self._layout: Dict[str, widgets.Widget] = {}
-        self._html: Dict[str, widgets.Widget] = {}
-        self._btn: Dict[str, widgets.Widget] = {}
+        self._text: dict[str, widgets.Widget] = {}
+        self._select: dict[str, widgets.Widget] = {}
+        self._layout: dict[str, widgets.Widget] = {}
+        self._html: dict[str, widgets.Widget] = {}
+        self._btn: dict[str, widgets.Widget] = {}
 
-        self.piv_entities: Dict[str, List[str]] = _get_entities_with_pivots()
+        self.piv_entities: dict[str, list[str]] = _get_entities_with_pivots()
 
         self._create_select_controls()
         self._create_help_controls()

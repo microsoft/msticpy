@@ -4,15 +4,17 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pandas DataFrame accessor for Pivot functions."""
+from __future__ import annotations
 
 import contextlib
 import json
 import re
 import warnings
+from collections.abc import Iterable
 from datetime import datetime
 from json import JSONDecodeError
 from numbers import Number
-from typing import Callable, Dict, Iterable, Set, Union
+from typing import Callable
 
 import numpy as np
 import pandas as pd
@@ -208,7 +210,7 @@ class PivotAccessor:
 
     def filter_cols(
         self,
-        cols: Union[str, Iterable[str]],
+        cols: str | Iterable[str],
         match_case: bool = False,
         sort_cols: bool = False,
     ) -> pd.DataFrame:
@@ -217,7 +219,7 @@ class PivotAccessor:
 
         Parameters
         ----------
-        cols : Union[str, Iterable[str]]
+        cols : str | Iterable[str]
             Either a string or a list of strings with filter expressions.
             These can be exact matches for column names, wildcard patterns
             ("*" matches multiple chars and "?" matches a single char),
@@ -235,7 +237,7 @@ class PivotAccessor:
 
         """
         curr_cols = self._df.columns
-        filt_cols: Set[str] = set()
+        filt_cols: set[str] = set()
         if isinstance(cols, str):
             filt_cols.update(_name_match(curr_cols, cols, match_case))
         elif isinstance(cols, list):
@@ -253,7 +255,7 @@ class PivotAccessor:
 
     def filter(
         self,
-        expr: Union[str, Number],
+        expr: str | Number,
         match_case: bool = False,
         numeric_col: bool = False,
     ) -> pd.DataFrame:
@@ -262,7 +264,7 @@ class PivotAccessor:
 
         Parameters
         ----------
-        expr : Union[str, Number]
+        expr : str | Number
             String or regular expression to match or a (partial) number.
             If `expr` is a string it is matched against any string or object
             columns using pandas `str.contains(..regex=True)`
@@ -307,14 +309,14 @@ class PivotAccessor:
         raise TypeError("expr '{expr}' must be a string or numeric type.")
 
     def sort(
-        self, cols: Union[str, Iterable[str], Dict[str, str]], ascending: bool = None
+        self, cols: str | Iterable[str] | dict[str, str], ascending: bool = None
     ) -> pd.DataFrame:
         """
         Sort output by column expression.
 
         Parameters
         ----------
-        cols : Union[str, Iterable[str], Dict[str, str]]
+        cols : str | Iterable[str] | dict[str, str]
             If this is a string, then this should be a column name expression. A column name
             expression is either a column name, a case-insenstive column name or a
             regular expression to match one or more column names.
@@ -383,13 +385,13 @@ class PivotAccessor:
         asc_param = ascending if ascending is not None else list(sort_cols.values())
         return self._df.sort_values(list(sort_cols.keys()), ascending=asc_param)
 
-    def list_to_rows(self, cols: Union[str, Iterable[str]]) -> pd.DataFrame:
+    def list_to_rows(self, cols: str | Iterable[str]) -> pd.DataFrame:
         """
         Expand a list column to individual rows.
 
         Parameters
         ----------
-        cols : Union[str, Iterable[str]]
+        cols : str | Iterable[str]
             The columns to be expanded.
 
         Returns
@@ -418,13 +420,13 @@ class PivotAccessor:
             )
         return data
 
-    def parse_json(self, cols: Union[str, Iterable[str]]) -> pd.DataFrame:
+    def parse_json(self, cols: str | Iterable[str]) -> pd.DataFrame:
         """
         Convert JSON string columns to Python types.
 
         Parameters
         ----------
-        cols : Union[str, Iterable[str]]
+        cols : str | Iterable[str]
             Column or iterable of columns to process
 
         Returns
@@ -490,13 +492,13 @@ def _json_safe_conv(val):
     return val
 
 
-def _extract_values(data: Union[dict, list, str], key_name: str = "") -> dict:
+def _extract_values(data: dict | list | str, key_name: str = "") -> dict:
     """
     Recursively extracts column values from the given key's values.
 
     Parameters
     ----------
-    data: Union[dict, list, str]
+    data: dict | list | str
         Values for the given key in the dictionary.
     key_name : str
         Key for unnested and is obtained by joining all parent key names.

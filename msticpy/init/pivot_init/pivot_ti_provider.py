@@ -4,8 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot TI Provider helper functions."""
+from __future__ import annotations
+
 from collections import defaultdict
-from typing import Callable, Dict, Set, Tuple, Type
+from typing import Callable, Type
 
 import pandas as pd
 
@@ -21,7 +23,7 @@ __author__ = "Ian Hellen"
 
 IOC_TYPES = {"ipv4", "ipv6", "dns", "file_hash", "url"}
 
-TI_ENTITY_ATTRIBS: Dict[str, Tuple[Type, str]] = {
+TI_ENTITY_ATTRIBS: dict[str, tuple[Type, str]] = {
     "ipv4": (entities.IpAddress, "Address"),
     "ipv6": (entities.IpAddress, "Address"),
     "ip": (entities.IpAddress, "Address"),
@@ -68,7 +70,7 @@ def add_ioc_queries_to_entities(ti_lookup: TILookup, container: str = "ti", **kw
 def create_ti_pivot_funcs(ti_lookup: TILookup):
     """Create the TI Pivot functions."""
     ioc_type_supp = _get_supported_ioc_types(ti_lookup)
-    ioc_queries: Dict[str, Dict[str, Callable[..., pd.DataFrame]]] = defaultdict(dict)
+    ioc_queries: dict[str, dict[str, Callable[..., pd.DataFrame]]] = defaultdict(dict)
 
     # Add functions for ioc types that will call all providers
     # Non-IP types
@@ -86,7 +88,7 @@ def register_ti_pivot_providers(ti_lookup: TILookup, pivot: "Pivot"):  # type: i
             ti_prov.register_pivots(PivotRegistration, pivot)
 
 
-def _get_supported_ioc_types(ti_lookup: TILookup) -> Dict[str, Set[str]]:
+def _get_supported_ioc_types(ti_lookup: TILookup) -> dict[str, set[str]]:
     return {
         ti_prov_name: set(ti_prov.supported_types) & IOC_TYPES
         for ti_prov_name, ti_prov in ti_lookup.loaded_providers.items()
@@ -95,7 +97,7 @@ def _get_supported_ioc_types(ti_lookup: TILookup) -> Dict[str, Set[str]]:
 
 def _create_lookup_func(
     ti_lookup: TILookup, ioc, ioc_name, providers
-) -> Tuple[str, str, Callable[..., pd.DataFrame]]:
+) -> tuple[str, str, Callable[..., pd.DataFrame]]:
     suffix = f"_{ioc_name}"
     short_func_name = f"lookup{suffix}"
     func_name = f"{short_func_name}_{ioc_name}"

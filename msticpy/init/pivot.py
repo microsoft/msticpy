@@ -4,14 +4,16 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot functions main module."""
+from __future__ import annotations
 
 import contextlib
 import warnings
+from collections.abc import Iterable
 from datetime import datetime, timedelta, timezone
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, Dict, Iterable, Optional, Type
+from typing import Any, Callable, Type
 
 from .._version import VERSION
 from ..common.timespan import TimeSpan
@@ -53,23 +55,23 @@ class Pivot:
 
     def __init__(
         self,
-        namespace: Dict[str, Any] = None,
+        namespace: dict[str, Any] = None,
         providers: Iterable[Any] = None,
-        timespan: Optional[TimeSpan] = None,
+        timespan: TimeSpan | None = None,
     ):
         """
         Instantiate a Pivot environment.
 
         Parameters
         ----------
-        namespace : Dict[str, Any], optional
+        namespace : dict[str, Any], optional
             To search for and use any current providers, specify
             `namespace=globals()`, by default None
         providers : Iterable[Any], optional
             A list of query providers, TILookup or other providers to
             use (these will override providers of the same type read
             from `namespace`), by default None
-        timespan : Optional[TimeSpan], optional
+        timespan : TimeSpan | None, optional
             The default timespan used by providers that require
             start and end times. By default the time range is initialized
             to be 24 hours prior to the load time.
@@ -80,13 +82,13 @@ class Pivot:
             self.timespan = timespan
 
         # acquire current providers
-        self._providers: Dict[str, Any] = {}
+        self._providers: dict[str, Any] = {}
         self._param_providers = providers
         self._param_namespace = namespace
 
     def reload_pivots(
         self,
-        namespace: Dict[str, Any] = None,
+        namespace: dict[str, Any] = None,
         providers: Iterable[Any] = None,
         clear_existing: bool = False,
     ):
@@ -95,7 +97,7 @@ class Pivot:
 
         Parameters
         ----------
-        namespace : Dict[str, Any], optional
+        namespace : dict[str, Any], optional
             To search for and use any current providers, specify
             `namespace=globals()`, by default None
         providers : Iterable[Any], optional
@@ -132,7 +134,7 @@ class Pivot:
 
     def _get_all_providers(
         self,
-        namespace: Dict[str, Any] = None,
+        namespace: dict[str, Any] = None,
         providers: Iterable[Any] = None,
     ):
         self._providers["TILookup"] = (
@@ -162,12 +164,12 @@ class Pivot:
             Query provider.
 
         """
-        add_data_queries_to_entities(prov, self.get_timespan)
+        add_data_queries_to_entities(prov, self.get_timespan)  # type: ignore[arg-type]
 
     @staticmethod
     def _get_provider_by_type(
         provider_type: Type,
-        namespace: Dict[str, Any] = None,
+        namespace: dict[str, Any] = None,
         providers: Iterable[Any] = None,
     ) -> Any:
         if providers:
@@ -193,13 +195,13 @@ class Pivot:
             return Path(__file__).parent.parent.joinpath(_DEF_PIVOT_REG_FILE)
 
     @property
-    def providers(self) -> Dict[str, Any]:
+    def providers(self) -> dict[str, Any]:
         """
         Return the current set of loaded providers.
 
         Returns
         -------
-        Dict[str, Any]
+        dict[str, Any]
             provider_name, provider_instance
 
         """
@@ -223,13 +225,13 @@ class Pivot:
         """
         return self._providers.get(name)
 
-    def edit_query_time(self, timespan: Optional[TimeSpan] = None):
+    def edit_query_time(self, timespan: TimeSpan | None = None):
         """
         Display a QueryTime widget to get the timespan.
 
         Parameters
         ----------
-        timespan : Optional[TimeSpan], optional
+        timespan : TimeSpan | None, optional
             Pre-populate the timespan shown by the QueryTime editor,
             by default None
 
@@ -278,7 +280,7 @@ class Pivot:
 
         Parameters
         ----------
-        value : Optional[Any], optional
+        value : Any | None, optional
             TimeSpan object or something convertible to
             a TimeSpan, by default None
 
@@ -291,13 +293,13 @@ class Pivot:
             return
         self._query_time.set_time(timespan)
 
-    def set_timespan(self, value: Optional[Any] = None, **kwargs):
+    def set_timespan(self, value: Any | None = None, **kwargs):
         """
         Set the pivot timespan.
 
         Parameters
         ----------
-        value : Optional[Any], optional
+        value : Any | None, optional
             TimeSpan object or something convertible to
             a TimeSpan, by default None
 
@@ -330,7 +332,7 @@ class Pivot:
     @staticmethod
     def register_pivot_providers(
         pivot_reg_path: str,
-        namespace: Dict[str, Any] = None,
+        namespace: dict[str, Any] = None,
         def_container: str = "custom",
         force_container: bool = False,
     ):
@@ -341,7 +343,7 @@ class Pivot:
         ----------
         pivot_reg_path : str
             Path to config yaml file
-        namespace : Dict[str, Any], optional
+        namespace : dict[str, Any], optional
             Namespace to search for existing instances of classes, by default None
         def_container : str, optional
             Container name to use for entity pivot functions, by default "other"
@@ -366,7 +368,7 @@ class Pivot:
     def add_pivot_function(
         func: Callable[[Any], Any],
         pivot_reg: "PivotRegistration" = None,
-        container: Optional[str] = None,
+        container: str | None = None,
         **kwargs,
     ):
         """

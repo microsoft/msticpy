@@ -25,11 +25,12 @@ PluginFolders:
 
 import contextlib
 import sys
+from collections.abc import Iterable
 from importlib import import_module
 from inspect import getmembers, isabstract, isclass
 from pathlib import Path
 from types import ModuleType
-from typing import Iterable, NamedTuple, Optional, Union
+from typing import NamedTuple
 from warnings import warn
 
 from .._version import VERSION
@@ -50,8 +51,8 @@ _PLUGIN_KEY = "PluginFolders"
 class PluginReg(NamedTuple):
     """Plugin registration tuple."""
 
-    reg_dest: Union[type, ModuleType]  # class or module containing CUSTOM_PROVIDERS
-    name_property: Optional[str]  # Custom name(s) for provider
+    reg_dest: type | ModuleType  # class or module containing CUSTOM_PROVIDERS
+    name_property: str | None  # Custom name(s) for provider
 
 
 # This dictionary maps the class of the plugin to
@@ -67,7 +68,7 @@ _PLUGIN_TYPES = {
 }
 
 
-def read_plugins(plugin_paths: Union[str, Iterable[str]]):
+def read_plugins(plugin_paths: str | Iterable[str]):
     """Load plugins from folders specified in msticpyconfig.yaml."""
     plugin_config = [plugin_paths] if isinstance(plugin_paths, str) else plugin_paths
     if not plugin_config:
@@ -79,7 +80,7 @@ def read_plugins(plugin_paths: Union[str, Iterable[str]]):
         load_plugins_from_path(plugin_path=plugin_path)
 
 
-def load_plugins_from_path(plugin_path: Union[str, Path]):
+def load_plugins_from_path(plugin_path: str | Path):
     """Load all compatible plugins found in plugin_path."""
     sys.path.append(str(plugin_path))
     for module_file in Path(plugin_path).glob("*.py"):

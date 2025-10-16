@@ -4,8 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """msticpy IPython magics."""
+from __future__ import annotations
+
 import re
-from typing import List, Tuple
 
 # pylint: enable=unused-import
 from IPython import get_ipython
@@ -133,7 +134,7 @@ if is_ipython():
             "-i",
             help="The types of IoC to search for (comma-separated string)",
         )
-        def ioc(self, line="", cell=None) -> List[Tuple[str, List[str]]]:
+        def ioc(self, line="", cell=None) -> list[tuple[str, list[str]]]:
             """
             Ioc Extract IPython magic extension.
 
@@ -146,7 +147,7 @@ if is_ipython():
 
             Returns
             -------
-            List[Tuple[str, List[str]]]
+            list[tuple[str, list[str]]]
                 List of tuples of IoCs found grouped by type.
 
             """
