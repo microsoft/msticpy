@@ -76,7 +76,7 @@ def get_retrieval_assistant_agent(system_message: str = "") -> "AssistantAgent":
     """
     if not AUTOGEN_AVAILABLE:
         raise MsticpyImportExtraError(
-            "Autogen packages not installed. "
+            "Autogen packages not installed. Only supported on Python 3.10 or later."
             "Install with 'pip install msticpy[aiagents]' or "
             "'pip install autogen-agentchat autogen-ext[retrievechat]'",
             title="Error importing autogen packages",
