@@ -4,8 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
 import ipywidgets as widgets
 from ipywidgets import Layout
@@ -28,11 +29,11 @@ class Lookback(IPyDisplayMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        default: Optional[int] = None,
+        default: int | None = None,
         description: str = "Select time ({units}) to look back",
         origin_time: datetime = None,
-        min_value: Optional[int] = None,
-        max_value: Optional[int] = None,
+        min_value: int | None = None,
+        max_value: int | None = None,
         units: str = "hour",
         auto_display: bool = False,
         **kwargs,

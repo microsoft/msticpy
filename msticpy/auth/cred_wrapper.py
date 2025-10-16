@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Credential wrapper to expose ADAL and MSAL credentials."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from azure.core.pipeline import PipelineContext, PipelineRequest
 from azure.core.pipeline.policies import BearerTokenCredentialPolicy
@@ -42,7 +44,7 @@ class CredentialWrapper(BasicTokenAuthentication):
 
         """
         super().__init__(None)  # type: ignore
-        self.token: Dict[str, Any] = {}
+        self.token: dict[str, Any] = {}
         if credential is None:
             credential = DefaultAzureCredential()
 

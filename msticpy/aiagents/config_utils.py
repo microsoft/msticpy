@@ -4,18 +4,19 @@
 # license information.
 # --------------------------------------------------------------------------
 """Utility Modules related to AI agents used in MSTICpy."""
+from __future__ import annotations
 
 import os
-from typing import Callable, Dict, List, Union
+from typing import Callable
 
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
 from ..common.exceptions import MsticpyUserConfigError
 from ..common.pkg_config import get_config
 
-ConfigItem = Dict[str, Union[str, Callable]]
-ConfigList = List[ConfigItem]
-Config = Dict[str, Union[str, float, ConfigList]]
+ConfigItem = dict[str, str | Callable]
+ConfigList = list[ConfigItem]
+Config = dict[str, str | float | ConfigList]
 
 token_provider = get_bearer_token_provider(
     DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"

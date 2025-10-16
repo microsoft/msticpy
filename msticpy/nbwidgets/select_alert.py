@@ -4,12 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
+from __future__ import annotations
 
 import contextlib
 import json
 import random
+from collections.abc import Callable
 from json import JSONDecodeError
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Any
 
 import ipywidgets as widgets
 import pandas as pd
@@ -52,8 +54,8 @@ class SelectAlert(IPyDisplayMixin):
     def __init__(
         self,
         alerts: pd.DataFrame,
-        action: Callable[..., Optional[Tuple]] = None,
-        columns: List[str] = None,
+        action: Callable[..., tuple | None] = None,
+        columns: list[str] = None,
         auto_display: bool = False,
         id_col: str = "SystemAlertId",
         **kwargs,
@@ -120,7 +122,7 @@ class SelectAlert(IPyDisplayMixin):
         # setup to use updatable display objects
         rand_id = random.randint(0, 999999)  # nosec
         self._output_id = f"{self.__class__.__name__}_{rand_id}"
-        self._disp_elems: List[Any] = []
+        self._disp_elems: list[Any] = []
 
         # set up observer callbacks
         self._w_filter_alerts.observe(self._update_options, names="value")
@@ -287,7 +289,7 @@ class AlertSelector(SelectAlert):
         self,
         alerts: pd.DataFrame,
         action: Callable[..., None] = None,
-        columns: List[str] = None,
+        columns: list[str] = None,
         auto_display: bool = False,
     ):
         """

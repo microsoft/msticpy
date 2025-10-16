@@ -9,10 +9,10 @@ Module for MSTICpy documentation utilities and retrieval agent configuration.
 Includes functions to find documentation files and to set up retrieval
 agents that assist security analysts by answering questions based on MSTICpy documentation.
 """
+from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import List, Optional
 
 from autogen.agentchat.chat import ChatResult
 from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistantAgent
@@ -28,7 +28,7 @@ else:
     import importlib.resources as pkg_resources
 
 
-def find_rst_files() -> List[str]:
+def find_rst_files() -> list[str]:
     """
     Find all .rst files in the docs/source directory of 'msticpy' package.
 
@@ -75,7 +75,7 @@ def get_retrieval_assistant_agent(system_message: str = "") -> RetrieveAssistant
 
 
 def get_retrieval_user_proxy_agent(
-    customized_prompt: Optional[str] = None,
+    customized_prompt: str | None = None,
 ) -> RetrieveUserProxyAgent:
     """
     Create and return a RetrieveUserProxyAgent.

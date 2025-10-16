@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
-from typing import Any, Dict, List, Union
+from __future__ import annotations
+
+from typing import Any
 
 import ipywidgets as widgets
 
@@ -21,8 +23,8 @@ class SelectSubset(IPyDisplayMixin):
 
     def __init__(
         self,
-        source_items: Union[Dict[str, str], List[Any]],
-        default_selected: Union[Dict[str, str], List[Any]] = None,
+        source_items: dict[str, str] | list[Any],
+        default_selected: dict[str, str] | list[Any] | None = None,
         display_filter: bool = True,
         auto_display: bool = True,
     ):
@@ -101,12 +103,12 @@ class SelectSubset(IPyDisplayMixin):
             self.display()
 
     @property
-    def value(self) -> List[Any]:
+    def value(self) -> list[Any]:
         """Return currently selected value or values."""
         return self.selected_values
 
     @property
-    def selected_items(self) -> List[Any]:
+    def selected_items(self) -> list[Any]:
         """
         Return a list of the selected items.
 
@@ -115,14 +117,14 @@ class SelectSubset(IPyDisplayMixin):
 
         Returns
         -------
-        List[Any]
+        list[Any]
             List of items in the selected list.
 
         """
         return list(self._select_list.options)
 
     @property
-    def selected_values(self) -> List[Any]:
+    def selected_values(self) -> list[Any]:
         """
         Return list of selected values.
 
@@ -131,7 +133,7 @@ class SelectSubset(IPyDisplayMixin):
 
         Returns
         -------
-        List[Any]
+        list[Any]
             List of selected item values.
 
         """

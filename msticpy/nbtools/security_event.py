@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for SecurityEvent class."""
-from typing import Any, Dict, List
+from __future__ import annotations
+
+from typing import Any
 
 import pandas as pd
 from deprecated.sphinx import deprecated
@@ -45,26 +47,26 @@ class SecurityEvent(SecurityBase):
 
     # Properties
     @property
-    def entities(self) -> List[Entity]:
+    def entities(self) -> list[Entity]:
         """
         Return the list of entities extracted from the event.
 
         Returns
         -------
-        List[Entity]
+        list[Entity]
             The list of entities extracted from the event.
 
         """
         return list(self._entities)
 
     @property
-    def query_params(self) -> Dict[str, Any]:
+    def query_params(self) -> dict[str, Any]:
         """
         Query parameters derived from alert.
 
         Returns
         -------
-            Dict[str, Any]
+            dict[str, Any]
                 Dictionary of parameter names
 
         """

@@ -4,9 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
+from __future__ import annotations
+
 from abc import ABC
 from enum import IntEnum
-from typing import Any, Dict, List, Optional, ClassVar
+from typing import Any, ClassVar
 from weakref import WeakValueDictionary
 
 from IPython.display import display
@@ -34,21 +36,21 @@ class RegisteredWidget(ABC):
     the same cell after entering values.
     """
 
-    ALLOWED_KWARGS: ClassVar[List[str]] = [
+    ALLOWED_KWARGS: ClassVar[list[str]] = [
         "id_vals",
         "val_attrs",
         "nb_params",
         "name_space",
         "register",
     ]
-    _NB_PARAMS: ClassVar[Dict[str, str]] = {}
+    _NB_PARAMS: ClassVar[dict[str, str]] = {}
 
     def __init__(
         self,
-        id_vals: Optional[List[Any]] = None,
-        val_attrs: Optional[List[str]] = None,
-        nb_params: Optional[Dict[str, str]] = None,
-        name_space: Dict[str, Any] = globals(),
+        id_vals: list[Any] | None = None,
+        val_attrs: list[str] | None = None,
+        nb_params: dict[str, str] | None = None,
+        name_space: dict[str, Any] = globals(),
         register: bool = True,
         **kwargs,
     ):
@@ -145,7 +147,7 @@ def parse_time_unit(unit_str: str) -> TimeUnit:
     return TimeUnit.MINUTE
 
 
-def default_max_buffer(max_default: Optional[int], default: int, unit: TimeUnit) -> int:
+def default_max_buffer(max_default: int | None, default: int, unit: TimeUnit) -> int:
     """Return the max time buffer for a give time unit."""
     mag_default = abs(int(default * 4))
     if max_default is not None:
@@ -160,7 +162,7 @@ def default_max_buffer(max_default: Optional[int], default: int, unit: TimeUnit)
     return max(240, mag_default)
 
 
-def default_before_after(default: Optional[int], unit: TimeUnit) -> int:
+def default_before_after(default: int | None, unit: TimeUnit) -> int:
     """Return default before and after bounds for a TimeUnit."""
     if default is not None:
         return abs(default)
