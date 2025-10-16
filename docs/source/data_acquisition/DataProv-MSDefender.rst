@@ -16,8 +16,10 @@ M365 Defender Configuration
 Creating a Client App for M365 Defender
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Microsoft 365 Defender APIs can be accessed in both `application <https://learn.microsoft.com/en-us/defender-endpoint/api/exposed-apis-create-app-webapp>`
-and `delegated user contexts <https://learn.microsoft.com/en-us/defender-endpoint/api/exposed-apis-create-app-nativeapp>`.
+Microsoft 365 Defender APIs can be accessed in both
+`application <https://learn.microsoft.com/en-us/defender-endpoint/api/exposed-apis-create-app-webapp>`
+and
+`delegated user contexts <https://learn.microsoft.com/en-us/defender-endpoint/api/exposed-apis-create-app-nativeapp>`.
 Accessing Microsoft 365 Defender APIs as an application requires
 either a client secret or certificate, while delegated user auth requires
 an interactive signin through a browser or via device code.
@@ -25,7 +27,7 @@ an interactive signin through a browser or via device code.
 As such, the details on registering an Azure AD application for MS 365 Defender
 are different for application and delegated user auth scenarios. Please
 see the above links for more information. Notably, delegated user auth
-scenarios do not require a application credential and thus is preferrable.
+scenarios do not require a application credential and thus is preferable.
 
 For delegated user auth scenarios, ensure that the application has a
 "Mobile or Desktop Application" redirect URI configured as `http://localhost`.
@@ -75,7 +77,7 @@ If connecting to the MS Defender 365 API using application auth,
 we strongly recommend storing the client secret value
 in Azure Key Vault. You can replace the text value with a referenced
 to a Key Vault secret using the MSTICPy configuration editor.
-See :doc:`msticpy Settings Editor <../getting_started/SettingsEditor>`)
+See :doc:`msticpy Settings Editor <../getting_started/SettingsEditor>`
 
 Your configuration when using Key Vault should look like the following:
 
@@ -89,7 +91,7 @@ Your configuration when using Key Vault should look like the following:
             TenantId: "TENANT ID"
 
 You can create multiple instances of M365 Defender settings by adding
-an instance string to the "MicrosoftDefender" section name.
+an instance suffix to the "MicrosoftDefender" section name.
 
 .. code:: yaml
 
@@ -133,6 +135,81 @@ See :doc:`msticpy Settings Editor <../getting_started/SettingsEditor>`.
             Certificate: "Path to certificate"
             PrivateKeySecret:
                 KeyVault:
+
+Federated Authentication Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Federated authentication allows you to authenticate using credentials from
+Microsoft Entra ID in place of an Application client secret or certificate.
+
+When using federated authentication with MS Defender, you authenticate as a user
+rather than as an application, which means:
+
+* You don't need to store client secrets or certificates
+* Authentication uses your organization's federated identity provider credentials
+* You benefit from your organization's security policies (MFA, conditional access, etc.)
+* Permissions are granted based on your user account rather than an app registration
+* The authentication flow automatically redirects your Microsoft Entra ID
+
+To use federated authentication with MS Defender, configure your settings
+to include a username but **not** a client secret or certificate:
+
+.. code:: yaml
+
+      MicrosoftDefender:
+          Args:
+            ClientId: "CLIENT ID"
+            TenantId: "TENANT ID"
+            UserName: "user@domain.com"
+            Cloud: "global"
+
+The presence of a ``UserName`` field triggers delegated (user) authentication.
+When you connect, the authentication flow will:
+
+1. Contact your Microsoft Entra ID tenant
+2. Detect that your user account is federated
+3. Automatically redirect to your organization's configured identity provider
+4. Return to Entra ID after successful authentication with your IdP
+5. Issue the token needed to access MS Defender APIs
+
+**Federated Authentication with Multiple Tenants**
+
+If you work with multiple tenants that use federated authentication:
+
+.. code:: yaml
+
+      MicrosoftDefender-TenantA:
+          Args:
+            ClientId: "CLIENT ID A"
+            TenantId: "TENANT ID A"
+            UserName: "user@tenantA.com"
+            Cloud: "global"
+      MicrosoftDefender-TenantB:
+          Args:
+            ClientId: "CLIENT ID B"
+            TenantId: "TENANT ID B"
+            UserName: "user@tenantB.com"
+            Cloud: "global"
+
+**Token Caching Location**
+
+By default, authentication tokens are cached in a file named ``token_cache.bin``
+in the current directory. You can specify a custom location:
+
+.. code:: yaml
+
+      MicrosoftDefender:
+          Args:
+            ClientId: "CLIENT ID"
+            TenantId: "TENANT ID"
+            UserName: "user@domain.com"
+            Location: "/path/to/custom/token_cache.bin"
+            Cloud: "global"
+
+.. note:: When using federated authentication, ensure your app registration
+    has a "Mobile or Desktop Application" redirect URI configured as
+    ``http://localhost``. This is required for the interactive authentication flow.
+
 
 Loading a QueryProvider for M365 Defender
 -----------------------------------------
@@ -209,6 +286,59 @@ auth_type to "device".
 .. code:: ipython3
 
         mdatp_prov.connect(delegated_auth=True, auth_type="device")
+
+**Connecting with Federated Authentication**
+
+When using federated authentication (username-based auth), the provider
+will automatically use delegated authentication. You can choose between
+interactive browser authentication (default) or device code authentication:
+
+.. code:: ipython3
+
+        # Browser-based authentication (default for federated users)
+        mdatp_prov.connect()
+
+        # Or explicitly specify interactive authentication
+        mdatp_prov.connect(auth_type="interactive")
+
+        # Device code authentication (useful in restricted environments)
+        mdatp_prov.connect(auth_type="device")
+
+When using browser-based authentication with a federated identity provider,
+a browser window will open and redirect you to your organization's login page.
+After authenticating with your IdP (which may include MFA), you'll be
+redirected back and the connection will complete automatically.
+
+For device code authentication, you'll be presented with a code and URL.
+Open the URL in any browser (on any device), enter the code, and authenticate
+through your federated identity provider.
+
+**Connecting with Federated Auth Using Connection Parameters**
+
+You can also pass federated authentication parameters directly:
+
+.. code:: ipython3
+
+        mdatp_prov.connect(
+            tenant_id='your-tenant-id',
+            client_id='your-client-id',
+            username='user@domain.com',
+            auth_type='interactive'  # or 'device'
+        )
+
+Or as a connection string:
+
+.. code:: ipython3
+
+        conn_str = (
+            "tenant_id='243bb6be-4136-4b64-9055-fb661594199a'; "
+            "client_id='a5b24e23-a96a-4472-b729-9e5310c83e20'; "
+            "username='user@domain.com'"
+        )
+        mdatp_prov.connect(conn_str, auth_type='interactive')
+
+.. note:: The ``delegated_auth`` parameter is automatically set to ``True``
+    when a username is provided, so you don't need to specify it explicitly.
 
 You can also pass connection parameters as
 keyword arguments or a connection string.
