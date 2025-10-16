@@ -98,6 +98,7 @@ def get_secrets_client_func() -> Callable[..., "SecretsClient" | None]:
 
 # Create a SecretsClient instance if it can be imported when
 # the module is imported.
+# pylint: disable=invalid-name
 _SECRETS_CLIENT: Any = None
 # Create the secrets client closure
 _SET_SECRETS_CLIENT: Callable[..., "SecretsClient" | None] = get_secrets_client_func()

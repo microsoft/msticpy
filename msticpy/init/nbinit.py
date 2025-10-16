@@ -192,7 +192,8 @@ def _get_verbosity_setting() -> Callable[[int | None], int]:
     return _verbose
 
 
-_VERBOSITY: Callable[[int | None], int] = _get_verbosity_setting()
+# pylint: disable=invalid-name
+VERBOSITY: Callable[[int | None], int] = _get_verbosity_setting()
 
 # pylint: disable=use-dict-literal
 _NB_IMPORTS = [
@@ -442,7 +443,7 @@ def init_notebook(
     if friendly_exceptions is None:
         friendly_exceptions = get_config("msticpy.FriendlyExceptions", None)
     if friendly_exceptions:
-        if _VERBOSITY() == 2:  # type: ignore
+        if VERBOSITY() == 2:  # type: ignore
             _pr_output("Friendly exceptions enabled.")
         InteractiveShell.showtraceback = _hook_ipython_exceptions(  # type: ignore
             InteractiveShell.showtraceback,
@@ -462,7 +463,7 @@ def init_notebook(
 
 def _pr_output(*args):
     """Output to IPython display or print."""
-    if not _VERBOSITY():
+    if not VERBOSITY():
         return
     if is_ipython():
         display(HTML(" ".join([*args, "<br>"]).replace("\n", "<br>")))
@@ -581,7 +582,7 @@ def _set_verbosity(**kwargs):
         verbosity = 2 if verb_param else 0
     elif isinstance(verb_param, int):
         verbosity = min(2, max(0, verb_param))
-    _VERBOSITY(verbosity)
+    VERBOSITY(verbosity)
 
 
 def _detect_env(env_name: Literal["aml", "synapse"], **kwargs):
@@ -854,7 +855,7 @@ def _imp_module(nm_spc: dict[str, Any], module_name: str, alias: str | None = No
         nm_spc[alias] = mod
     else:
         nm_spc[module_name] = mod
-    if _VERBOSITY() == 2:  # type: ignore
+    if VERBOSITY() == 2:  # type: ignore
         _pr_output(f"{module_name} imported (alias={alias})")
     return mod
 
@@ -870,7 +871,7 @@ def _imp_module_all(nm_spc: dict[str, Any], module_name):
         if item.startswith("_"):
             continue
         nm_spc[item] = getattr(imported_mod, item)
-    if _VERBOSITY() == 2:  # type: ignore
+    if VERBOSITY() == 2:  # type: ignore
         _pr_output(f"All items imported from {module_name}")
 
 
@@ -898,7 +899,7 @@ def _imp_from_package(
         nm_spc[alias] = obj
     else:
         nm_spc[tgt] = obj
-    if _VERBOSITY() == 2:  # type: ignore
+    if VERBOSITY() == 2:  # type: ignore
         _pr_output(f"{tgt} imported from {pkg} (alias={alias})")
     return obj
 
@@ -931,7 +932,7 @@ def _check_and_reload_pkg(
                 importlib.reload(pkg)
             else:
                 _imp_module(nm_spc, pkg_name, alias=alias)
-    if _VERBOSITY() == 2:  # type: ignore
+    if VERBOSITY() == 2:  # type: ignore
         _pr_output(f"{pkg_name} imported version {pkg.__version__}")
     return warn_mssg
 

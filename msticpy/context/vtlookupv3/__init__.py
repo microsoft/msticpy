@@ -8,7 +8,7 @@ import contextlib
 
 from ..._version import VERSION
 
-# pylint: disable=unused-import
+# pylint: disable=unused-import, invalid-name
 # flake8: noqa: F401
 VT3_AVAILABLE = False
 with contextlib.suppress(ImportError):

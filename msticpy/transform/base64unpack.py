@@ -116,7 +116,8 @@ def _get_trace_setting() -> Callable[[Optional[bool]], bool]:
     return _trace_enabled
 
 
-_GET_TRACE = _get_trace_setting()
+# pylint: disable=invalid-name
+GET_TRACE = _get_trace_setting()
 
 
 def _get_utf16_setting() -> Callable[[Optional[bool]], bool]:
@@ -132,7 +133,8 @@ def _get_utf16_setting() -> Callable[[Optional[bool]], bool]:
     return _utf16_enabled
 
 
-_GET_UTF16 = _get_utf16_setting()
+# pylint: disable=invalid-name
+GET_UTF16 = _get_utf16_setting()
 
 
 @export
@@ -203,8 +205,8 @@ def unpack_items(
     frame. This allows you to re-join the output data to the input data.
 
     """
-    _GET_TRACE(trace)
-    _GET_UTF16(utf16)
+    GET_TRACE(trace)
+    GET_UTF16(utf16)
 
     if input_string is not None:
         input_string = _b64_string_pad(input_string)
@@ -252,8 +254,8 @@ def unpack(
       replaced by the results of the decoding
 
     """
-    _GET_TRACE(trace)
-    _GET_UTF16(utf16)
+    GET_TRACE(trace)
+    GET_UTF16(utf16)
 
     return _decode_b64_string_recursive(input_string)
 
@@ -312,8 +314,8 @@ def unpack_df(
       frame.
 
     """
-    _GET_TRACE(trace)
-    _GET_UTF16(utf16)
+    GET_TRACE(trace)
+    GET_UTF16(utf16)
 
     output_df = pd.DataFrame(columns=BinaryRecord._fields)
     row_results: List[pd.DataFrame] = []
@@ -460,7 +462,7 @@ def _add_to_results(
 
 
 def _debug_print_trace(*args):
-    if _GET_TRACE():
+    if GET_TRACE():
         for arg in args:
             print(arg, end="")
         print()
@@ -587,7 +589,7 @@ def _get_byte_encoding(bytes_array: bytes) -> BinaryRecord:
     """
     result_rec = _empty_binary_rec()
     printable_bytes = _as_byte_string(bytes_array)
-    if _GET_UTF16():  # type: ignore
+    if GET_UTF16():  # type: ignore
         try:
             # Difficult to tell the difference between a real unicode string
             # and a binary string that happens to decode to a utf-16 string.

@@ -59,7 +59,7 @@ class DocsRagMagic(Magics):
                 question=question,
             )
 
-        answer = response.summary
+        answer = response.summary  # type: ignore[attr-defined]
 
         display_markdown(f"\n**Question**: {question}", raw=True)
         display_markdown(f"\n**Answer**: {answer}", raw=True)

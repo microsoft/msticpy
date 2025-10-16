@@ -41,6 +41,7 @@ _MITRE_JSON_URL = (
 _MTR_TAC_CAT_URI = "https://attack.mitre.org/tactics/{cat}/"
 _MTR_TECH_CAT_URI = "https://attack.mitre.org/techniques/{cat}/"
 
+# pylint: disable=invalid-name
 MITRE_TECHNIQUES: Optional[pd.DataFrame] = None
 MITRE_TACTICS: Optional[pd.DataFrame] = None
 

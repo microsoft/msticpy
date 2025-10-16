@@ -13,7 +13,7 @@ from ...common.utility import export
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-
+# pylint: disable=invalid-name
 ENTITY_ENUMS: Dict[str, Type] = {}
 
 
