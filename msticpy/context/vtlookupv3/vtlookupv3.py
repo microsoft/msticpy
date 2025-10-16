@@ -32,12 +32,12 @@ try:
         from vt.object import Object
 
 except ImportError as imp_err:
-    err_msg: str = (
+    ERR_MSG: str = (
         "Cannot use this feature without vt-py, vt-graph-api and "
         "nest_asyncio packages installed."
     )
     raise MsticpyImportExtraError(
-        err_msg,
+        ERR_MSG,
         title="Error importing VirusTotal modules.",
         extra="vt3",
     ) from imp_err

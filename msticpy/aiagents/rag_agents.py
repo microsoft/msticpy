@@ -12,14 +12,20 @@ agents that assist security analysts by answering questions based on MSTICpy doc
 
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
-from autogen.agentchat.chat import ChatResult
-from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistantAgent
-from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProxyAgent
+try:
+    # pylint: disable=import-error
+    from autogen_agentchat.agents import AssistantAgent
+    from autogen_agentchat.task import MaxMessageTermination
+    from autogen_agentchat.teams import RoundRobinGroupChat
+    from autogen_ext.models.openai import OpenAIChatCompletionClient
 
-from .._version import VERSION
-from ..common.exceptions import MsticpyUserConfigError
+    AUTOGEN_AVAILABLE = True
+except ImportError:
+    AUTOGEN_AVAILABLE = False
+
+from ..common.exceptions import MsticpyImportExtraError, MsticpyUserConfigError
 from .config_utils import get_autogen_config_from_msticpyconfig
 
 if sys.version_info < (3, 9):
@@ -48,9 +54,9 @@ def find_rst_files() -> List[str]:
     return rst_files
 
 
-def get_retrieval_assistant_agent(system_message: str = "") -> RetrieveAssistantAgent:
+def get_retrieval_assistant_agent(system_message: str = "") -> "AssistantAgent":
     """
-    Create and return a RetrieveAssistantAgent.
+    Create and return an AssistantAgent.
 
     Parameters
     ----------
@@ -59,26 +65,108 @@ def get_retrieval_assistant_agent(system_message: str = "") -> RetrieveAssistant
 
     Returns
     -------
-    RetrieveAssistantAgent
-        Configured RetrieveAssistantAgent instance.
+    AssistantAgent
+        Configured AssistantAgent instance.
+
+    Raises
+    ------
+    MsticpyImportExtraError
+        If autogen packages are not installed.
 
     """
+    if not AUTOGEN_AVAILABLE:
+        raise MsticpyImportExtraError(
+            "Autogen packages not installed. "
+            "Install with 'pip install msticpy[aiagents]' or "
+            "'pip install autogen-agentchat autogen-ext[retrievechat]'",
+            title="Error importing autogen packages",
+            extra="aiagents",
+        )
+
     if not system_message:
         system_message = (
             "You are a helpful assistant to security analysts using MSTICpy."
         )
-    return RetrieveAssistantAgent(
+
+    autogen_config = get_autogen_config_from_msticpyconfig()
+    model_client = _create_model_client(autogen_config)
+
+    return AssistantAgent(
         name="assistant",
+        model_client=model_client,
         system_message=system_message,
-        llm_config=get_autogen_config_from_msticpyconfig(),
+    )
+
+
+def _create_model_client(
+    autogen_config: Dict[str, Any]
+) -> "OpenAIChatCompletionClient":
+    """
+    Create an OpenAI model client from autogen configuration.
+
+    Parameters
+    ----------
+    autogen_config : Dict[str, Any]
+        Autogen configuration dictionary.
+
+    Returns
+    -------
+    OpenAIChatCompletionClient
+        Configured model client.
+
+    Raises
+    ------
+    MsticpyUserConfigError
+        If configuration is invalid.
+
+    """
+    if not AUTOGEN_AVAILABLE:
+        raise MsticpyImportExtraError(
+            "Autogen packages not installed. "
+            "Install with 'pip install msticpy[aiagents]' or "
+            "'pip install autogen-agentchat autogen-ext[retrievechat]'",
+            title="Error importing autogen packages",
+            extra="aiagents",
+        )
+    if "config_list" not in autogen_config or not isinstance(
+        autogen_config["config_list"], list
+    ):
+        raise MsticpyUserConfigError(
+            "Invalid Autogen configuration: 'config_list' not found or not a list!"
+        )
+
+    if not autogen_config["config_list"]:
+        raise MsticpyUserConfigError(
+            "Invalid Autogen configuration: 'config_list' is empty!"
+        )
+
+    default_config = autogen_config["config_list"][0]
+
+    if "model" not in default_config:
+        raise MsticpyUserConfigError(
+            "Invalid Autogen configuration: 'model' not found in config!"
+        )
+
+    model = default_config["model"]
+    api_key = default_config.get("api_key")
+    base_url = default_config.get("base_url")
+
+    return OpenAIChatCompletionClient(
+        model=model,
+        api_key=api_key,
+        base_url=base_url,
     )
 
 
 def get_retrieval_user_proxy_agent(
     customized_prompt: Optional[str] = None,
-) -> RetrieveUserProxyAgent:
+) -> "AssistantAgent":
     """
-    Create and return a RetrieveUserProxyAgent.
+    Create and return an AssistantAgent configured for RAG.
+
+    Note: In autogen 0.4+, RAG functionality is handled through
+    extensions and requires additional setup with vector databases.
+    This function returns a basic AssistantAgent.
 
     Parameters
     ----------
@@ -87,75 +175,86 @@ def get_retrieval_user_proxy_agent(
 
     Returns
     -------
-    RetrieveUserProxyAgent
-        Configured RetrieveUserProxyAgent instance.
+    AssistantAgent
+        Configured AssistantAgent instance.
 
     Raises
     ------
     MsticpyUserConfigError
         Autogen settings not found in msticpyconfig.yaml configuration
+    MsticpyImportExtraError
+        If autogen packages are not installed.
 
     """
-    rst_files = find_rst_files()
-    autogen_config = get_autogen_config_from_msticpyconfig()
-
-    default_model = None
-    if "config_list" in autogen_config and isinstance(
-        autogen_config["config_list"], list
-    ):
-        if autogen_config["config_list"]:
-            default_config = autogen_config["config_list"][0]
-            if "model" in default_config:
-                default_model = default_config["model"]
-
-    if not default_model:
-        raise MsticpyUserConfigError(
-            "Could not find a valid default Autogen model in msticpyconfig.yaml configuration!"
+    if not AUTOGEN_AVAILABLE:
+        raise MsticpyImportExtraError(
+            "Autogen packages not installed. "
+            "Install with 'pip install msticpy[aiagents]' or "
+            "'pip install autogen-agentchat autogen-ext[retrievechat]'",
+            title="Error importing autogen packages",
+            extra="aiagents",
         )
+    autogen_config = get_autogen_config_from_msticpyconfig()
+    model_client = _create_model_client(autogen_config)
 
-    return RetrieveUserProxyAgent(
+    system_message = customized_prompt or (
+        "You are a helpful assistant with access to MSTICpy documentation. "
+        "Answer questions about MSTICpy based on the provided context."
+    )
+
+    return AssistantAgent(
         name="ragproxyagent",
-        human_input_mode="NEVER",
-        max_consecutive_auto_reply=1,
-        is_termination_msg=lambda x: True,
-        retrieve_config={
-            "task": "default",
-            "docs_path": rst_files,
-            "chunk_token_size": 2000,
-            "customized_prompt": customized_prompt,
-            "model": default_model,
-            "vector_db": "chroma",
-            "collection_name": f"MSTICpy_Docs_{VERSION}",
-            "get_or_create": True,
-        },
-        code_execution_config=False,
+        model_client=model_client,
+        system_message=system_message,
     )
 
 
-def ask_question(
-    assistant_agent: RetrieveAssistantAgent,
-    user_proxy_agent: RetrieveUserProxyAgent,
+async def ask_question(
+    assistant_agent: "AssistantAgent",
+    user_proxy_agent: "AssistantAgent",
     question: str,
-) -> ChatResult:
+) -> str:
     """
     Ask a question using the assistant and user proxy agents.
 
     Parameters
     ----------
-    assistant_agent : RetrieveAssistantAgent
+    assistant_agent : AssistantAgent
         The assistant agent to use.
-    user_proxy_agent : RetrieveUserProxyAgent
+    user_proxy_agent : AssistantAgent
         The user proxy agent to use.
     question : str
         The question to ask.
 
     Returns
     -------
-    ChatResult
-        The result of the chat interaction.
+    str
+        The response from the assistant.
+
+    Raises
+    ------
+    MsticpyImportExtraError
+        If autogen packages are not installed.
 
     """
-    assistant_agent.reset()
-    return user_proxy_agent.initiate_chat(
-        assistant_agent, message=user_proxy_agent.message_generator, problem=question
+    if not AUTOGEN_AVAILABLE:
+        raise MsticpyImportExtraError(
+            "Autogen packages not installed. "
+            "Install with 'pip install msticpy[aiagents]' or "
+            "'pip install autogen-agentchat autogen-ext[retrievechat]'",
+            title="Error importing autogen packages",
+            extra="aiagents",
+        )
+    # Create a team with both agents
+    team = RoundRobinGroupChat(
+        [user_proxy_agent, assistant_agent],
+        termination_condition=MaxMessageTermination(max_messages=10),
     )
+
+    # Run the team
+    result = await team.run(task=question)
+
+    # Return the last message content
+    if result.messages:
+        return result.messages[-1].content
+    return "No response generated."
