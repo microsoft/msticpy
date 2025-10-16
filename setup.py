@@ -56,8 +56,8 @@ EXTRAS = {
     "riskiq": ["passivetotal>=2.5.3", "requests>=2.31.0"],
     "panel": [],  # now in core install
     "aiagents": [
-        "autogen-agentchat>=0.4.0",
-        "autogen-ext>=0.4.0",
+        'autogen-agentchat>=0.4.0; python_version >= "3.10"',
+        'autogen-ext>=0.4.0; python_version >= "3.10"',
     ],
 }
 extras_all = [

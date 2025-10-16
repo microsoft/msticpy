@@ -45,8 +45,8 @@ packaging>=24.0
 pandas>=1.4.0, <3.0.0
 panel>=1.2.1
 passivetotal>=2.5.3
-autogen-agentchat>=0.4.0
-autogen-ext>=0.4.0
+autogen-agentchat>=0.4.0; python_version >= "3.10"
+autogen-ext>=0.4.0; python_version >= "3.10"
 pydantic>=1.8.0, <3.0.0
 pygments>=2.0.0
 pyjwt>=2.3.0
