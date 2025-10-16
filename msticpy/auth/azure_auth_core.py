@@ -10,10 +10,11 @@ from __future__ import annotations
 import logging
 import os
 import sys
+from collections.abc import Callable, Iterator
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, ClassVar, Iterator
+from typing import Any, ClassVar
 
 from azure.common.credentials import get_cli_profile
 from azure.core.credentials import TokenCredential

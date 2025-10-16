@@ -7,8 +7,9 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from functools import partial
-from typing import Any, Callable
+from typing import Any
 
 from .._version import VERSION
 from ..common import pkg_config as config

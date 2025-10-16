@@ -9,9 +9,9 @@ from __future__ import annotations
 import itertools
 import warnings
 from collections import abc, defaultdict, namedtuple
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from functools import wraps
-from typing import Any, Callable, Type
+from typing import Any, Type
 
 import pandas as pd
 
@@ -363,7 +363,7 @@ PARAM_ENTITY_MAP["cmd_line"] = PARAM_ENTITY_MAP["commandline"]
 
 def add_data_queries_to_entities(
     provider: "QueryProvider",  # type: ignore  # noqa: F821
-    get_timespan: Callable[[Any, TimeSpan], TimeSpan],
+    get_timespan: Callable[[], TimeSpan],
 ):
     """
     Add data queries from `provider` to entities.
@@ -372,7 +372,7 @@ def add_data_queries_to_entities(
     ----------
     provider : QueryProvider
         Query provider
-    get_timespan : Callable[[Any, TimeSpan], TimeSpan]
+    get_timespan : Callable[[], TimeSpan]
         Callback to get time span. If None
         it will use the Pivot built-in time range.
 
@@ -402,7 +402,7 @@ def add_data_queries_to_entities(
 def add_queries_to_entities(
     prov_qry_funcs: PivotQueryFunctions,
     container: str,
-    get_timespan: Callable[[Any, TimeSpan], TimeSpan],
+    get_timespan: Callable[[], TimeSpan],
 ):
     """
     Add data queries to entities.
@@ -413,7 +413,7 @@ def add_queries_to_entities(
         Collection of wrapped query functions
     container : str
         The name of the container to add query functions to
-    get_timespan : Callable[[Any, TimeSpan], TimeSpan]
+    get_timespan : Callable[[], TimeSpan]
         Function to get the current timespan. If None
         it will use the Pivot built-in time range.
 

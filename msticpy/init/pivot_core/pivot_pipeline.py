@@ -149,7 +149,7 @@ class Pipeline:
         self,
         name: str,
         description: str | None = None,
-        steps: Iterable[PipelineStep | None] = None,
+        steps: Iterable[PipelineStep] = None,
     ):
         """
         Create Pipeline instance.
@@ -168,7 +168,7 @@ class Pipeline:
         self.description = description
         self.steps: list[PipelineStep] = []
         if steps:
-            self.steps.extend(iter(steps))  # type: ignore[arg-type]
+            self.steps.extend(iter(steps))
 
     def __repr__(self) -> str:
         """

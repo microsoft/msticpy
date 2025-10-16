@@ -10,11 +10,10 @@ import contextlib
 import json
 import re
 import warnings
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import datetime
 from json import JSONDecodeError
 from numbers import Number
-from typing import Callable
 
 import numpy as np
 import pandas as pd

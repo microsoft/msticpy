@@ -8,12 +8,12 @@ from __future__ import annotations
 
 import contextlib
 import warnings
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta, timezone
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, Type
+from typing import Any, Type
 
 from .._version import VERSION
 from ..common.timespan import TimeSpan
@@ -164,7 +164,7 @@ class Pivot:
             Query provider.
 
         """
-        add_data_queries_to_entities(prov, self.get_timespan)  # type: ignore[arg-type]
+        add_data_queries_to_entities(prov, self.get_timespan)
 
     @staticmethod
     def _get_provider_by_type(
