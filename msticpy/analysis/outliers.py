@@ -483,7 +483,7 @@ def plot_outlier_results(
     x_outliers: np.ndarray,
     feature_columns: list[int],
     plt_title: str,
-):
+):  # type: ignore[index]
     """
     Plot Isolation Forest results.
 

@@ -256,5 +256,5 @@ async def ask_question(
 
     # Return the last message content
     if result.messages:
-        return result.messages[-1].content
+        return result.messages[-1].content  # type: ignore[union-attr]
     return "No response generated."
