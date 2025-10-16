@@ -584,14 +584,14 @@ def plot_outlier_results(
                     z = z.reshape(xx.shape)
 
                     # pylint: disable=no-member
-                    axes[i, j].contourf(xx, yy, z, cmap=plt.cm.Blues_r)  # type: ignore[index]
+                    axes[i, j].contourf(xx, yy, z, cmap=plt.cm.Blues_r)  # type: ignore
 
                     # pylint: disable=line-too-long
                     b1 = axes[i, j].scatter(x[:, j], x[:, i], c="white", edgecolor="k")  # type: ignore[index]
                     b2 = axes[i, j].scatter(  # type: ignore[index]
                         x_predict[:, j], x_predict[:, i], c="green", edgecolor="k"
                     )
-                    c = axes[i, j].scatter(
+                    c = axes[i, j].scatter(  # type: ignore[index]
                         x_outliers[:, j], x_outliers[:, i], c="red", marker="x"
                     )
 
