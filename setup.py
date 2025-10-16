@@ -55,7 +55,10 @@ EXTRAS = {
     "sql2kql": ["mo-sql-parsing>=8, <9.0.0"],
     "riskiq": ["passivetotal>=2.5.3", "requests>=2.31.0"],
     "panel": [],  # now in core install
-    "aiagents": ["autogen-agentchat[retrievechat]~=0.2.0"],
+    "aiagents": [
+        'autogen-agentchat>=0.4.0; python_version >= "3.10"',
+        'autogen-ext>=0.4.0; python_version >= "3.10"',
+    ],
 }
 extras_all = [
     extra for name, extras in EXTRAS.items() for extra in extras if name != "dev"

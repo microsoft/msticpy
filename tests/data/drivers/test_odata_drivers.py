@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Miscellaneous data provider driver tests."""
+import sys
 from unittest.mock import Mock, patch
 
 import pandas as pd
@@ -134,6 +135,9 @@ _MDE_CONNECT_STR = [
 
 @pytest.mark.parametrize("env, api, con_str", _MDE_CONNECT_STR)
 @patch("msticpy.data.drivers.odata_driver.httpx")
+@pytest.mark.skipif(
+    sys.platform.startswith("linux"), reason="File locking issue on Linux"
+)
 def test_mde_connect_str(httpx, env, api, con_str):
     """Test security graph driver."""
     driver_cls = import_driver(DataEnvironment.parse(env))
