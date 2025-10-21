@@ -290,7 +290,7 @@ def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfigura
         if data_environment == DataEnvironment.M365D:
             logger.warning(
                 "M365 Defender/Defender XDR Advanced Hunting API has been deprecated."
-                "Reverting to MDE Advanced Queries API."
+                "Reverting to MDE Advanced Queries API. "
                 "Please use Microsoft Graph Security Hunting API instead - "
                 "provider name = 'M365DGraph'."
             )
