@@ -8,19 +8,19 @@ repos:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
   - repo: https://github.com/ambv/black
-    rev: 24.10.0
+    rev: 25.9.0
     hooks:
       - id: black
         language: python
   - repo: https://github.com/PyCQA/pylint
-    rev: v3.3.1
+    rev: v4.0.2
     hooks:
       - id: pylint
         args:
           - --disable=duplicate-code,import-error
           - --ignore-patterns=test_
   - repo: https://github.com/pycqa/flake8
-    rev: 7.1.1
+    rev: 7.3.0
     hooks:
       - id: flake8
         args:
@@ -28,7 +28,7 @@ repos:
           - --max-line-length=90
           - --exclude=tests,test*.py
   - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+    rev: 7.0.0
     hooks:
       - id: isort
         name: isort (python)
@@ -43,7 +43,7 @@ repos:
           - --convention=numpy
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.8.0
+    rev: v0.14.1
     hooks:
       # Run the linter.
       - id: ruff
