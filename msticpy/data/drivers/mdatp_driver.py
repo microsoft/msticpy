@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import logging
+import warnings
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar
 from urllib.parse import urljoin
@@ -28,6 +29,7 @@ if TYPE_CHECKING:
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
+logging.captureWarnings(True)
 logger: logging.Logger = logging.getLogger(__name__)
 
 
@@ -288,12 +290,13 @@ def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfigura
         api_endpoint = "/security/runHuntingQuery"
     else:
         if data_environment == DataEnvironment.M365D:
-            logger.warning(
+            warn_message = (
                 "M365 Defender/Defender XDR Advanced Hunting API has been deprecated."
                 "Reverting to MDE Advanced Queries API. "
                 "Please use Microsoft Graph Security Hunting API instead - "
                 "provider name = 'M365DGraph'."
             )
+            warnings.warn(warn_message, DeprecationWarning)
 
         # MDE Advanced Queries API
         logger.info("Using MDE Advanced Queries API (default)")
