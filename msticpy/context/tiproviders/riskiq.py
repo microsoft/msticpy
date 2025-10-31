@@ -38,9 +38,9 @@ try:
         from passivetotal.analyzer.whois import WhoisRecords
 
 except ImportError as imp_err:
-    error_msg: str = "Cannot use this feature without passivetotal package installed."
+    ERROR_MSG: str = "Cannot use this feature without passivetotal package installed."
     raise MsticpyImportExtraError(
-        error_msg,
+        ERROR_MSG,
         title="Error importing RiskIQ modules.",
         extra="riskiq",
     ) from imp_err

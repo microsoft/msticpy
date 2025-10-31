@@ -558,7 +558,11 @@ def _get_driver_settings(
     logger.debug(
         "Getting driver settings for: %s (instance: %s)", config_name, instance
     )
-    config_key: str = f"{config_name}-{instance}" if instance else config_name
+    config_key: str = (
+        f"{config_name}-{instance}"
+        if instance and instance != "Default"
+        else config_name
+    )
     drv_config: ProviderSettings | None = get_provider_settings("DataProviders").get(
         config_key,
     )
