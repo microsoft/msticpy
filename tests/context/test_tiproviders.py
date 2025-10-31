@@ -332,7 +332,7 @@ def test_ti_lookup_enable_disable(ti_lookup):
 
 def test_opr_single_result(ti_lookup):
     """Test OPR for single result."""
-    ti_provider = ti_lookup.loaded_providers["OPR"]
+    ti_provider = ti_lookup.loaded_providers["OpenPageRank"]
     ti_provider._httpx_client = RequestSession()
     iocs = {
         "google.com": ("dns", None),
@@ -346,7 +346,7 @@ def test_opr_single_result(ti_lookup):
             ioc=ioc,
             ioc_type=ioc_params[0],
             ioc_query_type=ioc_params[1],
-            providers=["OPR"],
+            providers=["OpenPageRank"],
             show_not_supported=True,
         )
         check.is_not_none(result)
@@ -377,7 +377,7 @@ def test_opr_single_result(ti_lookup):
 
 def test_opr_multi_result(ti_lookup):
     """Test OPR multi-item lookup."""
-    ti_provider = ti_lookup.loaded_providers["OPR"]
+    ti_provider = ti_lookup.loaded_providers["OpenPageRank"]
     ti_provider._httpx_client = RequestSession()
 
     n_requests = 9
@@ -389,7 +389,7 @@ def test_opr_multi_result(ti_lookup):
     )
 
     results_df = ti_lookup.lookup_iocs(
-        data=gen_doms, ioc_col="domain", ioc_type_col="ioc_type", providers=["OPR"]
+        data=gen_doms, ioc_col="domain", ioc_type_col="ioc_type", providers=["OpenPageRank"]
     )
     check.equal(n_requests, len(results_df))
     check.greater_equal(
@@ -426,7 +426,7 @@ def test_tor_exit_nodes(ti_lookup, monkeypatch):
     nodelist = {node: node_dict for node in _TOR_NODES}
     monkeypatch.setattr(Tor, "_nodelist", nodelist)
     # OFFLINE_TEST - End
-    tor_prov = ti_lookup.loaded_providers["Tor"]
+    tor_prov = ti_lookup.loaded_providers["TorExitNodes"]
     tor_nodes = random.sample(list(tor_prov._nodelist.keys()), 4)  # nosec
 
     other_ips = [
@@ -442,7 +442,7 @@ def test_tor_exit_nodes(ti_lookup, monkeypatch):
     for ioc in tor_nodes + other_ips:
         result = ti_lookup.lookup_ioc(
             ioc=ioc,
-            providers=["Tor"],
+            providers=["TorExitNodes"],
             show_not_supported=True,
         )
         lu_result = result.to_dict(orient="records")[0]
@@ -459,7 +459,7 @@ def test_tor_exit_nodes(ti_lookup, monkeypatch):
     check.equal(len(neg_results), 5)
 
     all_ips = tor_nodes + other_ips
-    tor_results_df = ti_lookup.lookup_iocs(data=all_ips, providers=["Tor"])
+    tor_results_df = ti_lookup.lookup_iocs(data=all_ips, providers=["TorExitNodes"])
     check.equal(len(all_ips), len(tor_results_df))
     check.equal(
         len(tor_results_df[tor_results_df["Severity"].isin(["warning", "high"])]), 4
