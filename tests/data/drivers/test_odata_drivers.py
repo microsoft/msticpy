@@ -45,10 +45,10 @@ _JSON_RESP = {
 _MDEF_TESTS = [
     ("MDE", "https://api.securitycenter.microsoft.com/", ""),
     ("MDATP", "https://api.securitycenter.microsoft.com/", None),
-    ("M365D", "https://api.security.microsoft.com/", None),
-    ("M365D", "https://api-us.security.microsoft.com/", "us"),
-    ("M365D", "https://api-eu.security.microsoft.com/", "eu"),
-    ("M365D", "https://api-uk.security.microsoft.com/", "uk"),
+    ("M365D", "https://api.securitycenter.microsoft.com/", None),
+    ("M365D", "https://api-us.securitycenter.microsoft.com/", "us"),
+    ("M365D", "https://api-eu.securitycenter.microsoft.com/", "eu"),
+    ("M365D", "https://api-uk.securitycenter.microsoft.com/", "uk"),
     ("MDE", "https://api-gov.securitycenter.microsoft.us/", "dod"),
     ("MDE", "https://api-uk.securitycenter.microsoft.com/", "uk"),
     ("MDE", "https://api-us.securitycenter.microsoft.com/", "us"),
@@ -108,7 +108,7 @@ def _mde_create_mock(httpx):
         ("MDATP", "securitycenter"),
         ("MDE", "securitycenter"),
         ("MDE", "securitycenter"),
-        ("M365D", "security"),
+        ("M365D", "securitycenter"),
     ],
 )
 @patch("msticpy.data.drivers.odata_driver.httpx")
@@ -128,7 +128,7 @@ _CONSTRING = "client_id=1234;tenant_id=8360dd21-0294-4240-9128-89611f415c53;clie
 _MDE_CONNECT_STR = [
     ("MDATP", "securitycenter", _CONSTRING),
     ("MDE", "securitycenter", _CONSTRING),
-    ("M365D", "security", _CONSTRING),
+    ("M365D", "securitycenter", _CONSTRING),
 ]
 
 
@@ -154,7 +154,7 @@ _PARAMS = {
 _MDE_CONNECT_PARAMS = [
     ("MDATP", "securitycenter", _PARAMS),
     ("MDE", "securitycenter", _PARAMS),
-    ("M365D", "security", _PARAMS),
+    ("M365D", "securitycenter", _PARAMS),
 ]
 
 

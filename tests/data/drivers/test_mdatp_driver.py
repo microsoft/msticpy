@@ -50,9 +50,10 @@ def test_select_api_mde() -> None:
 
 def test_select_api_m365d() -> None:
     """Test API selection for M365 Defender unified environment."""
+    # Note this now reverts to MDE parameters
     cfg = _select_api(DataEnvironment.M365D, "global")
-    assert cfg.api_endpoint == "/advancedhunting/run"
-    assert "/api/advancedhunting/run" in cfg.api_uri
+    assert cfg.api_endpoint == "/advancedqueries/run"
+    assert "/advancedqueries/run" in cfg.api_uri
 
 
 def test_select_api_graph() -> None:

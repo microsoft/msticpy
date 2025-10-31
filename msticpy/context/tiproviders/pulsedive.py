@@ -30,8 +30,6 @@ if TYPE_CHECKING:
 __version__ = VERSION
 __author__ = "Thomas Roccia | @fr0gger_"
 
-_BASE_URL = "https://pulsedive.com/api/"
-
 _QUERY_OBJECTS_MAPPINGS: dict[str, dict[str, str]] = {
     "indicator": {"indicator": "observable"},
     "threat": {"threat": "observable"},
@@ -75,6 +73,8 @@ class PDlookup:
     explore different types of data available in the Pulsedive API.
 
     """
+
+    BASE_URL = "https://pulsedive.com/api/"
 
     _SUPPORTED_PD_TYPES: ClassVar[set[PDEntityType]] = {
         PDEntityType.INDICATOR,
@@ -230,7 +230,7 @@ class PDlookup:
                 **mp_ua_header(),
             }
             resp: httpx.Response = httpx.post(
-                f"{_BASE_URL}analyze.php",
+                f"{self.BASE_URL}analyze.php",
                 data=data,
                 headers=headers,
             )
@@ -244,9 +244,9 @@ class PDlookup:
 
         if pd_query.query_type == "q":
             # if the key is "q", make a GET request to the explore endpoint
-            query_url: str = f"{_BASE_URL}explore.php"
+            query_url: str = f"{self.BASE_URL}explore.php"
         else:
-            query_url = f"{_BASE_URL}info.php"
+            query_url = f"{self.BASE_URL}info.php"
         params: dict[str, Any] = {
             **self._get_default_params(),
             pd_query.query_type: pd_query.data,
@@ -280,7 +280,7 @@ class PDlookup:
         params: dict[str, Any] = {"qid": qid, **self._get_default_params()}
         headers: dict[str, str] = mp_ua_header()
         timeout: httpx.Timeout = get_http_timeout()
-        url: str = f"{_BASE_URL}analyze.php"
+        url: str = f"{self.BASE_URL}analyze.php"
         resp = httpx.get(
             url,
             params=params,
@@ -344,7 +344,7 @@ _QUERY_DEF = APILookupParams(
 class Pulsedive(HttpTIProvider):
     """Pulsedive TI Lookup."""
 
-    _BASE_URL = _BASE_URL
+    _BASE_URL = PDlookup.BASE_URL
 
     _QUERIES: ClassVar[dict[str, APILookupParams]] = {
         ioc_type: _QUERY_DEF for ioc_type in ("ipv4", "ipv6", "dns", "hostname", "url")
