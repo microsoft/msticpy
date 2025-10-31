@@ -27,7 +27,7 @@ __author__ = "Ian Hellen"
 
 
 def _value_or_default(src_dict: dict, prop_name: str, default: dict):
-    """Return value from dict or emtpy dict."""
+    """Return value from dict or empty dict."""
     src_value = src_dict.get(prop_name)
     return src_value if src_value is not None else default
 

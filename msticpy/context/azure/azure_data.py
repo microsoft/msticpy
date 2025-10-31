@@ -54,7 +54,7 @@ try:
         from azure.mgmt.network.models import NetworkInterface
         from azure.mgmt.subscription.models import Subscription
 except ImportError as imp_err:
-    error_msg: str = (
+    ERROR_MSG: str = (
         "Cannot use this feature without these azure packages installed:\n"
         "azure.mgmt.network\n"
         "azure.mgmt.resource\n"
@@ -62,7 +62,7 @@ except ImportError as imp_err:
         "azure.mgmt.compute\n"
     )
     raise MsticpyImportExtraError(
-        error_msg,
+        ERROR_MSG,
         title="Error importing azure module",
         extra="azure",
     ) from imp_err

@@ -91,6 +91,7 @@ def _fetch_asns() -> Callable[[], dict[str, str]]:
 
 
 # Create the dictionary accessor from the fetch_asns wrapper
+# pylint: disable=invalid-name
 _ASNS_DICT: Callable[[], dict[str, str]] = _fetch_asns()
 
 

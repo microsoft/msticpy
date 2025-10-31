@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import logging
+import warnings
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar
 from urllib.parse import urljoin
@@ -16,11 +17,7 @@ from typing_extensions import Self
 
 from ..._version import VERSION
 from ...auth.azure_auth_core import AzureCloudConfig
-from ...auth.cloud_mappings import (
-    get_defender_endpoint,
-    get_m365d_endpoint,
-    get_m365d_login_endpoint,
-)
+from ...auth.cloud_mappings import get_defender_endpoint, get_m365d_login_endpoint
 from ...common.data_utils import ensure_df_datetimes
 from ...common.utility import export
 from ..core.query_defns import DataEnvironment
@@ -32,6 +29,7 @@ if TYPE_CHECKING:
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
+logging.captureWarnings(True)
 logger: logging.Logger = logging.getLogger(__name__)
 
 
@@ -117,7 +115,7 @@ class MDATPDriver(OData):
 
         self.cloud: str = cs_dict.pop("cloud", "global")
         if cloud:
-            logger.info("Overriding configured cloud with: %s", cloud)
+            logger.info("Using Azure cloud: %s", cloud)
             self.cloud = cloud
         else:
             logger.debug("Using cloud from configuration: %s", self.cloud)
@@ -290,16 +288,17 @@ def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfigura
         resource_uri: str = az_cloud_config.endpoints["microsoftGraphResourceId"]
         api_version = "v1.0"
         api_endpoint = "/security/runHuntingQuery"
-    elif data_environment == DataEnvironment.M365D:
-        logger.info("Using M365 Defender Advanced Hunting API")
-        login_uri = urljoin(
-            get_m365d_login_endpoint(cloud),
-            "{tenantId}/oauth2/v2.0/token",
-        )
-        resource_uri = get_m365d_endpoint(cloud)
-        api_version = "api"
-        api_endpoint = "/advancedhunting/run"
     else:
+        if data_environment == DataEnvironment.M365D:
+            warn_message = (
+                "M365 Defender/Defender XDR Advanced Hunting API has been deprecated."
+                "Reverting to MDE Advanced Queries API. "
+                "Please use Microsoft Graph Security Hunting API instead - "
+                "provider name = 'M365DGraph'."
+            )
+            warnings.warn(warn_message, DeprecationWarning)
+
+        # MDE Advanced Queries API
         logger.info("Using MDE Advanced Queries API (default)")
         login_uri = urljoin(
             get_m365d_login_endpoint(cloud),

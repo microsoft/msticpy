@@ -143,6 +143,7 @@ WHEN = "when"
 WHERE = "where"
 WITH = "with"
 
+# pylint: disable=invalid-name
 JOIN_KEYWORDS = {
     FULL_JOIN: "outer",
     FULL_OUTER_JOIN: "outer",
