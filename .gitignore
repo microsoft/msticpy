@@ -120,3 +120,6 @@ morphchart_package/
 /docs/notebooks/kqlmagic/*
 /kqlmagic/**
 /GitExtensions.settings
+
+# Guardian files
+/.gdn/**

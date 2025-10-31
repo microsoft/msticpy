@@ -74,7 +74,6 @@ __author__ = "Ian Hellen"
 _KQL_CLOUD_MAP = {"global": "public", "cn": "china", "usgov": "government"}
 
 _KQL_OPTIONS = ["timeout"]
-_KQL_ENV_OPTS = "KQLMAGIC_CONFIGURATION"
 
 _AZ_CLOUD_MAP = {kql_cloud: az_cloud for az_cloud, kql_cloud in _KQL_CLOUD_MAP.items()}
 

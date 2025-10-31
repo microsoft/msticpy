@@ -48,9 +48,9 @@ try:
     if TYPE_CHECKING:
         from azure.kusto.data.response import KustoResponseDataSet
 except ImportError as imp_err:
-    import_err: str = "Cannot use this feature without Azure Kusto client installed"
+    IMPORT_ERR: str = "Cannot use this feature without Azure Kusto client installed"
     raise MsticpyMissingDependencyError(
-        import_err,
+        IMPORT_ERR,
         title="Error importing azure.kusto.data",
         packages="azure-kusto-data",
     ) from imp_err
