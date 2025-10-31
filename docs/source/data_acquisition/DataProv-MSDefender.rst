@@ -9,9 +9,9 @@ This driver lets you query the Microsoft Defender APIs.
       This is the preferred and most modern API.
     - **MDE/MDATP**: Uses the Microsoft Defender for Endpoint API (formerly MDATP).
       This is the fallback option when M365DGraph is not available.
-    - **M365D** (Removed): The Microsoft 365 Defender API provider has been removed from
-      MSTICPy. If you use the "M365D" provider name, it will automatically use the MDE
-      API endpoints instead.
+    - **M365D** (Deprecated): The Microsoft 365 Defender API was deprecated by Microsoft and
+      is no longer supported. The M365D provider has been removed from MSTICPy. If you use
+      the "M365D" provider name, it will automatically fall back to using the MDE API endpoints.
 
     Many components in MSTICPy still use the old abbreviation **MDATP**
     (Microsoft Advanced Threat Protection) for backwards compatibility.
@@ -54,9 +54,10 @@ and auth scenario (application or delegated user):
     Microsoft Graph API. The MDE/MDATP endpoints are maintained for backwards
     compatibility and as a fallback option.
 
-    The Microsoft Threat Protection API provider (M365D) has been removed. If you
-    specify "M365D" as the provider name, it will automatically use MDE endpoints
-    for backwards compatibility.
+    The Microsoft 365 Defender API (M365D) was deprecated by Microsoft and is no longer
+    supported. The M365D provider has been removed from MSTICPy. If you specify "M365D"
+    as the provider name, it will automatically fall back to using MDE endpoints for
+    backwards compatibility.
 
 Once you have registered the application, you can use it to connect to
 the MS Defender API using your chosen data environment.
@@ -147,22 +148,20 @@ See :doc:`msticpy Settings Editor <../getting_started/SettingsEditor>`.
             PrivateKeySecret:
                 KeyVault:
 
-Federated Authentication Configuration
+Delegated Authentication Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Federated authentication allows you to authenticate using credentials from
-Microsoft Entra ID in place of an Application client secret or certificate.
-
-When using federated authentication with MS Defender, you authenticate as a user
-rather than as an application, which means:
+Delegated authentication allows you to authenticate as a user (with user consent)
+rather than as an application. This means:
 
 * You don't need to store client secrets or certificates
-* Authentication uses your organization's federated identity provider credentials
+* Authentication uses your user credentials
 * You benefit from your organization's security policies (MFA, conditional access, etc.)
 * Permissions are granted based on your user account rather than an app registration
-* The authentication flow automatically redirects your Microsoft Entra ID
+* If your organization uses federated authentication (e.g., ADFS, Okta), the authentication
+  flow will automatically redirect to your federated identity provider
 
-To use federated authentication with MS Defender, configure your settings
+To use delegated authentication with MS Defender, configure your settings
 to include a username but **not** a client secret or certificate:
 
 .. code:: yaml
@@ -178,14 +177,14 @@ The presence of a ``UserName`` field triggers delegated (user) authentication.
 When you connect, the authentication flow will:
 
 1. Contact your Microsoft Entra ID tenant
-2. Detect that your user account is federated
-3. Automatically redirect to your organization's configured identity provider
-4. Return to Entra ID after successful authentication with your IdP
+2. If your account uses federated authentication, automatically redirect to your organization's identity provider
+3. Prompt for user credentials and any required MFA
+4. Return to Entra ID after successful authentication
 5. Issue the token needed to access MS Defender APIs
 
-**Federated Authentication with Multiple Tenants**
+**Delegated Authentication with Multiple Tenants**
 
-If you work with multiple tenants that use federated authentication:
+If you work with multiple tenants:
 
 .. code:: yaml
 
@@ -202,7 +201,7 @@ If you work with multiple tenants that use federated authentication:
             UserName: "user@tenantB.com"
             Cloud: "global"
 
-**Token Caching Location**
+**Token Caching**
 
 By default, authentication tokens are cached in a file named ``token_cache.bin``
 in the current directory. You can specify a custom location:
@@ -214,10 +213,10 @@ in the current directory. You can specify a custom location:
             ClientId: "CLIENT ID"
             TenantId: "TENANT ID"
             UserName: "user@domain.com"
-            Location: "/path/to/custom/token_cache.bin"
+            TokenCachePath: "/path/to/custom/token_cache.bin"
             Cloud: "global"
 
-.. note:: When using federated authentication, ensure your app registration
+.. note:: When using delegated authentication, ensure your app registration
     has a "Mobile or Desktop Application" redirect URI configured as
     ``http://localhost``. This is required for the interactive authentication flow.
 
@@ -239,9 +238,10 @@ Loading a QueryProvider for Microsoft Defender
 
 You can also use the alias "MDATP" for backwards compatibility.
 
-.. note:: The "M365D" alias has been removed but is still accepted for backwards
-    compatibility - it will automatically use MDE endpoints. We recommend using
-    "M365DGraph" for new implementations.
+.. note:: The "M365D" provider name has been deprecated because the Microsoft 365 Defender
+    API is no longer supported by Microsoft. If used, it will automatically fall back to
+    MDE endpoints for backwards compatibility. We recommend using "M365DGraph" for new
+    implementations.
 
 Specifying the Defender Cloud Instance
 --------------------------------------
@@ -312,49 +312,41 @@ an instance name when you call connect.
 
         defender_prov.connect(instance="Tenant2")
 
-If you want to use delegated authentication for your application
+**Using Delegated (User) Authentication**
+
+If you want to use delegated authentication for your application,
 you can specify this when you call connect. By default, this will
 attempt to use browser-based authentication, however you can also
-use device code authentication (needed if using Azure ML) by setting
-auth_type to "device".
+use device code authentication (needed if using Azure ML or environments
+without browser access) by setting auth_type to "device".
 
 .. code:: ipython3
 
-        defender_prov.connect(delegated_auth=True, auth_type="device")
-
-**Connecting with Federated Authentication**
-
-When using federated authentication (username-based auth), the provider
-will automatically use delegated authentication. You can choose between
-interactive browser authentication (default) or device code authentication:
-
-.. code:: ipython3
-
-        # Browser-based authentication (default for federated users)
-        mdatp_prov.connect()
+        # Browser-based authentication (default for delegated auth)
+        defender_prov.connect(delegated_auth=True)
 
         # Or explicitly specify interactive authentication
-        mdatp_prov.connect(auth_type="interactive")
+        defender_prov.connect(delegated_auth=True, auth_type="interactive")
 
         # Device code authentication (useful in restricted environments)
-        mdatp_prov.connect(auth_type="device")
+        defender_prov.connect(delegated_auth=True, auth_type="device")
 
-When using browser-based authentication with a federated identity provider,
-a browser window will open and redirect you to your organization's login page.
-After authenticating with your IdP (which may include MFA), you'll be
-redirected back and the connection will complete automatically.
+When using browser-based authentication, a browser window will open for you
+to sign in. If your organization uses federated authentication (e.g., ADFS,
+Okta, etc.), you'll be automatically redirected to your organization's login page.
+After authenticating (which may include MFA), you'll be redirected back and
+the connection will complete automatically.
 
 For device code authentication, you'll be presented with a code and URL.
-Open the URL in any browser (on any device), enter the code, and authenticate
-through your federated identity provider.
+Open the URL in any browser (on any device), enter the code, and sign in.
 
-**Connecting with Federated Auth Using Connection Parameters**
+**Connecting with Delegated Auth Using Connection Parameters**
 
-You can also pass federated authentication parameters directly:
+You can also pass delegated authentication parameters directly:
 
 .. code:: ipython3
 
-        mdatp_prov.connect(
+        defender_prov.connect(
             tenant_id='your-tenant-id',
             client_id='your-client-id',
             username='user@domain.com',
@@ -370,10 +362,12 @@ Or as a connection string:
             "client_id='a5b24e23-a96a-4472-b729-9e5310c83e20'; "
             "username='user@domain.com'"
         )
-        mdatp_prov.connect(conn_str, auth_type='interactive')
+        defender_prov.connect(conn_str, auth_type='interactive')
 
 .. note:: The ``delegated_auth`` parameter is automatically set to ``True``
     when a username is provided, so you don't need to specify it explicitly.
+
+**Connecting with Application Authentication (Client Secret or Certificate)**
 
 You can also pass connection parameters as
 keyword arguments or a connection string.
@@ -383,8 +377,8 @@ the required parameters are:
 
 * tenant_id -- The tenant ID of the Defender workspace to connect to.
 * client_id -- The ID of the application registered for MS Defender.
-* client_secret -- The secret used for by the application.
-* username -- If using delegated auth for your application.
+* client_secret -- The secret used by the application (for app authentication).
+* username -- The username for delegated authentication (for user authentication).
 
 The client_secret and username parameters are mutually exclusive.
 
@@ -409,7 +403,7 @@ You can also specify these parameters as a connection string of the form:
         "client_id='a5b24e23-a96a-4472-b729-9e5310c83e20'; "
         "client_secret='[PLACEHOLDER]'"
     )
-    md_prov.connect(conn_str)
+    defender_prov.connect(conn_str)
 
 Other Microsoft Defender Documentation
 --------------------------------------
