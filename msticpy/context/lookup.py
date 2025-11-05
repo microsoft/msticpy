@@ -797,8 +797,9 @@ class Lookup:
             ) or settings.provider == "--no-load--":
                 continue
             try:
-                prov_name: str = settings.provider or provider_name
-                provider_class: type[Provider] = self.import_provider(prov_name)
+                provider_class: type[Provider] = self.import_provider(
+                    settings.provider or provider_name
+                )
             except LookupError:
                 warnings.warn(
                     f"Could not find provider class for {provider_name} "
@@ -806,7 +807,6 @@ class Lookup:
                     f"Provider class name in config is '{settings.provider}'",
                     stacklevel=2,
                 )
-                prov_name = provider_name
                 continue
 
             # instantiate class sending args from settings to init
@@ -839,7 +839,7 @@ class Lookup:
 
             self.add_provider(
                 provider=provider_instance,
-                name=prov_name,
+                name=provider_name,
                 primary=settings.primary,
             )
 
