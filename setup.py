@@ -56,7 +56,7 @@ EXTRAS = {
     "riskiq": ["passivetotal>=2.5.3", "requests>=2.31.0"],
     "panel": [],  # now in core install
     "aiagents": ["autogen-agentchat[retrievechat]~=0.2.0"],
-    "openobserve": ["python_openobserve>=0.3.0"],
+    "openobserve": ["python_openobserve>=0.4.1"],
 }
 extras_all = [
     extra for name, extras in EXTRAS.items() for extra in extras if name != "dev"
