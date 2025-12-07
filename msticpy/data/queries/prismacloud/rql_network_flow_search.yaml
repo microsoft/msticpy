@@ -1,0 +1,176 @@
+metadata:
+  version: 1
+  # name: PrismaCloud Queries
+  description: Queries for Prisma Cloud Data Provider
+  data_environments: [Prismacloud]
+  data_families: [Prismacloud]
+  tags: [Prisma_network_flow_search]
+  aliases:
+    - &network_flow_query_relative |-
+      {{
+        "querymetadata" :
+            {{
+                "queryType": "network_flow_query_relative",
+                "unit": "{unit_type}",
+                "amount": "{amount_value}",
+                "endpoint": "network",
+                $<query_conditions>$,
+                "isParsedinDriver": true
+            }}
+      }}
+    - &network_flow_query_absolute |-
+      {{
+        "querymetadata" :
+            {{
+                "queryType": "network_flow_query_absolute",
+                "start_time": "{start}",
+                "end_time": "{end}",
+                "endpoint": "network",
+                $<query_conditions>$,
+                "isParsedinDriver": true
+            }}
+      }}
+defaults:
+  metadata:
+    data_source: "Prismacloud"
+  parameters:
+    unit_type:
+      description: Field to use for time
+      type: str
+      default: minute
+    amount_value:
+      description: Field to use for time
+      type: int
+      default: 60
+    start:
+      description: Query start time
+      type: datetime
+      default: -7
+    end:
+      description: Query end time
+      type: datetime
+      default: 0
+sources:
+  search_network_flow_relative:
+    description: Retrieve configuration data from Prisma Cloud using relative time using dynamic queries.
+    metadata: {}
+    args:
+      query: *network_flow_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "{query_condition}"
+    parameters:
+      query_condition:
+        description: enter query
+        type: str
+  search_network_flow_absolute:
+    description: Retrieve configuration data from Prisma Cloud using relative time using dynamic queries.
+    metadata: {}
+    args:
+      query: *network_flow_query_absolute
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "{query_condition}"
+    parameters:
+      query_condition:
+        description: enter query
+        type: str
+  search_network_with_account_name:
+    description: |-
+      Retrieve network flow data from Prisma Cloud using by providing cloud account name.
+      search_network_with_account_name = prismacloud_qp.Prismacloud.search_network_with_account_name(selectaccount_name = ["something"])
+    metadata: {}
+    args:
+      query: *network_flow_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "network from vpc.flow_record where cloud.account IN ({selectaccount_name}) {additional_query_condition}{optional_limit}"
+    parameters:
+      selectaccount_name:
+        description: |-
+          List of account names to search
+        type: list
+        default:
+          - foo
+          - testasset
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
+  search_network_with_account_name_and_securitygroup:
+    description: |-
+      Retrieve network flow data from Prisma Cloud using by providing cloud account name and security group.
+      search_network_with_account_name = prismacloud_qp.Prismacloud.search_network_with_account_name(selectaccount_name_list = ["something"], security_group_list = ["something"])
+    metadata: {}
+    args:
+      query: *network_flow_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "network from vpc.flow_record where cloud.account IN ({selectaccount_name_list}) AND dest.resource IN ( resource where securitygroup.name IN ({security_group_list})) {additional_query_condition}{optional_limit}"
+    parameters:
+      selectaccount_name_list:
+        description: |-
+          List of account names to search
+        type: list
+        default:
+          - foo
+          - testaccount
+      security_group_list:
+        description: |-
+          List of security groups to search
+        type: list
+        default:
+          - foo
+          - testgroup
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str
+  search_network_with_account_name_and_virtualnetwork:
+    description: |-
+      Retrieve network flow data from Prisma Cloud using by providing cloud account name and virtual network name.
+      search_network_with_account_name = prismacloud_qp.Prismacloud.search_network_with_account_name(selectaccount_name = ["something"])
+    metadata: {}
+    args:
+      query: *network_flow_query_relative
+    query_macros:
+      query_conditions:
+        description: query search conditions
+        value: |-
+          "query_by_user": "network from vpc.flow_record where cloud.account IN ({selectaccount_name_list}) AND dest.resource IN ( resource where virtualnetwork.name IN ({network_list})) {additional_query_condition}{optional_limit}"
+    parameters:
+      selectaccount_name_list:
+        description: |-
+          List of account names to search
+        type: list
+        default:
+          - foo
+          - testaccount
+      network_list:
+        description: |-
+          List of virtual network list to search
+        type: list
+        default:
+          - foo
+          - testgroup
+      optional_limit:
+        description: enter limit using command - limit search records to |number|
+        type: str
+      additional_query_condition:
+        description: |-
+          Additional query condition to search
+        type: str

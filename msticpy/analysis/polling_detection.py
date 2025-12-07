@@ -13,22 +13,33 @@ updates or malware beaconing and checking for instructions.
 There is currently only one technique available for filtering polling data which is
 the class PeriodogramPollingDetector.
 """
+from __future__ import annotations
+
 from collections import Counter
-from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from pkg_resources import parse_version
 from scipy import signal, special
+from typing_extensions import Self
+
+try:
+    from packaging.version import Version
+except ImportError:
+    # Fallback for older environments
+    # pylint: disable=deprecated-module
+    from distutils.version import LooseVersion as Version  # type: ignore[assignment]
 
 from ..common.utility import export
 
-_PD_VERSION = parse_version(pd.__version__)
-if _PD_VERSION >= parse_version("2.2.1"):
-    GROUP_APPLY_PARAMS = {"include_groups": False}
-else:
-    GROUP_APPLY_PARAMS = {}
+_PD_VERSION = Version(pd.__version__)
+
+GROUP_APPLY_PARAMS = (
+    {"include_groups": False} if Version("2.2.1") <= _PD_VERSION else {}
+)
+
+
+POWER_SPECTRAL_DENSITY_THRESHOLD: int = 700
 
 
 @export
@@ -44,7 +55,12 @@ class PeriodogramPollingDetector:
 
     """
 
-    def __init__(self, data: pd.DataFrame, copy: bool = False) -> None:
+    def __init__(
+        self: PeriodogramPollingDetector,
+        data: pd.DataFrame,
+        *,
+        copy: bool = False,
+    ) -> None:
         """
         Create periodogram polling detector.
 
@@ -63,7 +79,12 @@ class PeriodogramPollingDetector:
         else:
             self.data = data
 
-    def _g_test(self, pxx: npt.NDArray, exclude_pi: bool) -> Tuple[float, float]:
+    def _g_test(
+        self: Self,
+        pxx: npt.NDArray,
+        *,
+        exclude_pi: bool,
+    ) -> tuple[float, float]:
         """
         Carry out fishers g test for periodicity.
 
@@ -106,18 +127,17 @@ class PeriodogramPollingDetector:
         test_statistic = np.max(pxx) / sum(pxx)
         upper = np.floor(1 / test_statistic).astype("int")
 
-        if pxx_length > 700:
+        if pxx_length > POWER_SPECTRAL_DENSITY_THRESHOLD:
             p_value = 1 - (1 - np.exp(-pxx_length * test_statistic)) ** pxx_length
         else:
-            compose = []
-            for j in range(1, upper):
-                compose.append(
-                    (-1) ** (j - 1)
-                    * np.exp(
-                        np.log(special.binom(pxx_length, j))
-                        + (pxx_length - 1) * np.log(1 - j * test_statistic)
-                    )
+            compose = [
+                (-1) ** (j - 1)
+                * np.exp(
+                    np.log(special.binom(pxx_length, j))
+                    + (pxx_length - 1) * np.log(1 - j * test_statistic),
                 )
+                for j in range(1, upper)
+            ]
 
             p_value = sum(compose)
 
@@ -126,12 +146,12 @@ class PeriodogramPollingDetector:
         return test_statistic, p_value
 
     def _detect_polling_arr(
-        self,
+        self: Self,
         timestamps: npt.NDArray,
         process_start: int,
         process_end: int,
         interval: int = 1,
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         """
         Carry out periodogram polling detecton on an array of timestamps.
 
@@ -179,14 +199,16 @@ class PeriodogramPollingDetector:
         max_pxx_freq = freq[np.argmax(pxx)]
 
         if len(dn_star) % 2 == 0:
-            _, p_val = self._g_test(pxx, True)
+            _, p_val = self._g_test(pxx, exclude_pi=True)
         else:
-            _, p_val = self._g_test(pxx, False)
+            _, p_val = self._g_test(pxx, exclude_pi=False)
 
         return p_val, max_pxx_freq, 1 / max_pxx_freq
 
     def detect_polling(
-        self, time_column: str, groupby: Optional[Union[List[str], str]] = None
+        self: Self,
+        time_column: str,
+        groupby: list[str] | str | None = None,
     ) -> None:
         """
         Detect the time interval which is highly periodic.
@@ -211,15 +233,17 @@ class PeriodogramPollingDetector:
         end = max(ts_col)
 
         if not groupby:
-            p_value, freq, interval = self._detect_polling_arr(ts_col, start, end)  # type: ignore
+            p_value, freq, interval = self._detect_polling_arr(ts_col, start, end)
 
             self.data["p_value"] = p_value
             self.data["dominant_frequency"] = freq
             self.data["dominant_interval"] = interval
         else:
             grouped_results = self.data.groupby(groupby).apply(
-                lambda x: self._detect_polling_arr(  # type: ignore
-                    x[time_column], min(x[time_column]), max(x[time_column])  # type: ignore
+                lambda x: self._detect_polling_arr(
+                    x[time_column],
+                    min(x[time_column]),
+                    max(x[time_column]),
                 ),
                 **GROUP_APPLY_PARAMS,
             )

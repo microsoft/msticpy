@@ -27,7 +27,7 @@ __author__ = "Ian Hellen"
 
 
 def _value_or_default(src_dict: dict, prop_name: str, default: dict):
-    """Return value from dict or emtpy dict."""
+    """Return value from dict or empty dict."""
     src_value = src_dict.get(prop_name)
     return src_value if src_value is not None else default
 
@@ -415,6 +415,8 @@ class QuerySource:
 
     @staticmethod
     def _format_datetime_default(date_time: datetime) -> str:
+        if date_time.tzinfo:
+            return date_time.isoformat(sep="T")
         return date_time.isoformat(sep="T") + "Z"
 
     @staticmethod

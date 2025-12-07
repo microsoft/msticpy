@@ -44,8 +44,6 @@ sec_client_patch = BHKeyVaultMgmtClient.__module__ + ".SecretClient"
 is_ipython_patch = BHKeyVaultMgmtClient.__module__ + ".is_ipython"
 display_patch = BHKeyVaultMgmtClient.__module__ + ".display"
 HTML_patch = BHKeyVaultMgmtClient.__module__ + ".HTML"
-basic_tok_auth_patch = BHKeyVaultMgmtClient.__module__ + ".BasicTokenAuthentication"
-kv_mgmt_client_patch = BHKeyVaultMgmtClient.__module__ + ".KeyVaultManagementClient"
 
 
 # Test classes used in unit tests
@@ -280,45 +278,6 @@ class TestSecretsConfig(unittest.TestCase):
 
         kv_sec_client.set_secret("MyTestSecret", "TheActualValue")
         self.assertEqual(keyvault_client.get_secret("MyTestSecret"), "TheActualValue")
-
-    @patch(kv_mgmt_client_patch)
-    @patch(az_connect_core_patch)
-    def test_kv_mgmt_client(self, az_core, kv_mgmt):
-        AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
-        LegacyCreds = namedtuple("legacycreds", ["token"])
-        az_core.return_value = AzCredentials(LegacyCreds(ACC_TOKEN), "cred")
-        # expiry_time = datetime.now() + timedelta(1)
-        # auth_context.return_value = mock_auth_context_methods(expiry_time)
-        kv_mgmt.return_value = _KeyVaultMgmtMock()
-        # kv_sec_client = _SecretClientTest()
-
-        kv_settings = get_kv_settings("msticpyconfig-kv.yaml")
-        vault_mgmt = BHKeyVaultMgmtClient(
-            tenant_id=kv_settings.tenantid,
-            subscription_id=kv_settings.subscriptionid,
-            resource_group=kv_settings.resourcegroup,
-            azure_region=kv_settings.azureregion,
-        )
-
-        vault_mgmt.create_vault("mynewvault")
-        vault_mgmt.create_vault("myothervault")
-        self.assertIn("mynewvault", vault_mgmt.list_vaults())
-        self.assertIn("myothervault", vault_mgmt.list_vaults())
-
-        self.assertEqual(
-            vault_mgmt.get_vault_uri("mynewvault"), "https://mynewvault.vault.azure.net"
-        )
-
-        kv_settings = get_kv_settings("msticpyconfig-kv.yaml")
-        kv_settings["azureregion"] = None
-        with self.assertRaises(MsticpyKeyVaultConfigError):
-            nr_vault_mgmt = BHKeyVaultMgmtClient(
-                tenant_id=kv_settings.tenantid,
-                subscription_id=kv_settings.subscriptionid,
-                resource_group=kv_settings.resourcegroup,
-                settings=kv_settings,
-            )
-            nr_vault_mgmt.create_vault("mynewvault")
 
     @patch(sec_client_patch)
     def test_secret_settings(

@@ -4,22 +4,44 @@
 # license information.
 # --------------------------------------------------------------------------
 """Checker functions for Azure ML notebooks."""
+from __future__ import annotations
+
 import logging
 import os
 import sys
 import warnings
 from pathlib import Path
-from typing import Any, List, Mapping, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any
 
 import yaml
 from IPython import get_ipython
 from IPython.display import HTML, display
-from pkg_resources import Requirement, WorkingSet, parse_version  # type: ignore
+
+try:
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version as get_version
+
+    from packaging.version import Version
+except ImportError:
+    # Fallback for older environments
+    # pylint: disable=deprecated-module
+    from distutils.version import LooseVersion as Version  # type: ignore[assignment]
+
+    try:
+        from importlib_metadata import PackageNotFoundError  # type: ignore[assignment]
+        from importlib_metadata import version as get_version
+    except ImportError:
+        # pylint: disable=invalid-name
+        get_version = None  # type: ignore[assignment]
+        PackageNotFoundError = Exception  # type: ignore
 
 from .._version import VERSION
 from ..common.pkg_config import _HOME_PATH, get_config, refresh_config
 from ..common.utility import search_for_file, unit_testing
 from ..config import MpConfigFile  # pylint: disable=no-name-in-module
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 __version__ = VERSION
 
@@ -79,23 +101,23 @@ MP_ENV_VAR = "MSTICPYCONFIG"
 MP_FILE = "msticpyconfig.yaml"
 
 
-def is_in_aml_pyspark():
+def is_in_aml_pyspark() -> bool:
     """Return True if running in Spark on Azure Machine Learning."""
     return os.environ.get("AZUREML_FRAMEWORK") == "PySpark"
 
 
-def is_in_aml():
+def is_in_aml() -> bool:
     """Return True if running in Azure Machine Learning."""
     return os.environ.get("APPSETTING_WEBSITE_SITE_NAME") == "AMLComputeInstance"
 
 
 def check_aml_settings(
-    min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF,
-    min_mp_ver: Union[str, Tuple] = MSTICPY_REQ_VERSION,
-    extras: Optional[List[str]] = None,
-    mp_release: Optional[str] = None,
+    min_py_ver: str | tuple = MIN_PYTHON_VER_DEF,
+    min_mp_ver: str | tuple = MSTICPY_REQ_VERSION,
+    extras: list[str] | None = None,
+    mp_release: str | None = None,
     **kwargs,
-):
+) -> None:
     """
     Check the current versions of the Python kernel and MSTICPy.
 
@@ -141,7 +163,7 @@ def check_aml_settings(
 check_versions = check_aml_settings
 
 
-def _check_pyspark():
+def _check_pyspark() -> None:
     """Check if we are running in PySpark kernel."""
     if not is_in_aml_pyspark():
         return
@@ -149,7 +171,7 @@ def _check_pyspark():
     _disp_html(_PYSPARK_KERNEL_NOT_SUPPORTED.format(nb_uri=AZ_GET_STARTED))
 
 
-def _kql_magic_installed():
+def _kql_magic_installed() -> bool:
     try:
         # pylint: disable=import-outside-toplevel, unused-import
         from Kqlmagic import kql  # noqa: F401
@@ -159,7 +181,7 @@ def _kql_magic_installed():
         return False
 
 
-def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
+def check_python_ver(min_py_ver: str | tuple = MIN_PYTHON_VER_DEF) -> None:
     """
     Check the current version of the Python kernel.
 
@@ -175,7 +197,8 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
 
     """
     minimum_py_version = max(
-        _get_pkg_version(min_py_ver), _get_pkg_version(MIN_PYTHON_VER_DEF)
+        _get_pkg_version(min_py_ver),
+        _get_pkg_version(MIN_PYTHON_VER_DEF),
     )
     sys_ver = _get_pkg_version(sys.version_info[:3])
     _disp_html("Checking Python kernel version...")
@@ -187,13 +210,13 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
             (Python) kernel version.</h4></font>
             Choose a kernel from the notebook toolbar (above), that is Python
             {minimum_py_version} or later (Python 3.10 recommended)<br>
-            """
+            """,
         )
         _disp_html(
             f"""
             Please see the <a href="{TROUBLE_SHOOTING}">TroubleShootingNotebooks</a>
             for more information<br><br><hr>
-            """
+            """,
         )
         # Bandit SQL inject error found here
         raise RuntimeError(f"Python {minimum_py_version} or later kernel is required.")
@@ -201,7 +224,7 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
     _disp_html(f"Info: Python kernel version {sys_ver} - OK<br>")
 
 
-def check_mp_ver(min_msticpy_ver: Union[str, Tuple], extras: Optional[List[str]]):
+def check_mp_ver(min_msticpy_ver: str | tuple, extras: list[str] | None) -> None:
     """
     Check and optionally update the current version of msticpy.
 
@@ -230,14 +253,14 @@ def check_mp_ver(min_msticpy_ver: Union[str, Tuple], extras: Optional[List[str]]
                 package="msticpy",
                 inst_ver=loaded_version,
                 req_ver=mp_min_pkg_ver,
-            )
+            ),
         )
         mp_pkg_spec = f"msticpy[{','.join(extras)}]" if extras else "msticpy"
         mp_pkg_spec = f"{mp_pkg_spec}>={min_msticpy_ver}"
 
         _disp_html(
             f"Please run the following command to upgrade MSTICPy<br>"
-            f"<pre>%pip install --upgrade {mp_pkg_spec}</pre><br>"
+            f"<pre>%pip install --upgrade {mp_pkg_spec}</pre><br>",
         )
         raise ImportError(
             "Unsupported version of MSTICPy installed",
@@ -253,12 +276,12 @@ def check_mp_ver(min_msticpy_ver: Union[str, Tuple], extras: Optional[List[str]]
         _disp_html(
             f"A newer version of MSTICPy ({installed_version})"
             "has been installed but has not been loaded.<br>"
-            "Please restart the notebook kernel and re-run this cell."
+            "Please restart the notebook kernel and re-run this cell.",
         )
     _disp_html(f"Info: msticpy version {loaded_version} (>= {mp_min_pkg_ver}) - OK<br>")
 
 
-def populate_config_to_mp_config(mp_path):
+def populate_config_to_mp_config(mp_path: str | None) -> str | None:
     """Populate new or existing msticpyconfig with settings from config.json."""
     # Look for a config.json
     config_json = search_for_file("config.json", paths=[get_aml_user_folder()])
@@ -266,11 +289,13 @@ def populate_config_to_mp_config(mp_path):
         return None
 
     # if we found one, use it to populate msticpyconfig.yaml
-    mp_path = mp_path or str(get_aml_user_folder().joinpath("msticpyconfig.yaml"))
+    mp_path = mp_path or str(
+        (get_aml_user_folder() or Path()).joinpath("msticpyconfig.yaml")
+    )
     mp_config_convert = MpConfigFile(file=config_json)
     azs_settings = mp_config_convert.map_json_to_mp_ws()
     def_azs_settings = next(
-        iter(azs_settings.get("AzureSentinel", {}).get("Workspaces", {}).values())
+        iter(azs_settings.get("AzureSentinel", {}).get("Workspaces", {}).values()),
     )
     if def_azs_settings:
         mp_config_convert.settings["AzureSentinel"]["Workspaces"][
@@ -301,10 +326,10 @@ def populate_config_to_mp_config(mp_path):
 
 
 def _check_mp_install(
-    min_mp_ver: Union[str, Tuple],
-    mp_release: Optional[str],
-    extras: Optional[List[str]],
-):
+    min_mp_ver: str | tuple,
+    mp_release: str | None,
+    extras: list[str] | None,
+) -> None:
     """Check for and try to install required MSTICPy version."""
     # Use the release ver specified in params, in the environment or
     # the notebook default.
@@ -314,7 +339,7 @@ def _check_mp_install(
     check_mp_ver(min_msticpy_ver=mp_install_version, extras=extras)
 
 
-def _set_kql_env_vars(extras: Optional[List[str]]):
+def _set_kql_env_vars(extras: list[str] | None) -> None:
     """Set environment variables for Kqlmagic based on MP extras."""
     jp_extended = ("azsentinel", "azuresentinel", "kql")
     if extras and any(extra for extra in extras if extra in jp_extended):
@@ -325,32 +350,48 @@ def _set_kql_env_vars(extras: Optional[List[str]]):
         os.environ["KQLMAGIC_AZUREML_COMPUTE"] = _get_vm_fqdn()
 
 
-def _get_pkg_version(version: Union[str, Tuple]):
-    """Return pkg_resources parsed version from string or tuple."""
+def _get_pkg_version(version: str | tuple) -> Version:
+    """
+    Return comparable package version.
+
+    Parameters
+    ----------
+    version : str | tuple
+        Version string or tuple
+
+    Returns
+    -------
+    Version
+        Parsed version object
+
+    """
     if isinstance(version, str):
-        return parse_version(version)
+        return Version(version)
     if isinstance(version, tuple):
-        return parse_version(".".join(str(ver) for ver in version))
-    raise TypeError(f"Version {version} not cannot be parsed.")
+        return Version(".".join(str(ver) for ver in version))
+    raise TypeError(f"Version {version} cannot be parsed.")
 
 
-def _get_installed_mp_version():
+def _get_installed_mp_version() -> Version | None:
     """Return the installed version of MSTICPY."""
-    working_set = WorkingSet()
-    mp_installed = working_set.find(Requirement("msticpy"))  # type: ignore
-    if mp_installed:
-        return mp_installed.parsed_version
+    if get_version is not None:
+        try:
+            version_str = get_version("msticpy")
+            return Version(version_str)
+        # pylint: disable=broad-exception-caught
+        except (PackageNotFoundError, Exception):
+            pass
     return None
 
 
-def _disp_html(text: str):
+def _disp_html(text: str) -> None:
     """Display the HTML text."""
     display(HTML(text))
 
 
-def get_aml_user_folder() -> Optional[Path]:
+def get_aml_user_folder() -> Path | None:
     """Return the root of the user folder."""
-    path_parts = Path(".").absolute().parts
+    path_parts = Path().absolute().parts
     if "Users" not in path_parts:
         return Path(_HOME_PATH).expanduser()
     # find the index of the last occurrence of "users"
@@ -362,26 +403,27 @@ def get_aml_user_folder() -> Optional[Path]:
 
 
 # pylint: disable=import-outside-toplevel, unused-import, import-error
-def _run_user_settings():
+def _run_user_settings() -> None:
     """Check for nbuser_settings.py and warn that it is no longer used."""
     user_folder = get_aml_user_folder()
     if user_folder and user_folder.joinpath("nbuser_settings.py").is_file():
         warnings.warn(
-            "Automatic processing of nbuser_settings.py is no longer supported in MSTICPy."
+            "Automatic processing of nbuser_settings.py is no longer supported in MSTICPy.",
+            stacklevel=1,
         )
 
 
 # pylint: enable=import-outside-toplevel, unused-import, import-error
 
 
-def _set_mpconfig_var():
+def _set_mpconfig_var() -> None:
     """Set MSTICPYCONFIG to file in user directory if no other found."""
     mp_path_val = os.environ.get(MP_ENV_VAR)
     if (
         # If a valid MSTICPYCONFIG value is found - return
         (mp_path_val and Path(mp_path_val).is_file())
         # Or if there is a msticpyconfig in the current folder.
-        or Path(".").joinpath(MP_FILE).is_file()
+        or Path().joinpath(MP_FILE).is_file()
     ):
         return
     # Otherwise check the user's root folder
@@ -395,7 +437,7 @@ def _set_mpconfig_var():
             # it will have already configured settings so we need to refresh.
             refresh_config()
             _disp_html(
-                f"<br>No {MP_FILE} found. Will use {MP_FILE} in user folder {user_dir}<br>"
+                f"<br>No {MP_FILE} found. Will use {MP_FILE} in user folder {user_dir}<br>",
             )
 
 
@@ -404,12 +446,18 @@ _NBVM_PATH = "/mnt/azmnt/.nbvm"
 
 def _get_vm_metadata() -> Mapping[str, Any]:
     """Read VM metadata from definition file."""
-    with open(_NBVM_PATH, "r", encoding="utf-8") as nbvm_handle:
-        nbvm_lines = nbvm_handle.readlines()
+    nbvm_path = Path(_NBVM_PATH)
+    if not nbvm_path.exists():
+        return {}
+
+    content = nbvm_path.read_text(encoding="utf-8")
+    lines = content.strip().split("\n")
+
     return {
         item[0]: item[1]
-        for item in map(lambda x: x.split("=", maxsplit=1), nbvm_lines)
-        if item
+        for line in lines
+        for item in [line.split("=", 1)]
+        if len(item) == 2
     }
 
 
@@ -423,7 +471,7 @@ def _get_vm_fqdn() -> str:
     return ""
 
 
-def _check_kql_prereqs():
+def _check_kql_prereqs() -> None:
     """
     Check and install packages for Kqlmagic/msal_extensions.
 
@@ -480,16 +528,16 @@ def _check_kql_prereqs():
         ]
         if missing_lx_pkg:
             _disp_html(
-                "Kqlmagic/msal-extensions pre-requisite PyGObject not installed."
+                "Kqlmagic/msal-extensions pre-requisite PyGObject not installed.",
             )
             _disp_html(
                 "To prevent warnings when loading the Kqlmagic data provider,"
                 " Please run the following command:<br>"
-                "!conda install --yes -c conda-forge pygobject<br>"
+                "!conda install --yes -c conda-forge pygobject<br>",
             )
 
 
-def _check_azure_cli_status():
+def _check_azure_cli_status() -> None:
     """Check for Azure CLI credentials."""
     # import these only if we need them at runtime
     # pylint: disable=import-outside-toplevel
@@ -499,7 +547,7 @@ def _check_azure_cli_status():
         return
 
     status, message = check_cli_credentials()
-    if status == AzureCliStatus.CLI_OK:
+    if status == AzureCliStatus.CLI_OK and message:
         _disp_html(message)
         return
 
@@ -510,10 +558,10 @@ def _check_azure_cli_status():
         "Create a new notebook cell and enter the following command:<br>"
         "<pre>!az login</pre>"
         "You will be prompted to authenticate to Azure. Once you have "
-        "completed this, return to this notebook and continue.<br>"
+        "completed this, return to this notebook and continue.<br>",
     )
     if status == AzureCliStatus.CLI_NOT_INSTALLED:
-        _disp_html("Azure CLI not installed." f" ({_CLI_WIKI_MSSG_SHORT})")
+        _disp_html(f"Azure CLI not installed. ({_CLI_WIKI_MSSG_SHORT})")
     elif message:
         _disp_html("\n".join([message, _CLI_WIKI_MSSG_GEN]))
 
@@ -536,7 +584,7 @@ Azure:
 """
 
 
-def _check_aml_auth_method_order():
+def _check_aml_auth_method_order() -> None:
     """Reorder the auth methods to put Azure CLI first."""
     try:
         current_methods = get_config("Azure.auth_methods")
@@ -547,7 +595,8 @@ def _check_aml_auth_method_order():
     auth_index = {meth: idx for idx, meth in enumerate(current_methods)}
     msi_lower_than_cli = auth_index.get("msi", 99) > auth_index.get("cli", 99)
     msi_lower_than_devcode = auth_index.get("msi", 99) > auth_index.get(
-        "devicecode", auth_index.get("device_code", 99)
+        "devicecode",
+        auth_index.get("device_code", 99),
     )
     if msi_lower_than_cli or msi_lower_than_devcode:
         return

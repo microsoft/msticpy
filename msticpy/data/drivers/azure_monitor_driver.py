@@ -19,7 +19,6 @@ from __future__ import annotations
 import contextlib
 import logging
 import warnings
-from datetime import datetime
 from typing import Any, Iterable, cast
 
 import httpx
@@ -112,7 +111,7 @@ class AzureMonitorDriver(DriverBase):
         self._schema: dict[str, Any] = {}
         self.set_driver_property(
             DriverProps.FORMATTERS,
-            {"datetime": self._format_datetime, "list": self._format_list},
+            {"list": self._format_list},
         )
         self._loaded = True
         self._ua_policy = UserAgentPolicy(user_agent=mp_ua_header()["UserAgent"])
@@ -640,16 +639,12 @@ class AzureMonitorDriver(DriverBase):
         return _schema_format_tables(tables)
 
     @staticmethod
-    def _format_datetime(date_time: datetime) -> str:
-        """Return datetime-formatted string."""
-        return date_time.isoformat(sep="T") + "Z"
-
-    @staticmethod
     def _format_list(param_list: Iterable[Any]):
         """Return formatted list parameter."""
         fmt_list = []
         for item in param_list:
             if isinstance(item, str):
+                item = item.replace("'", r"\'")
                 fmt_list.append(f"'{item}'")
             else:
                 fmt_list.append(f"{item}")

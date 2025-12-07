@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import ipywidgets as widgets
@@ -48,7 +48,7 @@ class Lookback(IPyDisplayMixin):
             The description to display
             (the default is 'Select time ({units}) to look back')
         origin_time : datetime, optional
-            The origin time (the default is `datetime.utcnow()`)
+            The origin time (the default is `datetime.now(timezone.utc)`)
         min_value : int, optional
             Minimum value (the default is 1)
         max_value : int, optional
@@ -64,7 +64,9 @@ class Lookback(IPyDisplayMixin):
 
         """
         # default to now
-        self.origin_time = datetime.utcnow() if origin_time is None else origin_time
+        self.origin_time = (
+            datetime.now(timezone.utc) if origin_time is None else origin_time
+        )
         description = kwargs.pop("label", description)
 
         self._time_unit = parse_time_unit(units)

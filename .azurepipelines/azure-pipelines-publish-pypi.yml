@@ -87,7 +87,7 @@ extends:
 
         - powershell: python -m twine upload --skip-existing --verbose "$(DistDir)/*"
           condition: eq('${{ parameters.Feed }}', 'pypi')
-          displayName: 'Push to PyPI Test feed'
+          displayName: 'Push to PyPI main feed'
           env:
             TWINE_REPOSITORY: ${{ parameters.Feed }}
             TWINE_USERNAME: __token__

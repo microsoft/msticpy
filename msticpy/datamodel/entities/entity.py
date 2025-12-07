@@ -11,7 +11,7 @@ import pprint
 import typing
 from abc import ABC
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Mapping, Optional, Type, Union
 
 import networkx as nx
@@ -88,7 +88,7 @@ class Entity(ABC, Node):
 
         """
         super().__init__()
-        self.TimeGenerated = datetime.utcnow()
+        self.TimeGenerated = datetime.now(timezone.utc)
         self.Type = self._get_entity_type_name(type(self))
         # If we have an unknown entity see if we a type passed in
         if self.Type == "unknown" and "Type" in kwargs:

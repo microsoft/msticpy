@@ -44,9 +44,7 @@ sources:
         | join kind=inner (AlertEvidence
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})) on AlertId
-        | project-away TenantId1, TimeGenerated1, Timestamp1, AlertId1, Title1,
-          AttackTechniques1, ServiceSource1, DetectionSource1, SHA1,
-          SourceSystem1, Type1
+        | project-away *1
         {add_query_items}"
       uri: None
   host_alerts:
@@ -81,9 +79,7 @@ sources:
         | join kind=inner (AlertEvidence
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})) on AlertId
-        | project-away TenantId1, TimeGenerated1, Timestamp1, AlertId1, Title1,
-          AttackTechniques1, ServiceSource1, DetectionSource1, SHA1,
-          SourceSystem1, Type1
+        | project-away *1
         | where EntityType =~ "Ip"
         | where RemoteIP has "{ip_address}"
         {add_query_items}'
@@ -102,9 +98,7 @@ sources:
         | join kind=inner (AlertEvidence
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})) on AlertId
-        | project-away TenantId1, TimeGenerated1, Timestamp1, AlertId1, Title1,
-          AttackTechniques1, ServiceSource1, DetectionSource1, SHA1,
-          SourceSystem1, Type1
+        | project-away *1
         | where EntityType =~ "Url"
         | where RemoteUrl has "{url}"
         {add_query_items}'
@@ -123,9 +117,7 @@ sources:
         | join kind=inner (AlertEvidence
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})) on AlertId
-        | project-away TenantId1, TimeGenerated1, Timestamp1, AlertId1, Title1,
-          AttackTechniques1, ServiceSource1, DetectionSource1, SHA1,
-          SourceSystem1, Type1
+        | project-away *1
         | where EntityType in~ ("File", "Process")
         | where SHA1 has "{file_hash}"
         {add_query_items}'
@@ -146,9 +138,7 @@ sources:
         | join kind=inner (AlertEvidence
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})) on AlertId
-        | project-away TenantId1, TimeGenerated1, Timestamp1, AlertId1, Title1,
-          AttackTechniques1, ServiceSource1, DetectionSource1, SHA1,
-          SourceSystem1, Type1
+        | project-away *1
         | where EntityType in~ ("File", "Process")
         | where SHA256 has "{file_hash}"
         {add_query_items}'
@@ -169,9 +159,7 @@ sources:
         | join kind=inner (AlertEvidence
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})) on AlertId
-        | project-away TenantId1, TimeGenerated1, Timestamp1, AlertId1, Title1,
-          AttackTechniques1, ServiceSource1, DetectionSource1, SHA1,
-          SourceSystem1, Type1
+        | project-away *1
         | where EntityType =~ "Process"
         | where FileName =~ "{file_name}"
         {add_query_items}'
@@ -192,9 +180,7 @@ sources:
         | join kind=inner (AlertEvidence
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})) on AlertId
-        | project-away TenantId1, TimeGenerated1, Timestamp1, AlertId1, Title1,
-          AttackTechniques1, ServiceSource1, DetectionSource1, SHA1,
-          SourceSystem1, Type1
+        | project-away *1
         | where EntityType =~ "User"
         | where AccountName =~ "{account_name}"
         {add_query_items}'
@@ -213,9 +199,7 @@ sources:
         | join kind=inner (AlertEvidence
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})) on AlertId
-        | project-away TenantId1, TimeGenerated1, Timestamp1, AlertId1, Title1,
-          AttackTechniques1, ServiceSource1, DetectionSource1, SHA1,
-          SourceSystem1, Type1
+        | project-away *1
         | where EntityType =~ "RegistryValue"
         | where RegistryKey =~ "{key_name}"
         {add_query_items}'
@@ -234,9 +218,7 @@ sources:
         | join kind=inner (AlertEvidence
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})) on AlertId
-        | project-away TenantId1, TimeGenerated1, Timestamp1, AlertId1, Title1,
-          AttackTechniques1, ServiceSource1, DetectionSource1, SHA1,
-          SourceSystem1, Type1
+        | project-away *1
         | where EntityType =~ "MailMessage"
         | where NetworkMessageId =~ "{message_id}"
         {add_query_items}'
@@ -255,9 +237,7 @@ sources:
         | join kind=inner (AlertEvidence
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})) on AlertId
-        | project-away TenantId1, TimeGenerated1, Timestamp1, AlertId1, Title1,
-          AttackTechniques1, ServiceSource1, DetectionSource1, SHA1,
-          SourceSystem1, Type1
+        | project-away *1
         | where EntityType =~ "Mailbox"
         | where AccountUpn =~ "{mailbox}"
         {add_query_items}'
@@ -276,6 +256,7 @@ sources:
         | join kind=inner (AlertEvidence
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})) on AlertId
+        | project-away *1
         | where EntityType in~ ("CloudApplication", "OAuthApplication")
         | where Application =~ "{app_name}"
         {add_query_items}'

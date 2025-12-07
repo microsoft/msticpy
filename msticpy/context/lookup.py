@@ -19,7 +19,7 @@ import importlib
 import logging
 import warnings
 from collections import ChainMap
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Mapping, Sized
+from typing import TYPE_CHECKING, Any, Callable, ClassVar
 
 import nest_asyncio
 import pandas as pd
@@ -42,6 +42,7 @@ from .provider_base import Provider, _make_sync
 
 if TYPE_CHECKING:
     import datetime
+    from collections.abc import Iterable, Mapping, Sized
     from types import ModuleType
 
     from ..nbwidgets.select_item import SelectItem
@@ -323,22 +324,22 @@ class Lookup:
 
     def provider_usage(self: Self) -> None:
         """Print usage of loaded providers."""
-        print("Primary providers")
-        print("-----------------")
+        logger.info("Primary providers")
+        logger.info("-----------------")
         if self._providers:
             for prov_name, prov in self._providers.items():
-                print("\nProvider class: %s", prov_name)
+                logger.info("\nProvider class: %s", prov_name)
                 prov.usage()
         else:
-            print("none")
-        print("\nSecondary providers")
-        print("-------------------")
+            logger.info("none")
+        logger.info("\nSecondary providers")
+        logger.info("-------------------")
         if self._secondary_providers:
             for prov_name, prov in self._secondary_providers.items():
-                print("\nProvider class: %s", prov_name)
+                logger.info("\nProvider class: %s", prov_name)
                 prov.usage()
         else:
-            print("none")
+            logger.info("none")
 
     @classmethod
     def reload_provider_settings(cls: type[Self]) -> None:
@@ -451,7 +452,7 @@ class Lookup:
         default_providers: list[str] | None = None,
         prov_scope: str = "primary",
         *,
-        progress=True,
+        progress: bool = True,
         show_not_supported: bool = False,
         start: datetime.datetime | None = None,
         end: datetime.datetime | None = None,
@@ -489,9 +490,6 @@ class Lookup:
             If supported by the provider, end time for the item's validity
         progress : bool
             Use progress bar to track completion, by default True
-
-        Other Parameters
-        ----------------
         progress : bool
             Use progress bar to track completion, by default True
 

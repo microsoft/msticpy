@@ -83,12 +83,22 @@ class TestQuerySource(unittest.TestCase):
             )
         self.query_sources = self.la_provider.query_store.data_families
 
+    def test_date_formatters_datetime_no_tz(self):
+        """Test date formatting standard date."""
+        # standard date
+        test_end = datetime.now(tz=None)
+        test_start = test_end - timedelta(days=1)
+        check_dt_str = test_start.isoformat(sep="T") + "Z"
+        q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
+        query = q_src.create_query(start=test_start, end=test_end)
+        self.assertIn(check_dt_str, query)
+
     def test_date_formatters_datetime(self):
         """Test date formatting standard date."""
         # standard date
         test_end = datetime.now(tz=timezone.utc)
         test_start = test_end - timedelta(days=1)
-        check_dt_str = test_start.isoformat(sep="T") + "Z"
+        check_dt_str = test_start.isoformat(sep="T")
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
         query = q_src.create_query(start=test_start, end=test_end)
         self.assertIn(check_dt_str, query)
@@ -97,7 +107,7 @@ class TestQuerySource(unittest.TestCase):
         """Test date formatting ISO date string."""
         test_end = datetime.now(tz=timezone.utc)
         test_start = test_end - timedelta(days=1)
-        check_dt_str = test_start.isoformat(sep="T") + "Z"
+        check_dt_str = test_start.isoformat(sep="T")
         start = test_start.isoformat()
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
         query = q_src.create_query(start=start, end=test_end)

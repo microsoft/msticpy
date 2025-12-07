@@ -4,13 +4,25 @@
 # license information.
 # --------------------------------------------------------------------------
 """test package imports."""
+from __future__ import annotations
+
 import re
 import sys
 from pathlib import Path
 
-import pkg_resources
 import pytest
 import pytest_check as check
+
+try:
+    from packaging.requirements import Requirement
+except ImportError:
+    # Fallback for older environments
+    try:
+        from importlib_metadata import Requirement
+    except ImportError:
+        # Last resort fallback
+        from pkg_resources import Requirement
+
 from tools.toollib.import_analyzer import analyze_imports, get_setup_reqs
 
 PKG_ROOT = "."
@@ -29,7 +41,9 @@ EXTRAS_EXCEPTIONS = {
     "pyperclip",
     "autogen",
     "importlib_resources",
+    "importlib_metadata",
     "notebookutils",
+    "distutils",
 }
 CONDA_PKG_EXCEPTIONS = {
     "vt-py",
@@ -157,13 +171,19 @@ def test_conda_reqs(extras_from_setup):
 def _get_reqs_from_file(reqs_file):
     with open(str(reqs_file), "r") as f_hdl:
         reqs_lines = f_hdl.readlines()
-    reqs = [
-        pkg_resources.Requirement.parse(req)
-        for req in reqs_lines
-        if req.strip() and not req.strip().startswith("#")
-    ]
+
+    requirements = set()
+    for req in reqs_lines:
+        if not req.strip() or req.strip().startswith("#"):
+            continue
+
+        # Remove trailing comments and strip whitespace
+        req_clean = req.split("#")[0].strip()
+        if req_clean:
+            requirements.add(Requirement(req_clean))
+
     return {
         req.name.casefold(): req.specifier
-        for req in reqs
+        for req in requirements
         if req.marker is None or req.marker.evaluate()
     }

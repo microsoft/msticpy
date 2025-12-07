@@ -11,9 +11,10 @@ import base64
 import dataclasses
 import json
 import logging
+from collections.abc import Hashable
 from datetime import timedelta
 from functools import partial
-from typing import TYPE_CHECKING, Any, Hashable, NamedTuple, NoReturn
+from typing import TYPE_CHECKING, Any, NamedTuple, NoReturn
 
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.serialization import pkcs12
@@ -47,9 +48,9 @@ try:
     if TYPE_CHECKING:
         from azure.kusto.data.response import KustoResponseDataSet
 except ImportError as imp_err:
-    import_err: str = "Cannot use this feature without Azure Kusto client installed"
+    IMPORT_ERR: str = "Cannot use this feature without Azure Kusto client installed"
     raise MsticpyMissingDependencyError(
-        import_err,
+        IMPORT_ERR,
         title="Error importing azure.kusto.data",
         packages="azure-kusto-data",
     ) from imp_err

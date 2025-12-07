@@ -8,7 +8,7 @@
 import contextlib
 import warnings
 from collections import namedtuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import pytest
@@ -19,13 +19,7 @@ from msticpy.data import QueryProvider
 from msticpy.datamodel import entities
 from msticpy.init.pivot import Pivot
 
-# pylint: disable=unused-import, unused-argument
-from .pivot_fixtures import (
-    create_data_providers,
-    create_pivot,
-    data_providers,
-    exec_connect,
-)
+from .conftest import exec_connect
 
 __author__ = "Ian Hellen"
 
@@ -128,7 +122,9 @@ class _TimeObj:
 
 def test_pivot_time(create_pivot):
     """Function_docstring."""
-    end = datetime.utcnow()
+    from datetime import timezone
+
+    end = datetime.now(timezone.utc)
     start = end - timedelta(1)
     timespan = TimeSpan(start=start, end=end)
 
@@ -214,7 +210,7 @@ def test_entity_attr_funcs(create_pivot, test_case):
 def test_misc_functions(create_pivot):
     """Test some additional methods of pivot.py."""
     check.greater(len(create_pivot.providers), 2)
-    t_span = TimeSpan(end=datetime.utcnow(), period="1D")
+    t_span = TimeSpan(end=datetime.now(timezone.utc), period="1D")
     create_pivot.edit_query_time(timespan=t_span)
     check.equal(create_pivot.start, t_span.start)
     check.equal(create_pivot.end, t_span.end)

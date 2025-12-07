@@ -4,21 +4,46 @@
 # license information.
 # --------------------------------------------------------------------------
 """Requirements file writer from setup.py extras."""
+from __future__ import annotations
 
 import argparse
 import difflib
 import sys
 from importlib import import_module
 from pathlib import Path
-from typing import List
 
-from pkg_resources import Requirement, parse_requirements
+try:
+    from packaging.requirements import Requirement
+except ImportError:
+    # Fallback for older environments
+    try:
+        from importlib_metadata import Requirement
+    except ImportError:
+        # Last resort fallback
+        # pylint: disable=deprecated-module
+        from pkg_resources import Requirement
+
 from setuptools.config import read_configuration
 
 VERSION = "1.0.0"
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+
+def parse_requirements(requirements: list[str]) -> list[Requirement]:
+    """Parse a list of requirement strings into Requirement objects."""
+    parsed_reqs = set()
+    for req in requirements:
+        if not req.strip() or req.strip().startswith("#"):
+            continue
+
+        # Remove trailing comments and strip whitespace
+        req_clean = req.split("#")[0].strip()
+        if req_clean:
+            parsed_reqs.add(Requirement(req_clean))
+
+    return list(parsed_reqs)
 
 
 _PIPFILE_TEMPLATE = """
@@ -90,7 +115,7 @@ def _add_script_args():
     return parser
 
 
-def _read_reqs_file(file) -> List[Requirement]:
+def _read_reqs_file(file: str) -> list[Requirement]:
     """Return parsed requirements from requirements file."""
     reqs_file = Path(file)
     if reqs_file.is_file():
@@ -105,7 +130,7 @@ def _read_reqs_file(file) -> List[Requirement]:
     return []
 
 
-def _compare_reqs(new: List[Requirement], current: List[Requirement]) -> List[str]:
+def _compare_reqs(new: list[Requirement], current: list[Requirement]) -> list[str]:
     """Return diff of two requirements lists."""
     new_list = [str(req) for req in new]
     curr_list = [str(req) for req in current]
@@ -119,7 +144,7 @@ def _compare_reqs(new: List[Requirement], current: List[Requirement]) -> List[st
     )
 
 
-def _write_requirements(file_name, requirements: List[Requirement]):
+def _write_requirements(file_name: str, requirements: list[Requirement]) -> None:
     """Write requirements file."""
     Path(file_name).write_text(
         "\n".join(str(req) for req in requirements), encoding="utf-8"
@@ -133,7 +158,7 @@ def _get_pyver_from_setup(setup_cfg: str = "setup.cfg") -> str:
 
 
 def _create_pipfile(
-    reqs: List[Requirement], reqs_dev: List[Requirement], py_ver: str
+    reqs: list[Requirement], reqs_dev: list[Requirement], py_ver: str
 ) -> str:
     """Return the text of a Pipfile."""
     packages = [f'{req.name} = "{req.specifier}"' for req in reqs]
@@ -148,7 +173,7 @@ def _create_pipfile(
 def _get_extras_from_setup(
     extra: str = "all",
     include_base: bool = False,
-) -> List[Requirement]:
+) -> list[Requirement]:
     """
     Return list of extras from setup.py.
 

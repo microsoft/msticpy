@@ -8,7 +8,7 @@ import json
 import pickle  # nosec
 import zipfile
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Generator, Iterable, List, Optional, Set, Tuple, Union
 from zipfile import BadZipFile, ZipFile
@@ -41,6 +41,7 @@ _MITRE_JSON_URL = (
 _MTR_TAC_CAT_URI = "https://attack.mitre.org/tactics/{cat}/"
 _MTR_TECH_CAT_URI = "https://attack.mitre.org/techniques/{cat}/"
 
+# pylint: disable=invalid-name
 MITRE_TECHNIQUES: Optional[pd.DataFrame] = None
 MITRE_TACTICS: Optional[pd.DataFrame] = None
 
@@ -598,7 +599,7 @@ def _create_mdr_metadata_cache():
 _GET_MORDOR_METADATA = _create_mdr_metadata_cache()
 
 _LAST_UPDATE_KEY = "mp_last_updated"
-_DEFAULT_TS = pd.Timestamp(pd.Timestamp.utcnow() - pd.Timedelta(days=60))
+_DEFAULT_TS = pd.Timestamp(pd.Timestamp.now(tz=timezone.utc) - pd.Timedelta(days=60))
 
 
 # pylint: disable=global-statement
@@ -634,7 +635,7 @@ def _fetch_mdr_metadata(cache_folder: Optional[str] = None) -> Dict[str, MordorE
             last_timestamp = pd.Timestamp(
                 metadata_doc.get(_LAST_UPDATE_KEY, _DEFAULT_TS)
             )
-            cache_valid = (pd.Timestamp.utcnow() - last_timestamp).days < 30
+            cache_valid = (pd.Timestamp.now(tz=timezone.utc) - last_timestamp).days < 30
 
         if not cache_valid:
             gh_file_content = _get_mdr_file(filename)
@@ -642,7 +643,9 @@ def _fetch_mdr_metadata(cache_folder: Optional[str] = None) -> Dict[str, MordorE
                 metadata_doc = yaml.safe_load(gh_file_content)
             except yaml.error.YAMLError:
                 continue
-            metadata_doc[_LAST_UPDATE_KEY] = pd.Timestamp.utcnow().isoformat()
+            metadata_doc[_LAST_UPDATE_KEY] = pd.Timestamp.now(
+                tz=timezone.utc
+            ).isoformat()
             md_cached_metadata[filename] = metadata_doc
         doc_id = metadata_doc.get("id")
         mdr_entry = metadata_doc.copy()
@@ -677,7 +680,7 @@ def _write_mordor_cache(md_cached_metadata, cache_folder):
 
 
 def _build_mdr_indexes(
-    mdr_metadata: Dict[str, MordorEntry]
+    mdr_metadata: Dict[str, MordorEntry],
 ) -> Tuple[Dict[str, Set[str]], Dict[str, Set[str]]]:
     """
     Return dictionaries mapping Mitre items to Mordor datasets.

@@ -54,7 +54,7 @@ try:
         from azure.mgmt.network.models import NetworkInterface
         from azure.mgmt.subscription.models import Subscription
 except ImportError as imp_err:
-    error_msg: str = (
+    ERROR_MSG: str = (
         "Cannot use this feature without these azure packages installed:\n"
         "azure.mgmt.network\n"
         "azure.mgmt.resource\n"
@@ -62,7 +62,7 @@ except ImportError as imp_err:
         "azure.mgmt.compute\n"
     )
     raise MsticpyImportExtraError(
-        error_msg,
+        ERROR_MSG,
         title="Error importing azure module",
         extra="azure",
     ) from imp_err
@@ -919,6 +919,8 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
             times: list = []
             output = []
             for time in metric.timeseries:
+                if not time or not time.data:
+                    continue
                 for data in time.data:
                     times.append(data.time_stamp)
                     output.append(data.total)
@@ -1065,7 +1067,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
                     self,
                     client_name,
                     client(
-                        self.credentials.legacy,
+                        self.credentials.legacy,  # type:ignore[arg-type]
                         base_url=self.az_cloud_config.resource_manager,
                         credential_scopes=[self.az_cloud_config.token_uri],
                     ),
@@ -1075,7 +1077,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
                 self,
                 client_name,
                 client(
-                    self.credentials.legacy,
+                    self.credentials.legacy,  # type:ignore[arg-type]
                     subscription_id=sub_id,
                     base_url=self.az_cloud_config.resource_manager,
                     credential_scopes=[self.az_cloud_config.token_uri],
