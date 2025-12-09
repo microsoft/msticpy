@@ -213,7 +213,7 @@ def create_pivot_func(
             ).drop(columns="src_row_index", errors="ignore")
         return result_df
 
-    pivot_lookup.pivot_properties = attr.asdict(
+    pivot_lookup.pivot_properties = attr.asdict(  # type: ignore[attr-defined]
         pivot_reg, filter=lambda _, val: val is not None
     )
     return pivot_lookup

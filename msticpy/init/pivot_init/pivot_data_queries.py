@@ -23,8 +23,8 @@ from ..pivot_core.pivot_container import PivotContainer
 from ..pivot_core.pivot_register import get_join_params, join_result
 
 if TYPE_CHECKING:
+    from ...data.core.data_providers import QueryProvider
     from ...data.core.query_source import QuerySource
-    from ...data.drivers.driver_base import QueryProvider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

@@ -425,7 +425,7 @@ class KqlDriver(DriverBase):
         current_connection = [conn for conn in connections if conn.startswith(" * ")]
         if not current_connection:
             return ""
-        return current_connection[0].removeprefix(" * ").split("@")[0]
+        return current_connection[0].replace(" * ", "").strip().split("@")[0]
 
     def _set_kql_cloud(self):
         """If cloud is set in Azure Settings override default."""

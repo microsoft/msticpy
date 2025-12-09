@@ -101,7 +101,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         )
 
         # pylint: enable=import-outside-toplevel
-        self.__class__._add_pivots = add_data_queries_to_entities
+        self.__class__._add_pivots = add_data_queries_to_entities  # type: ignore[attr-defined]
 
         data_environment, self.environment_name = QueryProvider._check_environment(
             data_environment,

@@ -447,5 +447,5 @@ class Pivot:
 
 
 # add link in datamodel for legacy location
-legacy_pivot.Pivot = Pivot
-legacy_pivot.PivotRegistration = PivotRegistration
+legacy_pivot.Pivot = Pivot  # type: ignore[attr-defined]
+legacy_pivot.PivotRegistration = PivotRegistration  # type: ignore[attr-defined]
