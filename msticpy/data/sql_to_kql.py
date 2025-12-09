@@ -10,7 +10,7 @@ This is an experiment conversion utility built to support a limited subset
 of ANSI SQL.
 
 It relies on mo_sql_parsing https://github.com/klahnakoski/mo-sql-parsing
-(a maintained fork from the deprecated https://github.com/mozilla/moz-sql-parser)
+(version 11+, a maintained fork from the deprecated https://github.com/mozilla/moz-sql-parser)
 to parse the SQL syntax tree. Some hacky additions have been done to
 allow table renaming and support for non ANSI SQL operators such as
 RLIKE.
@@ -24,13 +24,16 @@ Known limitations
 - Does not support aggregate functions in SELECT with no GROUP BY clause
 - Does not support IN, EXISTS, HAVING operators
 - Only partial support for AS naming (should work in SELECT expressions)
+- PIVOT operations are parsed but may require additional handling
 
 """
+
+from __future__ import annotations
 
 import random
 import re
 from collections import namedtuple
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 from ..common.exceptions import MsticpyImportExtraError
 
@@ -183,10 +186,8 @@ BINARY_OPS = {
     "is_not": "!=",
 }
 
-# noqa: MC0001
 
-
-def sql_to_kql(sql: str, target_tables: Dict[str, str] = None) -> str:
+def sql_to_kql(sql: str, target_tables: dict[str, str] | None = None) -> str:
     """Parse SQL and return KQL equivalent."""
     # ensure literals are surrounded by single quotes
     sql = _single_quote_strings(sql)
@@ -195,18 +196,26 @@ def sql_to_kql(sql: str, target_tables: Dict[str, str] = None) -> str:
     if target_tables:
         for table, target_name in target_tables.items():
             sql = sql.replace(table, target_name)
-    # replace keywords
-    # sql = _remap_kewords(sql)
+
     parsed_sql = parse(sql)
     query_lines = _parse_query(parsed_sql)
     return "\n".join(line for line in query_lines if line.strip())
 
 
-def _parse_query(parsed_sql: Dict[str, Any]) -> List[str]:  # noqa: MC0001
+def _parse_query(parsed_sql: dict[str, Any]) -> list[str]:
     """Translate query or subquery."""
-    query_lines: List[str] = []
+    query_lines: list[str] = []
     if isinstance(parsed_sql, str):
         return [parsed_sql]
+
+    # Handle union_all at top level (no FROM/SELECT) - note the underscore
+    if "union_all" in parsed_sql and FROM not in parsed_sql:
+        union_l_expr = "\n".join(_parse_query(parsed_sql["union_all"][0]))
+        query_lines.append(union_l_expr)
+        union_r_expr = "\n  ".join(_parse_query(parsed_sql["union_all"][1]))
+        query_lines.append(f"| union ({union_r_expr}\n)")
+        return query_lines
+
     if FROM in parsed_sql:
         _process_from(parsed_sql[FROM], query_lines)
     if WHERE in parsed_sql:
@@ -218,7 +227,7 @@ def _parse_query(parsed_sql: Dict[str, Any]) -> List[str]:  # noqa: MC0001
         # the groupby
         parsed_sql.pop(SELECT, parsed_sql.pop(SELECT_DISTINCT, None))
 
-    distinct_select: List[Dict[str, Any]] = []
+    distinct_select: list[dict[str, Any]] = []
     if SELECT_DISTINCT in parsed_sql:
         distinct_select.extend(parsed_sql[SELECT_DISTINCT])
         _process_select(
@@ -248,8 +257,8 @@ def _parse_query(parsed_sql: Dict[str, Any]) -> List[str]:  # noqa: MC0001
 
 
 def _process_from(
-    from_expr: Union[List[Dict[str, Any]], Dict[str, Any], str], query_lines: List[str]
-):
+    from_expr: list[dict[str, Any]] | dict[str, Any] | str, query_lines: list[str]
+) -> None:
     """Process FROM clause."""
     if isinstance(from_expr, dict) and UNION in from_expr:
         query_lines.extend(_parse_query(from_expr))
@@ -274,13 +283,16 @@ def _process_from(
 
 
 def _process_select(
-    parsed_sql: Dict[str, Any],
-    expr_list: Union[List[Dict[Any, Any]], Dict[Any, Any]],
-    query_lines: List[str],
-):
+    parsed_sql: dict[str, Any],
+    expr_list: list[dict[Any, Any]] | dict[Any, Any],
+    query_lines: list[str],
+) -> None:
     """Process SELECT clause."""
     # Expressions
+    # Handle both old format ("*") and new format ({'all_columns': {}})
     if parsed_sql == "*":
+        return
+    if isinstance(parsed_sql, dict) and "all_columns" in parsed_sql:
         return
     _db_print(expr_list, type(expr_list))
     select_list = expr_list if isinstance(expr_list, list) else [expr_list]
@@ -305,7 +317,7 @@ def _process_select(
         query_lines.append(f"| project {', '.join(project_items)}")
 
 
-def _gen_expr_name(value):
+def _gen_expr_name(value: Any) -> str:
     """Generate random expression name."""
     pref = "expr"
     if isinstance(value, str):
@@ -321,7 +333,7 @@ def _gen_expr_name(value):
     return f"{pref}_{suffix}"
 
 
-def _get_expr_list(expr_list):
+def _get_expr_list(expr_list: Any) -> Any:
     if (
         isinstance(expr_list, list)
         and len(expr_list) == 1
@@ -332,7 +344,7 @@ def _get_expr_list(expr_list):
     return expr_list
 
 
-def _get_expr_value(expr_val):
+def _get_expr_value(expr_val: Any) -> Any:
     if isinstance(expr_val, dict) and "value" in expr_val:
         return expr_val["value"]
     if isinstance(expr_val, list):
@@ -340,7 +352,7 @@ def _get_expr_value(expr_val):
     return expr_val
 
 
-def _process_group_by(parsed_sql: Dict[str, Any], query_lines: List[str]):
+def _process_group_by(parsed_sql: dict[str, Any], query_lines: list[str]) -> None:
     """Process GROUP BY clause."""
     group_by_expr = parsed_sql[GROUP_BY]
     group_by_expr = (
@@ -351,26 +363,39 @@ def _process_group_by(parsed_sql: Dict[str, Any], query_lines: List[str]):
     expr_list = parsed_sql.get(SELECT, parsed_sql.get(SELECT_DISTINCT, []))
     group_by_expr_list = []
     expr_list = _get_expr_value(expr_list)
+    # Handle single expression that's not in a list
+    if not isinstance(expr_list, list):
+        expr_list = [{"value": expr_list}]
     for expr in expr_list:
         name_expr = ""
-        if "name" in expr:
+        if isinstance(expr, dict) and "name" in expr:
             name_expr = f"{expr.get('name')} = "
-        if isinstance(expr.get("value"), str):
-            group_by_expr_list.append(f"{name_expr}any({expr['value']})")
+        expr_value = expr.get("value") if isinstance(expr, dict) else expr
+        if isinstance(expr_value, str):
+            group_by_expr_list.append(f"{name_expr}any({expr_value})")
         else:
-            group_by_expr_list.append(
-                f"{name_expr}{_parse_expression(expr.get('value'))}"
-            )
+            group_by_expr_list.append(f"{name_expr}{_parse_expression(expr_value)}")
     query_lines.append(f"| summarize {', '.join(group_by_expr_list)} by {by_clause}")
 
 
 # pylint: disable=too-many-return-statements, too-many-branches
-def _parse_expression(expression):  # noqa: MC0001, PLR0911
+def _parse_expression(expression: Any) -> str:  # noqa: PLR0911
     """Return parsed expression."""
     if _is_literal(expression)[0]:
         return _quote_literal(expression)
     if not isinstance(expression, dict):
         return expression
+
+    # Handle COUNT(DISTINCT x) in version 11 format: {"distinct": true, "count": "EventID"}
+    if (
+        isinstance(expression, dict)
+        and "distinct" in expression
+        and "count" in expression
+    ):
+        if expression.get("distinct") is True:
+            func_arg = _parse_expression(expression["count"])
+            return f"dcount({func_arg})"
+
     if AND in expression:
         return "\n  and ".join(
             [f"({_parse_expression(expr)})" for expr in expression[AND]]
@@ -434,13 +459,16 @@ def _map_func(func: str, *args) -> str:
         return func_fmt.format(**args_dict)
     func_map = SQL_KQL_FUNC_MAP[func]
 
-    if (
-        func == "count"
-        and isinstance(args[0], dict)
-        and next(iter(args[0])) == "distinct"
-    ):
-        func_arg = _get_expr_value(args[0]["distinct"])
-        return f"dcount({func_arg})"
+    # Handle COUNT(DISTINCT x) - the first argument might be the column name
+    # with distinct flag embedded in the expression dict from the parser
+    if func == "count":
+        if isinstance(args[0], dict) and "distinct" in args[0]:
+            # Old format: {"count": {"distinct": x}}
+            func_arg = _get_expr_value(args[0]["distinct"])
+            return f"dcount({func_arg})"
+        # Just return regular count
+        func_arg = _parse_expression(args[0])
+        return f"count({func_arg})"
 
     if not func_map.cust_arg_fmt and not func_map.cust_func_format:
         func_fmt = f"{func_map.default}({def_arg_fmt})"
@@ -454,7 +482,7 @@ def _map_func(func: str, *args) -> str:
     raise ValueError(f"Could not map function or args {func}{args_dict}")
 
 
-def _quote_literal(expr: Union[str, List[str], Any]) -> Any:
+def _quote_literal(expr: str | list[str] | Any) -> Any:
     """Quote string if it is a literal."""
     literal, expr = _is_literal(expr)
     if not literal:
@@ -466,7 +494,7 @@ def _quote_literal(expr: Union[str, List[str], Any]) -> Any:
     return expr
 
 
-def _is_literal(expr: Union[Dict[str, Any], Any]) -> Tuple[bool, Any]:
+def _is_literal(expr: dict[str, Any] | Any) -> tuple[bool, Any]:
     """Check if literal string."""
     if isinstance(expr, dict) and "literal" in expr:
         return True, expr["literal"]
@@ -485,14 +513,14 @@ def _single_quote_strings(sql: str) -> str:
     return re.sub(r"(?<![\\])\"", "'", sql)
 
 
-def _format_order_item(item: Dict[str, Any]) -> str:
+def _format_order_item(item: dict[str, Any]) -> str:
     """Return ORDER BY item with sort direction."""
     if "sort" in item:
         return f"{item['value']} {item['sort'].lower()}"
     return f"{item['value']}"
 
 
-def _get_join_list(parsed_sql: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def _get_join_list(parsed_sql: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return list of JOIN sub-expressions."""
     if not isinstance(parsed_sql, list):
         return []
@@ -506,7 +534,7 @@ def _get_join_list(parsed_sql: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return join_list
 
 
-def _rewrite_table_refs(join_expr: Union[Any, str, List], table_expr: str) -> str:
+def _rewrite_table_refs(join_expr: Any | str | list, table_expr: str) -> str:
     """Rewrite dotted prefixes."""
     p_expr = _parse_expression(join_expr)
     prefixes = set(re.findall(r"(\w+)\.", p_expr))
@@ -523,7 +551,7 @@ def _rewrite_table_refs(join_expr: Union[Any, str, List], table_expr: str) -> st
     return p_expr
 
 
-def _parse_join(join_expr) -> Optional[str]:
+def _parse_join(join_expr: dict[str, Any]) -> str | None:
     """Return translated JOIN expression."""
     join_type_set = JOIN_KEYWORDS & join_expr.keys()
     if not join_type_set:
@@ -546,7 +574,7 @@ def _parse_join(join_expr) -> Optional[str]:
     return f"| join kind={kql_join_type} ({p_table_expr}) on {on_expr}"
 
 
-def _process_like(expression: Dict[str, Any]) -> str:
+def _process_like(expression: dict[str, Any]) -> str:
     """Process Like clause."""
     left = _parse_expression(expression[LIKE][0])
     literal, right = _is_literal(expression[LIKE][1])
@@ -571,8 +599,8 @@ def _process_like(expression: Dict[str, Any]) -> str:
     return f"{left} {oper} {right}"
 
 
-def _create_distinct_list(distinct_select):
-    distinct_list = []
+def _create_distinct_list(distinct_select: list[dict[str, Any]]) -> list[str]:
+    distinct_list: list[str] = []
     for distinct_item in distinct_select:
         if "name" in distinct_item:
             distinct_list.append(distinct_item["name"])
@@ -587,12 +615,12 @@ def _create_distinct_list(distinct_select):
     return distinct_list
 
 
-def _create_order_by(order_by):
+def _create_order_by(order_by: dict[str, Any] | list[dict[str, Any]]) -> str:
     if isinstance(order_by, list):
         return ", ".join(_format_order_item(item) for item in order_by)
     return _format_order_item(order_by)
 
 
-def _db_print(*args, **kwargs):
+def _db_print(*args: Any, **kwargs: Any) -> None:
     if _DEBUG:
         print(*args, **kwargs)
