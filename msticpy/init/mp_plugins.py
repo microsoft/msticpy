@@ -86,7 +86,10 @@ def load_plugins_from_path(plugin_path: Union[str, Path]):
         try:
             module = import_module(module_file.stem)
         except ImportError:
-            warn(f"Unable to import plugin {module_file} from {plugin_path}")
+            warn(
+                f"Unable to import plugin {module_file} from {plugin_path}",
+                stacklevel=2,
+            )
         for name, obj in getmembers(module, isclass):
             if not isinstance(obj, type):
                 continue

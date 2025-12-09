@@ -13,7 +13,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from json.decoder import JSONDecodeError
 from numbers import Number
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from dateutil.parser import ParserError, parse  # type: ignore
 from dateutil.relativedelta import relativedelta
@@ -21,6 +21,9 @@ from dateutil.relativedelta import relativedelta
 from ..._version import VERSION
 from ...common.utility import collapse_dicts
 from .query_defns import Formatters
+
+if TYPE_CHECKING:
+    from .query_store import QueryStore
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -94,7 +97,7 @@ class QuerySource:
         self._source: dict[str, Any] = source or {}
         self.defaults: dict[str, Any] = defaults or {}
         self._global_metadata: dict[str, Any] = dict(metadata) if metadata else {}
-        self.query_store: "QueryStore" | None = None  # type: ignore  # noqa: F821
+        self.query_store: QueryStore | None = None
 
         # consolidate source metadata - source-specific
         # overrides global

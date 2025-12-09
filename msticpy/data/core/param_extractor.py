@@ -50,7 +50,7 @@ def extract_query_params(
     # at least the required params plus any that are extracted from args and
     # kwargs and have been added dynamically.
     req_param_names = query_source.required_params.keys()
-    req_params: Dict[str, Any] = {param: None for param in req_param_names}
+    req_params: Dict[str, Any] = dict.fromkeys(req_param_names)
 
     # try to retrieve any parameters as attributes of the args objects
     _get_object_params(args, all_params, req_params)

@@ -442,7 +442,9 @@ class DataTableFilter:
         return self._create_filter(col, operator, expr)
 
     # pylint: disable=too-many-return-statements
-    def _create_filter(self, col: str, operator: str, expr: str) -> pd.Series:
+    def _create_filter(  # noqa: PLR0911
+        self, col: str, operator: str, expr: str
+    ) -> pd.Series:
         if operator == "query":
             return pd.Series(self.data.index.isin(self.data.query(expr).index))
         if operator in ("in", "between"):

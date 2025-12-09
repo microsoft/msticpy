@@ -4,15 +4,16 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pandas DataFrame accessor for Pivot functions."""
+from __future__ import annotations
 
 import contextlib
 import json
 import re
 import warnings
+from collections.abc import Callable, Iterable
 from datetime import datetime
 from json import JSONDecodeError
 from numbers import Number
-from typing import Callable, Dict, Iterable, Set, Union
 
 import numpy as np
 import pandas as pd
@@ -161,7 +162,9 @@ class PivotAccessor:
         """
         if self._ip and var_name:
             if var_name in self._ip.ns_table["user_local"] and not clobber:
-                warnings.warn(f"Did not overwrite existing {var_name} in namespace")
+                warnings.warn(
+                    f"Did not overwrite existing {var_name} in namespace", stacklevel=2
+                )
             else:
                 self._ip.ns_table["user_local"][var_name] = self._df
         return self._df
@@ -208,7 +211,7 @@ class PivotAccessor:
 
     def filter_cols(
         self,
-        cols: Union[str, Iterable[str]],
+        cols: str | Iterable[str],
         match_case: bool = False,
         sort_cols: bool = False,
     ) -> pd.DataFrame:
@@ -235,7 +238,7 @@ class PivotAccessor:
 
         """
         curr_cols = self._df.columns
-        filt_cols: Set[str] = set()
+        filt_cols: set[str] = set()
         if isinstance(cols, str):
             filt_cols.update(_name_match(curr_cols, cols, match_case))
         elif isinstance(cols, list):
@@ -253,7 +256,7 @@ class PivotAccessor:
 
     def filter(
         self,
-        expr: Union[str, Number],
+        expr: str | Number,
         match_case: bool = False,
         numeric_col: bool = False,
     ) -> pd.DataFrame:
@@ -307,7 +310,7 @@ class PivotAccessor:
         raise TypeError("expr '{expr}' must be a string or numeric type.")
 
     def sort(
-        self, cols: Union[str, Iterable[str], Dict[str, str]], ascending: bool = None
+        self, cols: str | Iterable[str] | dict[str, str], ascending: bool = None
     ) -> pd.DataFrame:
         """
         Sort output by column expression.
@@ -374,7 +377,7 @@ class PivotAccessor:
             ]
             # we might get multiple matches
             if df_match_cols:
-                sort_cols.update({df_col: col_dict[col] for df_col in df_match_cols})
+                sort_cols.update(dict.fromkeys(df_match_cols, col_dict[col]))
                 continue
             raise ValueError(
                 f"'{col}' column in sort list did not match any columns in input data."
@@ -383,7 +386,7 @@ class PivotAccessor:
         asc_param = ascending if ascending is not None else list(sort_cols.values())
         return self._df.sort_values(list(sort_cols.keys()), ascending=asc_param)
 
-    def list_to_rows(self, cols: Union[str, Iterable[str]]) -> pd.DataFrame:
+    def list_to_rows(self, cols: str | Iterable[str]) -> pd.DataFrame:
         """
         Expand a list column to individual rows.
 
@@ -418,7 +421,7 @@ class PivotAccessor:
             )
         return data
 
-    def parse_json(self, cols: Union[str, Iterable[str]]) -> pd.DataFrame:
+    def parse_json(self, cols: str | Iterable[str]) -> pd.DataFrame:
         """
         Convert JSON string columns to Python types.
 
@@ -490,7 +493,7 @@ def _json_safe_conv(val):
     return val
 
 
-def _extract_values(data: Union[dict, list, str], key_name: str = "") -> dict:
+def _extract_values(data: dict | list | str, key_name: str = "") -> dict:
     """
     Recursively extracts column values from the given key's values.
 

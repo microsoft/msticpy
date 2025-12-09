@@ -289,7 +289,7 @@ class MsticpyCoreAccessor:
         if self._data_viewer_class is None:
             try:
                 # pylint: disable=import-outside-toplevel
-                from ..vis.data_viewer_panel import DataViewer
+                from ..vis.data_viewer_panel import DataViewer  # noqa: PLC0415
             except ImportError:
                 print("This component needs the panel package.")
                 return self._df

@@ -278,7 +278,7 @@ def _prep_data(data: pd.DataFrame, param: PlotParams):
 
     if param.value_col is None:
         # calculate a count of rows in each group
-        other_cols = list(set(data.columns) - set([param.x_column, param.y_column]))
+        other_cols = list(set(data.columns) - {param.x_column, param.y_column})
         if other_cols:
             count_col = other_cols[0]
         else:

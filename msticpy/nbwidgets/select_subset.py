@@ -161,11 +161,11 @@ class SelectSubset(IPyDisplayMixin):
                 selected_set.add(self._src_dict[selected])
             else:
                 selected_set.add(selected)
-        self._select_list.options = sorted(list(selected_set))
+        self._select_list.options = sorted(selected_set)
 
     def _on_btn_add_all(self, button):
         del button
-        self._select_list.options = sorted(list(set(self._source_list.options)))
+        self._select_list.options = sorted(set(self._source_list.options))
 
     def _on_btn_del(self, button):
         del button
@@ -178,16 +178,16 @@ class SelectSubset(IPyDisplayMixin):
                     selected_set.remove(self._src_dict[selected])
                 else:
                     selected_set.remove(selected)
-            self._select_list.options = sorted(list(selected_set))
+            self._select_list.options = sorted(selected_set)
         if not self._select_list.options:
             return
         # try to set the index to the next item in the list
         if cur_index < len(self._select_list.options):
             next_item = cur_index or 0
-            self._select_list.index = tuple([next_item])
+            self._select_list.index = (next_item,)
         else:
             last_item = max(len(self._select_list.options) - 1, 0)
-            self._select_list.index = tuple([last_item])
+            self._select_list.index = (last_item,)
 
     # pylint: enable=not-an-iterable
 

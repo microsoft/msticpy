@@ -146,7 +146,7 @@ def add_unbound_pivot_function(
 
 def _read_reg_file(file_path: str) -> Generator[PivotRegistration, Any, None]:
     """Read the yaml file and return generator of PivotRegistrations."""
-    with open(file_path, "r", encoding="utf-8") as f_handle:
+    with open(file_path, encoding="utf-8") as f_handle:
         # use safe_load instead load
         pivot_regs = yaml.safe_load(f_handle)
 
@@ -204,7 +204,8 @@ def _get_func_from_class(src_module, namespace, piv_reg):
         except Exception as err:  # pylint: disable=broad-except
             warnings.warn(
                 f"Could not create instance of class {src_class.__name__}. "
-                + f"Exception was {err}"
+                + f"Exception was {err}",
+                stacklevel=2,
             )
             return None
     # get the function from the object

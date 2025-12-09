@@ -257,7 +257,7 @@ class QueryStore:
         source_path: list,
         recursive: bool = True,
         driver_query_filter: dict[str, set[str]] | None = None,
-    ) -> dict[str, "QueryStore"]:
+    ) -> dict[str, QueryStore]:
         """
         Import multiple query definition files from directory path.
 
@@ -326,7 +326,7 @@ class QueryStore:
         self: Self,
         query_name: str,
         query_path: str | DataFamily | None = None,
-    ) -> "QuerySource":
+    ) -> QuerySource:
         """
         Return query with name `data_family` and `query_name`.
 

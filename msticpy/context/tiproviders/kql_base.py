@@ -85,7 +85,7 @@ class KqlTIProvider(TIProvider):
     def _connected(self: Self) -> bool:
         return self._query_provider.connected
 
-    @lru_cache(maxsize=256)
+    @lru_cache(maxsize=256)  # noqa: B019
     def lookup_ioc(
         self: Self,
         ioc: str,

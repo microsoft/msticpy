@@ -911,5 +911,5 @@ class B64ExtractAccessor:
             "Please use df.mp.b64extract() method instead."
             "This will be removed in MSTICPy v2.2.0"
         )
-        warnings.warn(warn_message, category=DeprecationWarning)
+        warnings.warn(warn_message, category=DeprecationWarning, stacklevel=2)
         return unpack_df(data=self._df, column=column, **kwargs)

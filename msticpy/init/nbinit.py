@@ -197,41 +197,33 @@ VERBOSITY: Callable[[int | None], int] = _get_verbosity_setting()
 
 # pylint: disable=use-dict-literal
 _NB_IMPORTS = [
-    dict(pkg="pandas", alias="pd"),
-    dict(pkg="IPython", tgt="get_ipython"),
-    dict(pkg="IPython.display", tgt="display"),
-    dict(pkg="IPython.display", tgt="HTML"),
-    dict(pkg="IPython.display", tgt="Markdown"),
+    {"pkg": "pandas", "alias": "pd"},
+    {"pkg": "IPython", "tgt": "get_ipython"},
+    {"pkg": "IPython.display", "tgt": "display"},
+    {"pkg": "IPython.display", "tgt": "HTML"},
+    {"pkg": "IPython.display", "tgt": "Markdown"},
     # dict(pkg="ipywidgets", alias="widgets"),
-    dict(pkg="pathlib", tgt="Path"),
-    dict(pkg="numpy", alias="np"),
+    {"pkg": "pathlib", "tgt": "Path"},
+    {"pkg": "numpy", "alias": "np"},
 ]
 if sns is not None:
-    _NB_IMPORTS.append(dict(pkg="seaborn", alias="sns"))
+    _NB_IMPORTS.append({"pkg": "seaborn", "alias": "sns"})
 
 _MP_IMPORTS = [
-    dict(pkg="msticpy"),
-    dict(pkg="msticpy.data", tgt="QueryProvider"),
-    # dict(pkg="msticpy.vis.foliummap", tgt="FoliumMap"),
-    # dict(pkg="msticpy.context", tgt="TILookup"),
-    # dict(pkg="msticpy.context", tgt="GeoLiteLookup"),
-    # dict(pkg="msticpy.context", tgt="IPStackLookup"),
-    # dict(pkg="msticpy.transform", tgt="IoCExtract"),
-    dict(pkg="msticpy.common.utility", tgt="md"),
-    dict(pkg="msticpy.common.utility", tgt="md_warn"),
-    dict(pkg="msticpy.common.wsconfig", tgt="WorkspaceConfig"),
-    dict(pkg="msticpy.init.pivot", tgt="Pivot"),
-    dict(pkg="msticpy.datamodel", tgt="entities"),
-    dict(pkg="msticpy.init", tgt="nbmagics"),
-    # dict(pkg="msticpy.nbtools", tgt="SecurityAlert"),
-    dict(pkg="msticpy.vis", tgt="mp_pandas_plot"),
-    # dict(pkg="msticpy.vis", tgt="nbdisplay"),
-    dict(pkg="msticpy.init", tgt="mp_pandas_accessors"),
-    # dict(pkg="msticpy", tgt="nbwidgets"),
+    {"pkg": "msticpy"},
+    {"pkg": "msticpy.data", "tgt": "QueryProvider"},
+    {"pkg": "msticpy.common.utility", "tgt": "md"},
+    {"pkg": "msticpy.common.utility", "tgt": "md_warn"},
+    {"pkg": "msticpy.common.wsconfig", "tgt": "WorkspaceConfig"},
+    {"pkg": "msticpy.init.pivot", "tgt": "Pivot"},
+    {"pkg": "msticpy.datamodel", "tgt": "entities"},
+    {"pkg": "msticpy.init", "tgt": "nbmagics"},
+    {"pkg": "msticpy.vis", "tgt": "mp_pandas_plot"},
+    {"pkg": "msticpy.init", "tgt": "mp_pandas_accessors"},
 ]
 
 _MP_IMPORT_ALL: list[dict[str, str]] = [
-    dict(module_name="msticpy.datamodel.entities"),
+    {"module_name": "msticpy.datamodel.entities"},
 ]
 # pylint: enable=use-dict-literal
 
@@ -492,7 +484,7 @@ def _err_output(*args):
 
 def _load_user_defaults(namespace):
     """Load user defaults, if defined."""
-    global current_providers  # pylint: disable=global-statement, invalid-name
+    global current_providers  # pylint: disable=global-statement, invalid-name  # noqa: PLW0603
     stdout_cap = io.StringIO()
     with redirect_stdout(stdout_cap):
         _pr_output("Loading user defaults.")
@@ -809,7 +801,7 @@ def _load_pivots(namespace):
         pivot.reload_pivots()
         namespace["pivot"] = pivot
         # pylint: disable=import-outside-toplevel, cyclic-import
-        import msticpy
+        import msticpy  # noqa: PLC0415
 
         msticpy.pivot = pivot
 

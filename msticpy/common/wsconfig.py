@@ -320,7 +320,7 @@ class WorkspaceConfig:
         if not file_path:
             return {}
         with contextlib.suppress(json.JSONDecodeError):
-            with open(file_path, "r", encoding="utf-8") as json_file:
+            with open(file_path, encoding="utf-8") as json_file:
                 if json_file:
                     config_ws = json.load(json_file)
                     return {

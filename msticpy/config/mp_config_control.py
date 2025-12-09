@@ -287,7 +287,7 @@ class MpConfigControls:
         return results
 
     # pylint: disable=too-many-return-statements
-    def _validate_setting_at_path(
+    def _validate_setting_at_path(  # noqa: PLR0911
         self, path: str, defn_path: Optional[str] = None, index: Optional[int] = None
     ) -> Union[ValidationResult, List[Union[ValidationResult, List[Any]]]]:
         """Recursively validate settings at path."""

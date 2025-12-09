@@ -17,7 +17,7 @@ class Node:
 
     def __init__(self):
         """Initialize the node."""
-        self.edges: Set["Edge"] = set()
+        self.edges: Set[Edge] = set()
 
     def add_edge(self, target: "Node", edge_attrs: Optional[Dict[str, Any]] = None):
         """

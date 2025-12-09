@@ -186,7 +186,9 @@ class Pivot:
     def _get_def_pivot_reg():
         try:
             # pylint: disable=import-outside-toplevel
-            from importlib.resources import files  # type: ignore[attr-defined]
+            from importlib.resources import (  # type: ignore[attr-defined]  # noqa: PLC0415
+                files,
+            )
 
             return files("msticpy").joinpath(_DEF_PIVOT_REG_FILE)
         except ImportError:
@@ -445,5 +447,5 @@ class Pivot:
 
 
 # add link in datamodel for legacy location
-setattr(legacy_pivot, "Pivot", Pivot)
-setattr(legacy_pivot, "PivotRegistration", PivotRegistration)
+legacy_pivot.Pivot = Pivot
+legacy_pivot.PivotRegistration = PivotRegistration

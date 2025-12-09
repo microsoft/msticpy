@@ -90,7 +90,7 @@ def risky_cmd_line(
         .set_index("TimeGenerated")
         .to_dict()
     )
-    with open(detection_rules, "r", encoding="utf-8") as json_file:
+    with open(detection_rules, encoding="utf-8") as json_file:
         rules = json.load(json_file)
 
     # Decode any Base64 encoded commands so we can match on them as well
@@ -110,11 +110,10 @@ def risky_cmd_line(
                     risky_actions.update({date: message})
                 else:
                     pass
+            elif re.match(detection, message):
+                risky_actions.update({date: message})
             else:
-                if re.match(detection, message):
-                    risky_actions.update({date: message})
-                else:
-                    pass
+                pass
     return risky_actions
 
 

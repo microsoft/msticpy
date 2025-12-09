@@ -150,7 +150,7 @@ def display_timeline_duration(
 
     group_by = [group_by] if isinstance(group_by, str) else list(group_by)
     end_time_column = end_time_column or time_column
-    data = ensure_df_datetimes(data, columns=list(set([time_column, end_time_column])))
+    data = ensure_df_datetimes(data, columns=list({time_column, end_time_column}))
     check_df_columns(
         data,
         group_by + [end_time_column, time_column],

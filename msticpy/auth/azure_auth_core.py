@@ -288,27 +288,25 @@ def _build_powershell_client(**kwargs) -> AzurePowerShellCredential:
     return AzurePowerShellCredential()
 
 
-_CLIENTS: dict[str, Callable[..., TokenCredential | None]] = dict(
-    {
-        "env": _build_env_client,
-        "cli": _build_cli_client,
-        "msi": _build_msi_client,
-        "vscode": _build_vscode_client,
-        "powershell": _build_powershell_client,
-        "interactive": _build_interactive_client,
-        "interactive_browser": _build_interactive_client,
-        "devicecode": _build_device_code_client,
-        "device_code": _build_device_code_client,
-        "device": _build_device_code_client,
-        "environment": _build_env_client,
-        "managedidentity": _build_msi_client,
-        "managed_identity": _build_msi_client,
-        "clientsecret": _build_client_secret_client,
-        "client_secret": _build_client_secret_client,
-        "certificate": _build_certificate_client,
-        "cert": _build_certificate_client,
-    }
-)
+_CLIENTS: dict[str, Callable[..., TokenCredential | None]] = {
+    "env": _build_env_client,
+    "cli": _build_cli_client,
+    "msi": _build_msi_client,
+    "vscode": _build_vscode_client,
+    "powershell": _build_powershell_client,
+    "interactive": _build_interactive_client,
+    "interactive_browser": _build_interactive_client,
+    "devicecode": _build_device_code_client,
+    "device_code": _build_device_code_client,
+    "device": _build_device_code_client,
+    "environment": _build_env_client,
+    "managedidentity": _build_msi_client,
+    "managed_identity": _build_msi_client,
+    "clientsecret": _build_client_secret_client,
+    "client_secret": _build_client_secret_client,
+    "certificate": _build_certificate_client,
+    "cert": _build_certificate_client,
+}
 
 
 def list_auth_methods() -> list[str]:

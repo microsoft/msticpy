@@ -9,15 +9,18 @@
 
 __author__ = "Rajamani R"
 
+import json
 import logging
 from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, cast
-import json
+
 import httpx
 import pandas as pd
+
 from msticpy.common.exceptions import MsticpyConnectionError, MsticpyUserError
-from .driver_base import DriverBase
-from ..core.query_store import QuerySource, QueryStore
+
 from ...common.provider_settings import get_provider_settings
+from ..core.query_store import QuerySource, QueryStore
+from .driver_base import DriverBase
 
 if TYPE_CHECKING:
     from collections.abc import Callable

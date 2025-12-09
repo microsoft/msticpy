@@ -671,7 +671,7 @@ class ProcessTreeAccessor:
             "Please use df.mp_plot.process_tree() method instead."
             "This will be removed in MSTICPy v2.2.0"
         )
-        warnings.warn(warn_message, category=DeprecationWarning)
+        warnings.warn(warn_message, category=DeprecationWarning, stacklevel=2)
         return build_and_show_process_tree(data=self._df, **kwargs)
 
     def build(self, schema: ProcSchema = None, **kwargs) -> pd.DataFrame:

@@ -67,7 +67,7 @@ def read_query_def_file(query_file: str) -> Tuple[Dict, Dict, Dict]:
 
     """
     data_map = None
-    with open(query_file, "r", encoding="utf-8") as f_handle:
+    with open(query_file, encoding="utf-8") as f_handle:
         # use safe_load instead load
         data_map = yaml.safe_load(f_handle)
 

@@ -244,7 +244,7 @@ class SettingsControl(ABC):
     def value(self) -> Union[str, Dict[str, Optional[str]]]:
         """Return the current value of the control."""
 
-    @value.setter
+    @value.setter  # noqa: B027
     def value(self, value: Union[str, Dict[str, Optional[str]]]):
         """Set value of controls from dict."""
 

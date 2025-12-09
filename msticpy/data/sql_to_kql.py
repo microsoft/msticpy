@@ -193,8 +193,8 @@ def sql_to_kql(sql: str, target_tables: Dict[str, str] = None) -> str:
 
     # replace table names
     if target_tables:
-        for table in target_tables:
-            sql = sql.replace(table, target_tables[table])
+        for table, target_name in target_tables.items():
+            sql = sql.replace(table, target_name)
     # replace keywords
     # sql = _remap_kewords(sql)
     parsed_sql = parse(sql)
@@ -256,12 +256,12 @@ def _process_from(
     elif isinstance(from_expr, dict):
         query_lines.extend(_parse_query(from_expr))
     elif isinstance(from_expr, str):
-        query_lines.append((from_expr))
+        query_lines.append(from_expr)
         return
     elif isinstance(from_expr, list):
         for from_item in from_expr:
             if isinstance(from_item, str):
-                query_lines.append((from_item))
+                query_lines.append(from_item)
             elif isinstance(from_item, dict) and "value" in from_item:
                 query_lines.extend(_parse_query(from_item.get("value")))  # type: ignore
 
@@ -295,11 +295,10 @@ def _process_select(
             name = name or _gen_expr_name(item["value"])
             extend_items.append(f"{name} = {value}")
             project_items.append(name)
+        elif name:
+            project_items.append(f"{name} = {value}")
         else:
-            if name:
-                project_items.append(f"{name} = {value}")
-            else:
-                project_items.append(value)
+            project_items.append(value)
     if extend_items:
         query_lines.append(f"| extend {', '.join(extend_items)}")
     if project_items:
@@ -366,7 +365,7 @@ def _process_group_by(parsed_sql: Dict[str, Any], query_lines: List[str]):
 
 
 # pylint: disable=too-many-return-statements, too-many-branches
-def _parse_expression(expression):  # noqa: MC0001
+def _parse_expression(expression):  # noqa: MC0001, PLR0911
     """Return parsed expression."""
     if _is_literal(expression)[0]:
         return _quote_literal(expression)
@@ -549,7 +548,7 @@ def _parse_join(join_expr) -> Optional[str]:
 
 def _process_like(expression: Dict[str, Any]) -> str:
     """Process Like clause."""
-    left = _parse_expression((expression[LIKE][0]))
+    left = _parse_expression(expression[LIKE][0])
     literal, right = _is_literal(expression[LIKE][1])
     if not (literal and isinstance(right, str)):
         raise ValueError(

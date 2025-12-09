@@ -241,7 +241,7 @@ class IoCExtract:
 
         # inline import due to circular dependency
         # pylint: disable=import-outside-toplevel
-        from ..context.domain_utils import DomainValidator
+        from ..context.domain_utils import DomainValidator  # noqa: PLC0415
 
         # pylint: enable=import-outside-toplevel
         self._dom_validator = DomainValidator()
@@ -796,5 +796,5 @@ class IoCExtractAccessor:
             "Please use df.mp.ioc_extract() method instead."
             "This will be removed in MSTICPy v2.2.0"
         )
-        warnings.warn(warn_message, category=DeprecationWarning)
+        warnings.warn(warn_message, category=DeprecationWarning, stacklevel=2)
         return self._ioc.extract_df(data=self._df, columns=columns, **kwargs)

@@ -1192,7 +1192,7 @@ class VTLookupV3:
             not_found_dict["status"] = "Unsupported type"
         else:
             not_found_dict.update(
-                {key: "Not found" for key in cls._BASIC_PROPERTIES_PER_TYPE[vte_type]},
+                dict.fromkeys(cls._BASIC_PROPERTIES_PER_TYPE[vte_type], "Not found"),
             )
         return pd.DataFrame([not_found_dict])
 

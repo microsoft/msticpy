@@ -172,7 +172,7 @@ def _load_provider(prov_name: str, qry_prov_entry: Dict[str, Any]) -> Tuple[str,
 # pylint: disable=import-outside-toplevel
 def _load_ti_lookup(comp_settings=None, **kwargs):
     del comp_settings, kwargs
-    from ..context.tilookup import TILookup
+    from ..context.tilookup import TILookup  # noqa: PLC0415
 
     return "ti_lookup", TILookup()
 
@@ -183,11 +183,11 @@ def _load_geoip_lookup(comp_settings=None, **kwargs):
         comp_settings.get("provider") if isinstance(comp_settings, dict) else None
     )
     if provider == "GeoLiteLookup":
-        from ..context.geoip import GeoLiteLookup
+        from ..context.geoip import GeoLiteLookup  # noqa: PLC0415
 
         return "geoip", GeoLiteLookup()
     if provider == "IpStackLookup":
-        from ..context.geoip import IPStackLookup
+        from ..context.geoip import IPStackLookup  # noqa: PLC0415
 
         return "geoip", IPStackLookup()
     return None, None
@@ -212,7 +212,7 @@ def _load_notebooklets(comp_settings=None, **kwargs):
     providers = [f"+{prov}" for prov in providers]
     nbinit_params.update({"providers": providers, "namespace": namespace})
     try:
-        import msticnb
+        import msticnb  # noqa: PLC0415
 
         msticnb.init(**nbinit_params)
         return "nb", msticnb
@@ -225,7 +225,7 @@ def _load_notebooklets(comp_settings=None, **kwargs):
 
 def _load_azure_data(comp_settings=None, **kwargs):
     del kwargs
-    from ..context.azure.azure_data import AzureData
+    from ..context.azure.azure_data import AzureData  # noqa: PLC0415
 
     az_data = AzureData()
     connect = comp_settings.pop("connect", True)
@@ -238,7 +238,7 @@ def _load_azure_data(comp_settings=None, **kwargs):
 
 def _load_azsent_api(comp_settings=None, **kwargs):
     del kwargs
-    from ..context.azure.sentinel_core import MicrosoftSentinel
+    from ..context.azure.sentinel_core import MicrosoftSentinel  # noqa: PLC0415
 
     res_id = comp_settings.pop("res_id", None)
     if res_id:

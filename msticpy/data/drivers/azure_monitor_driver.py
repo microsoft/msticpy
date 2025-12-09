@@ -374,6 +374,7 @@ class AzureMonitorDriver(DriverBase):
             warnings.warn(
                 "Partial results returned. This may indicate a query timeout.",
                 RuntimeWarning,
+                stacklevel=2,
             )
             table = result.partial_data[0]  # type: ignore[attr-defined]
         else:
@@ -677,7 +678,7 @@ class AzureMonitorDriver(DriverBase):
 
 
 def _schema_format_tables(
-    ws_tables: dict[str, Iterable[dict[str, Any]]]
+    ws_tables: dict[str, Iterable[dict[str, Any]]],
 ) -> dict[str, dict[str, str]]:
     """Return a sorted dictionary of table names and column names/types."""
     table_schema = {

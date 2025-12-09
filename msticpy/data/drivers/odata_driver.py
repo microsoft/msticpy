@@ -540,10 +540,10 @@ def _map_config_dict_name(config_dict: dict[str, str]) -> dict[str, str]:
     """Map configuration parameter names to expected values."""
     logger.debug("Mapping configuration dictionary names")
     mapped_dict: dict[str, str] = config_dict.copy()
-    for provided_name in config_dict:
+    for provided_name, mapped_name in config_dict.items():
         for req_name, alternates in _CONFIG_NAME_MAP.items():
             if provided_name.casefold() in alternates:
-                mapped_dict[req_name] = config_dict[provided_name]
+                mapped_dict[req_name] = mapped_name
                 logger.debug("Mapped '%s' to '%s'", provided_name, req_name)
                 break
     return mapped_dict

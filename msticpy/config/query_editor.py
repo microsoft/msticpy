@@ -1037,7 +1037,7 @@ def load_queries_from_yaml(yaml_file: str | Path) -> QueryCollection:
         A QueryCollection object containing the loaded queries.
 
     """
-    with open(yaml_file, "r", encoding="utf-8") as f_handle:
+    with open(yaml_file, encoding="utf-8") as f_handle:
         yaml_data: dict[str, Any] = yaml.safe_load(f_handle)
 
     metadata = QueryMetadata(**yaml_data.get("metadata", {}))
@@ -1119,7 +1119,7 @@ def _create_parameter(param_data: dict[str, Any]) -> QueryParameter:
 
 
 def _remove_none_values(
-    source_obj: dict[str, Any] | list[Any] | tuple[Any, ...]
+    source_obj: dict[str, Any] | list[Any] | tuple[Any, ...],
 ) -> dict[str, Any] | list[Any] | tuple[Any, ...]:
     """Recursively remove any item with a None value from a nested dictionary."""
     if isinstance(source_obj, dict):

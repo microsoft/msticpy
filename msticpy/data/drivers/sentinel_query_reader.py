@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Github Sentinel Query repo import class and helpers."""
+from __future__ import annotations
 
 import logging
 import os
@@ -12,7 +13,6 @@ import warnings
 import zipfile
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 import attr
 import httpx
@@ -92,10 +92,8 @@ class SentinelQuery:
 
 
 def get_sentinel_queries_from_github(
-    git_url: Optional[
-        str
-    ] = "https://github.com/Azure/Azure-Sentinel/archive/master.zip",
-    outputdir: Optional[str] = None,
+    git_url: str | None = "https://github.com/Azure/Azure-Sentinel/archive/master.zip",
+    outputdir: str | None = None,
 ) -> bool:
     r"""
     Download Microsoft Sentinel Github archive and extract detection and hunting queries.
@@ -146,7 +144,10 @@ def get_sentinel_queries_from_github(
         return True
 
     except httpx.HTTPError as http_err:
-        warnings.warn(f"HTTP error occurred trying to download from Github: {http_err}")
+        warnings.warn(
+            f"HTTP error occurred trying to download from Github: {http_err}",
+            stacklevel=2,
+        )
         return False
 
 
@@ -296,7 +297,7 @@ def _organize_query_list_by_folder(query_list: list) -> dict:
     queries_by_folder = {}
     for query in query_list:
         if query.folder_name == "":
-            warnings.warn(f"query {query} has no folder_name")
+            warnings.warn(f"query {query} has no folder_name", stacklevel=2)
         if query.folder_name not in queries_by_folder:
             queries_by_folder[query.folder_name] = [query]
         else:
@@ -434,7 +435,7 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
 
 
 def download_and_write_sentinel_queries(
-    query_type: str, yaml_output_folder: str, github_outputdir: Optional[str] = None
+    query_type: str, yaml_output_folder: str, github_outputdir: str | None = None
 ):
     """
     Download queries from GitHub and write out YAML files for the given query type.

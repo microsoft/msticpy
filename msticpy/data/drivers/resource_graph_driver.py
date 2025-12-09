@@ -4,8 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """Azure Resource Graph Driver class."""
+from __future__ import annotations
+
 import warnings
-from typing import Any, Tuple, Union
+from typing import Any
 
 import pandas as pd
 
@@ -103,7 +105,7 @@ class ResourceGraphDriver(DriverBase):
 
     def query(
         self, query: str, query_source: QuerySource = None, **kwargs
-    ) -> Union[pd.DataFrame, Any]:
+    ) -> pd.DataFrame | Any:
         """
         Execute Resource Graph query and retrieve results.
 
@@ -133,7 +135,7 @@ class ResourceGraphDriver(DriverBase):
 
         return result
 
-    def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
+    def query_with_results(self, query: str, **kwargs) -> tuple[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
 
@@ -185,6 +187,7 @@ class ResourceGraphDriver(DriverBase):
                 "Some resources may be missing from the results. "
                 "To rewrite the query and enable paging, "
                 "see the docs for an example: https://aka.ms/arg-results-truncated",
+                stacklevel=2,
             )
 
         return pd.json_normalize(response.data), response

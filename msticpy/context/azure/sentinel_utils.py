@@ -314,7 +314,7 @@ def extract_sentinel_response(
 
     """
     data_body: dict[str, dict[str, str]] = {"properties": {}}
-    for key in items:
+    for key in items:  # noqa: PLC0206
         if key in ["severity", "status", "title", "message", "searchResults"] or props:
             data_body["properties"].update({key: items[key]})
         else:

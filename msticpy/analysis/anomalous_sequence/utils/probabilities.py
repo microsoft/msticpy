@@ -52,9 +52,7 @@ def compute_cmds_probs(  # nosec
     # compute trans probs
     for prev, currents in seq2_counts.items():
         for current in currents:
-            trans_probs[prev][current] = seq2_counts[prev][current] / sum(
-                seq2_counts[prev].values()
-            )
+            trans_probs[prev][current] = currents[current] / sum(currents.values())
 
     prior_probs_sm = StateMatrix(states=prior_probs, unk_token=unk_token)
     trans_probs_sm = StateMatrix(states=trans_probs, unk_token=unk_token)

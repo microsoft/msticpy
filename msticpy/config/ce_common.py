@@ -60,7 +60,7 @@ _TEXT_WIDGETS = (widgets.Text, widgets.Textarea, widgets.Label, widgets.Select)
 
 
 # pylint: disable=too-many-return-statements
-def py_to_widget(
+def py_to_widget(  # noqa: PLR0911
     value: Any, ctrl: Optional[widgets.Widget] = None, val_type: Optional[str] = None
 ) -> Any:
     """
@@ -117,7 +117,7 @@ def py_to_widget(
     return value
 
 
-def widget_to_py(ctrl: Union[widgets.Widget, SettingsControl]) -> Any:
+def widget_to_py(ctrl: Union[widgets.Widget, SettingsControl]) -> Any:  # noqa: PLR0911
     """
     Adjust type and format of value returned from `ctrl.value`.
 
@@ -390,7 +390,7 @@ def get_wgt_ctrl(
             ctrl = widgets.Textarea(
                 description=var_name, value=dict_to_txt(curr_val) or "", **wgt_style
             )
-            setattr(ctrl, "tag", "txt_dict")
+            ctrl.tag = "txt_dict"
         elif st_type == "list":
             ctrl = widgets.Textarea(
                 description=var_name,
@@ -398,7 +398,7 @@ def get_wgt_ctrl(
                 **(wgt_style or TEXT_AREA_LAYOUT),
                 # tooltip="Enter each item as 'key:value'. Separate items with new lines.",
             )
-            setattr(ctrl, "tag", "list")
+            ctrl.tag = "list"
         else:
             ctrl = widgets.Text(
                 description=var_name,

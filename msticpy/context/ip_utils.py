@@ -132,7 +132,7 @@ def convert_to_ip_entities(
     """
     # locally imported to prevent cyclic import
     # pylint: disable=import-outside-toplevel, cyclic-import
-    from .geoip import GeoLiteLookup
+    from .geoip import GeoLiteLookup  # noqa: PLC0415
 
     geo_lite_lookup: GeoLiteLookup = GeoLiteLookup()
 

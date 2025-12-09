@@ -286,11 +286,11 @@ class OSQueryLogDriver(DriverBase):
         # because of log rotation
         list_lines: List[Dict[str, Any]] = []
         try:
-            with open(log_path, mode="r", encoding="utf-8") as logfile:
+            with open(log_path, encoding="utf-8") as logfile:
                 json_lines = logfile.readlines()
                 list_lines = [json.loads(line) for line in json_lines]
 
-        except (IOError, json.JSONDecodeError, ValueError) as exc:
+        except (OSError, json.JSONDecodeError, ValueError) as exc:
             raise MsticpyDataQueryError(
                 f"Read error on file {log_path}: {exc}."
             ) from exc

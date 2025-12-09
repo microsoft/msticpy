@@ -177,6 +177,6 @@ def load_plugins(plugin_paths: Union[str, Iterable[str]]):
 
     """
     # pylint: disable=import-outside-toplevel
-    from .init.mp_plugins import read_plugins
+    from .init.mp_plugins import read_plugins  # noqa: PLC0415
 
     read_plugins(plugin_paths)

@@ -213,16 +213,14 @@ def create_pivot_func(
             ).drop(columns="src_row_index", errors="ignore")
         return result_df
 
-    setattr(
-        pivot_lookup,
-        "pivot_properties",
-        attr.asdict(pivot_reg, filter=(lambda _, val: val is not None)),
+    pivot_lookup.pivot_properties = attr.asdict(
+        pivot_reg, filter=lambda _, val: val is not None
     )
     return pivot_lookup
 
 
 def get_join_params(
-    func_kwargs: dict[str, Any]
+    func_kwargs: dict[str, Any],
 ) -> tuple[str | None, str | None, str | None, bool]:
     """
     Get join parameters from kwargs.
@@ -251,7 +249,8 @@ def get_join_params(
             "If you are specifying explicit join keys "
             "you must specify 'right_on' parameter with the "
             + "name of the output column to join on. "
-            + "Results will joined on index."
+            + "Results will joined on index.",
+            stacklevel=2,
         )
     if not left_on:
         col_keys = list(func_kwargs.keys() - {"start", "end", "data"})
@@ -265,7 +264,8 @@ def get_join_params(
             "Could not infer 'left' join column from source data. "
             + "Please specify 'left_on' parameter with the "
             + "name of the source column to join on. "
-            + "Results will joined on index."
+            + "Results will joined on index.",
+            stacklevel=2,
         )
     return join_type, left_on, right_on, join_ignore_case
 
@@ -480,7 +480,7 @@ def _iterate_func(target_func, input_df, input_column, pivot_reg, **kwargs):
     results = []
     # Add any static parameters to all_rows_kwargs
     all_rows_kwargs = kwargs.copy()
-    all_rows_kwargs.update((pivot_reg.func_static_params or {}))
+    all_rows_kwargs.update(pivot_reg.func_static_params or {})
     res_key_col_name = pivot_reg.func_out_column_name or pivot_reg.func_input_value_arg
 
     for row_index, row in enumerate(input_df[[input_column]].itertuples(index=False)):

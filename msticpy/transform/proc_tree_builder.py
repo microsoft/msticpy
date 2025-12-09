@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree Builder module for Process Tree Visualization."""
-from typing import Any, Dict, Optional, Union
+from __future__ import annotations
+
+from typing import Any
 
 import pandas as pd
 
@@ -13,16 +15,11 @@ from . import proc_tree_build_mde as mde
 from . import proc_tree_build_winlx as winlx
 
 # pylint: disable=unused-import
-from .proc_tree_schema import ProcSchema  # noqa: F401
 from .proc_tree_schema import (  # noqa: F401
-    HX_PROCESSEVENT_SCH,
-    LX_EVENT_SCH,
     MDE_EVENT_SCH,
     MDE_INT_EVENT_SCH,
-    OSQUERY_EVENT_SCH,
     SUPPORTED_SCHEMAS,
-    SYSMON_PROCESS_CREATE_EVENT_SCH,
-    WIN_EVENT_SCH,
+    ProcSchema,  # noqa: F401
 )
 from .proc_tree_schema import ColNames as Col
 from .process_tree_utils import get_summary_info
@@ -33,7 +30,7 @@ __author__ = "Ian Hellen"
 
 def build_process_tree(
     procs: pd.DataFrame,
-    schema: Union[ProcSchema, Dict[str, Any]] = None,
+    schema: ProcSchema | dict[str, Any] | None = None,
     show_summary: bool = False,
     debug: bool = False,
     **kwargs,
@@ -45,7 +42,7 @@ def build_process_tree(
     ----------
     procs : pd.DataFrame
         Process events (Windows 4688 or Linux Auditd)
-    schema : Union[ProcSchema, Dict[str, Any]], optional
+    schema : ProcSchema | dict[str, Any] | None, optional
         The column schema to use, by default None.
         If supplied as a dict it must include definitions for the
         required fields in the ProcSchema class
@@ -99,13 +96,13 @@ def build_process_tree(
     return proc_tree.sort_values(by=["path", schema.time_stamp], ascending=True)
 
 
-def infer_schema(data: Union[pd.DataFrame, pd.Series]) -> Optional[ProcSchema]:
+def infer_schema(data: pd.DataFrame | pd.Series) -> ProcSchema | None:
     """
     Infer the correct schema to use for this data set.
 
     Parameters
     ----------
-    data : Union[pd.DataFrame, pd.Series]
+    data : pd.DataFrame | pd.Series
         Data set to test
 
     Returns

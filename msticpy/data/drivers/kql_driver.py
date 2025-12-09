@@ -53,11 +53,12 @@ def _set_kql_env_option(option, value):
 _set_kql_env_option("enable_add_items_to_help", False)
 
 try:
-    from Kqlmagic import kql as kql_exec
-    from Kqlmagic.kql_engine import KqlEngineError
+    from Kqlmagic.kql_engine import KqlEngineError  # noqa: I001
     from Kqlmagic.kql_proxy import KqlResponse
     from Kqlmagic.kql_response import KqlError
     from Kqlmagic.my_aad_helper import AuthenticationError
+
+    from Kqlmagic import kql as kql_exec
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
         "Cannot use this feature without Kqlmagic installed",
@@ -424,7 +425,7 @@ class KqlDriver(DriverBase):
         current_connection = [conn for conn in connections if conn.startswith(" * ")]
         if not current_connection:
             return ""
-        return current_connection[0].strip(" * ").split("@")[0]
+        return current_connection[0].removeprefix(" * ").split("@")[0]
 
     def _set_kql_cloud(self):
         """If cloud is set in Azure Settings override default."""

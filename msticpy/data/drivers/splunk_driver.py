@@ -438,9 +438,9 @@ class SplunkDriver(DriverBase):
             "result_count": int(query_job["resultCount"]),
         }
         status = (
-            "\r%(done_progress)03.1f%%   %(scan_count)d scanned   "
-            "%(event_count)d matched   %(result_count)d results"
-        ) % stats
+            f"\r{stats['done_progress']:03.1f}%   {stats['scan_count']:d} scanned   "
+            f"{stats['event_count']:d} matched   {stats['result_count']:d} results"
+        )
         if prev_progress == 0:
             progress = stats["done_progress"]
         else:

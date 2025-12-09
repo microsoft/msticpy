@@ -11,7 +11,7 @@ import pprint
 from contextlib import redirect_stdout, suppress
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any
 
 import ipywidgets as widgets
 import yaml
@@ -70,8 +70,8 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
 
     def __init__(
         self,
-        file: Union[str, Path, None] = None,
-        settings: Union[Dict[str, Any], SettingsDict, None] = None,
+        file: str | Path | None = None,
+        settings: dict[str, Any] | SettingsDict | None = None,
     ):
         """
         Create an instance of the MSTICPy Configuration helper class.
@@ -117,8 +117,8 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         self._txt_import_url = widgets.Text(
             description="MS Sentinel Portal URL", **_TXT_STYLE
         )
-        self._last_workspace: Dict[str, Dict[str, str]]
-        self.buttons: Dict[str, widgets.Button] = {}
+        self._last_workspace: dict[str, dict[str, str]]
+        self.buttons: dict[str, widgets.Button] = {}
         self.btn_pane = self._setup_buttons()
         self.info_pane = widgets.VBox(
             [
@@ -168,7 +168,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         return self.txt_current_config_path.value
 
     @current_file.setter
-    def current_file(self, file_name: Union[str, Path]):
+    def current_file(self, file_name: str | Path):
         """Set currently loaded file path."""
         self.txt_current_config_path.value = str(file_name)
 
@@ -178,7 +178,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         return self.txt_default_config_path.value
 
     @default_config_file.setter
-    def default_config_file(self, file_name: Union[str, Path]):
+    def default_config_file(self, file_name: str | Path):
         """Set default msticpyconfig path."""
         self.txt_default_config_path.value = file_name
 
@@ -195,7 +195,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         if show:
             display(self.viewer)
 
-    def load_from_file(self, file: Union[str, Path]):
+    def load_from_file(self, file: str | Path):
         """Load settings from `file`."""
         self.settings = self._read_mp_config(file)
         self.current_file = file
@@ -292,7 +292,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
             display(self.viewer)
 
     @staticmethod
-    def get_workspace_from_url(url: str) -> Dict[str, Dict[str, str]]:
+    def get_workspace_from_url(url: str) -> dict[str, dict[str, str]]:
         """
         Return workspace settings from Sentinel portal URL.
 
@@ -340,7 +340,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
 
     def _read_mp_config(self, file):
         if Path(file).is_file():
-            with open(file, "r", encoding="utf-8") as mp_hdl:
+            with open(file, encoding="utf-8") as mp_hdl:
                 try:
                     return SettingsDict(yaml.safe_load(mp_hdl))
                 except yaml.scanner.ScannerError as err:

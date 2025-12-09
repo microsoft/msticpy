@@ -75,9 +75,7 @@ class Tor(TIProvider):
                 tor_raw_list = resp.content.decode()
                 with cls._cache_lock:
                     node_dict: dict[str, Any] = {"ExitNode": True, "LastStatus": now}
-                    cls._nodelist = {
-                        node: node_dict for node in tor_raw_list.split("\n")
-                    }
+                    cls._nodelist = dict.fromkeys(tor_raw_list.split("\n"), node_dict)
                     cls._last_cached = datetime.now(timezone.utc)
 
     @staticmethod

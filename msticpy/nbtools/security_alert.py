@@ -159,7 +159,7 @@ class SecurityAlert(SecurityBase):
                             edge_attrs={"name": prop_name},
                         )
 
-    def _extract_entities(self, src_row):  # noqa: MC0001
+    def _extract_entities(self, src_row):
         input_entities = []
 
         if isinstance(src_row.ExtendedProperties, str):

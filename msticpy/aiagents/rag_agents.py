@@ -43,7 +43,7 @@ def find_rst_files() -> List[str]:
     docs_path = Path(mp_resources).parent / "docs" / "source"  # type: ignore[arg-type]
 
     # Find all .rst files in the docs/source directory
-    rst_files = list(str(fp) for fp in docs_path.rglob("*.rst"))
+    rst_files = [str(fp) for fp in docs_path.rglob("*.rst")]
 
     return rst_files
 

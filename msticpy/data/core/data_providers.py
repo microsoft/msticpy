@@ -96,10 +96,12 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         """
         # import at runtime to prevent circular import
         # pylint: disable=import-outside-toplevel, cyclic-import
-        from ...init.pivot_init.pivot_data_queries import add_data_queries_to_entities
+        from ...init.pivot_init.pivot_data_queries import (  # noqa: PLC0415
+            add_data_queries_to_entities,
+        )
 
         # pylint: enable=import-outside-toplevel
-        setattr(self.__class__, "_add_pivots", add_data_queries_to_entities)
+        self.__class__._add_pivots = add_data_queries_to_entities
 
         data_environment, self.environment_name = QueryProvider._check_environment(
             data_environment,

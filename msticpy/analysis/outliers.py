@@ -227,7 +227,7 @@ class RobustRandomCutForest:
         rng = np.random.RandomState(42)
         return rng.choice(rows, n_samples, replace=False)
 
-    def fit(self, x: np.ndarray) -> "RobustRandomCutForest":
+    def fit(self, x: np.ndarray) -> RobustRandomCutForest:
         """
         Build the forest from training data.
 
@@ -476,7 +476,7 @@ def identify_outliers_rrcf(
 
 
 # pylint: disable=too-many-arguments, too-many-locals
-def plot_outlier_results(
+def plot_outlier_results(  # noqa: PLR0915
     clf: IsolationForest | RobustRandomCutForest,
     x: np.ndarray,
     x_predict: np.ndarray,
@@ -646,7 +646,7 @@ def remove_common_items(data: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
     # pylint: disable=cell-var-from-loop
     for col in columns:
         filtered_df = filtered_df.filter(
-            lambda x: (x[col].std() == 0 and x[col].count() > 10)  # type: ignore
+            lambda x, col=col: (x[col].std() == 0 and x[col].count() > 10)  # type: ignore
         )
 
     return filtered_df

@@ -296,7 +296,7 @@ def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfigura
                 "Please use Microsoft Graph Security Hunting API instead - "
                 "provider name = 'M365DGraph'."
             )
-            warnings.warn(warn_message, DeprecationWarning)
+            warnings.warn(warn_message, DeprecationWarning, stacklevel=2)
 
         # MDE Advanced Queries API
         logger.info("Using MDE Advanced Queries API (default)")

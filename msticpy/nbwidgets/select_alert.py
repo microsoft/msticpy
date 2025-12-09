@@ -205,11 +205,11 @@ class SelectAlert(IPyDisplayMixin):
             ):
                 with contextlib.suppress(JSONDecodeError):
                     alert["ExtendedProperties"] = json.loads(
-                        (alert["ExtendedProperties"])
+                        alert["ExtendedProperties"]
                     )
             if "Entities" in alert.index and isinstance(alert["Entities"], str):
                 with contextlib.suppress(JSONDecodeError):
-                    alert["Entities"] = json.loads((alert["Entities"]))
+                    alert["Entities"] = json.loads(alert["Entities"])
             return alert
         return None
 

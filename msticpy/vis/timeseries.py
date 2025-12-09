@@ -64,7 +64,7 @@ figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 # pylint: disable=invalid-name, too-many-locals, too-many-statements
 # pylint: disable=too-many-branches, too-many-function-args, too-many-arguments
 @export  # noqa: C901, MC0001
-def display_timeseries_anomalies(
+def display_timeseries_anomalies(  # noqa: PLR0915
     data: pd.DataFrame,
     y: str = "Total",
     time_column: str = "TimeGenerated",

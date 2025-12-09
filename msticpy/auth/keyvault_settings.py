@@ -4,9 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """Keyvault client settings."""
+from __future__ import annotations
 
 import warnings
-from typing import Any, List, Optional
+from typing import Any
 
 from .._version import VERSION
 from ..common import pkg_config as config
@@ -61,8 +62,8 @@ class KeyVaultSettings:
             msticpyconfig.yaml.
 
         """
-        self.authority: Optional[str] = None
-        self.auth_methods: List[str] = []
+        self.authority: str | None = None
+        self.auth_methods: list[str] = []
         try:
             kv_config = config.get_config("KeyVault")
         except KeyError as err:
@@ -120,22 +121,22 @@ class KeyVaultSettings:
         return self.az_cloud_config.authority_uri
 
     @property
-    def keyvault_uri(self) -> Optional[str]:
+    def keyvault_uri(self) -> str | None:
         """Return KeyVault URI template for current cloud."""
         suffix = self.az_cloud_config.suffixes.get("keyVaultDns")
         kv_uri = f"https://{{vault}}.{suffix}"
         if not kv_uri:
             mssg = f"Could not find a valid KeyVault endpoint for {self.cloud}"
-            warnings.warn(mssg)
+            warnings.warn(mssg, stacklevel=2)
         return kv_uri
 
     @property
-    def mgmt_uri(self) -> Optional[str]:
+    def mgmt_uri(self) -> str | None:
         """Return Azure management URI template for current cloud."""
         mgmt_uri = self.az_cloud_config.resource_manager
         if not mgmt_uri:
             mssg = f"Could not find a valid KeyVault endpoint for {self.cloud}"
-            warnings.warn(mssg)
+            warnings.warn(mssg, stacklevel=2)
         return mgmt_uri
 
     def get_tenant_authority_uri(

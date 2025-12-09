@@ -106,7 +106,7 @@ def get_settings():
 def refresh_config():
     """Re-read the config settings."""
     # pylint: disable=global-statement
-    global _default_settings, _custom_settings, _settings
+    global _default_settings, _custom_settings, _settings  # noqa: PLW0603
     _default_settings = _get_default_config()
     _custom_settings = _get_custom_config()
     _custom_settings = _create_data_providers(_custom_settings)
@@ -258,7 +258,7 @@ def _read_config_file(config_file: Union[str, Path]) -> SettingsDict:
 
     """
     if Path(config_file).is_file():
-        with open(config_file, "r", encoding="utf-8") as f_handle:
+        with open(config_file, encoding="utf-8") as f_handle:
             # use safe_load instead of load
             try:
                 return SettingsDict(yaml.safe_load(f_handle))
@@ -287,16 +287,16 @@ def _override_config(base_config: SettingsDict, new_config: SettingsDict):
         if c_item is None:
             continue
         if isinstance(base_config.get(c_key), (dict, SettingsDict)):
-            _override_config(base_config[c_key], new_config[c_key])
+            _override_config(base_config[c_key], c_item)
         else:
-            base_config[c_key] = new_config[c_key]
+            base_config[c_key] = c_item
 
 
 def _get_default_config():
     """Return the package default config file."""
     package = "msticpy"
     try:
-        from importlib.resources import (  # pylint: disable=import-outside-toplevel
+        from importlib.resources import (  # pylint: disable=import-outside-toplevel  # noqa: PLC0415
             as_file,
             files,
         )
@@ -307,7 +307,9 @@ def _get_default_config():
     except ImportError:
         # If importlib.resources is not available we fall back to
         # older Python method
-        from importlib.resources import path  # pylint: disable=import-outside-toplevel
+        from importlib.resources import (  # pylint: disable=import-outside-toplevel  # noqa: PLC0415
+            path,
+        )
 
         # pylint: disable=deprecated-method
         package_path = path(package, _CONFIG_FILE)  # noqa: W4902
@@ -410,7 +412,7 @@ def get_http_timeout(
 
 
 def _valid_timeout(
-    timeout_val: Optional[Union[float, numbers.Real]]
+    timeout_val: Optional[Union[float, numbers.Real]],
 ) -> Union[float, None]:
     """Return float in valid range or None."""
     if isinstance(timeout_val, numbers.Real) and float(timeout_val) >= 0.0:
@@ -511,7 +513,7 @@ def _validate_azure_sentinel(mp_config):
         mp_errors.append("Missing or empty 'Workspaces' key in 'AzureSentinel' section")
         return mp_errors, mp_warnings
     no_default = True
-    for ws, ws_settings in ws_settings.items():
+    for ws, ws_settings in ws_settings.items():  # noqa: B020
         if ws == "Default":
             no_default = False
         ws_id = ws_settings.get("WorkspaceId")

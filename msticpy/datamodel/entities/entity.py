@@ -12,7 +12,7 @@ import typing
 from abc import ABC
 from copy import deepcopy
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Mapping, Optional, Type, Union
+from typing import Any, Mapping
 
 import networkx as nx
 
@@ -60,9 +60,9 @@ class Entity(ABC, Node):
     Implements common methods for Entity classes
     """
 
-    ENTITY_NAME_MAP: Dict[str, type] = {}
-    _entity_schema: Dict[str, Any] = {}
-    ID_PROPERTIES: List[str] = []
+    ENTITY_NAME_MAP: dict[str, type] = {}
+    _entity_schema: dict[str, Any] = {}
+    ID_PROPERTIES: list[str] = []
     JSONEncoder = _EntityJSONEncoder
 
     def __init__(
@@ -117,7 +117,7 @@ class Entity(ABC, Node):
         cls,
         src_entity: Mapping[str, Any] | None = None,
         **kwargs,
-    ) -> "Entity":
+    ) -> Entity:
         """
         Create an entity from a mapping type (e.g. pd.Series) or dict or kwargs.
 
@@ -359,7 +359,7 @@ class Entity(ABC, Node):
             if prop not in ("edges", "TimeGenerated") and not prop.startswith("_")
         )
 
-    def merge(self, other: Any) -> "Entity":
+    def merge(self, other: Any) -> Entity:
         """
         Merge with other entity to create new entity.
 
@@ -472,8 +472,8 @@ class Entity(ABC, Node):
 
     @classmethod
     def instantiate_entity(
-        cls, raw_entity: Mapping[str, Any], entity_type: Optional[Type] = None
-    ) -> Union["Entity", Mapping[str, Any]]:
+        cls, raw_entity: Mapping[str, Any], entity_type: type | None = None
+    ) -> Entity | Mapping[str, Any]:
         """
         Class factory to return entity from raw dictionary representation.
 
@@ -507,7 +507,7 @@ class Entity(ABC, Node):
         raise TypeError(f"Could not find a suitable type for {entity_type}")
 
     @classmethod
-    def _get_entity_type_name(cls, entity_type: Type) -> str:
+    def _get_entity_type_name(cls, entity_type: type) -> str:
         """
         Get V3 entity name for an entity.
 
@@ -537,7 +537,7 @@ class Entity(ABC, Node):
         return name
 
     @property
-    def node_properties(self) -> Dict[str, Any]:
+    def node_properties(self) -> dict[str, Any]:
         """
         Return all public properties that are not entities.
 
@@ -600,7 +600,7 @@ class Entity(ABC, Node):
         return graph
 
     @classmethod
-    def get_pivot_list(cls, search_str: Optional[str] = None) -> List[str]:
+    def get_pivot_list(cls, search_str: str | None = None) -> list[str]:
         """
         Return list of current pivot functions.
 
@@ -664,7 +664,7 @@ class Entity(ABC, Node):
 
         """
         func_path = func_name.split(".") if "." in func_name else [func_name]
-        curr_attr: Optional[Any] = cls
+        curr_attr: Any | None = cls
         for path in func_path:
             curr_attr = getattr(curr_attr, path, None)  # type: ignore
             if not curr_attr:
@@ -720,6 +720,6 @@ class Entity(ABC, Node):
         delattr(cls, func_name)
 
 
-def camelcase_property_names(input_ent: Dict[str, Any]) -> Dict[str, Any]:
+def camelcase_property_names(input_ent: dict[str, Any]) -> dict[str, Any]:
     """Change initial letter Microsoft Sentinel API entity properties to upper case."""
     return {key[0].upper() + key[1:]: input_ent[key] for key in input_ent}

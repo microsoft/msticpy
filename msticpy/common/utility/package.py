@@ -60,7 +60,9 @@ def resolve_pkg_path(part_path: str):
     )
 
     if not searched_paths or len(searched_paths) > 1:
-        warnings.warn(f"No path or ambiguous match for {part_path} not found")
+        warnings.warn(
+            f"No path or ambiguous match for {part_path} not found", stacklevel=2
+        )
         return None
     return str(searched_paths[0])
 
@@ -161,8 +163,7 @@ def check_and_install_missing_packages(  # noqa: MC0001
                 subprocess.run(  # nosec
                     pkg_command + [package],
                     check=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
+                    capture_output=True,
                 )
             except subprocess.CalledProcessError as proc_err:
                 print(f"An Error has occurred while installing {package}.")

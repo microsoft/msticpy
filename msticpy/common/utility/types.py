@@ -36,11 +36,11 @@ def export(obj: type | Callable) -> type | Callable:
     """Decorate function or class to export to __all__."""
     mod: ModuleType = sys.modules[obj.__module__]
     if hasattr(mod, "__all__"):
-        all_list: list[str] = getattr(mod, "__all__")
+        all_list: list[str] = mod.__all__
         all_list.append(obj.__name__)
     else:
         all_list = [obj.__name__]
-        setattr(mod, "__all__", all_list)
+        mod.__all__ = all_list
     return obj
 
 

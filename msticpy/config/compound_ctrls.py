@@ -545,7 +545,7 @@ class UserDefLoadComponent(SettingsControl):
                 description=name,
                 style=self._W_STYLE,
             )
-            setattr(wgt, "tag", "txt_dict")
+            wgt.tag = "txt_dict"
             wgt.value = py_to_widget(curr_value, ctrl=wgt) or ""
             return wgt
         raise TypeError(f"Unknown definition type {val_type} for {name}/{ctrl_defn}")

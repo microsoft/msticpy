@@ -85,7 +85,7 @@ def _set_node_attributes(
     all_cols = [column, *attrib_cols] if attrib_cols else [column]
     # Create an 'agg' dictionary to apply to DataFrame
     agg_dict: Dict[str, Union[str, Callable]] = (
-        {col: _pd_unique_list for col in attrib_cols} if attrib_cols else {}
+        dict.fromkeys(attrib_cols, _pd_unique_list) if attrib_cols else {}
     )
     # Add these two items as attributes
     agg_dict.update({"node_role": "first", "node_type": "first"})

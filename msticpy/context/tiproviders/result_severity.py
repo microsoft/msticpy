@@ -19,7 +19,7 @@ __author__ = "Ian Hellen"
 
 
 @total_ordering
-class ResultSeverity(Enum):
+class ResultSeverity(Enum):  # noqa: PLW1641
     """Item report severity."""
 
     # pylint: disable=invalid-name

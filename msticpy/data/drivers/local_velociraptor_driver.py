@@ -154,7 +154,7 @@ class VelociraptorLogDriver(DriverBase):
             )
         return self._cached_query(query)
 
-    @lru_cache(maxsize=256)
+    @lru_cache(maxsize=256)  # noqa: B019
     def _cached_query(self, query: str) -> pd.DataFrame:
         iter_data_files = (
             tqdm(self.data_files[query]) if self._progress else self.data_files[query]

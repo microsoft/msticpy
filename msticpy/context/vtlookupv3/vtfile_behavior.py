@@ -371,9 +371,9 @@ def _create_si_proc(
     """Return an SIProcess Object from a raw VT proc definition."""
     name: str = raw_proc["name"]
     raw_proc["cmd_line"] = name
-    for proc in procs_created:
+    for proc, proc_name in procs_created.items():
         if name.lower().endswith(proc):
-            raw_proc["name"] = procs_created[proc]
+            raw_proc["name"] = proc_name
             break
     raw_proc["proc_key"] = raw_proc["process_id"] + "|" + raw_proc["name"]
     return SIProcess(**raw_proc)

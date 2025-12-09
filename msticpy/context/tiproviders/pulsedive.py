@@ -346,9 +346,9 @@ class Pulsedive(HttpTIProvider):
 
     _BASE_URL = PDlookup.BASE_URL
 
-    _QUERIES: ClassVar[dict[str, APILookupParams]] = {
-        ioc_type: _QUERY_DEF for ioc_type in ("ipv4", "ipv6", "dns", "hostname", "url")
-    }
+    _QUERIES: ClassVar[dict[str, APILookupParams]] = dict.fromkeys(
+        ("ipv4", "ipv6", "dns", "hostname", "url"), _QUERY_DEF
+    )
 
     _REQUIRED_PARAMS: ClassVar[list[str]] = ["API_KEY"]
     _RISK_MAP: ClassVar[dict[str, ResultSeverity]] = {

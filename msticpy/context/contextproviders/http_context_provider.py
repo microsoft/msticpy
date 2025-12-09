@@ -139,7 +139,7 @@ class HttpContextProvider(ContextProvider, HttpProvider):
             result["Details"] = self._response_message(result["Status"])
         return result
 
-    @lru_cache(maxsize=256)
+    @lru_cache(maxsize=256)  # noqa: B019
     def lookup_observable(  # noqa:PLR0913
         self: Self,
         observable: str,

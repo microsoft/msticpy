@@ -174,7 +174,7 @@ def _check_pyspark() -> None:
 def _kql_magic_installed() -> bool:
     try:
         # pylint: disable=import-outside-toplevel, unused-import
-        from Kqlmagic import kql  # noqa: F401
+        from Kqlmagic import kql  # noqa: F401, PLC0415
 
         return True
     except ImportError:
@@ -510,7 +510,7 @@ def _check_kql_prereqs() -> None:
     try:
         # If this successfully imports, we are ok
         # pylint: disable=import-outside-toplevel
-        import gi
+        import gi  # noqa: PLC0415
 
         # pylint: enable=import-outside-toplevel
         del gi
@@ -541,7 +541,10 @@ def _check_azure_cli_status() -> None:
     """Check for Azure CLI credentials."""
     # import these only if we need them at runtime
     # pylint: disable=import-outside-toplevel
-    from ..auth.azure_auth_core import AzureCliStatus, check_cli_credentials
+    from ..auth.azure_auth_core import (  # noqa: PLC0415
+        AzureCliStatus,
+        check_cli_credentials,
+    )
 
     if unit_testing():
         return
