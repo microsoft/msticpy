@@ -387,11 +387,7 @@ def _parse_expression(expression: Any) -> str:  # noqa: PLR0911
         return expression
 
     # Handle COUNT(DISTINCT x) in version 11 format: {"distinct": true, "count": "EventID"}
-    if (
-        isinstance(expression, dict)
-        and "distinct" in expression
-        and "count" in expression
-    ):
+    if "distinct" in expression and "count" in expression:
         if expression.get("distinct") is True:
             func_arg = _parse_expression(expression["count"])
             return f"dcount({func_arg})"

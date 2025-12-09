@@ -584,7 +584,7 @@ def plot_outlier_results(  # noqa: PLR0915
                     z = z.reshape(xx.shape)
 
                     # pylint: disable=no-member
-                    axes[i, j].contourf(xx, yy, z, cmap=plt.cm.Blues_r)  # type: ignore[index]
+                    axes[i, j].contourf(xx, yy, z, cmap=plt.cm.Blues_r)  # type: ignore[index,attr-defined]
 
                     b1 = axes[i, j].scatter(  # type: ignore[index]
                         x[:, j], x[:, i], c="white", edgecolor="k"

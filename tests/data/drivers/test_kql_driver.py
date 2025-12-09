@@ -69,7 +69,7 @@ class _MockIPython:
         content = cell or line
         return self._run_magic(magic, content)
 
-    @staticmethod  # noqa: MC0001
+    @staticmethod
     def _run_magic(magic, content):
         if magic == "reload_ext":
             return None
