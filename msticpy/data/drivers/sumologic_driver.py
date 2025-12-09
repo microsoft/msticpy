@@ -308,9 +308,7 @@ class SumologicDriver(DriverBase):
         except Exception as err:
             self._raise_qry_except(err, "search_job_messages", "to get job messages")
 
-    def _get_job_results_records(  # noqa: MC0001
-        self, searchjob, status, limit, verbosity
-    ):
+    def _get_job_results_records(self, searchjob, status, limit, verbosity):
         # Aggregated results, limit
         count = status["recordCount"]
         limit2 = None
@@ -412,7 +410,7 @@ class SumologicDriver(DriverBase):
         return self._format_datetime(start), self._format_datetime(end)
 
     # pylint: disable=too-many-branches
-    def query(  # noqa: MC0001
+    def query(
         self, query: str, query_source: QuerySource = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
         """

@@ -238,9 +238,7 @@ def display_timeline(
     )
 
 
-def _display_timeline_dict(
-    data: dict, param: PlotParams
-) -> LayoutDOM:  # noqa: C901, MC0001
+def _display_timeline_dict(data: dict, param: PlotParams) -> LayoutDOM:  # noqa: C901
     """
     Display a timeline of events.
 

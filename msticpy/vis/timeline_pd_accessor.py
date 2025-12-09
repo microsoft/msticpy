@@ -40,7 +40,7 @@ class TimeLineAccessor:
         time_column: str = "TimeGenerated",
         end_time_column: Optional[str] = None,
         **kwargs,
-    ) -> LayoutDOM:  # noqa: C901, MC0001
+    ) -> LayoutDOM:  # noqa: C901
         """
         Display a duration timeline of events grouped by one or more columns.
 

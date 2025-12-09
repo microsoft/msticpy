@@ -397,7 +397,7 @@ MAP_FUNCS: dict[str, str | Callable] = {
 }
 
 
-def mask_df(  # noqa: MC0001
+def mask_df(
     data: pd.DataFrame,
     column_map: Mapping[str, Any] = None,
     use_default: bool = True,

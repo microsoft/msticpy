@@ -507,7 +507,7 @@ def _extract_timestamp(audit_str: str) -> str:
 
 # pylint: disable=too-many-branches
 @export
-def generate_process_tree(  # noqa: MC0001
+def generate_process_tree(
     audit_data: pd.DataFrame, branch_depth: int = 4, processes: pd.DataFrame = None
 ) -> pd.DataFrame:
     """

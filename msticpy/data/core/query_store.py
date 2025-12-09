@@ -251,8 +251,8 @@ class QueryStore:
             source.show = query_filter(source)
 
     # pylint: disable=too-many-locals
-    @classmethod  # noqa: MC0001
-    def import_files(  # noqa: MC0001
+    @classmethod
+    def import_files(
         cls,
         source_path: list,
         recursive: bool = True,

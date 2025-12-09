@@ -159,7 +159,7 @@ def build_and_show_process_tree(
 
 # pylint: disable=too-many-locals, too-many-statements
 @export
-def plot_process_tree(  # noqa: MC0001
+def plot_process_tree(
     data: pd.DataFrame,
     schema: Union[ProcSchema, Dict[str, Any]] = None,
     output_var: str = None,

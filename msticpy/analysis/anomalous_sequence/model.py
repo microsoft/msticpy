@@ -339,7 +339,7 @@ class Model:
         if self.session_type == SessionType.cmds_params_values:
             self._compute_probs_values()
 
-    def compute_setof_params_cond_cmd(self, use_geo_mean: bool):  # noqa: MC0001
+    def compute_setof_params_cond_cmd(self, use_geo_mean: bool):
         """
         Compute likelihood of combinations of params conditional on the cmd.
 

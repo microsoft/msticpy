@@ -215,7 +215,7 @@ class MordorBrowser:
                 self.fields[field].value = ""
         self._clear_df_display()
 
-    def _select_ds_item(self, change):  # noqa: MC0001
+    def _select_ds_item(self, change):
         """Handle change of dataset selection."""
         item_id = change.get("new")
         mdr_item = self.mdr_metadata.get(item_id)

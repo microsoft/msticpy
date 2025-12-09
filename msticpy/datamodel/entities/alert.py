@@ -100,7 +100,7 @@ class Alert(Entity):
         if isinstance(src_event, pd.Series) and not src_event.empty:
             self._create_from_event(src_event)
 
-    def _create_from_ent(self, src_entity):  # noqa: MC0001
+    def _create_from_ent(self, src_entity):
         if "StartTime" in src_entity:
             self.TimeGeneratedUtc = src_entity["StartTime"]
         if "TimeGenerated" in src_entity:
@@ -365,7 +365,7 @@ def _find_original_entity(ent, base_ents):
         return ent
 
 
-def _generate_base_ents(ents: list) -> list:  # noqa: MC0001
+def _generate_base_ents(ents: list) -> list:
     """Generate a list of all enties form a set of nested entities."""
     base_ents = []
     for ent in ents:

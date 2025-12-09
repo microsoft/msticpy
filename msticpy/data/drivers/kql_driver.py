@@ -130,7 +130,7 @@ class KqlDriver(DriverBase):
             self.connect(connection_str)
 
     # pylint: disable=too-many-branches
-    def connect(self, connection_str: Optional[str] = None, **kwargs):  # noqa: MC0001
+    def connect(self, connection_str: Optional[str] = None, **kwargs):
         """
         Connect to data source.
 

@@ -88,8 +88,8 @@ def check_py_version(min_ver: Tuple = (3, 6)):
 
 
 # pylint: disable=not-an-iterable, too-many-branches
-@export  # noqa: MC0001
-def check_and_install_missing_packages(  # noqa: MC0001
+@export
+def check_and_install_missing_packages(
     required_packages: List[str],
     force_notebook: bool = False,
     user: bool = False,

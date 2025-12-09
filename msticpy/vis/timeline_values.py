@@ -79,8 +79,8 @@ class PlotParams:
 
 
 # pylint: disable=invalid-name, too-many-locals, too-many-statements, too-many-branches
-@export  # noqa: C901, MC0001
-def display_timeline_values(  # noqa: C901, MC0001, PLR0912, PLR0915
+@export  # noqa: C901
+def display_timeline_values(  # noqa: C901, PLR0912, PLR0915
     data: pd.DataFrame,
     value_column: str = None,
     time_column: str = "TimeGenerated",
