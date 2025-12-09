@@ -17,7 +17,7 @@ jobs:
     permissions: read-all
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       # Print out details about the run
       - name: Dump GitHub context
@@ -163,18 +163,11 @@ jobs:
             python -m pip install -r requirements-dev.txt
           else
             echo "Missing requirements-dev.txt. Installing minimal requirements for testing."
-            python -m pip install flake8 black bandit mypy pylint types-attrs pydocstyle pyroma
+            python -m pip install black bandit mypy types-attrs pyroma
           fi
-      - name: black
+      - name: ruff
         run: |
-          black --diff --check --exclude venv msticpy
-        if: ${{ always() }}
-      - name: flake8
-        run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 msticpy --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 --max-line-length=90 --exclude=tests* . --ignore=E501,W503 --jobs=auto
+          ruff check msticpy --ignore PLW0603
         if: ${{ always() }}
       - name: pylint
         run: |
@@ -205,14 +198,6 @@ jobs:
       - name: bandit
         run: |
           bandit -x tests -r -s B303,B404,B603,B607,B608,B113 msticpy
-        if: ${{ always() }}
-      - name: flake8
-        run: |
-          flake8 --max-line-length=90 --exclude=tests* . --ignore=E501,W503 --jobs=auto
-        if: ${{ always() }}
-      - name: pydocstyle
-        run: |
-          pydocstyle --convention=numpy msticpy
         if: ${{ always() }}
       - name: pyroma
         run: |
