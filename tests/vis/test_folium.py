@@ -109,6 +109,7 @@ def test_centering_algorithms(geo_loc_df):
     check.is_true(math.isclose(center[1], -87.36079411764706))
 
 
+@pytest.mark.filterwarnings("ignore:GeoIpLookup")
 def test_add_ips(geo_loc_df):
     """Test adding list of IPs."""
     ips = geo_loc_df.AllExtIPs
@@ -279,6 +280,7 @@ _PM_TEST_PARAMS = [
 _PM_IDS = [pmt.name for pmt in _PM_TEST_PARAMS]
 
 
+@pytest.mark.filterwarnings("ignore:GeoIpLookup")
 @pytest.mark.parametrize("plot_test", _PM_TEST_PARAMS, ids=_PM_IDS)
 def test_plot_map(plot_test, geo_loc_df):
     """Test plot_map with different parameters."""

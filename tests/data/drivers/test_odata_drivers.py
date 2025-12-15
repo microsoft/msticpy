@@ -30,7 +30,10 @@ except ImportError:
 
 MP_PATH = str(get_test_data_path().parent.joinpath("msticpyconfig-test.yaml"))
 # pylint: disable=protected-access
-pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
+pytestmark = [
+    pytest.mark.filterwarnings("ignore::UserWarning"),
+    pytest.mark.filterwarnings("ignore:M365 Defender"),
+]
 
 _JSON_RESP = {
     "token_type": "Bearer",

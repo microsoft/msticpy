@@ -290,6 +290,7 @@ def test_tiproviders_editor(kv_sec, mp_conf_ctrl):
 
 
 @respx.mock
+@pytest.mark.filterwarnings("ignore:Use list")
 @patch("msticpy.config.ce_common.get_token")
 def test_get_tenant_id(get_token):
     """Test get tenantID function."""

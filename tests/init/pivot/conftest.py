@@ -20,15 +20,15 @@ from ...unit_test_lib import custom_mp_config, get_test_data_path
 
 __author__ = "Ian Hellen"
 
-# pylint: disable=redefined-outer-name, protected-access
+# pylint: disable=redefined-outer-name, protected-access, invalid-name
 
-_KQL_IMP_OK = False
+_AZURE_MONITOR_OK = False
 with contextlib.suppress(ImportError):
     # pylint: disable=unused-import
-    from msticpy.data.drivers import kql_driver
+    from msticpy.data.drivers import azure_monitor_driver
 
-    del kql_driver
-    _KQL_IMP_OK = True
+    del azure_monitor_driver
+    _AZURE_MONITOR_OK = True
 _SPLUNK_IMP_OK = False
 with contextlib.suppress(ImportError):
     from msticpy.data.drivers import splunk_driver
@@ -63,7 +63,7 @@ def create_data_providers():
     ):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=UserWarning)
-            if _KQL_IMP_OK:
+            if _AZURE_MONITOR_OK:
                 prov_dict["az_sent_prov"] = QueryProvider("MSSentinel")
             prov_dict["mdatp_prov"] = QueryProvider("MDE")
             if _SPLUNK_IMP_OK:

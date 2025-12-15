@@ -88,7 +88,7 @@ class VTObjectProperties(Enum):
 def _ensure_eventloop(*, force_nest_asyncio: bool = False) -> asyncio.AbstractEventLoop:
     """Ensure that we have an event loop available."""
     try:
-        event_loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
+        event_loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
     except RuntimeError:
         # Generate an event loop if there isn't any.
         event_loop = asyncio.new_event_loop()

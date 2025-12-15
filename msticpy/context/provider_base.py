@@ -501,7 +501,7 @@ def _(
 def _make_sync(future: Coroutine) -> pd.DataFrame:
     """Wait for an async call, making it sync."""
     try:
-        event_loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
+        event_loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
     except RuntimeError:
         # Generate an event loop if there isn't any.
         event_loop = asyncio.new_event_loop()
