@@ -3,7 +3,6 @@
 ![GitHub Actions build](https://github.com/microsoft/msticpy/actions/workflows/python-package.yml/badge.svg?branch=main)
 [![Azure Pipelines build](https://dev.azure.com/mstic-detections/mstic-jupyter/_apis/build/status/microsoft.msticpy?branchName=main)](https://dev.azure.com/mstic-detections/mstic-jupyter/_build/latest?definitionId=14&branchName=main)
 [![Downloads](https://pepy.tech/badge/msticpy)](https://pepy.tech/project/msticpy)
-[![BlackHat Arsenal 2020](https://raw.githubusercontent.com/toolswatch/badges/master/arsenal/usa/2020.svg)](https://www.blackhat.com/us-20/arsenal/schedule/#msticpy-the-security-analysis-swiss-army-knife-19872)
 
 Microsoft Threat Intelligence Python Security Tools.
 
@@ -29,7 +28,7 @@ alt="Timeline" title="Msticpy Timeline Control" height="300" />
 The **msticpy** package was initially developed to support
 [Jupyter Notebooks](https://jupyter-notebook-beginner-guide.readthedocs.io/en/latest/)
 authoring for
-[Azure Sentinel](https://azure.microsoft.com/en-us/services/azure-sentinel/).
+[Microsoft Sentinel](https://www.microsoft.com/en-us/security/business/siem-and-xdr/microsoft-sentinel/).
 While Azure Sentinel is still a big focus of our work, we are
 extending the data query/acquisition components to pull log data from
 other sources (currently Splunk, Microsoft Defender for Endpoint and
@@ -54,11 +53,6 @@ We welcome feedback, bug reports, suggestions for new features and contributions
 For core install:
 
 `pip install msticpy`
-
-If you are using *MSTICPy* with Azure Sentinel you should install with
-the "azsentinel" extra package:
-
-`pip install msticpy[azsentinel]`
 
 or for the latest dev build
 
@@ -90,8 +84,8 @@ functions in this interactive demo on mybinder.org.
 
 ## Log Data Acquisition
 
-QueryProvider is an extensible query library targeting Azure Sentinel/Log Analytics,
-Splunk, OData
+QueryProvider is an extensible query library targeting Microsoft Sentinel/Log Analytics,
+Microsoft XDR, Splunk, OData
 and other log data sources. It also has special support for
 [Mordor](https://github.com/OTRF/mordor) data sets and using local data.
 
@@ -325,7 +319,7 @@ See the following notebooks for more examples of the use of this package in prac
 ## Supported Platforms and Packages
 
 - msticpy is OS-independent
-- Requires [Python 3.8 or later](https://www.python.org/dev/peps/pep-0494/)
+- Requires [Python 3.10 or later](https://www.python.org/dev/peps/pep-0494/)
 - See [requirements.txt](requirements.txt) for more details and version requirements.
 
 ---
