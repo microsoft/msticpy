@@ -5,6 +5,7 @@
 # Author: Thomas Roccia - @fr0gger_
 # --------------------------------------------------------------------------
 """MalwareBazaar TI Provider."""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -123,9 +124,9 @@ class MBlookup:
         """
         if MBEntityType(mb_type) not in self._SUPPORTED_MB_TYPES:
             err_msg: str = (
-                f"Property type {mb_type} not supported."
-                " Valid types are "
-                ", ".join(x.value for x in MBEntityType.__members__.values())
+                f"Property type {mb_type} not supported. Valid types are , ".join(
+                    x.value for x in MBEntityType.__members__.values()
+                )
             )
             raise KeyError(err_msg)
 

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot pipeline class."""
+
 from collections import namedtuple
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -208,9 +209,7 @@ class Pipeline:
         pl_name, pl_dict = next(iter(pipeline.items()))
         if pl_dict and isinstance(pl_dict, dict):
             steps = [PipelineStep(**step) for step in pl_dict.get("steps", [])]
-            return cls(
-                name=pl_name, description=pl_dict.get("description"), steps=steps
-            )
+            return cls(name=pl_name, description=pl_dict.get("description"), steps=steps)
         raise ValueError("Dictionary could not be parsed.")
 
     @staticmethod

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for SecurityAlert class."""
+
 import json
 from json import JSONDecodeError
 from typing import Any, Dict, List
@@ -47,9 +48,7 @@ class SecurityAlert(SecurityBase):
                     self.extended_properties = src_row.ExtendedProperties
                 elif isinstance(src_row.ExtendedProperties, str):
                     try:
-                        self.extended_properties = json.loads(
-                            src_row.ExtendedProperties
-                        )
+                        self.extended_properties = json.loads(src_row.ExtendedProperties)
                     except JSONDecodeError:
                         pass
         self._find_os_family()
@@ -71,10 +70,7 @@ class SecurityAlert(SecurityBase):
 
         """
         params_dict = super().query_params
-        if (
-            "system_alert_id" not in params_dict
-            or params_dict["system_alert_id"] is None
-        ):
+        if "system_alert_id" not in params_dict or params_dict["system_alert_id"] is None:
             params_dict["system_alert_id"] = self._ids["SystemAlertId"]
         return params_dict
 
@@ -144,8 +140,7 @@ class SecurityAlert(SecurityBase):
             ref_props_multi = {
                 name: prop
                 for name, prop in entity.properties.items()
-                if isinstance(prop, list)
-                and any(elem for elem in prop if "$ref" in elem)
+                if isinstance(prop, list) and any(elem for elem in prop if "$ref" in elem)
             }
             for prop_name, prop_val in ref_props_multi.items():
                 for idx, elem in enumerate(prop_val):

@@ -12,6 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -81,9 +82,7 @@ class ProgressCounter:
 class Lookup:
     """Item lookup from providers."""
 
-    _NO_PROVIDERS_MSG: ClassVar[
-        str
-    ] = """
+    _NO_PROVIDERS_MSG: ClassVar[str] = """
     No Providers are loaded - please check that
     you have correctly configured your msticpyconfig.yaml settings.
     """
@@ -128,14 +127,6 @@ class Lookup:
         if primary_providers:
             for prov in primary_providers:
                 self.add_provider(prov, primary=True)
-        if secondary_providers:
-            warnings.warn(
-                "'secondary_providers' is a deprecated parameter",
-                DeprecationWarning,
-                stacklevel=1,
-            )
-            for prov in secondary_providers:
-                self.add_provider(prov, primary=False)
         if not (primary_providers or secondary_providers):
             self._load_providers()
 
@@ -226,8 +217,9 @@ class Lookup:
                     )
                 else:
                     err_msg = (
-                        f"Unknown provider '{provider}'. Available providers:"
-                        ", ".join(available_providers)
+                        f"Unknown provider '{provider}'. Available providers:, ".join(
+                            available_providers
+                        )
                     )
                 raise ValueError(err_msg)
 
@@ -264,8 +256,9 @@ class Lookup:
                     )
                 else:
                     err_msg = (
-                        f"Unknown provider '{provider}'. Available providers:"
-                        ", ".join(available_providers)
+                        f"Unknown provider '{provider}'. Available providers:, ".join(
+                            available_providers
+                        )
                     )
                 raise ValueError(err_msg)
 
@@ -772,8 +765,9 @@ class Lookup:
             if hasattr(cls, "CUSTOM_PROVIDERS") and provider in cls.CUSTOM_PROVIDERS:
                 return cls.CUSTOM_PROVIDERS[provider]
             err_msg: str = (
-                f"No provider named '{provider}'. Possible values are: "
-                ", ".join(list(cls.PROVIDERS) + list(cls.CUSTOM_PROVIDERS))
+                f"No provider named '{provider}'. Possible values are: , ".join(
+                    list(cls.PROVIDERS) + list(cls.CUSTOM_PROVIDERS)
+                )
             )
             raise LookupError(err_msg)
 

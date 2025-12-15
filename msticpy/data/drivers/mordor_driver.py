@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mordor/OTRF Security datasets driver."""
+
 import json
 import pickle  # nosec
 import zipfile
@@ -69,12 +70,8 @@ class MordorDriver(DriverBase):
         self._driver_queries: List[Dict[str, Any]] = []
 
         mdr_settings = get_config("DataProviders.Mordor", {})
-        self.use_cached = kwargs.pop(
-            "used_cached", mdr_settings.get("used_cached", True)
-        )
-        self.save_folder = kwargs.pop(
-            "save_folder", mdr_settings.get("save_folder", ".")
-        )
+        self.use_cached = kwargs.pop("used_cached", mdr_settings.get("used_cached", True))
+        self.save_folder = kwargs.pop("save_folder", mdr_settings.get("save_folder", "."))
         self.save_folder = _resolve_cache_folder(self.save_folder)
         self.silent = kwargs.pop("silent", False)
 
@@ -350,8 +347,7 @@ class MitreAttack:
 
         """
         if (
-            not self._technique_name
-            and self.technique in MITRE_TECHNIQUES.index  # type: ignore[union-attr]
+            not self._technique_name and self.technique in MITRE_TECHNIQUES.index  # type: ignore[union-attr]
         ):
             self._technique_name = MITRE_TECHNIQUES.loc[  # type: ignore[union-attr]
                 self.technique
@@ -370,8 +366,7 @@ class MitreAttack:
 
         """
         if (
-            not self._technique_desc
-            and self.technique in MITRE_TECHNIQUES.index  # type: ignore[union-attr]
+            not self._technique_desc and self.technique in MITRE_TECHNIQUES.index  # type: ignore[union-attr]
         ):
             self._technique_desc = MITRE_TECHNIQUES.loc[  # type: ignore
                 self.technique
@@ -410,9 +405,7 @@ class MitreAttack:
                     tactic_name = MITRE_TACTICS.loc[tactic].Name  # type: ignore[union-attr]
                     tactic_desc = MITRE_TACTICS.loc[tactic].Description  # type: ignore[union-attr]
                 tactic_uri = self.MTR_TAC_URI.format(tactic_id=tactic)
-                self._tactics_full.append(
-                    (tactic, tactic_name, tactic_desc, tactic_uri)
-                )
+                self._tactics_full.append((tactic, tactic_name, tactic_desc, tactic_uri))
         return self._tactics_full
 
 
@@ -626,15 +619,11 @@ def _fetch_mdr_metadata(cache_folder: Optional[str] = None) -> Dict[str, MordorE
 
     md_cached_metadata = _read_mordor_cache(cache_folder)
     mdr_md_paths = list(get_mdr_data_paths("metadata"))
-    for filename in tqdm(
-        mdr_md_paths, unit=" files", desc="Downloading Mordor metadata"
-    ):
+    for filename in tqdm(mdr_md_paths, unit=" files", desc="Downloading Mordor metadata"):
         cache_valid = False
         if filename in md_cached_metadata:
             metadata_doc = md_cached_metadata[filename]
-            last_timestamp = pd.Timestamp(
-                metadata_doc.get(_LAST_UPDATE_KEY, _DEFAULT_TS)
-            )
+            last_timestamp = pd.Timestamp(metadata_doc.get(_LAST_UPDATE_KEY, _DEFAULT_TS))
             cache_valid = (pd.Timestamp.now(tz=timezone.utc) - last_timestamp).days < 30
 
         if not cache_valid:
@@ -643,9 +632,7 @@ def _fetch_mdr_metadata(cache_folder: Optional[str] = None) -> Dict[str, MordorE
                 metadata_doc = yaml.safe_load(gh_file_content)
             except yaml.error.YAMLError:
                 continue
-            metadata_doc[_LAST_UPDATE_KEY] = pd.Timestamp.now(
-                tz=timezone.utc
-            ).isoformat()
+            metadata_doc[_LAST_UPDATE_KEY] = pd.Timestamp.now(tz=timezone.utc).isoformat()
             md_cached_metadata[filename] = metadata_doc
         doc_id = metadata_doc.get("id")
         mdr_entry = metadata_doc.copy()

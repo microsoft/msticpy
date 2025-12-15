@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Logging global config."""
+
 import logging
 import os
 import sys

@@ -14,6 +14,7 @@ Azure SDK docs: https://learn.microsoft.com/python/api/overview/
 azure/monitor-query-readme?view=azure-python
 
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -25,8 +26,8 @@ import httpx
 import pandas as pd
 from azure.core.exceptions import HttpResponseError
 from azure.core.pipeline.policies import UserAgentPolicy
-from packaging.version import Version
-from packaging.version import parse as parse_version
+from packaging.version import Version  # pylint: disable=no-name-in-module
+from packaging.version import parse as parse_version  # pylint: disable=no-name-in-module
 
 from ..._version import VERSION
 from ...auth.azure_auth import AzureCloudConfig, az_connect
@@ -336,9 +337,7 @@ class AzureMonitorDriver(DriverBase):
         workspace_id = next(iter(self._workspace_ids), None) or self._workspace_id
         additional_workspaces = self._workspace_ids[1:] if self._workspace_ids else None
         logger.info("Query to run %s", query)
-        logger.info(
-            "Workspaces %s", ",".join(self._workspace_ids) or self._workspace_id
-        )
+        logger.info("Workspaces %s", ",".join(self._workspace_ids) or self._workspace_id)
         logger.info(
             "Time span %s - %s",
             str(time_span_value[0]) if time_span_value else "none",
@@ -422,8 +421,7 @@ class AzureMonitorDriver(DriverBase):
         args_path = f"{self._ws_config.settings_path}.Args"
         args_settings = self._ws_config.settings.get("Args", {})
         return {
-            name: get_protected_setting(args_path, name)
-            for name in args_settings.keys()
+            name: get_protected_setting(args_path, name) for name in args_settings.keys()
         }
 
     def _get_workspaces(self, connection_str: str | None = None, **kwargs):
@@ -443,9 +441,7 @@ class AzureMonitorDriver(DriverBase):
         connection_str = connection_str or self._def_connection_str
         if workspace_name or connection_str is None:
             ws_config = WorkspaceConfig(workspace=workspace_name)  # type: ignore
-            logger.info(
-                "WorkspaceConfig created from workspace name %s", workspace_name
-            )
+            logger.info("WorkspaceConfig created from workspace name %s", workspace_name)
         elif isinstance(connection_str, str):
             self._def_connection_str = connection_str
             with contextlib.suppress(ValueError):

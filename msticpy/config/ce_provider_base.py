@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module docstring."""
+
 from abc import ABC
 from typing import List, Optional
 
@@ -58,8 +59,7 @@ HELP_URIS = {
         + "msticpyconfig.html#specifying-secrets-as-key-vault-secrets"
     ),
     "MSTICPy Configuration": (
-        "https://msticpy.readthedocs.io/en/latest/"
-        + "getting_started/msticpyconfig.html"
+        "https://msticpy.readthedocs.io/en/latest/" + "getting_started/msticpyconfig.html"
     ),
     "Help on this tab": (
         "https://msticpy.readthedocs.io/en/latest/getting_started/"
@@ -168,12 +168,8 @@ class CEProviders(CEItemsBase, ABC):
         if not self.prov_options.label:
             self.set_status("Error: please select a provider name to add.")
             return
-        self._populate_edit_ctrls(
-            control_name=self.prov_options.label, new_provider=True
-        )
-        self.mp_controls.save_ctrl_values(
-            f"{self._COMP_PATH}.{self.prov_options.label}"
-        )
+        self._populate_edit_ctrls(control_name=self.prov_options.label, new_provider=True)
+        self.mp_controls.save_ctrl_values(f"{self._COMP_PATH}.{self.prov_options.label}")
         self.select_item.options = self._get_select_opts()
         self.select_item.label = self.prov_options.label
 

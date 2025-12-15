@@ -17,7 +17,7 @@ jobs:
     permissions: read-all
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       # Print out details about the run
       - name: Dump GitHub context
@@ -173,7 +173,7 @@ jobs:
             python -m pip install -r requirements-dev.txt
           else
             echo "Missing requirements-dev.txt. Installing minimal requirements for testing."
-            python -m pip install black bandit mypy types-attrs pyroma
+            python -m pip install bandit mypy types-attrs pyroma
           fi
       - name: ruff
         run: |

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process tree builder routines for MDE process data."""
+
 from typing import Dict, Tuple, Union
 
 import numpy as np
@@ -164,9 +165,7 @@ def _extract_missing_parents(
         .drop(columns=["InitiatingProcessFileName"])
     )
     missing_parents["CreatedProcessFilePath"] = (
-        missing_parents.CreatedProcessFilePath
-        + "\\"
-        + missing_parents.CreatedProcessName
+        missing_parents.CreatedProcessFilePath + "\\" + missing_parents.CreatedProcessName
     )
     missing_parents = _sort_df_by_time(missing_parents)
     if debug:

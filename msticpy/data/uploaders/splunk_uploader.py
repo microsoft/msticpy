@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Splunk Uploader class."""
+
 import logging
 from pathlib import Path
 from typing import Any, Optional

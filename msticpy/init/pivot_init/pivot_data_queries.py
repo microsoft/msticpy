@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot query functions class."""
+
 from __future__ import annotations
 
 import itertools
@@ -450,7 +451,10 @@ def add_queries_to_entities(
             }
             # Wrap the function
             cls_func = _create_pivot_func(
-                func, func_params.param_attrs, attr_map, get_timespan  # type:ignore
+                func,
+                func_params.param_attrs,
+                attr_map,
+                get_timespan,  # type:ignore
             )
             # add a properties dict to the function
             cls_func.pivot_properties = _create_piv_properties(

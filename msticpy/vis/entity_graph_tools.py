@@ -17,7 +17,7 @@ from bokeh.layouts import column
 from bokeh.models import Circle, HoverTool, Label, LayoutDOM  # type: ignore
 from bokeh.plotting import figure, from_networkx
 from dateutil import parser
-from packaging.version import Version, parse
+from packaging.version import Version, parse  # pylint: disable=no-name-in-module
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
@@ -309,9 +309,7 @@ class EntityGraph:
         ):
             self.alertentity_graph.remove_edge(source, target)
         else:
-            raise MsticpyUserError(
-                title=f"No edge exists between {source} and {target}"
-            )
+            raise MsticpyUserError(title=f"No edge exists between {source} and {target}")
 
     def remove_node(self, name: str):
         """
@@ -510,9 +508,7 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
     nx.set_node_attributes(entity_graph_for_plotting, node_attributes)
 
     for source_node, target_node in entity_graph.edges:
-        entity_graph_for_plotting.add_edge(
-            rev_index[source_node], rev_index[target_node]
-        )
+        entity_graph_for_plotting.add_edge(rev_index[source_node], rev_index[target_node])
 
     graph_renderer = from_networkx(
         entity_graph_for_plotting, nx.spring_layout, scale=scale, center=(0, 0)

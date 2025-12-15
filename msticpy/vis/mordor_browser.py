@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mordor dataset browser."""
+
 from pprint import pformat
 from typing import Any, Dict, Iterable, Optional
 
@@ -143,9 +144,7 @@ class MordorBrowser:
         self.widgets["filter_reset"].on_click(self._reset_filters)
         wgt_filter_grp = widgets.VBox(
             [
-                widgets.HBox(
-                    [self.widgets["filter_text"], self.widgets["filter_help"]]
-                ),
+                widgets.HBox([self.widgets["filter_text"], self.widgets["filter_help"]]),
                 widgets.HBox(
                     [
                         self.widgets["sel_techniques"],

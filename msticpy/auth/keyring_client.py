@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Settings provider for secrets."""
+
 from typing import Any, Set
 
 import keyring

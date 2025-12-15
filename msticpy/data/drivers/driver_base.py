@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data driver base class."""
+
 import abc
 from abc import ABC
 from collections import defaultdict

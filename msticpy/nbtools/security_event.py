@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for SecurityEvent class."""
+
 from typing import Any, Dict, List
 
 import pandas as pd

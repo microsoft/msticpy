@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Search Features."""
+
 from __future__ import annotations
 
 import datetime as dt

@@ -95,9 +95,7 @@ class SelectAlert(IPyDisplayMixin):
         columns = columns or ["AlertName", "ProductName"]
         self.disp_columns = list({col for col in columns if col in alerts.columns})
         if not self.disp_columns:
-            raise ValueError(
-                f"Display columns {','.join(columns)} not found in alerts."
-            )
+            raise ValueError(f"Display columns {','.join(columns)} not found in alerts.")
         self._select_items = self._get_select_options(
             alerts, self.time_col, self.id_col, self.disp_columns
         )
@@ -204,9 +202,7 @@ class SelectAlert(IPyDisplayMixin):
                 alert["ExtendedProperties"], str
             ):
                 with contextlib.suppress(JSONDecodeError):
-                    alert["ExtendedProperties"] = json.loads(
-                        alert["ExtendedProperties"]
-                    )
+                    alert["ExtendedProperties"] = json.loads(alert["ExtendedProperties"])
             if "Entities" in alert.index and isinstance(alert["Entities"], str):
                 with contextlib.suppress(JSONDecodeError):
                     alert["Entities"] = json.loads(alert["Entities"])
@@ -217,9 +213,9 @@ class SelectAlert(IPyDisplayMixin):
         """Select the first alert by default."""
         top_alert = self.alerts.iloc[0]
         if self.default_alert:
-            top_alert = self.alerts[
-                self.alerts[self.id_col] == self.default_alert
-            ].iloc[0]
+            top_alert = self.alerts[self.alerts[self.id_col] == self.default_alert].iloc[
+                0
+            ]
         if not top_alert.empty:
             self._w_select_alert.index = 0
             self.alert_id = top_alert[self.id_col]

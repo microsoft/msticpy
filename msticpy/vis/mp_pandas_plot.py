@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module docstring."""
+
 from typing import Iterable, Optional, Tuple, Union
 
 import pandas as pd
@@ -178,9 +179,7 @@ class MsticpyPlotAccessor:
             The bokeh plot figure.
 
         """
-        return display_timeline_values(
-            data=self._df, value_column=value_column, **kwargs
-        )
+        return display_timeline_values(data=self._df, value_column=value_column, **kwargs)
 
     def timeline_duration(
         self,

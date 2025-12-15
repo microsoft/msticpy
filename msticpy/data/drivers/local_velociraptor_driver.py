@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Local Velociraptor Data Driver class."""
+
 import logging
 from collections import defaultdict
 from functools import lru_cache
@@ -25,8 +26,7 @@ __author__ = "ianhelle"
 logger = logging.getLogger(__name__)
 
 _VELOCIRATOR_DOC_URL = (
-    "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
-    "DataProv-Velociraptor.html"
+    "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProv-Velociraptor.html"
 )
 
 
@@ -206,8 +206,7 @@ class VelociraptorLogDriver(DriverBase):
 
         for input_path in (Path(path_str) for path_str in self._paths):
             files = {
-                file.relative_to(input_path): file
-                for file in input_path.rglob("*.json")
+                file.relative_to(input_path): file for file in input_path.rglob("*.json")
             }
 
             file_names = [valid_pyname(str(file.with_suffix(""))) for file in files]

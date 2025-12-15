@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Sentinel Alert class."""
+
 import json
 from typing import Any, Dict, List
 

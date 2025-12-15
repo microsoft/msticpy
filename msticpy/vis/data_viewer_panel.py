@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Dataframe viewer using Panel Tabulator."""
+
 from functools import partial
 from pprint import pformat
 from textwrap import wrap
@@ -97,10 +98,7 @@ class DataViewer:
         hidden_cols = kwargs.pop("hidden_cols", None)
         self._hidden_columns = self._default_hidden_cols(selected_cols, hidden_cols)
 
-        if (
-            not kwargs.pop("show_tenant_id", False)
-            and "TenantId" in self._hidden_columns
-        ):
+        if not kwargs.pop("show_tenant_id", False) and "TenantId" in self._hidden_columns:
             self._hidden_columns.remove("TenantId")
 
         # Create the tabulator control

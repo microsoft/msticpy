@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree Schema module for Process Tree Visualization."""
+
 from __future__ import annotations
 
 from dataclasses import MISSING, asdict, dataclass, field, fields
@@ -64,8 +65,7 @@ class ProcSchema:  # pylint: disable=too-many-instance-attributes  # noqa: PLW16
         self_dict: dict[str, Any] = asdict(self)
 
         return not any(
-            value and value != self_dict[field]
-            for field, value in asdict(other).items()
+            value and value != self_dict[field] for field, value in asdict(other).items()
         )
 
     @property

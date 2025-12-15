@@ -5,6 +5,7 @@
 # Author: Thomas Roccia - @fr0gger_
 # --------------------------------------------------------------------------
 """Pulsedive TI Provider."""
+
 from __future__ import annotations
 
 from enum import Enum

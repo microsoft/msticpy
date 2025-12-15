@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Utility sub-package."""
+
 from ..._version import VERSION
 from .format import *  # noqa: F401, F403
 from .package import *  # noqa: F401, F403

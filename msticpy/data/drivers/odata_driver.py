@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """OData Driver class."""
+
 from __future__ import annotations
 
 import abc
@@ -360,9 +361,7 @@ class OData(DriverBase):
             )
         logger.debug("Authority URL: %s", authority)
         logger.debug("Scopes: %s", self.scopes)
-        logger.info(
-            "Initializing MSAL delegated auth for user: %s", cs_dict["username"]
-        )
+        logger.info("Initializing MSAL delegated auth for user: %s", cs_dict["username"])
 
         self.msal_auth = MSALDelegatedAuth(
             client_id=cs_dict["client_id"],
@@ -466,9 +465,7 @@ class OData(DriverBase):
         logger.warning("Response error: %s", response.json()["error"]["message"])
         if response.status_code == httpx.codes.UNAUTHORIZED:
             logger.error("Authentication failed - status code 401")
-            err_msg: str = (
-                "Authentication failed - possible timeout. Please re-connect."
-            )
+            err_msg: str = "Authentication failed - possible timeout. Please re-connect."
             raise ConnectionRefusedError(err_msg)
         # Raise an exception to handle hitting API limits
         if response.status_code == httpx.codes.TOO_MANY_REQUESTS:
@@ -555,13 +552,9 @@ def _get_driver_settings(
     instance: str | None = None,
 ) -> dict[str, str]:
     """Try to retrieve config settings for OAuth drivers."""
-    logger.debug(
-        "Getting driver settings for: %s (instance: %s)", config_name, instance
-    )
+    logger.debug("Getting driver settings for: %s (instance: %s)", config_name, instance)
     config_key: str = (
-        f"{config_name}-{instance}"
-        if instance and instance != "Default"
-        else config_name
+        f"{config_name}-{instance}" if instance and instance != "Default" else config_name
     )
     drv_config: ProviderSettings | None = get_provider_settings("DataProviders").get(
         config_key,

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Lazy importer for msticpy sub-packages."""
+
 import importlib
 from types import ModuleType
 from typing import Callable, Iterable, Tuple
@@ -71,7 +72,8 @@ def lazy_import(
         # appropriate for direct imports.
         try:
             imported = importlib.import_module(
-                mod_name, module.__spec__.parent  # type: ignore
+                mod_name,
+                module.__spec__.parent,  # type: ignore
             )
         except ImportError as imp_err:
             message = f"cannot import name '{mod_name}' from '{importer_name}'"

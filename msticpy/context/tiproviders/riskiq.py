@@ -12,6 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
 from functools import partial
@@ -326,9 +327,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
             if self._pivot_get_timespan
             else None
         )
-        end = (
-            end or self._pivot_get_timespan().end if self._pivot_get_timespan else None
-        )
+        end = end or self._pivot_get_timespan().end if self._pivot_get_timespan else None
         if (
             start
             and end

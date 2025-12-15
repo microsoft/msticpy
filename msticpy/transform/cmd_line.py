@@ -13,6 +13,7 @@ Designed to support standard linux syslog for investigations where auditd
 is not available.
 
 """
+
 import datetime as dt
 import json
 import re
@@ -85,10 +86,7 @@ def risky_cmd_line(
 
     events[cmd_field] = events[cmd_field].replace("", np.nan)
     activity = (
-        events[["TimeGenerated", cmd_field]]
-        .dropna()
-        .set_index("TimeGenerated")
-        .to_dict()
+        events[["TimeGenerated", cmd_field]].dropna().set_index("TimeGenerated").to_dict()
     )
     with open(detection_rules, encoding="utf-8") as json_file:
         rules = json.load(json_file)
@@ -162,8 +160,7 @@ def cmd_speed(
     df_len = len(actions.index) - (events + 1)
     while df_len >= 0:
         delta = (
-            actions["TimeGenerated"][(df_len + events)]
-            - actions["TimeGenerated"][df_len]
+            actions["TimeGenerated"][(df_len + events)] - actions["TimeGenerated"][df_len]
         )
         if delta < dt.timedelta(seconds=time):
             suspicious_actions.append(

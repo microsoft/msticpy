@@ -12,13 +12,13 @@ enrich IP Address data to assist investigations.
 Designed to support any data source containing IP address entity.
 
 """
+
 from __future__ import annotations
 
 import ipaddress
 import logging
 import re
 import socket
-import warnings
 from dataclasses import asdict, dataclass, field
 from functools import lru_cache
 from time import sleep
@@ -28,7 +28,6 @@ import httpx
 import pandas as pd
 from bs4 import BeautifulSoup
 from deprecated.sphinx import deprecated
-from typing_extensions import Self
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyConnectionError, MsticpyException
@@ -80,9 +79,9 @@ def _fetch_asns() -> Callable[[], dict[str, str]]:
                 raise MsticpyConnectionError(err_msg) from err
             asns_soup = BeautifulSoup(asns_resp.content, features="lxml")
             asns_dict = {
-                str(asn.next_element)
-                .strip(): str(asn.next_element.next_element if asn.next_element else "")
-                .strip()
+                str(asn.next_element).strip(): str(
+                    asn.next_element.next_element if asn.next_element else ""
+                ).strip()
                 for asn in asns_soup.find_all("a")
             }
         return asns_dict
@@ -389,64 +388,6 @@ def get_whois_df(  # noqa: PLR0913
             return data.drop(columns=whois_data.columns)
         return data
     return data.assign(ASNDescription="No data returned")
-
-
-@pd.api.extensions.register_dataframe_accessor("mp_whois")
-@export
-class IpWhoisAccessor:
-    """Pandas api extension for IP Whois lookup."""
-
-    def __init__(self: IpWhoisAccessor, pandas_obj: pd.DataFrame) -> None:
-        """Instantiate pandas extension class."""
-        self._df: pd.DataFrame = pandas_obj
-
-    def lookup(
-        self: Self,
-        ip_column: str,
-        *,
-        asn_col: str = "ASNDescription",
-        whois_col: str = "WhoIsData",
-        show_progress: bool = False,
-    ) -> pd.DataFrame:
-        """
-        Extract IoCs from either a pandas DataFrame.
-
-        Parameters
-        ----------
-        ip_column : str
-            Column name of IP Address to look up.
-        asn_col : str, optional
-            Name of the output column for ASN description,
-            by default "ASNDescription"
-        whois_col : str, optional
-            Name of the output column for full whois data,
-            by default "WhoIsData"
-        show_progress : bool, optional
-            Show progress for each query, by default False
-
-        Returns
-        -------
-        pd.DataFrame
-            Output DataFrame with results in added columns.
-
-        """
-        warn_message = (
-            "This accessor method has been deprecated.\n"
-            "Please use IpAddress.util.whois() pivot function."
-            "This will be removed in MSTICPy v2.2.0"
-        )
-        warnings.warn(
-            warn_message,
-            category=DeprecationWarning,
-            stacklevel=1,
-        )
-        return get_whois_df(
-            data=self._df,
-            ip_column=ip_column,
-            asn_col=asn_col,
-            whois_col=whois_col,
-            show_progress=show_progress,
-        )
 
 
 def ip_whois(

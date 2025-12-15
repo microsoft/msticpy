@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Keyvault client settings."""
+
 from __future__ import annotations
 
 import warnings

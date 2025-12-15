@@ -10,6 +10,7 @@ Includes functions to conduct common investigation steps when dealing
 with a domain or url, such as getting a screenshot or validating the TLD.
 
 """
+
 from __future__ import annotations
 
 import datetime as dt

@@ -50,6 +50,7 @@ Configuring your environment notebook
 https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/ConfiguringNotebookEnvironment.ipynb
 
 """
+
 from __future__ import annotations
 
 import importlib
@@ -227,9 +228,7 @@ _MP_IMPORT_ALL: list[dict[str, str]] = [
 ]
 # pylint: enable=use-dict-literal
 
-_CONF_URI = (
-    "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html"
-)
+_CONF_URI = "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html"
 
 _AZNB_GUIDE = (
     "Please run the <i>Getting Started Guide for Azure Sentinel "
@@ -785,13 +784,6 @@ def _set_nb_options(namespace):
     pd.set_option("display.max_columns", 50)
     pd.set_option("display.max_colwidth", 100)
 
-    os.environ["KQLMAGIC_LOAD_MODE"] = "silent"
-    # Kqlmagic config will use AZ CLI login if available
-    kql_config = os.environ.get("KQLMAGIC_CONFIGURATION", "")
-    if "try_azcli_login" not in kql_config:
-        kql_config = ";".join([kql_config, "try_azcli_login=True"])
-        os.environ["KQLMAGIC_CONFIGURATION"] = kql_config
-
 
 def _load_pivots(namespace):
     """Load pivot functions."""
@@ -912,9 +904,7 @@ def _check_and_reload_pkg(
     if pkg_version < required_version:
         _err_output(_MISSING_PKG_WARN.format(package=pkg_name))
         # sourcery skip: swap-if-expression
-        resp = (
-            input("Install the package now? (y/n)") if not unit_testing() else "y"
-        )  # nosec
+        resp = input("Install the package now? (y/n)") if not unit_testing() else "y"  # nosec
         if resp.casefold().startswith("y"):
             warn_mssg.append(f"{pkg_name} was installed or upgraded.")
             pkg_spec = f"{pkg_name}>={required_version}"

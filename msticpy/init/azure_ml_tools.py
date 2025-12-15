@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Checker functions for Azure ML notebooks."""
+
 from __future__ import annotations
 
 import logging
@@ -14,7 +15,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import yaml
-from IPython import get_ipython
 from IPython.display import HTML, display
 
 try:
@@ -151,9 +151,6 @@ def check_aml_settings(
     check_python_ver(min_py_ver=min_py_ver)
 
     _check_mp_install(min_mp_ver, mp_release, extras)
-    if _kql_magic_installed():
-        _check_kql_prereqs()
-        _set_kql_env_vars(extras)
     _run_user_settings()
     _set_mpconfig_var()
     _check_azure_cli_status()
@@ -171,16 +168,6 @@ def _check_pyspark() -> None:
         return
 
     _disp_html(_PYSPARK_KERNEL_NOT_SUPPORTED.format(nb_uri=AZ_GET_STARTED))
-
-
-def _kql_magic_installed() -> bool:
-    try:
-        # pylint: disable=import-outside-toplevel, unused-import
-        from Kqlmagic import kql  # noqa: F401, PLC0415
-
-        return True
-    except ImportError:
-        return False
 
 
 def check_python_ver(min_py_ver: str | tuple = MIN_PYTHON_VER_DEF) -> None:
@@ -300,9 +287,9 @@ def populate_config_to_mp_config(mp_path: str | None) -> str | None:
         iter(azs_settings.get("AzureSentinel", {}).get("Workspaces", {}).values()),
     )
     if def_azs_settings:
-        mp_config_convert.settings["AzureSentinel"]["Workspaces"][
-            "Default"
-        ] = def_azs_settings.copy()
+        mp_config_convert.settings["AzureSentinel"]["Workspaces"]["Default"] = (
+            def_azs_settings.copy()
+        )
 
     if Path(mp_path).exists():
         # If there is an existing file read it in
@@ -339,17 +326,6 @@ def _check_mp_install(
     mp_install_version = mp_release or os.environ.get("MP_TEST_VER") or str(pkg_version)
 
     check_mp_ver(min_msticpy_ver=mp_install_version, extras=extras)
-
-
-def _set_kql_env_vars(extras: list[str] | None) -> None:
-    """Set environment variables for Kqlmagic based on MP extras."""
-    jp_extended = ("azsentinel", "azuresentinel", "kql")
-    if extras and any(extra for extra in extras if extra in jp_extended):
-        os.environ["KQLMAGIC_EXTRAS_REQUIRE"] = "jupyter-extended"
-    else:
-        os.environ["KQLMAGIC_EXTRAS_REQUIRE"] = "jupyter-basic"
-    if is_in_aml():
-        os.environ["KQLMAGIC_AZUREML_COMPUTE"] = _get_vm_fqdn()
 
 
 def _get_pkg_version(version: str | tuple) -> Version:
@@ -467,76 +443,8 @@ def _get_vm_fqdn() -> str:
     """Get the FQDN of the host."""
     vm_metadata = _get_vm_metadata()
     if vm_metadata and "instance" in vm_metadata:
-        return (
-            f"https://{vm_metadata.get('instance')}.{vm_metadata.get('domainsuffix')}"
-        )
+        return f"https://{vm_metadata.get('instance')}.{vm_metadata.get('domainsuffix')}"
     return ""
-
-
-def _check_kql_prereqs() -> None:
-    """
-    Check and install packages for Kqlmagic/msal_extensions.
-
-    Notes
-    -----
-    Kqlmagic may trigger warnings about a missing PyGObject package
-    and some system library dependencies. To fix this do the
-    following:<br>
-    From a notebook run:
-
-        %pip uninstall enum34
-        !sudo apt-get --yes install libgirepository1.0-dev
-        !sudo apt-get --yes install gir1.2-secret-1
-        %pip install pygobject
-
-    You can also do this from a terminal - but ensure that you've
-    activated the environment corresponding to the kernel you are
-    using prior to running the pip commands.
-
-        # Install the libgi dependency
-        sudo apt install libgirepository1.0-dev
-        sudo apt install gir1.2-secret-1
-
-        # activate the environment
-        # conda activate azureml_py38
-        # source ./env_path/scripts/activate
-
-        # Uninstall enum34
-        python -m pip uninstall enum34
-        # Install pygobject
-        python -m install pygobject
-
-    """
-    if not is_in_aml():
-        return
-    try:
-        # If this successfully imports, we are ok
-        # pylint: disable=import-outside-toplevel
-        import gi  # noqa: PLC0415
-
-        # pylint: enable=import-outside-toplevel
-        del gi
-    except ImportError:
-        # Check for system packages
-        ip_shell = get_ipython()
-        if not ip_shell:
-            return
-        apt_list = ip_shell.run_line_magic("sx", "apt list")
-        apt_list = [apt.split("/", maxsplit=1)[0] for apt in apt_list]
-        missing_lx_pkg = [
-            apt_pkg
-            for apt_pkg in ("libgirepository1.0-dev", "gir1.2-secret-1")
-            if apt_pkg not in apt_list
-        ]
-        if missing_lx_pkg:
-            _disp_html(
-                "Kqlmagic/msal-extensions pre-requisite PyGObject not installed.",
-            )
-            _disp_html(
-                "To prevent warnings when loading the Kqlmagic data provider,"
-                " Please run the following command:<br>"
-                "!conda install --yes -c conda-forge pygobject<br>",
-            )
 
 
 def _check_azure_cli_status() -> None:

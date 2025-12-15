@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for converting DataFrame to Networkx graph."""
+
 from typing import Callable, Dict, Iterable, Optional, Union
 
 import networkx as nx
@@ -56,9 +57,7 @@ def df_to_networkx(
 
     """
     create_as = nx.DiGraph if graph_type == "digraph" else nx.Graph
-    _verify_columns(
-        data, source_col, target_col, source_attrs, target_attrs, edge_attrs
-    )
+    _verify_columns(data, source_col, target_col, source_attrs, target_attrs, edge_attrs)
     # remove any source or target rows that are NaN
     data = data.dropna(axis=0, subset=[source_col, target_col])
     nx_graph = nx.from_pandas_edgelist(
@@ -112,9 +111,7 @@ def _pd_unique_list(series: pd.Series):
     return ", ".join([str(attrib) for attrib in unique_vals])
 
 
-def _verify_columns(
-    data, source_col, target_col, source_attrs, target_attrs, edge_attrs
-):
+def _verify_columns(data, source_col, target_col, source_attrs, target_attrs, edge_attrs):
     """Check specified columns are in data."""
     missing_columns = {
         **_verify_column(data, "source_col", source_col),

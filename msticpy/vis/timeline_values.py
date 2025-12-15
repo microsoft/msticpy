@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Timeline values Bokeh plot."""
+
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
@@ -339,18 +340,14 @@ def _plot_param_group(
             plot_args["legend_label"] = inline_legend
 
         if "vbar" in plot_kinds:
-            p_series.append(
-                plot.vbar(top=value_col, width=4, color="color", **plot_args)
-            )
+            p_series.append(plot.vbar(top=value_col, width=4, color="color", **plot_args))
         if "circle" in plot_kinds:
             p_series.append(
                 plot.circle(y=value_col, radius=2, color="color", **plot_args)
             )
         if "line" in plot_kinds:
             p_series.append(
-                plot.line(
-                    y=value_col, line_width=2, line_color=group_color, **plot_args
-                )
+                plot.line(y=value_col, line_width=2, line_color=group_color, **plot_args)
             )
         if not inline_legend:
             legend_items.append((legend_label, p_series))

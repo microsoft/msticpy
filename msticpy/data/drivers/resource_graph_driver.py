@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Azure Resource Graph Driver class."""
+
 from __future__ import annotations
 
 import warnings

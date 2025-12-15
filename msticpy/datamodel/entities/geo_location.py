@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """GeoLocation Entity class."""
+
 from typing import Any, Mapping, Optional, Tuple
 
 from ..._version import VERSION

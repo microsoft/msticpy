@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
+
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 

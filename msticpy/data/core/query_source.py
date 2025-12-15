@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Intake kql driver."""
+
 from __future__ import annotations
 
 import json
@@ -463,8 +464,8 @@ class QuerySource:
                 def_value = None
             param_block.extend(
                 (
-                    f'{p_name}: {p_props.get("type", "Any")}{optional}',
-                    f'    {p_props.get("description", "no description")}',
+                    f"{p_name}: {p_props.get('type', 'Any')}{optional}",
+                    f"    {p_props.get('description', 'no description')}",
                 )
             )
 
@@ -505,8 +506,7 @@ class QuerySource:
             valid_failures.append(msg)
         if not self._query:
             msg = (
-                f'Source {self.name} does not have "query" property '
-                + "in args element."
+                f'Source {self.name} does not have "query" property ' + "in args element."
             )
             valid_failures.append(msg)
 

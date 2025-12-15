@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """MSTICPy core pandas accessor methods."""
+
 from typing import Any, Dict, List, Mapping, Union
 
 import pandas as pd

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for SecurityAlert class."""
+
 from __future__ import annotations
 
 import html
@@ -104,9 +105,7 @@ class SecurityBase(QueryParamProvider):
     def __repr__(self) -> str:
         """Return repr of item."""
         if self.properties:
-            params = ", ".join(
-                [f"{name}={val}" for name, val in self.properties.items()]
-            )
+            params = ", ".join([f"{name}={val}" for name, val in self.properties.items()])
             if len(params) > 80:
                 params = params[:80] + "..."
             return f"{self.__class__.__name__}({params})"

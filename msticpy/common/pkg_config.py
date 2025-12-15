@@ -12,6 +12,7 @@ variable `MSTICPYCONFIG`. If this is not defined the package will look for
 a file `msticpyconfig.yaml` in the current directory.
 
 """
+
 import contextlib
 import numbers
 import os
@@ -578,11 +579,7 @@ def _check_required_provider_settings(sec_args, sec_path, p_name, key_provs):
             )
         )
 
-    if (
-        p_name == _AZ_CLI
-        and "clientId" in sec_args
-        and sec_args["clientId"] is not None
-    ):
+    if p_name == _AZ_CLI and "clientId" in sec_args and sec_args["clientId"] is not None:
         # only warn if partially filled - since these are optional
         errs.extend(
             (

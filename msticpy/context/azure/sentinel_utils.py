@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Utilties."""
+
 from __future__ import annotations
 
 import logging

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """AzureResource Entity class."""
+
 import re
 from itertools import islice
 from typing import Any, Dict, Mapping, Optional

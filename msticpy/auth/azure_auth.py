@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Azure authentication handling."""
+
 from __future__ import annotations
 
 import os

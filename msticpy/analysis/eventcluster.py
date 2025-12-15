@@ -31,6 +31,7 @@ add_process_features: derives numerical features from text features such as
 commandline and process path.
 
 """
+
 import re
 from binascii import crc32
 from functools import lru_cache
@@ -320,9 +321,7 @@ def add_process_features(
     return output_df
 
 
-def _add_processname_features(
-    output_df: pd.DataFrame, force: bool, path_separator: str
-):
+def _add_processname_features(output_df: pd.DataFrame, force: bool, path_separator: str):
     """
     Add process name default features.
 

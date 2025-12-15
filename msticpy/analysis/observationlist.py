@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Observation summary collector."""
+
 from collections import OrderedDict
 from datetime import datetime
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Set, Tuple
@@ -105,7 +106,7 @@ class Observation:
         if self.link:
             display(Markdown(f"[Go to details](#{self.link})"))
         if self.tags:
-            display(Markdown(f'tags: {", ".join(self.tags)}'))
+            display(Markdown(f"tags: {', '.join(self.tags)}"))
         display(self.filtered_data)
         if self.additional_properties:
             display(Markdown("### Additional Properties"))

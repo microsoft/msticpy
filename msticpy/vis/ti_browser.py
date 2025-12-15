@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Threat Intel Results Browser."""
+
 import pprint
 from typing import List, Union
 
@@ -105,9 +106,7 @@ def _label_col_dict(row: pd.Series, column: str):
     """Add label from the Provider column to the details."""
     if not isinstance(row[column], dict):
         return row[column]
-    return (
-        {row.Provider: row[column]} if row.Provider not in row[column] else row[column]
-    )
+    return {row.Provider: row[column]} if row.Provider not in row[column] else row[column]
 
 
 def ti_details_display(ti_data):
@@ -149,9 +148,7 @@ def ti_details_display(ti_data):
 
 def raw_results(raw_result: str) -> str:
     """Create pre-formatted details for raw results."""
-    fmt_details = (
-        pprint.pformat(raw_result).replace("\n", "<br>").replace(" ", "&nbsp;")
-    )
+    fmt_details = pprint.pformat(raw_result).replace("\n", "<br>").replace(" ", "&nbsp;")
     return f"""
         <details>
         <summary> <u>Raw results from provider...</u></summary>

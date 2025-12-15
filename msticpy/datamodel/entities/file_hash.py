@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """FileHash Entity class."""
+
 from typing import Any, Mapping
 
 from ..._version import VERSION

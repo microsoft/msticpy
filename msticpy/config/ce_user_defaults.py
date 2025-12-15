@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module docstring."""
+
 import ipywidgets as widgets
 
 from .._version import VERSION
@@ -275,9 +276,7 @@ class CEAutoLoadComps(CEAutoLoadQProvs):
         setting_path = f"{conf_path}.{prov_name}"
         prov_ctrl = self.mp_controls.get_control(setting_path)
         if not isinstance(prov_ctrl, UserDefLoadComponent):
-            prov_ctrl = UserDefLoadComponent(
-                self.mp_controls, prov_name, self._COMP_PATH
-            )
+            prov_ctrl = UserDefLoadComponent(self.mp_controls, prov_name, self._COMP_PATH)
             self.mp_controls.set_control(setting_path, prov_ctrl)
 
         curr_val = self.mp_controls.get_value(setting_path)

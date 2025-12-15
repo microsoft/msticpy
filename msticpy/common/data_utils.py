@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data utility functions."""
+
 from typing import List, Union
 
 import pandas as pd
@@ -54,9 +55,7 @@ def ensure_df_datetimes(
 
     # Look for any TZ-naive columns in the list
     if add_utc_tz:
-        localize_cols = {
-            col for col in columns if col in data.select_dtypes("datetime")
-        }
+        localize_cols = {col for col in columns if col in data.select_dtypes("datetime")}
         for col in localize_cols:
             converted_data[col] = converted_data[col].dt.tz_localize(
                 "UTC", ambiguous="infer", nonexistent="shift_forward"

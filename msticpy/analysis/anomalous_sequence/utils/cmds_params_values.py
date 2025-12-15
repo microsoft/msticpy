@@ -137,9 +137,7 @@ def laplace_smooth_counts(
     start_token: str,
     end_token: str,
     unk_token: str,
-) -> Tuple[
-    StateMatrix, StateMatrix, StateMatrix, StateMatrix, StateMatrix, StateMatrix
-]:
+) -> Tuple[StateMatrix, StateMatrix, StateMatrix, StateMatrix, StateMatrix, StateMatrix]:
     """
     Laplace smoothing is applied to the counts.
 
@@ -215,9 +213,7 @@ def laplace_smooth_counts(
     param_counts_sm = StateMatrix(states=param_counts_ls, unk_token=unk_token)
     cmd_param_counts_sm = StateMatrix(states=cmd_param_counts_ls, unk_token=unk_token)
     value_counts_sm = StateMatrix(states=value_counts_ls, unk_token=unk_token)
-    param_value_counts_sm = StateMatrix(
-        states=param_value_counts_ls, unk_token=unk_token
-    )
+    param_value_counts_sm = StateMatrix(states=param_value_counts_ls, unk_token=unk_token)
 
     return (
         seq1_counts_sm,
@@ -256,9 +252,7 @@ def get_params_to_model_values(
     ]
 
     modellable_params = [
-        param[0]
-        for param in param_stats
-        if param[1] <= 20 <= param[2] and param[3] <= 10
+        param[0] for param in param_stats if param[1] <= 20 <= param[2] and param[3] <= 10
     ]
 
     return set(modellable_params)

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """VirusTotal Object browser."""
+
 import pprint
 from typing import Dict, Optional
 
@@ -130,13 +131,13 @@ def _summary_html(title: str, summary: Dict[str, str]) -> str:
     <h3>{title}</h3>
     <table>
     <tr>
-        <td>ID</td><td>{summary.get('sha256')}</td>
+        <td>ID</td><td>{summary.get("sha256")}</td>
     </tr>
     <tr>
-        <td>Names</td><td>{summary.get('names')}</td>
+        <td>Names</td><td>{summary.get("names")}</td>
     </tr>
     <tr>
-        <td>File Type</td><td>{summary.get('magic')}</td>
+        <td>File Type</td><td>{summary.get("magic")}</td>
     </tr>
     </table>
     """

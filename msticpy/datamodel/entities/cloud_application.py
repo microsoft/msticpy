@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """CloudApplication Entity class."""
+
 from typing import Any, Mapping, Optional
 
 from ..._version import VERSION

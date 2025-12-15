@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Incident Entity class."""
+
 from typing import Any, Dict, List, Mapping, Optional
 
 import pandas as pd

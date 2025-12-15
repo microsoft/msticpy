@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Timeline base plot."""
+
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
@@ -35,7 +36,6 @@ from .timeline_common import (
 
 # pylint: disable=unused-import
 # Importing to activate pandas accessors
-from .timeline_pd_accessor import TimeLineAccessor  # noqa F401
 from .timeline_values import display_timeline_values  # noqa F401
 
 # pylint: enable=unused-import

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Miscellaneous helper methods for Jupyter Notebooks."""
+
 from __future__ import annotations
 
 import contextlib

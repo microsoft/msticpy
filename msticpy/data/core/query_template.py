@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """MSTICPy query template definition."""
+
 from dataclasses import field
 from typing import Any, Dict, List, Optional, Union
 

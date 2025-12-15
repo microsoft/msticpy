@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
+
 from __future__ import annotations
 
 from abc import ABC
@@ -101,9 +102,7 @@ class RegisteredWidget(ABC):  # noqa: B024
                 # one that was recovered from the widget registry
                 # set it from the nb_param value
                 wgt_internal_name = self._NB_PARAMS.get(attr, attr)
-                if nb_param in name_space and not getattr(
-                    self, wgt_internal_name, None
-                ):
+                if nb_param in name_space and not getattr(self, wgt_internal_name, None):
                     setattr(self, wgt_internal_name, name_space[nb_param])
 
 

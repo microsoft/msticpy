@@ -355,9 +355,7 @@ def _get_expr_value(expr_val: Any) -> Any:
 def _process_group_by(parsed_sql: dict[str, Any], query_lines: list[str]) -> None:
     """Process GROUP BY clause."""
     group_by_expr = parsed_sql[GROUP_BY]
-    group_by_expr = (
-        group_by_expr if isinstance(group_by_expr, list) else [group_by_expr]
-    )
+    group_by_expr = group_by_expr if isinstance(group_by_expr, list) else [group_by_expr]
     by_clause = ", ".join(val["value"] for val in group_by_expr if val.get("value"))
 
     expr_list = parsed_sql.get(SELECT, parsed_sql.get(SELECT_DISTINCT, []))
@@ -397,9 +395,7 @@ def _parse_expression(expression: Any) -> str:  # noqa: PLR0911
             [f"({_parse_expression(expr)})" for expr in expression[AND]]
         )
     if OR in expression:
-        return "\n  or ".join(
-            [f"({_parse_expression(expr)})" for expr in expression[OR]]
-        )
+        return "\n  or ".join([f"({_parse_expression(expr)})" for expr in expression[OR]])
     if NOT in expression:
         return f" not ({_parse_expression(expression[NOT])})"
     if BETWEEN in expression:

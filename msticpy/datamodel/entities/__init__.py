@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Entity sub-package."""
+
 import difflib
 from typing import List
 

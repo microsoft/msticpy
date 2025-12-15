@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """MailMessage Entity class."""
+
 from typing import Any, List, Mapping, Optional
 
 from ..._version import VERSION
@@ -167,9 +168,7 @@ class MailMessage(Entity):
     def name_str(self) -> str:
         """Return Entity Name."""
         return (
-            self.Subject
-            or f"MailMessage to: {self.Recipient}"
-            or self.__class__.__name__
+            self.Subject or f"MailMessage to: {self.Recipient}" or self.__class__.__name__
         )
 
     _entity_schema = {

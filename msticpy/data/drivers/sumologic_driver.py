@@ -4,6 +4,7 @@
 #  license information.
 #  --------------------------------------------------------------------------
 """Sumologic Driver class."""
+
 import re
 import time
 from datetime import datetime, timedelta

@@ -1,3 +1,3 @@
 """Version file."""
 
-VERSION = "2.17.2"
+VERSION = "3.0.0.pre1"

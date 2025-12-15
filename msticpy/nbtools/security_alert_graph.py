@@ -8,6 +8,7 @@ security_alert_graph.
 
 Creates an entity graph for the alert.
 """
+
 import networkx as nx
 import pandas as pd
 
@@ -109,9 +110,7 @@ def add_related_alerts(related_alerts: pd.DataFrame, alertgraph: nx.Graph) -> nx
     related_alerts.apply(lambda x: _add_alert_node(related_alerts_graph, x), axis=1)
     if alert_host_node:
         related_alerts.apply(
-            lambda x: _add_related_alert_edges(
-                related_alerts_graph, x, alert_host_node
-            ),
+            lambda x: _add_related_alert_edges(related_alerts_graph, x, alert_host_node),
             axis=1,
         )
     return related_alerts_graph
@@ -207,8 +206,8 @@ def _get_name_and_description(entity, os_family="Windows"):
         e_name, e_description = _get_account_name_desc(entity)
     elif entity["Type"] == "host-logon-session":
         e_name = "host-logon-session"
-        e_description = f'Logon session {entity["SessionId"]}\n'
-        e_description = e_description + f'(Start time: {entity["StartTimeUtc"]}'
+        e_description = f"Logon session {entity['SessionId']}\n"
+        e_description = e_description + f"(Start time: {entity['StartTimeUtc']}"
     elif entity["Type"] == "process":
         e_name, e_description = _get_process_name_desc(entity)
     elif entity["Type"] == "file":

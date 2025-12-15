@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Display code with with highlighting."""
+
 from typing import List, Optional
 
 from IPython.display import HTML, DisplayHandle, display

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for common display functions."""
+
 from typing import Any, List, Mapping, Tuple, Union
 
 import IPython

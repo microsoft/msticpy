@@ -89,9 +89,7 @@ class AzureCredEnvNames:
     AZURE_CLIENT_CERTIFICATE_PATH: ClassVar[str] = "AZURE_CLIENT_CERTIFICATE_PATH"
     # (Optional) The password protecting the certificate file
     # (for PFX (PKCS12) certificates).
-    AZURE_CLIENT_CERTIFICATE_PASSWORD: ClassVar[str] = (
-        "AZURE_CLIENT_CERTIFICATE_PASSWORD"  # nosec  # noqa
-    )
+    AZURE_CLIENT_CERTIFICATE_PASSWORD: ClassVar[str] = "AZURE_CLIENT_CERTIFICATE_PASSWORD"  # nosec  # noqa
     # (Optional) Specifies whether an authentication request will include an x5c
     # header to support subject name / issuer based authentication.
     # When set to `true` or `1`, authentication requests include the x5c header.
@@ -270,9 +268,7 @@ def _build_certificate_client(
 ) -> CertificateCredential | None:
     """Build a credential from Certificate."""
     if not client_id:
-        logger.info(
-            "'certificate' credential requested but client_id param not supplied"
-        )
+        logger.info("'certificate' credential requested but client_id param not supplied")
         return None
     return CertificateCredential(
         authority=aad_uri,
@@ -512,10 +508,7 @@ def only_interactive_cred(chained_cred: ChainedTokenCredential):
 
 def _filter_credential_warning(record) -> bool:
     """Rewrite out credential not found message."""
-    if (
-        not record.name.startswith("azure.identity")
-        or record.levelno != logging.WARNING
-    ):
+    if not record.name.startswith("azure.identity") or record.levelno != logging.WARNING:
         return True
     message = record.getMessage()
     if ".get_token" in message:
@@ -559,10 +552,7 @@ def check_cli_credentials() -> tuple[AzureCliStatus, str | None]:
             and len(raw_token[0]) == 3
         ):
             bearer_token = raw_token[0][2]
-            if (
-                parser.parse(bearer_token.get("expiresOn", datetime.min))
-                < datetime.now()
-            ):
+            if parser.parse(bearer_token.get("expiresOn", datetime.min)) < datetime.now():
                 raise ValueError("AADSTS70043: The refresh token has expired")
 
         return AzureCliStatus.CLI_OK, "Azure CLI credentials available."

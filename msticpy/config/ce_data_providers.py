@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data Providers Component Edit."""
+
 import re
 from typing import Optional
 
@@ -102,9 +103,7 @@ class CEDataProviders(CEProviders):
         new_provider: bool = False,
     ):
         """Retrieve and populate form controls for the provider to display."""
-        super()._populate_edit_ctrls(
-            control_name=control_name, new_provider=new_provider
-        )
+        super()._populate_edit_ctrls(control_name=control_name, new_provider=new_provider)
         # add the instance text box
         self.edit_ctrls.children = [
             self.text_prov_instance,
@@ -126,9 +125,7 @@ class CEDataProviders(CEProviders):
                 return
             # The instance name may have changed, which alters the path
             if self._last_instance_path != self._current_path:
-                self.mp_controls.rename_path(
-                    self._last_instance_path, self._current_path
-                )
+                self.mp_controls.rename_path(self._last_instance_path, self._current_path)
         super()._save_provider(btn)
         # refresh the item list and re-select the current item
         edited_provider = self._prov_name

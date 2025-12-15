@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Settings provider for secrets."""
+
 import re
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple

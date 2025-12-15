@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Object container class."""
+
 from typing import Any, Dict, Optional, Type
 
 from .._version import VERSION
@@ -45,9 +46,7 @@ class ObjectContainer:
             raise AttributeError(
                 f"{self.__class__.__name__} object has no attribute {name}"
             ) from nm_err
-        raise AttributeError(
-            f"{self.__class__.__name__} object has no attribute {name}"
-        )
+        raise AttributeError(f"{self.__class__.__name__} object has no attribute {name}")
 
     def __repr__(self):
         """Return list of attributes."""

@@ -22,10 +22,10 @@ The following types are built-in:
    regular expressions used at runtime.
 
 """
+
 from __future__ import annotations
 
 import re
-import warnings
 from collections import defaultdict
 from enum import Enum
 from typing import Any
@@ -736,65 +736,3 @@ class IoCExtract:
             return
 
         iocs_found[current_match] = (current_def.ioc_type, current_def.priority)
-
-
-# pylint: disable=too-few-public-methods
-@pd.api.extensions.register_dataframe_accessor("mp_ioc")
-class IoCExtractAccessor:
-    """Pandas api extension for IoC Extractor."""
-
-    def __init__(self, pandas_obj):
-        """Instantiate pandas extension class."""
-        self._df = pandas_obj
-        self._ioc = IoCExtract()
-
-    def extract(self, columns, **kwargs):
-        """
-        Extract IoCs from either a pandas DataFrame.
-
-        Parameters
-        ----------
-        columns : list
-            The list of columns to use as source strings,
-
-        Other Parameters
-        ----------------
-        ioc_types : list, optional
-            Restrict matching to just specified types.
-            (default is all types)
-        include_paths : bool, optional
-            Whether to include path matches (which can be noisy)
-            (the default is false - excludes 'windows_path'
-            and 'linux_path'). If `ioc_types` is specified
-            this parameter is ignored.
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame of observables
-
-        Notes
-        -----
-        Extract takes a pandas DataFrame as input.
-        The results will be returned as a new
-        DataFrame with the following columns:
-        - IoCType: the mnemonic used to distinguish different IoC Types
-        - Observable: the actual value of the observable
-        - SourceIndex: the index of the row in the input DataFrame from
-        which the source for the IoC observable was extracted.
-
-        IoCType Pattern selection
-        The default list is:  ['ipv4', 'ipv6', 'dns', 'url',
-        'md5_hash', 'sha1_hash', 'sha256_hash'] plus any
-        user-defined types.
-        'windows_path', 'linux_path' are excluded unless `include_paths`
-        is True or explicitly included in `ioc_paths`.
-
-        """
-        warn_message = (
-            "This accessor method has been deprecated.\n"
-            "Please use df.mp.ioc_extract() method instead."
-            "This will be removed in MSTICPy v2.2.0"
-        )
-        warnings.warn(warn_message, category=DeprecationWarning, stacklevel=2)
-        return self._ioc.extract_df(data=self._df, columns=columns, **kwargs)

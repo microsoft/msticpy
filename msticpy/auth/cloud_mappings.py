@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Azure Cloud Mappings."""
+
 import contextlib
 from functools import lru_cache
 from typing import Any, Dict, List, Optional
@@ -150,11 +151,7 @@ def get_cloud_endpoints_by_resource_manager_url(
 
     except httpx.RequestError:
         cloud = next(
-            (
-                key
-                for key, val in CLOUD_MAPPING.items()
-                if val == f_resource_manager_url
-            ),
+            (key for key, val in CLOUD_MAPPING.items() if val == f_resource_manager_url),
             "global",
         )
         return cloud_mappings_offline[cloud]

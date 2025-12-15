@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Query Provider mixin methods."""
+
 import re
 from collections import abc
 from typing import Dict, Iterable, List, NamedTuple, Optional, Pattern, Protocol, Union

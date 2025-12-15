@@ -5,6 +5,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to collect and return details related to Azure."""
+
 from __future__ import annotations
 
 import datetime
@@ -15,7 +16,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable
 
 import numpy as np
 import pandas as pd
-from packaging.version import Version, parse
+from packaging.version import Version, parse  # pylint: disable=no-name-in-module
 from typing_extensions import Self
 
 from ..._version import VERSION
@@ -793,9 +794,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
                     ),
                     subnet=ip_addr.subnet.name if ip_addr.subnet else None,
                     subnet_nsg=(
-                        ip_addr.subnet.network_security_group
-                        if ip_addr.subnet
-                        else None
+                        ip_addr.subnet.network_security_group if ip_addr.subnet else None
                     ),
                     subnet_route_table=(
                         ip_addr.subnet.route_table if ip_addr.subnet else None

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot helper functions ."""
+
 from __future__ import annotations
 
 import warnings
@@ -388,8 +389,7 @@ def _check_valid_settings_for_input(input_value: Any, pivot_reg: PivotRegistrati
             isinstance(input_value, pd.DataFrame)
             or (
                 # pylint: disable=isinstance-second-argument-not-valid-type
-                isinstance(input_value, pd.DataFrame)
-                and not isinstance(input_value, str)
+                isinstance(input_value, pd.DataFrame) and not isinstance(input_value, str)
                 # pylint: enable=isinstance-second-argument-not-valid-type
             )
         ):

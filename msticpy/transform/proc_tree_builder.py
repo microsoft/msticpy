@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree Builder module for Process Tree Visualization."""
+
 from __future__ import annotations
 
 from typing import Any

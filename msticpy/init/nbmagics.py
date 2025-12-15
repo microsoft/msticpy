@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """msticpy IPython magics."""
+
 import re
 from typing import List, Tuple
 

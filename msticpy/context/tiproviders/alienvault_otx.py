@@ -12,6 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -121,9 +122,7 @@ class OTX(HttpTIProvider):
                         "sections_available": response["RawResult"]["sections"],
                     },
                 )
-            severity = (
-                ResultSeverity.warning if pulse_count == 1 else ResultSeverity.high
-            )
+            severity = ResultSeverity.warning if pulse_count == 1 else ResultSeverity.high
             return (
                 True,
                 severity,

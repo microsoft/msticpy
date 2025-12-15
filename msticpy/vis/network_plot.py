@@ -24,7 +24,7 @@ from bokeh.models import (  # type: ignore[attr-defined]
 )
 from bokeh.palettes import Spectral4
 from bokeh.plotting import figure, from_networkx, show
-from packaging.version import Version, parse
+from packaging.version import Version, parse  # pylint: disable=no-name-in-module
 from typing_extensions import Literal
 
 from .._version import VERSION
@@ -190,9 +190,7 @@ def plot_nx_graph(
         _create_node_hover(source_attrs, target_attrs, [graph_renderer.node_renderer])
     ]
     if edge_attrs:
-        hover_tools.append(
-            _create_edge_hover(edge_attrs, [graph_renderer.edge_renderer])
-        )
+        hover_tools.append(_create_edge_hover(edge_attrs, [graph_renderer.edge_renderer]))
     plot.add_tools(*hover_tools, WheelZoomTool(), TapTool(), BoxSelectTool())
 
     # Create labels
@@ -238,9 +236,7 @@ def _create_node_hover(
     return HoverTool(tooltips=node_tooltips, renderers=renderers)
 
 
-def _create_edge_hover(
-    edge_attrs: Iterable[str], renderers: List[Renderer]
-) -> HoverTool:
+def _create_edge_hover(edge_attrs: Iterable[str], renderers: List[Renderer]) -> HoverTool:
     """Create a hover tool for nodes."""
     edge_attr_cols = edge_attrs or []
     edge_tooltips = [
@@ -319,8 +315,7 @@ def plot_entity_graph(
     output_notebook()
     font_pnt = f"{font_size}pt" if isinstance(font_size, int) else font_size
     node_attrs = {
-        node: attrs.get("color", "green")
-        for node, attrs in entity_graph.nodes(data=True)
+        node: attrs.get("color", "green") for node, attrs in entity_graph.nodes(data=True)
     }
     nx.set_node_attributes(entity_graph, node_attrs, "node_color")
 

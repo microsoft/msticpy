@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data provider sub-package."""
+
 import importlib
 from functools import singledispatch
 from typing import Dict
@@ -37,8 +38,8 @@ _ENVIRONMENT_DRIVERS = {
         "local_velociraptor_driver",
         "VelociraptorLogDriver",
     ),
-    DataEnvironment.MSSentinel_Legacy: ("kql_driver", "KqlDriver"),
-    DataEnvironment.Kusto_Legacy: ("kusto_driver", "KustoDriver"),
+    DataEnvironment.MSSentinel_Legacy: ("azure_monitor_driver", "AzureMonitorDriver"),
+    DataEnvironment.Kusto_Legacy: ("azure_kusto_driver", "AzureKustoDriver"),
     DataEnvironment.M365DGraph: ("mdatp_driver", "MDATPDriver"),
     DataEnvironment.Prismacloud: ("prismacloud_driver", "PrismaCloudDriver"),
     DataEnvironment.MSSentinelSearch: ("azure_search_driver", "AzureSearchDriver"),

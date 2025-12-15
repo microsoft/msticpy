@@ -5,6 +5,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Folium map class."""
+
 from __future__ import annotations
 
 import contextlib
@@ -614,11 +615,7 @@ def _get_popup_text(ip_entity: IpAddress) -> str:
         str(line)
         for line in [
             ip_entity.Address,
-            *(
-                list(
-                    ip_entity.Location.properties.values() if ip_entity.Location else []
-                )
-            ),
+            *(list(ip_entity.Location.properties.values() if ip_entity.Location else [])),
             *(list(ip_entity.AdditionalData.items())),
         ]
     )

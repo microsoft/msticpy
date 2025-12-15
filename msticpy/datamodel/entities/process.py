@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Entity class."""
+
 from datetime import datetime
 from typing import Any, Mapping, Optional
 

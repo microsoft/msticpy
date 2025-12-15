@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pandas DataFrame accessor for Pivot functions."""
+
 from __future__ import annotations
 
 import contextlib
@@ -20,7 +21,7 @@ import pandas as pd
 from IPython.core.display import HTML
 from IPython.core.getipython import get_ipython
 from IPython.display import display
-from packaging.version import parse as parse_version
+from packaging.version import parse as parse_version  # pylint: disable=no-name-in-module
 
 from ..._version import VERSION
 
@@ -371,9 +372,7 @@ class PivotAccessor:
                 continue
             # look for regex matches for col name
             df_match_cols = [
-                df_cols[s_col]
-                for s_col in df_cols
-                if re.match(col, s_col, re.IGNORECASE)
+                df_cols[s_col] for s_col in df_cols if re.match(col, s_col, re.IGNORECASE)
             ]
             # we might get multiple matches
             if df_match_cols:

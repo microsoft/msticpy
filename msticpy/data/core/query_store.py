@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """QueryStore class - holds a collection of QuerySources."""
+
 from __future__ import annotations
 
 import logging
@@ -294,9 +295,7 @@ class QueryStore:
                 try:
                     sources, defaults, metadata = read_query_def_file(str(file_path))
                 except ValueError:
-                    print(
-                        f"{file_path} is not a valid query definition file - skipping."
-                    )
+                    print(f"{file_path} is not a valid query definition file - skipping.")
                     continue
 
                 for env_value in metadata.get("data_environments", []):
@@ -312,9 +311,7 @@ class QueryStore:
                     if environment_name not in env_stores:
                         env_stores[environment_name] = cls(environment=environment_name)
                     for source_name, source in sources.items():
-                        new_source = QuerySource(
-                            source_name, source, defaults, metadata
-                        )
+                        new_source = QuerySource(source_name, source, defaults, metadata)
                         if not driver_query_filter or (
                             driver_query_filter
                             and _matches_driver_filter(new_source, driver_query_filter)

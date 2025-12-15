@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Url Entity class."""
+
 from typing import Any, Dict, Mapping, Optional
 
 from urllib3.exceptions import LocationParseError

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Component edit utility functions."""
+
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import httpx

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for common display functions."""
+
 from itertools import zip_longest
 from typing import Any, Dict
 

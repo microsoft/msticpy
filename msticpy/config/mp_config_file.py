@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Msticpy Config class."""
+
 from __future__ import annotations
 
 import io
@@ -320,8 +321,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         self.txt_viewer.value = "\n".join(
             [
                 workspace_settings,
-                "\n"
-                "Use 'Import into settings' button to import into current settings.",
+                "\nUse 'Import into settings' button to import into current settings.",
             ]
         )
         self.viewer.children = [self.txt_viewer, self.btn_close]
@@ -441,27 +441,21 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
 
     def _setup_buttons(self):
         btn_style = {"layout": widgets.Layout(width="200px")}
-        self.buttons["load"] = widgets.Button(
-            **(self._BUTTON_DEFS["load"]), **btn_style
-        )
+        self.buttons["load"] = widgets.Button(**(self._BUTTON_DEFS["load"]), **btn_style)
         self.buttons["load_def"] = widgets.Button(
             **(self._BUTTON_DEFS["load_def"]), **btn_style
         )
         self.buttons["reload"] = widgets.Button(
             **(self._BUTTON_DEFS["reload"]), **btn_style
         )
-        self.buttons["view"] = widgets.Button(
-            **(self._BUTTON_DEFS["view"]), **btn_style
-        )
+        self.buttons["view"] = widgets.Button(**(self._BUTTON_DEFS["view"]), **btn_style)
         self.buttons["validate"] = widgets.Button(
             **(self._BUTTON_DEFS["validate"]), **btn_style
         )
         self.buttons["convert"] = widgets.Button(
             **(self._BUTTON_DEFS["convert"]), **btn_style
         )
-        self.buttons["save"] = widgets.Button(
-            **(self._BUTTON_DEFS["save"]), **btn_style
-        )
+        self.buttons["save"] = widgets.Button(**(self._BUTTON_DEFS["save"]), **btn_style)
         self.buttons["showkv"] = widgets.Button(
             **(self._BUTTON_DEFS["showkv"]), **btn_style
         )
@@ -471,9 +465,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         self.buttons["import_workspace"] = widgets.Button(
             **(self._BUTTON_DEFS["import_workspace"]), **btn_style
         )
-        self._btn_view_setting = widgets.Button(
-            description="Get Workspace", **btn_style
-        )
+        self._btn_view_setting = widgets.Button(description="Get Workspace", **btn_style)
         self._btn_import_settings = widgets.Button(
             description="Import into settings", disabled=True, **btn_style
         )
@@ -486,9 +478,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         self.buttons["save"].on_click(self._save_file)
         self.buttons["reload"].on_click(self._btn_func("refresh_mp_config"))
         self.buttons["showkv"].on_click(self._btn_func_no_disp("show_kv_secrets"))
-        self.buttons["get_workspace"].on_click(
-            self._btn_func("_show_sentinel_workspace")
-        )
+        self.buttons["get_workspace"].on_click(self._btn_func("_show_sentinel_workspace"))
         self.buttons["import_workspace"].on_click(
             self._btn_func("_import_sentinel_settings")
         )

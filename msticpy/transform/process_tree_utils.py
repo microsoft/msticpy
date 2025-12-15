@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree Visualization."""
+
 import textwrap
 from collections import Counter
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
@@ -114,9 +115,7 @@ def get_process(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Series
     raise ValueError("Unknown type for source parameter.")
 
 
-def get_parent(
-    procs: pd.DataFrame, source: Union[str, pd.Series]
-) -> Optional[pd.Series]:
+def get_parent(procs: pd.DataFrame, source: Union[str, pd.Series]) -> Optional[pd.Series]:
     """
     Return the parent of the source process.
 
@@ -454,9 +453,7 @@ def tree_to_text(
 
         # process subsequent rows
         for tmplt_line in template[1:]:
-            out_line = "  ".join(
-                f"{name}: {row[col]}" for name, col in tmplt_line.items
-            )
+            out_line = "  ".join(f"{name}: {row[col]}" for name, col in tmplt_line.items)
             out_line = "\n".join(
                 textwrap.wrap(
                     out_line,
@@ -471,7 +468,7 @@ def tree_to_text(
 
 
 def _create_proctree_template(
-    schema: Union[ProcSchema, Dict[str, str]]
+    schema: Union[ProcSchema, Dict[str, str]],
 ) -> List[TemplateLine]:
     """Create a template from the schema."""
     if isinstance(schema, dict):

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Entity Entity class."""
+
 from __future__ import annotations
 
 import json
@@ -577,9 +578,7 @@ class Entity(ABC, Node):
         if not graph.has_node(self):
             graph.add_node(self.name_str, **self.node_properties)
         for edge in self.edges:
-            if not isinstance(edge.source, Entity) or not isinstance(
-                edge.target, Entity
-            ):
+            if not isinstance(edge.source, Entity) or not isinstance(edge.target, Entity):
                 continue
             if graph.has_edge(edge.source.name_str, edge.target.name_str):
                 continue

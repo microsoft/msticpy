@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Analytics Features."""
+
 from __future__ import annotations
 
 import logging
@@ -48,9 +49,7 @@ class SentinelHuntingMixin(SentinelUtilsMixin):
             item_type="ss_path",
             api_version="2020-08-01",
         )
-        return saved_query_df[
-            saved_query_df["properties.category"] == "Hunting Queries"
-        ]
+        return saved_query_df[saved_query_df["properties.category"] == "Hunting Queries"]
 
     get_hunting_queries: Callable[..., pd.DataFrame] = list_hunting_queries
 

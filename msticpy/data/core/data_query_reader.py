@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data query definition reader."""
+
 import logging
 from itertools import chain
 from pathlib import Path

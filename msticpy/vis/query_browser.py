@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """QueryProvider Query Browser."""
+
 import textwrap
 from typing import Any, Generator
 

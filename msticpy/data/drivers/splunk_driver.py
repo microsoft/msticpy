@@ -4,6 +4,7 @@
 #  license information.
 #  --------------------------------------------------------------------------
 """Splunk Driver class."""
+
 import logging
 from datetime import datetime, timedelta, timezone
 from time import sleep

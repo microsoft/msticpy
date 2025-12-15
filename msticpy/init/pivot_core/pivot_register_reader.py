@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Reads pivot registration config files."""
+
 from __future__ import annotations
 
 import importlib

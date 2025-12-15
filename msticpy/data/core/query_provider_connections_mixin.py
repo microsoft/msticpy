@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Query Provider additional connection methods."""
+
 from __future__ import annotations
 
 import asyncio
@@ -193,8 +194,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         """
         # Add the initial connection
         query_tasks: dict[str, partial[pd.DataFrame | str | None]] = {
-            self._query_provider.current_connection
-            or "0": partial(
+            self._query_provider.current_connection or "0": partial(
                 self._query_provider.query,
                 query,
                 **kwargs,
@@ -287,19 +287,16 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
             logger.warning("Cannot split a query with no 'start' and 'end' parameters")
             return None
 
-        split_queries: dict[tuple[datetime, datetime], str] = (
-            self._create_split_queries(
-                query_source=query_source,
-                query_params=query_params,
-                start=start,
-                end=end,
-                split_by=split_by,
-            )
+        split_queries: dict[tuple[datetime, datetime], str] = self._create_split_queries(
+            query_source=query_source,
+            query_params=query_params,
+            start=start,
+            end=end,
+            split_by=split_by,
         )
         if debug:
             return "\n\n".join(
-                f"{start}-{end}\n{query}"
-                for (start, end), query in split_queries.items()
+                f"{start}-{end}\n{query}" for (start, end), query in split_queries.items()
             )
 
         query_tasks: dict[str, partial[pd.DataFrame | str | None]] = (

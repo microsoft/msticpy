@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for timeseries analysis functions."""
+
 import inspect
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -363,9 +364,7 @@ def extract_anomaly_periods(
             start_period = time - pd.Timedelta(period)  # type: ignore
             end_period = time + pd.Timedelta(period)  # type: ignore
             periods[start_period] = end_period
-        elif (time - end_period) <= pd.Timedelta(
-            period
-        ) * 2 and start_period is not None:
+        elif (time - end_period) <= pd.Timedelta(period) * 2 and start_period is not None:
             # if the current time is less than 2x the period away
             # from our current end_period time, update the end_time
             periods[start_period] = time + pd.Timedelta(period)

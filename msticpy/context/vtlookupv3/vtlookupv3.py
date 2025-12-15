@@ -278,9 +278,9 @@ class VTLookupV3:
         """
         if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
             error_msg: str = (
-                f"Property type {vt_type} not supported"
-                "Valid types are"
-                ", ".join(x.value for x in VTEntityType.__members__.values())
+                f"Property type {vt_type} not supportedValid types are, ".join(
+                    x.value for x in VTEntityType.__members__.values()
+                )
             )
             raise KeyError(error_msg)
 
@@ -868,9 +868,9 @@ class VTLookupV3:
             # pylint: disable=no-member
 
             error_msg: str = (
-                f"Property type {vt_type} not supported. "
-                "Valid types are: "
-                ", ".join(x.value for x in VTEntityType.__members__.values())
+                f"Property type {vt_type} not supported. Valid types are: , ".join(
+                    x.value for x in VTEntityType.__members__.values()
+                )
             )
             raise KeyError(error_msg)
 
@@ -1051,9 +1051,7 @@ class VTLookupV3:
         response_rows = []
         for response_item in response_list:
             # flatten nested dictionary and append id, type values
-            response_item_df = pd.json_normalize(
-                response_item["attributes"], max_level=0
-            )
+            response_item_df = pd.json_normalize(response_item["attributes"], max_level=0)
             response_item_df["id"] = response_item["id"]
             response_item_df["type"] = response_item["type"]
 

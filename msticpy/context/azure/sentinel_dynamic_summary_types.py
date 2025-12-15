@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Sentinel Dynamic Summary classes."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -231,9 +232,7 @@ class DynamicSummary:
         if summary_items is not None:
             self.add_summary_items(summary_items)
         self.source_info: dict[str, Any] = (
-            source_info
-            if isinstance(source_info, dict)
-            else {"user_source": source_info}
+            source_info if isinstance(source_info, dict) else {"user_source": source_info}
         )
         self.source_info["source_pkg"] = f"MSTICPy {VERSION}"
 
@@ -820,7 +819,5 @@ def _convert_data_types(
 def _match_tactics(tactics: Iterable[str]) -> list[str]:
     """Return case-insensitive matches for tactics list."""
     return [
-        _TACTICS_DICT[tactic.casefold()]
-        for tactic in tactics
-        if tactic in _TACTICS_DICT
+        _TACTICS_DICT[tactic.casefold()] for tactic in tactics if tactic in _TACTICS_DICT
     ]

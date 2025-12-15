@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Cybereason Driver class."""
+
 from __future__ import annotations
 
 import datetime as dt
@@ -36,9 +37,7 @@ __author__ = "Florian Bracq"
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-_HELP_URI = (
-    "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html"
-)
+_HELP_URI = "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html"
 
 
 # pylint: disable=too-many-instance-attributes

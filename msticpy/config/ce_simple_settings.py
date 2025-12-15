@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Simple settings component edit base class."""
+
 import ipywidgets as widgets
 
 from .._version import VERSION
@@ -33,9 +34,7 @@ class CESimpleSettings(CompEditSimple):
         super().__init__(description=self._DESCRIPTION)
 
         self.mp_controls = mp_controls
-        self.comp_defn = self._get_settings_path(
-            mp_controls.config_defn, self._COMP_PATH
-        )
+        self.comp_defn = self._get_settings_path(mp_controls.config_defn, self._COMP_PATH)
         self.settings = self._get_settings_path(mp_controls.mp_config, self._COMP_PATH)
 
         self.help.set_help(self._HELP_TEXT, self._HELP_URI)

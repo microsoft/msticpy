@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """MP Config Control Class."""
+
 import pkgutil
 import re
 from collections import namedtuple

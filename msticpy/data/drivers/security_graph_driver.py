@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Security Graph OData Driver class."""
+
 from typing import Any, Optional, Union
 
 import pandas as pd

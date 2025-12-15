@@ -4,10 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """Check current version against PyPI."""
+
 from importlib.metadata import version
 
-from packaging.version import Version
-from packaging.version import parse as parse_version
+from packaging.version import Version  # pylint: disable=no-name-in-module
+from packaging.version import parse as parse_version  # pylint: disable=no-name-in-module
 
 from .._version import VERSION
 

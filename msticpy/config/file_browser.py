@@ -119,9 +119,7 @@ class FileBrowser(CompEditDisplayMixin):
         if tgt_folder == self.PARENT:
             tgt_folder = self.current_folder.parent
         if tgt_folder:
-            self.current_folder = (
-                Path(self.current_folder).joinpath(tgt_folder).resolve()
-            )
+            self.current_folder = Path(self.current_folder).joinpath(tgt_folder).resolve()
             self.txt_path.value = str(self.current_folder)
             folders, files = self.read_folder(self.current_folder)
             self.select_folder.options = self.get_folder_list(folders)

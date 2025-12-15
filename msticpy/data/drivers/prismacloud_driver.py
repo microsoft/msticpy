@@ -160,9 +160,7 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
 
     CONFIG_NAME: ClassVar[str] = "Prismacloud"
 
-    def __init__(
-        self, **kwargs: DriverConfig
-    ) -> None:  # pylint: disable=too-many-locals
+    def __init__(self, **kwargs: DriverConfig) -> None:  # pylint: disable=too-many-locals
         """
         Initialize the Prisma Cloud Driver and set up the HTTP client.
 
@@ -205,9 +203,7 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
 
         # preference 1 as argument , preference 2 from config file , third default value
         if not kwargs.get("base_url"):
-            self.base_url = (
-                cast(str, self.config.get("base_url")) or BASE_URL_API
-            )  # type: ignore[assignment]
+            self.base_url = cast(str, self.config.get("base_url")) or BASE_URL_API  # type: ignore[assignment]
         else:
             self.base_url = kwargs.get("base_url", BASE_URL_API)  # type: ignore[assignment]
         self.debug: bool = bool(kwargs.get("debug", False))

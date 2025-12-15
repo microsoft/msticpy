@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Timeline duration plot."""
+
 from datetime import datetime
 from typing import Iterable, List, Optional, Tuple, Union
 
@@ -31,12 +32,6 @@ from .timeline_common import (
     plot_ref_events,
     set_axes_and_grids,
 )
-
-# pylint: disable=unused-import
-# Importing to activate pandas accessors
-from .timeline_pd_accessor import TimeLineAccessor  # noqa F401
-
-# pylint: enable=unused-import
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -183,9 +178,7 @@ def display_timeline_duration(
     height = param.height or calc_auto_plot_height(len(grouped_data))
     # Concatenate ylabel columns to display on y-axis
     if len(group_by) > 1:
-        y_range = grouped_data[group_by[0]].str.cat(
-            grouped_data[group_by[1:]], sep=" / "
-        )
+        y_range = grouped_data[group_by[0]].str.cat(grouped_data[group_by[1:]], sep=" / ")
     else:
         y_range = grouped_data[group_by[0]]
 

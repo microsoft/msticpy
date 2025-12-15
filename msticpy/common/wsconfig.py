@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for Log Analytics-related configuration."""
+
 import contextlib
 import json
 import os
@@ -162,9 +163,7 @@ class WorkspaceConfig:
         """Return attribute from configuration."""
         with contextlib.suppress(KeyError):
             return self[attribute]
-        raise AttributeError(
-            f"{self.__class__.__name__} has no attribute '{attribute}'"
-        )
+        raise AttributeError(f"{self.__class__.__name__} has no attribute '{attribute}'")
 
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
@@ -298,9 +297,7 @@ class WorkspaceConfig:
             tenant_id = match.groupdict()["tenant_id"]
         else:
             raise ValueError("Could not find tenant ID in connection string.")
-        if match := re.match(
-            workspace_regex, connection_str, re.IGNORECASE | re.VERBOSE
-        ):
+        if match := re.match(workspace_regex, connection_str, re.IGNORECASE | re.VERBOSE):
             workspace_id = match.groupdict()["workspace_id"]
         else:
             raise ValueError("Could not find workspace ID in connection string.")

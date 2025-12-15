@@ -5,6 +5,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Kusto Driver subclass."""
+
 from __future__ import annotations
 
 import base64
@@ -739,8 +740,7 @@ class AzureKustoDriver(DriverBase):
                 "Using client secret authentication because client_secret in config",
             )
         elif (
-            KFields.CERTIFICATE in cluster_config
-            and KFields.CLIENT_ID in cluster_config
+            KFields.CERTIFICATE in cluster_config and KFields.CLIENT_ID in cluster_config
         ):
             method = "certificate"
             auth_params_dict["client_id"] = cluster_config.ClientId
@@ -945,9 +945,7 @@ def _create_cluster_config(
 ) -> dict[str, KustoConfig]:
     """Return a dictionary of Kusto cluster settings from msticpyconfig.yaml."""
     return {
-        config[KFields.ARGS]
-        .get(KFields.CLUSTER)
-        .casefold(): KustoConfig(
+        config[KFields.ARGS].get(KFields.CLUSTER).casefold(): KustoConfig(
             tenant_id=_setting_or_default(
                 config[KFields.ARGS],
                 KFields.TENANT_ID,
@@ -1029,9 +1027,9 @@ def _parse_query_status(response: KustoResponseDataSet) -> dict[str, Any]:
     df_status: pd.DataFrame = dataframe_from_result_table(
         response.tables[query_info_idx],
     )
-    results: list[dict[Hashable, Any]] = df_status[
-        ["EventTypeName", "Payload"]
-    ].to_dict(orient="records")
+    results: list[dict[Hashable, Any]] = df_status[["EventTypeName", "Payload"]].to_dict(
+        orient="records"
+    )
     return {
         row.get("EventTypeName", "Unknown_field"): json.loads(
             row.get("Payload", "No Payload"),
@@ -1087,9 +1085,7 @@ def _raise_not_connected_error() -> NoReturn:
 
 def _raise_unknown_query_error(err: Exception) -> NoReturn:
     """Raise an error if unknown exception raised."""
-    err_msg: str = (
-        f"Unknown exception when executing query. Exception type: {type(err)}"
-    )
+    err_msg: str = f"Unknown exception when executing query. Exception type: {type(err)}"
     raise MsticpyDataQueryError(
         err_msg,
         *err.args,

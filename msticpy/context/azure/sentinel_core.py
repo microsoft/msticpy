@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Microsoft Sentinel APIs to interact with Microsoft Sentinel Workspaces."""
+
 from __future__ import annotations
 
 import logging

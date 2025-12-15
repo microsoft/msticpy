@@ -12,6 +12,7 @@ Designed to support standard linux syslog for investigations where
 auditd is not available.
 
 """
+
 import datetime as dt
 from typing import Any, Dict
 
@@ -171,9 +172,7 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> pd.DataFrame:
         raise MsticpyException("There are no logon sessions in the supplied data set")
 
     # For each session identify the likely start and end times
-    while ses_opened < len(logons_opened.index) and ses_closed < len(
-        logons_closed.index
-    ):
+    while ses_opened < len(logons_opened.index) and ses_closed < len(logons_closed.index):
         ses_start = (logons_opened.iloc[ses_opened]).name
         ses_end = (logons_closed.iloc[ses_closed]).name
         # If we can identify a user for the session add this to the details

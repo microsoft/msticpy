@@ -134,15 +134,9 @@ def _load_query_providers(user_config, namespace):
         The namespace to load the component instances into.
 
     """
-    logger.info(
-        "Loading %d query providers", len(user_config.get("QueryProviders", {}))
-    )
-    for qry_prov_name, qry_prov_settings in user_config.get(
-        "QueryProviders", {}
-    ).items():
-        qry_prov = _initialize_component(
-            qry_prov_name, qry_prov_settings, QueryProvider
-        )
+    logger.info("Loading %d query providers", len(user_config.get("QueryProviders", {})))
+    for qry_prov_name, qry_prov_settings in user_config.get("QueryProviders", {}).items():
+        qry_prov = _initialize_component(qry_prov_name, qry_prov_settings, QueryProvider)
         if qry_prov:
             namespace[qry_prov_name] = qry_prov
 

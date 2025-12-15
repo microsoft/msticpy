@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """MailCluster Entity class."""
+
 from typing import Any, Dict, List, Mapping, Optional
 
 from ..._version import VERSION

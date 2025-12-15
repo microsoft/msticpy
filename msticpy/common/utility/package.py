@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Packaging utility functions."""
+
 import importlib
 import os
 import re
@@ -194,9 +195,7 @@ def mp_ua_header() -> Dict[str, str]:
 
 
 @export
-def search_for_file(
-    pattern: str, paths: List[Union[str, Path]] = None
-) -> Optional[str]:
+def search_for_file(pattern: str, paths: List[Union[str, Path]] = None) -> Optional[str]:
     """Search `paths` for file `pattern`."""
     paths = paths or [".", ".."]
     for start_path in paths:
@@ -337,8 +336,6 @@ def delayed_import(module: str, attrib: str, call: bool = False):
         if attribute is None:
             imp_module = importlib.import_module(module)
             attribute = getattr(imp_module, attrib)
-        return (
-            attribute(*args, **kwargs) if (call and callable(attribute)) else attribute
-        )
+        return attribute(*args, **kwargs) if (call and callable(attribute)) else attribute
 
     return import_item

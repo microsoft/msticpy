@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Dataframe viewer."""
+
 from collections import namedtuple
 from typing import Dict, List, Union
 
@@ -45,9 +46,7 @@ class DataViewerBokeh:
 
     _DEF_HEIGHT = 550
 
-    def __init__(
-        self, data: pd.DataFrame, selected_cols: List[str] = None, debug=False
-    ):
+    def __init__(self, data: pd.DataFrame, selected_cols: List[str] = None, debug=False):
         """
         Initialize the DataViewer class.
 
@@ -168,9 +167,7 @@ class DataViewerBokeh:
         self.data_table.view = CDSView(
             filter=BooleanFilter(self.data_filter.bool_filters)
         )
-        self.data_table.height = self._calc_df_height(
-            self.data_filter.filtered_dataframe
-        )
+        self.data_table.height = self._calc_df_height(self.data_filter.filtered_dataframe)
         self._update_data_table()
 
 
@@ -348,9 +345,7 @@ class DataTableFilter:
             column [str], inv [bool], operator [str], expr [str]
 
         """
-        self.filters = {
-            f_name: FilterExpr(*f_expr) for f_name, f_expr in filters.items()
-        }
+        self.filters = {f_name: FilterExpr(*f_expr) for f_name, f_expr in filters.items()}
         self._curr_filters.options = list(filters.keys())
 
     @property
@@ -358,9 +353,7 @@ class DataTableFilter:
         """Return current set of boolean filters."""
         df_filt = None
         for filt in self.filters.values():
-            new_filt = self._make_filter(
-                filt.column, filt.operator, filt.expr, filt.inv
-            )
+            new_filt = self._make_filter(filt.column, filt.operator, filt.expr, filt.inv)
             new_filt = new_filt.values if isinstance(new_filt, pd.Series) else new_filt
             df_filt = new_filt if df_filt is None else df_filt & new_filt
         return df_filt if df_filt is not None else self.data.index.isin(self.data.index)
@@ -465,9 +458,7 @@ class DataTableFilter:
             return self.data[col] < test_expr
         if operator == "<=":
             return self.data[col] >= test_expr
-        raise TypeError(
-            f"Unsupported operator for operator {operator} and column {col}"
-        )
+        raise TypeError(f"Unsupported operator for operator {operator} and column {col}")
 
     def _filter_in_or_between(self, col: str, operator: str, expr: str) -> pd.Series:
         """Return filter for `in` and `between` operators."""
@@ -477,8 +468,7 @@ class DataTableFilter:
             test_expr = [item.strip("\"' ") for item in expr.split(",")]
         elif pd.api.types.is_numeric_dtype(self.data[col]):
             test_expr = [
-                int(item) if "." not in item else float(item)
-                for item in expr.split(",")
+                int(item) if "." not in item else float(item) for item in expr.split(",")
             ]
         elif pd.api.types.is_datetime64_any_dtype(self.data[col]):
             test_expr = [pd.Timestamp(item.strip()) for item in expr.split(",")]  # type: ignore

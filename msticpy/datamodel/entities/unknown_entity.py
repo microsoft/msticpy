@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Threatintelligence Entity class."""
+
 from typing import Any, Dict, Mapping
 
 from ..._version import VERSION

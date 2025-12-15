@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Entity graph property."""
+
 from typing import Union
 
 from ..._version import VERSION

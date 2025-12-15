@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module docstring."""
+
 from datetime import datetime
 
 import ipywidgets as widgets

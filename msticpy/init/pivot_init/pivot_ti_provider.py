@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot TI Provider helper functions."""
+
 from collections import defaultdict
 from typing import Callable, Dict, Set, Tuple, Type
 

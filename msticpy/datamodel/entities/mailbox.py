@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mailbox Entity class."""
+
 from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
@@ -86,8 +87,7 @@ class Mailbox(Entity):
     def description_str(self):
         """Return Entity Description."""
         return (
-            f"{self.MailboxPrimaryAddress} - {self.RiskLevel}"
-            or self.__class__.__name__
+            f"{self.MailboxPrimaryAddress} - {self.RiskLevel}" or self.__class__.__name__
         )
 
     @property

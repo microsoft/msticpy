@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree builder for Windows security and Linux auditd events."""
+
 from dataclasses import asdict
 from typing import Tuple
 
@@ -204,7 +205,8 @@ def _merge_parent_by_time(
 
 
 def _extract_inferred_parents(
-    merged_procs: pd.DataFrame, schema: "ProcSchema"  # type: ignore  # noqa: F821
+    merged_procs: pd.DataFrame,
+    schema: "ProcSchema",  # type: ignore  # noqa: F821
 ) -> pd.DataFrame:
     """Find any inferred parents and creates rows for them."""
     tz_aware = merged_procs.iloc[0][schema.time_stamp].tz
@@ -212,9 +214,7 @@ def _extract_inferred_parents(
 
     # Fill in missing values for root processes
     root_procs_crit = merged_procs[Col.source_index_par].isna()
-    merged_procs.loc[root_procs_crit, "NewProcessId_par"] = merged_procs[
-        schema.parent_id
-    ]
+    merged_procs.loc[root_procs_crit, "NewProcessId_par"] = merged_procs[schema.parent_id]
     parent_col_name = schema.parent_name or "ParentName"
     if schema.parent_name:
         merged_procs.loc[root_procs_crit, Col.new_process_lc_par] = merged_procs[
@@ -312,9 +312,7 @@ def _check_merge_status(procs, merged_procs, schema):
     print("These two should add up to top line")
     row_dups = len(rows_with_dups2)
     print("Rows with dups", row_dups)
-    row_nodups = len(
-        merged_procs[~merged_procs[Col.source_index].isin(rows_with_dups2)]
-    )
+    row_nodups = len(merged_procs[~merged_procs[Col.source_index].isin(rows_with_dups2)])
     print("Rows with no dups", row_nodups)
     print(row_dups, "+", row_nodups, "=", row_dups + row_nodups)
 
@@ -336,9 +334,7 @@ def _check_proc_keys(merged_procs_par, schema):
     crit1 = merged_procs_par[Col.timestamp_orig_par].isin(
         merged_procs_par[schema.time_stamp]
     )
-    crit2 = merged_procs_par[Col.EffectiveLogonId].isin(
-        merged_procs_par[schema.logon_id]
-    )
+    crit2 = merged_procs_par[Col.EffectiveLogonId].isin(merged_procs_par[schema.logon_id])
     c2a = None
     if schema.target_logon_id:
         c2a = merged_procs_par[Col.EffectiveLogonId].isin(

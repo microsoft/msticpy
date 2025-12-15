@@ -20,6 +20,7 @@ rate. Maxmind geolite uses a downloadable database, while IPStack is
 an online lookup (API key required).
 
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -206,15 +207,11 @@ class IPStackLookup(GeoIpLookup):
 
     """
 
-    _LICENSE_HTML: ClassVar[
-        str
-    ] = """
+    _LICENSE_HTML: ClassVar[str] = """
 This library uses services provided by ipstack.
 <a href="https://ipstack.com">https://ipstack.com</a>"""
 
-    _LICENSE_TXT: ClassVar[
-        str
-    ] = """
+    _LICENSE_TXT: ClassVar[str] = """
 This library uses services provided by ipstack (https://ipstack.com)"""
 
     _IPSTACK_API: ClassVar[str] = (
@@ -446,23 +443,17 @@ class GeoLiteLookup(GeoIpLookup):
     _DB_ARCHIVE: ClassVar[str] = "GeoLite2-City.mmdb.{rand}.tar.gz"
     _DB_FILE: ClassVar[str] = "GeoLite2-City.mmdb"
 
-    _LICENSE_HTML: ClassVar[
-        str
-    ] = """
+    _LICENSE_HTML: ClassVar[str] = """
 This product includes GeoLite2 data created by MaxMind, available from
 <a href="https://www.maxmind.com">https://www.maxmind.com</a>.
 """
 
-    _LICENSE_TXT: ClassVar[
-        str
-    ] = """
+    _LICENSE_TXT: ClassVar[str] = """
 This product includes GeoLite2 data created by MaxMind, available from
 https://www.maxmind.com.
 """
 
-    _NO_API_KEY_MSSG: ClassVar[
-        str
-    ] = """
+    _NO_API_KEY_MSSG: ClassVar[str] = """
 You need both an API Key and an Account ID to download the Maxmind GeoIPLite database.
 If you do not have an account, go here to create one and obtain and API key
 and your account ID.
@@ -751,7 +742,8 @@ Alternatively, you can pass the account_id and api_key to the GeoLiteLookup clas
                 return True
             # Create a basic auth object for the request
             basic_auth = httpx.BasicAuth(
-                username=self._account_id, password=self._api_key  # type: ignore[arg-type]
+                username=self._account_id,
+                password=self._api_key,  # type: ignore[arg-type]
             )
             # Stream download and write to file
             logger.info(

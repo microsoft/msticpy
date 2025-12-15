@@ -114,7 +114,7 @@ In the Azure ML and Azure Synapse environments, some additional
 initialization and checks are performed.
 
 """
-import os
+
 from typing import Iterable, Union
 
 from . import nbwidgets  # noqa: F401
@@ -133,9 +133,6 @@ __author__ = "Ian Hellen, Pete Bryan, Ashwin Patil"
 refresh_config = settings.refresh_config
 get_config = settings.get_config
 setup_logging()
-
-if not os.environ.get("KQLMAGIC_EXTRAS_REQUIRES"):
-    os.environ["KQLMAGIC_EXTRAS_REQUIRES"] = "jupyter-basic"
 
 _LAZY_IMPORTS = {
     "msticpy.auth.azure_auth.az_connect",

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot browser widget."""
+
 from typing import Dict, List
 
 import ipywidgets as widgets

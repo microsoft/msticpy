@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """MS Defender/Defender 365 OData Driver class."""
+
 from __future__ import annotations
 
 import logging

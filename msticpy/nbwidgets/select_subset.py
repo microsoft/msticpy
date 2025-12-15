@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
+
 from typing import Any, Dict, List, Union
 
 import ipywidgets as widgets
@@ -91,9 +92,7 @@ class SelectSubset(IPyDisplayMixin):
         self._b_del_all.on_click(self._on_btn_del_all)
         self._b_add_all.on_click(self._on_btn_add_all)
 
-        v_box = widgets.VBox(
-            [self._b_add_all, self._b_add, self._b_del, self._b_del_all]
-        )
+        v_box = widgets.VBox([self._b_add_all, self._b_add, self._b_del, self._b_del_all])
         self.layout = widgets.HBox([self._source_list, v_box, self._select_list])
         if self._display_filter:
             self.layout = widgets.VBox([self._w_filter, self.layout])
@@ -135,9 +134,7 @@ class SelectSubset(IPyDisplayMixin):
             List of selected item values.
 
         """
-        if self._select_list.options and isinstance(
-            self._select_list.options[0], tuple
-        ):
+        if self._select_list.options and isinstance(self._select_list.options[0], tuple):
             return [item[1] for item in self._select_list.options]
         return self.selected_items
 

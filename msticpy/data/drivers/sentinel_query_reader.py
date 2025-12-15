@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Github Sentinel Query repo import class and helpers."""
+
 from __future__ import annotations
 
 import logging
@@ -407,9 +408,7 @@ def write_to_yaml(query_list: list, query_type: str, output_folder: str) -> bool
                 print(err)
 
         try:
-            query_text = yaml.safe_dump(
-                dict_to_write, encoding="utf-8", sort_keys=False
-            )
+            query_text = yaml.safe_dump(dict_to_write, encoding="utf-8", sort_keys=False)
         except yaml.YAMLError as error:
             print(error)
             return False

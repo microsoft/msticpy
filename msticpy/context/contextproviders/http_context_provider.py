@@ -11,6 +11,7 @@ It is used to interface with HTTP API providing additional contexts.
 It inherits from ContextProvider and HttpProvider
 
 """
+
 from __future__ import annotations
 
 from functools import lru_cache

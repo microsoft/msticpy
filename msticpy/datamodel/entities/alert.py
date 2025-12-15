@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Alert Entity class."""
+
 import json
 from datetime import datetime
 from typing import Any, Dict, List, Mapping, Optional, Tuple
@@ -346,9 +347,7 @@ def _extract_entities(ents: list):
                         nested_ents = []
                         for item in val:
                             if isinstance(item, dict) and "$ref" in item:
-                                nested_ents.append(
-                                    _find_original_entity(item, base_ents)
-                                )
+                                nested_ents.append(_find_original_entity(item, base_ents))
                                 entity[k] = nested_ents
                     elif isinstance(val, dict) and "$ref" in val:
                         entity[k] = _find_original_entity(val, base_ents)
@@ -381,8 +380,7 @@ def _generate_base_ents(ents: list) -> list:
                                     if isinstance(p, dict) and "$id" in p.keys():
                                         base_ents.append(p)
                             elif (
-                                isinstance(prop[val], dict)
-                                and "$id" in prop[val].keys()
+                                isinstance(prop[val], dict) and "$id" in prop[val].keys()
                             ):
                                 base_ents.append(val)
             elif isinstance(item, dict) and "$id" in item.keys():

@@ -530,9 +530,7 @@ def plot_outlier_results(  # noqa: PLR0915
         plt.contourf(xx, yy, z, cmap=plt.cm.Blues_r)  # type: ignore
 
         b1 = plt.scatter(x[:, 0], x[:, 1], c="white", s=20, edgecolor="k")
-        b2 = plt.scatter(
-            x_predict[:, 0], x_predict[:, 1], c="green", s=40, edgecolor="k"
-        )
+        b2 = plt.scatter(x_predict[:, 0], x_predict[:, 1], c="green", s=40, edgecolor="k")
         c = plt.scatter(x_outliers[:, 0], x_outliers[:, 1], c="red", marker="x", s=200)
         plt.axis("tight")
 

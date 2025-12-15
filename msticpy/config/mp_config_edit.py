@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module docstring."""
+
 from typing import Any, Dict, Optional, Union, cast
 
 import ipywidgets as widgets
@@ -184,8 +185,7 @@ class MpConfigEdit(CompEditDisplayMixin):
     def _get_tab_definitions(self) -> Dict[str, CETabControlDef]:
         """Return tab definitions and arguments."""
         return {
-            name: (cls, [self.mp_controls])
-            for name, cls in self._TAB_DEFINITIONS.items()
+            name: (cls, [self.mp_controls]) for name, cls in self._TAB_DEFINITIONS.items()
         }
 
     @property

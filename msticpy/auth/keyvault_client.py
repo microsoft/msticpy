@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Keyvault client - adapted from Bluehound code."""
+
 from __future__ import annotations
 
 import logging
@@ -323,8 +324,7 @@ class BHKeyVaultClient:
                     self.vault_uri,
                 )
             err_msg = (
-                f"Secret name {secret_name} in {self.vault_uri}"
-                "has blank or null value."
+                f"Secret name {secret_name} in {self.vault_uri}has blank or null value."
             )
             raise MsticpyKeyVaultMissingSecretError(
                 err_msg,

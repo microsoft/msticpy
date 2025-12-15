@@ -5,6 +5,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Query Editor."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -272,9 +273,7 @@ class QueryParameterEditWidget(IPyDisplayMixin):
         """Set the parameter container."""
         self.param_container = container
         if self.param_container and self.param_container.parameters:
-            self.parameter_dropdown.options = list(
-                self.param_container.parameters.keys()
-            )
+            self.parameter_dropdown.options = list(self.param_container.parameters.keys())
             init_change = CustomChange(new=next(iter(self.param_container.parameters)))
             self.populate_widgets(init_change)
         else:
@@ -430,9 +429,7 @@ class QueryEditWidget(IPyDisplayMixin):
         self.query_opts_widget.set_title(1, "Query metadata")
         self.query_opts_widget.selected_index = None
         self.add_query_button: widgets.Button = widgets.Button(description="New Query")
-        self.save_query_button: widgets.Button = widgets.Button(
-            description="Save Query"
-        )
+        self.save_query_button: widgets.Button = widgets.Button(description="Save Query")
         self.delete_query_button: widgets.Button = widgets.Button(
             description="Delete Query"
         )
@@ -639,9 +636,7 @@ class QueryEditWidget(IPyDisplayMixin):
 class MetadataEditWidget(IPyDisplayMixin):
     """A class for editing Metadata properties."""
 
-    def __init__(
-        self: MetadataEditWidget, metadata: QueryMetadata | None = None
-    ) -> None:
+    def __init__(self: MetadataEditWidget, metadata: QueryMetadata | None = None) -> None:
         """
         Initialize a MetadataEditWidget object.
 
@@ -752,9 +747,7 @@ class MetadataEditWidget(IPyDisplayMixin):
             else ()
         )
         self.data_families_widget.value = (
-            ", ".join(self.metadata.data_families)
-            if self.metadata.data_families
-            else ""
+            ", ".join(self.metadata.data_families) if self.metadata.data_families else ""
         )
         self.database_widget.value = self.metadata.database or ""
         self.cluster_widget.value = self.metadata.cluster or ""
@@ -834,12 +827,8 @@ class QueryEditor(IPyDisplayMixin):
             self.filename_widget.value = str(query_file)
             self._open_initial_file()
         else:
-            self.query_collection: QueryCollection = (
-                query_file or self._new_collection()
-            )
-            self.filename_widget.value = (
-                self.query_collection.file_name or _DEF_FILENAME
-            )
+            self.query_collection: QueryCollection = query_file or self._new_collection()
+            self.filename_widget.value = self.query_collection.file_name or _DEF_FILENAME
         self.query_editor: QueryEditWidget = QueryEditWidget(self.query_collection)
         self.metadata_editor: MetadataEditWidget = MetadataEditWidget(
             self.query_collection.metadata
@@ -995,9 +984,7 @@ class YamlLiteralBlockContext:
 
         def str_presenter(dumper: yaml.SafeDumper, data: str) -> yaml.ScalarNode:
             if "\n" in data:
-                data = "\n".join(
-                    line.rstrip() for line in data.splitlines(keepends=True)
-                )
+                data = "\n".join(line.rstrip() for line in data.splitlines(keepends=True))
                 return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
             return dumper.represent_scalar("tag:yaml.org,2002:str", data)
 
@@ -1072,22 +1059,15 @@ def save_queries_to_yaml(
         del query_dict["file_name"]
     _rename_data_type(query_dict)
     with YamlLiteralBlockContext():
-        yaml_data: str = yaml.safe_dump(
-            _remove_none_values(query_dict), sort_keys=False
-        )
+        yaml_data: str = yaml.safe_dump(_remove_none_values(query_dict), sort_keys=False)
     Path(yaml_file).write_text(yaml_data, encoding="utf-8")
 
 
 def _create_query_defaults(defaults: dict[str, Any]) -> QueryDefaults:
     """Create a QueryDefaults object."""
-    def_metadata: dict[str, Any] = (
-        defaults["metadata"] if "metadata" in defaults else {}
-    )
+    def_metadata: dict[str, Any] = defaults["metadata"] if "metadata" in defaults else {}
     def_params: dict[str, QueryParameter] = (
-        {
-            name: _create_parameter(param)
-            for name, param in defaults["parameters"].items()
-        }
+        {name: _create_parameter(param) for name, param in defaults["parameters"].items()}
         if "parameters" in defaults and defaults["parameters"]
         else {}
     )

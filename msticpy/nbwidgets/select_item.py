@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
+
 import random
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 

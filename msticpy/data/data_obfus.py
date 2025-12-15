@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data obfuscation functions."""
+
 from __future__ import annotations
 
 import hashlib
@@ -513,42 +514,3 @@ def check_masking(
 # alertnative names for backward compat
 obfuscate_df = mask_df
 check_obfuscation = check_masking
-
-
-@pd.api.extensions.register_dataframe_accessor("mp_mask")
-class ObfuscationAccessor:
-    """Base64 Unpack pandas extension."""
-
-    def __init__(self, pandas_obj):
-        """Initialize the extension."""
-        self._df = pandas_obj
-
-    def mask(
-        self, column_map: Mapping[str, Any] = None, use_default: bool = True
-    ) -> pd.DataFrame:
-        """
-        Obfuscate the data in columns of a pandas dataframe.
-
-        Parameters
-        ----------
-        data : pd.DataFrame
-            dataframe containing column to obfuscate
-        column_map : Mapping[str, Any], optional
-            Custom column mapping, by default None
-        use_default: bool
-            If True use the built-in map (adding any custom
-            mappings to this dictionary)
-
-        Returns
-        -------
-        pd.DataFrame
-            Obfuscated dataframe
-
-        """
-        warn_message = (
-            "This accessor method has been deprecated.\n"
-            "Please use df.mp.mask() method instead."
-            "This will be removed in MSTICPy v2.2.0"
-        )
-        warnings.warn(warn_message, category=DeprecationWarning, stacklevel=2)
-        return mask_df(data=self._df, column_map=column_map, use_default=use_default)

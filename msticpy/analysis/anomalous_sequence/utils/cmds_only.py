@@ -46,8 +46,7 @@ def compute_counts(  # nosec
     """
     if not start_token != end_token != unk_token:
         raise MsticpyException(
-            "start_token, end_token, unk_tokens should all be set to something "
-            "different"
+            "start_token, end_token, unk_tokens should all be set to something different"
         )
 
     seq1_counts: DefaultDict[str, int] = defaultdict(lambda: 0)

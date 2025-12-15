@@ -488,9 +488,11 @@ def test_whois_pdext(mock_asn_whois_query, net_df):
     net_df = net_df.head(25)
     mock_asn_whois_query.return_value = ASN_RESPONSE
     respx.get(re.compile(r"http://rdap\.arin\.net/.*")).respond(200, json=RDAP_RESPONSE)
-    results = net_df.mp_whois.lookup(ip_column="AllExtIPs")
-    check.equal(len(results), len(net_df))
-    check.is_in("ASNDescription", results.columns)
+
+    # Use mp.whois() instead of deprecated mp_whois accessor
+    results = net_df.mp.whois(ip_column="AllExtIPs")
+    # Results are merged back into original dataframe
+    check.is_in("AsnDescription", results.columns)
 
     results2 = net_df.mp.whois(ip_column="AllExtIPs", asn_col="asn", whois_col="whois")
     check.equal(len(results2), len(net_df))

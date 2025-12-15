@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Account Entity class."""
+
 from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
@@ -163,9 +164,7 @@ class Account(Entity):
         if role == "target" and "TargetUserName" in src_event:
             self.Name = src_event["TargetUserName"]
             self.NTDomain = (
-                src_event["TargetUserDomain"]
-                if "TargetUserDomain" in src_event
-                else None
+                src_event["TargetUserDomain"] if "TargetUserDomain" in src_event else None
             )
             self.Sid = (
                 src_event["TargetUserSid"] if "TargetUserSid" in src_event else None

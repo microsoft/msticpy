@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Credential wrapper to expose ADAL and MSAL credentials."""
+
 from typing import Any, Dict
 
 from azure.core.pipeline import PipelineContext, PipelineRequest

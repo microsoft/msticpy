@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Bokeh matrix plot."""
+
 import math
 from typing import List, Optional, Union
 
@@ -312,7 +313,5 @@ def _prep_data(data: pd.DataFrame, param: PlotParams):
             .reset_index()
         )
     return tmp_df.assign(
-        size=lambda x: _size_scale(
-            tmp_df[param.value_col], param.log_size, param.invert
-        )
+        size=lambda x: _size_scale(tmp_df[param.value_col], param.log_size, param.invert)
     )

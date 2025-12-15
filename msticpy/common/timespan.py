@@ -5,7 +5,6 @@
 # --------------------------------------------------------------------------
 """Timespan class."""
 
-
 import contextlib
 from datetime import datetime, timedelta, timezone
 from numbers import Number

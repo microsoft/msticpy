@@ -29,6 +29,7 @@ or a dictionary of one of the following:
 - KeyVault: vault_name/secret_name
 
 """
+
 from typing import Dict, Optional
 
 from .pkg_config import get_config

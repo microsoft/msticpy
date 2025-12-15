@@ -6,7 +6,6 @@
 """Pivot functions main module."""
 
 import contextlib
-import warnings
 from datetime import datetime, timedelta, timezone
 from importlib import import_module
 from pathlib import Path
@@ -15,15 +14,10 @@ from typing import Any, Callable, Dict, Iterable, Optional, Type
 
 from .._version import VERSION
 from ..common.timespan import TimeSpan
+from ..common.utility.types import SingletonClass
 from ..context.tilookup import TILookup
 from ..data.core.data_providers import QueryProvider
 from ..datamodel import entities
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore", category=DeprecationWarning)
-    from ..datamodel import pivot as legacy_pivot
-
-from ..common.utility.types import SingletonClass
 from ..nbwidgets.query_time import QueryTime
 from . import pivot_init
 
@@ -444,8 +438,3 @@ class Pivot:
     def browse():
         """Return PivotBrowser."""
         return PivotBrowser()
-
-
-# add link in datamodel for legacy location
-legacy_pivot.Pivot = Pivot  # type: ignore[attr-defined]
-legacy_pivot.PivotRegistration = PivotRegistration  # type: ignore[attr-defined]

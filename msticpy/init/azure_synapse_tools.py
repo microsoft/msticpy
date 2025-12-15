@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Help functions for Synapse pipelines notebooks."""
+
 import logging
 import os
 import re
@@ -237,8 +238,8 @@ class LinkedService:
         self.name: str = kwargs.get("name")
         self.entry_type: str = kwargs.get("type")
         self.etag: str = kwargs.get("etag")
-        self.properties: Dict[str, Union[str, Dict[str, Union[Dict, str]]]] = (
-            kwargs.get("properties", {})
+        self.properties: Dict[str, Union[str, Dict[str, Union[Dict, str]]]] = kwargs.get(
+            "properties", {}
         )
 
     @property
@@ -275,9 +276,7 @@ class LinkedService:
 class SynapseName:
     """Name mapping to default values."""
 
-    storage_account_prefix = (
-        "adlsforsentinel"  # + last 7 digit of Sentinel workspace id;
-    )
+    storage_account_prefix = "adlsforsentinel"  # + last 7 digit of Sentinel workspace id;
     key_vault_name_prefix = "kvforsentinel"  # + last 7 digit of ws I’d;
     kv_linked_service = "Akvlink"
     sp_client_id_name = "clientid"
@@ -426,9 +425,7 @@ class MPSparkUtils:
         except StopIteration:
             return None
 
-    def get_storage_service(
-        self, linked_svc_name: Optional[str] = None
-    ) -> LinkedService:
+    def get_storage_service(self, linked_svc_name: Optional[str] = None) -> LinkedService:
         """Return linked storage service (named) or default storage."""
         storage_svc: Optional[LinkedService] = None
         if linked_svc_name:

@@ -13,6 +13,7 @@ fields and performs some event-specific formatting and normalization
 line arguments into a single string). This is still a work-in-progress.
 
 """
+
 import codecs
 import re
 from datetime import datetime, timezone
@@ -386,9 +387,7 @@ def get_event_subset(data: pd.DataFrame, event_type: str) -> pd.DataFrame:
         data['EventType'] == event_type
 
     """
-    return (
-        data[data["EventType"] == event_type].dropna(axis=1, how="all").infer_objects()
-    )
+    return data[data["EventType"] == event_type].dropna(axis=1, how="all").infer_objects()
 
 
 @export
@@ -433,9 +432,7 @@ def read_from_file(
     )
 
     # extract message ID into separate column
-    df_raw["mssg_id"] = df_raw.apply(
-        lambda x: _extract_timestamp(x["raw_data"]), axis=1
-    )
+    df_raw["mssg_id"] = df_raw.apply(lambda x: _extract_timestamp(x["raw_data"]), axis=1)
     # pylint: disable=unsupported-assignment-operation, no-member
     # Pack message type and content into a dictionary:
     # {'mssg_type: ['item1=x, item2=y....]}

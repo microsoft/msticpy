@@ -12,6 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar, Iterable, Mapping
@@ -39,9 +40,7 @@ __author__ = "Ian Hellen"
 class TILookup(Lookup):
     """Threat Intel observable lookup from providers."""
 
-    _NO_PROVIDERS_MSG: ClassVar[
-        str
-    ] = """
+    _NO_PROVIDERS_MSG: ClassVar[str] = """
     No TI Providers are loaded - please check that
     you have correctly configured your msticpyconfig.yaml settings.
     """

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Compound control classes."""
+
 import os
 from copy import deepcopy
 from typing import Any, Dict, Optional, Tuple, Union
@@ -357,9 +358,7 @@ class UserDefQryProvCtrl(SettingsControl):
 
         """
         alias = {"alias": self.txt_alias.value} if self.txt_alias.value else {}
-        connect = (
-            {"connect": self.cb_connect.value} if not self.cb_connect.value else {}
-        )
+        connect = {"connect": self.cb_connect.value} if not self.cb_connect.value else {}
         return {**alias, **connect}
 
     @value.setter
@@ -385,9 +384,7 @@ class UserDefLoadComponent(SettingsControl):
     _W_STYLE = {"description_width": "100px"}
 
     # pylint: disable=line-too-long
-    def __init__(
-        self, mp_controls: MpConfigControls, comp_name: str, setting_path: str
-    ):
+    def __init__(self, mp_controls: MpConfigControls, comp_name: str, setting_path: str):
         """
         Initialize the control.
 
@@ -441,9 +438,7 @@ class UserDefLoadComponent(SettingsControl):
                 self._add_control_to_map(ctrl_path, self.controls[name])
             if isinstance(settings, tuple):
                 # if tuple then the second elem of the tuple is the type defn
-                self.controls[name] = self._create_select_ctrl(
-                    settings, name, curr_value
-                )
+                self.controls[name] = self._create_select_ctrl(settings, name, curr_value)
                 self._add_control_to_map(ctrl_path, self.controls[name])
             elif isinstance(settings, dict):
                 self.controls[name] = widgets.Text(value=name, disabled=True)
@@ -501,9 +496,7 @@ class UserDefLoadComponent(SettingsControl):
             sub_path = f"{path}.{key}" if path else key
             if isinstance(val, dict):
                 if isinstance(self.controls[key], widgets.Textarea):
-                    self.controls[key].value = py_to_widget(
-                        val, ctrl=self.controls[key]
-                    )
+                    self.controls[key].value = py_to_widget(val, ctrl=self.controls[key])
                 else:
                     self._set_ctrl_from_val(sub_path, val)
             elif key in self.controls:

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Local Osquery Data Driver class - osquery.{results,snapshots}.log."""
+
 import json
 import logging
 
@@ -234,9 +235,7 @@ class OSQueryLogDriver(DriverBase):
 
         # Otherwise read in the data files.
         data_files = (
-            tqdm(self.data_files.values())
-            if self._progress
-            else self.data_files.values()
+            tqdm(self.data_files.values()) if self._progress else self.data_files.values()
         )
         for log_file in data_files:
             self._read_log_file(log_file)
@@ -291,9 +290,7 @@ class OSQueryLogDriver(DriverBase):
                 list_lines = [json.loads(line) for line in json_lines]
 
         except (OSError, json.JSONDecodeError, ValueError) as exc:
-            raise MsticpyDataQueryError(
-                f"Read error on file {log_path}: {exc}."
-            ) from exc
+            raise MsticpyDataQueryError(f"Read error on file {log_path}: {exc}.") from exc
         if not list_lines:
             raise MsticpyNoDataSourceError(
                 f"No log data retrieved from {log_path}",
@@ -302,9 +299,7 @@ class OSQueryLogDriver(DriverBase):
         logger.info("log %s read, %d lines read", log_path, len(list_lines))
         df_all_queries = pd.json_normalize(list_lines, max_level=3)
         # Don't want dot in columns name
-        df_all_queries.columns = df_all_queries.columns.str.replace(
-            ".", "_", regex=False
-        )
+        df_all_queries.columns = df_all_queries.columns.str.replace(".", "_", regex=False)
 
         for event_name in df_all_queries["name"].unique().tolist():
             combined_dfs = []
@@ -346,11 +341,7 @@ def _rename_columns(data: pd.DataFrame):
     for prefix in _PREFIXES:
         source_cols = data.filter(regex=f"{prefix}.*").columns
         rename_cols.update(
-            {
-                col: col.replace(prefix, "")
-                for col in source_cols
-                if isinstance(col, str)
-            }
+            {col: col.replace(prefix, "") for col in source_cols if isinstance(col, str)}
         )
     rename_cols = {
         col: ren_col if ren_col not in df_cols else f"{ren_col}_"
