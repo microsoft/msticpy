@@ -31,6 +31,7 @@ if TYPE_CHECKING:
 __version__ = VERSION
 __author__ = "Thomas Roccia | @fr0gger_"
 
+# pylint: disable=invalid-name
 _QUERY_OBJECTS_MAPPINGS: dict[str, dict[str, str]] = {
     "indicator": {"indicator": "observable"},
     "threat": {"threat": "observable"},

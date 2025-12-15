@@ -26,6 +26,7 @@ Submodules
    msticpy.data.drivers.mdatp_driver
    msticpy.data.drivers.mordor_driver
    msticpy.data.drivers.odata_driver
+   msticpy.data.drivers.prismacloud_driver
    msticpy.data.drivers.resource_graph_driver
    msticpy.data.drivers.security_graph_driver
    msticpy.data.drivers.sentinel_query_reader
