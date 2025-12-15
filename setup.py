@@ -32,6 +32,7 @@ EXTRAS = {
     "vt3": ["vt-py>=0.18.0", "vt-graph-api>=2.0"],
     "splunk": ["splunk-sdk>=1.6.0,!=2.0.0"],
     "sumologic": ["sumologic-sdk>=0.1.11", "openpyxl>=3.0"],
+    "kql": ["KqlmagicCustom[jupyter-extended]>=0.1.114.post22"],
     "azure": [
         "azure-mgmt-compute>=4.6.2",
         "azure-mgmt-core>=1.2.1",
