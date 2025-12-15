@@ -162,7 +162,7 @@ class ResourceGraphDriver(DriverBase):
 
         request_options = QueryRequestOptions(
             top=top,
-            result_format=ResultFormat.object_array,
+            result_format=ResultFormat.object_array,  # type: ignore
         )
 
         request = QueryRequest(
