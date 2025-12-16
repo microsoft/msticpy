@@ -9,14 +9,14 @@ import re
 
 import setuptools
 
-with open("msticpy/_version.py", "r", encoding="utf-8") as fd:
+with open("msticpy/_version.py", encoding="utf-8") as fd:
     v_match = re.search(r'^VERSION\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE)
     __version__ = v_match[1] if v_match else "no version"
 
-with open("requirements.txt", "r", encoding="utf-8") as fh:
+with open("requirements.txt", encoding="utf-8") as fh:
     INSTALL_REQUIRES = fh.readlines()
 
-with open("requirements-dev.txt", "r", encoding="utf-8") as fh:
+with open("requirements-dev.txt", encoding="utf-8") as fh:
     INSTALL_DEV_REQUIRES = fh.readlines()
 
 
@@ -52,10 +52,9 @@ EXTRAS = {
         "rrcf==0.4.4",
         "joblib>=1.3.0",
     ],
-    "sql2kql": ["mo-sql-parsing>=8, <9.0.0"],
+    "sql2kql": ["mo-sql-parsing>=11, <12.0.0"],
     "riskiq": ["passivetotal>=2.5.3", "requests>=2.31.0"],
     "panel": [],  # now in core install
-    "aiagents": ["autogen-agentchat[retrievechat]~=0.2.0"],
 }
 extras_all = [
     extra for name, extras in EXTRAS.items() for extra in extras if name != "dev"

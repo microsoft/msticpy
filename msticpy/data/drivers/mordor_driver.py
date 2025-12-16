@@ -769,7 +769,7 @@ def download_mdr_file(
         ) from bad_zip_err
 
 
-def _extract_zip_file_to_df(  # noqa: MC0001
+def _extract_zip_file_to_df(
     zip_file: ZipFile,
     file_name: str,
     use_cached: bool = True,
