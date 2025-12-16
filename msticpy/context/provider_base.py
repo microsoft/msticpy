@@ -20,7 +20,6 @@ import logging
 from abc import ABC, abstractmethod
 from asyncio import get_event_loop
 from collections.abc import Coroutine, Generator, Iterable
-from collections.abc import Iterable as C_Iterable
 from functools import lru_cache, partial, singledispatch
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
@@ -443,7 +442,7 @@ class PivotProvider(ABC):
 
 @singledispatch
 def generate_items(
-    data: pd.DataFrame | dict | C_Iterable,
+    data: pd.DataFrame | dict | Iterable,
     item_col: str | None = None,
     item_type_col: str | None = None,
 ) -> Generator[tuple[str | None, str | None], Any, None]:
@@ -466,7 +465,7 @@ def generate_items(
     """
     del item_col, item_type_col
 
-    if isinstance(data, C_Iterable):
+    if isinstance(data, Iterable):
         for item in data:
             yield cast(str, item), Provider.resolve_item_type(item)
     else:
