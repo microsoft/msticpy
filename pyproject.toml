@@ -6,9 +6,8 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.ruff]
-# Same as Black's default line length
-line-length = 90
-target-version = "py38"
+line-length = 95
+target-version = "py310"
 
 # Exclude directories
 exclude = [

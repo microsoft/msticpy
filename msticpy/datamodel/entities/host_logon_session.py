@@ -7,8 +7,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
-from typing import Any, Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export

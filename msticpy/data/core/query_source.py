@@ -9,12 +9,13 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Callable
 
 # from collections import ChainMap
 from datetime import datetime, timedelta, timezone
 from json.decoder import JSONDecodeError
 from numbers import Number
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from dateutil.parser import ParserError, parse  # type: ignore
 from dateutil.relativedelta import relativedelta
@@ -179,9 +180,7 @@ class QuerySource:
 
         """
         return {
-            p_key: p_props
-            for p_key, p_props in self.params.items()
-            if "default" in p_props
+            p_key: p_props for p_key, p_props in self.params.items() if "default" in p_props
         }
 
     @property
@@ -245,14 +244,10 @@ class QuerySource:
         parameter defaults (see `default_params` property).
 
         """
-        param_dict = {
-            name: value.get("default", None) for name, value in self.params.items()
-        }
+        param_dict = {name: value.get("default", None) for name, value in self.params.items()}
 
         param_dict.update(self.resolve_param_aliases(kwargs))
-        missing_params = {
-            name: value for name, value in param_dict.items() if value is None
-        }
+        missing_params = {name: value for name, value in param_dict.items() if value is None}
         if missing_params:
             raise ValueError(
                 "These required parameters were not set: ", f"{missing_params.keys()}"
@@ -284,9 +279,7 @@ class QuerySource:
         if fmt_template:
             # custom formatting template in the query definition
             param_dict[p_name] = fmt_template.format(param_dict[p_name])
-        elif param_settings["type"] == "datetime" and isinstance(
-            param_dict[p_name], datetime
-        ):
+        elif param_settings["type"] == "datetime" and isinstance(param_dict[p_name], datetime):
             # format datetime using driver formatter or default formatter
             if formatters and Formatters.DATETIME in formatters:
                 param_dict[p_name] = formatters[Formatters.DATETIME](param_dict[p_name])
@@ -339,16 +332,10 @@ class QuerySource:
     def _get_aliased_param(self, alias: str) -> str | None:
         """Return first parameter with a matching alias."""
         aliased_params = {
-            p_name: p_prop
-            for p_name, p_prop in self.params.items()
-            if "aliases" in p_prop
+            p_name: p_prop for p_name, p_prop in self.params.items() if "aliases" in p_prop
         }
         return next(
-            (
-                param
-                for param, props in aliased_params.items()
-                if alias in props["aliases"]
-            ),
+            (param for param, props in aliased_params.items() if alias in props["aliases"]),
             None,
         )
 
@@ -397,9 +384,7 @@ class QuerySource:
         if not m_time or "value" not in m_time.groupdict():
             return timedelta(0)
         tm_val = int(m_time.groupdict()["sign"] + m_time.groupdict()["value"])
-        tm_unit = (
-            m_time.groupdict()["unit"].lower() if m_time.groupdict()["unit"] else "d"
-        )
+        tm_unit = m_time.groupdict()["unit"].lower() if m_time.groupdict()["unit"] else "d"
         # Use relative delta to build the timedelta based on the units
         # in the time range expression
         unit_param = RD_UNIT_MAP.get(tm_unit, "days")
@@ -505,9 +490,7 @@ class QuerySource:
             )
             valid_failures.append(msg)
         if not self._query:
-            msg = (
-                f'Source {self.name} does not have "query" property ' + "in args element."
-            )
+            msg = f'Source {self.name} does not have "query" property ' + "in args element."
             valid_failures.append(msg)
 
         # Now get the query and the parameter definitions from the source and

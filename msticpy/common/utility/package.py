@@ -14,7 +14,6 @@ import warnings
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from platform import python_version
-from typing import Dict, List, Optional, Tuple, Union
 
 from IPython.core.display import HTML
 from IPython.core.getipython import get_ipython
@@ -61,15 +60,13 @@ def resolve_pkg_path(part_path: str):
     )
 
     if not searched_paths or len(searched_paths) > 1:
-        warnings.warn(
-            f"No path or ambiguous match for {part_path} not found", stacklevel=2
-        )
+        warnings.warn(f"No path or ambiguous match for {part_path} not found", stacklevel=2)
         return None
     return str(searched_paths[0])
 
 
 @export
-def check_py_version(min_ver: Tuple = (3, 6)):
+def check_py_version(min_ver: tuple = (3, 6)):
     """
     Check that the current python version is not less than `min_ver`.
 
@@ -79,7 +76,7 @@ def check_py_version(min_ver: Tuple = (3, 6)):
         Minimum required version, by default (3,6)
 
     """
-    if isinstance(min_ver, (float, str)):
+    if isinstance(min_ver, float | str):
         min_ver_list = str(min_ver).split(".")
         min_ver = (int(min_ver_list[0]), int(min_ver_list[1]))
     if sys.version_info < min_ver:
@@ -91,7 +88,7 @@ def check_py_version(min_ver: Tuple = (3, 6)):
 # pylint: disable=not-an-iterable, too-many-branches
 @export
 def check_and_install_missing_packages(
-    required_packages: List[str],
+    required_packages: list[str],
     force_notebook: bool = False,
     user: bool = False,
     upgrade: bool = False,
@@ -189,13 +186,13 @@ _MSTICPY_USER_AGENT = _get_mp_ua()
 
 
 @export
-def mp_ua_header() -> Dict[str, str]:
+def mp_ua_header() -> dict[str, str]:
     """Return headers dict for MSTICPy User Agent."""
     return {"UserAgent": _get_mp_ua()}
 
 
 @export
-def search_for_file(pattern: str, paths: List[Union[str, Path]] = None) -> Optional[str]:
+def search_for_file(pattern: str, paths: list[str | Path] = None) -> str | None:
     """Search `paths` for file `pattern`."""
     paths = paths or [".", ".."]
     for start_path in paths:
@@ -206,7 +203,7 @@ def search_for_file(pattern: str, paths: List[Union[str, Path]] = None) -> Optio
 
 
 @export
-def search_module(pattern: str) -> Dict[str, str]:
+def search_module(pattern: str) -> dict[str, str]:
     """
     Return MSTICPy modules that match `pattern`.
 
@@ -313,7 +310,7 @@ def set_unit_testing(on: bool = True):
         os.environ.pop(_U_TEST_ENV, None)
 
 
-def init_getattr(module_name: str, dynamic_imports: Dict[str, str], attrib: str):
+def init_getattr(module_name: str, dynamic_imports: dict[str, str], attrib: str):
     """Import and return dynamic attribute."""
     if attrib in dynamic_imports:
         module = importlib.import_module(dynamic_imports[attrib])
@@ -321,7 +318,7 @@ def init_getattr(module_name: str, dynamic_imports: Dict[str, str], attrib: str)
     raise AttributeError(f"{module_name} has no attribute {attrib}")
 
 
-def init_dir(static_attribs: List[str], dynamic_imports: Dict[str, str]):
+def init_dir(static_attribs: list[str], dynamic_imports: dict[str, str]):
     """Return list of available attributes."""
     return sorted(set(static_attribs + list(dynamic_imports)))
 

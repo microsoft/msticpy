@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import logging
 import warnings
+from collections.abc import Callable
 from functools import partial
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from typing_extensions import Self
 
@@ -286,10 +287,8 @@ class MicrosoftSentinel(
                 sentinel_instance: SentinelInstanceDetails = SentinelInstanceDetails(
                     subscription_id=connect_kwargs.get(_SUB_ID)
                     or self.default_subscription_id,
-                    resource_group=connect_kwargs.get(_RES_GRP)
-                    or self.default_resource_group,
-                    workspace_name=connect_kwargs.get(_WS_NAME)
-                    or self.default_workspace_name,
+                    resource_group=connect_kwargs.get(_RES_GRP) or self.default_resource_group,
+                    workspace_name=connect_kwargs.get(_WS_NAME) or self.default_workspace_name,
                 )
             except TypeError as err:
                 raise MsticpyUserConfigError(
@@ -319,9 +318,7 @@ class MicrosoftSentinel(
             )
         logger.info("Using tenant id %s", tenant_id)
         az_connect_kwargs: dict[str, Any] = {
-            key: value
-            for key, value in connect_kwargs.items()
-            if key not in _WS_PARAMETERS
+            key: value for key, value in connect_kwargs.items() if key not in _WS_PARAMETERS
         }
         if tenant_id:
             az_connect_kwargs["tenant_id"] = tenant_id

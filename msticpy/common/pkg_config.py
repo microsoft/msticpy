@@ -17,10 +17,11 @@ import contextlib
 import numbers
 import os
 from collections import UserDict
+from collections.abc import Callable
 from contextlib import AbstractContextManager
 from importlib.util import find_spec
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import httpx
 import yaml
@@ -70,11 +71,11 @@ _custom_settings = SettingsDict()
 _settings = SettingsDict()
 
 
-def _get_current_config() -> Callable[[Any], Optional[str]]:
+def _get_current_config() -> Callable[[Any], str | None]:
     """Closure for holding path of config file."""
-    _current_conf_file: Optional[str] = None
+    _current_conf_file: str | None = None
 
-    def _current_config(file_path: Optional[str] = None) -> Optional[str]:
+    def _current_config(file_path: str | None = None) -> str | None:
         nonlocal _current_conf_file  # noqa
         if file_path is not None:
             _current_conf_file = file_path
@@ -86,7 +87,7 @@ def _get_current_config() -> Callable[[Any], Optional[str]]:
 _CURRENT_CONF_FILE = _get_current_config()
 
 
-def current_config_path() -> Optional[str]:
+def current_config_path() -> str | None:
     """
     Return the path of the current config file, if any.
 
@@ -126,9 +127,7 @@ def has_config(setting_path: str) -> bool:
 _DEFAULT_SENTINEL = "@@@NO-DEFAULT-VALUE@@@"
 
 
-def get_config(
-    setting_path: Optional[str] = None, default: Any = _DEFAULT_SENTINEL
-) -> Any:
+def get_config(setting_path: str | None = None, default: Any = _DEFAULT_SENTINEL) -> Any:
     """
     Return setting item for path.
 
@@ -243,7 +242,7 @@ def _del_config(setting_path: str, settings_dict: SettingsDict) -> Any:
     return current_value
 
 
-def _read_config_file(config_file: Union[str, Path]) -> SettingsDict:
+def _read_config_file(config_file: str | Path) -> SettingsDict:
     """
     Read a yaml config definition file.
 
@@ -273,9 +272,7 @@ def _read_config_file(config_file: Union[str, Path]) -> SettingsDict:
     return SettingsDict()
 
 
-def _consolidate_configs(
-    def_config: SettingsDict, cust_config: SettingsDict
-) -> SettingsDict:
+def _consolidate_configs(def_config: SettingsDict, cust_config: SettingsDict) -> SettingsDict:
     resultant_config = SettingsDict()
     resultant_config.update(def_config)
 
@@ -287,7 +284,7 @@ def _override_config(base_config: SettingsDict, new_config: SettingsDict):
     for c_key, c_item in new_config.items():
         if c_item is None:
             continue
-        if isinstance(base_config.get(c_key), (dict, SettingsDict)):
+        if isinstance(base_config.get(c_key), dict | SettingsDict):
             _override_config(base_config[c_key], c_item)
         else:
             base_config[c_key] = c_item
@@ -302,9 +299,7 @@ def _get_default_config():
             files,
         )
 
-        package_path: AbstractContextManager = as_file(
-            files(package).joinpath(_CONFIG_FILE)
-        )
+        package_path: AbstractContextManager = as_file(files(package).joinpath(_CONFIG_FILE))
     except ImportError:
         # If importlib.resources is not available we fall back to
         # older Python method
@@ -321,7 +316,7 @@ def _get_default_config():
     except ModuleNotFoundError as mod_err:
         # if all else fails we try to find the package default config somewhere
         # in the package tree - we use the first one we find
-        pkg_root: Optional[Path] = _get_pkg_path("msticpy")
+        pkg_root: Path | None = _get_pkg_path("msticpy")
         if not pkg_root:
             raise MsticpyUserConfigError(
                 f"Unable to locate the package default {_CONFIG_FILE}",
@@ -358,7 +353,7 @@ def _get_pkg_path(pkg_name):
     return current_path
 
 
-def _create_data_providers(mp_config: Dict[str, Any]) -> Dict[str, Any]:
+def _create_data_providers(mp_config: dict[str, Any]) -> dict[str, Any]:
     if mp_config.get(_DP_KEY) is None:
         mp_config[_DP_KEY] = {}
     data_providers = mp_config[_DP_KEY]
@@ -382,28 +377,26 @@ def _create_data_providers(mp_config: Dict[str, Any]) -> Dict[str, Any]:
 
 def get_http_timeout(
     *,
-    timeout: Optional[int] = None,
-    def_timeout: Optional[int] = None,
+    timeout: int | None = None,
+    def_timeout: int | None = None,
     **kwargs,
 ) -> httpx.Timeout:
     """Return timeout from settings or overridden in `kwargs`."""
     del kwargs
-    config_timeout: Union[int, Dict, httpx.Timeout, List, Tuple] = get_config(
+    config_timeout: int | dict | httpx.Timeout | list | tuple = get_config(
         "msticpy.http_timeout", get_config("http_timeout", None)
     )
-    timeout_params: Union[int, Dict, httpx.Timeout, List[Union[float, None]], Tuple] = (
+    timeout_params: int | dict | httpx.Timeout | list[float | None] | tuple = (
         timeout or def_timeout or config_timeout
     )
     if isinstance(timeout_params, dict):
-        timeout_params = {
-            name: _valid_timeout(val) for name, val in timeout_params.items()
-        }
+        timeout_params = {name: _valid_timeout(val) for name, val in timeout_params.items()}
         return httpx.Timeout(**timeout_params)
     if isinstance(timeout_params, httpx.Timeout):
         return timeout_params
     if isinstance(timeout_params, numbers.Real):
         return httpx.Timeout(_valid_timeout(timeout_params))
-    if isinstance(timeout_params, (list, tuple)):
+    if isinstance(timeout_params, list | tuple):
         timeout_params = [_valid_timeout(val) for val in timeout_params]
         if len(timeout_params) >= 2:
             return httpx.Timeout(timeout=timeout_params[0], connect=timeout_params[1])
@@ -413,8 +406,8 @@ def get_http_timeout(
 
 
 def _valid_timeout(
-    timeout_val: Optional[Union[float, numbers.Real]],
-) -> Union[float, None]:
+    timeout_val: float | numbers.Real | None,
+) -> float | None:
     """Return float in valid range or None."""
     if isinstance(timeout_val, numbers.Real) and float(timeout_val) >= 0.0:
         return float(timeout_val)
@@ -429,7 +422,7 @@ refresh_config()
 
 
 def validate_config(
-    mp_config: Union[SettingsDict, Dict[str, Any], None] = None, config_file: str = None
+    mp_config: SettingsDict | dict[str, Any] | None = None, config_file: str = None
 ):
     """
     Validate msticpy config settings.
@@ -448,7 +441,7 @@ def validate_config(
     if not mp_config and not config_file:
         mp_config = _settings
 
-    if not isinstance(mp_config, (dict, SettingsDict)):
+    if not isinstance(mp_config, dict | SettingsDict):
         raise TypeError("Unknown format for configuration settings.")
 
     mp_errors, mp_warn = _validate_azure_sentinel(mp_config=mp_config)
@@ -480,16 +473,12 @@ def validate_config(
 
 def _print_validation_report(mp_errors, mp_warn):
     if mp_errors:
-        _print_validation_item(
-            "\nThe following configuration errors were found:", mp_errors
-        )
+        _print_validation_item("\nThe following configuration errors were found:", mp_errors)
 
     else:
         print("No errors found.")
     if mp_warn:
-        _print_validation_item(
-            "\nThe following configuration warnings were found:", mp_warn
-        )
+        _print_validation_item("\nThe following configuration warnings were found:", mp_warn)
 
     else:
         print("No warnings found.")
@@ -551,9 +540,7 @@ def _check_provider_settings(mp_config, section, key_provs):
             _check_required_provider_settings(sec_args, sec_path, p_name, key_provs)
         )
 
-        mp_errors.extend(
-            _check_env_vars(args_key=p_setting.get("Args"), section=sec_path)
-        )
+        mp_errors.extend(_check_env_vars(args_key=p_setting.get("Args"), section=sec_path))
     return mp_errors, mp_warnings
 
 

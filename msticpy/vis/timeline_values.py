@@ -5,8 +5,9 @@
 # --------------------------------------------------------------------------
 """Timeline values Bokeh plot."""
 
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any
 
 import attr
 import pandas as pd
@@ -51,30 +52,30 @@ figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 class PlotParams:
     """Plot params for time_duration."""
 
-    time_column: Optional[str] = None
-    height: Optional[int] = None
+    time_column: str | None = None
+    height: int | None = None
     width: int = 900
-    title: Optional[str] = None
+    title: str | None = None
     yaxis: bool = True
     range_tool: bool = True
-    group_by: Optional[str] = None
-    legend: Optional[str] = None
+    group_by: str | None = None
+    legend: str | None = None
     xgrid: bool = True
     ygrid: bool = False
     hide: bool = False
     color: str = "navy"
-    kind: Union[str, List[str]] = "vbar"
+    kind: str | list[str] = "vbar"
     ylabel_cols: Iterable[str] = attr.Factory(list)
-    ref_event: Optional[Any] = None
-    ref_time: Optional[datetime] = None
-    ref_events: Optional[pd.DataFrame] = None
-    ref_col: Optional[str] = None
-    ref_time_col: Optional[str] = None
-    ref_times: Optional[List[Tuple[datetime, str]]] = None
-    source_columns: List = []
+    ref_event: Any | None = None
+    ref_time: datetime | None = None
+    ref_events: pd.DataFrame | None = None
+    ref_col: str | None = None
+    ref_time_col: str | None = None
+    ref_times: list[tuple[datetime, str]] | None = None
+    source_columns: list = []
 
     @classmethod
-    def field_list(cls) -> List[str]:
+    def field_list(cls) -> list[str]:
         """Return field names as a list."""
         return list(attr.fields_dict(cls).keys())
 
@@ -320,9 +321,9 @@ def _plot_param_group(
     graph_df,
     group_count_df,
     plot,
-) -> List[Tuple[str, Any]]:
+) -> list[tuple[str, Any]]:
     """Plot series groups."""
-    legend_items: List[Tuple[str, Any]] = []
+    legend_items: list[tuple[str, Any]] = []
     for _, group_id in group_count_df[param.group_by].items():
         first_group_item = graph_df[graph_df[param.group_by] == group_id].iloc[0]
         legend_label = str(first_group_item[param.group_by])
@@ -331,7 +332,7 @@ def _plot_param_group(
         row_source = ColumnDataSource(graph_df[graph_df[param.group_by] == group_id])
         p_series = []
         # create default plot args
-        plot_args: Dict[str, Any] = {
+        plot_args: dict[str, Any] = {
             "x": time_column,
             "alpha": 0.7,
             "source": row_source,
@@ -342,9 +343,7 @@ def _plot_param_group(
         if "vbar" in plot_kinds:
             p_series.append(plot.vbar(top=value_col, width=4, color="color", **plot_args))
         if "circle" in plot_kinds:
-            p_series.append(
-                plot.circle(y=value_col, radius=2, color="color", **plot_args)
-            )
+            p_series.append(plot.circle(y=value_col, radius=2, color="color", **plot_args))
         if "line" in plot_kinds:
             p_series.append(
                 plot.line(y=value_col, line_width=2, line_color=group_color, **plot_args)

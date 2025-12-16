@@ -7,7 +7,7 @@
 
 import json
 from json import JSONDecodeError
-from typing import Any, Dict, List
+from typing import Any
 
 import pandas as pd
 from deprecated.sphinx import deprecated
@@ -36,9 +36,9 @@ class SecurityAlert(SecurityBase):
         super().__init__(src_row=src_row)
 
         # add entities to dictionary to remove dups
-        self._src_entities: Dict[int, Entity] = {}
+        self._src_entities: dict[int, Entity] = {}
 
-        self.extended_properties: Dict[str, Any] = {}
+        self.extended_properties: dict[str, Any] = {}
         if src_row is not None:
             if "Entities" in src_row:
                 self._extract_entities(src_row)
@@ -54,12 +54,12 @@ class SecurityAlert(SecurityBase):
         self._find_os_family()
 
     @property
-    def entities(self) -> List[Entity]:
+    def entities(self) -> list[Entity]:
         """Return a list of the Security Alert entities."""
         return list(self._src_entities.values())
 
     @property
-    def query_params(self) -> Dict[str, Any]:
+    def query_params(self) -> dict[str, Any]:
         """
         Query parameters derived from alert.
 
@@ -102,8 +102,7 @@ class SecurityAlert(SecurityBase):
 
         if self.extended_properties:
             str_rep = [
-                f"ExtProp: {prop}: {val}"
-                for prop, val in self.extended_properties.items()
+                f"ExtProp: {prop}: {val}" for prop, val in self.extended_properties.items()
             ]
             alert_props = alert_props + "\n" + "\n".join(str_rep)
 

@@ -5,7 +5,8 @@
 # --------------------------------------------------------------------------
 """FileHash Entity class."""
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export

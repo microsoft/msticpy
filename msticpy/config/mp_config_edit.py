@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Module docstring."""
 
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, cast
 
 import ipywidgets as widgets
 from IPython.display import display
@@ -47,7 +47,7 @@ class MpConfigEdit(CompEditDisplayMixin):
 
     def __init__(
         self,
-        settings: Optional[Union[Dict[str, Any], MpConfigFile, str]] = None,
+        settings: dict[str, Any] | MpConfigFile | str | None = None,
         conf_filepath: str = None,
     ):
         """
@@ -75,10 +75,8 @@ class MpConfigEdit(CompEditDisplayMixin):
         self._lbl_loading = widgets.Label(value="Loading. Please wait.")
         display(self._lbl_loading)
         if isinstance(settings, MpConfigFile):
-            self.mp_conf_file = MpConfigFile(
-                settings=settings.settings, file=conf_filepath
-            )
-        elif isinstance(settings, (dict, SettingsDict)):
+            self.mp_conf_file = MpConfigFile(settings=settings.settings, file=conf_filepath)
+        elif isinstance(settings, dict | SettingsDict):
             self.mp_conf_file = MpConfigFile(settings=settings, file=conf_filepath)
         elif isinstance(settings, str):
             self.mp_conf_file = MpConfigFile(file=settings)
@@ -86,13 +84,13 @@ class MpConfigEdit(CompEditDisplayMixin):
             # This is the default if neither settings nor conf_filepath are passed.
             self.mp_conf_file = MpConfigFile(file=conf_filepath)
             self.mp_conf_file.load_default()
-        self.tool_buttons: Dict[str, widgets.Widget] = {}
+        self.tool_buttons: dict[str, widgets.Widget] = {}
         self._inc_loading_label()
 
         # Get the settings definitions and Config controls object
         mp_def_dict = get_mpconfig_definitions()
         self.mp_controls = MpConfigControls(
-            mp_def_dict, cast(Dict[str, Any], self.mp_conf_file.settings)
+            mp_def_dict, cast(dict[str, Any], self.mp_conf_file.settings)
         )
         self._inc_loading_label()
 
@@ -142,7 +140,7 @@ class MpConfigEdit(CompEditDisplayMixin):
         """Return a list of current tab names and controls."""
         return self.tab_ctrl.tab_controls
 
-    def set_tab(self, tab_name: Optional[str], index: int = 0):
+    def set_tab(self, tab_name: str | None, index: int = 0):
         """Programmatically set the tab by name or index."""
         self.tab_ctrl.set_tab(tab_name, index)
 
@@ -182,11 +180,9 @@ class MpConfigEdit(CompEditDisplayMixin):
             # Set these controls as named attributes on the object
             setattr(self, name.replace(" ", "_"), ctrl)
 
-    def _get_tab_definitions(self) -> Dict[str, CETabControlDef]:
+    def _get_tab_definitions(self) -> dict[str, CETabControlDef]:
         """Return tab definitions and arguments."""
-        return {
-            name: (cls, [self.mp_controls]) for name, cls in self._TAB_DEFINITIONS.items()
-        }
+        return {name: (cls, [self.mp_controls]) for name, cls in self._TAB_DEFINITIONS.items()}
 
     @property
     def current_config_file(self):

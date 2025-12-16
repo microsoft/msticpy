@@ -345,9 +345,7 @@ class SecurityBase(QueryParamProvider):
 
         """
         for session in [
-            e
-            for e in self.entities
-            if e["Type"] in ["host-logon-session", "hostlogonsession"]
+            e for e in self.entities if e["Type"] in ["host-logon-session", "hostlogonsession"]
         ]:
             if account is None or session["Account"] == account:
                 return session["SessionId"]
@@ -365,10 +363,7 @@ class SecurityBase(QueryParamProvider):
         if self.is_in_log_analytics:
             return "true"
         if self.is_in_azure_sub:
-            return (
-                f"AzureResourceSubscriptionId {operator} "
-                f"'{self._ids['AzSubscriptionId']}'"
-            )
+            return f"AzureResourceSubscriptionId {operator} '{self._ids['AzSubscriptionId']}'"
         if self.is_in_workspace:
             return f"WorkspaceId {operator} '{self._ids['WorkspaceId']}'"
 
@@ -468,9 +463,7 @@ class SecurityBase(QueryParamProvider):
 
         if show_entities and self.entities:
             entity_title = "<br/><h3>Entities:</h3><br/>"
-            entity_html = "<br/>".join(
-                [self._format_entity(ent) for ent in self.entities]
-            )
+            entity_html = "<br/>".join([self._format_entity(ent) for ent in self.entities])
             html_doc = html_doc + entity_title + entity_html
         else:
             e_counts = Counter([ent["Type"] for ent in self.entities])
@@ -509,9 +502,7 @@ class SecurityBase(QueryParamProvider):
                         break
             else:
                 for proc in [
-                    e
-                    for e in self.entities
-                    if e["Type"] == "process" and "ImageFile" in e
+                    e for e in self.entities if e["Type"] == "process" and "ImageFile" in e
                 ]:
                     file = proc["ImageFile"]
                     if "Directory" in file and "/" in file["Directory"]:

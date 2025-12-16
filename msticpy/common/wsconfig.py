@@ -10,7 +10,7 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import ipywidgets as widgets
 from IPython.display import display
@@ -119,10 +119,10 @@ class WorkspaceConfig:
 
     def __init__(
         self,
-        workspace: Optional[str] = None,
-        config_file: Optional[str] = None,
+        workspace: str | None = None,
+        config_file: str | None = None,
         interactive: bool = True,
-        config: Optional[Dict[str, str]] = None,
+        config: dict[str, str] | None = None,
     ):
         """
         Load current Azure Notebooks configuration for Log Analytics.
@@ -145,11 +145,11 @@ class WorkspaceConfig:
             Workspace configuration as dictionary.
 
         """
-        self._config: Dict[str, Any] = {}
+        self._config: dict[str, Any] = {}
         self._interactive = interactive
         self._config_file = config_file
         self.workspace_key = workspace or "Default"
-        self.settings_key: Optional[str] = None
+        self.settings_key: str | None = None
 
         # If config file specified, use that
         if config:
@@ -228,8 +228,7 @@ class WorkspaceConfig:
         ws_id = self[self.CONF_WS_ID]
         if not ten_id:
             raise KeyError(
-                f"Configuration setting for {self.CONF_TENANT_ID} "
-                + "could not be found."
+                f"Configuration setting for {self.CONF_TENANT_ID} " + "could not be found."
             )
         if not ws_id:
             raise KeyError(
@@ -250,24 +249,24 @@ class WorkspaceConfig:
         }
 
     @property
-    def args(self) -> Dict[str, str]:
+    def args(self) -> dict[str, str]:
         """Return any additional arguments."""
         return self._config.get(self.CONF_ARGS, {})
 
     @property
-    def settings_path(self) -> Optional[str]:
+    def settings_path(self) -> str | None:
         """Return the path to the settings in the MSTICPY config."""
         if self.settings_key:
             return f"AzureSentinel.Workspaces.{self.settings_key}"
         return None
 
     @property
-    def settings(self) -> Dict[str, Any]:
+    def settings(self) -> dict[str, Any]:
         """Return the current settings dictionary."""
         return get_config(self.settings_path, {})
 
     @classmethod
-    def from_settings(cls, settings: Dict[str, Any]) -> "WorkspaceConfig":
+    def from_settings(cls, settings: dict[str, Any]) -> "WorkspaceConfig":
         """Create a WorkstationConfig from MSTICPY Workspace settings."""
         return cls(
             config={  # type: ignore
@@ -312,7 +311,7 @@ class WorkspaceConfig:
         )
 
     @classmethod
-    def _read_config_values(cls, file_path: str) -> Dict[str, str]:
+    def _read_config_values(cls, file_path: str) -> dict[str, str]:
         """Read configuration file."""
         if not file_path:
             return {}
@@ -328,7 +327,7 @@ class WorkspaceConfig:
         return {}
 
     @classmethod
-    def list_workspaces(cls) -> Dict:
+    def list_workspaces(cls) -> dict:
         """
         Return list of available workspaces.
 
@@ -415,12 +414,12 @@ class WorkspaceConfig:
                 )
             )
 
-    def _read_pkg_config_values(self, workspace_name: Optional[str] = None):
+    def _read_pkg_config_values(self, workspace_name: str | None = None):
         """Try to find a usable config from the MSTICPy config file."""
         ws_settings = get_config("AzureSentinel", {}).get("Workspaces")  # type: ignore
         if not ws_settings:
             return
-        selected_workspace: Dict[str, str] = {}
+        selected_workspace: dict[str, str] = {}
         if workspace_name:
             selected_workspace, self.settings_key = self._lookup_ws_name_and_id(
                 workspace_name, ws_settings
@@ -446,7 +445,7 @@ class WorkspaceConfig:
                 return ws_config, name
         return {}, None
 
-    def _search_for_file(self, pattern: str) -> Optional[str]:
+    def _search_for_file(self, pattern: str) -> str | None:
         config_file = None
         for start_path in (".", ".."):
             searched_configs = list(Path(start_path).glob(pattern))

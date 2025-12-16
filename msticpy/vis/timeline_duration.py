@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 """Timeline duration plot."""
 
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Iterable, List, Optional, Tuple, Union
 
 import attr
 import pandas as pd
@@ -52,9 +52,9 @@ figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 class PlotParams:
     """Plot params for time_duration."""
 
-    height: Optional[int] = None
+    height: int | None = None
     width: int = 900
-    title: Optional[str] = None
+    title: str | None = None
     yaxis: bool = True
     range_tool: bool = True
     xgrid: bool = True
@@ -62,13 +62,13 @@ class PlotParams:
     hide: bool = False
     color: str = "navy"
     ylabel_cols: Iterable[str] = attr.Factory(list)
-    ref_events: Optional[pd.DataFrame] = None
-    ref_col: Optional[str] = None
-    ref_times: Optional[List[Tuple[datetime, str]]] = None
-    source_columns: List = []
+    ref_events: pd.DataFrame | None = None
+    ref_col: str | None = None
+    ref_times: list[tuple[datetime, str]] | None = None
+    source_columns: list = []
 
     @classmethod
-    def field_list(cls) -> List[str]:
+    def field_list(cls) -> list[str]:
         """Return field names as a list."""
         return list(attr.fields_dict(cls).keys())
 
@@ -79,9 +79,9 @@ class PlotParams:
 @export
 def display_timeline_duration(
     data: pd.DataFrame,
-    group_by: Union[Iterable[str], str],
+    group_by: Iterable[str] | str,
     time_column: str = "TimeGenerated",
-    end_time_column: Optional[str] = None,
+    end_time_column: str | None = None,
     **kwargs,
 ) -> LayoutDOM:  # noqa: C901
     """
@@ -250,7 +250,7 @@ def display_timeline_duration(
 
 
 def _group_durations(
-    data: pd.DataFrame, group_by: List[str], time_column: str, end_time_column: str
+    data: pd.DataFrame, group_by: list[str], time_column: str, end_time_column: str
 ):
     """Group the data and calculate start and end times."""
     grouped_data = data.groupby(group_by).agg(

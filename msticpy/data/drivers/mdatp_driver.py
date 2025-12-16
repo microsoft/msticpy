@@ -121,9 +121,7 @@ class MDATPDriver(OData):
         else:
             logger.debug("Using cloud from configuration: %s", self.cloud)
 
-        logger.info(
-            "Selecting API configuration for environment: %s", self.data_environment
-        )
+        logger.info("Selecting API configuration for environment: %s", self.data_environment)
         m365d_params: M365DConfiguration = _select_api(
             self.data_environment,
             self.cloud,

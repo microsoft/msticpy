@@ -646,11 +646,7 @@ class IoCExtract:
             return IoCType.unknown.name
 
         return next(
-            (
-                ioc_type
-                for ioc_type, match_set in results.items()
-                if observable in match_set
-            ),
+            (ioc_type for ioc_type, match_set in results.items() if observable in match_set),
             IoCType.unknown.name,
         )
 
@@ -724,9 +720,7 @@ class IoCExtract:
                 )
 
     @staticmethod
-    def _add_highest_pri_match(
-        iocs_found: dict, current_match: str, current_def: IoCPattern
-    ):
+    def _add_highest_pri_match(iocs_found: dict, current_match: str, current_def: IoCPattern):
         # if we already found a match for this item and the previous
         # ioc type is more specific then don't add this to the results
         if (

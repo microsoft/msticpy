@@ -5,7 +5,8 @@
 # --------------------------------------------------------------------------
 """File Entity class."""
 
-from typing import Any, List, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.data_types import SharedProperty
@@ -84,16 +85,16 @@ class File(Entity):
             kw arguments.
 
         """
-        self.FullPath: Optional[str] = None
-        self.Directory: Optional[str] = None
-        self.Name: Optional[str] = None
-        self.Md5: Optional[str] = None
-        self.Host: Optional[Host] = None
-        self.Sha1: Optional[str] = None
-        self.Sha256: Optional[str] = None
-        self.Sha256Ac: Optional[str] = None
-        self.FileHashes: List[FileHash] = []
-        self.PathSeparator: Optional[str] = "\\"
+        self.FullPath: str | None = None
+        self.Directory: str | None = None
+        self.Name: str | None = None
+        self.Md5: str | None = None
+        self.Host: Host | None = None
+        self.Sha1: str | None = None
+        self.Sha256: str | None = None
+        self.Sha256Ac: str | None = None
+        self.FileHashes: list[FileHash] = []
+        self.PathSeparator: str | None = "\\"
         self.OSFamily = OSFamily.Windows
         super().__init__(src_entity=src_entity, **kwargs)
         if src_event is not None:
@@ -108,9 +109,7 @@ class File(Entity):
     @property
     def path_separator(self):
         """Return the path separator used by the file."""
-        if (
-            self.Directory and "/" in self.Directory
-        ) or self.OSFamily != OSFamily.Windows:
+        if (self.Directory and "/" in self.Directory) or self.OSFamily != OSFamily.Windows:
             return "/"
         return "\\"
 
@@ -174,7 +173,7 @@ class File(Entity):
             self.Directory = full_path.split(self.PathSeparator)[:-1]
 
     @property
-    def file_hash(self) -> Optional[str]:
+    def file_hash(self) -> str | None:
         """
         Return the first defined file hash.
 

@@ -233,7 +233,9 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
             elif not (current_df == item_series).all(axis=1).any():  # type: ignore[attr-defined]
                 watchlist_id = str(uuid4())
             else:
-                err_msg = "Item already exists in the watchlist. Set overwrite = True to replace."
+                err_msg = (
+                    "Item already exists in the watchlist. Set overwrite = True to replace."
+                )
                 raise MsticpyUserError(err_msg)
 
             watchlist_url: str = (

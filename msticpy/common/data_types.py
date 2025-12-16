@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Object container class."""
 
-from typing import Any, Dict, Optional, Type
+from typing import Any
 
 from .._version import VERSION
 from ..common.utility import check_kwarg
@@ -17,7 +17,7 @@ __author__ = "Ian Hellen"
 class ObjectContainer:
     """Empty class used to create hierarchical attributes."""
 
-    _subclasses: Dict[str, Type] = {}
+    _subclasses: dict[str, type] = {}
 
     def __len__(self):
         """Return number of items in the attribute collection."""
@@ -36,7 +36,7 @@ class ObjectContainer:
                 pass
             else:
                 return attr
-        nm_err: Optional[Exception] = None
+        nm_err: Exception | None = None
         try:
             # check for similar-named attributes in __dict__
             check_kwarg(name, list(self.__dict__.keys()))

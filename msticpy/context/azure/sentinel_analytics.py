@@ -8,7 +8,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 from uuid import UUID, uuid4
 
 import httpx
@@ -197,9 +198,7 @@ class SentinelAnalyticsMixin(SentinelUtilsMixin):
         if template:
             template_id: str = self._get_template_id(template)
             templates: pd.DataFrame = self.list_analytic_templates()
-            template_details: pd.Series = templates[
-                templates["name"] == template_id
-            ].iloc[0]
+            template_details: pd.Series = templates[templates["name"] == template_id].iloc[0]
             name = template_details["properties.displayName"]
             query = template_details["properties.query"]
             query_frequency = template_details["properties.queryFrequency"]

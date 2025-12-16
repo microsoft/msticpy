@@ -16,9 +16,10 @@ requests per minute for the account type that you have.
 from __future__ import annotations
 
 import contextlib
+from collections.abc import Iterable
 from datetime import datetime, timezone
 from threading import Lock
-from typing import Any, ClassVar, Iterable
+from typing import Any, ClassVar
 
 import httpx
 import pandas as pd

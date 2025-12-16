@@ -231,8 +231,7 @@ _MP_IMPORT_ALL: list[dict[str, str]] = [
 _CONF_URI = "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html"
 
 _AZNB_GUIDE = (
-    "Please run the <i>Getting Started Guide for Azure Sentinel "
-    "ML Notebooks</i> notebook."
+    "Please run the <i>Getting Started Guide for Azure Sentinel ML Notebooks</i> notebook."
 )
 
 current_providers: dict[str, Any] = {}  # pylint: disable=invalid-name
@@ -401,9 +400,7 @@ def init_notebook(
         _check_msticpy_version()
 
     if _detect_env("synapse", **kwargs) and is_in_synapse():
-        synapse_params = {
-            key: val for key, val in kwargs.items() if key in _SYNAPSE_KWARGS
-        }
+        synapse_params = {key: val for key, val in kwargs.items() if key in _SYNAPSE_KWARGS}
         try:
             init_synapse(**synapse_params)
         except Exception as err:  # pylint: disable=broad-except
@@ -558,8 +555,7 @@ def _show_init_warnings(imp_ok, conf_ok):
     if not conf_ok:
         md("One or more configuration items were missing or set incorrectly.")
         md(
-            _AZNB_GUIDE
-            + f" and the <a href='{_CONF_URI}'>msticpy configuration guide</a>.",
+            _AZNB_GUIDE + f" and the <a href='{_CONF_URI}'>msticpy configuration guide</a>.",
         )
     md("This notebook may still run but with reduced functionality.")
     return False

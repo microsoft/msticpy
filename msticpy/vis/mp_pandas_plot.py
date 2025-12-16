@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Module docstring."""
 
-from typing import Iterable, Optional, Tuple, Union
+from collections.abc import Iterable
 
 import pandas as pd
 from bokeh.models import LayoutDOM
@@ -183,9 +183,9 @@ class MsticpyPlotAccessor:
 
     def timeline_duration(
         self,
-        group_by: Union[Iterable[str], str],
+        group_by: Iterable[str] | str,
         time_column: str = "TimeGenerated",
-        end_time_column: Optional[str] = None,
+        end_time_column: str | None = None,
         **kwargs,
     ) -> LayoutDOM:  # noqa: C901
         """
@@ -247,7 +247,7 @@ class MsticpyPlotAccessor:
             **kwargs,
         )
 
-    def process_tree(self, **kwargs) -> Tuple[figure, LayoutDOM]:
+    def process_tree(self, **kwargs) -> tuple[figure, LayoutDOM]:
         """
         Build and plot a process tree.
 
@@ -540,9 +540,9 @@ class MsticpyPlotAccessor:
         source_col: str,
         target_col: str,
         title: str = "Data Graph",
-        source_attrs: Optional[Iterable[str]] = None,
-        target_attrs: Optional[Iterable[str]] = None,
-        edge_attrs: Optional[Iterable[str]] = None,
+        source_attrs: Iterable[str] | None = None,
+        target_attrs: Iterable[str] | None = None,
+        edge_attrs: Iterable[str] | None = None,
         graph_type: GraphType = "graph",
         **kwargs,
     ):

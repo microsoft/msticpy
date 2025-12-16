@@ -140,9 +140,7 @@ class KeyVaultSettings:
             warnings.warn(mssg, stacklevel=2)
         return mgmt_uri
 
-    def get_tenant_authority_uri(
-        self, authority_uri: str = None, tenant: str = None
-    ) -> str:
+    def get_tenant_authority_uri(self, authority_uri: str = None, tenant: str = None) -> str:
         """
         Return authority URI for tenant.
 
@@ -179,9 +177,7 @@ class KeyVaultSettings:
             return f"{auth}{tenant.strip()}"
         return f"{auth}/{tenant.strip()}"
 
-    def get_tenant_authority_host(
-        self, authority_uri: str = None, tenant: str = None
-    ) -> str:
+    def get_tenant_authority_host(self, authority_uri: str = None, tenant: str = None) -> str:
         """
         Return tenant authority URI with no leading scheme.
 

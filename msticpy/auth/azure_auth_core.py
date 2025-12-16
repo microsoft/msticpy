@@ -10,10 +10,11 @@ from __future__ import annotations
 import logging
 import os
 import sys
+from collections.abc import Callable, Iterator
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, ClassVar, Iterator
+from typing import Any, ClassVar
 
 from azure.common.credentials import get_cli_profile
 from azure.core.credentials import TokenCredential
@@ -45,9 +46,7 @@ __author__ = "Pete Bryan"
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-_HELP_URI = (
-    "https://msticpy.readthedocs.io/en/latest/getting_started/AzureAuthentication.html"
-)
+_HELP_URI = "https://msticpy.readthedocs.io/en/latest/getting_started/AzureAuthentication.html"
 
 
 @dataclass
@@ -71,9 +70,7 @@ class AzCredentials:
 class AzureCredEnvNames:
     """Enumeration of Azure environment credential names."""
 
-    AZURE_CLIENT_ID: ClassVar[str] = (
-        "AZURE_CLIENT_ID"  # The app ID for the service principal
-    )
+    AZURE_CLIENT_ID: ClassVar[str] = "AZURE_CLIENT_ID"  # The app ID for the service principal
     AZURE_TENANT_ID: ClassVar[str] = (
         "AZURE_TENANT_ID"  # The service principal's Azure AD tenant ID
     )
@@ -93,9 +90,7 @@ class AzureCredEnvNames:
     # (Optional) Specifies whether an authentication request will include an x5c
     # header to support subject name / issuer based authentication.
     # When set to `true` or `1`, authentication requests include the x5c header.
-    AZURE_CLIENT_SEND_CERTIFICATE_CHAIN: ClassVar[str] = (
-        "AZURE_CLIENT_SEND_CERTIFICATE_CHAIN"
-    )
+    AZURE_CLIENT_SEND_CERTIFICATE_CHAIN: ClassVar[str] = "AZURE_CLIENT_SEND_CERTIFICATE_CHAIN"
 
     # Username and password:
     AZURE_USERNAME: ClassVar[str] = (
@@ -202,9 +197,7 @@ def _build_msi_client(
             return cred
         except ClientAuthenticationError:
             # If we fail again, just create with no params
-            logger.info(
-                "Managed Identity credential failed auth - retrying with no params"
-            )
+            logger.info("Managed Identity credential failed auth - retrying with no params")
             return ManagedIdentityCredential()
 
 
@@ -546,11 +539,7 @@ def check_cli_credentials() -> tuple[AzureCliStatus, str | None]:
         cli_profile = get_cli_profile()
         raw_token = cli_profile.get_raw_token()
         bearer_token = None
-        if (
-            isinstance(raw_token, tuple)
-            and len(raw_token) == 3
-            and len(raw_token[0]) == 3
-        ):
+        if isinstance(raw_token, tuple) and len(raw_token) == 3 and len(raw_token[0]) == 3:
             bearer_token = raw_token[0][2]
             if parser.parse(bearer_token.get("expiresOn", datetime.min)) < datetime.now():
                 raise ValueError("AADSTS70043: The refresh token has expired")

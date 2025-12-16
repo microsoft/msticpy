@@ -7,7 +7,6 @@
 
 from datetime import datetime, timezone
 from importlib.metadata import version
-from typing import List, Optional, Union
 
 import networkx as nx
 import numpy as np
@@ -51,7 +50,7 @@ class EntityGraph:
 
     def __init__(
         self,
-        entity: Union[Incident, Alert, pd.DataFrame, pd.Series, Entity, SecurityAlert],
+        entity: Incident | Alert | pd.DataFrame | pd.Series | Entity | SecurityAlert,
     ):
         """
         Create a new instance of the entity graph.
@@ -65,7 +64,7 @@ class EntityGraph:
         """
         output_notebook()
         self.alertentity_graph = nx.Graph(id="IncidentGraph")
-        if isinstance(entity, (Incident, Alert)):
+        if isinstance(entity, Incident | Alert):
             self._add_incident_or_alert_node(entity)
         elif isinstance(entity, pd.DataFrame):
             self.add_incident(entity)
@@ -198,7 +197,7 @@ class EntityGraph:
         """
         self._add_entity_node(ent, attached_to)
 
-    def add_incident(self, incident: Union[Incident, Alert, pd.DataFrame]):
+    def add_incident(self, incident: Incident | Alert | pd.DataFrame):
         """
         Add another incident or set of incidents to the graph.
 
@@ -222,8 +221,8 @@ class EntityGraph:
     def add_note(
         self,
         name: str,
-        description: Optional[str] = None,
-        attached_to: Union[str, List] = None,
+        description: str | None = None,
+        attached_to: str | list = None,
     ):
         """
         Add a node to the graph representing a note or comment.
@@ -279,9 +278,7 @@ class EntityGraph:
             self.alertentity_graph.add_edge(source, target)
         else:
             missing = [
-                name
-                for name in [source, target]
-                if name not in self.alertentity_graph.nodes()
+                name for name in [source, target] if name not in self.alertentity_graph.nodes()
             ]
             raise MsticpyUserError(title=f"Node(s) {missing} not found in graph")
 
@@ -344,7 +341,7 @@ class EntityGraph:
         ]
         return pd.DataFrame(node_list).replace("None", np.nan)
 
-    def _add_incident_or_alert_node(self, incident: Union[Incident, Alert, None]):
+    def _add_incident_or_alert_node(self, incident: Incident | Alert | None):
         """Check what type of entity is passed in and creates relevant graph."""
         if isinstance(incident, Incident):
             self._add_incident_node(incident)
@@ -368,9 +365,7 @@ class EntityGraph:
 
     def _add_incident_node(self, incident):
         """Add an incident entity to the graph."""
-        self.alertentity_graph = nx.compose(
-            self.alertentity_graph, incident.to_networkx()
-        )
+        self.alertentity_graph = nx.compose(self.alertentity_graph, incident.to_networkx())
         if incident.Alerts:
             for alert in incident.Alerts:
                 self._add_alert_node(alert, incident.name_str)
@@ -396,7 +391,7 @@ class EntityGraph:
         return self.alertentity_graph
 
 
-def _convert_to_tz_aware_ts(date_string: Optional[str]) -> Optional[datetime]:
+def _convert_to_tz_aware_ts(date_string: str | None) -> datetime | None:
     """Convert a date string to a timezone aware datetime object."""
     if date_string is None:
         return None
@@ -422,7 +417,7 @@ def _dedupe_entities(alerts, ents) -> list:
 def plot_entitygraph(  # pylint: disable=too-many-locals
     entity_graph: nx.Graph,
     node_size: int = 25,
-    font_size: Union[int, str] = 10,
+    font_size: int | str = 10,
     height: int = 800,
     width: int = 800,
     scale: int = 2,

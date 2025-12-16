@@ -5,11 +5,11 @@
 # --------------------------------------------------------------------------
 """Module for converting DataFrame to Networkx graph."""
 
-from typing import Callable, Dict, Iterable, Optional, Union
+from collections.abc import Callable, Iterable
+from typing import Literal
 
 import networkx as nx
 import pandas as pd
-from typing_extensions import Literal
 
 from .._version import VERSION
 
@@ -25,9 +25,9 @@ def df_to_networkx(
     data: pd.DataFrame,
     source_col: str,
     target_col: str,
-    source_attrs: Optional[Iterable[str]] = None,
-    target_attrs: Optional[Iterable[str]] = None,
-    edge_attrs: Optional[Iterable[str]] = None,
+    source_attrs: Iterable[str] | None = None,
+    target_attrs: Iterable[str] | None = None,
+    edge_attrs: Iterable[str] | None = None,
     graph_type: GraphType = "graph",
 ):
     """
@@ -77,13 +77,13 @@ def _set_node_attributes(
     data: pd.DataFrame,
     graph: nx.Graph,
     column: str,
-    attrib_cols: Optional[Iterable[str]],
+    attrib_cols: Iterable[str] | None,
     node_role: NodeRole,
 ):
     """Set node attributes from column values."""
     all_cols = [column, *attrib_cols] if attrib_cols else [column]
     # Create an 'agg' dictionary to apply to DataFrame
-    agg_dict: Dict[str, Union[str, Callable]] = (
+    agg_dict: dict[str, str | Callable] = (
         dict.fromkeys(attrib_cols, _pd_unique_list) if attrib_cols else {}
     )
     # Add these two items as attributes

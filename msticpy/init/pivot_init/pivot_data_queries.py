@@ -32,9 +32,7 @@ __author__ = "Ian Hellen"
 
 
 ParamAttrs = namedtuple("ParamAttrs", "type, query, family, required")
-QueryParams = namedtuple(
-    "QueryParams", "all, required, full_required, param_attrs, table"
-)
+QueryParams = namedtuple("QueryParams", "all, required, full_required, param_attrs, table")
 PivQuerySettings = namedtuple(
     "PivQuerySettings", "short_name, direct_func_entities, assigned_entities"
 )
@@ -382,11 +380,7 @@ def add_data_queries_to_entities(
     """
     q_funcs = PivotQueryFunctions(provider)
 
-    if (
-        provider.instance
-        and provider.instance != "Default"
-        and not _use_v1_query_naming()
-    ):
+    if provider.instance and provider.instance != "Default" and not _use_v1_query_naming():
         container_name = f"{provider.environment}_{provider.instance.casefold()}"
     else:
         container_name = provider.environment
@@ -446,9 +440,7 @@ def add_queries_to_entities(
                 if param in func_params.all and ent == entity_cls
             }
             # Build the map of param names to entity attributes
-            attr_map = {
-                param: ent_attr for param, (_, ent_attr) in param_entities.items()
-            }
+            attr_map = {param: ent_attr for param, (_, ent_attr) in param_entities.items()}
             # Wrap the function
             cls_func = _create_pivot_func(
                 func,
@@ -457,9 +449,7 @@ def add_queries_to_entities(
                 get_timespan,  # type:ignore
             )
             # add a properties dict to the function
-            cls_func.pivot_properties = _create_piv_properties(
-                name, param_entities, container
-            )
+            cls_func.pivot_properties = _create_piv_properties(name, param_entities, container)
             q_piv_settings = prov_qry_funcs.get_query_pivot_settings(family, name)
             func_name = _format_func_name(name, family, func_params, q_piv_settings)
 
@@ -735,7 +725,7 @@ def _exec_query_for_values(func, func_kwargs, func_params, parent_kwargs):
     # iteration so ignore these and run queries per row
     row_results = []
     # zip the value lists into tuples
-    for row in zip(*(var_iter_params.values())):
+    for row in zip(*(var_iter_params.values()), strict=False):
         # build a single-line dict of {param1: row_value1...}
         col_param_dict = {param: row[idx] for idx, param in enumerate(var_iter_params)}
         row_results.append(func(**simple_params, **col_param_dict, **func_kwargs))

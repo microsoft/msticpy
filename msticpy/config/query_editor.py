@@ -8,10 +8,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Callable, Literal, cast
+from typing import Any, Literal, cast
 
 import ipywidgets as widgets
 import yaml
@@ -175,9 +176,7 @@ class QueryParameterEditWidget(IPyDisplayMixin):
 
     """
 
-    def __init__(
-        self: QueryParameterEditWidget, container: Query | QueryDefaults
-    ) -> None:
+    def __init__(self: QueryParameterEditWidget, container: Query | QueryDefaults) -> None:
         """Initialize the class."""
         self._changed_data: bool = False
         self.param_container: Query | QueryDefaults = container
@@ -430,9 +429,7 @@ class QueryEditWidget(IPyDisplayMixin):
         self.query_opts_widget.selected_index = None
         self.add_query_button: widgets.Button = widgets.Button(description="New Query")
         self.save_query_button: widgets.Button = widgets.Button(description="Save Query")
-        self.delete_query_button: widgets.Button = widgets.Button(
-            description="Delete Query"
-        )
+        self.delete_query_button: widgets.Button = widgets.Button(description="Delete Query")
         self.queries_widget: widgets.VBox = widgets.VBox(
             children=[
                 widgets.Label(value="Query"),
@@ -566,9 +563,7 @@ class QueryEditWidget(IPyDisplayMixin):
             The formatted query string.
 
         """
-        return "\n|".join(
-            line.strip() for line in query.strip().split("|") if line.strip()
-        )
+        return "\n|".join(line.strip() for line in query.strip().split("|") if line.strip())
 
     def add_query(self: Self, button: widgets.Button) -> None:
         """
@@ -695,9 +690,7 @@ class MetadataEditWidget(IPyDisplayMixin):
             placeholder="(optional)",
             **txt_fmt(),
         )
-        self.save_metadata_widget: widgets.Button = widgets.Button(
-            description="Save metadata"
-        )
+        self.save_metadata_widget: widgets.Button = widgets.Button(description="Save metadata")
         self.save_metadata_widget.on_click(self.save_metadata)
 
         self.layout: widgets.VBox = widgets.VBox(
@@ -742,9 +735,7 @@ class MetadataEditWidget(IPyDisplayMixin):
         self.version_widget.value = self.metadata.version or ""
         self.description_widget.value = self.metadata.description or ""
         self.data_env_widget.value = (
-            tuple(self.metadata.data_environments)
-            if self.metadata.data_environments
-            else ()
+            tuple(self.metadata.data_environments) if self.metadata.data_environments else ()
         )
         self.data_families_widget.value = (
             ", ".join(self.metadata.data_families) if self.metadata.data_families else ""
@@ -753,9 +744,7 @@ class MetadataEditWidget(IPyDisplayMixin):
         self.cluster_widget.value = self.metadata.cluster or ""
         self.clusters_widget.value = "\n".join(self.metadata.clusters or [])
         self.cluster_groups_widget.value = "\n".join(self.metadata.cluster_groups or [])
-        self.tags_widget.value = (
-            ", ".join(self.metadata.tags) if self.metadata.tags else ""
-        )
+        self.tags_widget.value = ", ".join(self.metadata.tags) if self.metadata.tags else ""
         self.data_source_widget.value = self.metadata.data_source or ""
 
     def save_metadata(self: Self, button: widgets.Button) -> None:
@@ -765,9 +754,7 @@ class MetadataEditWidget(IPyDisplayMixin):
         self.metadata.description = self.description_widget.value
         self.metadata.data_environments = list(self.data_env_widget.value)
         self.metadata.data_families = [
-            fam.strip()
-            for fam in self.data_families_widget.value.split(",")
-            if fam.strip()
+            fam.strip() for fam in self.data_families_widget.value.split(",") if fam.strip()
         ]
         self.metadata.database = self.database_widget.value
         self.metadata.cluster = self.cluster_widget.value
@@ -775,8 +762,7 @@ class MetadataEditWidget(IPyDisplayMixin):
             cluster.strip() for cluster in self.clusters_widget.value.split("\n")
         ]
         self.metadata.cluster_groups = [
-            cluster_grp.strip()
-            for cluster_grp in self.cluster_groups_widget.value.split("\n")
+            cluster_grp.strip() for cluster_grp in self.cluster_groups_widget.value.split("\n")
         ]
         self.metadata.tags = [
             tag.strip() for tag in self.tags_widget.value.split(",") if tag.strip()
@@ -823,7 +809,7 @@ class QueryEditor(IPyDisplayMixin):
             description="Current file",
             layout=widgets.Layout(width="70%"),
         )
-        if isinstance(query_file, (Path, str)):
+        if isinstance(query_file, Path | str):
             self.filename_widget.value = str(query_file)
             self._open_initial_file()
         else:
@@ -920,9 +906,7 @@ class QueryEditor(IPyDisplayMixin):
         """Open a new query collection."""
         del button
         if self._unsaved_changes() and not self.ignore_changes.value:
-            print(
-                "Please save or check 'Ignore changes' before opening a different file."
-            )
+            print("Please save or check 'Ignore changes' before opening a different file.")
             return
         self._reset_change_state()
         self.query_collection = load_queries_from_yaml(self.current_file)
@@ -1078,9 +1062,7 @@ def _create_query(query_data: dict[str, Any]) -> Query:
     """Create a Query object."""
     parameters: dict[str, Any] = query_data.get("parameters", {})
     if parameters:
-        parameters = {
-            name: _create_parameter(param) for name, param in parameters.items()
-        }
+        parameters = {name: _create_parameter(param) for name, param in parameters.items()}
     return Query(
         description=query_data.get("description", ""),
         metadata=query_data.get("metadata", {}),
@@ -1106,7 +1088,7 @@ def _remove_none_values(
         return {
             key: _remove_none_values(val)
             for key, val in source_obj.items()
-            if val is not None or (isinstance(val, (list, dict)) and len(val) > 0)
+            if val is not None or (isinstance(val, list | dict) and len(val) > 0)
         }
     if isinstance(source_obj, list):
         return [_remove_none_values(val) for val in source_obj if val is not None]
@@ -1124,6 +1106,6 @@ def _rename_data_type(source_obj: dict[str, Any] | list[Any] | tuple[Any]) -> No
             source_obj["type"] = val
         for value in source_obj.values():
             _rename_data_type(value)
-    if isinstance(source_obj, (list, tuple)):
+    if isinstance(source_obj, list | tuple):
         for value in source_obj:
             _rename_data_type(value)

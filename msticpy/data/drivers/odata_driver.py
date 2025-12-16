@@ -179,9 +179,7 @@ class OData(DriverBase):
             setting for setting in ("tenant_id", "client_id") if setting not in cs_dict
         ]
         auth_present: bool = (
-            "username" in cs_dict
-            or "client_secret" in cs_dict
-            or "certificate" in cs_dict
+            "username" in cs_dict or "client_secret" in cs_dict or "certificate" in cs_dict
         )
         if missing_settings:
             logger.error("Missing required connection parameters: %s", missing_settings)
@@ -336,9 +334,7 @@ class OData(DriverBase):
                 "Token acquisition failed: %s",
                 json_response.get("error_description", "Unknown error"),
             )
-            err_msg = (
-                f"Could not obtain access token - {json_response['error_description']}"
-            )
+            err_msg = f"Could not obtain access token - {json_response['error_description']}"
             raise MsticpyConnectionError(err_msg)
         logger.info("Successfully obtained access token via client secret")
 

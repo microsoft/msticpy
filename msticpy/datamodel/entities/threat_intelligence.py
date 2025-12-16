@@ -5,7 +5,8 @@
 # --------------------------------------------------------------------------
 """Threatintelligence Entity class."""
 
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -49,12 +50,12 @@ class Threatintelligence(Entity):
             :param src_entity: instantiate entity using properties of src entity
             :param kwargs: key-value pair representation of entity
         """
-        self.ProviderName: Optional[str] = None
-        self.ThreatType: Optional[str] = None
-        self.ThreatName: Optional[str] = None
-        self.Confidence: Optional[str] = None
-        self.ReportLink: Optional[str] = None
-        self.ThreatDescription: Optional[str] = None
+        self.ProviderName: str | None = None
+        self.ThreatType: str | None = None
+        self.ThreatName: str | None = None
+        self.Confidence: str | None = None
+        self.ReportLink: str | None = None
+        self.ThreatDescription: str | None = None
         super().__init__(src_entity=src_entity, **kwargs)
 
     @property

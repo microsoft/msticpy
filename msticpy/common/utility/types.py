@@ -10,10 +10,11 @@ from __future__ import annotations
 import difflib
 import inspect
 import sys
+from collections.abc import Callable, Iterable
 from enum import Enum
 from functools import wraps
 from types import ModuleType
-from typing import Any, Callable, Iterable, TypeVar, overload
+from typing import Any, TypeVar, overload
 
 from typing_extensions import Self
 

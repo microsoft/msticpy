@@ -327,8 +327,7 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
             self.after = after
         if self.before == 0:
             self.before = before or int(
-                (self._query_end - self._query_start).total_seconds()
-                / self._time_unit.value,
+                (self._query_end - self._query_start).total_seconds() / self._time_unit.value,
             )
 
     # Utility functions

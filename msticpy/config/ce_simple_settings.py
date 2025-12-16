@@ -24,8 +24,7 @@ class CESimpleSettings(CompEditSimple):
     _HELP_TEXT = ""
     _HELP_URI = {
         "MSTICPy Configuration": (
-            "https://msticpy.readthedocs.io/en/latest/"
-            + "getting_started/msticpyconfig.html"
+            "https://msticpy.readthedocs.io/en/latest/" + "getting_started/msticpyconfig.html"
         )
     }
 

@@ -156,9 +156,7 @@ class ProcSchema:  # pylint: disable=too-many-instance-attributes  # noqa: PLW16
         """Return blank schema dictionary."""
         return {
             cls_field.name: (
-                "required"
-                if (cls_field.default or cls_field.default == MISSING)
-                else None
+                "required" if (cls_field.default or cls_field.default == MISSING) else None
             )
             for cls_field in fields(cls)
         }

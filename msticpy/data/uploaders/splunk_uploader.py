@@ -7,7 +7,7 @@
 
 import logging
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import pandas as pd
 from pandas.errors import ParserError
@@ -126,10 +126,10 @@ class SplunkUploader(UploaderBase):
     def upload_df(  # type: ignore
         self,
         data: pd.DataFrame,
-        table_name: Optional[str] = None,
-        index_name: Optional[str] = None,
+        table_name: str | None = None,
+        index_name: str | None = None,
         create_index: bool = False,
-        source_type: Optional[str] = None,
+        source_type: str | None = None,
         **kwargs,
     ):
         """
@@ -179,11 +179,11 @@ class SplunkUploader(UploaderBase):
     def upload_file(  # type: ignore
         self,
         file_path: str,
-        table_name: Optional[str] = None,
+        table_name: str | None = None,
         delim: str = ",",
-        index_name: Optional[str] = None,
+        index_name: str | None = None,
         create_index: bool = False,
-        source_type: Optional[str] = None,
+        source_type: str | None = None,
         **kwargs,
     ):
         """
@@ -240,11 +240,11 @@ class SplunkUploader(UploaderBase):
     def upload_folder(  # type: ignore
         self,
         folder_path: str,
-        table_name: Optional[str] = None,
+        table_name: str | None = None,
         delim: str = ",",
-        index_name: Optional[str] = None,
+        index_name: str | None = None,
         create_index=False,
-        source_type: Optional[str] = None,
+        source_type: str | None = None,
         **kwargs,
     ):
         """

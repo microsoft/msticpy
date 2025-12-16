@@ -31,9 +31,7 @@ if TYPE_CHECKING:
 try:
     import vt
 except ImportError as imp_err:
-    ERR_MSG: str = (
-        "Cannot use this feature without vt-py and vt-graph-api packages installed."
-    )
+    ERR_MSG: str = "Cannot use this feature without vt-py and vt-graph-api packages installed."
     raise MsticpyImportExtraError(
         ERR_MSG,
         title="Error importing VirusTotal modules.",

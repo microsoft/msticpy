@@ -31,11 +31,12 @@ import tarfile
 import warnings
 from abc import ABCMeta, abstractmethod
 from collections import abc
+from collections.abc import Iterable, Mapping
 from datetime import datetime, timedelta, timezone
 from json import JSONDecodeError
 from pathlib import Path
 from time import sleep
-from typing import Any, ClassVar, Iterable, Mapping
+from typing import Any, ClassVar
 
 import geoip2.database
 import httpx
@@ -381,9 +382,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
             # Please upgrade your subscription."}}
 
             if "success" in results and not results["success"]:
-                err_msg: str = (
-                    f"Service unable to complete request. Error: {results['error']}"
-                )
+                err_msg: str = f"Service unable to complete request. Error: {results['error']}"
                 raise PermissionError(err_msg)
             return [(item, response.status_code) for item in results.values()]
 
@@ -433,8 +432,7 @@ class GeoLiteLookup(GeoIpLookup):
     """
 
     _MAXMIND_DOWNLOAD: ClassVar[str] = (
-        "https://download.maxmind.com/geoip/databases"
-        "/GeoLite2-City/download?suffix=tar.gz"
+        "https://download.maxmind.com/geoip/databases/GeoLite2-City/download?suffix=tar.gz"
     )
 
     _DB_HOME: ClassVar[str] = str(
@@ -696,8 +694,7 @@ Alternatively, you can pass the account_id and api_key to the GeoLiteLookup clas
                     db_updated = False
             elif self._force_update:
                 logger.info(
-                    "force_update is set to True. "
-                    "Attempting to download new database to %s",
+                    "force_update is set to True. Attempting to download new database to %s",
                     self._db_folder,
                 )
                 if not self._download_and_extract_archive():
@@ -961,9 +958,7 @@ def entity_distance(ip_src: IpAddress, ip_dest: IpAddress) -> float:
 
     """
     if not ip_src.Location or not ip_dest.Location:
-        err_msg: str = (
-            "Source and destination entities must have defined Location properties."
-        )
+        err_msg: str = "Source and destination entities must have defined Location properties."
         raise AttributeError(err_msg)
 
     return geo_distance(

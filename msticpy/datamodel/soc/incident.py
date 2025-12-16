@@ -5,7 +5,8 @@
 # --------------------------------------------------------------------------
 """Incident Entity class."""
 
-from typing import Any, Dict, List, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 import pandas as pd
 
@@ -54,15 +55,15 @@ class Incident(Entity):
             kw arguments.
 
         """
-        self.DisplayName: Optional[str] = None
-        self.IncidentID: Optional[str] = None
-        self.Severity: Optional[str] = None
-        self.Status: Optional[str] = None
-        self.Owner: Optional[Dict] = None
-        self.Classification: Optional[str] = None
-        self.Labels: Optional[List] = None
-        self.Alerts: Optional[List] = None
-        self.Entities: Optional[List] = None
+        self.DisplayName: str | None = None
+        self.IncidentID: str | None = None
+        self.Severity: str | None = None
+        self.Status: str | None = None
+        self.Owner: dict | None = None
+        self.Classification: str | None = None
+        self.Labels: list | None = None
+        self.Alerts: list | None = None
+        self.Entities: list | None = None
 
         super().__init__(src_entity=src_entity, **kwargs)
 

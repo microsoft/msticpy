@@ -5,7 +5,8 @@
 # --------------------------------------------------------------------------
 """ServicePrincipal Entity class."""
 
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -62,12 +63,12 @@ class ServicePrincipal(Entity):
             kw arguments.
 
         """
-        self.ServicePrincipalName: Optional[str] = None
-        self.ServicePrincipalObjectId: Optional[str] = None
-        self.AppId: Optional[str] = None
-        self.AppOwnerTenantId: Optional[str] = None
-        self.TenantId: Optional[str] = None
-        self.ServicePrincipalType: Optional[str] = None
+        self.ServicePrincipalName: str | None = None
+        self.ServicePrincipalObjectId: str | None = None
+        self.AppId: str | None = None
+        self.AppOwnerTenantId: str | None = None
+        self.TenantId: str | None = None
+        self.ServicePrincipalType: str | None = None
 
         super().__init__(src_entity=src_entity, **kwargs)
 

@@ -230,17 +230,13 @@ def _parse_query(parsed_sql: dict[str, Any]) -> list[str]:
     distinct_select: list[dict[str, Any]] = []
     if SELECT_DISTINCT in parsed_sql:
         distinct_select.extend(parsed_sql[SELECT_DISTINCT])
-        _process_select(
-            parsed_sql[SELECT_DISTINCT], parsed_sql[SELECT_DISTINCT], query_lines
-        )
+        _process_select(parsed_sql[SELECT_DISTINCT], parsed_sql[SELECT_DISTINCT], query_lines)
     if SELECT in parsed_sql:
         _process_select(parsed_sql[SELECT], parsed_sql[SELECT], query_lines)
     if ORDER_BY in parsed_sql:
         query_lines.append(f"| order by {_create_order_by(parsed_sql[ORDER_BY])}")
     if distinct_select:
-        query_lines.append(
-            f"| distinct {', '.join(_create_distinct_list(distinct_select))}"
-        )
+        query_lines.append(f"| distinct {', '.join(_create_distinct_list(distinct_select))}")
     if LIMIT in parsed_sql:
         query_lines.append(f"| limit {parsed_sql[LIMIT]}")
     if UNION in parsed_sql:
@@ -391,9 +387,7 @@ def _parse_expression(expression: Any) -> str:  # noqa: PLR0911
             return f"dcount({func_arg})"
 
     if AND in expression:
-        return "\n  and ".join(
-            [f"({_parse_expression(expr)})" for expr in expression[AND]]
-        )
+        return "\n  and ".join([f"({_parse_expression(expr)})" for expr in expression[AND]])
     if OR in expression:
         return "\n  or ".join([f"({_parse_expression(expr)})" for expr in expression[OR]])
     if NOT in expression:

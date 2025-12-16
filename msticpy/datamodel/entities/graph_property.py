@@ -5,8 +5,6 @@
 # --------------------------------------------------------------------------
 """Entity graph property."""
 
-from typing import Union
-
 from ..._version import VERSION
 
 __version__ = VERSION
@@ -17,9 +15,7 @@ __author__ = "Ian Hellen"
 
 
 # Future - will replace entity graph creation with property factory
-def graph_property(
-    name: str, prop_type: Union[type, str], edge_name: str = None
-) -> property:
+def graph_property(name: str, prop_type: type | str, edge_name: str = None) -> property:
     """Property factory for graph_property."""
     storage_name = f"_{name}"
     edge_attrs = {"name": edge_name or name}

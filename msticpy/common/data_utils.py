@@ -5,8 +5,6 @@
 # --------------------------------------------------------------------------
 """Data utility functions."""
 
-from typing import List, Union
-
 import pandas as pd
 
 from .._version import VERSION
@@ -17,7 +15,7 @@ __author__ = "Ian Hellen"
 
 def ensure_df_datetimes(
     data: pd.DataFrame,
-    columns: Union[str, List[str], None] = None,
+    columns: str | list[str] | None = None,
     add_utc_tz: bool = True,
 ) -> pd.DataFrame:
     """

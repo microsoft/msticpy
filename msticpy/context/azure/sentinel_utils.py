@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from collections import Counter
 from dataclasses import dataclass
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 import httpx
 import pandas as pd
@@ -224,8 +224,7 @@ class SentinelUtilsMixin(AzureData):
         """Check that Sentinel workspace is connected."""
         if not self.connected:
             err_msg: str = (
-                "Not connected to Sentinel, ensure you run `.connect`"
-                "before calling functions."
+                "Not connected to Sentinel, ensure you run `.connect`before calling functions."
             )
             raise MsticpyAzureConnectionError(err_msg)
 
@@ -342,9 +341,7 @@ def parse_resource_id(res_id: str) -> dict[str, Any]:
     """Extract components from workspace resource ID."""
     if not res_id.startswith("/"):
         res_id = f"/{res_id}"
-    res_id_parts: dict[str, str] = cast(
-        Dict[str, str], az_tools.parse_resource_id(res_id)
-    )
+    res_id_parts: dict[str, str] = cast(dict[str, str], az_tools.parse_resource_id(res_id))
     workspace_name: str | None = None
     if (
         res_id_parts.get("namespace") == "Microsoft.OperationalInsights"

@@ -10,8 +10,9 @@ from __future__ import annotations
 import os
 import warnings
 from collections import UserDict
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 from .._version import VERSION
 from .exceptions import MsticpyImportExtraError
@@ -129,9 +130,7 @@ def get_provider_settings(config_section="TIProviders") -> dict[str, ProviderSet
     # pylint: enable=global-statement
     if get_config("KeyVault", None):
         if _SECRETS_CLIENT is None and _SECRETS_ENABLED:
-            print(
-                "KeyVault enabled. Secrets access may require additional authentication."
-            )
+            print("KeyVault enabled. Secrets access may require additional authentication.")
             _SECRETS_CLIENT = _SET_SECRETS_CLIENT()
     else:
         _SECRETS_CLIENT = None
@@ -325,7 +324,7 @@ def _fetch_secret_setting(
         _description_
 
     """
-    if isinstance(config_setting, (str, int, float)):
+    if isinstance(config_setting, str | int | float):
         return str(config_setting)
     if not isinstance(config_setting, dict):
         err_msg: str = (

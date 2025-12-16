@@ -6,8 +6,9 @@
 """Settings provider for secrets."""
 
 import re
+from collections.abc import Callable
 from functools import partial
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 from .._version import VERSION
 from ..common import pkg_config as config
@@ -35,7 +36,7 @@ class SecretsClient:
         self,
         tenant_id: str = None,
         use_keyring: bool = False,
-        auth_methods: Optional[List[str]] = None,
+        auth_methods: list[str] | None = None,
         credential: Any = None,
         **kwargs,
     ):
@@ -97,8 +98,8 @@ class SecretsClient:
                 "Please add this to the KeyVault section of msticpyconfig.yaml",
                 title="missing tenant ID value.",
             )
-        self.kv_secret_vault: Dict[str, str] = {}
-        self.kv_vaults: Dict[str, BHKeyVaultClient] = {}
+        self.kv_secret_vault: dict[str, str] = {}
+        self.kv_vaults: dict[str, BHKeyVaultClient] = {}
         self._use_keyring = (
             _KEYRING_INSTALLED
             and KeyringClient.is_keyring_available()
@@ -140,9 +141,7 @@ class SecretsClient:
         """Return normalized name for use as a KeyVault secret name."""
         return re.sub("[^0-9a-zA-Z-]", "-", setting_path)
 
-    def _get_kv_vault_and_name(
-        self, setting_path: str
-    ) -> Tuple[Optional[str], Optional[str]]:
+    def _get_kv_vault_and_name(self, setting_path: str) -> tuple[str | None, str | None]:
         """Return the vault and secret name for a config path."""
         setting_item = config.get_config(setting_path, None)
 

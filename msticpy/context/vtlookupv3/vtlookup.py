@@ -431,9 +431,7 @@ class VTLookup:
             # 2. Or we have reached the end of our row iteration
             # AND
             # 3. The batch is not empty
-            if (
-                len(obs_batch) == vt_param.batch_size or row_num == row_count
-            ) and obs_batch:
+            if (len(obs_batch) == vt_param.batch_size or row_num == row_count) and obs_batch:
                 obs_submit: str = vt_param.batch_delimiter.join(obs_batch)
 
                 self._print_status(
@@ -506,11 +504,7 @@ class VTLookup:
             with contextlib.suppress(JSONDecodeError, TypeError):
                 vt_results = json.loads(vt_results, strict=False)
 
-        if (
-            isinstance(vt_results, list)
-            and vt_param is not None
-            and vt_param.batch_size > 1
-        ):
+        if isinstance(vt_results, list) and vt_param is not None and vt_param.batch_size > 1:
             # multiple results
             results_to_parse = vt_results
         elif isinstance(vt_results, dict):
@@ -563,9 +557,7 @@ class VTLookup:
                     ]
             else:
                 df_dict_vtresults["Observable"] = observables[result_idx]
-                df_dict_vtresults["SourceIndex"] = source_row_index[
-                    observables[result_idx]
-                ]
+                df_dict_vtresults["SourceIndex"] = source_row_index[observables[result_idx]]
 
             new_results: pd.DataFrame = pd.concat(
                 objs=[self.results, df_dict_vtresults],
@@ -755,9 +747,7 @@ class VTLookup:
             return DuplicateStatus(is_dup=False, status="ok")
 
         # Note duplicate var here can be multiple rows of past results
-        duplicate: pd.DataFrame = self.results[
-            self.results["Observable"] == observable
-        ].copy()
+        duplicate: pd.DataFrame = self.results[self.results["Observable"] == observable].copy()
         # if this is a file hash we should check for previous results in
         # all of the hash columns
         if duplicate.shape[0] == 0 and ioc_type in [
@@ -765,9 +755,7 @@ class VTLookup:
             "sha1_hash",
             "sh256_hash",
         ]:
-            dup_query = (
-                "MD5 == @observable or SHA1 == @observable or SHA256 == @observable"
-            )
+            dup_query = "MD5 == @observable or SHA1 == @observable or SHA256 == @observable"
             duplicate = self.results.query(dup_query).copy()
             # In these cases we want to set the observable to the source value
             # but keep the rest of the results

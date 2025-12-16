@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import warnings
 from collections import abc
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Callable
+from typing import Any
 
 import attr
 import pandas as pd
@@ -192,9 +193,7 @@ def create_pivot_func(
                     "Try again with a single row/value as input.",
                     "E.g. func(data=df.iloc[N], column=...)",
                 )
-            result_df = _iterate_func(
-                target_func, input_df, input_column, pivot_reg, **kwargs
-            )
+            result_df = _iterate_func(target_func, input_df, input_column, pivot_reg, **kwargs)
         else:
             result_df = target_func(**param_dict, **kwargs)  # type: ignore
         merge_key = pivot_reg.func_out_column_name or input_column
@@ -393,9 +392,7 @@ def _check_valid_settings_for_input(input_value: Any, pivot_reg: PivotRegistrati
                 # pylint: enable=isinstance-second-argument-not-valid-type
             )
         ):
-            raise ValueError(
-                f"This function does not accept inputs of {type(input_value)}"
-            )
+            raise ValueError(f"This function does not accept inputs of {type(input_value)}")
 
 
 def _arg_to_dframe(arg_val, col_name: str = "param_value"):

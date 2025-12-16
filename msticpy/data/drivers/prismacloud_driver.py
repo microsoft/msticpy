@@ -243,9 +243,7 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         self.queries_loaded: bool = False
 
     @staticmethod
-    def _get_driver_settings(
-        config_name: str, instance: str | None = None
-    ) -> dict[str, str]:
+    def _get_driver_settings(config_name: str, instance: str | None = None) -> dict[str, str]:
         """
         Retrieve Prisma Cloud settings from MSTICPY configuration.
 
@@ -338,9 +336,7 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         if connection_str:
             username = username or connection_str.split(":")[0]
             password = (
-                password or connection_str.split(":")[1]
-                if ":" in connection_str
-                else None
+                password or connection_str.split(":")[1] if ":" in connection_str else None
             )
         if not username or not password:
             username = self.config.get("username")
@@ -367,9 +363,7 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
                 self._loaded = True
                 logger.info("Prisma Cloud connection successful")
                 if "X-Redlock-Auth" not in self.client.headers:
-                    logger.debug(
-                        "X-Redlock-Auth not in self.client.headers did not match"
-                    )
+                    logger.debug("X-Redlock-Auth not in self.client.headers did not match")
                 return self
             logger.error("Login failed: %s", result.get("message", "Unknown error"))
             msg = f"Login failed: {result.get('message', 'Unknown error')}"

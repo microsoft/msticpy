@@ -8,9 +8,10 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any
 
 from typing_extensions import Self
 
@@ -114,9 +115,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
             if issubclass(self.driver_class, DriverBase):
                 driver = self.driver_class(data_environment=data_environment, **kwargs)
             else:
-                err_msg: str = (
-                    f"Could not find suitable data provider for {data_environment}"
-                )
+                err_msg: str = f"Could not find suitable data provider for {data_environment}"
                 raise LookupError(err_msg)
         else:
             self.driver_class = driver.__class__
@@ -170,7 +169,9 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         elif isinstance(data_environment, DataEnvironment):
             environment_name = data_environment.name
         else:
-            err_msg = f"Unknown data environment type {data_environment} ({type(data_environment)})"
+            err_msg = (
+                f"Unknown data environment type {data_environment} ({type(data_environment)})"
+            )
             raise TypeError(err_msg)
         return data_environment, environment_name
 

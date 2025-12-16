@@ -5,8 +5,9 @@
 # --------------------------------------------------------------------------
 """Mordor dataset browser."""
 
+from collections.abc import Iterable
 from pprint import pformat
-from typing import Any, Dict, Iterable, Optional
+from typing import Any
 
 import ipywidgets as widgets
 import pandas as pd
@@ -29,7 +30,7 @@ __author__ = "Ian Hellen"
 class MordorBrowser:
     """Mordor browser widget."""
 
-    def __init__(self, save_folder: Optional[str] = None, use_cached: bool = True):
+    def __init__(self, save_folder: str | None = None, use_cached: bool = True):
         """
         Initialize MordorBrowser control.
 
@@ -58,7 +59,7 @@ class MordorBrowser:
             "font_family": "arial, sans-serif",
         }
 
-        self.widgets: Dict[str, Any] = {}
+        self.widgets: dict[str, Any] = {}
         self._init_field_ctls()
         self._init_select_dataset()
         self._init_filter_ctrls()
@@ -75,7 +76,7 @@ class MordorBrowser:
             list(self.fields.values()), layout=self.layouts["box_layout"]
         )
 
-        self.datasets: Dict[str, pd.DataFrame] = {}
+        self.datasets: dict[str, pd.DataFrame] = {}
         self.current_dataset: pd.DataFrame = None  # type: ignore
         display(widgets.VBox([browse_ctrls, fields_ctrls]))
         self._df_disp = display(HTML("<p>"), display_id=True)
@@ -114,9 +115,7 @@ class MordorBrowser:
         )
         self.widgets["filter_text"].continuous_update = False
         self.widgets["filter_text"].observe(self._update_select_list, "value")
-        self.widgets["filter_help"] = widgets.Label(
-            value=" comma ORs values, '+' ANDs values"
-        )
+        self.widgets["filter_help"] = widgets.Label(value=" comma ORs values, '+' ANDs values")
 
         # Mitre filters
         self.widgets["sel_techniques"] = widgets.SelectMultiple(
@@ -307,7 +306,7 @@ class MordorBrowser:
         self._df_disp.update(self.datasets[selection])
 
     @staticmethod
-    def _get_mitre_filter_options(mordor_index: Dict[str, MordorEntry], mitre_data):
+    def _get_mitre_filter_options(mordor_index: dict[str, MordorEntry], mitre_data):
         return [
             (f"{m_id} - {mitre_data.loc[m_id].Name}", m_id)
             for m_id in mordor_index

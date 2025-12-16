@@ -51,9 +51,7 @@ class ResultSeverity(Enum):  # noqa: PLW1641
             return value
         if isinstance(value, str) and value.lower() in cls.__members__:
             return cls[value.lower()]
-        if isinstance(value, int) and value in [
-            v.value for v in cls.__members__.values()
-        ]:
+        if isinstance(value, int) and value in [v.value for v in cls.__members__.values()]:
             return cls(value)
         return ResultSeverity.unknown
 

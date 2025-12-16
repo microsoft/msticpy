@@ -111,9 +111,7 @@ def get_sentinel_queries_from_github(
 
     """
     if outputdir is None:
-        outputdir = str(
-            Path.joinpath(Path("~").expanduser(), ".msticpy", "Azure-Sentinel")
-        )
+        outputdir = str(Path.joinpath(Path("~").expanduser(), ".msticpy", "Azure-Sentinel"))
 
     try:
         with httpx.stream("GET", git_url, follow_redirects=True) as response:  # type: ignore
@@ -205,9 +203,7 @@ def import_sentinel_queries(yaml_files: dict, query_type: str) -> list:
     ]
 
 
-def _import_sentinel_query(
-    yaml_path: str, yaml_text: str, query_type: str
-) -> SentinelQuery:
+def _import_sentinel_query(yaml_path: str, yaml_text: str, query_type: str) -> SentinelQuery:
     """
     Create a SentinelQuery attr object for a given yaml query.
 

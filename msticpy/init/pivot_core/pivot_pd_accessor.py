@@ -295,9 +295,7 @@ class PivotAccessor:
             text_cols = self._df.select_dtypes(include=[object, "string"])
             return self._df[
                 text_cols.apply(
-                    lambda col: col.str.contains(
-                        expr, regex=True, case=match_case, na=False
-                    )
+                    lambda col: col.str.contains(expr, regex=True, case=match_case, na=False)
                 ).any(axis=1)
             ]
         if isinstance(expr, Number) or numeric_col:

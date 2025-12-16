@@ -5,8 +5,6 @@
 # --------------------------------------------------------------------------
 """Display code with with highlighting."""
 
-from typing import List, Optional
-
 from IPython.display import HTML, DisplayHandle, display
 from pygments import formatters, highlight, lexers, styles
 
@@ -53,7 +51,7 @@ def to_html(code: str, language: str, style: str = "default", full: bool = True)
     # pylint: enable=no-member
 
 
-def list_pygments_styles() -> List[str]:
+def list_pygments_styles() -> list[str]:
     """
     Return list of pygments styles available.
 
@@ -72,7 +70,7 @@ def display_html(
     style: str = "stata-dark",
     full: bool = True,
     display_handle: bool = False,
-) -> Optional[DisplayHandle]:
+) -> DisplayHandle | None:
     """
     Display pygments-formatted code.
 

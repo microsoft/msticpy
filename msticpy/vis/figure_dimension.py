@@ -5,8 +5,9 @@
 # --------------------------------------------------------------------------
 """figure_dimension - helps set the width and height properties of a figure for plotting."""
 
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Callable
+from typing import Any
 
 from bokeh.plotting import figure
 

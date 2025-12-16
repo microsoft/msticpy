@@ -5,7 +5,8 @@
 # --------------------------------------------------------------------------
 """GeoLocation Entity class."""
 
-from typing import Any, Mapping, Optional, Tuple
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -62,13 +63,13 @@ class GeoLocation(Entity, ContextObject):
             kw arguments.
 
         """
-        self.CountryCode: Optional[str] = None
-        self.CountryOrRegionName: Optional[str] = None
-        self.State: Optional[str] = None
-        self.City: Optional[str] = None
-        self.Longitude: Optional[float] = None
-        self.Latitude: Optional[float] = None
-        self.Asn: Optional[str] = None
+        self.CountryCode: str | None = None
+        self.CountryOrRegionName: str | None = None
+        self.State: str | None = None
+        self.City: str | None = None
+        self.Longitude: float | None = None
+        self.Latitude: float | None = None
+        self.Asn: str | None = None
         super().__init__(src_entity=src_entity, **kwargs)
 
     @property
@@ -82,7 +83,7 @@ class GeoLocation(Entity, ContextObject):
         return self.CountryCode or self.__class__.__name__
 
     @property
-    def CountryName(self) -> Optional[str]:  # noqa: N802
+    def CountryName(self) -> str | None:  # noqa: N802
         """Return CountryName."""
         return self.CountryOrRegionName
 
@@ -92,7 +93,7 @@ class GeoLocation(Entity, ContextObject):
         self.CountryOrRegionName = value
 
     @property
-    def coordinates(self) -> Tuple[float, float]:
+    def coordinates(self) -> tuple[float, float]:
         """Return Latitude/Longitude as a tuple of floats."""
         if self.Latitude and self.Longitude:
             return self.Latitude, self.Longitude

@@ -6,7 +6,8 @@
 """Module for pre-defined widget layouts."""
 
 import asyncio
-from typing import Any, Iterable, Optional
+from collections.abc import Iterable
+from typing import Any
 
 import ipywidgets as widgets
 from IPython.display import display
@@ -44,9 +45,9 @@ class OptionButtons(IPyDisplayMixin):
 
     def __init__(
         self,
-        description: Optional[str] = "Select an option to continue",
-        buttons: Optional[Iterable[str]] = None,
-        default: Optional[str] = None,
+        description: str | None = "Select an option to continue",
+        buttons: Iterable[str] | None = None,
+        default: str | None = None,
         timeout: int = 0,
         debug: bool = False,
         **kwargs,
@@ -80,7 +81,7 @@ class OptionButtons(IPyDisplayMixin):
         self._desc_label = widgets.Label(value=description)
         self._timer_label = widgets.Label(layout=widgets.Layout(left="10px"))
         self.default = default or next(iter(buttons)).casefold()
-        self.value: Optional[str] = None
+        self.value: str | None = None
         self.timeout = timeout
 
         self._completion: Any = None

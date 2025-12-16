@@ -115,7 +115,7 @@ initialization and checks are performed.
 
 """
 
-from typing import Iterable, Union
+from collections.abc import Iterable
 
 from . import nbwidgets  # noqa: F401
 
@@ -156,7 +156,7 @@ _LAZY_IMPORTS = {
 module, __getattr__, __dir__ = lazy_import(__name__, _LAZY_IMPORTS)
 
 
-def load_plugins(plugin_paths: Union[str, Iterable[str]]):
+def load_plugins(plugin_paths: str | Iterable[str]):
     """
     Load plugins from specified paths or configuration.
 

@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from collections.abc import Callable, Iterable
 from functools import cached_property
 from os import path
-from typing import Any, Callable, Iterable
+from typing import Any
 
 from typing_extensions import Self
 
@@ -202,9 +203,7 @@ class QueryStore:
         src_dict = {"args": {"query": query}, "description": description or name}
         md_dict = {"data_families": query_paths}
 
-        query_source = QuerySource(
-            name=name, source=src_dict, defaults={}, metadata=md_dict
-        )
+        query_source = QuerySource(name=name, source=src_dict, defaults={}, metadata=md_dict)
         self.add_data_source(query_source)
 
     def import_file(self: Self, query_file: str) -> None:
@@ -226,18 +225,14 @@ class QueryStore:
         try:
             sources, defaults, metadata = read_query_def_file(query_file)
         except ValueError:
-            logger.warning(
-                "%sis not a valid query definition file - skipping.", query_file
-            )
+            logger.warning("%sis not a valid query definition file - skipping.", query_file)
             return
 
         for source_name, source in sources.items():
             new_source = QuerySource(source_name, source, defaults, metadata)
             self.add_data_source(new_source)
 
-    def apply_query_filter(
-        self: Self, query_filter: Callable[[QuerySource], bool]
-    ) -> None:
+    def apply_query_filter(self: Self, query_filter: Callable[[QuerySource], bool]) -> None:
         """
         Apply a filter to the query sources.
 

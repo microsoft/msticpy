@@ -8,8 +8,9 @@
 import contextlib
 import json
 import random
+from collections.abc import Callable
 from json import JSONDecodeError
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Any
 
 import ipywidgets as widgets
 import pandas as pd
@@ -52,8 +53,8 @@ class SelectAlert(IPyDisplayMixin):
     def __init__(
         self,
         alerts: pd.DataFrame,
-        action: Callable[..., Optional[Tuple]] = None,
-        columns: List[str] = None,
+        action: Callable[..., tuple | None] = None,
+        columns: list[str] = None,
         auto_display: bool = False,
         id_col: str = "SystemAlertId",
         **kwargs,
@@ -118,7 +119,7 @@ class SelectAlert(IPyDisplayMixin):
         # setup to use updatable display objects
         rand_id = random.randint(0, 999999)  # nosec
         self._output_id = f"{self.__class__.__name__}_{rand_id}"
-        self._disp_elems: List[Any] = []
+        self._disp_elems: list[Any] = []
 
         # set up observer callbacks
         self._w_filter_alerts.observe(self._update_options, names="value")
@@ -213,9 +214,7 @@ class SelectAlert(IPyDisplayMixin):
         """Select the first alert by default."""
         top_alert = self.alerts.iloc[0]
         if self.default_alert:
-            top_alert = self.alerts[self.alerts[self.id_col] == self.default_alert].iloc[
-                0
-            ]
+            top_alert = self.alerts[self.alerts[self.id_col] == self.default_alert].iloc[0]
         if not top_alert.empty:
             self._w_select_alert.index = 0
             self.alert_id = top_alert[self.id_col]
@@ -232,7 +231,7 @@ class SelectAlert(IPyDisplayMixin):
         if output_objs is None:
             self._clear_display()
             return
-        if not isinstance(output_objs, (tuple, list)):
+        if not isinstance(output_objs, tuple | list):
             output_objs = [output_objs]
         display_objs = bool(self._disp_elems)
         for idx, out_obj in enumerate(output_objs):
@@ -254,9 +253,7 @@ class SelectAlert(IPyDisplayMixin):
 
 
 # pylint: disable=too-many-instance-attributes
-@deprecated(
-    reason="Superceded by SelectAlert. Will be removed in v2.0.0.", version="0.5.2"
-)
+@deprecated(reason="Superceded by SelectAlert. Will be removed in v2.0.0.", version="0.5.2")
 class AlertSelector(SelectAlert):
     """
     AlertSelector.
@@ -283,7 +280,7 @@ class AlertSelector(SelectAlert):
         self,
         alerts: pd.DataFrame,
         action: Callable[..., None] = None,
-        columns: List[str] = None,
+        columns: list[str] = None,
         auto_display: bool = False,
     ):
         """
@@ -312,9 +309,7 @@ class AlertSelector(SelectAlert):
     def display(self):
         """Display the interactive widgets."""
         self._select_top_alert()
-        display(
-            widgets.VBox([self._w_filter_alerts, self._w_select_alert, self._w_output])
-        )
+        display(widgets.VBox([self._w_filter_alerts, self._w_select_alert, self._w_output]))
 
     def _run_action(self, change=None):
         del change

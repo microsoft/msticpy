@@ -19,9 +19,10 @@ import asyncio
 import logging
 from abc import ABC, abstractmethod
 from asyncio import get_event_loop
+from collections.abc import Coroutine, Generator, Iterable
 from collections.abc import Iterable as C_Iterable
 from functools import lru_cache, partial, singledispatch
-from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Generator, Iterable, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 import pandas as pd
 from typing_extensions import Self

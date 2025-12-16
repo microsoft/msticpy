@@ -7,7 +7,6 @@
 
 import inspect
 from datetime import datetime
-from typing import Dict, List, Optional
 
 import pandas as pd
 
@@ -291,9 +290,7 @@ def ts_anomalies_stl(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     # this column does not contain seasonal/trend components
     result["score"] = stats.zscore(result["residual"])
     # create spikes(1) and dips(-1) based on threshold and seasonal columns
-    result.loc[
-        (result["score"] > score_threshold) & (result["seasonal"] > 0), "anomalies"
-    ] = 1
+    result.loc[(result["score"] > score_threshold) & (result["seasonal"] > 0), "anomalies"] = 1
     result.loc[
         (result["score"] > score_threshold) & (result["seasonal"] < 0), "anomalies"
     ] = -1
@@ -314,7 +311,7 @@ def extract_anomaly_periods(
     period: str = "1h",
     pos_only: bool = True,
     anomalies_column: str = "anomalies",
-) -> Dict[datetime, datetime]:
+) -> dict[datetime, datetime]:
     """
     Return dictionary of anomaly periods, merging adjacent ones.
 
@@ -382,7 +379,7 @@ def find_anomaly_periods(
     period: str = "1h",
     pos_only: bool = True,
     anomalies_column: str = "anomalies",
-) -> List[TimeSpan]:
+) -> list[TimeSpan]:
     """
     Return list of anomaly period as TimeSpans.
 
@@ -420,7 +417,7 @@ def find_anomaly_periods(
     ]
 
 
-def create_time_period_kqlfilter(periods: Dict[datetime, datetime]) -> str:
+def create_time_period_kqlfilter(periods: dict[datetime, datetime]) -> str:
     """
     Return KQL time filter expression from anomaly periods.
 
@@ -447,7 +444,7 @@ def create_time_period_kqlfilter(periods: Dict[datetime, datetime]) -> str:
 def set_new_anomaly_threshold(
     data: pd.DataFrame,
     threshold: float,
-    threshold_low: Optional[float] = None,
+    threshold_low: float | None = None,
     anomalies_column: str = "anomalies",
 ) -> pd.DataFrame:
     """

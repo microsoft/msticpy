@@ -9,9 +9,10 @@ import json
 import pickle  # nosec
 import zipfile
 from collections import defaultdict
+from collections.abc import Generator, Iterable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Generator, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any
 from zipfile import BadZipFile, ZipFile
 
 import attr
@@ -43,8 +44,8 @@ _MTR_TAC_CAT_URI = "https://attack.mitre.org/tactics/{cat}/"
 _MTR_TECH_CAT_URI = "https://attack.mitre.org/techniques/{cat}/"
 
 # pylint: disable=invalid-name
-MITRE_TECHNIQUES: Optional[pd.DataFrame] = None
-MITRE_TACTICS: Optional[pd.DataFrame] = None
+MITRE_TECHNIQUES: pd.DataFrame | None = None
+MITRE_TACTICS: pd.DataFrame | None = None
 
 _MITRE_TECH_CACHE = "mitre_tech_cache.pkl"
 _MITRE_TACTICS_CACHE = "mitre_tact_cache.pkl"
@@ -64,10 +65,10 @@ class MordorDriver(DriverBase):
         self.has_driver_queries = True
         self.mitre_techniques: pd.DataFrame
         self.mitre_tactics: pd.DataFrame
-        self.mordor_data: Dict[str, MordorEntry]
-        self.mdr_idx_tech: Dict[str, Set[str]]
-        self.mdr_idx_tact: Dict[str, Set[str]]
-        self._driver_queries: List[Dict[str, Any]] = []
+        self.mordor_data: dict[str, MordorEntry]
+        self.mdr_idx_tech: dict[str, set[str]]
+        self.mdr_idx_tact: dict[str, set[str]]
+        self._driver_queries: list[dict[str, Any]] = []
 
         mdr_settings = get_config("DataProviders.Mordor", {})
         self.use_cached = kwargs.pop("used_cached", mdr_settings.get("used_cached", True))
@@ -79,7 +80,7 @@ class MordorDriver(DriverBase):
 
     # pylint: disable=global-statement
 
-    def connect(self, connection_str: Optional[str] = None, **kwargs):
+    def connect(self, connection_str: str | None = None, **kwargs):
         """
         Connect to data source.
 
@@ -94,9 +95,7 @@ class MordorDriver(DriverBase):
         print("Retrieving Mitre data...")
 
         if MITRE_TECHNIQUES is None or MITRE_TACTICS is None:
-            MITRE_TECHNIQUES, MITRE_TACTICS = _get_mitre_categories(
-                cache_folder=cache_folder
-            )
+            MITRE_TECHNIQUES, MITRE_TACTICS = _get_mitre_categories(cache_folder=cache_folder)
         self.mitre_techniques = MITRE_TECHNIQUES
         self.mitre_tactics = MITRE_TACTICS
 
@@ -120,7 +119,7 @@ class MordorDriver(DriverBase):
 
     def query(
         self, query: str, query_source: QuerySource = None, **kwargs
-    ) -> Union[pd.DataFrame, Any]:
+    ) -> pd.DataFrame | Any:
         """
         Execute query string and return DataFrame of results.
 
@@ -161,7 +160,7 @@ class MordorDriver(DriverBase):
             return "Could not convert result to a DataFrame."
         return result_df
 
-    def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
+    def query_with_results(self, query: str, **kwargs) -> tuple[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame plus native results.
 
@@ -182,7 +181,7 @@ class MordorDriver(DriverBase):
         return pd.DataFrame(), result
 
     @property
-    def driver_queries(self) -> Iterable[Dict[str, Any]]:
+    def driver_queries(self) -> Iterable[dict[str, Any]]:
         """
         Return generator of Mordor query definitions.
 
@@ -208,12 +207,10 @@ class MordorDriver(DriverBase):
                 )
 
                 tactics = ", ".join(
-                    f"{tac[0]}: {tac[1]}"
-                    for att in mitre_data
-                    for tac in att.tactics_full
+                    f"{tac[0]}: {tac[1]}" for att in mitre_data for tac in att.tactics_full
                 )
 
-                doc_string: List[str] = [
+                doc_string: list[str] = [
                     f"{mdr_item.title}",
                     "",
                     "Notes",
@@ -259,9 +256,7 @@ class MordorDriver(DriverBase):
         matches = []
         for mdr_id in search_mdr_data(self.mordor_data, terms=search):
             for file_path in self.mordor_data[mdr_id].get_file_paths():
-                matches.append(
-                    f"{file_path['qry_path']} ({self.mordor_data[mdr_id].title})"
-                )
+                matches.append(f"{file_path['qry_path']} ({self.mordor_data[mdr_id].title})")
         return matches
 
 
@@ -284,10 +279,10 @@ class MitreAttack:
 
     def __init__(
         self,
-        attack: Dict[str, Any] = None,
+        attack: dict[str, Any] = None,
         technique: str = None,
         sub_technique: str = None,
-        tactics: List[str] = None,
+        tactics: list[str] = None,
     ):
         """
         Create instance of MitreAttack.
@@ -305,9 +300,7 @@ class MitreAttack:
 
         """
         if attack is None and (technique is None and tactics is None):
-            raise TypeError(
-                "Either 'attack' or 'technique' and 'tactics' must be specified."
-            )
+            raise TypeError("Either 'attack' or 'technique' and 'tactics' must be specified.")
         self.technique = attack.get("technique") if attack else technique
         self.sub_technique = attack.get("sub-technique") if attack else sub_technique
         self.tactics = attack.get("tactics") if attack else tactics  # type: ignore
@@ -315,7 +308,7 @@ class MitreAttack:
         self._technique_name = None
         self._technique_desc = None
         self._technique_uri = None
-        self._tactics_full: List[Tuple[str, str, str, str]] = []
+        self._tactics_full: list[tuple[str, str, str, str]] = []
 
     def __repr__(self) -> str:
         """
@@ -336,7 +329,7 @@ class MitreAttack:
         )
 
     @property
-    def technique_name(self) -> Optional[str]:
+    def technique_name(self) -> str | None:
         """
         Return Mitre Technique full name.
 
@@ -355,7 +348,7 @@ class MitreAttack:
         return self._technique_name
 
     @property
-    def technique_desc(self) -> Optional[str]:
+    def technique_desc(self) -> str | None:
         """
         Return Mitre technique description.
 
@@ -387,7 +380,7 @@ class MitreAttack:
         return self.MTR_TECH_URI.format(technique_id=self.technique)
 
     @property
-    def tactics_full(self) -> List[Tuple[str, str, str, str]]:
+    def tactics_full(self) -> list[tuple[str, str, str, str]]:
         """
         Return full listing of Mitre tactics.
 
@@ -445,20 +438,20 @@ class MordorEntry:
     type: str
     creation_date: datetime = attr.ib(converter=_to_datetime)
     modification_date: datetime = attr.ib(converter=_to_datetime)
-    contributors: List[str] = attr.Factory(list)
-    author: Optional[str] = None
-    platform: Optional[str] = None
-    description: Optional[str] = None
-    tags: List[str] = attr.Factory(list)
-    files: List[Dict[str, Any]] = attr.Factory(list)
-    datasets: List[Dict[str, Any]] = attr.Factory(list)
-    attack_mappings: List[Dict[str, Any]] = attr.Factory(list)
-    notebooks: List[Dict[str, str]] = attr.Factory(list)
-    simulation: Dict[str, Any] = attr.Factory(dict)
-    references: List[Any] = attr.Factory(list)
-    _rel_file_paths: List[Dict[str, Any]] = attr.Factory(list)
+    contributors: list[str] = attr.Factory(list)
+    author: str | None = None
+    platform: str | None = None
+    description: str | None = None
+    tags: list[str] = attr.Factory(list)
+    files: list[dict[str, Any]] = attr.Factory(list)
+    datasets: list[dict[str, Any]] = attr.Factory(list)
+    attack_mappings: list[dict[str, Any]] = attr.Factory(list)
+    notebooks: list[dict[str, str]] = attr.Factory(list)
+    simulation: dict[str, Any] = attr.Factory(dict)
+    references: list[Any] = attr.Factory(list)
+    _rel_file_paths: list[dict[str, Any]] = attr.Factory(list)
 
-    def get_notebooks(self) -> List[Tuple[str, str, str]]:
+    def get_notebooks(self) -> list[tuple[str, str, str]]:
         """
         Return the list of notebooks for the dataset.
 
@@ -473,7 +466,7 @@ class MordorEntry:
             for nbk in self.notebooks
         ]
 
-    def get_attacks(self) -> List[MitreAttack]:
+    def get_attacks(self) -> list[MitreAttack]:
         """
         Return list of Mitre attack classifications.
 
@@ -485,7 +478,7 @@ class MordorEntry:
         """
         return [MitreAttack(attack=attack) for attack in self.attack_mappings]
 
-    def get_file_paths(self) -> List[Dict[str, str]]:
+    def get_file_paths(self) -> list[dict[str, str]]:
         """
         Return list of data file links.
 
@@ -577,9 +570,9 @@ def _get_mdr_file(gh_file):
 
 
 def _create_mdr_metadata_cache():
-    md_metadata: Dict[str, MordorEntry] = {}
+    md_metadata: dict[str, MordorEntry] = {}
 
-    def _get_mdr_metadata(cache_folder: Optional[str] = None):
+    def _get_mdr_metadata(cache_folder: str | None = None):
         nonlocal md_metadata
         if not md_metadata:
             md_metadata = _fetch_mdr_metadata(cache_folder=cache_folder)
@@ -596,7 +589,7 @@ _DEFAULT_TS = pd.Timestamp(pd.Timestamp.now(tz=timezone.utc) - pd.Timedelta(days
 
 
 # pylint: disable=global-statement
-def _fetch_mdr_metadata(cache_folder: Optional[str] = None) -> Dict[str, MordorEntry]:
+def _fetch_mdr_metadata(cache_folder: str | None = None) -> dict[str, MordorEntry]:
     """
     Return full metadata for Mordor datasets.
 
@@ -615,7 +608,7 @@ def _fetch_mdr_metadata(cache_folder: Optional[str] = None) -> Dict[str, MordorE
 
     if MITRE_TECHNIQUES is None or MITRE_TACTICS is None:
         MITRE_TECHNIQUES, MITRE_TACTICS = _get_mitre_categories()
-    md_metadata: Dict[str, MordorEntry] = {}
+    md_metadata: dict[str, MordorEntry] = {}
 
     md_cached_metadata = _read_mordor_cache(cache_folder)
     mdr_md_paths = list(get_mdr_data_paths("metadata"))
@@ -646,9 +639,9 @@ def _fetch_mdr_metadata(cache_folder: Optional[str] = None) -> Dict[str, MordorE
 # pylint: enable=global-statement
 
 
-def _read_mordor_cache(cache_folder) -> Dict[str, Any]:
+def _read_mordor_cache(cache_folder) -> dict[str, Any]:
     """Return dictionary of cached metadata if cached_folder is a valid path."""
-    md_cached_metadata: Dict[str, Any] = {}
+    md_cached_metadata: dict[str, Any] = {}
     mordor_cache = Path(cache_folder).joinpath(_MORDOR_CACHE)
     if _valid_cache(mordor_cache):
         try:
@@ -667,8 +660,8 @@ def _write_mordor_cache(md_cached_metadata, cache_folder):
 
 
 def _build_mdr_indexes(
-    mdr_metadata: Dict[str, MordorEntry],
-) -> Tuple[Dict[str, Set[str]], Dict[str, Set[str]]]:
+    mdr_metadata: dict[str, MordorEntry],
+) -> tuple[dict[str, set[str]], dict[str, set[str]]]:
     """
     Return dictionaries mapping Mitre items to Mordor datasets.
 
@@ -805,8 +798,8 @@ def _extract_zip_file_to_df(
 
 
 def search_mdr_data(
-    mdr_data: Dict[str, MordorEntry], terms: str = None, subset: Iterable[str] = None
-) -> Set[str]:
+    mdr_data: dict[str, MordorEntry], terms: str = None, subset: Iterable[str] = None
+) -> set[str]:
     """
     Return IDs for items matching terms.
 
@@ -837,7 +830,7 @@ def search_mdr_data(
         logic = "AND"
     else:
         search_terms = [terms]
-    results: Set[str] = set()
+    results: set[str] = set()
     for search_idx, term in enumerate(search_terms):
         item_results = set()
         for md_id, item in mdr_data.items():
@@ -882,8 +875,8 @@ def _reshape_mitre_df(data):
 
 
 def _get_mitre_categories(
-    cache_folder: Optional[str] = None,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    cache_folder: str | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Download and return Mitre techniques and tactics.
 

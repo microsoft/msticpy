@@ -100,7 +100,7 @@ for _ in range(4):
     ip_list = [str(n) for n in np.arange(256)]
     rand_list = ip_list.copy()
     rng.shuffle(rand_list)
-    ip_map.append(dict(zip(ip_list, rand_list)))
+    ip_map.append(dict(zip(ip_list, rand_list, strict=False)))
 
 
 @lru_cache(maxsize=1024)
@@ -149,28 +149,19 @@ def _map_ip4_address(ip_addr: str) -> str:
     if ip_bytes[0] == 10:
         # class A res private
         ls_bytes = ".".join(
-            [
-                ip_map[idx].get(byte, "1")
-                for idx, byte in enumerate(ip_addr.split(".")[1:])
-            ]
+            [ip_map[idx].get(byte, "1") for idx, byte in enumerate(ip_addr.split(".")[1:])]
         )
         return f"10.{ls_bytes}"
     if ip_bytes[0] == 17 and (16 <= ip_bytes[1] <= 31):
         # class B res private
         ls_bytes = ".".join(
-            [
-                ip_map[idx].get(byte, "1")
-                for idx, byte in enumerate(ip_addr.split(".")[2:])
-            ]
+            [ip_map[idx].get(byte, "1") for idx, byte in enumerate(ip_addr.split(".")[2:])]
         )
         return f"{ip_bytes[0]}.{ip_bytes[1]}.{ls_bytes}"
     if ip_bytes[0] == 192 and ip_bytes[1] == 168:
         # class C res private
         ls_bytes = ".".join(
-            [
-                ip_map[idx].get(byte, "1")
-                for idx, byte in enumerate(ip_addr.split(".")[2:])
-            ]
+            [ip_map[idx].get(byte, "1") for idx, byte in enumerate(ip_addr.split(".")[2:])]
         )
         return f"192.168.{ls_bytes}"
     # by default, remap all

@@ -11,9 +11,10 @@ import json
 import pprint
 import typing
 from abc import ABC
+from collections.abc import Mapping
 from copy import deepcopy
 from datetime import datetime, timezone
-from typing import Any, Mapping
+from typing import Any
 
 import networkx as nx
 
@@ -245,9 +246,7 @@ class Entity(ABC, Node):
 
     def __repr__(self) -> str:
         """Return repr of entity."""
-        params = ", ".join(
-            f"{name}={val}" for name, val in self.properties.items() if val
-        )
+        params = ", ".join(f"{name}={val}" for name, val in self.properties.items() if val)
         if self.edges:
             params = f"{params}, edges={'. '.join(str(edge) for edge in self.edges)}"
 
@@ -525,13 +524,7 @@ class Entity(ABC, Node):
         """
         try:
             name = next(
-                iter(
-                    (
-                        key
-                        for key, val in cls.ENTITY_NAME_MAP.items()
-                        if val == entity_type
-                    )
-                )
+                iter((key for key, val in cls.ENTITY_NAME_MAP.items() if val == entity_type))
             )
         except StopIteration:
             name = "unknown"
@@ -551,7 +544,7 @@ class Entity(ABC, Node):
         props = {
             name: str(value)
             for name, value in self.properties.items()
-            if not isinstance(value, (Entity, list)) and name != "edges"
+            if not isinstance(value, Entity | list) and name != "edges"
         }
         props["Description"] = self.description_str
         props["Name"] = self.name_str

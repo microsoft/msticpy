@@ -5,8 +5,6 @@
 # --------------------------------------------------------------------------
 """Process tree builder routines for MDE process data."""
 
-from typing import Dict, Tuple, Union
-
 import numpy as np
 import pandas as pd
 
@@ -111,7 +109,7 @@ def _add_proc_key(
 
 
 def _extract_missing_parents(
-    data: pd.DataFrame, col_mapping: Dict[str, str], debug: bool = False
+    data: pd.DataFrame, col_mapping: dict[str, str], debug: bool = False
 ) -> pd.DataFrame:
     """Return parent processes that are not in the created process set."""
     # save the source index
@@ -145,9 +143,7 @@ def _extract_missing_parents(
     # print(non_par_cols)
 
     # merge the original data with the parent rows
-    merged_parents = data.filter(
-        regex="Initiating.*|parent_key|src_index"
-    ).merge(  # parents
+    merged_parents = data.filter(regex="Initiating.*|parent_key|src_index").merge(  # parents
         data.filter(non_par_cols),  # type: ignore
         left_on=Col.parent_key,
         right_on=Col.proc_key,
@@ -208,10 +204,10 @@ def _split_file_path(
     path_col: str = "CreatedProcessFilePath",
     file_col: str = "CreatedProcessName",
     separator: str = "\\",
-) -> Dict[str, Union[str, float]]:
+) -> dict[str, str | float]:
     """Split file path in to folder/stem."""
-    f_path: Union[str, float] = np.nan
-    f_stem: Union[str, float] = np.nan
+    f_path: str | float = np.nan
+    f_stem: str | float = np.nan
     try:
         f_path, _, f_stem = input_path.rpartition(separator)
     except AttributeError:
@@ -222,9 +218,7 @@ def _split_file_path(
 def _extract_missing_gparents(data):
     """Return grandparent processes for any procs not in Createdprocesses."""
     missing_gps = (
-        data[~data.parent_key.isin(data.proc_key)]
-        .filter(regex=".*Parent.*")
-        .drop_duplicates()
+        data[~data.parent_key.isin(data.proc_key)].filter(regex=".*Parent.*").drop_duplicates()
     )
     missing_gps_file_split = missing_gps.apply(
         lambda proc: _split_file_path(proc.CreatedProcessParentName),
@@ -259,7 +253,7 @@ def _extract_missing_gparents(data):
     return missing_gps
 
 
-def _get_par_child_col_mapping(data: pd.DataFrame) -> Dict[str, str]:
+def _get_par_child_col_mapping(data: pd.DataFrame) -> dict[str, str]:
     """Return a mapping between parent and child column names."""
     created_proc_cols = _remove_col_prefix(data, "Created")
     init_proc_cols = _remove_col_prefix(data, "Initiating")
@@ -267,7 +261,7 @@ def _get_par_child_col_mapping(data: pd.DataFrame) -> Dict[str, str]:
     return {**init_proc_col_mapping, **_MDE_NON_STD_COL_MAP}
 
 
-def _remove_col_prefix(data: pd.DataFrame, prefix: str) -> Dict[str, str]:
+def _remove_col_prefix(data: pd.DataFrame, prefix: str) -> dict[str, str]:
     """Return a mapping of column stems and columns with `prefix`."""
     return {
         col.replace(prefix, ""): col
@@ -277,8 +271,8 @@ def _remove_col_prefix(data: pd.DataFrame, prefix: str) -> Dict[str, str]:
 
 
 def _map_columns(
-    created_cols: Dict[str, str], init_cols: Dict[str, str]
-) -> Tuple[Dict[str, str], Dict[str, str]]:
+    created_cols: dict[str, str], init_cols: dict[str, str]
+) -> tuple[dict[str, str], dict[str, str]]:
     """Return Initiating -> Created column mapping."""
     col_mapping = {}
     unmapped = {}
@@ -367,8 +361,6 @@ def convert_mde_schema_to_internal(
         if isinstance(arg_value, str) and arg_value in _SENTINEL_MDE_MAP:
             plot_args[arg_name] = _SENTINEL_MDE_MAP[arg_value]
         if isinstance(arg_value, list):
-            plot_args[arg_name] = [
-                _SENTINEL_MDE_MAP.get(field, field) for field in arg_value
-            ]
+            plot_args[arg_name] = [_SENTINEL_MDE_MAP.get(field, field) for field in arg_value]
 
     return data.rename(columns=_SENTINEL_MDE_MAP)

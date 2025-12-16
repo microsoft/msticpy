@@ -21,8 +21,7 @@ class CEOtherProviders(CEProviders):
     # _HELP_TEXT inherited from base
     _HELP_URI = {
         "GeoIP Providers": (
-            "https://msticpy.readthedocs.io/en/latest/"
-            + "data_acquisition/GeoIPLookups.html"
+            "https://msticpy.readthedocs.io/en/latest/" + "data_acquisition/GeoIPLookups.html"
         ),
         **HELP_URIS,
     }

@@ -13,7 +13,8 @@ import itertools
 import math
 import statistics as stats
 import sys
-from typing import Any, Callable, Generator, Iterable
+from collections.abc import Callable, Generator, Iterable
+from typing import Any
 
 import folium
 import pandas as pd
@@ -127,8 +128,8 @@ class FoliumMap:
                 continue
             if (
                 not (
-                    isinstance(ip_entity.Location.Latitude, (int, float))
-                    and isinstance(ip_entity.Location.Longitude, (int, float))
+                    isinstance(ip_entity.Location.Latitude, int | float)
+                    and isinstance(ip_entity.Location.Longitude, int | float)
                 )
                 or math.isnan(ip_entity.Location.Latitude)
                 or math.isnan(ip_entity.Location.Longitude)
@@ -151,9 +152,7 @@ class FoliumMap:
             else:
                 marker_target_map: folium.Map = self.folium_map
                 marker.add_to(marker_target_map)
-            self.locations.append(
-                (ip_entity.Location.Latitude, ip_entity.Location.Longitude)
-            )
+            self.locations.append((ip_entity.Location.Latitude, ip_entity.Location.Longitude))
 
     def add_ips(
         self: Self,
@@ -178,9 +177,7 @@ class FoliumMap:
         _, ip_entities = _GEO_LITE.lookup_ip(ip_addr_list=ip_addresses)
         self.add_ip_cluster(ip_entities=ip_entities, **kwargs)
 
-    def add_geoloc_cluster(
-        self: Self, geo_locations: Iterable[GeoLocation], **kwargs
-    ) -> None:
+    def add_geoloc_cluster(self: Self, geo_locations: Iterable[GeoLocation], **kwargs) -> None:
         """
         Add a collection of GeoLocation objects to the map.
 
@@ -201,9 +198,7 @@ class FoliumMap:
         ]
         self.add_ip_cluster(ip_entities=ip_entities, **kwargs)
 
-    def add_locations(
-        self: Self, locations: Iterable[tuple[float, float]], **kwargs
-    ) -> None:
+    def add_locations(self: Self, locations: Iterable[tuple[float, float]], **kwargs) -> None:
         """
         Add a collection of lat/long tuples to the map.
 
@@ -631,9 +626,7 @@ if sys.version_info > (3, 10):
     )
 
 else:
-    from typing import Dict, Union
-
-    IconMapper = Union[Callable[[str], Dict[str, Any]], Dict[str, Any], None]
+    IconMapper = Callable[[str], dict[str, Any]] | dict[str, Any] | None
 
 
 # pylint: disable=too-many-locals, too-many-arguments
@@ -1007,7 +1000,7 @@ def get_map_center(entities: Iterable[Entity], mode: str = "modal"):
     loc_props: list[str] = [
         p_name
         for p_name, p_val in entities[0].properties.items()
-        if isinstance(p_val, (IpAddress, GeoLocation))
+        if isinstance(p_val, IpAddress | GeoLocation)
     ]
     for entity, prop in itertools.product(entities, loc_props):
         if prop not in entity:
@@ -1065,9 +1058,7 @@ def _extract_coords_loc_entities(
 ) -> list[tuple[float, float]]:
     """Return list of coordinate tuples from GeoLocation entities."""
     return [
-        (loc.Latitude, loc.Longitude)
-        for loc in loc_entities
-        if loc.Latitude and loc.Longitude
+        (loc.Latitude, loc.Longitude) for loc in loc_entities if loc.Latitude and loc.Longitude
     ]
 
 

@@ -396,9 +396,7 @@ def _pre_process_tree(
         lambda x: x[schema.process_name].split(schema.path_separator)[-1], axis=1
     )
     proc_tree[schema.process_id] = proc_tree[schema.process_id].fillna("unknown")
-    proc_tree["__proc_id$$"] = proc_tree[schema.process_id].apply(
-        _pid_fmt, args=(pid_fmt,)
-    )
+    proc_tree["__proc_id$$"] = proc_tree[schema.process_id].apply(_pid_fmt, args=(pid_fmt,))
 
     # Command line processing
     if not schema.cmd_line:
@@ -413,9 +411,9 @@ def _pre_process_tree(
         proc_tree[long_cmd][schema.cmd_line].str[:max_cmd_len] + "..."
     )
     # replace missing cmd lines
-    proc_tree.loc[~long_cmd, "__cmd_line$$"] = proc_tree[~long_cmd][
-        schema.cmd_line
-    ].fillna("cmdline unknown")
+    proc_tree.loc[~long_cmd, "__cmd_line$$"] = proc_tree[~long_cmd][schema.cmd_line].fillna(
+        "cmdline unknown"
+    )
     return TreeResult(proc_tree=proc_tree, schema=schema, levels=levels, n_rows=n_rows)
 
 
@@ -578,9 +576,7 @@ def _create_vert_range_tool(
 # pylint: enable=too-many-arguments
 
 
-def _create_data_table(
-    source: ColumnDataSource, schema: ProcSchema, legend_col: str = None
-):
+def _create_data_table(source: ColumnDataSource, schema: ProcSchema, legend_col: str = None):
     """Return DataTable widget for source."""
     column_names = [
         schema.user_name,
@@ -606,9 +602,7 @@ def _create_data_table(
         )
     ]
     columns2 = [
-        TableColumn(field=col, title=col)
-        for col in column_names
-        if col in source.column_names
+        TableColumn(field=col, title=col) for col in column_names if col in source.column_names
     ]
 
     return DataTable(source=source, columns=columns + columns2, width=950, height=150)

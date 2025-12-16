@@ -6,7 +6,6 @@
 """Process Tree builder for Windows security and Linux auditd events."""
 
 from dataclasses import asdict
-from typing import Tuple
 
 import pandas as pd
 
@@ -87,12 +86,10 @@ def extract_process_tree(
 def _clean_proc_data(
     procs: pd.DataFrame,
     schema: "ProcSchema",  # type: ignore  # noqa: F821
-) -> Tuple[pd.DataFrame, ProcSchema]:
+) -> tuple[pd.DataFrame, ProcSchema]:
     """Return cleaned process data."""
     procs = ensure_df_datetimes(procs, columns=schema.time_stamp)
-    procs_cln = (
-        procs.drop_duplicates().sort_values(schema.time_stamp, ascending=True).copy()
-    )
+    procs_cln = procs.drop_duplicates().sort_values(schema.time_stamp, ascending=True).copy()
 
     # Filter out any non-process events
     if schema.event_id_column and schema.event_id_identifier:
@@ -141,9 +138,7 @@ def _num_cols_to_str(
     into a single string.
     """
     # Change float/int cols in our core schema to force int
-    schema_cols = [
-        col for col in asdict(schema).values() if col and col in procs_cln.columns
-    ]
+    schema_cols = [col for col in asdict(schema).values() if col and col in procs_cln.columns]
     force_int_cols = {
         col: "int"
         for col, col_type in procs_cln[schema_cols].dtypes.to_dict().items()
@@ -331,18 +326,14 @@ def _check_inferred_parents(procs, procs_par):
 
 def _check_proc_keys(merged_procs_par, schema):
     """Diagnostic for _assign_proc_keys."""
-    crit1 = merged_procs_par[Col.timestamp_orig_par].isin(
-        merged_procs_par[schema.time_stamp]
-    )
+    crit1 = merged_procs_par[Col.timestamp_orig_par].isin(merged_procs_par[schema.time_stamp])
     crit2 = merged_procs_par[Col.EffectiveLogonId].isin(merged_procs_par[schema.logon_id])
     c2a = None
     if schema.target_logon_id:
         c2a = merged_procs_par[Col.EffectiveLogonId].isin(
             merged_procs_par[schema.target_logon_id]
         )
-    crit3 = merged_procs_par[Col.parent_proc_lc].isin(
-        merged_procs_par[Col.new_process_lc]
-    )
+    crit3 = merged_procs_par[Col.parent_proc_lc].isin(merged_procs_par[Col.new_process_lc])
     crit4 = merged_procs_par[schema.process_id].isin(merged_procs_par[schema.parent_id])
     crit5 = merged_procs_par[Col.parent_key].isin(merged_procs_par.index)
     crit6 = merged_procs_par[Col.parent_key].isna()

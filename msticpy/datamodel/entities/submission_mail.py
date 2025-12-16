@@ -5,7 +5,8 @@
 # --------------------------------------------------------------------------
 """Submission mail Entity class."""
 
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -68,16 +69,16 @@ class SubmissionMail(Entity):
             kw arguments.
 
         """
-        self.SubmissionId: Optional[str] = None
+        self.SubmissionId: str | None = None
         self.SubmissionDate: Any = None
-        self.Submitter: Optional[str] = None
-        self.NetworkMessageId: Optional[str] = None
+        self.Submitter: str | None = None
+        self.NetworkMessageId: str | None = None
         self.Timestamp: Any = None
-        self.Recipient: Optional[str] = None
-        self.Sender: Optional[str] = None
-        self.SenderIp: Optional[str] = None
-        self.Subject: Optional[str] = None
-        self.ReportType: Optional[str] = None
+        self.Recipient: str | None = None
+        self.Sender: str | None = None
+        self.SenderIp: str | None = None
+        self.Subject: str | None = None
+        self.ReportType: str | None = None
 
         super().__init__(src_entity=src_entity, **kwargs)
 

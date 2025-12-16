@@ -36,7 +36,7 @@ import re
 from binascii import crc32
 from functools import lru_cache
 from math import floor, log10
-from typing import Any, List, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -66,14 +66,14 @@ __author__ = "Ian Hellen"
 @export
 def dbcluster_events(
     data: Any,
-    cluster_columns: List[Any] = None,
+    cluster_columns: list[Any] = None,
     verbose: bool = False,
     normalize: bool = True,
     time_column: str = "TimeCreatedUtc",
     max_cluster_distance: float = 0.01,
     min_cluster_samples: int = 2,
     **kwargs,
-) -> Tuple[pd.DataFrame, DBSCAN, np.ndarray]:
+) -> tuple[pd.DataFrame, DBSCAN, np.ndarray]:
     """
     Cluster data set according to cluster_columns features.
 
@@ -127,9 +127,7 @@ def dbcluster_events(
         )
 
     # Create DBSCAN cluster object
-    db_cluster = DBSCAN(
-        eps=max_cluster_distance, min_samples=min_cluster_samples, **kwargs
-    )
+    db_cluster = DBSCAN(eps=max_cluster_distance, min_samples=min_cluster_samples, **kwargs)
 
     # Normalize the data (most clustering algorithms don't do well with
     # unnormalized data)
@@ -148,9 +146,7 @@ def dbcluster_events(
         )
         print("Individual cluster sizes: ", ", ".join(str(c) for c in counts))
 
-    clustered_events = _merge_clustered_items(
-        cluster_set, labels, data, time_column, counts
-    )
+    clustered_events = _merge_clustered_items(cluster_set, labels, data, time_column, counts)
 
     if verbose:
         print("Cluster output rows: ", len(clustered_events))
@@ -161,7 +157,7 @@ def dbcluster_events(
 def _merge_clustered_items(
     cluster_set: np.ndarray,
     labels: np.ndarray,
-    data: Union[pd.DataFrame, np.ndarray],
+    data: pd.DataFrame | np.ndarray,
     time_column: str,
     counts: np.ndarray,
 ) -> pd.DataFrame:
@@ -348,9 +344,7 @@ def _add_processname_features(output_df: pd.DataFrame, force: bool, path_separat
             lambda x: log10(x.pathScore) if x.pathScore else 0, axis=1
         )
     if "pathHash" not in output_df or force:
-        output_df["pathHash"] = output_df.apply(
-            lambda x: crc32_hash(x.NewProcessName), axis=1
-        )
+        output_df["pathHash"] = output_df.apply(lambda x: crc32_hash(x.NewProcessName), axis=1)
 
 
 def _add_commandline_features(output_df: pd.DataFrame, force: bool):
@@ -366,9 +360,7 @@ def _add_commandline_features(output_df: pd.DataFrame, force: bool):
 
     """
     if "commandlineLen" not in output_df or force:
-        output_df["commandlineLen"] = output_df.apply(
-            lambda x: len(x.CommandLine), axis=1
-        )
+        output_df["commandlineLen"] = output_df.apply(lambda x: len(x.CommandLine), axis=1)
     if "commandlineLogLen" not in output_df or force:
         output_df["commandlineLogLen"] = output_df.apply(
             lambda x: log10(x.commandlineLen) if x.commandlineLen else 0, axis=1
@@ -635,7 +627,7 @@ def plot_cluster(  # noqa: C901
     data: pd.DataFrame,
     x_predict: np.ndarray,
     plot_label: str = None,
-    plot_features: Tuple[int, int] = (0, 1),
+    plot_features: tuple[int, int] = (0, 1),
     verbose: bool = False,
     cut_off: int = 3,
     xlabel: str = None,
@@ -700,14 +692,10 @@ def plot_cluster(  # noqa: C901
         # print("Silhouette Coefficient: %0.3f"
         #       % metrics.silhouette_score(x_predict, labels))
 
-    if (
-        not isinstance(data, pd.DataFrame)
-        or plot_label is not None
-        and plot_label not in data
-    ):
+    if not isinstance(data, pd.DataFrame) or plot_label is not None and plot_label not in data:
         plot_label = None
     p_label = None
-    for cluster_id, color in zip(unique_labels, colors):
+    for cluster_id, color in zip(unique_labels, colors, strict=False):
         if cluster_id == -1:
             # Black used for noise.
             color = [0, 0, 0, 1]

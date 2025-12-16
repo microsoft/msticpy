@@ -7,7 +7,6 @@
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Union
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -42,7 +41,7 @@ class DataFamily(Enum):
     Prismacloud = 21
 
     @classmethod
-    def parse(cls, value: Union[str, int]) -> "DataFamily":
+    def parse(cls, value: str | int) -> "DataFamily":
         """
         Convert string or int to enum.
 
@@ -124,7 +123,7 @@ class DataEnvironment(Enum):
     MSSentinelSearch = 25
 
     @classmethod
-    def parse(cls, value: Union[str, int]) -> "DataEnvironment":
+    def parse(cls, value: str | int) -> "DataEnvironment":
         """
         Convert string or int to enum.
 

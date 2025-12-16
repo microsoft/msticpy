@@ -18,7 +18,6 @@ import datetime as dt
 import json
 import re
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -38,7 +37,7 @@ _DETECTIONS_DEF_DIR = "resources"
 def risky_cmd_line(
     events: pd.DataFrame,
     log_type: str,
-    detection_rules: Optional[str] = None,
+    detection_rules: str | None = None,
     cmd_field: str = "Command",
 ) -> dict:
     """
@@ -74,9 +73,7 @@ def risky_cmd_line(
 
     """
     if cmd_field not in events.columns:
-        raise MsticpyException(
-            f"The provided dataset does not contain the {cmd_field} field"
-        )
+        raise MsticpyException(f"The provided dataset does not contain the {cmd_field} field")
     if detection_rules is None:
         detection_rules = str(
             Path(__file__)
@@ -159,9 +156,7 @@ def cmd_speed(
     actions = cmd_events.dropna(subset=[cmd_field]).reset_index()
     df_len = len(actions.index) - (events + 1)
     while df_len >= 0:
-        delta = (
-            actions["TimeGenerated"][(df_len + events)] - actions["TimeGenerated"][df_len]
-        )
+        delta = actions["TimeGenerated"][(df_len + events)] - actions["TimeGenerated"][df_len]
         if delta < dt.timedelta(seconds=time):
             suspicious_actions.append(
                 {df_len: [actions[df_len : (df_len + events)], delta]}  # noqa: E203

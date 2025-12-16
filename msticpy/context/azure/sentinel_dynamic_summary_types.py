@@ -11,9 +11,10 @@ import dataclasses
 import json
 import logging
 import uuid
+from collections.abc import Callable
 from datetime import datetime
 from functools import singledispatchmethod
-from typing import TYPE_CHECKING, Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import numpy as np
 import pandas as pd
@@ -79,9 +80,7 @@ class FieldList:
 
     def __repr__(self: Self) -> str:
         """Return list of field attributes and values."""
-        field_names: str = "\n    ".join(
-            f"{key}='{val}'" for key, val in vars(self).items()
-        )
+        field_names: str = "\n    ".join(f"{key}='{val}'" for key, val in vars(self).items())
         return f"Fields:\n    {field_names}"
 
 
@@ -368,9 +367,7 @@ class DynamicSummary:
             dyn_summaries = df_to_dynamic_summaries(data)
 
         """
-        return [
-            df_to_dynamic_summary(ds_data) for _, ds_data in data.groupby("SummaryId")
-        ]
+        return [df_to_dynamic_summary(ds_data) for _, ds_data in data.groupby("SummaryId")]
 
     @staticmethod
     def df_to_dynamic_summary(data: pd.DataFrame) -> DynamicSummary:
@@ -818,6 +815,4 @@ def _convert_data_types(
 
 def _match_tactics(tactics: Iterable[str]) -> list[str]:
     """Return case-insensitive matches for tactics list."""
-    return [
-        _TACTICS_DICT[tactic.casefold()] for tactic in tactics if tactic in _TACTICS_DICT
-    ]
+    return [_TACTICS_DICT[tactic.casefold()] for tactic in tactics if tactic in _TACTICS_DICT]

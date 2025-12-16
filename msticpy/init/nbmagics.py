@@ -6,7 +6,6 @@
 """msticpy IPython magics."""
 
 import re
-from typing import List, Tuple
 
 # pylint: enable=unused-import
 from IPython import get_ipython
@@ -49,9 +48,7 @@ if is_ipython():
 
         @line_cell_magic
         @magic_arguments.magic_arguments()
-        @magic_arguments.argument(
-            "--out", "-o", help="The variable to return the results in"
-        )
+        @magic_arguments.argument("--out", "-o", help="The variable to return the results in")
         @magic_arguments.argument(
             "--pretty",
             "-p",
@@ -126,15 +123,13 @@ if is_ipython():
 
         @line_cell_magic
         @magic_arguments.magic_arguments()
-        @magic_arguments.argument(
-            "--out", "-o", help="The variable to return the results in"
-        )
+        @magic_arguments.argument("--out", "-o", help="The variable to return the results in")
         @magic_arguments.argument(
             "--ioc_types",
             "-i",
             help="The types of IoC to search for (comma-separated string)",
         )
-        def ioc(self, line="", cell=None) -> List[Tuple[str, List[str]]]:
+        def ioc(self, line="", cell=None) -> list[tuple[str, list[str]]]:
             """
             Ioc Extract IPython magic extension.
 

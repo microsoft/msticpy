@@ -5,7 +5,8 @@
 # --------------------------------------------------------------------------
 """Dns Entity class."""
 
-from typing import Any, List, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -57,10 +58,10 @@ class Dns(Entity):
             kw arguments.
 
         """
-        self.DomainName: Optional[str] = None
-        self.IpAddresses: List[IpAddress] = []
-        self.DnsServerIp: Optional[IpAddress] = None
-        self.HostIpAddress: Optional[IpAddress] = None
+        self.DomainName: str | None = None
+        self.IpAddresses: list[IpAddress] = []
+        self.DnsServerIp: IpAddress | None = None
+        self.HostIpAddress: IpAddress | None = None
         super().__init__(src_entity=src_entity, **kwargs)
 
     @property
@@ -78,7 +79,7 @@ class Dns(Entity):
         "DomainName": None,
         # IpAddresses (type System.Collections.Generic.List`1
         # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.IP])
-        "IpAddresses": (List, "IpAddress"),
+        "IpAddresses": (list, "IpAddress"),
         # DnsServerIp (type Microsoft.Azure.Security.Detection
         # .AlertContracts.V3.Entities.IP)
         "DnsServerIp": "IpAddress",

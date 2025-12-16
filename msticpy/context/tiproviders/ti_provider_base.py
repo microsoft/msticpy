@@ -17,7 +17,8 @@ from __future__ import annotations
 
 import logging
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, ClassVar, Iterable
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from typing_extensions import Self
 

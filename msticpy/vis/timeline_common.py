@@ -5,8 +5,9 @@
 # --------------------------------------------------------------------------
 """Module for common timeline functions."""
 
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any
 
 import pandas as pd
 from bokeh.models import (  # type: ignore[attr-defined]
@@ -57,7 +58,7 @@ figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
 @export
 def check_df_columns(
-    data: pd.DataFrame, req_columns: List[str], help_uri: str, plot_type: str
+    data: pd.DataFrame, req_columns: list[str], help_uri: str, plot_type: str
 ):
     """
     Check that specified columns are in the DataFrame.
@@ -90,11 +91,11 @@ def check_df_columns(
 
 def create_data_grouping(
     data: pd.DataFrame,
-    source_columns: List[str],
+    source_columns: list[str],
     time_column: str,
-    group_by: Optional[str],
+    group_by: str | None,
     color: str,
-) -> Tuple[pd.DataFrame, pd.DataFrame, Set[str], int]:
+) -> tuple[pd.DataFrame, pd.DataFrame, set[str], int]:
     """
     Group input data and add indexes and tooltips.
 
@@ -152,22 +153,19 @@ def create_data_grouping(
     return graph_df, group_count_df, tool_tip_columns, series_count  # type: ignore
 
 
-def get_def_source_cols(data: pd.DataFrame, source_columns: Iterable[str]) -> Set[str]:
+def get_def_source_cols(data: pd.DataFrame, source_columns: Iterable[str]) -> set[str]:
     """Get default set of columns (backward compat)."""
     if not source_columns:
         return (
             {"NewProcessName", "EventID", "CommandLine"}
-            if all(
-                col in data.columns
-                for col in ["NewProcessName", "EventID", "CommandLine"]
-            )
+            if all(col in data.columns for col in ["NewProcessName", "EventID", "CommandLine"])
             else set()
         )
 
     return set(source_columns)
 
 
-def get_color_palette(series_count: int) -> Tuple[Palette, int]:
+def get_color_palette(series_count: int) -> tuple[Palette, int]:
     """Return palette based on series size."""
     palette_size = min(256, series_count + series_count // 5)
     return viridis(palette_size), palette_size
@@ -197,7 +195,7 @@ def set_axes_and_grids(
 
 def get_time_bounds(
     min_time: pd.Timestamp, max_time: pd.Timestamp
-) -> Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp, pd.Timestamp]:
+) -> tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp, pd.Timestamp]:
     """Return start and end range, coping with out-of-bounds error."""
     try:
         start_range = min_time - ((max_time - min_time) * 0.1)
@@ -211,10 +209,10 @@ def get_time_bounds(
 
 
 def create_tool_tips(
-    data: Union[pd.DataFrame, Dict[str, pd.DataFrame]], columns: Iterable[str]
-) -> Dict[str, Any]:
+    data: pd.DataFrame | dict[str, pd.DataFrame], columns: Iterable[str]
+) -> dict[str, Any]:
     """Create formatting for tool tip columns."""
-    formatters: Dict[str, str] = {}
+    formatters: dict[str, str] = {}
     # if this is a dict we need to unpack each dataframe and process
     # the tooltip columns for all of the data sets.
     if isinstance(data, dict):
@@ -237,9 +235,7 @@ def create_tool_tips(
     return {"tooltips": tool_tip_items, "formatters": formatters}
 
 
-def _get_datetime_tooltip(
-    col: str, dataset: pd.DataFrame
-) -> Tuple[str, str, Dict[str, str]]:
+def _get_datetime_tooltip(col: str, dataset: pd.DataFrame) -> tuple[str, str, dict[str, str]]:
     """Return tooltip and formatter entries for column."""
     if " " in col:
         disp_col = col.replace(" ", "_")
@@ -248,7 +244,7 @@ def _get_datetime_tooltip(
         disp_col = tt_col = col
     if col in dataset and is_datetime64_any_dtype(dataset[col]):
         col_tooltip = f"@{tt_col}{{%F %T.%3N}}"
-        col_fmt: Dict[Any, Any] = {f"@{tt_col}": "datetime"}
+        col_fmt: dict[Any, Any] = {f"@{tt_col}": "datetime"}
     else:
         col_tooltip = f"@{tt_col}"
         col_fmt = {}
@@ -291,9 +287,7 @@ def create_range_tool(
         "Drag the middle or edges of the selection box to change "
         + "the range in the main chart"
     )
-    rng_select.add_layout(
-        Title(text=help_str, align="right", text_font_size="10px"), "below"
-    )
+    rng_select.add_layout(Title(text=help_str, align="right", text_font_size="10px"), "below")
     rng_select.xaxis[0].formatter = get_tick_formatter()
     if isinstance(data, dict):
         for _, series_def in data.items():
@@ -362,9 +356,9 @@ def plot_ref_events(
     plot: Figure,
     time_col: str,
     group_count: int,
-    ref_events: Optional[pd.DataFrame] = None,
-    ref_col: Optional[str] = None,
-    ref_times: Optional[List[Tuple[datetime, str]]] = None,
+    ref_events: pd.DataFrame | None = None,
+    ref_col: str | None = None,
+    ref_times: list[tuple[datetime, str]] | None = None,
 ):
     """Plot reference lines/labels."""
     if ref_events is not None:
@@ -372,9 +366,7 @@ def plot_ref_events(
             ref_events = pd.DataFrame(ref_events)
         for idx, event in enumerate(ref_events.itertuples()):
             evt_time = event._asdict()[time_col]
-            evt_label = (
-                event._asdict()[ref_col] if ref_col else f"reference {event.Index}"
-            )
+            evt_label = event._asdict()[ref_col] if ref_col else f"reference {event.Index}"
             plot_ref_line(
                 plot=plot,
                 ref_time=evt_time,
@@ -394,7 +386,7 @@ def plot_ref_events(
             )
 
 
-def get_ref_event_time(**kwargs) -> Tuple[Optional[Any], Union[Any, str]]:
+def get_ref_event_time(**kwargs) -> tuple[Any | None, Any | str]:
     """Extract the reference time from kwargs."""
     ref_alert = kwargs.get("alert", None)
     if ref_alert is not None:

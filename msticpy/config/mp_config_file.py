@@ -102,22 +102,16 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
 
         # Set up controls
         self.file_browser = FileBrowser(select_cb=self.load_from_file)
-        self.txt_viewer = widgets.Textarea(
-            layout=widgets.Layout(width="99%", height="300px")
-        )
+        self.txt_viewer = widgets.Textarea(layout=widgets.Layout(width="99%", height="300px"))
         self.btn_close = widgets.Button(description="Close viewer")
         self.btn_close.on_click(self._close_view)
 
         self.html_title = widgets.HTML("<h3>MSTICPy settings</h3>")
-        self.txt_current_config_path = widgets.Text(
-            description="Current file", **_TXT_STYLE
-        )
+        self.txt_current_config_path = widgets.Text(description="Current file", **_TXT_STYLE)
         self.txt_default_config_path = widgets.Text(
             description="Default Config path", **_TXT_STYLE
         )
-        self._txt_import_url = widgets.Text(
-            description="MS Sentinel Portal URL", **_TXT_STYLE
-        )
+        self._txt_import_url = widgets.Text(description="MS Sentinel Portal URL", **_TXT_STYLE)
         self._last_workspace: dict[str, dict[str, str]]
         self.buttons: dict[str, widgets.Button] = {}
         self.btn_pane = self._setup_buttons()
@@ -150,7 +144,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         # set the default location even if user supplied file parameter
         self.mp_config_def_path = current_config_path() or self.current_file
 
-        if settings is not None and isinstance(settings, (dict, SettingsDict)):
+        if settings is not None and isinstance(settings, dict | SettingsDict):
             # If caller has supplied settings, we don't want to load
             # anything from a file
             self.settings = SettingsDict(settings)
@@ -236,9 +230,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
 
         """
         # remove empty settings sections before saving
-        empty_items = [
-            section for section, settings in self.settings.items() if not settings
-        ]
+        empty_items = [section for section, settings in self.settings.items() if not settings]
         for empty_section in empty_items:
             del self.settings[empty_section]
         # create a backup, if required
@@ -445,20 +437,14 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         self.buttons["load_def"] = widgets.Button(
             **(self._BUTTON_DEFS["load_def"]), **btn_style
         )
-        self.buttons["reload"] = widgets.Button(
-            **(self._BUTTON_DEFS["reload"]), **btn_style
-        )
+        self.buttons["reload"] = widgets.Button(**(self._BUTTON_DEFS["reload"]), **btn_style)
         self.buttons["view"] = widgets.Button(**(self._BUTTON_DEFS["view"]), **btn_style)
         self.buttons["validate"] = widgets.Button(
             **(self._BUTTON_DEFS["validate"]), **btn_style
         )
-        self.buttons["convert"] = widgets.Button(
-            **(self._BUTTON_DEFS["convert"]), **btn_style
-        )
+        self.buttons["convert"] = widgets.Button(**(self._BUTTON_DEFS["convert"]), **btn_style)
         self.buttons["save"] = widgets.Button(**(self._BUTTON_DEFS["save"]), **btn_style)
-        self.buttons["showkv"] = widgets.Button(
-            **(self._BUTTON_DEFS["showkv"]), **btn_style
-        )
+        self.buttons["showkv"] = widgets.Button(**(self._BUTTON_DEFS["showkv"]), **btn_style)
         self.buttons["get_workspace"] = widgets.Button(
             **(self._BUTTON_DEFS["get_workspace"]), **btn_style
         )
@@ -479,9 +465,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         self.buttons["reload"].on_click(self._btn_func("refresh_mp_config"))
         self.buttons["showkv"].on_click(self._btn_func_no_disp("show_kv_secrets"))
         self.buttons["get_workspace"].on_click(self._btn_func("_show_sentinel_workspace"))
-        self.buttons["import_workspace"].on_click(
-            self._btn_func("_import_sentinel_settings")
-        )
+        self.buttons["import_workspace"].on_click(self._btn_func("_import_sentinel_settings"))
 
         btns1 = widgets.VBox(list(self.buttons.values())[: len(self.buttons) // 2])
         # flake8: noqa: E203

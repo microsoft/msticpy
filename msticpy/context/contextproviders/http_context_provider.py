@@ -127,9 +127,7 @@ class HttpContextProvider(ContextProvider, HttpProvider):
                 result["RawResult"] = response.json().copy()
                 result["Result"], result["Details"] = self.parse_results(result)
             except JSONDecodeError:
-                result[
-                    "RawResult"
-                ] = f"""There was a problem parsing results from this lookup:
+                result["RawResult"] = f"""There was a problem parsing results from this lookup:
                                     {response.text}"""
                 result["Result"] = False
                 result["Details"] = {}

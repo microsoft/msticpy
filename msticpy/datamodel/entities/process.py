@@ -5,8 +5,9 @@
 # --------------------------------------------------------------------------
 """Process Entity class."""
 
+from collections.abc import Mapping
 from datetime import datetime
-from typing import Any, Mapping, Optional
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -85,15 +86,15 @@ class Process(Entity):
             kw arguments.
 
         """
-        self.ProcessId: Optional[str] = None
-        self.CommandLine: Optional[str] = None
-        self.ElevationToken: Optional[ElevationToken] = None
+        self.ProcessId: str | None = None
+        self.CommandLine: str | None = None
+        self.ElevationToken: ElevationToken | None = None
         self.CreationTimeUtc: datetime = datetime.min
-        self.ImageFile: Optional[File] = None
-        self.Account: Optional[Account] = None
-        self.ParentProcess: Optional[Process] = None
-        self.Host: Optional[Host] = None
-        self.LogonSession: Optional[HostLogonSession] = None
+        self.ImageFile: File | None = None
+        self.Account: Account | None = None
+        self.ParentProcess: Process | None = None
+        self.Host: Host | None = None
+        self.LogonSession: HostLogonSession | None = None
         super().__init__(src_entity=src_entity, **kwargs)
 
         if src_event is not None:
@@ -131,13 +132,13 @@ class Process(Entity):
             self.ImageFile = File(src_event=src_event, role="parent")
 
     @property
-    def ProcessName(self) -> Optional[str]:  # noqa: N802
+    def ProcessName(self) -> str | None:  # noqa: N802
         """Return the name of the process file."""  # noqa: N802
         file = self["ImageFile"]
         return file.Name if file else None
 
     @property
-    def ProcessFilePath(self) -> Optional[str]:  # noqa: N802
+    def ProcessFilePath(self) -> str | None:  # noqa: N802
         """Return the name of the process file path."""  # noqa: N802
         file = self.ImageFile
         return file.FullPath if file else None

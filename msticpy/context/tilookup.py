@@ -15,7 +15,8 @@ requests per minute for the account type that you have.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import TYPE_CHECKING, ClassVar
 
 from typing_extensions import Self
 

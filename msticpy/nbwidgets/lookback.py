@@ -6,7 +6,6 @@
 """Module for pre-defined widget layouts."""
 
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
 import ipywidgets as widgets
 from ipywidgets import Layout
@@ -29,11 +28,11 @@ class Lookback(IPyDisplayMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        default: Optional[int] = None,
+        default: int | None = None,
         description: str = "Select time ({units}) to look back",
         origin_time: datetime = None,
-        min_value: Optional[int] = None,
-        max_value: Optional[int] = None,
+        min_value: int | None = None,
+        max_value: int | None = None,
         units: str = "hour",
         auto_display: bool = False,
         **kwargs,
@@ -65,9 +64,7 @@ class Lookback(IPyDisplayMixin):
 
         """
         # default to now
-        self.origin_time = (
-            datetime.now(timezone.utc) if origin_time is None else origin_time
-        )
+        self.origin_time = datetime.now(timezone.utc) if origin_time is None else origin_time
         description = kwargs.pop("label", description)
 
         self._time_unit = parse_time_unit(units)

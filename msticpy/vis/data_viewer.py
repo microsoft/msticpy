@@ -6,7 +6,6 @@
 """Dataframe viewer."""
 
 from collections import namedtuple
-from typing import Dict, List, Union
 
 import ipywidgets as widgets
 import pandas as pd
@@ -46,7 +45,7 @@ class DataViewerBokeh:
 
     _DEF_HEIGHT = 550
 
-    def __init__(self, data: pd.DataFrame, selected_cols: List[str] = None, debug=False):
+    def __init__(self, data: pd.DataFrame, selected_cols: list[str] = None, debug=False):
         """
         Initialize the DataViewer class.
 
@@ -108,11 +107,11 @@ class DataViewerBokeh:
         ]  # type: ignore
 
     @property
-    def filters(self) -> Dict[str, FilterExpr]:
+    def filters(self) -> dict[str, FilterExpr]:
         """Return current filters as a dict."""
         return self.data_filter.filters
 
-    def import_filters(self, filters: Dict[str, FilterExpr]):
+    def import_filters(self, filters: dict[str, FilterExpr]):
         """
         Import filter set replacing current filters.
 
@@ -164,9 +163,7 @@ class DataViewerBokeh:
         del btn
         if self._debug:
             print("_apply_filter")
-        self.data_table.view = CDSView(
-            filter=BooleanFilter(self.data_filter.bool_filters)
-        )
+        self.data_table.view = CDSView(filter=BooleanFilter(self.data_filter.bool_filters))
         self.data_table.height = self._calc_df_height(self.data_filter.filtered_dataframe)
         self._update_data_table()
 
@@ -272,13 +269,11 @@ class DataTableFilter:
         self._not_cb = widgets.Checkbox(
             description="not", value=False, **(_layout("60px", desc_width="initial"))
         )
-        self._filter_value = widgets.Textarea(
-            description="Filter value", **(_layout("400px"))
-        )
+        self._filter_value = widgets.Textarea(description="Filter value", **(_layout("400px")))
         self._curr_filters = widgets.Select(description="Filters", **(_layout("500px")))
         self._oper_label = widgets.Label(" in ")
 
-        self.filters: Dict[str, FilterExpr] = {}
+        self.filters: dict[str, FilterExpr] = {}
 
         self._curr_filters.observe(self._select_filter, names="value")
         self._col_select.observe(self._update_operators, names="value")
@@ -333,7 +328,7 @@ class DataTableFilter:
         """Display in IPython."""
         self.display()
 
-    def import_filters(self, filters: Dict[str, FilterExpr]):
+    def import_filters(self, filters: dict[str, FilterExpr]):
         """
         Replace the current filters with `filters`.
 
@@ -462,7 +457,7 @@ class DataTableFilter:
 
     def _filter_in_or_between(self, col: str, operator: str, expr: str) -> pd.Series:
         """Return filter for `in` and `between` operators."""
-        test_expr: List[Union[str, int, float]]
+        test_expr: list[str | int | float]
 
         if pd.api.types.is_string_dtype(self.data[col]):
             test_expr = [item.strip("\"' ") for item in expr.split(",")]
@@ -488,7 +483,7 @@ class DataTableFilter:
 
     def _conv_expr_type(self, col: str, expr: str):
         """Convert string expression to required type."""
-        test_expr: Union[str, int, float]
+        test_expr: str | int | float
         if pd.api.types.is_numeric_dtype(self.data[col]):
             test_expr = int(expr) if "." not in expr else float(expr)
         elif pd.api.types.is_datetime64_any_dtype(self.data[col]):

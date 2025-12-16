@@ -5,7 +5,8 @@
 # --------------------------------------------------------------------------
 """Account Entity class."""
 
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.data_types import SplitProperty
@@ -91,18 +92,18 @@ class Account(Entity):
             kw arguments.
 
         """
-        self.Name: Optional[str] = None
-        self.NTDomain: Optional[str] = None
-        self.UPNSuffix: Optional[str] = None
-        self.Host: Optional[Host] = None
-        self.LogonId: Optional[str] = None
-        self.Sid: Optional[str] = None
-        self.AadTenantId: Optional[str] = None
-        self._AadUserId: Optional[str] = None
-        self.PUID: Optional[str] = None
+        self.Name: str | None = None
+        self.NTDomain: str | None = None
+        self.UPNSuffix: str | None = None
+        self.Host: Host | None = None
+        self.LogonId: str | None = None
+        self.Sid: str | None = None
+        self.AadTenantId: str | None = None
+        self._AadUserId: str | None = None
+        self.PUID: str | None = None
         self.IsDomainJoined: bool = False
-        self.DisplayName: Optional[str] = None
-        self.ObjectGuid: Optional[str] = None
+        self.DisplayName: str | None = None
+        self.ObjectGuid: str | None = None
         if "Upn" in kwargs:
             self.Upn = kwargs.pop("Upn")
         if "AadUserId" in kwargs:
@@ -122,7 +123,7 @@ class Account(Entity):
         return self.Name or self.DisplayName or "Unknown Account"
 
     @property
-    def AadUserId(self) -> Optional[str]:  # noqa: N802
+    def AadUserId(self) -> str | None:  # noqa: N802
         """Return the Azure AD user ID or the ObjectGuid."""
         return self._AadUserId or self.ObjectGuid
 
@@ -151,13 +152,9 @@ class Account(Entity):
         if role == "subject" and "SubjectUserName" in src_event:
             self.Name = src_event["SubjectUserName"]
             self.NTDomain = (
-                src_event["SubjectUserDomain"]
-                if "SubjectUserDomain" in src_event
-                else None
+                src_event["SubjectUserDomain"] if "SubjectUserDomain" in src_event else None
             )
-            self.Sid = (
-                src_event["SubjectUserSid"] if "SubjectUserSid" in src_event else None
-            )
+            self.Sid = src_event["SubjectUserSid"] if "SubjectUserSid" in src_event else None
             self.LogonId = (
                 src_event["SubjectLogonId"] if "SubjectLogonId" in src_event else None
             )
@@ -166,16 +163,10 @@ class Account(Entity):
             self.NTDomain = (
                 src_event["TargetUserDomain"] if "TargetUserDomain" in src_event else None
             )
-            self.Sid = (
-                src_event["TargetUserSid"] if "TargetUserSid" in src_event else None
-            )
-            self.LogonId = (
-                src_event["TargetLogonId"] if "TargetLogonId" in src_event else None
-            )
+            self.Sid = src_event["TargetUserSid"] if "TargetUserSid" in src_event else None
+            self.LogonId = src_event["TargetLogonId"] if "TargetLogonId" in src_event else None
 
-        self.AadTenantId = (
-            src_event["AadTenantId"] if "AadTenantId" in src_event else None
-        )
+        self.AadTenantId = src_event["AadTenantId"] if "AadTenantId" in src_event else None
         self.Sid = src_event["Sid"] if "Sid" in src_event else None
         self.NTDomain = src_event["NtDomain"] if "NtDomain" in src_event else None
         self.AadUserId = src_event["AadUserId"] if "AadUserId" in src_event else None

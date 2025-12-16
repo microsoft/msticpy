@@ -7,7 +7,6 @@
 
 import copy
 from collections import defaultdict
-from typing import DefaultDict, List, Tuple, Union
 
 import numpy as np
 
@@ -17,8 +16,8 @@ from ..utils.laplace_smooth import laplace_smooth_cmd_counts
 
 
 def compute_counts(  # nosec
-    sessions: List[List[str]], start_token: str, end_token: str, unk_token: str
-) -> Tuple[DefaultDict[str, int], DefaultDict[str, DefaultDict[str, int]]]:
+    sessions: list[list[str]], start_token: str, end_token: str, unk_token: str
+) -> tuple[defaultdict[str, int], defaultdict[str, defaultdict[str, int]]]:
     """
     Compute counts of individual commands and of sequences of two commands.
 
@@ -49,8 +48,8 @@ def compute_counts(  # nosec
             "start_token, end_token, unk_tokens should all be set to something different"
         )
 
-    seq1_counts: DefaultDict[str, int] = defaultdict(lambda: 0)
-    seq2_counts: DefaultDict[str, DefaultDict[str, int]] = defaultdict(
+    seq1_counts: defaultdict[str, int] = defaultdict(lambda: 0)
+    seq2_counts: defaultdict[str, defaultdict[str, int]] = defaultdict(
         lambda: defaultdict(lambda: 0)
     )
 
@@ -68,12 +67,12 @@ def compute_counts(  # nosec
 
 
 def laplace_smooth_counts(
-    seq1_counts: DefaultDict[str, int],
-    seq2_counts: DefaultDict[str, DefaultDict[str, int]],
+    seq1_counts: defaultdict[str, int],
+    seq2_counts: defaultdict[str, defaultdict[str, int]],
     start_token: str,
     end_token: str,
     unk_token: str,
-) -> Tuple[StateMatrix, StateMatrix]:
+) -> tuple[StateMatrix, StateMatrix]:
     """
     Laplace smoothing is applied to the counts.
 
@@ -120,9 +119,9 @@ def laplace_smooth_counts(
 
 # pylint: disable=too-many-arguments, too-many-branches
 def compute_likelihood_window(
-    window: List[str],
-    prior_probs: Union[StateMatrix, dict],
-    trans_probs: Union[StateMatrix, dict],
+    window: list[str],
+    prior_probs: StateMatrix | dict,
+    trans_probs: StateMatrix | dict,
     use_start_token: bool,
     use_end_token: bool,
     start_token: str = None,
@@ -167,9 +166,7 @@ def compute_likelihood_window(
 
     if use_end_token:
         if end_token is None:
-            raise MsticpyException(
-                "end_token should not be None, when use_end_token is True"
-            )
+            raise MsticpyException("end_token should not be None, when use_end_token is True")
 
     w_len = len(window)
     if w_len == 0:
@@ -195,15 +192,15 @@ def compute_likelihood_window(
 # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
 # pylint: disable=too-many-locals, too-many-branches
 def compute_likelihood_windows_in_session(
-    session: List[str],
-    prior_probs: Union[StateMatrix, dict],
-    trans_probs: Union[StateMatrix, dict],
+    session: list[str],
+    prior_probs: StateMatrix | dict,
+    trans_probs: StateMatrix | dict,
     window_len: int,
     use_start_end_tokens: bool,
     start_token: str = None,
     end_token: str = None,
     use_geo_mean: bool = False,
-) -> List[float]:
+) -> list[float]:
     """
     Compute the likelihoods of a sliding window of length `window_len` in the session.
 
@@ -277,15 +274,15 @@ def compute_likelihood_windows_in_session(
 
 # pylint: disable=too-many-arguments
 def rarest_window_session(
-    session: List[str],
-    prior_probs: Union[StateMatrix, dict],
-    trans_probs: Union[StateMatrix, dict],
+    session: list[str],
+    prior_probs: StateMatrix | dict,
+    trans_probs: StateMatrix | dict,
     window_len: int,
     use_start_end_tokens: bool,
     start_token: str,
     end_token: str,
     use_geo_mean: bool = False,
-) -> Tuple[List[str], float]:
+) -> tuple[list[str], float]:
     """
     Find and compute likelihood of the rarest window in the session.
 

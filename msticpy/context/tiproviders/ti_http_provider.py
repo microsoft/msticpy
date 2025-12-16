@@ -134,9 +134,7 @@ class HttpTIProvider(TIProvider, HttpProvider):
                     result,
                 )
             except JSONDecodeError:
-                result[
-                    "RawResult"
-                ] = f"""There was a problem parsing results from this lookup:
+                result["RawResult"] = f"""There was a problem parsing results from this lookup:
                                     {response.text}"""
                 result["Result"] = False
                 severity = ResultSeverity.information

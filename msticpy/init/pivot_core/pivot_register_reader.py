@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import importlib
 import warnings
-from typing import Any, Callable, Generator
+from collections.abc import Callable, Generator
+from typing import Any
 
 import yaml
 

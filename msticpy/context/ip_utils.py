@@ -19,10 +19,11 @@ import ipaddress
 import logging
 import re
 import socket
+from collections.abc import Callable, Iterator
 from dataclasses import asdict, dataclass, field
 from functools import lru_cache
 from time import sleep
-from typing import Any, Callable, Iterator
+from typing import Any
 
 import httpx
 import pandas as pd
@@ -430,7 +431,7 @@ def ip_whois(
     if ip is None:
         err_msg: str = "One of ip or ip_address parameters must be supplied."
         raise ValueError(err_msg)
-    if isinstance(ip, (list, pd.Series)):
+    if isinstance(ip, list | pd.Series):
         rate_limit: bool = len(ip) > RATE_LIMIT_THRESHOLD
         if rate_limit:
             logger.info("Large number of lookups, this may take some time.")
@@ -444,7 +445,7 @@ def ip_whois(
                 retry_count=retry_count,
             ).properties
         return _whois_result_to_pandas(whois_results)
-    if isinstance(ip, (str, IpAddress)):
+    if isinstance(ip, str | IpAddress):
         return _whois_lookup(ip, raw=raw)
     return pd.DataFrame()
 
@@ -466,9 +467,7 @@ def get_asn_details(asns: str | list[str]) -> pd.DataFrame | dict[str, Any]:
 
     """
     if isinstance(asns, list):
-        asn_detail_results: list[dict[str, Any]] = [
-            _asn_results(str(asn)) for asn in asns
-        ]
+        asn_detail_results: list[dict[str, Any]] = [_asn_results(str(asn)) for asn in asns]
         return pd.DataFrame(asn_detail_results)
     return _asn_results(str(asns))
 
@@ -539,7 +538,7 @@ def get_asn_from_ip(
     ip_response: str = _cymru_query(query)
     keys: list[str] = ip_response.split("\n", maxsplit=1)[0].split("|")
     values: list[str] = ip_response.split("\n")[1].split("|")
-    return {key.strip(): value.strip() for key, value in zip(keys, values)}
+    return {key.strip(): value.strip() for key, value in zip(keys, values, strict=False)}
 
 
 @dataclass
@@ -636,8 +635,7 @@ def _rdap_lookup(url: str, retry_count: int = 5) -> httpx.Response:
         retry_count -= 1
     if not rdap_data:
         err_msg: str = (
-            "Rate limit exceeded - try adjusting query_rate parameter "
-            "to slow down requests"
+            "Rate limit exceeded - try adjusting query_rate parameter to slow down requests"
         )
         raise MsticpyException(err_msg)
     return rdap_data

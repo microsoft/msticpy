@@ -6,9 +6,10 @@
 """Data query definition reader."""
 
 import logging
+from collections.abc import Iterable
 from itertools import chain
 from pathlib import Path
-from typing import Any, Dict, Iterable, Tuple
+from typing import Any
 
 import yaml
 
@@ -49,7 +50,7 @@ def find_yaml_files(source_path: str, recursive: bool = True) -> Iterable[Path]:
         yield file_path
 
 
-def read_query_def_file(query_file: str) -> Tuple[Dict, Dict, Dict]:
+def read_query_def_file(query_file: str) -> tuple[dict, dict, dict]:
     """
     Read a yaml data query definition file.
 
@@ -91,7 +92,7 @@ def read_query_def_file(query_file: str) -> Tuple[Dict, Dict, Dict]:
     return sources, defaults, metadata
 
 
-def validate_query_defs(query_def_dict: Dict[str, Any]) -> bool:
+def validate_query_defs(query_def_dict: dict[str, Any]) -> bool:
     """
     Validate content of query definition.
 
@@ -127,7 +128,7 @@ def validate_query_defs(query_def_dict: Dict[str, Any]) -> bool:
     return True
 
 
-def _validate_data_categories(query_def_dict: Dict):
+def _validate_data_categories(query_def_dict: dict):
     if (
         "data_environments" not in query_def_dict["metadata"]
         or not query_def_dict["metadata"]["data_environments"]

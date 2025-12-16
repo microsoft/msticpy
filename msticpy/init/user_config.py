@@ -48,7 +48,7 @@ add connect: False to the entry.
 import textwrap
 from contextlib import redirect_stdout
 from io import StringIO
-from typing import Any, Dict, Tuple
+from typing import Any
 
 from .._version import VERSION
 from ..common.pkg_config import get_config
@@ -59,7 +59,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-def load_user_defaults() -> Dict[str, object]:
+def load_user_defaults() -> dict[str, object]:
     """
     Load providers from user defaults in msticpyconfig.yaml.
 
@@ -133,9 +133,7 @@ def _load_components(user_defaults, namespace=None):
     return prov_dict
 
 
-def _load_az_workspaces(
-    prov_name: str, azsent_prov_entry: Dict[str, Any]
-) -> Dict[str, Any]:
+def _load_az_workspaces(prov_name: str, azsent_prov_entry: dict[str, Any]) -> dict[str, Any]:
     az_provs = {}
     for ws_name, ws_settings in azsent_prov_entry.items():
         if not ws_settings:
@@ -158,7 +156,7 @@ def _load_az_workspaces(
     return az_provs
 
 
-def _load_provider(prov_name: str, qry_prov_entry: Dict[str, Any]) -> Tuple[str, Any]:
+def _load_provider(prov_name: str, qry_prov_entry: dict[str, Any]) -> tuple[str, Any]:
     alias = qry_prov_entry.get("alias", prov_name)
     connect = qry_prov_entry.get("connect", True)
     obj_name = f"qry_{alias.lower()}"

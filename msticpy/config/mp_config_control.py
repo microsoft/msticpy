@@ -8,7 +8,7 @@
 import pkgutil
 import re
 from collections import namedtuple
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import ipywidgets as widgets
 import yaml
@@ -34,7 +34,7 @@ _VALID_SUCCESS = "Validation succeeded"
 class MpConfigControls:
     """Msticpy configuration and settings database."""
 
-    def __init__(self, mp_config_def: Dict[str, Any], mp_config: Dict[str, Any]):
+    def __init__(self, mp_config_def: dict[str, Any], mp_config: dict[str, Any]):
         """
         Return an instance of MpConfigControls.
 
@@ -57,7 +57,7 @@ class MpConfigControls:
             self.mp_config["DataProviders"]["AzureCLI"] = self.mp_config["AzureCLI"]
 
     @staticmethod
-    def _get_elem_from_path(path, member_dict: Dict[str, Any]):
+    def _get_elem_from_path(path, member_dict: dict[str, Any]):
         """Return an item at the path from `member_dict`."""
         paths = path.split(".")
         current_elem = member_dict
@@ -69,7 +69,7 @@ class MpConfigControls:
         return current_elem
 
     def _set_elem_at_path(
-        self, path: str, member_dict: Dict[str, Any], value: Any, create: bool = True
+        self, path: str, member_dict: dict[str, Any], value: Any, create: bool = True
     ):
         """Set item at the path from `member_dict` to `value`."""
         path_elems = path.rsplit(".", maxsplit=1)
@@ -96,7 +96,7 @@ class MpConfigControls:
             current_elem[tgt_key] = value
             print_debug("set", parent_path, tgt_key, value)
 
-    def _del_elem_at_path(self, path: str, member_dict: Dict[str, Any]):
+    def _del_elem_at_path(self, path: str, member_dict: dict[str, Any]):
         """Delete an item at `path`."""
         parent_path, tgt_key = path.rsplit(".", maxsplit=1)
         parent = self._get_elem_from_path(parent_path, member_dict)
@@ -130,15 +130,13 @@ class MpConfigControls:
         """Delete the control stored at `path`."""
         self._del_elem_at_path(path, self.controls)
 
-    def get_defn(self, path: str) -> Union[Dict[str, Any], Tuple[str, Any]]:
+    def get_defn(self, path: str) -> dict[str, Any] | tuple[str, Any]:
         """Return the setting definition at `path`."""
         defn = self._get_elem_from_path(path, self.config_defn)
         if defn is not None:
             return defn
         if path.startswith("AzureSentinel.Workspaces"):
-            path = re.sub(
-                r"(?P<root>AzureSentinel\.Workspaces\.)([^.]+)", r"\1Default", path
-            )
+            path = re.sub(r"(?P<root>AzureSentinel\.Workspaces\.)([^.]+)", r"\1Default", path)
         return self._get_elem_from_path(path, self.config_defn)
 
     def rename_path(self, old_path: str, new_path: str):
@@ -150,9 +148,7 @@ class MpConfigControls:
             or len(old_path_elems) == 1
             or len(new_path_elems) == 1
         ):
-            raise ValueError(
-                "Can only rename the bottom element of paths", old_path, new_path
-            )
+            raise ValueError("Can only rename the bottom element of paths", old_path, new_path)
         path_root = old_path_elems[0]
         src_key = old_path_elems[1]
         tgt_key = new_path_elems[1]
@@ -200,9 +196,9 @@ class MpConfigControls:
         print_debug(
             type(ctrl_tree),
             "instance check",
-            isinstance(ctrl_tree, (widgets.Widget, SettingsControl)),
+            isinstance(ctrl_tree, widgets.Widget | SettingsControl),
         )
-        if isinstance(ctrl_tree, (widgets.Widget, SettingsControl)):
+        if isinstance(ctrl_tree, widgets.Widget | SettingsControl):
             return widget_to_py(ctrl_tree)
         if isinstance(ctrl_tree, dict):
             return {key: self._get_ctrl_values(f"{path}.{key}") for key in ctrl_tree}
@@ -222,7 +218,7 @@ class MpConfigControls:
                 ctrl_dict[name] = None
         return ctrl_dict
 
-    def validate_all_settings(self, show_all: bool = False) -> List[ValidationResult]:
+    def validate_all_settings(self, show_all: bool = False) -> list[ValidationResult]:
         """
         Validate settings against definitions.
 
@@ -245,8 +241,8 @@ class MpConfigControls:
         return results
 
     def validate_setting(
-        self, path: str, defn_path: Optional[str] = None, show_all: bool = False
-    ) -> List[ValidationResult]:
+        self, path: str, defn_path: str | None = None, show_all: bool = False
+    ) -> list[ValidationResult]:
         """
         Validate settings against definitions for a specific path.
 
@@ -277,7 +273,7 @@ class MpConfigControls:
             return [res for res in up_results if not res[0] or show_all]
         return [ValidationResult(True, "No validation results found")]
 
-    def _unpack_lists(self, res_list: List[Any]) -> List[ValidationResult]:
+    def _unpack_lists(self, res_list: list[Any]) -> list[ValidationResult]:
         """Unpack nested lists into a single list."""
         results = []
         for item in res_list:
@@ -289,8 +285,8 @@ class MpConfigControls:
 
     # pylint: disable=too-many-return-statements
     def _validate_setting_at_path(  # noqa: PLR0911
-        self, path: str, defn_path: Optional[str] = None, index: Optional[int] = None
-    ) -> Union[ValidationResult, List[Union[ValidationResult, List[Any]]]]:
+        self, path: str, defn_path: str | None = None, index: int | None = None
+    ) -> ValidationResult | list[ValidationResult | list[Any]]:
         """Recursively validate settings at path."""
         defn_path = defn_path or path
         conf_defn = self.get_defn(defn_path)
@@ -355,9 +351,7 @@ class MpConfigControls:
         """Extract type and options from definition."""
         if not conf_val or "(" not in conf_val or ")" not in conf_val:
             return "unknown", {}
-        val_type_match = re.match(
-            r"(?P<type>[^()]+)\((?P<params>.*)\)$", conf_val.strip()
-        )
+        val_type_match = re.match(r"(?P<type>[^()]+)\((?P<params>.*)\)$", conf_val.strip())
         val_type = val_type_match.groupdict().get("type")
         val_param_str = val_type_match.groupdict().get("params", "")
 
@@ -375,8 +369,7 @@ class MpConfigControls:
             val_params = {}
         if "options" in val_params:
             val_params["options"] = [
-                val.strip("'\"")
-                for val in val_params["options"].strip()[1:-1].split("; ")
+                val.strip("'\"") for val in val_params["options"].strip()[1:-1].split("; ")
             ]
         if "mp_defn_path" in val_params:
             defn_path = val_params.pop("mp_defn_path").strip(" /\"'").replace("/", ".")
@@ -429,7 +422,7 @@ class MpConfigControls:
         return out_list
 
 
-def get_mpconfig_definitions() -> Dict[str, Any]:
+def get_mpconfig_definitions() -> dict[str, Any]:
     """
     Return the current msticpyconfig definition dictionary.
 
@@ -500,7 +493,7 @@ def _validate_m_enum(value, path, val_type, val_opts):
     mssg = _get_mssg(value, path)
     if _is_none_and_not_required(value, val_type, val_opts):
         return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
-    if not isinstance(value, (str, list)):
+    if not isinstance(value, str | list):
         return ValidationResult(
             False,
             f"Value '{value}' of type {type(value)} should be type {val_type} - {mssg}",
@@ -538,7 +531,7 @@ def _validate_txt_dict(value, path, val_type, val_opts):
                     False,
                     f"Key {d_key} of {value} must be a string - {mssg}",
                 )
-            if not isinstance(d_val, (str, int, bool)):
+            if not isinstance(d_val, str | int | bool):
                 return ValidationResult(
                     False,
                     f"Value {d_val} of key {d_key} in {value} must be a"

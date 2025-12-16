@@ -14,7 +14,7 @@ auditd is not available.
 """
 
 import datetime as dt
-from typing import Any, Dict
+from typing import Any
 
 import ipywidgets as widgets
 import pandas as pd
@@ -151,20 +151,12 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> pd.DataFrame:
     ses_closed = 0
     # Extract logon session opened and logon session closed data.
     logons_opened = (
-        (
-            logon_events[
-                logon_events["SyslogMessage"].str.contains("pam_unix.+session opened")
-            ]
-        )
+        (logon_events[logon_events["SyslogMessage"].str.contains("pam_unix.+session opened")])
         .set_index("TimeGenerated")
         .sort_index(ascending=True)
     )
     logons_closed = (
-        (
-            logon_events[
-                logon_events["SyslogMessage"].str.contains("pam_unix.+session closed")
-            ]
-        )
+        (logon_events[logon_events["SyslogMessage"].str.contains("pam_unix.+session closed")])
         .set_index("TimeGenerated")
         .sort_index(ascending=True)
     )
@@ -230,8 +222,8 @@ def risky_sudo_sessions(
 
     # Depending on whether we have risky or suspicious acitons or both
     # identify sessions which these actions occur in
-    risky_act_sessions: Dict[str, Any] = {}
-    susp_act_sessions: Dict[str, Any] = {}
+    risky_act_sessions: dict[str, Any] = {}
+    susp_act_sessions: dict[str, Any] = {}
     if risky_actions is not None:
         risky_act_sessions = _find_risky_sudo_session(
             risky_actions=risky_actions, sudo_sessions=sessions

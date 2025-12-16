@@ -6,7 +6,7 @@
 """Uses the Azure Python SDK to interact with Azure Blob Storage."""
 
 import datetime
-from typing import Any, List, Optional
+from typing import Any
 
 import pandas as pd
 from azure.common.exceptions import CloudError
@@ -38,14 +38,14 @@ class AzureBlobStorage:
         self.connected = False
         self.abs_site = f"{abs_name}.blob.core.windows.net"
         self.connection_string = abs_connection_string
-        self.credentials: Optional[AzCredentials] = None
-        self.abs_client: Optional[BlobServiceClient] = None
+        self.credentials: AzCredentials | None = None
+        self.abs_client: BlobServiceClient | None = None
         if connect:
             self.connect()
 
     def connect(
         self,
-        auth_methods: List = None,
+        auth_methods: list = None,
         silent: bool = False,
     ):
         """Authenticate with the SDK."""
@@ -55,9 +55,7 @@ class AzureBlobStorage:
         if not self.connection_string:
             self.abs_client = BlobServiceClient(self.abs_site, self.credentials.modern)
         else:
-            self.abs_client = BlobServiceClient.from_connection_string(
-                self.connection_string
-            )
+            self.abs_client = BlobServiceClient.from_connection_string(self.connection_string)
         if not self.abs_client:
             raise CloudError("Could not create a Blob Storage client.")
         self.connected = True
@@ -103,7 +101,7 @@ class AzureBlobStorage:
         properties = new_container.get_container_properties()
         return _parse_returned_items([properties], ["encryption_scope", "lease"])
 
-    def blobs(self, container_name: str) -> Optional[pd.DataFrame]:
+    def blobs(self, container_name: str) -> pd.DataFrame | None:
         """
         Get a list of blobs in a container.
 
@@ -154,9 +152,7 @@ class AzureBlobStorage:
         if not upload["error_code"]:
             print("Upload complete")
         else:
-            raise CloudError(
-                f"There was a problem uploading the blob: {upload['error_code']}"
-            )
+            raise CloudError(f"There was a problem uploading the blob: {upload['error_code']}")
         return True
 
     def get_blob(self, container_name: str, blob_name: str) -> bytes:

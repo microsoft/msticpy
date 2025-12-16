@@ -6,7 +6,7 @@
 """Module for common display functions."""
 
 from itertools import zip_longest
-from typing import Any, Dict
+from typing import Any
 
 import pandas as pd
 from bokeh.io import output_notebook, show
@@ -143,8 +143,7 @@ def display_timeseries_anomalies(  # noqa: PLR0915
     show_range: bool = kwargs.pop("range_tool", True)
     color: list = kwargs.get("color", ["navy", "green", "firebrick"])
     color = [
-        col1 or col2
-        for col1, col2 in zip_longest(color[:3], ["navy", "green", "firebrick"])
+        col1 or col2 for col1, col2 in zip_longest(color[:3], ["navy", "green", "firebrick"])
     ]
     legend_pos: str = kwargs.pop("legend", "top_left")
     xgrid: bool = kwargs.pop("xgrid", False)
@@ -223,7 +222,7 @@ def display_timeseries_anomalies(  # noqa: PLR0915
 
     # create default plot args
     # pylint: disable=use-dict-literal
-    arg_dict: Dict[str, Any] = {
+    arg_dict: dict[str, Any] = {
         "x": time_column,
         "y": value_column,
         "size": 12,

@@ -6,8 +6,8 @@
 """Azure Cloud Mappings."""
 
 import contextlib
-from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from functools import cache
+from typing import Any
 
 import httpx
 
@@ -62,10 +62,8 @@ def format_endpoint(endpoint: str) -> str:
     return endpoint if endpoint.endswith("/") else f"{endpoint}/"
 
 
-@lru_cache(maxsize=None)
-def get_cloud_endpoints(
-    cloud: str, resource_manager_url: Optional[str] = None
-) -> Dict[str, Any]:
+@cache
+def get_cloud_endpoints(cloud: str, resource_manager_url: str | None = None) -> dict[str, Any]:
     """
     Get the cloud endpoints for a specific cloud.
 
@@ -104,7 +102,7 @@ def get_cloud_endpoints(
     )
 
 
-def get_cloud_endpoints_by_cloud(cloud: str) -> Dict[str, Any]:
+def get_cloud_endpoints_by_cloud(cloud: str) -> dict[str, Any]:
     """
     Get the cloud endpoints for a specific cloud.
 
@@ -125,7 +123,7 @@ def get_cloud_endpoints_by_cloud(cloud: str) -> Dict[str, Any]:
 
 def get_cloud_endpoints_by_resource_manager_url(
     resource_manager_url: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get the cloud endpoints for a specific resource manager url.
 
@@ -168,7 +166,7 @@ def get_azure_config_value(key, default):
     return default
 
 
-def default_auth_methods() -> List[str]:
+def default_auth_methods() -> list[str]:
     """Get the default (all) authentication options."""
     return get_azure_config_value(
         "auth_methods", ["env", "msi", "vscode", "cli", "powershell", "devicecode"]
@@ -197,9 +195,9 @@ class AzureCloudConfig:
 
     def __init__(
         self,
-        cloud: Optional[str] = None,
-        tenant_id: Optional[str] = None,
-        resource_manager_url: Optional[str] = None,
+        cloud: str | None = None,
+        tenant_id: str | None = None,
+        resource_manager_url: str | None = None,
     ):
         """
         Initialize AzureCloudConfig from `cloud` or configuration.
@@ -229,14 +227,14 @@ class AzureCloudConfig:
         self.endpoints = get_cloud_endpoints(self.cloud, self.resource_manager_url)
 
     @property
-    def cloud_names(self) -> List[str]:
+    def cloud_names(self) -> list[str]:
         """Return a list of current cloud names."""
         return list(CLOUD_MAPPING.keys())
 
     @staticmethod
     def resolve_cloud_alias(
         alias,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Return match of cloud alias or name."""
         alias_cf = alias.casefold()
         aliases = {alias.casefold(): cloud for alias, cloud in CLOUD_ALIASES.items()}
@@ -245,7 +243,7 @@ class AzureCloudConfig:
         return alias_cf if alias_cf in aliases.values() else None
 
     @property
-    def suffixes(self) -> Dict[str, str]:
+    def suffixes(self) -> dict[str, str]:
         """
         Get CloudSuffixes class an Azure cloud.
 
@@ -272,9 +270,7 @@ class AzureCloudConfig:
     @property
     def authority_uri(self) -> str:
         """Return the AAD authority URI."""
-        return format_endpoint(
-            self.endpoints.get("authentication", {}).get("loginEndpoint")
-        )
+        return format_endpoint(self.endpoints.get("authentication", {}).get("loginEndpoint"))
 
     @property
     def log_analytics_uri(self) -> str:

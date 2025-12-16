@@ -322,9 +322,7 @@ class RobustRandomCutForest:
         scores = np.sum(tree_scores, axis=0) / self.num_trees
         return scores
 
-    def _process_tree(
-        self, tree: rrcf.RCTree, x_sub: np.ndarray, batches: list
-    ) -> np.ndarray:
+    def _process_tree(self, tree: rrcf.RCTree, x_sub: np.ndarray, batches: list) -> np.ndarray:
         """
         Process a single tree with batched operations.
 
@@ -349,7 +347,7 @@ class RobustRandomCutForest:
             temp_indices = np.arange(1000000 + start, 1000000 + end)
 
             # Insert batch
-            for idx, point in zip(temp_indices, batch):
+            for idx, point in zip(temp_indices, batch, strict=False):
                 tree.insert_point(point, index=idx)
 
             # Calculate CoDisp
@@ -516,9 +514,7 @@ def plot_outlier_results(  # noqa: PLR0915
             np.c_[
                 xx.ravel(),
                 yy.ravel(),
-                np.zeros(
-                    (xx.ravel().shape[0], clf.n_features_in_ - len(feature_columns))
-                ),
+                np.zeros((xx.ravel().shape[0], clf.n_features_in_ - len(feature_columns))),
             ]
         )
         z = z.reshape(xx.shape)

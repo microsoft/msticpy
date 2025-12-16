@@ -19,9 +19,10 @@ import contextlib
 import math
 import re
 from collections import Counter
+from collections.abc import Callable
 from functools import partial
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Callable, ClassVar
+from typing import ClassVar
 from urllib.parse import quote_plus
 
 from typing_extensions import Self
@@ -372,6 +373,4 @@ def preprocess_observable(
 def _entropy(input_str: str) -> float:
     """Compute entropy of input string."""
     str_len = float(len(input_str))
-    return -sum(
-        (a / str_len) * math.log2(a / str_len) for a in Counter(input_str).values()
-    )
+    return -sum((a / str_len) * math.log2(a / str_len) for a in Counter(input_str).values())

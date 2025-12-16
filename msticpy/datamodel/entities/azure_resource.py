@@ -6,8 +6,9 @@
 """AzureResource Entity class."""
 
 import re
+from collections.abc import Mapping
 from itertools import islice
-from typing import Any, Dict, Mapping, Optional
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -53,9 +54,9 @@ class AzureResource(Entity):
             kw arguments.
 
         """
-        self.ResourceId: Optional[str] = None
-        self.ResourceIdParts: Dict[str, str] = {}
-        self.Url: Optional[str] = None
+        self.ResourceId: str | None = None
+        self.ResourceIdParts: dict[str, str] = {}
+        self.Url: str | None = None
         super().__init__(src_entity=src_entity, **kwargs)
         if self.ResourceId and not self.ResourceIdParts:
             self._extract_resource_parts()
@@ -103,4 +104,4 @@ class AzureResource(Entity):
         res_elems = res_match.groupdict().get("res_path", "").split("/")
         keys = islice(res_elems, 0, len(res_elems), 2)
         vals = islice(res_elems, 1, len(res_elems), 2)
-        self.ResourceIdParts = dict(zip(keys, vals))
+        self.ResourceIdParts = dict(zip(keys, vals, strict=False))

@@ -20,8 +20,9 @@ import contextlib
 import logging
 import warnings
 from collections import defaultdict
+from collections.abc import Callable, Iterable
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import pandas as pd
 from typing_extensions import Self

@@ -7,7 +7,6 @@
 
 import importlib
 from functools import singledispatch
-from typing import Dict
 
 from ..._version import VERSION
 from ..core.query_defns import DataEnvironment
@@ -45,7 +44,7 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.MSSentinelSearch: ("azure_search_driver", "AzureSearchDriver"),
 }
 
-CUSTOM_PROVIDERS: Dict[str, type] = {}
+CUSTOM_PROVIDERS: dict[str, type] = {}
 
 
 @singledispatch
@@ -69,9 +68,7 @@ def _(data_environment: DataEnvironment) -> type:
             ", ".join(env.name for env in _ENVIRONMENT_DRIVERS),
         )
 
-    imp_module = importlib.import_module(
-        f"msticpy.data.drivers.{mod_name}", package="msticpy"
-    )
+    imp_module = importlib.import_module(f"msticpy.data.drivers.{mod_name}", package="msticpy")
     return getattr(imp_module, cls_name)
 
 

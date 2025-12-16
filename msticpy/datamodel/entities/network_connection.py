@@ -5,7 +5,8 @@
 # --------------------------------------------------------------------------
 """NetworkConnection Entity class."""
 
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -65,11 +66,11 @@ class NetworkConnection(Entity):
             kw arguments.
 
         """
-        self.SourceAddress: Optional[IpAddress] = None
-        self.SourcePort: Optional[int] = None
-        self.DestinationAddress: Optional[IpAddress] = None
-        self.DestinationPort: Optional[int] = None
-        self.Protocol: Optional[str] = None
+        self.SourceAddress: IpAddress | None = None
+        self.SourcePort: int | None = None
+        self.DestinationAddress: IpAddress | None = None
+        self.DestinationPort: int | None = None
+        self.Protocol: str | None = None
         super().__init__(src_entity=src_entity, **kwargs)
 
     @property

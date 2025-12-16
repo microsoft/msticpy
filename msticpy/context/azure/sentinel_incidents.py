@@ -8,7 +8,8 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 import httpx
@@ -239,9 +240,9 @@ class SentinelIncidentsMixin(SentinelBookmarksMixin):
                 ):
                     bkmark_id: str = relationship["properties"]["relatedResourceName"]
                     bookmarks_df: pd.DataFrame = self.list_bookmarks()
-                    bookmark: pd.Series = bookmarks_df[
-                        bookmarks_df["name"] == bkmark_id
-                    ].iloc[0]
+                    bookmark: pd.Series = bookmarks_df[bookmarks_df["name"] == bkmark_id].iloc[
+                        0
+                    ]
                     bookmarks_list.append(
                         {
                             "Bookmark ID": bkmark_id,
@@ -432,10 +433,7 @@ class SentinelIncidentsMixin(SentinelBookmarksMixin):
                 display(filtered_incidents[["name", "properties.title"]])
                 err_msg: str = "More than one incident found, please specify by GUID"
                 raise MsticpyUserError(err_msg) from incident_name
-            if (
-                not isinstance(filtered_incidents, pd.DataFrame)
-                or filtered_incidents.empty
-            ):
+            if not isinstance(filtered_incidents, pd.DataFrame) or filtered_incidents.empty:
                 err_msg = f"Incident {incident} not found"
                 raise MsticpyUserError(err_msg) from incident_name
             return filtered_incidents["name"].iloc[0]
@@ -463,9 +461,7 @@ class SentinelIncidentsMixin(SentinelBookmarksMixin):
 
         """
         self.check_connected()
-        comment_url: str = (
-            self.sent_urls["incidents"] + f"/{incident_id}/comments/{uuid4()}"
-        )
+        comment_url: str = self.sent_urls["incidents"] + f"/{incident_id}/comments/{uuid4()}"
         params: dict[str, str] = {"api-version": "2020-01-01"}
         data: dict[str, Any] = extract_sentinel_response({"message": comment})
         if not self._token:

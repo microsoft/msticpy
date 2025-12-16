@@ -10,7 +10,8 @@ from __future__ import annotations
 import contextlib
 import sys
 import traceback
-from typing import Any, ClassVar, Generator
+from collections.abc import Generator
+from typing import Any, ClassVar
 
 from IPython.display import display
 
@@ -208,9 +209,7 @@ class MsticpyUserError(MsticpyException):
                 if isinstance(l_content, tuple):
                     l_content = l_content[0]
                 if l_type == "title":
-                    out_lines.extend(
-                        ("-" * len(l_content), l_content, "-" * len(l_content))
-                    )
+                    out_lines.extend(("-" * len(l_content), l_content, "-" * len(l_content)))
                 elif l_type == "uri":
                     if isinstance(l_content, tuple):
                         out_lines.append(f" - {': '.join(l_content)}")
@@ -248,9 +247,7 @@ class MsticpyUserConfigError(MsticpyUserError):
         "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html",
     )
 
-    def __init__(
-        self, *args, help_uri: tuple[str, str] | str | None = None, **kwargs
-    ) -> None:
+    def __init__(self, *args, help_uri: tuple[str, str] | str | None = None, **kwargs) -> None:
         """
         Create generic user configuration exception.
 
@@ -285,9 +282,7 @@ class MsticpyKeyVaultConfigError(MsticpyUserConfigError):
         "#specifying-secrets-as-key-vault-secrets",
     )
 
-    def __init__(
-        self, *args, help_uri: tuple[str, str] | str | None = None, **kwargs
-    ) -> None:
+    def __init__(self, *args, help_uri: tuple[str, str] | str | None = None, **kwargs) -> None:
         """
         Create Key Vault configuration exception.
 
@@ -309,9 +304,7 @@ class MsticpyKeyVaultConfigError(MsticpyUserConfigError):
 class MsticpyKeyVaultMissingSecretError(MsticpyKeyVaultConfigError):
     """Missing secret exception."""
 
-    def __init__(
-        self, *args, help_uri: tuple[str, str] | str | None = None, **kwargs
-    ) -> None:
+    def __init__(self, *args, help_uri: tuple[str, str] | str | None = None, **kwargs) -> None:
         """
         Create Key Vault missing key exception.
 
@@ -339,9 +332,7 @@ class MsticpyAzureConfigError(MsticpyUserConfigError):
         + "#instantiating-and-connecting-with-an-azure-data-connector",
     )
 
-    def __init__(
-        self, *args, help_uri: tuple[str, str] | str | None = None, **kwargs
-    ) -> None:
+    def __init__(self, *args, help_uri: tuple[str, str] | str | None = None, **kwargs) -> None:
         """
         Create Azure data missing configuration exception.
 
@@ -412,9 +403,7 @@ class MsticpyImportExtraError(MsticpyUserError, ImportError):
         "https://msticpy.readthedocs.io/en/latest/getting_started/Installing.html",
     )
 
-    def __init__(
-        self, *args, help_uri: tuple[str, str] | str | None = None, **kwargs
-    ) -> None:
+    def __init__(self, *args, help_uri: tuple[str, str] | str | None = None, **kwargs) -> None:
         """
         Create import missing extra exception.
 
@@ -450,9 +439,7 @@ class MsticpyMissingDependencyError(MsticpyUserError, ImportError):
         "https://msticpy.readthedocs.io/en/latest/getting_started/Installing.html",
     )
 
-    def __init__(
-        self, *args, help_uri: tuple[str, str] | str | None = None, **kwargs
-    ) -> None:
+    def __init__(self, *args, help_uri: tuple[str, str] | str | None = None, **kwargs) -> None:
         """
         Create import missing extra exception.
 
@@ -502,9 +489,7 @@ class MsticpyParameterError(MsticpyUserError):
         "https://msticpy.readthedocs.io",
     )
 
-    def __init__(
-        self, *args, help_uri: tuple[str, str] | str | None = None, **kwargs
-    ) -> None:
+    def __init__(self, *args, help_uri: tuple[str, str] | str | None = None, **kwargs) -> None:
         """
         Create parameter exception.
 

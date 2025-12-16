@@ -6,7 +6,6 @@
 """Threat Intel Results Browser."""
 
 import pprint
-from typing import List, Union
 
 import pandas as pd
 from IPython.display import HTML
@@ -20,7 +19,7 @@ __author__ = "Ian Hellen"
 
 def browse_results(
     data: pd.DataFrame,
-    severities: Union[List[str], str, None] = None,
+    severities: list[str] | str | None = None,
     *,
     height: str = "300px",
 ) -> SelectItem:
@@ -56,9 +55,7 @@ def browse_results(
     return SelectItem(item_dict=opts, action=disp_func, height=height)
 
 
-def get_ti_select_options(
-    ti_data: pd.DataFrame, severities: Union[List[str], str, None] = None
-):
+def get_ti_select_options(ti_data: pd.DataFrame, severities: list[str] | str | None = None):
     """Get SelectItem options for TI data."""
     ti_agg_df = _create_ti_agg_list(ti_data, severities)
     return dict(
@@ -75,9 +72,7 @@ def get_ti_select_options(
     )
 
 
-def _create_ti_agg_list(
-    ti_data: pd.DataFrame, severities: Union[List[str], str, None] = None
-):
+def _create_ti_agg_list(ti_data: pd.DataFrame, severities: list[str] | str | None = None):
     """Aggregate ti results on IoC for multiple providers."""
     if not severities:
         severities = ["warning", "high"]
@@ -89,14 +84,10 @@ def _create_ti_agg_list(
         ti_data[ti_data["Severity"].isin(severities)]
         .groupby(["Ioc", "IocType", "Severity"])
         .agg(
-            Providers=pd.NamedAgg(
-                column="Provider", aggfunc=lambda x: x.unique().tolist()
-            ),
+            Providers=pd.NamedAgg(column="Provider", aggfunc=lambda x: x.unique().tolist()),
             Details=pd.NamedAgg(column="Details", aggfunc=lambda x: x.tolist()),
             Responses=pd.NamedAgg(column="RawResult", aggfunc=lambda x: x.tolist()),
-            References=pd.NamedAgg(
-                column="Reference", aggfunc=lambda x: x.unique().tolist()
-            ),
+            References=pd.NamedAgg(column="Reference", aggfunc=lambda x: x.unique().tolist()),
         )
         .reset_index()
     )
@@ -119,9 +110,9 @@ def ti_details_display(ti_data):
         h3_style = "background-color: SteelBlue; padding: 6px"
         results = [f"<h2 style='{h2_style}'>{ioc}</h2>"]
         for prov in provs:
-            ioc_match = ti_data[
-                (ti_data["Ioc"] == ioc) & (ti_data["Provider"] == prov)
-            ].iloc[0]
+            ioc_match = ti_data[(ti_data["Ioc"] == ioc) & (ti_data["Provider"] == prov)].iloc[
+                0
+            ]
             results.extend(
                 (
                     f"<h3 style='{h3_style}'>Type: '{ioc_match.IocType}', Provider: {prov}, "

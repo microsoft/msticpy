@@ -8,8 +8,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable, Iterable
 from functools import singledispatchmethod
-from typing import TYPE_CHECKING, Any, Callable, Iterable
+from typing import TYPE_CHECKING, Any
 
 import httpx
 from typing_extensions import Self
@@ -142,10 +143,8 @@ class SentinelDynamicSummaryMixin(SentinelUtilsMixin):
         if summary_items:
             if not self.sent_data_query:
                 try:
-                    self.sent_data_query: SentinelQueryProvider | None = (
-                        SentinelQueryProvider(
-                            self.default_workspace_name,  # type: ignore[attr-defined]
-                        )
+                    self.sent_data_query: SentinelQueryProvider | None = SentinelQueryProvider(
+                        self.default_workspace_name,  # type: ignore[attr-defined]
                     )
                     logger.info(
                         "Created sentinel query provider for %s",
@@ -316,9 +315,7 @@ class SentinelDynamicSummaryMixin(SentinelUtilsMixin):
             "_create_dynamic_summary (DynamicSummary) failure %s",
             response.content.decode("utf-8"),
         )
-        err_msg = (
-            f"Dynamic summary create/update failed with status {response.status_code}"
-        )
+        err_msg = f"Dynamic summary create/update failed with status {response.status_code}"
         raise MsticpyAzureConnectionError(
             err_msg,
             "Text response:",

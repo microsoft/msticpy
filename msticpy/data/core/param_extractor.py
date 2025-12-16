@@ -5,7 +5,8 @@
 # --------------------------------------------------------------------------
 """Parameter extractor helper functions for use with IPython/Juptyer queries."""
 
-from typing import Any, Dict, List, Mapping, Tuple
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -19,7 +20,7 @@ __author__ = "Ian Hellen"
 @export
 def extract_query_params(
     query_source: QuerySource, *args, **kwargs
-) -> Tuple[Dict[str, Any], List[str]]:
+) -> tuple[dict[str, Any], list[str]]:
     """
     Get the parameters needed for the query.
 
@@ -51,7 +52,7 @@ def extract_query_params(
     # at least the required params plus any that are extracted from args and
     # kwargs and have been added dynamically.
     req_param_names = query_source.required_params.keys()
-    req_params: Dict[str, Any] = dict.fromkeys(req_param_names)
+    req_params: dict[str, Any] = dict.fromkeys(req_param_names)
 
     # try to retrieve any parameters as attributes of the args objects
     _get_object_params(args, all_params, req_params)
@@ -71,7 +72,7 @@ def extract_query_params(
 
 
 def _get_object_params(
-    args: Tuple[Any, ...], params: Mapping[str, Any], req_params: Dict[str, Any]
+    args: tuple[Any, ...], params: Mapping[str, Any], req_params: dict[str, Any]
 ):
     """
     Get params from attributes of arg objects.
@@ -88,7 +89,7 @@ def _get_object_params(
     """
     remaining_params = list(params.keys())
     for arg_object in args:
-        if isinstance(arg_object, (str, int, float, bool)):
+        if isinstance(arg_object, str | int | float | bool):
             # ignore some common primitive types
             continue
         for param in remaining_params:
