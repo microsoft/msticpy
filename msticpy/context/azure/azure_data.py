@@ -804,7 +804,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
             )
             nsg_rules = []
             if nsg_details is not None:
-                for nsg in nsg_details.default_security_rules:
+                for nsg in nsg_details.default_security_rules:  # type: ignore[union-attr]
                     rules = asdict(
                         NsgItems(
                             rule_name=nsg.name,

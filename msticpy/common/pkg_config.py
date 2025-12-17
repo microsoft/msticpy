@@ -308,7 +308,7 @@ def _get_default_config():
         )
 
         # pylint: disable=deprecated-method
-        package_path = path(package, _CONFIG_FILE)  # noqa: W4902
+        package_path = path(package, _CONFIG_FILE)
 
     try:
         with package_path as config_path:
