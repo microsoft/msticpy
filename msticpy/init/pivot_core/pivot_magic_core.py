@@ -82,12 +82,12 @@ def run_txt2df(line: str, cell: str, local_ns: dict | None) -> pd.DataFrame:
         return pd.DataFrame()
     cell_text = io.StringIO(cell)
     warn_args: dict[str, str | bool]
-    if _PD_VER < Version("1.3.0"):  # type: ignore
+    if _PD_VER < Version("1.3.0"):
         warn_args = {"warn_bad_lines": True}
     else:
         warn_args = {"on_bad_lines": "warn"}
     try:
-        parsed_df = pd.read_csv(  # type: ignore
+        parsed_df = pd.read_csv(
             cell_text,
             header=0 if args.headers else None,
             sep=args.sep,
@@ -99,7 +99,7 @@ def run_txt2df(line: str, cell: str, local_ns: dict | None) -> pd.DataFrame:
     except ParserError:
         # try again without headers
         cell_text = io.StringIO(cell)
-        parsed_df = pd.read_csv(  # type: ignore
+        parsed_df = pd.read_csv(
             cell_text,
             sep=args.sep,
             skipinitialspace=True,

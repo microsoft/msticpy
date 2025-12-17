@@ -28,14 +28,14 @@ except ImportError:
     from distutils.version import LooseVersion as Version  # type: ignore[assignment]
 
     try:
-        from importlib_metadata import (  # type: ignore[assignment,no-redef]
+        from importlib_metadata import (
             PackageNotFoundError,
         )
-        from importlib_metadata import version as get_version  # type: ignore[no-redef]
+        from importlib_metadata import version as get_version
     except ImportError:
         # pylint: disable=invalid-name
         get_version = None  # type: ignore[assignment]
-        PackageNotFoundError = Exception  # type: ignore[assignment,misc,no-redef]
+        PackageNotFoundError = Exception
 
 from .._version import VERSION
 from ..common.pkg_config import _HOME_PATH, get_config, refresh_config
@@ -146,7 +146,7 @@ def check_aml_settings(
     _disp_html("<h4>Starting AML notebook pre-checks...</h4>")
     _check_pyspark()
     if isinstance(min_py_ver, str):
-        min_py_ver = _get_pkg_version(min_py_ver).release  # type: ignore
+        min_py_ver = _get_pkg_version(min_py_ver).release
     check_python_ver(min_py_ver=min_py_ver)
 
     _check_mp_install(min_mp_ver, mp_release, extras)

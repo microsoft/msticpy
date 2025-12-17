@@ -406,7 +406,7 @@ def _try_match_commandlines(
                 and np.isnan(row["cmd_line"])
                 and row["name"] in cmd
             ):
-                procs_cmd.loc[idx, "cmd_line"] = cmd  # type: ignore
+                procs_cmd.loc[idx, "cmd_line"] = cmd
                 break
     for cmd in command_executions:
         for idx, row in procs_cmd.iterrows():
@@ -416,7 +416,7 @@ def _try_match_commandlines(
                 and Path(row["name"]).stem.lower() in cmd.lower()
             ):
                 weak_matches += 1
-                procs_cmd.loc[idx, "cmd_line"] = cmd  # type: ignore
+                procs_cmd.loc[idx, "cmd_line"] = cmd
                 break
 
     if weak_matches:

@@ -427,7 +427,7 @@ def mask_df(
     for col_name in data.columns:
         if col_name not in col_map:
             continue
-        col_type = col_map.get(col_name, "str")  # type: ignore
+        col_type = col_map.get(col_name, "str")
         if not silent:
             print(col_name, end=", ")
         map_func = MAP_FUNCS.get(col_type)
@@ -481,12 +481,11 @@ def check_masking(
     unchanged = []
     obfuscated = []
     for col in sorted(data.columns):
-        if data.iloc[index][col] == orig_data.iloc[index][col]:  # type: ignore
-            unchanged.append(f"{col}: {data.iloc[index][col]}")  # type: ignore
+        if data.iloc[index][col] == orig_data.iloc[index][col]:
+            unchanged.append(f"{col}: {data.iloc[index][col]}")
         else:
             obfuscated.append(
-                f"{col}:   {orig_data.iloc[index][col]} "  # type: ignore
-                f"----> {data.iloc[index][col]}"  # type: ignore
+                f"{col}:   {orig_data.iloc[index][col]} ----> {data.iloc[index][col]}"
             )
     if not silent:
         print("===== Start Check ====")

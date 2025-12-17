@@ -121,7 +121,7 @@ def get_sentinel_queries_from_github(
                 unit="iB",
                 unit_scale=True,
             )
-            repo_zip = Path.joinpath(Path(outputdir), "Azure-Sentinel.zip")  # type: ignore
+            repo_zip = Path.joinpath(Path(outputdir), "Azure-Sentinel.zip")
             with open(repo_zip, "wb") as file:
                 for data in response.iter_bytes(chunk_size=10000):
                     progress_bar.update(len(data))
@@ -303,7 +303,7 @@ def _organize_query_list_by_folder(query_list: list) -> dict:
     return queries_by_folder
 
 
-def _create_queryfile_metadata(folder_name: str) -> dict:  # type: ignore
+def _create_queryfile_metadata(folder_name: str) -> dict:
     """
     Generate metadata section of the YAML file for the given folder_name.
 

@@ -177,10 +177,10 @@ def plot_nx_graph(
     _create_edge_renderer(graph_renderer, edge_color=edge_color)
     _create_node_renderer(graph_renderer, node_size, "node_color")
 
-    graph_renderer.selection_policy = NodesAndLinkedEdges()  # type: ignore[assignment]
-    graph_renderer.inspection_policy = EdgesAndLinkedNodes()  # type: ignore[assignment]
+    graph_renderer.selection_policy = NodesAndLinkedEdges()
+    graph_renderer.inspection_policy = EdgesAndLinkedNodes()
     # pylint: disable=no-member
-    plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
+    plot.renderers.append(graph_renderer)
 
     hover_tools = [
         _create_node_hover(source_attrs, target_attrs, [graph_renderer.node_renderer])
@@ -335,11 +335,11 @@ def plot_entity_graph(
         circle_size_param = {"radius": node_size // 2}
     else:
         circle_size_param = {"size": node_size // 2}
-    graph_renderer.node_renderer.glyph = Circle(  # type: ignore[attr-defined]
+    graph_renderer.node_renderer.glyph = Circle(
         **circle_size_param, fill_color="node_color", fill_alpha=0.5
     )
     # pylint: disable=no-member
-    plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
+    plot.renderers.append(graph_renderer)
 
     # Create labels
     label_layout = graph_renderer.layout_provider.graph_layout  # type: ignore[attr-defined]

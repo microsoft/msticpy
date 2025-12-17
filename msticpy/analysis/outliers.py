@@ -578,15 +578,13 @@ def plot_outlier_results(  # noqa: PLR0915
                     z = z.reshape(xx.shape)
 
                     # pylint: disable=no-member
-                    axes[i, j].contourf(xx, yy, z, cmap=plt.cm.Blues_r)  # type: ignore[index,attr-defined]
+                    axes[i, j].contourf(xx, yy, z, cmap=plt.cm.Blues_r)
 
-                    b1 = axes[i, j].scatter(  # type: ignore[index]
-                        x[:, j], x[:, i], c="white", edgecolor="k"
-                    )
-                    b2 = axes[i, j].scatter(  # type: ignore[index]
+                    b1 = axes[i, j].scatter(x[:, j], x[:, i], c="white", edgecolor="k")
+                    b2 = axes[i, j].scatter(
                         x_predict[:, j], x_predict[:, i], c="green", edgecolor="k"
                     )
-                    c = axes[i, j].scatter(  # type: ignore[index]
+                    c = axes[i, j].scatter(
                         x_outliers[:, j], x_outliers[:, i], c="red", marker="x"
                     )
 
@@ -595,14 +593,14 @@ def plot_outlier_results(  # noqa: PLR0915
                     xp_max_y = x_predict[:, 1].max() + (x_predict[:, 1].max() / 10)
                     xp_min_y = -x_predict[:, 1].max() / 10
 
-                    axes[i, j].axis(xmin=xp_min_x, xmax=xp_max_x)  # type: ignore[index]
-                    axes[i, j].axis(ymin=xp_min_y, ymax=xp_max_y)  # type: ignore[index]
-                    axes[i, j].set_xlabel(f"{feature_columns[j]}")  # type: ignore[index]
-                    axes[i, j].set_ylabel(f"{feature_columns[i]}")  # type: ignore[index]
+                    axes[i, j].axis(xmin=xp_min_x, xmax=xp_max_x)
+                    axes[i, j].axis(ymin=xp_min_y, ymax=xp_max_y)
+                    axes[i, j].set_xlabel(f"{feature_columns[j]}")
+                    axes[i, j].set_ylabel(f"{feature_columns[i]}")
 
                 else:
                     # do not show the same features x,y each other.
-                    axes[i, j].axis("off")  # type: ignore[index]
+                    axes[i, j].axis("off")
 
         fig.suptitle(plt_title)
         plt.legend(
@@ -642,7 +640,7 @@ def remove_common_items(data: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
     # pylint: disable=cell-var-from-loop
     for col in columns:
         filtered_df = filtered_df.filter(
-            lambda x, col=col: (x[col].std() == 0 and x[col].count() > 10)  # type: ignore
+            lambda x, col=col: (x[col].std() == 0 and x[col].count() > 10)
         )
 
     return filtered_df

@@ -203,7 +203,7 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
 
         # preference 1 as argument , preference 2 from config file , third default value
         if not kwargs.get("base_url"):
-            self.base_url = cast(str, self.config.get("base_url")) or BASE_URL_API  # type: ignore[assignment]
+            self.base_url = cast(str, self.config.get("base_url")) or BASE_URL_API
         else:
             self.base_url = kwargs.get("base_url", BASE_URL_API)  # type: ignore[assignment]
         self.debug: bool = bool(kwargs.get("debug", False))

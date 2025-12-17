@@ -133,7 +133,7 @@ class MsticpyCoreAccessor:
 
     def build_process_tree(
         self,
-        schema: ProcSchema | dict[str, Any] = None,
+        schema: ProcSchema | dict[str, Any] | None = None,
         show_summary: bool = False,
         debug: bool = False,
     ) -> pd.DataFrame:

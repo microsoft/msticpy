@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Any
 
 import pandas as pd
-from bokeh.models import (  # type: ignore[attr-defined]
+from bokeh.models import (
     ColumnDataSource,
     DatetimeTickFormatter,
     GestureTool,
@@ -28,7 +28,7 @@ from bokeh.palettes import Palette, viridis
 from bokeh.plotting import figure
 
 try:
-    from bokeh.plotting import Figure  # type: ignore
+    from bokeh.plotting import Figure
 except ImportError:
     Figure = LayoutDOM
 from pandas.api.types import is_datetime64_any_dtype
@@ -80,7 +80,7 @@ def check_df_columns(
         If one or more columns not found in `data`
 
     """
-    missing_cols = set(req_columns) - set(data.columns)  # type: ignore
+    missing_cols = set(req_columns) - set(data.columns)
     if missing_cols:
         raise MsticpyParameterError(
             title="Columns not found in DataFrame",
@@ -150,7 +150,7 @@ def create_data_grouping(
         graph_df["y_index"] = 1
         series_count = 1
         group_count_df = None
-    return graph_df, group_count_df, tool_tip_columns, series_count  # type: ignore
+    return graph_df, group_count_df, tool_tip_columns, series_count
 
 
 def get_def_source_cols(data: pd.DataFrame, source_columns: Iterable[str]) -> set[str]:
@@ -201,8 +201,8 @@ def get_time_bounds(
         start_range = min_time - ((max_time - min_time) * 0.1)
         end_range = max_time + ((max_time - min_time) * 0.1)
     except OutOfBoundsDatetime:
-        min_time = min_time.to_pydatetime()  # type: ignore
-        max_time = max_time.to_pydatetime()  # type: ignore
+        min_time = min_time.to_pydatetime()
+        max_time = max_time.to_pydatetime()
         start_range = min_time - ((max_time - min_time) * 0.1)
         end_range = max_time + ((max_time - min_time) * 0.1)
     return start_range, end_range, min_time, max_time
@@ -218,9 +218,9 @@ def create_tool_tips(
     if isinstance(data, dict):
         tool_tip_dict = {}
         for data_set in data.values():
-            data_df = data_set.get("data", {})  # type: ignore
+            data_df = data_set.get("data", {})
             for col in columns:
-                disp_col, col_tooltip, col_fmt = _get_datetime_tooltip(col, data_df)  # type: ignore
+                disp_col, col_tooltip, col_fmt = _get_datetime_tooltip(col, data_df)
                 tool_tip_dict[disp_col] = col_tooltip
                 formatters.update(col_fmt)
         return {"tooltips": list(tool_tip_dict.items()), "formatters": formatters}
@@ -304,12 +304,12 @@ def create_range_tool(
         )
 
     range_tool = RangeTool(x_range=plot_range)
-    range_tool.overlay.fill_color = "navy"  # type: ignore
-    range_tool.overlay.fill_alpha = 0.2  # type: ignore
+    range_tool.overlay.fill_color = "navy"
+    range_tool.overlay.fill_alpha = 0.2
     rng_select.ygrid.grid_line_color = None
     rng_select.add_tools(range_tool)
     if isinstance(range_tool, GestureTool):
-        rng_select.toolbar.active_multi = range_tool  # type: ignore
+        rng_select.toolbar.active_multi = range_tool
     return rng_select
 
 
@@ -405,16 +405,16 @@ def get_ref_event_time(**kwargs) -> tuple[Any | None, Any | str]:
     else:
         ref_time = kwargs.get("ref_time", None)
         ref_label = "Ref time"
-    return ref_time, kwargs.get("ref_label", ref_label)  # type: ignore
+    return ref_time, kwargs.get("ref_label", ref_label)
 
 
 def get_tick_formatter() -> DatetimeTickFormatter:
     """Return tick formatting for different zoom levels."""
     # '%H:%M:%S.%3Nms
     tick_format = DatetimeTickFormatter()
-    tick_format.days = "%m-%d %H:%M"  # type: ignore
-    tick_format.hours = "%H:%M:%S"  # type: ignore
-    tick_format.minutes = "%H:%M:%S"  # type: ignore
-    tick_format.seconds = "%H:%M:%S"  # type: ignore
-    tick_format.milliseconds = "%H:%M:%S.%3N"  # type: ignore
+    tick_format.days = "%m-%d %H:%M"
+    tick_format.hours = "%H:%M:%S"
+    tick_format.minutes = "%H:%M:%S"
+    tick_format.seconds = "%H:%M:%S"
+    tick_format.milliseconds = "%H:%M:%S.%3N"
     return tick_format

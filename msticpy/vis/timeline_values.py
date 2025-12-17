@@ -13,7 +13,7 @@ import attr
 import pandas as pd
 from bokeh.io import output_notebook, show
 from bokeh.layouts import column
-from bokeh.models import (  # type: ignore[attr-defined]
+from bokeh.models import (
     ColumnDataSource,
     HoverTool,
     LayoutDOM,
@@ -253,7 +253,7 @@ def display_timeline_values(  # noqa: C901, PLR0912, PLR0915
                 click_policy="hide",
                 label_text_font_size="8pt",
             )
-            plot.add_layout(ext_legend, param.legend)  # type: ignore[arg-type]
+            plot.add_layout(ext_legend, param.legend)
     else:
         plot_args = {
             "x": time_column,
@@ -287,7 +287,7 @@ def display_timeline_values(  # noqa: C901, PLR0912, PLR0915
             data=graph_df,
             min_time=min_time,
             max_time=max_time,
-            plot_range=plot.x_range,  # type: ignore[arg-type]
+            plot_range=plot.x_range,
             width=param.width,
             height=height,
             time_column=time_column,

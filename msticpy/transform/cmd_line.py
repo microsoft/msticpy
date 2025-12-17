@@ -100,7 +100,7 @@ def risky_cmd_line(
             if b64_regex.match(message):
                 b64match = b64_regex.search(message)
                 b64string = unpack(input_string=b64match[1])  # type: ignore
-                b64string = b64string[1]["decoded_string"].to_string()  # type: ignore
+                b64string = b64string[1]["decoded_string"].to_string()
                 if re.match(detection, message):
                     risky_actions.update({date: message})
                 else:

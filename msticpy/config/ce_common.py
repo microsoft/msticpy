@@ -221,7 +221,7 @@ def get_def_tenant_id(sub_id: str) -> str | None:
     return sub_metadata.get("tenantId", None)
 
 
-def get_managed_tenant_id(sub_id: str) -> list[str] | None:  # type: ignore
+def get_managed_tenant_id(sub_id: str) -> list[str] | None:
     """
     Get the tenant IDs that are managing a subscription.
 
@@ -429,7 +429,7 @@ def get_defn_or_default(defn: tuple[str, Any] | Any) -> tuple[str, dict]:
 def get_or_create_mpc_section(
     mp_controls: "MpConfigControls",  # type: ignore[name-defined]
     section: str,
-    subkey: str | None = None,  # type: ignore
+    subkey: str | None = None,
 ) -> Any:
     """
     Return (and create if it doesn't exist) a settings section.

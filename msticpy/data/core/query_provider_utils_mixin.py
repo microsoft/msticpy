@@ -175,7 +175,7 @@ class QueryProviderUtilsMixin(QueryProviderProtocol):
         if substring:
             return list(
                 filter(
-                    lambda x: substring in x.lower(),  # type: ignore
+                    lambda x: substring in x.lower(),
                     self.query_store.query_names,
                 )
             )
@@ -183,9 +183,9 @@ class QueryProviderUtilsMixin(QueryProviderProtocol):
 
     def search(
         self,
-        search: str | Iterable[str] = None,
-        table: str | Iterable[str] = None,
-        param: str | Iterable[str] = None,
+        search: str | Iterable[str] | None = None,
+        table: str | Iterable[str] | None = None,
+        param: str | Iterable[str] | None = None,
         ignore_case: bool = True,
     ) -> list[str]:
         """

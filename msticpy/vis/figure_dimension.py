@@ -36,11 +36,11 @@ def set_figure_size(fig: figure, width: int, height: int) -> figure:
     if hasattr(figure(), "height"):
         fig.height = height
     if hasattr(figure(), "plot_height"):
-        fig.plot_height = height  # type: ignore[attr-defined]
+        fig.plot_height = height
     if hasattr(figure(), "width"):
         fig.width = width
     if hasattr(figure(), "plot_width"):
-        fig.plot_width = width  # type: ignore[attr-defined]
+        fig.plot_width = width
     return fig
 
 

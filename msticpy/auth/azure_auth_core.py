@@ -267,7 +267,7 @@ def _build_certificate_client(
         authority=aad_uri,
         tenant_id=tenant_id,  # type: ignore
         client_id=client_id,
-        **kwargs,  # type: ignore
+        **kwargs,
     )
 
 
@@ -399,12 +399,12 @@ def _az_connect_core(
         wrapped_credentials: CredentialWrapper = CredentialWrapper(
             chained_credential, resource_id=az_config.token_uri
         )
-        return AzCredentials(wrapped_credentials, chained_credential)  # type: ignore[arg-type]
+        return AzCredentials(wrapped_credentials, chained_credential)
 
     # Create the wrapped credential using the passed credential
     wrapped_credentials = CredentialWrapper(credential, resource_id=az_config.token_uri)
     return AzCredentials(
-        wrapped_credentials,  # type: ignore[arg-type]
+        wrapped_credentials,
         ChainedTokenCredential(credential),  # type: ignore[arg-type]
     )
 

@@ -578,7 +578,7 @@ Alternatively, you can pass the account_id and api_key to the GeoLiteLookup clas
                 try:
                     geo_match_object = self._reader.city(ip_input)
                     if hasattr(geo_match_object, "raw"):
-                        geo_match = geo_match_object.raw  # type: ignore
+                        geo_match = geo_match_object.raw
                     elif hasattr(geo_match_object, "to_dict"):
                         geo_match = geo_match_object.to_dict()
                     else:

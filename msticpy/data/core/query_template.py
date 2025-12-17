@@ -67,8 +67,8 @@ class Query:
 
     description: str
     args: QueryArgs = field(default_factory=QueryArgs)
-    metadata: dict[str, Any] | None = field(default_factory=dict)  # type: ignore
-    parameters: dict[str, QueryParameter] | None = field(default_factory=dict)  # type: ignore
+    metadata: dict[str, Any] | None = field(default_factory=dict)
+    parameters: dict[str, QueryParameter] | None = field(default_factory=dict)
 
 
 @dataclass

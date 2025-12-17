@@ -106,15 +106,15 @@ class SplunkUploader(UploaderBase):
         source_types = []
         for row in data.iterrows():
             if source_type == "json":
-                data = row[1].to_json()  # type: ignore
+                data = row[1].to_json()
             elif source_type == "csv":
-                data = row[1].to_csv()  # type: ignore
+                data = row[1].to_csv()
             else:
-                data = row[1].to_string()  # type: ignore
+                data = row[1].to_string()
             try:
-                data.encode(encoding="latin-1")  # type: ignore
+                data.encode(encoding="latin-1")
             except UnicodeEncodeError:
-                data = data.encode(encoding="utf-8")  # type: ignore
+                data = data.encode(encoding="utf-8")
             index.submit(data, sourcetype=source_type, host=host)
             source_types.append(source_type)
             progress.update(1)
@@ -123,7 +123,7 @@ class SplunkUploader(UploaderBase):
             print(f"Upload complete: Splunk sourcetype = {source_types}")
 
     # pylint: disable=arguments-differ
-    def upload_df(  # type: ignore
+    def upload_df(
         self,
         data: pd.DataFrame,
         table_name: str | None = None,
@@ -176,7 +176,7 @@ class SplunkUploader(UploaderBase):
             create_index=create_index,
         )
 
-    def upload_file(  # type: ignore
+    def upload_file(
         self,
         file_path: str,
         table_name: str | None = None,
@@ -237,7 +237,7 @@ class SplunkUploader(UploaderBase):
             create_index=create_index,
         )
 
-    def upload_folder(  # type: ignore
+    def upload_folder(
         self,
         folder_path: str,
         table_name: str | None = None,

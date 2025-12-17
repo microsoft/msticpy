@@ -344,9 +344,7 @@ class QueryStore:
             if query_container in self.data_families:
                 query_path = query_container
             elif query_path:
-                query_container = ".".join(
-                    [query_path, query_container]  # type: ignore
-                )
+                query_container = ".".join([query_path, query_container])
                 if query_container in self.data_families:
                     query_path = query_container
         query = self.data_families.get(query_path, {}).get(query_name)  # type: ignore

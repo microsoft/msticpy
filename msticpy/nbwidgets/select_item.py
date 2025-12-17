@@ -36,8 +36,8 @@ class SelectItem(IPyDisplayMixin):
     def __init__(
         self,
         description: str = "Select an item",
-        options: list[str] | dict[str, Any] = None,
-        action: Callable[..., tuple | None] = None,
+        options: list[str] | dict[str, Any] | None = None,
+        action: Callable[..., tuple | None] | None = None,
         value: str = "",
         **kwargs,
     ):

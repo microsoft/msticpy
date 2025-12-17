@@ -95,7 +95,7 @@ class Observation:
             Set of all field names.
 
         """
-        return {field.name for field in attr.fields(cls)}  # type: ignore[misc]
+        return {field.name for field in attr.fields(cls)}
 
     def display(self):
         """Display the observation."""

@@ -446,7 +446,7 @@ def add_queries_to_entities(
                 func,
                 func_params.param_attrs,
                 attr_map,
-                get_timespan,  # type:ignore
+                get_timespan,
             )
             # add a properties dict to the function
             cls_func.pivot_properties = _create_piv_properties(name, param_entities, container)

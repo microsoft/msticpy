@@ -171,7 +171,7 @@ class ContextLookup(Lookup):
     ) -> pd.DataFrame:
         """Lookup items async."""
         return await self._lookup_items_async(
-            data,  # type: ignore[arg-type]
+            data,
             item_col=obs_col,
             item_type_col=obs_type_col,
             query_type=query_type,

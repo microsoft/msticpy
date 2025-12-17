@@ -27,7 +27,7 @@ from .proc_tree_builder import build_process_tree
 
 try:
     # pylint: disable=unused-import
-    from ..analysis import cluster_auditd  # type: ignore
+    from ..analysis import cluster_auditd
 except ImportError:
 
     def cluster_auditd(*args, **kwargs):  # type: ignore
@@ -153,7 +153,7 @@ def unpack_auditd(audit_str: list[dict[str, str]]) -> Mapping[str, Mapping[str, 
                         # Mypy thinks codecs.decode returns a str so
                         # incorrectly issues a type warning - in this case it
                         # will return a bytes string.
-                        field_value = codecs.decode(  # type: ignore
+                        field_value = codecs.decode(
                             bytes(rec_split[1], "utf-8"), "hex"
                         ).decode("utf-8")
                     except ValueError:

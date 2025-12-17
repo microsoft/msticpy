@@ -73,7 +73,7 @@ class EntityGraph:
         elif isinstance(entity, Entity):
             self._add_entity_node(entity)
         elif isinstance(entity, SecurityAlert):
-            entity = Alert(entity)  # type: ignore
+            entity = Alert(entity)
             self._add_incident_or_alert_node(entity)
 
     def plot(self, hide: bool = False, timeline: bool = False, **kwargs) -> LayoutDOM:
@@ -211,7 +211,7 @@ class EntityGraph:
         if isinstance(incident, pd.DataFrame):
             for row in incident.iterrows():
                 if "name" in row[1]:
-                    inc = Incident(src_event=row[1])  # type: ignore
+                    inc = Incident(src_event=row[1])
                 elif "AlertName" in row[1]:
                     inc = Alert(src_event=row[1])  # type: ignore
                 self._add_incident_or_alert_node(inc)
@@ -222,7 +222,7 @@ class EntityGraph:
         self,
         name: str,
         description: str | None = None,
-        attached_to: str | list = None,
+        attached_to: str | list | None = None,
     ):
         """
         Add a node to the graph representing a note or comment.
@@ -520,10 +520,10 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
             "fill_color": "node_color",
             "fill_alpha": 0.5,
         }
-    graph_renderer.node_renderer.glyph = Circle(**circle_parms)  # type: ignore[attr-defined]
+    graph_renderer.node_renderer.glyph = Circle(**circle_parms)
 
     # pylint: disable=no-member
-    plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
+    plot.renderers.append(graph_renderer)
 
     # Create labels
     label_layout = graph_renderer.layout_provider.graph_layout  # type: ignore[attr-defined]

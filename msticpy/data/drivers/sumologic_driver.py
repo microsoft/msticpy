@@ -471,7 +471,7 @@ class SumologicDriver(DriverBase):
         if verbosity >= 3:
             print("DEBUG: {results}")
         if normalize:
-            dataframe_res = pd.json_normalize(results)  # type: ignore
+            dataframe_res = pd.json_normalize(results)
         else:
             dataframe_res = pd.DataFrame(results)
 

@@ -25,7 +25,7 @@ __author__ = "Ian Hellen"
 @export
 def md(
     string: str,
-    styles: str | Iterable[str] = None,
+    styles: str | Iterable[str] | None = None,
     disp_id: bool | DisplayHandle | None = None,
 ) -> DisplayHandle | None:
     """

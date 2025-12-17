@@ -116,7 +116,7 @@ def az_connect(
     )
     sub_client = SubscriptionClient(
         credential=credentials.modern,
-        base_url=az_cloud_config.resource_manager,  # type: ignore
+        base_url=az_cloud_config.resource_manager,
         credential_scopes=[az_cloud_config.token_uri],
     )
     if not sub_client:
@@ -205,7 +205,7 @@ def fallback_devicecode_creds(
             title="Azure authentication error",
         )
 
-    return AzCredentials(legacy_creds, ChainedTokenCredential(creds))  # type: ignore[arg-type]
+    return AzCredentials(legacy_creds, ChainedTokenCredential(creds))
 
 
 def get_default_resource_name(resource_uri: str) -> str:

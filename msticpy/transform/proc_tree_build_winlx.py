@@ -53,10 +53,10 @@ def extract_process_tree(
 
     """
     # Clean data
-    procs_cln, schema = _clean_proc_data(procs, schema)  # type: ignore
+    procs_cln, schema = _clean_proc_data(procs, schema)
 
     # Merge parent-child
-    merged_procs = _merge_parent_by_time(procs_cln, schema)  # type: ignore
+    merged_procs = _merge_parent_by_time(procs_cln, schema)
     if debug:
         _check_merge_status(procs_cln, merged_procs, schema)
 
@@ -100,7 +100,7 @@ def _clean_proc_data(
 
     if schema.logon_id not in procs_cln.columns:
         schema = ProcSchema(**(asdict(schema)))
-        schema.logon_id = None  # type: ignore
+        schema.logon_id = None
 
     if schema.logon_id:
         procs_cln[Col.EffectiveLogonId] = procs_cln[schema.logon_id]
@@ -119,7 +119,7 @@ def _clean_proc_data(
     if schema.parent_name:
         no_pproc = procs_cln[schema.parent_name] == ""
         procs_cln.loc[no_pproc, schema.parent_name] = "unknown"
-        procs_cln[Col.parent_proc_lc] = procs_cln[schema.parent_name].str.lower()  # type: ignore
+        procs_cln[Col.parent_proc_lc] = procs_cln[schema.parent_name].str.lower()
     procs_cln[Col.source_index] = procs_cln.index
     return procs_cln, schema
 

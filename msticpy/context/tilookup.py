@@ -233,7 +233,7 @@ class TILookup(Lookup):
     ) -> pd.DataFrame:
         """Lookup IoCs async."""
         return await self._lookup_items_async(
-            data,  # type: ignore[arg-type]
+            data,
             item_col=ioc_col,
             item_type_col=ioc_type_col,
             query_type=ioc_query_type,

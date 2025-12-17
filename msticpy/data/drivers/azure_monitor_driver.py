@@ -343,7 +343,7 @@ class AzureMonitorDriver(DriverBase):
             result = self._query_client.query_workspace(
                 workspace_id=workspace_id,  # type: ignore[arg-type]
                 query=query,
-                timespan=time_span_value,  # type: ignore[arg-type]
+                timespan=time_span_value,
                 server_timeout=server_timeout,
                 additional_workspaces=additional_workspaces,
             )
@@ -370,9 +370,9 @@ class AzureMonitorDriver(DriverBase):
                 RuntimeWarning,
                 stacklevel=2,
             )
-            table = result.partial_data[0]  # type: ignore[attr-defined]
+            table = result.partial_data[0]
         else:
-            table = result.tables[0]  # type: ignore[attr-defined]
+            table = result.tables[0]
         data_frame = pd.DataFrame(table.rows, columns=table.columns)
         logger.info("Dataframe returned with %d rows", len(data_frame))
         return data_frame, status
@@ -431,7 +431,7 @@ class AzureMonitorDriver(DriverBase):
         ws_config: WorkspaceConfig | None = None
         connection_str = connection_str or self._def_connection_str
         if workspace_name or connection_str is None:
-            ws_config = WorkspaceConfig(workspace=workspace_name)  # type: ignore
+            ws_config = WorkspaceConfig(workspace=workspace_name)
             logger.info("WorkspaceConfig created from workspace name %s", workspace_name)
         elif isinstance(connection_str, str):
             self._def_connection_str = connection_str

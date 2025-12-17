@@ -293,14 +293,14 @@ def _display_timeline_dict(data: dict, param: PlotParams) -> LayoutDOM:  # noqa:
         width=param.width,
     )
 
-    set_axes_and_grids(data, plot, param.yaxis, param.ygrid, param.xgrid)  # type: ignore
+    set_axes_and_grids(data, plot, param.yaxis, param.ygrid, param.xgrid)
 
     # Create plot bar to act as as range selector
     rng_select = create_range_tool(
-        data=data,  # type: ignore
+        data=data,
         min_time=min_time,
         max_time=max_time,
-        plot_range=plot.x_range,  # type: ignore[arg-type]
+        plot_range=plot.x_range,
         width=param.width,
         height=height,
     )
@@ -311,7 +311,7 @@ def _display_timeline_dict(data: dict, param: PlotParams) -> LayoutDOM:  # noqa:
     _plot_series(data, plot, param.legend)
 
     if param.ref_time is not None:
-        plot_ref_line(plot, param.ref_time, param.ref_label, len(data))  # type: ignore
+        plot_ref_line(plot, param.ref_time, param.ref_label, len(data))
     elif param.ref_events is not None or param.ref_times is not None:
         plot_ref_events(
             plot=plot,

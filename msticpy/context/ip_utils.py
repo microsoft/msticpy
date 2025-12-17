@@ -439,7 +439,7 @@ def ip_whois(
         for ip_addr in ip:
             if rate_limit:
                 sleep(query_rate)
-            whois_results[ip_addr] = _whois_lookup(  # type: ignore[index]
+            whois_results[ip_addr] = _whois_lookup(
                 ip_addr,
                 raw=raw,
                 retry_count=retry_count,

@@ -141,7 +141,7 @@ def get_provider_settings(config_section="TIProviders") -> dict[str, ProviderSet
     settings = {}
     for provider, item_settings in section_settings.items():
         prov_args = item_settings.get("Args")
-        prov_settings = ProviderSettings(  # type: ignore[call-arg]
+        prov_settings = ProviderSettings(
             name=provider,
             description=item_settings.get("Description"),
             args=_get_setting_args(

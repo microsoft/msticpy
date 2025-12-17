@@ -17,7 +17,7 @@ from json.decoder import JSONDecodeError
 from numbers import Number
 from typing import TYPE_CHECKING, Any
 
-from dateutil.parser import ParserError, parse  # type: ignore
+from dateutil.parser import ParserError, parse
 from dateutil.relativedelta import relativedelta
 
 from ..._version import VERSION
@@ -298,7 +298,7 @@ class QuerySource:
         if isinstance(param_value, Number):
             # datetime specified as a number - we
             # interpret this as an offset from utcnow
-            return datetime.now(tz=timezone.utc) + timedelta(  # type: ignore
+            return datetime.now(tz=timezone.utc) + timedelta(
                 param_value  # type: ignore
             )
         try:
@@ -370,9 +370,7 @@ class QuerySource:
                 # unit was specified
                 units = RD_UNIT_MAP.get(round_item or "d", "days")
                 # expand dict to args for relativedelta
-                result_date = result_date + relativedelta(
-                    **({units: +1})  # type: ignore
-                )
+                result_date = result_date + relativedelta(**({units: +1}))
         return result_date
 
     @staticmethod
@@ -389,7 +387,7 @@ class QuerySource:
         # in the time range expression
         unit_param = RD_UNIT_MAP.get(tm_unit, "days")
         # expand dict to args for relativedelta
-        return relativedelta(**({unit_param: tm_val}))  # type: ignore
+        return relativedelta(**({unit_param: tm_val}))
 
     @staticmethod
     def _parse_param_list(param_value: str | list) -> list[Any]:

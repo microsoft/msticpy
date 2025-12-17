@@ -11,7 +11,7 @@ from numbers import Number
 from typing import Any, Union
 
 import pandas as pd
-from dateutil.parser import ParserError  # type: ignore
+from dateutil.parser import ParserError
 
 from .._version import VERSION
 

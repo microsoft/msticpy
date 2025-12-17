@@ -211,7 +211,7 @@ class WorkspaceConfig:
         """
         ws_value = self._config.get(self.CONF_WS_ID, None)
         ten_value = self._config.get(self.CONF_TENANT_ID, None)
-        return is_valid_uuid(ws_value) and is_valid_uuid(ten_value)  # type: ignore
+        return is_valid_uuid(ws_value) and is_valid_uuid(ten_value)
 
     @property
     def code_connect_str(self) -> str:
@@ -269,7 +269,7 @@ class WorkspaceConfig:
     def from_settings(cls, settings: dict[str, Any]) -> "WorkspaceConfig":
         """Create a WorkstationConfig from MSTICPY Workspace settings."""
         return cls(
-            config={  # type: ignore
+            config={
                 cls.CONF_WS_NAME: settings.get(cls.CONF_WS_NAME),  # type: ignore
                 cls.CONF_SUB_ID: settings.get(cls.CONF_SUB_ID),  # type: ignore
                 cls.CONF_WS_ID: settings.get(cls.CONF_WS_ID),  # type: ignore
@@ -304,8 +304,8 @@ class WorkspaceConfig:
             workspace_name = match.groupdict()["workspace_name"]
         return cls(
             config={
-                cls.CONF_WS_ID: workspace_id,  # type: ignore[dict-item]
-                cls.CONF_TENANT_ID: tenant_id,  # type: ignore[dict-item]
+                cls.CONF_WS_ID: workspace_id,
+                cls.CONF_TENANT_ID: tenant_id,
                 cls.CONF_WS_NAME: workspace_name,  # type: ignore[dict-item]
             }
         )
@@ -416,7 +416,7 @@ class WorkspaceConfig:
 
     def _read_pkg_config_values(self, workspace_name: str | None = None):
         """Try to find a usable config from the MSTICPy config file."""
-        ws_settings = get_config("AzureSentinel", {}).get("Workspaces")  # type: ignore
+        ws_settings = get_config("AzureSentinel", {}).get("Workspaces")
         if not ws_settings:
             return
         selected_workspace: dict[str, str] = {}

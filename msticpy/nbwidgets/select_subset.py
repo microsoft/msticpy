@@ -23,7 +23,7 @@ class SelectSubset(IPyDisplayMixin):
     def __init__(
         self,
         source_items: dict[str, str] | list[Any],
-        default_selected: dict[str, str] | list[Any] = None,
+        default_selected: dict[str, str] | list[Any] | None = None,
         display_filter: bool = True,
         auto_display: bool = True,
     ):

@@ -17,7 +17,7 @@ try:
 except ImportError:
     Field = dict  # type: ignore
 from bokeh.layouts import column, row
-from bokeh.models import (  # type: ignore[attr-defined]
+from bokeh.models import (
     BoxSelectTool,
     ColorBar,
     ColumnDataSource,
@@ -263,7 +263,7 @@ def plot_process_tree(
     b_plot.add_tools(hover)
 
     # dodge to align rectangle with grid
-    rect_x = dodge("Level", 1.75, range=b_plot.x_range)  # type: ignore
+    rect_x = dodge("Level", 1.75, range=b_plot.x_range)
     rect_plot_params = {
         "width": 3.5,
         "height": 0.95,
@@ -315,8 +315,8 @@ def plot_process_tree(
 
     # Plot options
     _set_plot_option_defaults(b_plot)
-    b_plot.xaxis.ticker = sorted(levels)  # type: ignore[assignment]
-    b_plot.xgrid.ticker = sorted(levels)  # type: ignore[assignment]
+    b_plot.xaxis.ticker = sorted(levels)
+    b_plot.xgrid.ticker = sorted(levels)
     b_plot.hover.renderers = [rect_plot]  # only hover element boxes
 
     # Selection callback
@@ -337,11 +337,11 @@ def plot_process_tree(
         y_col="Row",
         fill_map=fill_map,
     )
-    plot_elems: LayoutDOM = row(b_plot, range_tool)  # type: ignore
+    plot_elems: LayoutDOM = row(b_plot, range_tool)
     if show_table:
         data_table = _create_data_table(source, schema, legend_col)
         plot_elems = column(plot_elems, data_table)
-    show(plot_elems)  # type: ignore
+    show(plot_elems)
     return b_plot, plot_elems
 
 
@@ -392,7 +392,7 @@ def _pre_process_tree(
     levels = proc_tree["Level"].unique()
 
     proc_tree[schema.process_name] = proc_tree[schema.process_name].fillna("unknown")
-    proc_tree["__proc_name$$"] = proc_tree.apply(  # type: ignore
+    proc_tree["__proc_name$$"] = proc_tree.apply(
         lambda x: x[schema.process_name].split(schema.path_separator)[-1], axis=1
     )
     proc_tree[schema.process_id] = proc_tree[schema.process_id].fillna("unknown")
@@ -519,7 +519,7 @@ def _create_fill_map(
             key_column, palette=viridis(max(3, len(values))), factors=values
         )
     elif col_kind in ["i", "u", "f", "M"]:
-        values = [val for val in source.data[key_column] if not np.isnan(val)]  # type: ignore
+        values = [val for val in source.data[key_column] if not np.isnan(val)]
         fill_map = linear_cmap(
             field_name=key_column,
             palette=viridis(256),
@@ -531,7 +531,7 @@ def _create_fill_map(
             color_bar = ColorBar(
                 color_mapper=fill_map["transform"],
                 width=8,
-                location=(0, 0),  # type: ignore
+                location=(0, 0),
             )
     return fill_map, color_bar
 

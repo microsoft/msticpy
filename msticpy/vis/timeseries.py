@@ -161,7 +161,7 @@ def display_timeseries_anomalies(  # noqa: PLR0915
     source_columns = [col for col in data.columns if col not in [anomalies_column]]
     data_anomaly = data[data[anomalies_column] == 1][source_columns].reset_index()
 
-    hover = HoverTool(**(create_tool_tips(data, source_columns)))  # type: ignore
+    hover = HoverTool(**(create_tool_tips(data, source_columns)))
 
     # Create the Plot figure
     title = title or "Time Series Anomalies Visualization"
@@ -243,7 +243,7 @@ def display_timeseries_anomalies(  # noqa: PLR0915
         plot.scatter(marker="circle_x", **arg_dict)
 
     # interactive legend to hide single/multiple plots if selected
-    plot.legend.location = legend_pos  # type: ignore[assignment]
+    plot.legend.location = legend_pos
     plot.legend.click_policy = "hide"
 
     # Create plot for the score column to act as as range selector
@@ -252,7 +252,7 @@ def display_timeseries_anomalies(  # noqa: PLR0915
         y="score",
         min_time=min_time,
         max_time=max_time,
-        plot_range=plot.x_range,  # type: ignore[arg-type]
+        plot_range=plot.x_range,
         width=width,
         height=height,
         time_column=time_column,

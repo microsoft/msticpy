@@ -36,7 +36,7 @@ def get_process_key(procs: pd.DataFrame, source_index: int) -> str:
         The process key of the process.
 
     """
-    return procs[procs[Col.source_index] == source_index].iloc[0].name  # type: ignore
+    return procs[procs[Col.source_index] == source_index].iloc[0].name
 
 
 # def build_process_key(  # type: ignore  # noqa: F821
@@ -277,7 +277,7 @@ def get_descendents(
         if children.empty:
             break
         descendents.append(children)
-        parent_keys = children.index  # type: ignore
+        parent_keys = children.index
         level += 1
 
     if descendents:
@@ -343,7 +343,7 @@ def get_siblings(
     """
     parent = get_parent(procs, source)
     proc = get_process(procs, source)
-    siblings = get_children(procs, parent, include_source=False)  # type: ignore
+    siblings = get_children(procs, parent, include_source=False)
     if not include_source:
         return siblings[siblings.index != proc.name]
     return siblings

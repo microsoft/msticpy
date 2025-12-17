@@ -303,7 +303,7 @@ class MitreAttack:
             raise TypeError("Either 'attack' or 'technique' and 'tactics' must be specified.")
         self.technique = attack.get("technique") if attack else technique
         self.sub_technique = attack.get("sub-technique") if attack else sub_technique
-        self.tactics = attack.get("tactics") if attack else tactics  # type: ignore
+        self.tactics = attack.get("tactics") if attack else tactics
 
         self._technique_name = None
         self._technique_desc = None

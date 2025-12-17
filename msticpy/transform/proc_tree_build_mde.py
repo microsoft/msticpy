@@ -144,7 +144,7 @@ def _extract_missing_parents(
 
     # merge the original data with the parent rows
     merged_parents = data.filter(regex="Initiating.*|parent_key|src_index").merge(  # parents
-        data.filter(non_par_cols),  # type: ignore
+        data.filter(non_par_cols),
         left_on=Col.parent_key,
         right_on=Col.proc_key,
         suffixes=("_child", "_par"),
@@ -348,8 +348,8 @@ def convert_mde_schema_to_internal(
     data["CreatedProcessParentId"] = data[schema.parent_id]
 
     # Put a value in parent procs with no name
-    null_proc_parent = data[schema.parent_name] == ""  # type: ignore
-    data.loc[null_proc_parent, schema.parent_name] = "unknown"  # type: ignore
+    null_proc_parent = data[schema.parent_name] == ""
+    data.loc[null_proc_parent, schema.parent_name] = "unknown"
 
     # Extract InitiatingProc folder path - remove stem
     data["InitiatingProcessFolderPath"] = data.InitiatingProcessFolderPath.apply(
