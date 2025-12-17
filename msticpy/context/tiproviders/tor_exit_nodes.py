@@ -12,12 +12,14 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
 import contextlib
+from collections.abc import Iterable
 from datetime import datetime, timezone
 from threading import Lock
-from typing import Any, ClassVar, Iterable
+from typing import Any, ClassVar
 
 import httpx
 import pandas as pd
@@ -75,9 +77,7 @@ class Tor(TIProvider):
                 tor_raw_list = resp.content.decode()
                 with cls._cache_lock:
                     node_dict: dict[str, Any] = {"ExitNode": True, "LastStatus": now}
-                    cls._nodelist = {
-                        node: node_dict for node in tor_raw_list.split("\n")
-                    }
+                    cls._nodelist = dict.fromkeys(tor_raw_list.split("\n"), node_dict)
                     cls._last_cached = datetime.now(timezone.utc)
 
     @staticmethod

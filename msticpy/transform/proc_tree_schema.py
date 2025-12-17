@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree Schema module for Process Tree Visualization."""
+
 from __future__ import annotations
 
 from dataclasses import MISSING, asdict, dataclass, field, fields
@@ -29,7 +30,7 @@ class ProcessTreeSchemaException(MsticpyUserError):
 
 
 @dataclass
-class ProcSchema:  # pylint: disable=too-many-instance-attributes
+class ProcSchema:  # pylint: disable=too-many-instance-attributes  # noqa: PLW1641
     """
     Property name lookup for Process event schema.
 
@@ -64,8 +65,7 @@ class ProcSchema:  # pylint: disable=too-many-instance-attributes
         self_dict: dict[str, Any] = asdict(self)
 
         return not any(
-            value and value != self_dict[field]
-            for field, value in asdict(other).items()
+            value and value != self_dict[field] for field, value in asdict(other).items()
         )
 
     @property
@@ -156,9 +156,7 @@ class ProcSchema:  # pylint: disable=too-many-instance-attributes
         """Return blank schema dictionary."""
         return {
             cls_field.name: (
-                "required"
-                if (cls_field.default or cls_field.default == MISSING)
-                else None
+                "required" if (cls_field.default or cls_field.default == MISSING) else None
             )
             for cls_field in fields(cls)
         }

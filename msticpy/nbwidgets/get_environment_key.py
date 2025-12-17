@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
+
 import os
 
 import ipywidgets as widgets
@@ -85,9 +86,7 @@ class GetEnvironmentKey(RegisteredWidget, IPyDisplayMixin):
             value=True, description="Save as environment var", disabled=False
         )
         self._w_save_button.on_click(self._on_save_button_clicked)
-        self._hbox = widgets.HBox(
-            [self._w_text, self._w_save_button, self._w_check_save]
-        )
+        self._hbox = widgets.HBox([self._w_text, self._w_save_button, self._w_check_save])
 
         if auto_display:
             self.display()

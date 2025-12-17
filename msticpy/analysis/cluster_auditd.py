@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Auditd cluster function."""
+
 import pandas as pd
 
 from .._version import VERSION

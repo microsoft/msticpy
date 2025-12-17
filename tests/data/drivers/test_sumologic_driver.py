@@ -267,7 +267,7 @@ _QUERY_TESTS = [
 @pytest.mark.parametrize(("query", "expected"), _QUERY_TESTS)
 def test_sumologic_query(sumologic_drv, query, expected):
     """Check queries with different outcomes."""
-    end = datetime.utcnow()
+    end = datetime.now(timezone.utc)
     start = end - timedelta(1)
     if query in ("MessageFail", "RecordFail", "Failjob", "RecordFail | count records"):
         with pytest.raises(MsticpyConnectionError) as mp_ex:
@@ -353,6 +353,7 @@ def test_sumologic_query_params(sumologic_drv, params, expected):
 
 
 @patch(SUMOLOGIC_SVC, SumologicService)
+@pytest.mark.filterwarnings("ignore:datetime.datetime.utcnow")
 @pytest.mark.parametrize("ext", ("xlsx", "csv"))
 def test_sumologic_query_export(sumologic_drv, tmpdir, ext):
     """Check queries with different parameters."""

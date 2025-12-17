@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """RegistryValue Entity class."""
-from typing import Any, Mapping, Optional
+
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -56,10 +58,10 @@ class RegistryValue(Entity):
             kw arguments.
 
         """
-        self.Key: Optional[RegistryKey] = None
-        self.Name: Optional[str] = None
-        self.Value: Optional[str] = None
-        self.ValueType: Optional[str] = None
+        self.Key: RegistryKey | None = None
+        self.Name: str | None = None
+        self.Value: str | None = None
+        self.ValueType: str | None = None
         super().__init__(src_entity=src_entity, **kwargs)
 
     @property

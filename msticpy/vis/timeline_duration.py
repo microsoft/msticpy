@@ -4,8 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Timeline duration plot."""
+
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Iterable, List, Optional, Tuple, Union
 
 import attr
 import pandas as pd
@@ -32,12 +33,6 @@ from .timeline_common import (
     set_axes_and_grids,
 )
 
-# pylint: disable=unused-import
-# Importing to activate pandas accessors
-from .timeline_pd_accessor import TimeLineAccessor  # noqa F401
-
-# pylint: enable=unused-import
-
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
@@ -57,9 +52,9 @@ figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 class PlotParams:
     """Plot params for time_duration."""
 
-    height: Optional[int] = None
+    height: int | None = None
     width: int = 900
-    title: Optional[str] = None
+    title: str | None = None
     yaxis: bool = True
     range_tool: bool = True
     xgrid: bool = True
@@ -67,13 +62,13 @@ class PlotParams:
     hide: bool = False
     color: str = "navy"
     ylabel_cols: Iterable[str] = attr.Factory(list)
-    ref_events: Optional[pd.DataFrame] = None
-    ref_col: Optional[str] = None
-    ref_times: Optional[List[Tuple[datetime, str]]] = None
-    source_columns: List = []
+    ref_events: pd.DataFrame | None = None
+    ref_col: str | None = None
+    ref_times: list[tuple[datetime, str]] | None = None
+    source_columns: list = []
 
     @classmethod
-    def field_list(cls) -> List[str]:
+    def field_list(cls) -> list[str]:
         """Return field names as a list."""
         return list(attr.fields_dict(cls).keys())
 
@@ -84,11 +79,11 @@ class PlotParams:
 @export
 def display_timeline_duration(
     data: pd.DataFrame,
-    group_by: Union[Iterable[str], str],
+    group_by: Iterable[str] | str,
     time_column: str = "TimeGenerated",
-    end_time_column: Optional[str] = None,
+    end_time_column: str | None = None,
     **kwargs,
-) -> LayoutDOM:  # noqa: C901, MC0001
+) -> LayoutDOM:  # noqa: C901
     """
     Display a duration timeline of events grouped by one or more columns.
 
@@ -150,7 +145,7 @@ def display_timeline_duration(
 
     group_by = [group_by] if isinstance(group_by, str) else list(group_by)
     end_time_column = end_time_column or time_column
-    data = ensure_df_datetimes(data, columns=list(set([time_column, end_time_column])))
+    data = ensure_df_datetimes(data, columns=list({time_column, end_time_column}))
     check_df_columns(
         data,
         group_by + [end_time_column, time_column],
@@ -183,9 +178,7 @@ def display_timeline_duration(
     height = param.height or calc_auto_plot_height(len(grouped_data))
     # Concatenate ylabel columns to display on y-axis
     if len(group_by) > 1:
-        y_range = grouped_data[group_by[0]].str.cat(
-            grouped_data[group_by[1:]], sep=" / "
-        )
+        y_range = grouped_data[group_by[0]].str.cat(grouped_data[group_by[1:]], sep=" / ")
     else:
         y_range = grouped_data[group_by[0]]
 
@@ -224,14 +217,14 @@ def display_timeline_duration(
     )
 
     # Set grid parameters
-    set_axes_and_grids(None, plot, param.yaxis, param.ygrid, param.xgrid)  # type: ignore
+    set_axes_and_grids(None, plot, param.yaxis, param.ygrid, param.xgrid)
 
     # Create plot bar to act as as range selector
     rng_select = create_range_tool(
         data=all_data,
         min_time=min_time,
         max_time=max_time,
-        plot_range=plot.x_range,  # type: ignore[arg-type]
+        plot_range=plot.x_range,
         width=param.width,
         height=height,
         time_column=time_column,
@@ -257,7 +250,7 @@ def display_timeline_duration(
 
 
 def _group_durations(
-    data: pd.DataFrame, group_by: List[str], time_column: str, end_time_column: str
+    data: pd.DataFrame, group_by: list[str], time_column: str, end_time_column: str
 ):
     """Group the data and calculate start and end times."""
     grouped_data = data.groupby(group_by).agg(

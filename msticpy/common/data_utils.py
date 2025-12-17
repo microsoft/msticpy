@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data utility functions."""
-from typing import List, Union
 
 import pandas as pd
 
@@ -16,7 +15,7 @@ __author__ = "Ian Hellen"
 
 def ensure_df_datetimes(
     data: pd.DataFrame,
-    columns: Union[str, List[str], None] = None,
+    columns: str | list[str] | None = None,
     add_utc_tz: bool = True,
 ) -> pd.DataFrame:
     """
@@ -42,7 +41,7 @@ def ensure_df_datetimes(
 
     """
     if not columns:
-        columns = list(data.filter(regex=".*[Tt]ime.*").columns)  # type: ignore
+        columns = list(data.filter(regex=".*[Tt]ime.*").columns)
     if isinstance(columns, str):
         columns = [columns]
     col_map = {
@@ -54,9 +53,7 @@ def ensure_df_datetimes(
 
     # Look for any TZ-naive columns in the list
     if add_utc_tz:
-        localize_cols = {
-            col for col in columns if col in data.select_dtypes("datetime")
-        }
+        localize_cols = {col for col in columns if col in data.select_dtypes("datetime")}
         for col in localize_cols:
             converted_data[col] = converted_data[col].dt.tz_localize(
                 "UTC", ambiguous="infer", nonexistent="shift_forward"

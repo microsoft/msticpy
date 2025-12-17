@@ -12,6 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
 import abc
@@ -19,8 +20,9 @@ import contextlib
 import logging
 import warnings
 from collections import defaultdict
+from collections.abc import Callable, Iterable
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import pandas as pd
 from typing_extensions import Self
@@ -36,8 +38,6 @@ from .ti_provider_base import ResultSeverity, TIProvider
 
 if TYPE_CHECKING:
     import datetime as dt
-
-    from Kqlmagic.results import ResultSet
 logger: logging.Logger = logging.getLogger(__name__)
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -85,7 +85,7 @@ class KqlTIProvider(TIProvider):
     def _connected(self: Self) -> bool:
         return self._query_provider.connected
 
-    @lru_cache(maxsize=256)
+    @lru_cache(maxsize=256)  # noqa: B019
     def lookup_ioc(
         self: Self,
         ioc: str,
@@ -254,32 +254,49 @@ class KqlTIProvider(TIProvider):
         """Add status info, if query produced no results."""
         src_ioc_frame["Result"] = False
         src_ioc_frame["Details"] = (
-            "Query failure"
-            if lookup_status == LookupStatus.QUERY_FAILED
-            else "Not found"
+            "Query failure" if lookup_status == LookupStatus.QUERY_FAILED else "Not found"
         )
         src_ioc_frame["Status"] = lookup_status.value
         src_ioc_frame["Severity"] = ResultSeverity.information.name
 
     @staticmethod
-    def _check_result_status(data_result: pd.DataFrame | ResultSet) -> LookupStatus:
-        """Check the return value from the query."""
+    def _check_result_status(data_result: pd.DataFrame | Any) -> LookupStatus:
+        """
+        Check the return value from the query.
+
+        Parameters
+        ----------
+        data_result : pd.DataFrame | Any
+            Query result - normally a DataFrame from azure-monitor-query driver,
+            but can be other types in test mocks or legacy code.
+
+        Returns
+        -------
+        LookupStatus
+            Status of the query execution.
+
+        """
         if isinstance(data_result, pd.DataFrame):
             return LookupStatus.NO_DATA if data_result.empty else LookupStatus.OK
-        if (
-            hasattr(data_result, "completion_query_info")
-            and data_result.completion_query_info["StatusCode"] == 0
-            and data_result.records_count == 0
+
+        # Handle legacy/mock objects with completion_query_info
+        if hasattr(data_result, "completion_query_info") and hasattr(
+            data_result, "records_count"
         ):
-            logger.info("No results return from data provider.")
-            return LookupStatus.NO_DATA
-        if data_result and hasattr(data_result, "completion_query_info"):
+            if (
+                data_result.completion_query_info.get("StatusCode") == 0
+                and data_result.records_count == 0
+            ):
+                logger.info("No results returned from data provider.")
+                return LookupStatus.NO_DATA
             logger.info(
-                "No results returned from data provider. %s",
+                "Query failed. Status: %s",
                 data_result.completion_query_info,
             )
-        else:
-            logger.info("Unknown response from provider: %s", data_result)
+            return LookupStatus.QUERY_FAILED
+
+        # Unknown result type
+        logger.warning("Unknown response type from provider: %s", type(data_result))
         return LookupStatus.QUERY_FAILED
 
     @abc.abstractmethod

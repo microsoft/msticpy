@@ -13,11 +13,11 @@ Designed to support standard linux syslog for investigations where auditd
 is not available.
 
 """
+
 import datetime as dt
 import json
 import re
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -37,7 +37,7 @@ _DETECTIONS_DEF_DIR = "resources"
 def risky_cmd_line(
     events: pd.DataFrame,
     log_type: str,
-    detection_rules: Optional[str] = None,
+    detection_rules: str | None = None,
     cmd_field: str = "Command",
 ) -> dict:
     """
@@ -73,9 +73,7 @@ def risky_cmd_line(
 
     """
     if cmd_field not in events.columns:
-        raise MsticpyException(
-            f"The provided dataset does not contain the {cmd_field} field"
-        )
+        raise MsticpyException(f"The provided dataset does not contain the {cmd_field} field")
     if detection_rules is None:
         detection_rules = str(
             Path(__file__)
@@ -85,12 +83,9 @@ def risky_cmd_line(
 
     events[cmd_field] = events[cmd_field].replace("", np.nan)
     activity = (
-        events[["TimeGenerated", cmd_field]]
-        .dropna()
-        .set_index("TimeGenerated")
-        .to_dict()
+        events[["TimeGenerated", cmd_field]].dropna().set_index("TimeGenerated").to_dict()
     )
-    with open(detection_rules, "r", encoding="utf-8") as json_file:
+    with open(detection_rules, encoding="utf-8") as json_file:
         rules = json.load(json_file)
 
     # Decode any Base64 encoded commands so we can match on them as well
@@ -105,16 +100,15 @@ def risky_cmd_line(
             if b64_regex.match(message):
                 b64match = b64_regex.search(message)
                 b64string = unpack(input_string=b64match[1])  # type: ignore
-                b64string = b64string[1]["decoded_string"].to_string()  # type: ignore
+                b64string = b64string[1]["decoded_string"].to_string()
                 if re.match(detection, message):
                     risky_actions.update({date: message})
                 else:
                     pass
+            elif re.match(detection, message):
+                risky_actions.update({date: message})
             else:
-                if re.match(detection, message):
-                    risky_actions.update({date: message})
-                else:
-                    pass
+                pass
     return risky_actions
 
 
@@ -162,10 +156,7 @@ def cmd_speed(
     actions = cmd_events.dropna(subset=[cmd_field]).reset_index()
     df_len = len(actions.index) - (events + 1)
     while df_len >= 0:
-        delta = (
-            actions["TimeGenerated"][(df_len + events)]
-            - actions["TimeGenerated"][df_len]
-        )
+        delta = actions["TimeGenerated"][(df_len + events)] - actions["TimeGenerated"][df_len]
         if delta < dt.timedelta(seconds=time):
             suspicious_actions.append(
                 {df_len: [actions[df_len : (df_len + events)], delta]}  # noqa: E203

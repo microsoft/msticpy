@@ -12,23 +12,23 @@ enrich IP Address data to assist investigations.
 Designed to support any data source containing IP address entity.
 
 """
+
 from __future__ import annotations
 
 import ipaddress
 import logging
 import re
 import socket
-import warnings
+from collections.abc import Callable, Iterator
 from dataclasses import asdict, dataclass, field
 from functools import lru_cache
 from time import sleep
-from typing import Any, Callable, Iterator
+from typing import Any
 
 import httpx
 import pandas as pd
 from bs4 import BeautifulSoup
 from deprecated.sphinx import deprecated
-from typing_extensions import Self
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyConnectionError, MsticpyException
@@ -80,9 +80,9 @@ def _fetch_asns() -> Callable[[], dict[str, str]]:
                 raise MsticpyConnectionError(err_msg) from err
             asns_soup = BeautifulSoup(asns_resp.content, features="lxml")
             asns_dict = {
-                str(asn.next_element)
-                .strip(): str(asn.next_element.next_element if asn.next_element else "")
-                .strip()
+                str(asn.next_element).strip(): str(
+                    asn.next_element.next_element if asn.next_element else ""
+                ).strip()
                 for asn in asns_soup.find_all("a")
             }
         return asns_dict
@@ -132,7 +132,7 @@ def convert_to_ip_entities(
     """
     # locally imported to prevent cyclic import
     # pylint: disable=import-outside-toplevel, cyclic-import
-    from .geoip import GeoLiteLookup
+    from .geoip import GeoLiteLookup  # noqa: PLC0415
 
     geo_lite_lookup: GeoLiteLookup = GeoLiteLookup()
 
@@ -391,64 +391,6 @@ def get_whois_df(  # noqa: PLR0913
     return data.assign(ASNDescription="No data returned")
 
 
-@pd.api.extensions.register_dataframe_accessor("mp_whois")
-@export
-class IpWhoisAccessor:
-    """Pandas api extension for IP Whois lookup."""
-
-    def __init__(self: IpWhoisAccessor, pandas_obj: pd.DataFrame) -> None:
-        """Instantiate pandas extension class."""
-        self._df: pd.DataFrame = pandas_obj
-
-    def lookup(
-        self: Self,
-        ip_column: str,
-        *,
-        asn_col: str = "ASNDescription",
-        whois_col: str = "WhoIsData",
-        show_progress: bool = False,
-    ) -> pd.DataFrame:
-        """
-        Extract IoCs from either a pandas DataFrame.
-
-        Parameters
-        ----------
-        ip_column : str
-            Column name of IP Address to look up.
-        asn_col : str, optional
-            Name of the output column for ASN description,
-            by default "ASNDescription"
-        whois_col : str, optional
-            Name of the output column for full whois data,
-            by default "WhoIsData"
-        show_progress : bool, optional
-            Show progress for each query, by default False
-
-        Returns
-        -------
-        pd.DataFrame
-            Output DataFrame with results in added columns.
-
-        """
-        warn_message = (
-            "This accessor method has been deprecated.\n"
-            "Please use IpAddress.util.whois() pivot function."
-            "This will be removed in MSTICPy v2.2.0"
-        )
-        warnings.warn(
-            warn_message,
-            category=DeprecationWarning,
-            stacklevel=1,
-        )
-        return get_whois_df(
-            data=self._df,
-            ip_column=ip_column,
-            asn_col=asn_col,
-            whois_col=whois_col,
-            show_progress=show_progress,
-        )
-
-
 def ip_whois(
     ip: IpAddress | str | list | pd.Series | None = None,
     ip_address: IpAddress | str | list[str] | pd.Series | None = None,
@@ -489,7 +431,7 @@ def ip_whois(
     if ip is None:
         err_msg: str = "One of ip or ip_address parameters must be supplied."
         raise ValueError(err_msg)
-    if isinstance(ip, (list, pd.Series)):
+    if isinstance(ip, list | pd.Series):
         rate_limit: bool = len(ip) > RATE_LIMIT_THRESHOLD
         if rate_limit:
             logger.info("Large number of lookups, this may take some time.")
@@ -497,13 +439,13 @@ def ip_whois(
         for ip_addr in ip:
             if rate_limit:
                 sleep(query_rate)
-            whois_results[ip_addr] = _whois_lookup(  # type: ignore[index]
+            whois_results[ip_addr] = _whois_lookup(
                 ip_addr,
                 raw=raw,
                 retry_count=retry_count,
             ).properties
         return _whois_result_to_pandas(whois_results)
-    if isinstance(ip, (str, IpAddress)):
+    if isinstance(ip, str | IpAddress):
         return _whois_lookup(ip, raw=raw)
     return pd.DataFrame()
 
@@ -525,9 +467,7 @@ def get_asn_details(asns: str | list[str]) -> pd.DataFrame | dict[str, Any]:
 
     """
     if isinstance(asns, list):
-        asn_detail_results: list[dict[str, Any]] = [
-            _asn_results(str(asn)) for asn in asns
-        ]
+        asn_detail_results: list[dict[str, Any]] = [_asn_results(str(asn)) for asn in asns]
         return pd.DataFrame(asn_detail_results)
     return _asn_results(str(asns))
 
@@ -598,7 +538,7 @@ def get_asn_from_ip(
     ip_response: str = _cymru_query(query)
     keys: list[str] = ip_response.split("\n", maxsplit=1)[0].split("|")
     values: list[str] = ip_response.split("\n")[1].split("|")
-    return {key.strip(): value.strip() for key, value in zip(keys, values)}
+    return {key.strip(): value.strip() for key, value in zip(keys, values, strict=False)}
 
 
 @dataclass
@@ -695,8 +635,7 @@ def _rdap_lookup(url: str, retry_count: int = 5) -> httpx.Response:
         retry_count -= 1
     if not rdap_data:
         err_msg: str = (
-            "Rate limit exceeded - try adjusting query_rate parameter "
-            "to slow down requests"
+            "Rate limit exceeded - try adjusting query_rate parameter to slow down requests"
         )
         raise MsticpyException(err_msg)
     return rdap_data

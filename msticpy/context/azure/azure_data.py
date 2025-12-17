@@ -5,17 +5,19 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to collect and return details related to Azure."""
+
 from __future__ import annotations
 
 import datetime
 import logging
+from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from importlib.metadata import version
-from typing import TYPE_CHECKING, Any, Callable, Iterable
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
-from packaging.version import Version, parse
+from packaging.version import Version, parse  # pylint: disable=no-name-in-module
 from typing_extensions import Self
 
 from ..._version import VERSION
@@ -249,9 +251,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
 
         """
         if self.connected is False:
-            err_msg: str = (
-                "You need to connect to the service before using this function."
-            )
+            err_msg: str = "You need to connect to the service before using this function."
             raise MsticpyNotConnectedError(
                 err_msg,
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
@@ -306,9 +306,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
 
         """
         if self.connected is False:
-            err_msg: str = (
-                "You need to connect to the service before using this function."
-            )
+            err_msg: str = "You need to connect to the service before using this function."
             raise MsticpyNotConnectedError(
                 err_msg,
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
@@ -412,9 +410,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
         """
         # Check if connection and client required are already present
         if self.connected is False:
-            err_msg: str = (
-                "You need to connect to the service before using this function."
-            )
+            err_msg: str = "You need to connect to the service before using this function."
             raise MsticpyNotConnectedError(
                 err_msg,
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
@@ -519,9 +515,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
         """
         # Check if connection and client required are already present
         if self.connected is False:
-            err_msg: str = (
-                "You need to connect to the service before using this function."
-            )
+            err_msg: str = "You need to connect to the service before using this function."
             raise MsticpyNotConnectedError(
                 err_msg,
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
@@ -671,9 +665,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
         """
         # Check if connection and client required are already present
         if self.connected is False:
-            err_msg: str = (
-                "You need to connect to the service before using this function."
-            )
+            err_msg: str = "You need to connect to the service before using this function."
             raise MsticpyNotConnectedError(
                 err_msg,
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
@@ -710,9 +702,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
             err_msg = "Resource provider not found"
             raise MsticpyResourceError(err_msg)
 
-        api_version = [
-            v for v in resource_types.api_versions if "preview" not in v.lower()
-        ]
+        api_version = [v for v in resource_types.api_versions if "preview" not in v.lower()]
         if api_version is None or not api_version:
             api_ver = resource_types.api_versions[0]
         else:
@@ -742,9 +732,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
         """
         # Check if connection and client required are already present
         if self.connected is False:
-            err_msg: str = (
-                "You need to connect to the service before using this function."
-            )
+            err_msg: str = "You need to connect to the service before using this function."
             raise MsticpyNotConnectedError(
                 err_msg,
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
@@ -793,9 +781,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
                     ),
                     subnet=ip_addr.subnet.name if ip_addr.subnet else None,
                     subnet_nsg=(
-                        ip_addr.subnet.network_security_group
-                        if ip_addr.subnet
-                        else None
+                        ip_addr.subnet.network_security_group if ip_addr.subnet else None
                     ),
                     subnet_route_table=(
                         ip_addr.subnet.route_table if ip_addr.subnet else None
@@ -818,7 +804,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
             )
             nsg_rules = []
             if nsg_details is not None:
-                for nsg in nsg_details.default_security_rules:  # type: ignore
+                for nsg in nsg_details.default_security_rules:  # type: ignore[union-attr]
                     rules = asdict(
                         NsgItems(
                             rule_name=nsg.name,
@@ -951,9 +937,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
 
         """
         if self.connected is False:
-            err_msg: str = (
-                "You need to connect to the service before using this function."
-            )
+            err_msg: str = "You need to connect to the service before using this function."
             raise MsticpyNotConnectedError(
                 err_msg,
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
@@ -1050,9 +1034,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
 
         """
         if not self.credentials:
-            err_msg: str = (
-                "Credentials must be provided for legacy authentication to work."
-            )
+            err_msg: str = "Credentials must be provided for legacy authentication to work."
             raise ValueError(err_msg)
         client: type[
             SubscriptionClient

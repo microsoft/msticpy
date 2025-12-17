@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
+
 import ipywidgets as widgets
 
 from .._version import VERSION

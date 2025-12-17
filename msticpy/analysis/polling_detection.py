@@ -13,6 +13,7 @@ updates or malware beaconing and checking for instructions.
 There is currently only one technique available for filtering polling data which is
 the class PeriodogramPollingDetector.
 """
+
 from __future__ import annotations
 
 from collections import Counter
@@ -34,9 +35,7 @@ from ..common.utility import export
 
 _PD_VERSION = Version(pd.__version__)
 
-GROUP_APPLY_PARAMS = (
-    {"include_groups": False} if Version("2.2.1") <= _PD_VERSION else {}
-)
+GROUP_APPLY_PARAMS = {"include_groups": False} if Version("2.2.1") <= _PD_VERSION else {}
 
 
 POWER_SPECTRAL_DENSITY_THRESHOLD: int = 700

@@ -194,8 +194,8 @@ def sql_to_kql(sql: str, target_tables: dict[str, str] | None = None) -> str:
 
     # replace table names
     if target_tables:
-        for table, target in target_tables.items():
-            sql = sql.replace(table, target)
+        for table, target_name in target_tables.items():
+            sql = sql.replace(table, target_name)
 
     parsed_sql = parse(sql)
     query_lines = _parse_query(parsed_sql)
@@ -230,17 +230,13 @@ def _parse_query(parsed_sql: dict[str, Any]) -> list[str]:
     distinct_select: list[dict[str, Any]] = []
     if SELECT_DISTINCT in parsed_sql:
         distinct_select.extend(parsed_sql[SELECT_DISTINCT])
-        _process_select(
-            parsed_sql[SELECT_DISTINCT], parsed_sql[SELECT_DISTINCT], query_lines
-        )
+        _process_select(parsed_sql[SELECT_DISTINCT], parsed_sql[SELECT_DISTINCT], query_lines)
     if SELECT in parsed_sql:
         _process_select(parsed_sql[SELECT], parsed_sql[SELECT], query_lines)
     if ORDER_BY in parsed_sql:
         query_lines.append(f"| order by {_create_order_by(parsed_sql[ORDER_BY])}")
     if distinct_select:
-        query_lines.append(
-            f"| distinct {', '.join(_create_distinct_list(distinct_select))}"
-        )
+        query_lines.append(f"| distinct {', '.join(_create_distinct_list(distinct_select))}")
     if LIMIT in parsed_sql:
         query_lines.append(f"| limit {parsed_sql[LIMIT]}")
     if UNION in parsed_sql:
@@ -355,9 +351,7 @@ def _get_expr_value(expr_val: Any) -> Any:
 def _process_group_by(parsed_sql: dict[str, Any], query_lines: list[str]) -> None:
     """Process GROUP BY clause."""
     group_by_expr = parsed_sql[GROUP_BY]
-    group_by_expr = (
-        group_by_expr if isinstance(group_by_expr, list) else [group_by_expr]
-    )
+    group_by_expr = group_by_expr if isinstance(group_by_expr, list) else [group_by_expr]
     by_clause = ", ".join(val["value"] for val in group_by_expr if val.get("value"))
 
     expr_list = parsed_sql.get(SELECT, parsed_sql.get(SELECT_DISTINCT, []))
@@ -393,13 +387,9 @@ def _parse_expression(expression: Any) -> str:  # noqa: PLR0911
             return f"dcount({func_arg})"
 
     if AND in expression:
-        return "\n  and ".join(
-            [f"({_parse_expression(expr)})" for expr in expression[AND]]
-        )
+        return "\n  and ".join([f"({_parse_expression(expr)})" for expr in expression[AND]])
     if OR in expression:
-        return "\n  or ".join(
-            [f"({_parse_expression(expr)})" for expr in expression[OR]]
-        )
+        return "\n  or ".join([f"({_parse_expression(expr)})" for expr in expression[OR]])
     if NOT in expression:
         return f" not ({_parse_expression(expression[NOT])})"
     if BETWEEN in expression:

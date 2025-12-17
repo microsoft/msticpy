@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """VirusTotal File Behavior functions."""
+
 from __future__ import annotations
 
 import logging
@@ -30,9 +31,7 @@ if TYPE_CHECKING:
 try:
     import vt
 except ImportError as imp_err:
-    ERR_MSG: str = (
-        "Cannot use this feature without vt-py and vt-graph-api packages installed."
-    )
+    ERR_MSG: str = "Cannot use this feature without vt-py and vt-graph-api packages installed."
     raise MsticpyImportExtraError(
         ERR_MSG,
         title="Error importing VirusTotal modules.",
@@ -320,8 +319,7 @@ def _build_process_tree(fb_categories: dict[str, Any]) -> pd.DataFrame:
     """Top level function to create displayable DataFrame."""
     proc_tree_raw: list[dict[str, Any]] = deepcopy(fb_categories["processes_tree"])
     procs_created: dict[str, Any] = {
-        Path(proc).parts[-1].lower(): proc
-        for proc in fb_categories["processes_created"]
+        Path(proc).parts[-1].lower(): proc for proc in fb_categories["processes_created"]
     }
 
     si_procs: list[SIProcess] = _extract_processes(proc_tree_raw, procs_created)
@@ -371,9 +369,9 @@ def _create_si_proc(
     """Return an SIProcess Object from a raw VT proc definition."""
     name: str = raw_proc["name"]
     raw_proc["cmd_line"] = name
-    for proc in procs_created:
+    for proc, proc_name in procs_created.items():
         if name.lower().endswith(proc):
-            raw_proc["name"] = procs_created[proc]
+            raw_proc["name"] = proc_name
             break
     raw_proc["proc_key"] = raw_proc["process_id"] + "|" + raw_proc["name"]
     return SIProcess(**raw_proc)
@@ -408,7 +406,7 @@ def _try_match_commandlines(
                 and np.isnan(row["cmd_line"])
                 and row["name"] in cmd
             ):
-                procs_cmd.loc[idx, "cmd_line"] = cmd  # type: ignore
+                procs_cmd.loc[idx, "cmd_line"] = cmd
                 break
     for cmd in command_executions:
         for idx, row in procs_cmd.iterrows():
@@ -418,7 +416,7 @@ def _try_match_commandlines(
                 and Path(row["name"]).stem.lower() in cmd.lower()
             ):
                 weak_matches += 1
-                procs_cmd.loc[idx, "cmd_line"] = cmd  # type: ignore
+                procs_cmd.loc[idx, "cmd_line"] = cmd
                 break
 
     if weak_matches:

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module docstring."""
+
 import ipywidgets as widgets
 
 from .._version import VERSION
@@ -68,7 +69,7 @@ class CEAutoLoadQProvs(CEItemsBase):
         """
         super().__init__(mp_controls)
         # pylint: disable=import-outside-toplevel
-        from ..data.core.query_defns import DataEnvironment
+        from ..data.core.query_defns import DataEnvironment  # noqa: PLC0415
 
         self._data_env_enum = DataEnvironment
 
@@ -182,12 +183,11 @@ class CEAutoLoadQProvs(CEItemsBase):
         curr_val = self.mp_controls.get_value(setting_path)
         if curr_val is None:
             curr_val = self._get_default_values(prov_name, conf_path)
+        elif "." in prov_name:
+            prov, child = prov_name.split(".", maxsplit=1)
+            curr_val = {prov: {child: curr_val}}
         else:
-            if "." in prov_name:
-                prov, child = prov_name.split(".", maxsplit=1)
-                curr_val = {prov: {child: curr_val}}
-            else:
-                curr_val = {prov_name: curr_val}
+            curr_val = {prov_name: curr_val}
 
         prov_ctrl.value = curr_val
 
@@ -276,9 +276,7 @@ class CEAutoLoadComps(CEAutoLoadQProvs):
         setting_path = f"{conf_path}.{prov_name}"
         prov_ctrl = self.mp_controls.get_control(setting_path)
         if not isinstance(prov_ctrl, UserDefLoadComponent):
-            prov_ctrl = UserDefLoadComponent(
-                self.mp_controls, prov_name, self._COMP_PATH
-            )
+            prov_ctrl = UserDefLoadComponent(self.mp_controls, prov_name, self._COMP_PATH)
             self.mp_controls.set_control(setting_path, prov_ctrl)
 
         curr_val = self.mp_controls.get_value(setting_path)

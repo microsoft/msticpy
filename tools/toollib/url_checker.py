@@ -70,7 +70,7 @@ PAGES_TO_SKIP = [
 
 
 # pylint: disable=too-many-locals, too-many-branches
-def check_site(  # noqa: MC0001
+def check_site(
     page_url: str,
     all_links: bool = False,
     top_root: Optional[str] = None,
@@ -273,7 +273,7 @@ def check_md_document(doc_path: str) -> Dict[str, UrlResult]:
         Dictionary of checked links
 
     """
-    with open(doc_path, "r", encoding="utf-8") as doc_file:
+    with open(doc_path, encoding="utf-8") as doc_file:
         body_markdown = doc_file.read()
     md_content = markdown.markdown(body_markdown)
     soup = BeautifulSoup(md_content, "html.parser")

@@ -12,6 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -19,7 +20,8 @@ import importlib
 import logging
 import warnings
 from collections import ChainMap
-from typing import TYPE_CHECKING, Any, Callable, ClassVar
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import nest_asyncio
 import pandas as pd
@@ -81,16 +83,12 @@ class ProgressCounter:
 class Lookup:
     """Item lookup from providers."""
 
-    _NO_PROVIDERS_MSG: ClassVar[
-        str
-    ] = """
+    _NO_PROVIDERS_MSG: ClassVar[str] = """
     No Providers are loaded - please check that
     you have correctly configured your msticpyconfig.yaml settings.
     """
 
-    _HELP_URI: ClassVar[str] = (
-        "https://msticpy.readthedocs.io/en/latest/DataEnrichment.html"
-    )
+    _HELP_URI: ClassVar[str] = "https://msticpy.readthedocs.io/en/latest/DataEnrichment.html"
 
     PROVIDERS: ClassVar[dict[str, tuple[str, str]]] = {}
     CUSTOM_PROVIDERS: ClassVar[dict[str, type[Provider]]]
@@ -128,14 +126,6 @@ class Lookup:
         if primary_providers:
             for prov in primary_providers:
                 self.add_provider(prov, primary=True)
-        if secondary_providers:
-            warnings.warn(
-                "'secondary_providers' is a deprecated parameter",
-                DeprecationWarning,
-                stacklevel=1,
-            )
-            for prov in secondary_providers:
-                self.add_provider(prov, primary=False)
         if not (primary_providers or secondary_providers):
             self._load_providers()
 
@@ -221,13 +211,10 @@ class Lookup:
                     as_list=True,
                 )
                 if not available_providers:
-                    err_msg: str = (
-                        f"Unknown provider '{provider}'. No available providers."
-                    )
+                    err_msg: str = f"Unknown provider '{provider}'. No available providers."
                 else:
-                    err_msg = (
-                        f"Unknown provider '{provider}'. Available providers:"
-                        ", ".join(available_providers)
+                    err_msg = f"Unknown provider '{provider}'. Available providers:, ".join(
+                        available_providers
                     )
                 raise ValueError(err_msg)
 
@@ -259,13 +246,10 @@ class Lookup:
                     as_list=True,
                 )
                 if not available_providers:
-                    err_msg: str = (
-                        f"Unknown provider '{provider}'. No available providers."
-                    )
+                    err_msg: str = f"Unknown provider '{provider}'. No available providers."
                 else:
-                    err_msg = (
-                        f"Unknown provider '{provider}'. Available providers:"
-                        ", ".join(available_providers)
+                    err_msg = f"Unknown provider '{provider}'. Available providers:, ".join(
+                        available_providers
                     )
                 raise ValueError(err_msg)
 
@@ -771,9 +755,8 @@ class Lookup:
         if not (mod_name and cls_name):
             if hasattr(cls, "CUSTOM_PROVIDERS") and provider in cls.CUSTOM_PROVIDERS:
                 return cls.CUSTOM_PROVIDERS[provider]
-            err_msg: str = (
-                f"No provider named '{provider}'. Possible values are: "
-                ", ".join(list(cls.PROVIDERS) + list(cls.CUSTOM_PROVIDERS))
+            err_msg: str = f"No provider named '{provider}'. Possible values are: , ".join(
+                list(cls.PROVIDERS) + list(cls.CUSTOM_PROVIDERS)
             )
             raise LookupError(err_msg)
 
@@ -833,9 +816,7 @@ class Lookup:
 
             # set the description from settings, if one is provided, otherwise
             # use class docstring.
-            provider_instance.description = (
-                settings.description or provider_instance.__doc__
-            )
+            provider_instance.description = settings.description or provider_instance.__doc__
 
             self.add_provider(
                 provider=provider_instance,
@@ -887,7 +868,7 @@ class Lookup:
     ) -> pd.DataFrame:
         """Combine dataframe results into single DF."""
         result_list: list[pd.DataFrame] = []
-        for prov_name, provider_result in zip(provider_names, results):
+        for prov_name, provider_result in zip(provider_names, results, strict=False):
             if provider_result is None or provider_result.empty:
                 continue
             result: pd.DataFrame = provider_result.copy()

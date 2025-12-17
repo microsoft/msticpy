@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Threatintelligence Entity class."""
-from typing import Any, Dict, Mapping
+
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -42,7 +44,7 @@ class UnknownEntity(Entity):
         """Return Entity Name."""
         return self.__class__.__name__
 
-    _entity_schema: Dict[str, Any] = {
+    _entity_schema: dict[str, Any] = {
         "TimeGenerated": None,
         "StartTime": None,
         "EndTime": None,

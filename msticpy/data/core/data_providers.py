@@ -4,12 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data provider loader."""
+
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any
 
 from typing_extensions import Self
 
@@ -96,10 +98,12 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         """
         # import at runtime to prevent circular import
         # pylint: disable=import-outside-toplevel, cyclic-import
-        from ...init.pivot_init.pivot_data_queries import add_data_queries_to_entities
+        from ...init.pivot_init.pivot_data_queries import (  # noqa: PLC0415
+            add_data_queries_to_entities,
+        )
 
         # pylint: enable=import-outside-toplevel
-        setattr(self.__class__, "_add_pivots", add_data_queries_to_entities)
+        self.__class__._add_pivots = add_data_queries_to_entities  # type: ignore[attr-defined]
 
         data_environment, self.environment_name = QueryProvider._check_environment(
             data_environment,
@@ -107,22 +111,17 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
 
         self._driver_kwargs: dict[str, Any] = kwargs.copy()
         if driver is None:
-            self.driver_class: type[DriverBase] = drivers.import_driver(
-                data_environment
-            )
+            self.driver_class: type[DriverBase] = drivers.import_driver(data_environment)
             if issubclass(self.driver_class, DriverBase):
                 driver = self.driver_class(data_environment=data_environment, **kwargs)
             else:
-                err_msg: str = (
-                    f"Could not find suitable data provider for {data_environment}"
-                )
+                err_msg: str = f"Could not find suitable data provider for {data_environment}"
                 raise LookupError(err_msg)
         else:
             self.driver_class = driver.__class__
         # allow the driver to override the data environment used for selecting queries
         self.environment_name = (
-            driver.get_driver_property(DriverProps.EFFECTIVE_ENV)
-            or self.environment_name
+            driver.get_driver_property(DriverProps.EFFECTIVE_ENV) or self.environment_name
         )
         logger.info("Using data environment %s", self.environment_name)
         logger.info("Driver class: %s", self.driver_class.__name__)
@@ -170,7 +169,9 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         elif isinstance(data_environment, DataEnvironment):
             environment_name = data_environment.name
         else:
-            err_msg = f"Unknown data environment type {data_environment} ({type(data_environment)})"
+            err_msg = (
+                f"Unknown data environment type {data_environment} ({type(data_environment)})"
+            )
             raise TypeError(err_msg)
         return data_environment, environment_name
 
@@ -216,9 +217,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         # Add any built-in or dynamically retrieved queries from driver
         if self._query_provider.has_driver_queries:
             logger.info("Adding driver queries to provider")
-            driver_queries: Iterable[dict[str, Any]] = (
-                self._query_provider.driver_queries
-            )
+            driver_queries: Iterable[dict[str, Any]] = self._query_provider.driver_queries
             self._add_driver_queries(queries=driver_queries)
             refresh_query_funcs = True
 
@@ -432,9 +431,7 @@ class QueryProvider(QueryProviderConnectionsMixin, QueryProviderUtilsMixin):
         query_options: dict[str, Any] = kwargs.pop("query_options", {})
         if not query_options:
             # Any kwargs left over we send to the query provider driver
-            query_options = {
-                key: val for key, val in kwargs.items() if key not in params
-            }
+            query_options = {key: val for key, val in kwargs.items() if key not in params}
         query_options["time_span"] = {
             "start": params.get("start"),
             "end": params.get("end"),

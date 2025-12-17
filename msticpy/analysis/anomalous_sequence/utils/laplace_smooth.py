@@ -6,16 +6,16 @@
 """Helper module for laplace smoothing counts."""
 
 import copy
-from typing import DefaultDict, List, Tuple
+from collections import defaultdict
 
 
 def laplace_smooth_cmd_counts(
-    seq1_counts: DefaultDict[str, int],
-    seq2_counts: DefaultDict[str, DefaultDict[str, int]],
+    seq1_counts: defaultdict[str, int],
+    seq2_counts: defaultdict[str, defaultdict[str, int]],
     start_token: str,
     end_token: str,
     unk_token: str,
-) -> Tuple[DefaultDict[str, int], DefaultDict[str, DefaultDict[str, int]]]:
+) -> tuple[defaultdict[str, int], defaultdict[str, defaultdict[str, int]]]:
     """
     Apply laplace smoothing to the input counts for the cmds.
 
@@ -45,7 +45,7 @@ def laplace_smooth_cmd_counts(
     seq1_counts_ls = copy.deepcopy(seq1_counts)
     seq2_counts_ls = copy.deepcopy(seq2_counts)
 
-    cmds: List[str] = list(seq1_counts_ls.keys()) + [unk_token]
+    cmds: list[str] = list(seq1_counts_ls.keys()) + [unk_token]
     for cmd1 in cmds:
         for cmd2 in cmds:
             if cmd1 != end_token and cmd2 != start_token:
@@ -57,11 +57,11 @@ def laplace_smooth_cmd_counts(
 
 
 def laplace_smooth_param_counts(
-    cmds: List[str],
-    param_counts: DefaultDict[str, int],
-    cmd_param_counts: DefaultDict[str, DefaultDict[str, int]],
+    cmds: list[str],
+    param_counts: defaultdict[str, int],
+    cmd_param_counts: defaultdict[str, defaultdict[str, int]],
     unk_token: str,
-) -> Tuple[DefaultDict[str, int], DefaultDict[str, DefaultDict[str, int]]]:
+) -> tuple[defaultdict[str, int], defaultdict[str, defaultdict[str, int]]]:
     """
     Apply laplace smoothing to the input counts for the params.
 
@@ -89,7 +89,7 @@ def laplace_smooth_param_counts(
     param_counts_ls = copy.deepcopy(param_counts)
     cmd_param_counts_ls = copy.deepcopy(cmd_param_counts)
 
-    params: List[str] = list(param_counts.keys()) + [unk_token]
+    params: list[str] = list(param_counts.keys()) + [unk_token]
     for cmd in cmds:
         for param in params:
             if param in cmd_param_counts_ls[cmd] or param == unk_token:
@@ -100,11 +100,11 @@ def laplace_smooth_param_counts(
 
 
 def laplace_smooth_value_counts(
-    params: List[str],
-    value_counts: DefaultDict[str, int],
-    param_value_counts: DefaultDict[str, DefaultDict[str, int]],
+    params: list[str],
+    value_counts: defaultdict[str, int],
+    param_value_counts: defaultdict[str, defaultdict[str, int]],
     unk_token: str,
-) -> Tuple[DefaultDict[str, int], DefaultDict[str, DefaultDict[str, int]]]:
+) -> tuple[defaultdict[str, int], defaultdict[str, defaultdict[str, int]]]:
     """
     Apply laplace smoothing to the input counts for the values.
 
@@ -132,7 +132,7 @@ def laplace_smooth_value_counts(
     value_counts_ls = copy.deepcopy(value_counts)
     param_value_counts_ls = copy.deepcopy(param_value_counts)
 
-    values: List[str] = list(value_counts_ls.keys()) + [unk_token]
+    values: list[str] = list(value_counts_ls.keys()) + [unk_token]
     for param in params:
         for value in values:
             if value in param_value_counts_ls[param] or value == unk_token:

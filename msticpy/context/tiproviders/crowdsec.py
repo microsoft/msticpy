@@ -74,10 +74,7 @@ class CrowdSec(HttpTIProvider):
                     ],
                 ),
                 "Behaviors": ",".join(
-                    [
-                        behavior["name"]
-                        for behavior in response["RawResult"]["behaviors"]
-                    ],
+                    [behavior["name"] for behavior in response["RawResult"]["behaviors"]],
                 ),
             },
         )

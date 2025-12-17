@@ -5,8 +5,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Coroutine, Iterable
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Iterable
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import pandas as pd
 from IPython.core.display import HTML
@@ -88,7 +89,7 @@ class VTObjectProperties(Enum):
 def _ensure_eventloop(*, force_nest_asyncio: bool = False) -> asyncio.AbstractEventLoop:
     """Ensure that we have an event loop available."""
     try:
-        event_loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
+        event_loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
     except RuntimeError:
         # Generate an event loop if there isn't any.
         event_loop = asyncio.new_event_loop()
@@ -277,10 +278,8 @@ class VTLookupV3:
 
         """
         if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
-            error_msg: str = (
-                f"Property type {vt_type} not supported"
-                "Valid types are"
-                ", ".join(x.value for x in VTEntityType.__members__.values())
+            error_msg: str = f"Property type {vt_type} not supportedValid types are, ".join(
+                x.value for x in VTEntityType.__members__.values()
             )
             raise KeyError(error_msg)
 
@@ -379,7 +378,7 @@ class VTLookupV3:
                 observable_type,
                 all_props=all_props,
             )
-            for observable, observable_type in zip(observables_list, types_list)
+            for observable, observable_type in zip(observables_list, types_list, strict=False)
         ]
 
         dfs: list[pd.DataFrame] = await asyncio.gather(*dfs_futures)
@@ -526,8 +525,7 @@ class VTLookupV3:
                 add_columns = pd.DataFrame(
                     {
                         ColumnNames.SOURCE.value: [observable] * rows,
-                        ColumnNames.SOURCE_TYPE.value: [VTEntityType(vt_type).value]
-                        * rows,
+                        ColumnNames.SOURCE_TYPE.value: [VTEntityType(vt_type).value] * rows,
                         ColumnNames.RELATIONSHIP_TYPE.value: [relationship] * rows,
                     },
                 )
@@ -710,7 +708,7 @@ class VTLookupV3:
                 limit=limit,
                 all_props=all_props,
             )
-            for observable, observable_type in zip(observables_list, types_list)
+            for observable, observable_type in zip(observables_list, types_list, strict=False)
         ]
 
         dfs: list[pd.DataFrame] = await asyncio.gather(*dfs_futures)
@@ -868,9 +866,9 @@ class VTLookupV3:
             # pylint: disable=no-member
 
             error_msg: str = (
-                f"Property type {vt_type} not supported. "
-                "Valid types are: "
-                ", ".join(x.value for x in VTEntityType.__members__.values())
+                f"Property type {vt_type} not supported. Valid types are: , ".join(
+                    x.value for x in VTEntityType.__members__.values()
+                )
             )
             raise KeyError(error_msg)
 
@@ -962,9 +960,7 @@ class VTLookupV3:
                 params={"query": query},
                 limit=limit,
             )
-            response_list: list[dict[str, Any]] = [
-                item.to_dict() for item in response_itr
-            ]
+            response_list: list[dict[str, Any]] = [item.to_dict() for item in response_itr]
         except vt.APIError as api_err:
             error_msg: str = (
                 f"The provided query returned 0 results because of an APIError: {api_err}"
@@ -1051,9 +1047,7 @@ class VTLookupV3:
         response_rows = []
         for response_item in response_list:
             # flatten nested dictionary and append id, type values
-            response_item_df = pd.json_normalize(
-                response_item["attributes"], max_level=0
-            )
+            response_item_df = pd.json_normalize(response_item["attributes"], max_level=0)
             response_item_df["id"] = response_item["id"]
             response_item_df["type"] = response_item["type"]
 
@@ -1099,9 +1093,7 @@ class VTLookupV3:
 
         # Create nodes DF, with source and target
         sources_df = (
-            concatenated_df.groupby(ColumnNames.SOURCE.value)[
-                ColumnNames.SOURCE_TYPE.value
-            ]
+            concatenated_df.groupby(ColumnNames.SOURCE.value)[ColumnNames.SOURCE_TYPE.value]
             .first()
             .reset_index()
             .rename(
@@ -1113,9 +1105,7 @@ class VTLookupV3:
         )
 
         target_df = (
-            concatenated_df.groupby(ColumnNames.TARGET.value)[
-                ColumnNames.TARGET_TYPE.value
-            ]
+            concatenated_df.groupby(ColumnNames.TARGET.value)[ColumnNames.TARGET_TYPE.value]
             .first()
             .reset_index()
             .rename(
@@ -1192,7 +1182,7 @@ class VTLookupV3:
             not_found_dict["status"] = "Unsupported type"
         else:
             not_found_dict.update(
-                {key: "Not found" for key in cls._BASIC_PROPERTIES_PER_TYPE[vte_type]},
+                dict.fromkeys(cls._BASIC_PROPERTIES_PER_TYPE[vte_type], "Not found"),
             )
         return pd.DataFrame([not_found_dict])
 
@@ -1225,9 +1215,7 @@ def _get_vt_api_key() -> str | None:
 def timestamps_to_utcdate(data: pd.DataFrame) -> pd.DataFrame:
     """Replace Unix timestamps in VT data with Py/pandas Timestamp."""
     columns: pd.Index = data.columns
-    for date_col in (
-        col for col in columns if isinstance(col, str) and col.endswith("_date")
-    ):
+    for date_col in (col for col in columns if isinstance(col, str) and col.endswith("_date")):
         data = (
             data.assign(pd_data=pd.to_datetime(data[date_col], unit="s", utc=True))
             .drop(columns=date_col)

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """LogAnalytics Uploader class."""
+
 import base64
 import datetime
 import hashlib
@@ -112,13 +113,7 @@ class LAUploader(UploaderBase):
         signature = self._build_signature(
             rfc1123date, content_length, "POST", content_type, resource
         )
-        uri = (
-            "https://"
-            + self.workspace
-            + self.ops_loc
-            + resource
-            + "?api-version=2016-04-01"
-        )
+        uri = "https://" + self.workspace + self.ops_loc + resource + "?api-version=2016-04-01"
         headers = {
             "content-type": content_type,
             "Authorization": signature,
@@ -171,9 +166,7 @@ class LAUploader(UploaderBase):
         if self._debug:
             print(f"Upload to {table_name} complete")
 
-    def upload_file(
-        self, file_path: str, table_name: str = None, delim: str = ",", **kwargs
-    ):
+    def upload_file(self, file_path: str, table_name: str = None, delim: str = ",", **kwargs):
         """
         Upload a seperated value file to Log Analytics.
 

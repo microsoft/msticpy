@@ -7,7 +7,6 @@
 
 from enum import Flag, auto
 from functools import partial
-from typing import Dict, Optional, Tuple, Union
 
 from ..._version import VERSION
 from ...common.provider_settings import get_provider_settings
@@ -84,7 +83,7 @@ URL_RELATIONSHIPS = {
     "referrer_urls": VTAPIScope.PRIVATE,
 }
 
-PIVOT_ENTITY_CATS: Dict[str, Tuple[str, Dict[str, VTAPIScope]]] = {
+PIVOT_ENTITY_CATS: dict[str, tuple[str, dict[str, VTAPIScope]]] = {
     "File": ("file", FILE_RELATIONSHIPS),
     "IpAddress": ("ip_address", IP_RELATIONSHIPS),
     "Dns": ("domain", DOMAIN_RELATIONSHIPS),
@@ -126,7 +125,7 @@ def init():
 
 
 # pylint: disable=no-member
-def add_pivot_functions(api_scope: Optional[str] = None):
+def add_pivot_functions(api_scope: str | None = None):
     """
     Add VT3 relationship functions as pivot functions.
 
@@ -150,7 +149,7 @@ def add_pivot_functions(api_scope: Optional[str] = None):
 
 
 # pylint: disable=no-member
-def _create_pivots(api_scope: Union[str, VTAPIScope, None]):
+def _create_pivots(api_scope: str | VTAPIScope | None):
     if api_scope is None:
         scope = _get_vt_api_scope()
     elif isinstance(api_scope, str):
@@ -175,9 +174,7 @@ def _create_pivots(api_scope: Union[str, VTAPIScope, None]):
         scope = VTAPIScope.ALL
     ent_funcs = {}
     for entity, (vt_type, category) in PIVOT_ENTITY_CATS.items():
-        ent_relations = (
-            rel for rel, rel_scope in category.items() if rel_scope & scope
-        )
+        ent_relations = (rel for rel, rel_scope in category.items() if rel_scope & scope)
         func_dict = {}
         for relationship in ent_relations:
             f_part = partial(

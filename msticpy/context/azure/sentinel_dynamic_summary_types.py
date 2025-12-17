@@ -4,15 +4,17 @@
 # license information.
 # --------------------------------------------------------------------------
 """Sentinel Dynamic Summary classes."""
+
 from __future__ import annotations
 
 import dataclasses
 import json
 import logging
 import uuid
+from collections.abc import Callable
 from datetime import datetime
 from functools import singledispatchmethod
-from typing import TYPE_CHECKING, Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import numpy as np
 import pandas as pd
@@ -78,9 +80,7 @@ class FieldList:
 
     def __repr__(self: Self) -> str:
         """Return list of field attributes and values."""
-        field_names: str = "\n    ".join(
-            f"{key}='{val}'" for key, val in vars(self).items()
-        )
+        field_names: str = "\n    ".join(f"{key}='{val}'" for key, val in vars(self).items())
         return f"Fields:\n    {field_names}"
 
 
@@ -231,9 +231,7 @@ class DynamicSummary:
         if summary_items is not None:
             self.add_summary_items(summary_items)
         self.source_info: dict[str, Any] = (
-            source_info
-            if isinstance(source_info, dict)
-            else {"user_source": source_info}
+            source_info if isinstance(source_info, dict) else {"user_source": source_info}
         )
         self.source_info["source_pkg"] = f"MSTICPy {VERSION}"
 
@@ -369,9 +367,7 @@ class DynamicSummary:
             dyn_summaries = df_to_dynamic_summaries(data)
 
         """
-        return [
-            df_to_dynamic_summary(ds_data) for _, ds_data in data.groupby("SummaryId")
-        ]
+        return [df_to_dynamic_summary(ds_data) for _, ds_data in data.groupby("SummaryId")]
 
     @staticmethod
     def df_to_dynamic_summary(data: pd.DataFrame) -> DynamicSummary:
@@ -819,8 +815,4 @@ def _convert_data_types(
 
 def _match_tactics(tactics: Iterable[str]) -> list[str]:
     """Return case-insensitive matches for tactics list."""
-    return [
-        _TACTICS_DICT[tactic.casefold()]
-        for tactic in tactics
-        if tactic in _TACTICS_DICT
-    ]
+    return [_TACTICS_DICT[tactic.casefold()] for tactic in tactics if tactic in _TACTICS_DICT]

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot function hierarchy attribute class."""
+
 from ..._version import VERSION
 from ...common.data_types import ObjectContainer
 

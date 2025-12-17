@@ -4,9 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree Visualization."""
+
 import textwrap
 from collections import Counter
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, NamedTuple
 
 import pandas as pd
 
@@ -35,7 +36,7 @@ def get_process_key(procs: pd.DataFrame, source_index: int) -> str:
         The process key of the process.
 
     """
-    return procs[procs[Col.source_index] == source_index].iloc[0].name  # type: ignore
+    return procs[procs[Col.source_index] == source_index].iloc[0].name
 
 
 # def build_process_key(  # type: ignore  # noqa: F821
@@ -85,7 +86,7 @@ def get_roots(procs: pd.DataFrame) -> pd.DataFrame:
     return procs[procs["IsRoot"]]
 
 
-def get_process(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Series:
+def get_process(procs: pd.DataFrame, source: str | pd.Series) -> pd.Series:
     """
     Return the process event as a Series.
 
@@ -114,9 +115,7 @@ def get_process(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Series
     raise ValueError("Unknown type for source parameter.")
 
 
-def get_parent(
-    procs: pd.DataFrame, source: Union[str, pd.Series]
-) -> Optional[pd.Series]:
+def get_parent(procs: pd.DataFrame, source: str | pd.Series) -> pd.Series | None:
     """
     Return the parent of the source process.
 
@@ -139,7 +138,7 @@ def get_parent(
     return None
 
 
-def get_root(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Series:
+def get_root(procs: pd.DataFrame, source: str | pd.Series) -> pd.Series:
     """
     Return the root process for the source process.
 
@@ -162,7 +161,7 @@ def get_root(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Series:
     return root_proc.iloc[0]
 
 
-def get_root_tree(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.DataFrame:
+def get_root_tree(procs: pd.DataFrame, source: str | pd.Series) -> pd.DataFrame:
     """
     Return the process tree to which the source process belongs.
 
@@ -203,7 +202,7 @@ def get_tree_depth(procs: pd.DataFrame) -> int:
 
 
 def get_children(
-    procs: pd.DataFrame, source: Union[str, pd.Series], include_source: bool = True
+    procs: pd.DataFrame, source: str | pd.Series, include_source: bool = True
 ) -> pd.DataFrame:
     """
     Return the child processes for the source process.
@@ -235,7 +234,7 @@ def get_children(
 
 def get_descendents(
     procs: pd.DataFrame,
-    source: Union[str, pd.Series],
+    source: str | pd.Series,
     include_source: bool = True,
     max_levels: int = -1,
 ) -> pd.DataFrame:
@@ -265,7 +264,7 @@ def get_descendents(
     parent_keys = [proc.name]
     level = 0
     current_index_name = procs.index.name
-    rem_procs: Optional[pd.DataFrame] = None
+    rem_procs: pd.DataFrame | None = None
     while max_levels == -1 or level < max_levels:
         if rem_procs is not None:
             # pylint: disable=unsubscriptable-object
@@ -278,7 +277,7 @@ def get_descendents(
         if children.empty:
             break
         descendents.append(children)
-        parent_keys = children.index  # type: ignore
+        parent_keys = children.index
         level += 1
 
     if descendents:
@@ -322,7 +321,7 @@ def get_ancestors(procs: pd.DataFrame, source, include_source=True) -> pd.DataFr
 
 
 def get_siblings(
-    procs: pd.DataFrame, source: Union[str, pd.Series], include_source: bool = True
+    procs: pd.DataFrame, source: str | pd.Series, include_source: bool = True
 ) -> pd.DataFrame:
     """
     Return the processes that share the parent of the source process.
@@ -344,13 +343,13 @@ def get_siblings(
     """
     parent = get_parent(procs, source)
     proc = get_process(procs, source)
-    siblings = get_children(procs, parent, include_source=False)  # type: ignore
+    siblings = get_children(procs, parent, include_source=False)
     if not include_source:
         return siblings[siblings.index != proc.name]
     return siblings
 
 
-def get_summary_info(procs: pd.DataFrame) -> Dict[str, int]:
+def get_summary_info(procs: pd.DataFrame) -> dict[str, int]:
     """
     Return summary information about the process trees.
 
@@ -365,7 +364,7 @@ def get_summary_info(procs: pd.DataFrame) -> Dict[str, int]:
         Summary statistic about the process tree
 
     """
-    summary: Dict[str, Any] = {}
+    summary: dict[str, Any] = {}
     summary["Processes"] = len(procs)
     summary["RootProcesses"] = len(procs[procs["IsRoot"]])
     summary["LeafProcesses"] = len(procs[procs["IsLeaf"]])
@@ -386,14 +385,14 @@ class TemplateLine(NamedTuple):
 
     """
 
-    items: List[Tuple[str, str]] = []
+    items: list[tuple[str, str]] = []
     wrap: int = 80
 
 
 def tree_to_text(
     procs: pd.DataFrame,
-    schema: Optional[Union[ProcSchema, Dict[str, str]]] = None,
-    template: Optional[List[TemplateLine]] = None,
+    schema: ProcSchema | dict[str, str] | None = None,
+    template: list[TemplateLine] | None = None,
     sort_column: str = "path",
     wrap_column: int = 0,
 ) -> str:
@@ -427,11 +426,9 @@ def tree_to_text(
 
     """
     if not schema and not template:
-        raise ValueError(
-            "One of 'schema' and 'template' must be supplied", "as parameters."
-        )
+        raise ValueError("One of 'schema' and 'template' must be supplied", "as parameters.")
     template = template or _create_proctree_template(schema)  # type: ignore
-    output: List[str] = []
+    output: list[str] = []
     for _, row in procs.sort_values(sort_column).iterrows():
         depth_count = Counter(row.path).get("/", 0)
         header = _node_header(depth_count)
@@ -439,8 +436,7 @@ def tree_to_text(
         # handle first row separately since it needs a header
         tmplt_line = template[0]
         out_line = "  ".join(
-            f"{name}: {row[col]}" if name else f"{row[col]}"
-            for name, col in tmplt_line.items
+            f"{name}: {row[col]}" if name else f"{row[col]}" for name, col in tmplt_line.items
         )
         indent = " " * len(header) + " "
         out_line = "\n".join(
@@ -454,9 +450,7 @@ def tree_to_text(
 
         # process subsequent rows
         for tmplt_line in template[1:]:
-            out_line = "  ".join(
-                f"{name}: {row[col]}" for name, col in tmplt_line.items
-            )
+            out_line = "  ".join(f"{name}: {row[col]}" for name, col in tmplt_line.items)
             out_line = "\n".join(
                 textwrap.wrap(
                     out_line,
@@ -471,15 +465,13 @@ def tree_to_text(
 
 
 def _create_proctree_template(
-    schema: Union[ProcSchema, Dict[str, str]]
-) -> List[TemplateLine]:
+    schema: ProcSchema | dict[str, str],
+) -> list[TemplateLine]:
     """Create a template from the schema."""
     if isinstance(schema, dict):
         schema = ProcSchema(**schema)
-    template_lines: List[TemplateLine] = [
-        TemplateLine(
-            items=[("Process", schema.process_name), ("PID", schema.process_id)]
-        ),
+    template_lines: list[TemplateLine] = [
+        TemplateLine(items=[("Process", schema.process_name), ("PID", schema.process_id)]),
         TemplateLine(items=[("Time", schema.time_stamp)]),
     ]
     if schema.cmd_line:

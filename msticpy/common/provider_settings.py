@@ -4,13 +4,15 @@
 # license information.
 # --------------------------------------------------------------------------
 """Helper functions for configuration settings."""
+
 from __future__ import annotations
 
 import os
 import warnings
 from collections import UserDict
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 from .._version import VERSION
 from .exceptions import MsticpyImportExtraError
@@ -55,7 +57,7 @@ def _secrets_enabled() -> bool:
     return _SECRETS_ENABLED and _SECRETS_CLIENT
 
 
-def get_secrets_client_func() -> Callable[..., "SecretsClient" | None]:
+def get_secrets_client_func() -> Callable[..., SecretsClient | None]:
     """
     Return function to get or create secrets client.
 
@@ -78,11 +80,11 @@ def get_secrets_client_func() -> Callable[..., "SecretsClient" | None]:
       replace the SecretsClient instance and return that.
 
     """
-    _secrets_client: "SecretsClient" | None = None
+    _secrets_client: SecretsClient | None = None
 
     def _return_secrets_client(
-        secrets_client: "SecretsClient" | None = None, **kwargs
-    ) -> "SecretsClient" | None:
+        secrets_client: SecretsClient | None = None, **kwargs
+    ) -> SecretsClient | None:
         """Return (optionally setting or creating) a SecretsClient."""
         nonlocal _secrets_client
         if not _SECRETS_ENABLED:
@@ -101,7 +103,7 @@ def get_secrets_client_func() -> Callable[..., "SecretsClient" | None]:
 # pylint: disable=invalid-name
 _SECRETS_CLIENT: Any = None
 # Create the secrets client closure
-_SET_SECRETS_CLIENT: Callable[..., "SecretsClient" | None] = get_secrets_client_func()
+_SET_SECRETS_CLIENT: Callable[..., SecretsClient | None] = get_secrets_client_func()
 # Create secrets client instance if SecretsClient can be imported
 # and config has KeyVault settings.
 if get_config("KeyVault", None) and _SECRETS_ENABLED:
@@ -124,13 +126,11 @@ def get_provider_settings(config_section="TIProviders") -> dict[str, ProviderSet
 
     """
     # pylint: disable=global-statement
-    global _SECRETS_CLIENT
+    global _SECRETS_CLIENT  # noqa: PLW0603
     # pylint: enable=global-statement
     if get_config("KeyVault", None):
         if _SECRETS_CLIENT is None and _SECRETS_ENABLED:
-            print(
-                "KeyVault enabled. Secrets access may require additional authentication."
-            )
+            print("KeyVault enabled. Secrets access may require additional authentication.")
             _SECRETS_CLIENT = _SET_SECRETS_CLIENT()
     else:
         _SECRETS_CLIENT = None
@@ -141,7 +141,7 @@ def get_provider_settings(config_section="TIProviders") -> dict[str, ProviderSet
     settings = {}
     for provider, item_settings in section_settings.items():
         prov_args = item_settings.get("Args")
-        prov_settings = ProviderSettings(  # type: ignore[call-arg]
+        prov_settings = ProviderSettings(
             name=provider,
             description=item_settings.get("Description"),
             args=_get_setting_args(
@@ -290,7 +290,10 @@ def _get_protected_settings(
                 f"{setting_path}.{arg_name}", arg_value
             )
         except NotImplementedError:
-            warnings.warn(f"Setting type for setting {arg_value} not yet implemented. ")
+            warnings.warn(
+                f"Setting type for setting {arg_value} not yet implemented. ",
+                stacklevel=2,
+            )
     return setting_dict
 
 
@@ -321,7 +324,7 @@ def _fetch_secret_setting(
         _description_
 
     """
-    if isinstance(config_setting, (str, int, float)):
+    if isinstance(config_setting, str | int | float):
         return str(config_setting)
     if not isinstance(config_setting, dict):
         err_msg: str = (
@@ -336,7 +339,8 @@ def _fetch_secret_setting(
             warnings.warn(
                 f"Environment variable {config_setting['EnvironmentVar']}"
                 f" ({setting_path})"
-                " was not set"
+                " value not found.",
+                stacklevel=2,
             )
         return env_value
     if "KeyVault" in config_setting:

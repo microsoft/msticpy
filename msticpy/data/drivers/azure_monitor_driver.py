@@ -14,19 +14,21 @@ Azure SDK docs: https://learn.microsoft.com/python/api/overview/
 azure/monitor-query-readme?view=azure-python
 
 """
+
 from __future__ import annotations
 
 import contextlib
 import logging
 import warnings
-from typing import Any, Iterable, cast
+from collections.abc import Iterable
+from typing import Any, cast
 
 import httpx
 import pandas as pd
 from azure.core.exceptions import HttpResponseError
 from azure.core.pipeline.policies import UserAgentPolicy
-from packaging.version import Version
-from packaging.version import parse as parse_version
+from packaging.version import Version  # pylint: disable=no-name-in-module
+from packaging.version import parse as parse_version  # pylint: disable=no-name-in-module
 
 from ..._version import VERSION
 from ...auth.azure_auth import AzureCloudConfig, az_connect
@@ -132,13 +134,9 @@ class AzureMonitorDriver(DriverBase):
         self.add_query_filter(
             "data_environments", ("MSSentinel", "LogAnalytics", "AzureSentinel")
         )
-        self.set_driver_property(
-            DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinel.name
-        )
+        self.set_driver_property(DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinel.name)
         self.set_driver_property(DriverProps.SUPPORTS_THREADING, value=True)
-        self.set_driver_property(
-            DriverProps.MAX_PARALLEL, value=kwargs.get("max_threads", 4)
-        )
+        self.set_driver_property(DriverProps.MAX_PARALLEL, value=kwargs.get("max_threads", 4))
         self.az_cloud_config = AzureCloudConfig()
         logger.info(
             "AzureMonitorDriver loaded. connect_str  %s, kwargs: %s",
@@ -302,9 +300,7 @@ class AzureMonitorDriver(DriverBase):
         return data if data is not None else result
 
     # pylint: disable=too-many-branches
-    def query_with_results(
-        self, query: str, **kwargs
-    ) -> tuple[pd.DataFrame, dict[str, Any]]:
+    def query_with_results(self, query: str, **kwargs) -> tuple[pd.DataFrame, dict[str, Any]]:
         """
         Execute query string and return DataFrame of results.
 
@@ -336,9 +332,7 @@ class AzureMonitorDriver(DriverBase):
         workspace_id = next(iter(self._workspace_ids), None) or self._workspace_id
         additional_workspaces = self._workspace_ids[1:] if self._workspace_ids else None
         logger.info("Query to run %s", query)
-        logger.info(
-            "Workspaces %s", ",".join(self._workspace_ids) or self._workspace_id
-        )
+        logger.info("Workspaces %s", ",".join(self._workspace_ids) or self._workspace_id)
         logger.info(
             "Time span %s - %s",
             str(time_span_value[0]) if time_span_value else "none",
@@ -349,7 +343,7 @@ class AzureMonitorDriver(DriverBase):
             result = self._query_client.query_workspace(
                 workspace_id=workspace_id,  # type: ignore[arg-type]
                 query=query,
-                timespan=time_span_value,  # type: ignore[arg-type]
+                timespan=time_span_value,
                 server_timeout=server_timeout,
                 additional_workspaces=additional_workspaces,
             )
@@ -374,10 +368,11 @@ class AzureMonitorDriver(DriverBase):
             warnings.warn(
                 "Partial results returned. This may indicate a query timeout.",
                 RuntimeWarning,
+                stacklevel=2,
             )
-            table = result.partial_data[0]  # type: ignore[attr-defined]
+            table = result.partial_data[0]
         else:
-            table = result.tables[0]  # type: ignore[attr-defined]
+            table = result.tables[0]
         data_frame = pd.DataFrame(table.rows, columns=table.columns)
         logger.info("Dataframe returned with %d rows", len(data_frame))
         return data_frame, status
@@ -398,9 +393,7 @@ class AzureMonitorDriver(DriverBase):
         # check for additional Args in settings but allow kwargs to override
         connect_args = self._get_workspace_settings_args()
         connect_args.update(kwargs)
-        connect_args.update(
-            {"auth_methods": az_auth_types, "tenant_id": self._az_tenant_id}
-        )
+        connect_args.update({"auth_methods": az_auth_types, "tenant_id": self._az_tenant_id})
         credentials = az_connect(**connect_args)
         logger.info(
             "Created query client. Auth type: %s, Url: %s, Proxies: %s",
@@ -420,10 +413,7 @@ class AzureMonitorDriver(DriverBase):
             return {}
         args_path = f"{self._ws_config.settings_path}.Args"
         args_settings = self._ws_config.settings.get("Args", {})
-        return {
-            name: get_protected_setting(args_path, name)
-            for name in args_settings.keys()
-        }
+        return {name: get_protected_setting(args_path, name) for name in args_settings.keys()}
 
     def _get_workspaces(self, connection_str: str | None = None, **kwargs):
         """Get workspace or workspaces to connect to."""
@@ -441,17 +431,13 @@ class AzureMonitorDriver(DriverBase):
         ws_config: WorkspaceConfig | None = None
         connection_str = connection_str or self._def_connection_str
         if workspace_name or connection_str is None:
-            ws_config = WorkspaceConfig(workspace=workspace_name)  # type: ignore
-            logger.info(
-                "WorkspaceConfig created from workspace name %s", workspace_name
-            )
+            ws_config = WorkspaceConfig(workspace=workspace_name)
+            logger.info("WorkspaceConfig created from workspace name %s", workspace_name)
         elif isinstance(connection_str, str):
             self._def_connection_str = connection_str
             with contextlib.suppress(ValueError):
                 ws_config = WorkspaceConfig.from_connection_string(connection_str)
-                logger.info(
-                    "WorkspaceConfig created from connection_str %s", connection_str
-                )
+                logger.info("WorkspaceConfig created from connection_str %s", connection_str)
         elif isinstance(connection_str, WorkspaceConfig):
             logger.info("WorkspaceConfig as parameter %s", connection_str.workspace_id)
             ws_config = connection_str
@@ -495,9 +481,9 @@ class AzureMonitorDriver(DriverBase):
 
     def _get_workspaces_by_name(self, workspaces):
         workspace_configs = {
-            WorkspaceConfig(workspace)[WorkspaceConfig.CONF_WS_ID]: WorkspaceConfig(
-                workspace
-            )[WorkspaceConfig.CONF_TENANT_ID]
+            WorkspaceConfig(workspace)[WorkspaceConfig.CONF_WS_ID]: WorkspaceConfig(workspace)[
+                WorkspaceConfig.CONF_TENANT_ID
+            ]
             for workspace in workspaces
         }
         if len(set(workspace_configs.values())) > 1:
@@ -677,7 +663,7 @@ class AzureMonitorDriver(DriverBase):
 
 
 def _schema_format_tables(
-    ws_tables: dict[str, Iterable[dict[str, Any]]]
+    ws_tables: dict[str, Iterable[dict[str, Any]]],
 ) -> dict[str, dict[str, str]]:
     """Return a sorted dictionary of table names and column names/types."""
     table_schema = {
@@ -689,9 +675,7 @@ def _schema_format_tables(
 
 def _schema_format_columns(table_schema: dict[str, Any]) -> dict[str, str]:
     """Return a sorted dictionary of column names and types."""
-    columns = {
-        col["name"]: col["type"] for col in table_schema.get("standardColumns", {})
-    }
+    columns = {col["name"]: col["type"] for col in table_schema.get("standardColumns", {})}
     for col in table_schema.get("customColumns", []):
         columns[col["name"]] = col["type"]
     return dict(sorted(columns.items()))

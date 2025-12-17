@@ -4,23 +4,28 @@
 # license information.
 # --------------------------------------------------------------------------
 """Intake kql driver."""
+
 from __future__ import annotations
 
 import json
 import re
+from collections.abc import Callable
 
 # from collections import ChainMap
 from datetime import datetime, timedelta, timezone
 from json.decoder import JSONDecodeError
 from numbers import Number
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
-from dateutil.parser import ParserError, parse  # type: ignore
+from dateutil.parser import ParserError, parse
 from dateutil.relativedelta import relativedelta
 
 from ..._version import VERSION
 from ...common.utility import collapse_dicts
 from .query_defns import Formatters
+
+if TYPE_CHECKING:
+    from .query_store import QueryStore
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -94,7 +99,7 @@ class QuerySource:
         self._source: dict[str, Any] = source or {}
         self.defaults: dict[str, Any] = defaults or {}
         self._global_metadata: dict[str, Any] = dict(metadata) if metadata else {}
-        self.query_store: "QueryStore" | None = None  # type: ignore  # noqa: F821
+        self.query_store: QueryStore | None = None
 
         # consolidate source metadata - source-specific
         # overrides global
@@ -175,9 +180,7 @@ class QuerySource:
 
         """
         return {
-            p_key: p_props
-            for p_key, p_props in self.params.items()
-            if "default" in p_props
+            p_key: p_props for p_key, p_props in self.params.items() if "default" in p_props
         }
 
     @property
@@ -241,14 +244,10 @@ class QuerySource:
         parameter defaults (see `default_params` property).
 
         """
-        param_dict = {
-            name: value.get("default", None) for name, value in self.params.items()
-        }
+        param_dict = {name: value.get("default", None) for name, value in self.params.items()}
 
         param_dict.update(self.resolve_param_aliases(kwargs))
-        missing_params = {
-            name: value for name, value in param_dict.items() if value is None
-        }
+        missing_params = {name: value for name, value in param_dict.items() if value is None}
         if missing_params:
             raise ValueError(
                 "These required parameters were not set: ", f"{missing_params.keys()}"
@@ -280,9 +279,7 @@ class QuerySource:
         if fmt_template:
             # custom formatting template in the query definition
             param_dict[p_name] = fmt_template.format(param_dict[p_name])
-        elif param_settings["type"] == "datetime" and isinstance(
-            param_dict[p_name], datetime
-        ):
+        elif param_settings["type"] == "datetime" and isinstance(param_dict[p_name], datetime):
             # format datetime using driver formatter or default formatter
             if formatters and Formatters.DATETIME in formatters:
                 param_dict[p_name] = formatters[Formatters.DATETIME](param_dict[p_name])
@@ -301,7 +298,7 @@ class QuerySource:
         if isinstance(param_value, Number):
             # datetime specified as a number - we
             # interpret this as an offset from utcnow
-            return datetime.now(tz=timezone.utc) + timedelta(  # type: ignore
+            return datetime.now(tz=timezone.utc) + timedelta(
                 param_value  # type: ignore
             )
         try:
@@ -335,16 +332,10 @@ class QuerySource:
     def _get_aliased_param(self, alias: str) -> str | None:
         """Return first parameter with a matching alias."""
         aliased_params = {
-            p_name: p_prop
-            for p_name, p_prop in self.params.items()
-            if "aliases" in p_prop
+            p_name: p_prop for p_name, p_prop in self.params.items() if "aliases" in p_prop
         }
         return next(
-            (
-                param
-                for param, props in aliased_params.items()
-                if alias in props["aliases"]
-            ),
+            (param for param, props in aliased_params.items() if alias in props["aliases"]),
             None,
         )
 
@@ -379,9 +370,7 @@ class QuerySource:
                 # unit was specified
                 units = RD_UNIT_MAP.get(round_item or "d", "days")
                 # expand dict to args for relativedelta
-                result_date = result_date + relativedelta(
-                    **({units: +1})  # type: ignore
-                )
+                result_date = result_date + relativedelta(**({units: +1}))  # type: ignore[arg-type]
         return result_date
 
     @staticmethod
@@ -393,14 +382,12 @@ class QuerySource:
         if not m_time or "value" not in m_time.groupdict():
             return timedelta(0)
         tm_val = int(m_time.groupdict()["sign"] + m_time.groupdict()["value"])
-        tm_unit = (
-            m_time.groupdict()["unit"].lower() if m_time.groupdict()["unit"] else "d"
-        )
+        tm_unit = m_time.groupdict()["unit"].lower() if m_time.groupdict()["unit"] else "d"
         # Use relative delta to build the timedelta based on the units
         # in the time range expression
         unit_param = RD_UNIT_MAP.get(tm_unit, "days")
         # expand dict to args for relativedelta
-        return relativedelta(**({unit_param: tm_val}))  # type: ignore
+        return relativedelta(**({unit_param: tm_val}))  # type: ignore[arg-type,return-value]
 
     @staticmethod
     def _parse_param_list(param_value: str | list) -> list[Any]:
@@ -460,8 +447,8 @@ class QuerySource:
                 def_value = None
             param_block.extend(
                 (
-                    f'{p_name}: {p_props.get("type", "Any")}{optional}',
-                    f'    {p_props.get("description", "no description")}',
+                    f"{p_name}: {p_props.get('type', 'Any')}{optional}",
+                    f"    {p_props.get('description', 'no description')}",
                 )
             )
 
@@ -501,10 +488,7 @@ class QuerySource:
             )
             valid_failures.append(msg)
         if not self._query:
-            msg = (
-                f'Source {self.name} does not have "query" property '
-                + "in args element."
-            )
+            msg = f'Source {self.name} does not have "query" property ' + "in args element."
             valid_failures.append(msg)
 
         # Now get the query and the parameter definitions from the source and

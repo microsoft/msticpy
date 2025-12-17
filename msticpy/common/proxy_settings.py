@@ -29,13 +29,12 @@ or a dictionary of one of the following:
 - KeyVault: vault_name/secret_name
 
 """
-from typing import Dict, Optional
 
 from .pkg_config import get_config
 from .provider_settings import get_protected_setting
 
 
-def get_http_proxies() -> Optional[Dict[str, str]]:
+def get_http_proxies() -> dict[str, str] | None:
     """Return proxy settings from config."""
     proxy_config = get_config("msticpy.Proxies", None)
     if not proxy_config:

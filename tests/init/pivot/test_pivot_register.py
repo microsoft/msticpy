@@ -249,6 +249,7 @@ _ENTITY_QUERIES = [
 
 
 @respx.mock
+@pytest.mark.filterwarnings("ignore:GeoIpLookup")
 @pytest.mark.parametrize("test_case", _ENTITY_QUERIES)
 @patch("msticpy.context.ip_utils._asn_whois_query")
 def test_entity_attr_funcs_entity(mock_asn_whois_query, create_pivot, test_case):
@@ -267,6 +268,7 @@ def test_entity_attr_funcs_entity(mock_asn_whois_query, create_pivot, test_case)
 
 
 @respx.mock
+@pytest.mark.filterwarnings("ignore:GeoIpLookup")
 @pytest.mark.parametrize("test_case", _ENTITY_QUERIES)
 @patch("msticpy.context.ip_utils._asn_whois_query")
 def test_entity_attr_funcs_value(mock_asn_whois_query, create_pivot, test_case):
@@ -284,6 +286,7 @@ def test_entity_attr_funcs_value(mock_asn_whois_query, create_pivot, test_case):
 
 
 @respx.mock
+@pytest.mark.filterwarnings("ignore:GeoIpLookup")
 @pytest.mark.parametrize("test_case", _ENTITY_QUERIES)
 @patch("msticpy.context.ip_utils._asn_whois_query")
 def test_entity_attr_funcs_itbl(mock_asn_whois_query, create_pivot, test_case):
@@ -301,6 +304,7 @@ def test_entity_attr_funcs_itbl(mock_asn_whois_query, create_pivot, test_case):
 
 
 @respx.mock
+@pytest.mark.filterwarnings("ignore:GeoIpLookup")
 @pytest.mark.parametrize("test_case", _ENTITY_QUERIES)
 @patch("msticpy.context.ip_utils._asn_whois_query")
 def test_entity_attr_funcs_df(mock_asn_whois_query, create_pivot, test_case):

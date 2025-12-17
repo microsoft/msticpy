@@ -13,7 +13,6 @@ of accompanying params.
 
 import copy
 from collections import defaultdict
-from typing import DefaultDict, List, Tuple, Union
 
 import numpy as np
 
@@ -27,12 +26,12 @@ from ..utils.laplace_smooth import (
 
 # pylint: disable=too-many-locals, too-many-branches
 def compute_counts(  # nosec
-    sessions: List[List[Cmd]], start_token: str, end_token: str
-) -> Tuple[
-    DefaultDict[str, int],
-    DefaultDict[str, DefaultDict[str, int]],
-    DefaultDict[str, int],
-    DefaultDict[str, DefaultDict[str, int]],
+    sessions: list[list[Cmd]], start_token: str, end_token: str
+) -> tuple[
+    defaultdict[str, int],
+    defaultdict[str, defaultdict[str, int]],
+    defaultdict[str, int],
+    defaultdict[str, defaultdict[str, int]],
 ]:
     """
     Compute the training counts for the sessions.
@@ -66,13 +65,13 @@ def compute_counts(  # nosec
         param conditional on command counts
 
     """
-    seq1_counts: DefaultDict[str, int] = defaultdict(lambda: 0)
-    seq2_counts: DefaultDict[str, DefaultDict[str, int]] = defaultdict(
+    seq1_counts: defaultdict[str, int] = defaultdict(lambda: 0)
+    seq2_counts: defaultdict[str, defaultdict[str, int]] = defaultdict(
         lambda: defaultdict(lambda: 0)
     )
 
-    param_counts: DefaultDict[str, int] = defaultdict(lambda: 0)
-    cmd_param_counts: DefaultDict[str, DefaultDict[str, int]] = defaultdict(
+    param_counts: defaultdict[str, int] = defaultdict(lambda: 0)
+    cmd_param_counts: defaultdict[str, defaultdict[str, int]] = defaultdict(
         lambda: defaultdict(lambda: 0)
     )
 
@@ -93,10 +92,10 @@ def compute_counts(  # nosec
 
 
 def laplace_smooth_counts(
-    seq1_counts: DefaultDict[str, int],
-    seq2_counts: DefaultDict[str, DefaultDict[str, int]],
-    param_counts: DefaultDict[str, int],
-    cmd_param_counts: DefaultDict[str, DefaultDict[str, int]],
+    seq1_counts: defaultdict[str, int],
+    seq2_counts: defaultdict[str, defaultdict[str, int]],
+    param_counts: defaultdict[str, int],
+    cmd_param_counts: defaultdict[str, defaultdict[str, int]],
     start_token: str,
     end_token: str,
     unk_token: str,
@@ -136,7 +135,7 @@ def laplace_smooth_counts(
         param conditional on command counts
 
     """
-    cmds: List[str] = list(seq1_counts.keys()) + [unk_token]
+    cmds: list[str] = list(seq1_counts.keys()) + [unk_token]
 
     # apply laplace smoothing for cmds
     seq1_counts_ls, seq2_counts_ls = laplace_smooth_cmd_counts(
@@ -165,8 +164,8 @@ def laplace_smooth_counts(
 
 def compute_prob_setofparams_given_cmd(
     cmd: str,
-    params: Union[set, dict],
-    param_cond_cmd_probs: Union[StateMatrix, dict],
+    params: set | dict,
+    param_cond_cmd_probs: StateMatrix | dict,
     use_geo_mean: bool = True,
 ) -> float:
     """
@@ -223,10 +222,10 @@ def compute_prob_setofparams_given_cmd(
 
 # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
 def compute_likelihood_window(
-    window: List[Cmd],
-    prior_probs: Union[StateMatrix, dict],
-    trans_probs: Union[StateMatrix, dict],
-    param_cond_cmd_probs: Union[StateMatrix, dict],
+    window: list[Cmd],
+    prior_probs: StateMatrix | dict,
+    trans_probs: StateMatrix | dict,
+    param_cond_cmd_probs: StateMatrix | dict,
     use_start_token: bool,
     use_end_token: bool,
     start_token: str = None,
@@ -268,9 +267,7 @@ def compute_likelihood_window(
     """
     if use_end_token:
         if end_token is None:
-            raise MsticpyException(
-                "end_token should not be None, when use_end_token is True"
-            )
+            raise MsticpyException("end_token should not be None, when use_end_token is True")
 
     if use_start_token:
         if start_token is None:
@@ -318,16 +315,16 @@ def compute_likelihood_window(
 
 # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
 def compute_likelihood_windows_in_session(
-    session: List[Cmd],
-    prior_probs: Union[StateMatrix, dict],
-    trans_probs: Union[StateMatrix, dict],
-    param_cond_cmd_probs: Union[StateMatrix, dict],
+    session: list[Cmd],
+    prior_probs: StateMatrix | dict,
+    trans_probs: StateMatrix | dict,
+    param_cond_cmd_probs: StateMatrix | dict,
     window_len: int,
     use_start_end_tokens: bool,
     start_token: str = None,
     end_token: str = None,
     use_geo_mean: bool = False,
-) -> List[float]:
+) -> list[float]:
     """
     Compute the likelihoods of a sliding window in the session.
 
@@ -407,7 +404,7 @@ def compute_likelihood_windows_in_session(
 
 # pylint: disable=too-many-arguments
 def rarest_window_session(
-    session: List[Cmd],
+    session: list[Cmd],
     prior_probs: StateMatrix,
     trans_probs: StateMatrix,
     param_cond_cmd_probs: StateMatrix,
@@ -416,7 +413,7 @@ def rarest_window_session(
     start_token: str,
     end_token: str,
     use_geo_mean=False,
-) -> Tuple[List[Cmd], float]:
+) -> tuple[list[Cmd], float]:
     """
     Find and compute the likelihood of the rarest window of `window_len` in the session.
 

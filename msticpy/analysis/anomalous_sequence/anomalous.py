@@ -8,6 +8,7 @@ Wrapper module for Model class for modelling sessions.
 
 In particular, this module is for both modelling and visualising your session data.
 """
+
 from __future__ import annotations
 
 import pandas as pd
@@ -61,7 +62,7 @@ def score_sessions(
         raise MsticpyException(f'"{session_column}" should be a column in the `data`')
 
     sessions_df = data.copy()
-    sessions = sessions_df[session_column].values.tolist()  # type: ignore
+    sessions = sessions_df[session_column].values.tolist()
 
     model = Model(sessions=sessions)
     model.train()
@@ -69,9 +70,9 @@ def score_sessions(
         window_len=window_length, use_geo_mean=False, use_start_end_tokens=True
     )
 
-    sessions_df[f"rarest_window{window_length}_likelihood"] = (
-        model.rare_window_likelihoods[window_length]
-    )
+    sessions_df[f"rarest_window{window_length}_likelihood"] = model.rare_window_likelihoods[
+        window_length
+    ]
     sessions_df[f"rarest_window{window_length}"] = model.rare_windows[window_length]
 
     return sessions_df

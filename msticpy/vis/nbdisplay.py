@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for common display functions."""
-from typing import Any, List, Mapping, Tuple, Union
+
+from collections.abc import Mapping
+from typing import Any
 
 import IPython
 import networkx as nx
@@ -28,9 +30,7 @@ __author__ = "Ian Hellen"
 
 
 @export
-def display_alert(
-    alert: Union[Mapping[str, Any], SecurityAlert], show_entities: bool = False
-):
+def display_alert(alert: Mapping[str, Any] | SecurityAlert, show_entities: bool = False):
     """
     Display a Security Alert.
 
@@ -52,8 +52,8 @@ def display_alert(
 
 @export
 def format_alert(
-    alert: Union[Mapping[str, Any], SecurityAlert], show_entities: bool = False
-) -> Union[IPython.display.HTML, Tuple[IPython.display.HTML, pd.DataFrame]]:
+    alert: Mapping[str, Any] | SecurityAlert, show_entities: bool = False
+) -> IPython.display.HTML | tuple[IPython.display.HTML, pd.DataFrame]:
     """
     Get IPython displayable Security Alert.
 
@@ -190,7 +190,7 @@ def display_logon_data(
 
 @export
 def format_logon(
-    logon_event: Union[pd.DataFrame, pd.Series],
+    logon_event: pd.DataFrame | pd.Series,
     alert: SecurityAlert = None,
     os_family: str = None,
 ) -> IPython.display.HTML:
@@ -243,7 +243,7 @@ def format_logon(
     return HTML(f"{t_style}<table class='table_logon'>{''.join(logon_output)}</table>")
 
 
-def _fmt_single_row(logon_row: pd.Series, os_family: str) -> List[str]:
+def _fmt_single_row(logon_row: pd.Series, os_family: str) -> list[str]:
     """Format a pandas series logon record."""
     logon_record = [
         f"<b>Account: </b>{logon_row['TargetUserName']}",
@@ -257,8 +257,7 @@ def _fmt_single_row(logon_row: pd.Series, os_family: str) -> List[str]:
         if logon_type not in _WIN_LOGON_TYPE_MAP:
             logon_desc_idx = 0
         logon_record.append(
-            f"<b>Logon type: </b>{logon_type}"
-            + f"({_WIN_LOGON_TYPE_MAP[logon_desc_idx]})"
+            f"<b>Logon type: </b>{logon_type}" + f"({_WIN_LOGON_TYPE_MAP[logon_desc_idx]})"
         )
 
     account_id = logon_row.TargetUserSid
@@ -282,9 +281,7 @@ def _fmt_single_row(logon_row: pd.Series, os_family: str) -> List[str]:
     logon_record.append(f"<b>Subject (source) account: </b>{subj_account}")
 
     logon_record.append(f"<b>Logon process: </b>{logon_row['LogonProcessName']}")
-    logon_record.append(
-        f"<b>Authentication: </b>{logon_row['AuthenticationPackageName']}"
-    )
+    logon_record.append(f"<b>Authentication: </b>{logon_row['AuthenticationPackageName']}")
     logon_record.append(f"<b>Source IpAddress: </b>{logon_row['IpAddress']}")
     logon_record.append(f"<b>Source Host: </b>{logon_row['WorkstationName']}")
     logon_record.append(f"<b>Logon status: </b>{logon_row['Status']}")

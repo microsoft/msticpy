@@ -4,7 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Settings provider for secrets."""
-from typing import Any, Set
+
+from typing import Any
 
 import keyring
 from keyring.errors import KeyringError, KeyringLocked
@@ -34,7 +35,7 @@ class KeyringClient:
         """
         self.debug = debug
         self.keyring = name
-        self._secret_names: Set[str] = set()
+        self._secret_names: set[str] = set()
 
     def __getitem__(self, key: str):
         """Get key name."""

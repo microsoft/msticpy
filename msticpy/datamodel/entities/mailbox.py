@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mailbox Entity class."""
-from typing import Any, Mapping, Optional
+
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -65,11 +67,11 @@ class Mailbox(Entity):
             kw arguments.
 
         """
-        self.MailboxPrimaryAddress: Optional[str] = None
-        self.DisplayName: Optional[str] = None
-        self.Upn: Optional[str] = None
-        self.ExternalDirectoryObjectId: Optional[str] = None
-        self.RiskLevel: Optional[str] = None
+        self.MailboxPrimaryAddress: str | None = None
+        self.DisplayName: str | None = None
+        self.Upn: str | None = None
+        self.ExternalDirectoryObjectId: str | None = None
+        self.RiskLevel: str | None = None
 
         super().__init__(src_entity=src_entity, **kwargs)
         if src_event:
@@ -85,10 +87,7 @@ class Mailbox(Entity):
     @property
     def description_str(self):
         """Return Entity Description."""
-        return (
-            f"{self.MailboxPrimaryAddress} - {self.RiskLevel}"
-            or self.__class__.__name__
-        )
+        return f"{self.MailboxPrimaryAddress} - {self.RiskLevel}" or self.__class__.__name__
 
     @property
     def name_str(self) -> str:

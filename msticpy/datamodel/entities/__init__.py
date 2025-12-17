@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Entity sub-package."""
+
 import difflib
-from typing import List
 
 from .account import Account
 from .alert import Alert
@@ -116,9 +116,7 @@ Entity.ENTITY_NAME_MAP.update(
 def find_entity(entity):
     """Find entity name."""
     entity_cf = entity.casefold()
-    entity_cls_dict = {
-        cls.__name__.casefold(): cls for cls in Entity.ENTITY_NAME_MAP.values()
-    }
+    entity_cls_dict = {cls.__name__.casefold(): cls for cls in Entity.ENTITY_NAME_MAP.values()}
     if entity_cf in Entity.ENTITY_NAME_MAP:
         print(f"Match found '{Entity.ENTITY_NAME_MAP[entity].__name__}'")
         return Entity.ENTITY_NAME_MAP[entity]
@@ -144,11 +142,11 @@ def find_entity(entity):
     return None
 
 
-def list_entities() -> List[str]:
+def list_entities() -> list[str]:
     """List entities."""
     return sorted([cls.__name__ for cls in set(Entity.ENTITY_NAME_MAP.values())])
 
 
-def entity_classes() -> List[type]:
+def entity_classes() -> list[type]:
     """Return a list of all entity classes."""
     return list(set(Entity.ENTITY_NAME_MAP.values()))

@@ -70,9 +70,7 @@ class AzureSearchDriver(AzureMonitorDriver):
         # check for additional Args in settings but allow kwargs to override
         connect_args = self._get_workspace_settings_args()
         connect_args.update(kwargs)
-        connect_args.update(
-            {"auth_methods": az_auth_types, "tenant_id": self._az_tenant_id}
-        )
+        connect_args.update({"auth_methods": az_auth_types, "tenant_id": self._az_tenant_id})
         credentials = az_connect(**connect_args)
 
         # This will still set up workspaces and tenant ID
@@ -86,9 +84,7 @@ class AzureSearchDriver(AzureMonitorDriver):
         self._connected = True
         logger.info("Created HTTP-based query client using /search endpoint.")
 
-    def query_with_results(
-        self, query: str, **kwargs
-    ) -> tuple[pd.DataFrame, dict[str, Any]]:
+    def query_with_results(self, query: str, **kwargs) -> tuple[pd.DataFrame, dict[str, Any]]:
         """
         Execute the query via the /search endpoint and return a DataFrame + result status.
 
@@ -104,9 +100,7 @@ class AzureSearchDriver(AzureMonitorDriver):
 
         """
         if not self._connected or not hasattr(self, "_auth_header"):
-            raise MsticpyKqlConnectionError(
-                "Not connected. Call connect() before querying."
-            )
+            raise MsticpyKqlConnectionError("Not connected. Call connect() before querying.")
         time_span_value = self._get_time_span_value(**kwargs)
         if not time_span_value:
             raise MsticpyDataQueryError(
@@ -154,9 +148,7 @@ class AzureSearchDriver(AzureMonitorDriver):
     def _query_search_endpoint(self, search_url, query_body, timeout):
         try:
             with httpx.Client(timeout=timeout) as client:
-                response = client.post(
-                    search_url, headers=self._auth_header, json=query_body
-                )
+                response = client.post(search_url, headers=self._auth_header, json=query_body)
         except httpx.RequestError as req_err:
             logger.error("HTTP request error: %s", req_err)
             raise MsticpyKqlConnectionError(

@@ -4,13 +4,15 @@
 # license information.
 # --------------------------------------------------------------------------
 """QueryStore class - holds a collection of QuerySources."""
+
 from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from collections.abc import Callable, Iterable
 from functools import cached_property
 from os import path
-from typing import Any, Callable, Iterable
+from typing import Any
 
 from typing_extensions import Self
 
@@ -201,9 +203,7 @@ class QueryStore:
         src_dict = {"args": {"query": query}, "description": description or name}
         md_dict = {"data_families": query_paths}
 
-        query_source = QuerySource(
-            name=name, source=src_dict, defaults={}, metadata=md_dict
-        )
+        query_source = QuerySource(name=name, source=src_dict, defaults={}, metadata=md_dict)
         self.add_data_source(query_source)
 
     def import_file(self: Self, query_file: str) -> None:
@@ -225,18 +225,14 @@ class QueryStore:
         try:
             sources, defaults, metadata = read_query_def_file(query_file)
         except ValueError:
-            logger.warning(
-                "%sis not a valid query definition file - skipping.", query_file
-            )
+            logger.warning("%sis not a valid query definition file - skipping.", query_file)
             return
 
         for source_name, source in sources.items():
             new_source = QuerySource(source_name, source, defaults, metadata)
             self.add_data_source(new_source)
 
-    def apply_query_filter(
-        self: Self, query_filter: Callable[[QuerySource], bool]
-    ) -> None:
+    def apply_query_filter(self: Self, query_filter: Callable[[QuerySource], bool]) -> None:
         """
         Apply a filter to the query sources.
 
@@ -251,13 +247,13 @@ class QueryStore:
             source.show = query_filter(source)
 
     # pylint: disable=too-many-locals
-    @classmethod  # noqa: MC0001
-    def import_files(  # noqa: MC0001
+    @classmethod
+    def import_files(
         cls,
         source_path: list,
         recursive: bool = True,
         driver_query_filter: dict[str, set[str]] | None = None,
-    ) -> dict[str, "QueryStore"]:
+    ) -> dict[str, QueryStore]:
         """
         Import multiple query definition files from directory path.
 
@@ -294,9 +290,7 @@ class QueryStore:
                 try:
                     sources, defaults, metadata = read_query_def_file(str(file_path))
                 except ValueError:
-                    print(
-                        f"{file_path} is not a valid query definition file - skipping."
-                    )
+                    print(f"{file_path} is not a valid query definition file - skipping.")
                     continue
 
                 for env_value in metadata.get("data_environments", []):
@@ -312,9 +306,7 @@ class QueryStore:
                     if environment_name not in env_stores:
                         env_stores[environment_name] = cls(environment=environment_name)
                     for source_name, source in sources.items():
-                        new_source = QuerySource(
-                            source_name, source, defaults, metadata
-                        )
+                        new_source = QuerySource(source_name, source, defaults, metadata)
                         if not driver_query_filter or (
                             driver_query_filter
                             and _matches_driver_filter(new_source, driver_query_filter)
@@ -326,7 +318,7 @@ class QueryStore:
         self: Self,
         query_name: str,
         query_path: str | DataFamily | None = None,
-    ) -> "QuerySource":
+    ) -> QuerySource:
         """
         Return query with name `data_family` and `query_name`.
 
@@ -352,9 +344,7 @@ class QueryStore:
             if query_container in self.data_families:
                 query_path = query_container
             elif query_path:
-                query_container = ".".join(
-                    [query_path, query_container]  # type: ignore
-                )
+                query_container = ".".join([query_path, query_container])
                 if query_container in self.data_families:
                     query_path = query_container
         query = self.data_families.get(query_path, {}).get(query_name)  # type: ignore

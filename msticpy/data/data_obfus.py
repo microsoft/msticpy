@@ -4,23 +4,27 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data obfuscation functions."""
+
+from __future__ import annotations
+
 import hashlib
 import pkgutil
 import re
 import uuid
 import warnings
+from collections.abc import Callable, Mapping
 from functools import lru_cache
-from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
 import yaml
 
-OBFUS_COL_MAP: Dict[str, str] = {}
+OBFUS_COL_MAP: dict[str, str] = {}
 _MAP_FILE = "resources/obfuscation_cols.yaml"
 _obfus_map_file = pkgutil.get_data("msticpy", _MAP_FILE)
 if not _obfus_map_file:
-    warnings.warn(f"Could not find obfuscation column map {_MAP_FILE}")
+    warnings.warn(f"Could not find obfuscation column map {_MAP_FILE}", stacklevel=2)
 else:
     _obfus_dicts = yaml.safe_load(_obfus_map_file)
     for data_col_map in _obfus_dicts.values():
@@ -90,13 +94,13 @@ def hash_item(input_item: str, delim: str = None) -> str:
 
 
 # Create a random map for shuffling IP address components
-ip_map: List[Dict[str, str]] = []
+ip_map: list[dict[str, str]] = []
 for _ in range(4):
     rng = np.random.default_rng()
     ip_list = [str(n) for n in np.arange(256)]
     rand_list = ip_list.copy()
     rng.shuffle(rand_list)
-    ip_map.append(dict(zip(ip_list, rand_list)))
+    ip_map.append(dict(zip(ip_list, rand_list, strict=False)))
 
 
 @lru_cache(maxsize=1024)
@@ -131,7 +135,7 @@ def _hash_ip_item(ip_addr: str) -> str:
     return hashlib.sha256(bytes(ip_addr, "utf-8")).hexdigest()[: len(ip_addr)]
 
 
-_WK_IPV4 = set(["0.0.0.0", "127.0.0.1", "255.255.255.255"])  # nosec
+_WK_IPV4 = {"0.0.0.0", "127.0.0.1", "255.255.255.255"}  # nosec
 
 
 def _map_ip4_address(ip_addr: str) -> str:
@@ -145,28 +149,19 @@ def _map_ip4_address(ip_addr: str) -> str:
     if ip_bytes[0] == 10:
         # class A res private
         ls_bytes = ".".join(
-            [
-                ip_map[idx].get(byte, "1")
-                for idx, byte in enumerate(ip_addr.split(".")[1:])
-            ]
+            [ip_map[idx].get(byte, "1") for idx, byte in enumerate(ip_addr.split(".")[1:])]
         )
         return f"10.{ls_bytes}"
     if ip_bytes[0] == 17 and (16 <= ip_bytes[1] <= 31):
         # class B res private
         ls_bytes = ".".join(
-            [
-                ip_map[idx].get(byte, "1")
-                for idx, byte in enumerate(ip_addr.split(".")[2:])
-            ]
+            [ip_map[idx].get(byte, "1") for idx, byte in enumerate(ip_addr.split(".")[2:])]
         )
         return f"{ip_bytes[0]}.{ip_bytes[1]}.{ls_bytes}"
     if ip_bytes[0] == 192 and ip_bytes[1] == 168:
         # class C res private
         ls_bytes = ".".join(
-            [
-                ip_map[idx].get(byte, "1")
-                for idx, byte in enumerate(ip_addr.split(".")[2:])
-            ]
+            [ip_map[idx].get(byte, "1") for idx, byte in enumerate(ip_addr.split(".")[2:])]
         )
         return f"192.168.{ls_bytes}"
     # by default, remap all
@@ -175,7 +170,7 @@ def _map_ip4_address(ip_addr: str) -> str:
     )
 
 
-def hash_ip(input_item: Union[List[str], str]) -> Union[List[str], str]:
+def hash_ip(input_item: list[str] | str) -> list[str] | str:
     """
     Hash IP address or list of IP addresses.
 
@@ -198,7 +193,7 @@ def hash_ip(input_item: Union[List[str], str]) -> Union[List[str], str]:
     return _hash_ip_item(input_item)
 
 
-def hash_list(item_list: List[str]) -> List[Any]:
+def hash_list(item_list: list[str]) -> list[Any]:
     """
     Hash list of strings.
 
@@ -213,8 +208,8 @@ def hash_list(item_list: List[str]) -> List[Any]:
         Hashed list
 
     """
-    out_list: List[Union[Dict[str, Any], List[Any], str]] = []
-    hash_val: Union[str, Dict[str, Any], List[str]]
+    out_list: list[dict[str, Any] | list[Any] | str] = []
+    hash_val: str | dict[str, Any] | list[str]
     for val in item_list:
         if isinstance(val, dict):
             hash_val = hash_dict(val)
@@ -226,9 +221,7 @@ def hash_list(item_list: List[str]) -> List[Any]:
     return out_list
 
 
-def hash_dict(
-    item_dict: Dict[str, Union[Dict[str, Any], List[Any], str]]
-) -> Dict[str, Any]:
+def hash_dict(item_dict: dict[str, dict[str, Any] | list[Any] | str]) -> dict[str, Any]:
     """
     Hash dictionary values.
 
@@ -287,18 +280,16 @@ def hash_sid(sid: str) -> str:
     return sid
 
 
-_WK_ACCOUNTS = set(
-    [
-        "administrator",
-        "guest",
-        "system",
-        "local service",
-        "network service",
-        "root",
-        "crontab",
-        "nt authority",
-    ]
-)
+_WK_ACCOUNTS = {
+    "administrator",
+    "guest",
+    "system",
+    "local service",
+    "network service",
+    "root",
+    "crontab",
+    "nt authority",
+}
 
 
 @lru_cache(maxsize=1024)
@@ -351,7 +342,7 @@ def _guid_replacer() -> Callable[[str], str]:
         replace_guid function
 
     """
-    guid_map: Dict[str, str] = {}
+    guid_map: dict[str, str] = {}
 
     def _replace_guid(guid: str) -> str:
         """
@@ -386,7 +377,7 @@ replace_guid = _guid_replacer()
 # DataFrame obfuscation functions
 
 # Map codes to functions
-MAP_FUNCS: Dict[str, Union[str, Callable]] = {
+MAP_FUNCS: dict[str, str | Callable] = {
     "uuid": replace_guid,
     "ip": hash_ip,
     "str": hash_string,
@@ -398,7 +389,7 @@ MAP_FUNCS: Dict[str, Union[str, Callable]] = {
 }
 
 
-def mask_df(  # noqa: MC0001
+def mask_df(
     data: pd.DataFrame,
     column_map: Mapping[str, Any] = None,
     use_default: bool = True,
@@ -436,7 +427,7 @@ def mask_df(  # noqa: MC0001
     for col_name in data.columns:
         if col_name not in col_map:
             continue
-        col_type = col_map.get(col_name, "str")  # type: ignore
+        col_type = col_map.get(col_name, "str")
         if not silent:
             print(col_name, end=", ")
         map_func = MAP_FUNCS.get(col_type)
@@ -463,7 +454,7 @@ def mask_df(  # noqa: MC0001
 
 def check_masking(
     data: pd.DataFrame, orig_data: pd.DataFrame, index: int = 0, silent=True
-) -> Optional[Tuple[List[str], List[str]]]:
+) -> tuple[list[str], list[str]] | None:
     """
     Check the obfuscation results for a row.
 
@@ -490,12 +481,11 @@ def check_masking(
     unchanged = []
     obfuscated = []
     for col in sorted(data.columns):
-        if data.iloc[index][col] == orig_data.iloc[index][col]:  # type: ignore
-            unchanged.append(f"{col}: {data.iloc[index][col]}")  # type: ignore
+        if data.iloc[index][col] == orig_data.iloc[index][col]:
+            unchanged.append(f"{col}: {data.iloc[index][col]}")
         else:
             obfuscated.append(
-                f"{col}:   {orig_data.iloc[index][col]} "  # type: ignore
-                f"----> {data.iloc[index][col]}"  # type: ignore
+                f"{col}:   {orig_data.iloc[index][col]} ----> {data.iloc[index][col]}"
             )
     if not silent:
         print("===== Start Check ====")
@@ -514,42 +504,3 @@ def check_masking(
 # alertnative names for backward compat
 obfuscate_df = mask_df
 check_obfuscation = check_masking
-
-
-@pd.api.extensions.register_dataframe_accessor("mp_mask")
-class ObfuscationAccessor:
-    """Base64 Unpack pandas extension."""
-
-    def __init__(self, pandas_obj):
-        """Initialize the extension."""
-        self._df = pandas_obj
-
-    def mask(
-        self, column_map: Mapping[str, Any] = None, use_default: bool = True
-    ) -> pd.DataFrame:
-        """
-        Obfuscate the data in columns of a pandas dataframe.
-
-        Parameters
-        ----------
-        data : pd.DataFrame
-            dataframe containing column to obfuscate
-        column_map : Mapping[str, Any], optional
-            Custom column mapping, by default None
-        use_default: bool
-            If True use the built-in map (adding any custom
-            mappings to this dictionary)
-
-        Returns
-        -------
-        pd.DataFrame
-            Obfuscated dataframe
-
-        """
-        warn_message = (
-            "This accessor method has been deprecated.\n"
-            "Please use df.mp.mask() method instead."
-            "This will be removed in MSTICPy v2.2.0"
-        )
-        warnings.warn(warn_message, category=DeprecationWarning)
-        return mask_df(data=self._df, column_map=column_map, use_default=use_default)

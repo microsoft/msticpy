@@ -4,9 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """Compound control classes."""
+
 import os
 from copy import deepcopy
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any
 
 import ipywidgets as widgets
 
@@ -37,7 +38,7 @@ class ArgControl(SettingsControl, CompEditStatusMixin):
 
     def __init__(
         self,
-        setting_path: Optional[str],
+        setting_path: str | None,
         name: str,
         store_type: str = STORE_TEXT,
         item_value: Any = None,
@@ -63,9 +64,7 @@ class ArgControl(SettingsControl, CompEditStatusMixin):
         self.name = name
         self.kv_client = None
 
-        self.lbl_setting = widgets.Label(
-            value=self.name, layout=widgets.Layout(width="130px")
-        )
+        self.lbl_setting = widgets.Label(value=self.name, layout=widgets.Layout(width="130px"))
         self.rb_store_type = widgets.RadioButtons(
             options=[STORE_TEXT, STORE_ENV_VAR, STORE_KEYVAULT],
             description="Storage:",
@@ -108,7 +107,7 @@ class ArgControl(SettingsControl, CompEditStatusMixin):
         self.rb_store_type.observe(self._change_store, names="value")
 
     @property
-    def value(self) -> Union[str, Dict[str, Optional[str]]]:
+    def value(self) -> str | dict[str, str | None]:
         """
         Return the value of the control.
 
@@ -125,7 +124,7 @@ class ArgControl(SettingsControl, CompEditStatusMixin):
         return {self.rb_store_type.value: widget_to_py(self.txt_val)}
 
     @value.setter
-    def value(self, value: Union[str, Dict[str, Optional[str]]]):
+    def value(self, value: str | dict[str, str | None]):
         """
         Set control to value.
 
@@ -218,7 +217,7 @@ class ArgControl(SettingsControl, CompEditStatusMixin):
 def _get_args_val(arg_setting):
     """Return a dict whether the value is a str or a dict."""
     _, arg_val = next(iter(arg_setting.items()))
-    if isinstance(arg_val, (str, int, bool)):
+    if isinstance(arg_val, str | int | bool):
         return STORE_TEXT, arg_val
     return next(iter(arg_val.items()))
 
@@ -254,7 +253,7 @@ if _KEYVAULT:
         item_name: str,
         value: str,
         kv_client: Any = None,
-    ) -> Tuple[bool, str, Any]:
+    ) -> tuple[bool, str, Any]:
         """
         Set the Key Vault secret to `value`.
 
@@ -295,7 +294,7 @@ else:
         item_name: str,
         value: str,
         kv_client: Any = None,
-    ) -> Tuple[bool, str, Any]:
+    ) -> tuple[bool, str, Any]:
         """Return empty response function if Key Vault cannot be initialized."""
         del setting_path, item_name, value, kv_client
         return False, "Azure keyvault libraries are not installed", None
@@ -344,7 +343,7 @@ class UserDefQryProvCtrl(SettingsControl):
         )
 
     @property
-    def value(self) -> Union[str, Dict[str, Optional[str]]]:
+    def value(self) -> str | dict[str, str | None]:
         """
         Return the current value of the control.
 
@@ -357,13 +356,11 @@ class UserDefQryProvCtrl(SettingsControl):
 
         """
         alias = {"alias": self.txt_alias.value} if self.txt_alias.value else {}
-        connect = (
-            {"connect": self.cb_connect.value} if not self.cb_connect.value else {}
-        )
+        connect = {"connect": self.cb_connect.value} if not self.cb_connect.value else {}
         return {**alias, **connect}
 
     @value.setter
-    def value(self, value: Union[str, Dict[str, Optional[str]]]):
+    def value(self, value: str | dict[str, str | None]):
         """
         Set the value of the component from settings.
 
@@ -385,9 +382,7 @@ class UserDefLoadComponent(SettingsControl):
     _W_STYLE = {"description_width": "100px"}
 
     # pylint: disable=line-too-long
-    def __init__(
-        self, mp_controls: MpConfigControls, comp_name: str, setting_path: str
-    ):
+    def __init__(self, mp_controls: MpConfigControls, comp_name: str, setting_path: str):
         """
         Initialize the control.
 
@@ -435,15 +430,11 @@ class UserDefLoadComponent(SettingsControl):
             ctrl_path = f"{path}.{name}"
             if isinstance(settings, str):
                 # Simple case of a string value
-                self.controls[name] = widgets.Text(
-                    description="Value", value=curr_value or ""
-                )
+                self.controls[name] = widgets.Text(description="Value", value=curr_value or "")
                 self._add_control_to_map(ctrl_path, self.controls[name])
             if isinstance(settings, tuple):
                 # if tuple then the second elem of the tuple is the type defn
-                self.controls[name] = self._create_select_ctrl(
-                    settings, name, curr_value
-                )
+                self.controls[name] = self._create_select_ctrl(settings, name, curr_value)
                 self._add_control_to_map(ctrl_path, self.controls[name])
             elif isinstance(settings, dict):
                 self.controls[name] = widgets.Text(value=name, disabled=True)
@@ -460,7 +451,7 @@ class UserDefLoadComponent(SettingsControl):
             ctrl_map = ctrl_map.get(elem)
 
     @property
-    def value(self) -> Union[str, Dict[str, Optional[str]]]:
+    def value(self) -> str | dict[str, str | None]:
         """
         Return the current value of the control.
 
@@ -473,7 +464,7 @@ class UserDefLoadComponent(SettingsControl):
         return self._get_val_from_ctrl(self.control_map)
 
     @value.setter
-    def value(self, value: Union[str, Dict[str, Optional[str]]]):
+    def value(self, value: str | dict[str, str | None]):
         """Set value of controls from dict."""
         if isinstance(value, dict):
             self._set_ctrl_from_val(path="", value=value)
@@ -501,9 +492,7 @@ class UserDefLoadComponent(SettingsControl):
             sub_path = f"{path}.{key}" if path else key
             if isinstance(val, dict):
                 if isinstance(self.controls[key], widgets.Textarea):
-                    self.controls[key].value = py_to_widget(
-                        val, ctrl=self.controls[key]
-                    )
+                    self.controls[key].value = py_to_widget(val, ctrl=self.controls[key])
                 else:
                     self._set_ctrl_from_val(sub_path, val)
             elif key in self.controls:
@@ -545,7 +534,7 @@ class UserDefLoadComponent(SettingsControl):
                 description=name,
                 style=self._W_STYLE,
             )
-            setattr(wgt, "tag", "txt_dict")
+            wgt.tag = "txt_dict"
             wgt.value = py_to_widget(curr_value, ctrl=wgt) or ""
             return wgt
         raise TypeError(f"Unknown definition type {val_type} for {name}/{ctrl_defn}")

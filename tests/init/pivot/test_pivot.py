@@ -26,13 +26,6 @@ __author__ = "Ian Hellen"
 pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
 # pylint: disable=redefined-outer-name, protected-access
 
-_KQL_IMP_OK = False
-with contextlib.suppress(ImportError):
-    # pylint: disable=unused-import
-    from msticpy.data.drivers import kql_driver
-
-    del kql_driver
-    _KQL_IMP_OK = True
 _SPLUNK_IMP_OK = False
 with contextlib.suppress(ImportError):
     from msticpy.data.drivers import splunk_driver
@@ -47,8 +40,6 @@ try:
     _IPSTACK_IMP_OK = True
 except ImportError:
     ip_stack_cls = None
-
-pytestmark = pytest.mark.skipif(not _KQL_IMP_OK, reason="Partial msticpy install")
 
 
 def _test_create_pivot_namespace(data_providers):

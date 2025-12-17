@@ -48,6 +48,7 @@ def test_select_api_mde() -> None:
     assert cfg.oauth_v2 is True
 
 
+@pytest.mark.filterwarnings("ignore:M365 Defender")
 def test_select_api_m365d() -> None:
     """Test API selection for M365 Defender unified environment."""
     # Note this now reverts to MDE parameters

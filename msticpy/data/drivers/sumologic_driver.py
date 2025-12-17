@@ -4,11 +4,12 @@
 #  license information.
 #  --------------------------------------------------------------------------
 """Sumologic Driver class."""
+
 import re
 import time
 from datetime import datetime, timedelta
 from timeit import default_timer as timer
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any
 
 import httpx
 import pandas as pd
@@ -30,8 +31,7 @@ __author__ = "juju4"
 
 SUMOLOGIC_CONNECT_ARGS = {
     "connection_str": (
-        "(string) The url endpoint (the default is"
-        + " 'https://api.us2.sumologic.com/api')."
+        "(string) The url endpoint (the default is" + " 'https://api.us2.sumologic.com/api')."
     ),
     "accessid": (
         "(string) The Sumologic accessid, which is used to "
@@ -52,9 +52,7 @@ class SumologicDriver(DriverBase):
     """Driver to connect and query from Sumologic."""
 
     _SUMOLOGIC_REQD_ARGS = ["connection_str", "accessid", "accesskey"]
-    _CONNECT_DEFAULTS: Dict[str, Any] = {
-        "connection_str": "https://api.us2.sumologic.com/api"
-    }
+    _CONNECT_DEFAULTS: dict[str, Any] = {"connection_str": "https://api.us2.sumologic.com/api"}
     _TIME_FORMAT = '"%Y-%m-%d %H:%M:%S.%6N"'
     _DEF_CHECKINTERVAL = 3
     _DEF_TIMEOUT = 300
@@ -67,9 +65,7 @@ class SumologicDriver(DriverBase):
         self._connected = False
         self._debug = kwargs.get("debug", False)
         self.set_driver_property(DriverProps.PUBLIC_ATTRS, {"client": self.service})
-        self.set_driver_property(
-            DriverProps.FORMATTERS, {"datetime": self._format_datetime}
-        )
+        self.set_driver_property(DriverProps.FORMATTERS, {"datetime": self._format_datetime})
         self.checkinterval = self._DEF_CHECKINTERVAL
         self.timeout = self._DEF_TIMEOUT
 
@@ -95,9 +91,7 @@ class SumologicDriver(DriverBase):
         """
         cs_dict = self._get_connect_args(connection_str, **kwargs)
 
-        arg_dict = {
-            key: val for key, val in cs_dict.items() if key in SUMOLOGIC_CONNECT_ARGS
-        }
+        arg_dict = {key: val for key, val in cs_dict.items() if key in SUMOLOGIC_CONNECT_ARGS}
         try:
             # https://github.com/SumoLogic/sumologic-python-sdk/blob/master/scripts/search-job.py
             self.service = SumoLogic(
@@ -129,11 +123,9 @@ class SumologicDriver(DriverBase):
         self._connected = True
         print(f"connected with accessid {arg_dict['accessid']}")
 
-    def _get_connect_args(
-        self, connection_str: Optional[str], **kwargs
-    ) -> Dict[str, Any]:
+    def _get_connect_args(self, connection_str: str | None, **kwargs) -> dict[str, Any]:
         """Check and consolidate connection parameters."""
-        cs_dict: Dict[str, Any] = self._CONNECT_DEFAULTS
+        cs_dict: dict[str, Any] = self._CONNECT_DEFAULTS
         # Fetch any config settings
         settings, cs_is_instance_name = self._get_sumologic_settings(connection_str)
         cs_dict.update(settings)
@@ -162,7 +154,7 @@ class SumologicDriver(DriverBase):
     # pylint: disable=broad-except
     def _query(
         self, query: str, query_source: QuerySource = None, **kwargs
-    ) -> Union[pd.DataFrame, Any]:
+    ) -> pd.DataFrame | Any:
         """
         Execute Sumologic query and retrieve results.
 
@@ -308,9 +300,7 @@ class SumologicDriver(DriverBase):
         except Exception as err:
             self._raise_qry_except(err, "search_job_messages", "to get job messages")
 
-    def _get_job_results_records(  # noqa: MC0001
-        self, searchjob, status, limit, verbosity
-    ):
+    def _get_job_results_records(self, searchjob, status, limit, verbosity):
         # Aggregated results, limit
         count = status["recordCount"]
         limit2 = None
@@ -326,9 +316,7 @@ class SumologicDriver(DriverBase):
                     result = self.service.search_job_records(searchjob, limit=limit2)
                     return result["records"]
                 except Exception as err:
-                    self._raise_qry_except(
-                        err, "search_job_records", "to get search records"
-                    )
+                    self._raise_qry_except(err, "search_job_records", "to get search records")
         else:
             # paging results
             # https://help.sumologic.com/APIs/Search-Job-API/About-the-Search-Job-API#query-parameters-2
@@ -344,9 +332,7 @@ class SumologicDriver(DriverBase):
                     else:
                         job_limit2 = job_limit
                     if verbosity >= 2:
-                        print(
-                            f"DEBUG: Paging {i * job_limit} / {count}, limit {job_limit2}"
-                        )
+                        print(f"DEBUG: Paging {i * job_limit} / {count}, limit {job_limit2}")
                     result = self.service.search_job_records(
                         searchjob, offset=(i * job_limit), limit=job_limit2
                     )
@@ -376,7 +362,7 @@ class SumologicDriver(DriverBase):
     # pylint: enable=inconsistent-return-statements
 
     @staticmethod
-    def _raise_qry_except(err: Exception, mssg: str, action: Optional[str] = None):
+    def _raise_qry_except(err: Exception, mssg: str, action: str | None = None):
         if isinstance(err, httpx.HTTPError):
             raise MsticpyConnectionError(
                 f"Communication error connecting to Sumologic: {err}",
@@ -412,9 +398,9 @@ class SumologicDriver(DriverBase):
         return self._format_datetime(start), self._format_datetime(end)
 
     # pylint: disable=too-many-branches
-    def query(  # noqa: MC0001
+    def query(
         self, query: str, query_source: QuerySource = None, **kwargs
-    ) -> Union[pd.DataFrame, Any]:
+    ) -> pd.DataFrame | Any:
         """
         Execute Sumologic query and retrieve results.
 
@@ -485,7 +471,7 @@ class SumologicDriver(DriverBase):
         if verbosity >= 3:
             print("DEBUG: {results}")
         if normalize:
-            dataframe_res = pd.json_normalize(results)  # type: ignore
+            dataframe_res = pd.json_normalize(results)
         else:
             dataframe_res = pd.DataFrame(results)
 
@@ -527,7 +513,7 @@ class SumologicDriver(DriverBase):
 
         return dataframe_res.copy()
 
-    def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
+    def query_with_results(self, query: str, **kwargs) -> tuple[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
 
@@ -555,7 +541,7 @@ class SumologicDriver(DriverBase):
     @staticmethod
     def _get_sumologic_settings(
         instance_name: str = None,
-    ) -> Tuple[Dict[str, Any], bool]:
+    ) -> tuple[dict[str, Any], bool]:
         """Get config from msticpyconfig."""
         data_provs = get_provider_settings(config_section="DataProviders")
         sl_settings = {
@@ -563,7 +549,7 @@ class SumologicDriver(DriverBase):
             for name, settings in data_provs.items()
             if name.startswith("Sumologic")
         }
-        sumologic_settings: Optional[ProviderSettings]
+        sumologic_settings: ProviderSettings | None
         # Check if the connection string is an instance name
         sumologic_settings = sl_settings.get(f"Sumologic-{instance_name}")
         if sumologic_settings:

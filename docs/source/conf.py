@@ -257,7 +257,6 @@ autodoc_mock_imports = [
     "ipywidgets",
     "jwt",
     "keyring",
-    "Kqlmagic",
     "matplotlib.pyplot",
     "matplotlib",
     "mo_sql_parsing",

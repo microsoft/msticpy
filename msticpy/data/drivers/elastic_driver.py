@@ -4,9 +4,11 @@
 #  license information.
 #  --------------------------------------------------------------------------
 """Elastic Driver class."""
+
 import json
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from typing import Any
 
 import pandas as pd
 
@@ -20,12 +22,12 @@ __version__ = VERSION
 __author__ = "Neil Desai, Ian Hellen"
 
 
-ELASTIC_CONNECT_ARGS: Dict[str, str] = {
+ELASTIC_CONNECT_ARGS: dict[str, str] = {
     # TBD - you may not need these - mainly for user
     # help/error messages (see _get_connect_args)
 }
 
-_ELASTIC_REQUIRED_ARGS: Dict[str, str] = {
+_ELASTIC_REQUIRED_ARGS: dict[str, str] = {
     # TBD
 }
 
@@ -78,21 +80,16 @@ class ElasticDriver(DriverBase):
         self._connected = True
         print("connected")
 
-    def _get_connect_args(
-        self, connection_str: Optional[str], **kwargs
-    ) -> Dict[str, Any]:
+    def _get_connect_args(self, connection_str: str | None, **kwargs) -> dict[str, Any]:
         """Check and consolidate connection parameters."""
-        cs_dict: Dict[str, Any] = {}
+        cs_dict: dict[str, Any] = {}
         # Fetch any config settings
         cs_dict.update(self._get_config_settings("Elastic"))
         # If a connection string - parse this and add to config
         if connection_str:
             cs_items = connection_str.split(";")
             cs_dict.update(
-                {
-                    cs_item.split("=")[0].strip(): cs_item.split("=")[1]
-                    for cs_item in cs_items
-                }
+                {cs_item.split("=")[0].strip(): cs_item.split("=")[1] for cs_item in cs_items}
             )
         elif kwargs:
             # if connection args supplied as kwargs
@@ -113,7 +110,7 @@ class ElasticDriver(DriverBase):
 
     def query(
         self, query: str, query_source: QuerySource = None, **kwargs
-    ) -> Union[pd.DataFrame, Any]:
+    ) -> pd.DataFrame | Any:
         """
         Execute query and retrieve results.
 
@@ -144,7 +141,7 @@ class ElasticDriver(DriverBase):
         # Run query and return results
         return pd.DataFrame()
 
-    def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
+    def query_with_results(self, query: str, **kwargs) -> tuple[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
 
@@ -177,16 +174,14 @@ class ElasticDriver(DriverBase):
         return ",".join(fmt_list)
 
     @staticmethod
-    def _custom_param_handler(query: str, param_dict: Dict[str, Any]) -> str:
+    def _custom_param_handler(query: str, param_dict: dict[str, Any]) -> str:
         """Replace parameters in query template for Elastic JSON queries."""
         query_dict = json.loads(query)
 
         start = param_dict.pop("start", None)
         end = param_dict.pop("end", None)
         if start or end:
-            time_range = {
-                "range": {"@timestamp": {"format": "strict_date_optional_time"}}
-            }
+            time_range = {"range": {"@timestamp": {"format": "strict_date_optional_time"}}}
             if start:
                 time_range["range"]["@timestamp"]["gte"] = start
             if end:

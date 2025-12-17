@@ -12,6 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
 import datetime as dt
@@ -130,7 +131,7 @@ class VirusTotal(HttpTIProvider):
 
         if "positives" in result_dict:
             positives = result_dict.get("positives", 0)
-            if not isinstance(positives, (int, float)):
+            if not isinstance(positives, int | float):
                 positives = 0
             elif isinstance(positives, str):
                 # sometimes the API returns a string with a number in it

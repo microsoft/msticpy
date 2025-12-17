@@ -4,11 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Sentinel Dynamic Summary Mixin class."""
+
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable, Iterable
 from functools import singledispatchmethod
-from typing import TYPE_CHECKING, Any, Callable, Iterable
+from typing import TYPE_CHECKING, Any
 
 import httpx
 from typing_extensions import Self
@@ -141,9 +143,7 @@ class SentinelDynamicSummaryMixin(SentinelUtilsMixin):
         if summary_items:
             if not self.sent_data_query:
                 try:
-                    self.sent_data_query: (
-                        SentinelQueryProvider | None
-                    ) = SentinelQueryProvider(
+                    self.sent_data_query: SentinelQueryProvider | None = SentinelQueryProvider(
                         self.default_workspace_name,  # type: ignore[attr-defined]
                     )
                     logger.info(
@@ -315,9 +315,7 @@ class SentinelDynamicSummaryMixin(SentinelUtilsMixin):
             "_create_dynamic_summary (DynamicSummary) failure %s",
             response.content.decode("utf-8"),
         )
-        err_msg = (
-            f"Dynamic summary create/update failed with status {response.status_code}"
-        )
+        err_msg = f"Dynamic summary create/update failed with status {response.status_code}"
         raise MsticpyAzureConnectionError(
             err_msg,
             "Text response:",
@@ -507,9 +505,7 @@ class SentinelDynamicSummaryMixin(SentinelUtilsMixin):
             If API returns an error.
 
         """
-        if (summary and not summary.summary_id) or (
-            data is not None and not summary_id
-        ):
+        if (summary and not summary.summary_id) or (data is not None and not summary_id):
             err_msg: str = "You must supply a summary ID to update"
             raise MsticpyParameterError(
                 err_msg,

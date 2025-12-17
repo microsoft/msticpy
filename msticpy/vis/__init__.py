@@ -22,6 +22,7 @@ This contains the following functionality:
 - timeseries - timeseries analysis visualization
 
 """
+
 # flake8: noqa: F403
 # pylint: disable=unused-import
 from . import mp_pandas_plot

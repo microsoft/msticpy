@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Formatting and checking functions."""
+
 import builtins
 import re
 import uuid

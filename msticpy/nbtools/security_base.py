@@ -4,13 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for SecurityAlert class."""
+
 from __future__ import annotations
 
 import html
 import re
 from collections import Counter
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import pandas as pd
 from deprecated.sphinx import deprecated
@@ -23,7 +24,7 @@ from ..datamodel.entities import Account, Entity, Host, OSFamily, Process
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-_ID_PROPERTIES: List[str] = [
+_ID_PROPERTIES: list[str] = [
     "AzSubscriptionId",
     "AzResourceId",
     "WorkspaceId",
@@ -55,11 +56,11 @@ class SecurityBase(QueryParamProvider):
         self._source_data: pd.Series = (
             src_row if src_row is not None else pd.Series(dtype="object")
         )
-        self._custom_query_params: Dict[str, Any] = {}
-        self._entities: List[Entity] = []
+        self._custom_query_params: dict[str, Any] = {}
+        self._entities: list[Entity] = []
 
         # Extract and cache alert ID properties
-        self._ids: Dict[str, str] = {}
+        self._ids: dict[str, str] = {}
         if self._source_data is not None:
             for id_property in _ID_PROPERTIES:
                 if id_property in self._source_data:
@@ -104,9 +105,7 @@ class SecurityBase(QueryParamProvider):
     def __repr__(self) -> str:
         """Return repr of item."""
         if self.properties:
-            params = ", ".join(
-                [f"{name}={val}" for name, val in self.properties.items()]
-            )
+            params = ", ".join([f"{name}={val}" for name, val in self.properties.items()])
             if len(params) > 80:
                 params = params[:80] + "..."
             return f"{self.__class__.__name__}({params})"
@@ -134,7 +133,7 @@ class SecurityBase(QueryParamProvider):
 
     # Properties
     @property
-    def entities(self) -> List[Entity]:
+    def entities(self) -> list[Entity]:
         """
         Return a list of the Alert or Event entities.
 
@@ -147,7 +146,7 @@ class SecurityBase(QueryParamProvider):
         return self._entities
 
     @property
-    def properties(self) -> Dict[str, Any]:
+    def properties(self) -> dict[str, Any]:
         """
         Return a dictionary of the Alert or Event properties.
 
@@ -165,7 +164,7 @@ class SecurityBase(QueryParamProvider):
         return self.primary_host.HostName if self.primary_host is not None else None
 
     @property
-    def computer(self) -> Optional[str]:
+    def computer(self) -> str | None:
         """
         Return the Computer name of the host associated with the alert.
 
@@ -174,7 +173,7 @@ class SecurityBase(QueryParamProvider):
         return self.primary_host.computer if self.primary_host is not None else None
 
     @property
-    def ids(self) -> Dict[str, str]:
+    def ids(self) -> dict[str, str]:
         """Return a collection of Identity properties for the alert."""
         return self._ids
 
@@ -205,7 +204,7 @@ class SecurityBase(QueryParamProvider):
         return "AzSubscriptionId" in self._ids and "AzResourceId" in self._ids
 
     @property
-    def primary_host(self) -> Optional[Union[Host, Entity]]:
+    def primary_host(self) -> Host | Entity | None:
         """
         Return the primary host entity (if any) associated with this object.
 
@@ -221,7 +220,7 @@ class SecurityBase(QueryParamProvider):
         return None
 
     @property
-    def primary_process(self) -> Optional[Union[Process, Entity]]:
+    def primary_process(self) -> Process | Entity | None:
         """
         Return the primary process entity (if any) associated with this object.
 
@@ -248,7 +247,7 @@ class SecurityBase(QueryParamProvider):
         return procs_with_parent[0] if procs_with_parent else procs[0]
 
     @property
-    def primary_account(self) -> Optional[Union[Process, Entity]]:
+    def primary_account(self) -> Process | Entity | None:
         """
         Return the primary account entity (if any) associated with this object.
 
@@ -262,7 +261,7 @@ class SecurityBase(QueryParamProvider):
         return accts[0] if accts else None
 
     @property
-    def query_params(self) -> Dict[str, Any]:
+    def query_params(self) -> dict[str, Any]:
         """
         Query parameters derived from alert.
 
@@ -327,7 +326,7 @@ class SecurityBase(QueryParamProvider):
         """Return the datetime of event."""
         return self.TimeGenerated
 
-    def get_logon_id(self, account: Account = None) -> Optional[Union[str, int]]:
+    def get_logon_id(self, account: Account = None) -> str | int | None:
         """
         Get the logon Id for the alert or the account, if supplied.
 
@@ -346,9 +345,7 @@ class SecurityBase(QueryParamProvider):
 
         """
         for session in [
-            e
-            for e in self.entities
-            if e["Type"] in ["host-logon-session", "hostlogonsession"]
+            e for e in self.entities if e["Type"] in ["host-logon-session", "hostlogonsession"]
         ]:
             if account is None or session["Account"] == account:
                 return session["SessionId"]
@@ -366,10 +363,7 @@ class SecurityBase(QueryParamProvider):
         if self.is_in_log_analytics:
             return "true"
         if self.is_in_azure_sub:
-            return (
-                f"AzureResourceSubscriptionId {operator} "
-                f"'{self._ids['AzSubscriptionId']}'"
-            )
+            return f"AzureResourceSubscriptionId {operator} '{self._ids['AzSubscriptionId']}'"
         if self.is_in_workspace:
             return f"WorkspaceId {operator} '{self._ids['WorkspaceId']}'"
 
@@ -403,7 +397,7 @@ class SecurityBase(QueryParamProvider):
             return f"AgentId {operator} '{self._ids['AgentId']}'"
         return None
 
-    def get_entities_of_type(self, entity_type: str) -> List[Entity]:
+    def get_entities_of_type(self, entity_type: str) -> list[Entity]:
         """
         Return entity collection for a give entity type.
 
@@ -469,9 +463,7 @@ class SecurityBase(QueryParamProvider):
 
         if show_entities and self.entities:
             entity_title = "<br/><h3>Entities:</h3><br/>"
-            entity_html = "<br/>".join(
-                [self._format_entity(ent) for ent in self.entities]
-            )
+            entity_html = "<br/>".join([self._format_entity(ent) for ent in self.entities])
             html_doc = html_doc + entity_title + entity_html
         else:
             e_counts = Counter([ent["Type"] for ent in self.entities])
@@ -510,9 +502,7 @@ class SecurityBase(QueryParamProvider):
                         break
             else:
                 for proc in [
-                    e
-                    for e in self.entities
-                    if e["Type"] == "process" and "ImageFile" in e
+                    e for e in self.entities if e["Type"] == "process" and "ImageFile" in e
                 ]:
                     file = proc["ImageFile"]
                     if "Directory" in file and "/" in file["Directory"]:
@@ -521,7 +511,7 @@ class SecurityBase(QueryParamProvider):
                         break
 
     @staticmethod
-    def _get_subscription_from_resource(resource_id) -> Optional[str]:
+    def _get_subscription_from_resource(resource_id) -> str | None:
         """Extract subscription Id from resource string."""
         sub_regex = r"^/subscriptions/([^/]+)/"
         sub_ids = re.findall(sub_regex, resource_id, re.RegexFlag.I)

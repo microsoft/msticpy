@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Test module for EntityGraph."""
 import pandas as pd
+import pytest
 from bokeh.models.layouts import Column
 
 try:
@@ -204,6 +205,7 @@ def test_plot():
     assert isinstance(tl_plot, Column)
 
 
+@pytest.mark.filterwarnings("ignore:no explicit representation of timezones")
 def test_df_plot():
     """Test plotting from DataFrame"""
     plot = sent_incidents.mp_plot.incident_graph()

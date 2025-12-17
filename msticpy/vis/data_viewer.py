@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Dataframe viewer."""
+
 from collections import namedtuple
-from typing import Dict, List, Union
 
 import ipywidgets as widgets
 import pandas as pd
@@ -45,9 +45,7 @@ class DataViewerBokeh:
 
     _DEF_HEIGHT = 550
 
-    def __init__(
-        self, data: pd.DataFrame, selected_cols: List[str] = None, debug=False
-    ):
+    def __init__(self, data: pd.DataFrame, selected_cols: list[str] = None, debug=False):
         """
         Initialize the DataViewer class.
 
@@ -104,16 +102,14 @@ class DataViewerBokeh:
     @property
     def filtered_data(self) -> pd.DataFrame:
         """Return filtered dataframe."""
-        return self.data_filter.filtered_dataframe[  # type: ignore
-            self.column_chooser.selected_columns
-        ]  # type: ignore
+        return self.data_filter.filtered_dataframe[self.column_chooser.selected_columns]
 
     @property
-    def filters(self) -> Dict[str, FilterExpr]:
+    def filters(self) -> dict[str, FilterExpr]:
         """Return current filters as a dict."""
         return self.data_filter.filters
 
-    def import_filters(self, filters: Dict[str, FilterExpr]):
+    def import_filters(self, filters: dict[str, FilterExpr]):
         """
         Import filter set replacing current filters.
 
@@ -165,12 +161,8 @@ class DataViewerBokeh:
         del btn
         if self._debug:
             print("_apply_filter")
-        self.data_table.view = CDSView(
-            filter=BooleanFilter(self.data_filter.bool_filters)
-        )
-        self.data_table.height = self._calc_df_height(
-            self.data_filter.filtered_dataframe
-        )
+        self.data_table.view = CDSView(filter=BooleanFilter(self.data_filter.bool_filters))
+        self.data_table.height = self._calc_df_height(self.data_filter.filtered_dataframe)
         self._update_data_table()
 
 
@@ -275,13 +267,11 @@ class DataTableFilter:
         self._not_cb = widgets.Checkbox(
             description="not", value=False, **(_layout("60px", desc_width="initial"))
         )
-        self._filter_value = widgets.Textarea(
-            description="Filter value", **(_layout("400px"))
-        )
+        self._filter_value = widgets.Textarea(description="Filter value", **(_layout("400px")))
         self._curr_filters = widgets.Select(description="Filters", **(_layout("500px")))
         self._oper_label = widgets.Label(" in ")
 
-        self.filters: Dict[str, FilterExpr] = {}
+        self.filters: dict[str, FilterExpr] = {}
 
         self._curr_filters.observe(self._select_filter, names="value")
         self._col_select.observe(self._update_operators, names="value")
@@ -336,7 +326,7 @@ class DataTableFilter:
         """Display in IPython."""
         self.display()
 
-    def import_filters(self, filters: Dict[str, FilterExpr]):
+    def import_filters(self, filters: dict[str, FilterExpr]):
         """
         Replace the current filters with `filters`.
 
@@ -348,9 +338,7 @@ class DataTableFilter:
             column [str], inv [bool], operator [str], expr [str]
 
         """
-        self.filters = {
-            f_name: FilterExpr(*f_expr) for f_name, f_expr in filters.items()
-        }
+        self.filters = {f_name: FilterExpr(*f_expr) for f_name, f_expr in filters.items()}
         self._curr_filters.options = list(filters.keys())
 
     @property
@@ -358,9 +346,7 @@ class DataTableFilter:
         """Return current set of boolean filters."""
         df_filt = None
         for filt in self.filters.values():
-            new_filt = self._make_filter(
-                filt.column, filt.operator, filt.expr, filt.inv
-            )
+            new_filt = self._make_filter(filt.column, filt.operator, filt.expr, filt.inv)
             new_filt = new_filt.values if isinstance(new_filt, pd.Series) else new_filt
             df_filt = new_filt if df_filt is None else df_filt & new_filt
         return df_filt if df_filt is not None else self.data.index.isin(self.data.index)
@@ -442,7 +428,9 @@ class DataTableFilter:
         return self._create_filter(col, operator, expr)
 
     # pylint: disable=too-many-return-statements
-    def _create_filter(self, col: str, operator: str, expr: str) -> pd.Series:
+    def _create_filter(  # noqa: PLR0911
+        self, col: str, operator: str, expr: str
+    ) -> pd.Series:
         if operator == "query":
             return pd.Series(self.data.index.isin(self.data.query(expr).index))
         if operator in ("in", "between"):
@@ -463,23 +451,20 @@ class DataTableFilter:
             return self.data[col] < test_expr
         if operator == "<=":
             return self.data[col] >= test_expr
-        raise TypeError(
-            f"Unsupported operator for operator {operator} and column {col}"
-        )
+        raise TypeError(f"Unsupported operator for operator {operator} and column {col}")
 
     def _filter_in_or_between(self, col: str, operator: str, expr: str) -> pd.Series:
         """Return filter for `in` and `between` operators."""
-        test_expr: List[Union[str, int, float]]
+        test_expr: list[str | int | float]
 
         if pd.api.types.is_string_dtype(self.data[col]):
             test_expr = [item.strip("\"' ") for item in expr.split(",")]
         elif pd.api.types.is_numeric_dtype(self.data[col]):
             test_expr = [
-                int(item) if "." not in item else float(item)
-                for item in expr.split(",")
+                int(item) if "." not in item else float(item) for item in expr.split(",")
             ]
         elif pd.api.types.is_datetime64_any_dtype(self.data[col]):
-            test_expr = [pd.Timestamp(item.strip()) for item in expr.split(",")]  # type: ignore
+            test_expr = [pd.Timestamp(item.strip()) for item in expr.split(",")]
         else:
             raise TypeError(
                 f"Unsupported column type {self.data[col].dtype}",
@@ -496,11 +481,11 @@ class DataTableFilter:
 
     def _conv_expr_type(self, col: str, expr: str):
         """Convert string expression to required type."""
-        test_expr: Union[str, int, float]
+        test_expr: str | int | float
         if pd.api.types.is_numeric_dtype(self.data[col]):
             test_expr = int(expr) if "." not in expr else float(expr)
         elif pd.api.types.is_datetime64_any_dtype(self.data[col]):
-            test_expr = pd.Timestamp(expr.strip())  # type: ignore
+            test_expr = pd.Timestamp(expr.strip())
         elif pd.api.types.is_string_dtype(self.data[col]):
             test_expr = expr.strip("\"' ")
         else:

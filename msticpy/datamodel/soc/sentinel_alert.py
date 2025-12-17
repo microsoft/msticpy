@@ -4,8 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Sentinel Alert class."""
+
 import json
-from typing import Any, Dict, List
+from typing import Any
 
 import pandas as pd
 
@@ -26,7 +27,7 @@ _FEATURES = [
     "VendorOriginalId",
 ]
 
-_ID_PROPERTIES: List[str] = [
+_ID_PROPERTIES: list[str] = [
     "AzSubscriptionId",
     "AzResourceId",
     "WorkspaceId",
@@ -41,7 +42,7 @@ _ID_PROPERTIES: List[str] = [
     "ResourceIdentifiers",
 ]
 
-_QUERY_PROPERTIES: List[str] = [
+_QUERY_PROPERTIES: list[str] = [
     "Query Period",
     "Trigger Operator",
     "Trigger Threshold",
@@ -79,7 +80,7 @@ class SentinelAlert(Alert):
             (the default is None)
 
         """
-        self._custom_query_params: Dict[str, Any] = {}
+        self._custom_query_params: dict[str, Any] = {}
         super().__init__(src_entity, src_event, **kwargs)
         if (
             isinstance(
@@ -90,7 +91,7 @@ class SentinelAlert(Alert):
         ):
             self._add_sentinel_items(src_event)
             self._add_extended_sent_props()
-        self._ids: Dict[str, str] = {}
+        self._ids: dict[str, str] = {}
         if self.__dict__ is not None:
             for id_property in _ID_PROPERTIES:
                 if id_property in self.properties:
@@ -115,7 +116,7 @@ class SentinelAlert(Alert):
                 self.__dict__.update({feature: src_event.get(feature, "")})
 
     @property
-    def ids(self) -> Dict[str, str]:
+    def ids(self) -> dict[str, str]:
         """Return a collection of Identity properties for the alert."""
         return self._ids
 

@@ -4,8 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """figure_dimension - helps set the width and height properties of a figure for plotting."""
+
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Callable
+from typing import Any
 
 from bokeh.plotting import figure
 
@@ -32,13 +34,13 @@ def set_figure_size(fig: figure, width: int, height: int) -> figure:
 
     """
     if hasattr(figure(), "height"):
-        setattr(fig, "height", height)
+        fig.height = height
     if hasattr(figure(), "plot_height"):
-        setattr(fig, "plot_height", height)
+        fig.plot_height = height  # type: ignore[attr-defined]
     if hasattr(figure(), "width"):
-        setattr(fig, "width", width)
+        fig.width = width  # type: ignore[attr-defined]
     if hasattr(figure(), "plot_width"):
-        setattr(fig, "plot_width", width)
+        fig.plot_width = width  # type: ignore[attr-defined]
     return fig
 
 
@@ -71,9 +73,7 @@ def bokeh_figure(func) -> Callable[[Any], Any]:
         # pylint: disable=comparison-with-callable
         if func == figure:
             param_mapper = (
-                _BOKEH_3_FIG_PARAMS
-                if hasattr(func(), "height")
-                else _BOKEH_2_FIG_PARAMS
+                _BOKEH_3_FIG_PARAMS if hasattr(func(), "height") else _BOKEH_2_FIG_PARAMS
             )
 
             func_kwargs = {

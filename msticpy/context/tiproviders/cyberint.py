@@ -10,6 +10,7 @@ Input can be a single IoC observable or a pandas DataFrame containing
 multiple observables. Processing requires an API key.
 https://cyberint.com/
 """
+
 from __future__ import annotations
 
 from typing import Any, ClassVar

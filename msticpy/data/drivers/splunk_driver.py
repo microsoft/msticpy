@@ -4,10 +4,12 @@
 #  license information.
 #  --------------------------------------------------------------------------
 """Splunk Driver class."""
+
 import logging
+from collections.abc import Iterable
 from datetime import datetime, timedelta, timezone
 from time import sleep
-from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from typing import Any
 
 import jwt
 import pandas as pd
@@ -87,7 +89,7 @@ class SplunkDriver(DriverBase):
     """Driver to connect and query from Splunk."""
 
     _SPLUNK_REQD_ARGS = ["host"]
-    _CONNECT_DEFAULTS: Dict[str, Any] = {"port": "8089"}
+    _CONNECT_DEFAULTS: dict[str, Any] = {"port": "8089"}
     _TIME_FORMAT = '"%Y-%m-%d %H:%M:%S.%6N"'
 
     def __init__(self, **kwargs):
@@ -116,7 +118,7 @@ class SplunkDriver(DriverBase):
             },
         )
 
-    def connect(self, connection_str: Optional[str] = None, **kwargs):
+    def connect(self, connection_str: str | None = None, **kwargs):
         """
         Connect to Splunk via splunk-sdk.
 
@@ -138,9 +140,7 @@ class SplunkDriver(DriverBase):
         """
         cs_dict = self._get_connect_args(connection_str, **kwargs)
 
-        arg_dict = {
-            key: val for key, val in cs_dict.items() if key in SPLUNK_CONNECT_ARGS
-        }
+        arg_dict = {key: val for key, val in cs_dict.items() if key in SPLUNK_CONNECT_ARGS}
 
         # Replace to Splunk python sdk's parameter name of sp_client.connect()
         if arg_dict.get("bearer_token"):
@@ -169,11 +169,9 @@ class SplunkDriver(DriverBase):
         self._connected = True
         print("Connected.")
 
-    def _get_connect_args(
-        self, connection_str: Optional[str], **kwargs
-    ) -> Dict[str, Any]:
+    def _get_connect_args(self, connection_str: str | None, **kwargs) -> dict[str, Any]:
         """Check and consolidate connection parameters."""
-        cs_dict: Dict[str, Any] = self._CONNECT_DEFAULTS
+        cs_dict: dict[str, Any] = self._CONNECT_DEFAULTS
         # Fetch any config settings
         cs_dict.update(self._get_config_settings("Splunk"))
         # If a connection string - parse this and add to config
@@ -181,10 +179,7 @@ class SplunkDriver(DriverBase):
             print("Credential loading from connection_str tied with ';'.")
             cs_items = connection_str.split(";")
             cs_dict.update(
-                {
-                    cs_item.split("=")[0].strip(): cs_item.split("=")[1]
-                    for cs_item in cs_items
-                }
+                {cs_item.split("=")[0].strip(): cs_item.split("=")[1] for cs_item in cs_items}
             )
         elif kwargs:
             print("Credential loading from connect() method's args.")
@@ -246,8 +241,8 @@ class SplunkDriver(DriverBase):
         return cs_dict
 
     def query(
-        self, query: str, query_source: Optional[QuerySource] = None, **kwargs
-    ) -> Union[pd.DataFrame, Any]:
+        self, query: str, query_source: QuerySource | None = None, **kwargs
+    ) -> pd.DataFrame | Any:
         """
         Execute splunk query and retrieve results via OneShot or async search mode.
 
@@ -316,19 +311,15 @@ class SplunkDriver(DriverBase):
         else:
             # Set mode and initialize async job
             kwargs_normalsearch = {"exec_mode": "normal"}
-            query_job = self.service.jobs.create(
-                query, count=count, **kwargs_normalsearch
-            )
-            resp_rows, reader = self._exec_async_search(
-                query_job, page_size, timeout=timeout
-            )
+            query_job = self.service.jobs.create(query, count=count, **kwargs_normalsearch)
+            resp_rows, reader = self._exec_async_search(query_job, page_size, timeout=timeout)
 
         if len(resp_rows) == 0 or not resp_rows:
             print("Warning - query did not return any results.")
             return [row for row in reader if isinstance(row, sp_results.Message)]
         return pd.DataFrame(resp_rows)
 
-    def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
+    def query_with_results(self, query: str, **kwargs) -> tuple[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
 
@@ -347,7 +338,7 @@ class SplunkDriver(DriverBase):
         raise NotImplementedError(f"Not supported for {self.__class__.__name__}")
 
     @property
-    def service_queries(self) -> Tuple[Dict[str, str], str]:
+    def service_queries(self) -> tuple[dict[str, str], str]:
         """
         Return dynamic queries available on connection to service.
 
@@ -369,7 +360,7 @@ class SplunkDriver(DriverBase):
         return {}, "SavedSearches"
 
     @property
-    def driver_queries(self) -> Iterable[Dict[str, Any]]:
+    def driver_queries(self) -> Iterable[dict[str, Any]]:
         """
         Return dynamic queries available on connection to service.
 
@@ -438,9 +429,9 @@ class SplunkDriver(DriverBase):
             "result_count": int(query_job["resultCount"]),
         }
         status = (
-            "\r%(done_progress)03.1f%%   %(scan_count)d scanned   "
-            "%(event_count)d matched   %(result_count)d results"
-        ) % stats
+            f"\r{stats['done_progress']:03.1f}%   {stats['scan_count']:d} scanned   "
+            f"{stats['event_count']:d} matched   {stats['result_count']:d} results"
+        )
         if prev_progress == 0:
             progress = stats["done_progress"]
         else:
@@ -458,9 +449,7 @@ class SplunkDriver(DriverBase):
     def _retrieve_results(query_job, offset, page_size):
         """Retrieve the results of a job, decode and return them."""
         # Retrieving all the results by paginate
-        result_count = int(
-            query_job["resultCount"]
-        )  # Number of results this job returned
+        result_count = int(query_job["resultCount"])  # Number of results this job returned
 
         resp_rows = []
         progress_bar_paginate = tqdm(
@@ -488,7 +477,7 @@ class SplunkDriver(DriverBase):
         return resp_rows, reader
 
     @property
-    def _saved_searches(self) -> Union[pd.DataFrame, Any]:
+    def _saved_searches(self) -> pd.DataFrame | Any:
         """
         Return list of saved searches in dataframe.
 
@@ -500,7 +489,7 @@ class SplunkDriver(DriverBase):
         """
         return self._get_saved_searches() if self.connected else None
 
-    def _get_saved_searches(self) -> Union[pd.DataFrame, Any]:
+    def _get_saved_searches(self) -> pd.DataFrame | Any:
         # sourcery skip: class-extract-method
         """
         Return list of saved searches in dataframe.
@@ -528,7 +517,7 @@ class SplunkDriver(DriverBase):
         return out_df
 
     @property
-    def _fired_alerts(self) -> Union[pd.DataFrame, Any]:
+    def _fired_alerts(self) -> pd.DataFrame | Any:
         """
         Return list of fired alerts in dataframe.
 
@@ -540,7 +529,7 @@ class SplunkDriver(DriverBase):
         """
         return self._get_fired_alerts() if self.connected else None
 
-    def _get_fired_alerts(self) -> Union[pd.DataFrame, Any]:
+    def _get_fired_alerts(self) -> pd.DataFrame | Any:
         """
         Return list of fired alerts in dataframe.
 

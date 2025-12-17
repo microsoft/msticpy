@@ -5,14 +5,13 @@
 # --------------------------------------------------------------------------
 """Timespan class."""
 
-
 import contextlib
 from datetime import datetime, timedelta, timezone
 from numbers import Number
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Union
 
 import pandas as pd
-from dateutil.parser import ParserError  # type: ignore
+from dateutil.parser import ParserError
 
 from .._version import VERSION
 
@@ -27,10 +26,10 @@ class TimeSpan:
     def __init__(
         self,
         *args,
-        timespan: Optional[Union["TimeSpan", Tuple[Any, Any], Any]] = None,
-        start: Optional[Union[datetime, str]] = None,
-        end: Optional[Union[datetime, str]] = None,
-        period: Optional[Union[timedelta, str]] = None,
+        timespan: Union["TimeSpan", tuple[Any, Any], Any] | None = None,
+        start: datetime | str | None = None,
+        end: datetime | str | None = None,
+        period: timedelta | str | None = None,
     ):
         """
         Initialize Timespan.
@@ -153,7 +152,7 @@ class TimeSpan:
             timespan = args[0]  # e.g. a tuple of start, end
         if len(args) == 2:
             start = args[0]
-            if isinstance(args[1], (str, datetime)):
+            if isinstance(args[1], str | datetime):
                 end = args[1]
             elif isinstance(args[1], Number):
                 period = args[1]

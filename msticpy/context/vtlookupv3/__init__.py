@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """VirusTotal V3 Subpackage."""
+
 import contextlib
 
 from ..._version import VERSION

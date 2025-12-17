@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """VirusTotal Object browser."""
+
 import pprint
-from typing import Dict, Optional
 
 import ipywidgets as widgets
 import pandas as pd
@@ -36,7 +36,7 @@ class VTObjectBrowser(IPyDisplayMixin):
 
     _BASIC_TITLE = "VirusTotal File hash lookup"
 
-    def __init__(self, file_id: Optional[str] = None):
+    def __init__(self, file_id: str | None = None):
         """
         Initialize the VT Browser.
 
@@ -77,9 +77,7 @@ class VTObjectBrowser(IPyDisplayMixin):
         self.hb_vt_attribs = widgets.HBox(
             [self.data_sel, self.data_view], layout=_BORDER_LAYOUT
         )
-        self.layout = widgets.VBox(
-            [self.html_header, self.hb_file_lookup, self.hb_vt_attribs]
-        )
+        self.layout = widgets.VBox([self.html_header, self.hb_file_lookup, self.hb_vt_attribs])
         if file_id:
             self.btn_lookup.click()
 
@@ -110,7 +108,7 @@ class VTObjectBrowser(IPyDisplayMixin):
         self.data_sel.options = self._current_data.columns
 
 
-def _extract_summary(data: Optional[pd.DataFrame] = None) -> Dict[str, str]:
+def _extract_summary(data: pd.DataFrame | None = None) -> dict[str, str]:
     """Return summary of item."""
     def_dict = {"sha256": "", "meaningful_name": "", "names": "", "magic": ""}
     if data is None:
@@ -124,19 +122,19 @@ def _extract_summary(data: Optional[pd.DataFrame] = None) -> Dict[str, str]:
     return data[["sha256", "meaningful_name", "names", "magic"]].iloc[0].to_dict()
 
 
-def _summary_html(title: str, summary: Dict[str, str]) -> str:
+def _summary_html(title: str, summary: dict[str, str]) -> str:
     """Return HTML formatted summary."""
     return f"""
     <h3>{title}</h3>
     <table>
     <tr>
-        <td>ID</td><td>{summary.get('sha256')}</td>
+        <td>ID</td><td>{summary.get("sha256")}</td>
     </tr>
     <tr>
-        <td>Names</td><td>{summary.get('names')}</td>
+        <td>Names</td><td>{summary.get("names")}</td>
     </tr>
     <tr>
-        <td>File Type</td><td>{summary.get('magic')}</td>
+        <td>File Type</td><td>{summary.get("magic")}</td>
     </tr>
     </table>
     """

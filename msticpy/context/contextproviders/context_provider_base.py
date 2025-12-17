@@ -12,12 +12,14 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
 import re
 from abc import abstractmethod
+from collections.abc import Iterable
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import TYPE_CHECKING, Any, ClassVar, Iterable
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from typing_extensions import Self
 

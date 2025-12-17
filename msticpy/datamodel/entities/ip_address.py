@@ -4,10 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """IpAddress Entity class."""
+
 from __future__ import annotations
 
+from collections.abc import Mapping
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -101,9 +103,7 @@ class IpAddress(Entity):
     def description_str(self) -> str:
         """Return Entity Description."""
         return (
-            f"{self.Address} - {self.Location.CountryCode}"
-            if self.Location
-            else self.Address
+            f"{self.Address} - {self.Location.CountryCode}" if self.Location else self.Address
         )
 
     @property

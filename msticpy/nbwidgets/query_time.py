@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -302,16 +303,12 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
     ) -> None:
         """Process different init time parameters from kwargs."""
         if timespan:
-            self._query_end = self.origin_time = self._ensure_timezone_aware(
-                timespan.end
-            )
+            self._query_end = self.origin_time = self._ensure_timezone_aware(timespan.end)
             self._query_start = self._ensure_timezone_aware(timespan.start)
         elif start and end:
             timespan = TimeSpan(start=start, end=end)
             self._query_start = self._ensure_timezone_aware(timespan.start)
-            self._query_end = self.origin_time = self._ensure_timezone_aware(
-                timespan.end
-            )
+            self._query_end = self.origin_time = self._ensure_timezone_aware(timespan.end)
         else:
             self.before = default_before_after(before, self._time_unit)
             self.after = default_before_after(after, self._time_unit)
@@ -330,8 +327,7 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
             self.after = after
         if self.before == 0:
             self.before = before or int(
-                (self._query_end - self._query_start).total_seconds()
-                / self._time_unit.value,
+                (self._query_end - self._query_start).total_seconds() / self._time_unit.value,
             )
 
     # Utility functions

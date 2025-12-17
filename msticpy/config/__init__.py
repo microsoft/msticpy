@@ -12,6 +12,7 @@ for interactively managing settings in Jupyter notebooks.
 It use the ipywidgets package.
 
 """
+
 from ..lazy_importer import lazy_import
 
 _LAZY_IMPORTS = {

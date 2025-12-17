@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Host Entity class."""
-from typing import Any, Mapping, Optional
+
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.data_types import SplitProperty
@@ -76,16 +78,16 @@ class Host(Entity):
             kw arguments.
 
         """
-        self.DnsDomain: Optional[str] = None
-        self.NTDomain: Optional[str] = None
-        self.HostName: Optional[str] = None
-        self.NetBiosName: Optional[str] = None
-        self.AzureID: Optional[str] = None
-        self.OMSAgentID: Optional[str] = None
+        self.DnsDomain: str | None = None
+        self.NTDomain: str | None = None
+        self.HostName: str | None = None
+        self.NetBiosName: str | None = None
+        self.AzureID: str | None = None
+        self.OMSAgentID: str | None = None
         self.OSFamily: OSFamily = OSFamily.Windows
-        self.OSVersion: Optional[str] = None
+        self.OSVersion: str | None = None
         self.IsDomainJoined: bool = False
-        self.DeviceId: Optional[str] = None
+        self.DeviceId: str | None = None
 
         super().__init__(src_entity=src_entity, **kwargs)
         self._computer = None
@@ -93,19 +95,19 @@ class Host(Entity):
             self._create_from_event(src_event)
 
     @property
-    def computer(self) -> Optional[str]:
+    def computer(self) -> str | None:
         """Return computer from source event."""
         return self._computer if self._computer is not None else self.fqdn
 
     @property
-    def fqdn(self) -> Optional[str]:
+    def fqdn(self) -> str | None:
         """Construct FQDN from host + dns."""
         if self.DnsDomain:
             return f"{self.HostName}.{self.DnsDomain}"
         return self.HostName
 
     @property
-    def FullName(self) -> Optional[str]:  # noqa: N802
+    def FullName(self) -> str | None:  # noqa: N802
         """Return the full name of the host - either FQDN or Netbiosname."""  # noqa: N802
         if self.DnsDomain:
             return f"{self.HostName or self.NetBiosName}.{self.DnsDomain}"

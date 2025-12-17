@@ -4,8 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """Timeline base plot."""
+
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any
 
 import attr
 import pandas as pd
@@ -35,7 +37,6 @@ from .timeline_common import (
 
 # pylint: disable=unused-import
 # Importing to activate pandas accessors
-from .timeline_pd_accessor import TimeLineAccessor  # noqa F401
 from .timeline_values import display_timeline_values  # noqa F401
 
 # pylint: enable=unused-import
@@ -55,34 +56,34 @@ class PlotParams:
     """Plot params for time_duration."""
 
     time_column: str = "TimeGenerated"
-    height: Optional[int] = None
+    height: int | None = None
     width: int = 900
     title: str = "Events"
     yaxis: bool = True
     range_tool: bool = True
-    group_by: Optional[str] = None
-    legend: Optional[str] = None
+    group_by: str | None = None
+    legend: str | None = None
     xgrid: bool = True
     ygrid: bool = False
     hide: bool = False
     color: str = "navy"
     size: int = 10
     ylabel_cols: Iterable[str] = attr.Factory(list)
-    ref_event: Optional[Any] = None
-    ref_time: Optional[datetime] = None
-    ref_events: Optional[pd.DataFrame] = None
-    ref_col: Optional[str] = None
-    ref_time_col: Optional[str] = None
-    ref_times: Optional[List[Tuple[datetime, str]]] = None
+    ref_event: Any | None = None
+    ref_time: datetime | None = None
+    ref_events: pd.DataFrame | None = None
+    ref_col: str | None = None
+    ref_time_col: str | None = None
+    ref_times: list[tuple[datetime, str]] | None = None
     ref_label: str = "Ref time"
-    source_columns: List[str] = []
+    source_columns: list[str] = []
     alert: Any = None
-    overlay_color: Optional[str] = None
-    overlay_data: Optional[pd.DataFrame] = None
+    overlay_color: str | None = None
+    overlay_data: pd.DataFrame | None = None
     overlay_columns: Iterable[str] = attr.Factory(list)
 
     @classmethod
-    def field_list(cls) -> List[str]:
+    def field_list(cls) -> list[str]:
         """Return field names as a list."""
         return list(attr.fields_dict(cls).keys())
 
@@ -94,9 +95,9 @@ class PlotParams:
 
 @export
 def display_timeline(
-    data: Union[pd.DataFrame, dict],
+    data: pd.DataFrame | dict,
     time_column: str = "TimeGenerated",
-    source_columns: Optional[List[str]] = None,
+    source_columns: list[str] | None = None,
     **kwargs,
 ) -> LayoutDOM:
     """
@@ -194,9 +195,7 @@ def display_timeline(
     """
     # Get args
     check_kwargs(kwargs, PlotParams.field_list())
-    param = PlotParams(
-        time_column=time_column, source_columns=source_columns or [], **kwargs
-    )
+    param = PlotParams(time_column=time_column, source_columns=source_columns or [], **kwargs)
     param.ref_time, param.ref_label = get_ref_event_time(**kwargs)
 
     if isinstance(data, pd.DataFrame):
@@ -238,9 +237,7 @@ def display_timeline(
     )
 
 
-def _display_timeline_dict(
-    data: dict, param: PlotParams
-) -> LayoutDOM:  # noqa: C901, MC0001
+def _display_timeline_dict(data: dict, param: PlotParams) -> LayoutDOM:  # noqa: C901
     """
     Display a timeline of events.
 
@@ -296,14 +293,14 @@ def _display_timeline_dict(
         width=param.width,
     )
 
-    set_axes_and_grids(data, plot, param.yaxis, param.ygrid, param.xgrid)  # type: ignore
+    set_axes_and_grids(data, plot, param.yaxis, param.ygrid, param.xgrid)
 
     # Create plot bar to act as as range selector
     rng_select = create_range_tool(
-        data=data,  # type: ignore
+        data=data,
         min_time=min_time,
         max_time=max_time,
-        plot_range=plot.x_range,  # type: ignore[arg-type]
+        plot_range=plot.x_range,
         width=param.width,
         height=height,
     )
@@ -314,7 +311,7 @@ def _display_timeline_dict(
     _plot_series(data, plot, param.legend)
 
     if param.ref_time is not None:
-        plot_ref_line(plot, param.ref_time, param.ref_label, len(data))  # type: ignore
+        plot_ref_line(plot, param.ref_time, param.ref_label, len(data))
     elif param.ref_events is not None or param.ref_times is not None:
         plot_ref_events(
             plot=plot,
@@ -342,7 +339,7 @@ def _plot_series(data, plot, legend_pos):
     legend_items = []
     for ser_name, series_def in data.items():
         size_param = series_def.get("size", 10)
-        glyph_size: Union[pd.Series, int]
+        glyph_size: pd.Series | int
         if isinstance(size_param, str):
             if size_param in series_def["data"].columns:
                 glyph_size = series_def["data"][size_param]
@@ -402,7 +399,7 @@ def _unpack_data_series_dict(data, param: PlotParams):
     """Unpack each series from the data series dictionary."""
     # Process the input dictionary
     # Take each item that is passed and fill in blanks and add a y_index
-    tool_tip_columns: Set[str] = set()
+    tool_tip_columns: set[str] = set()
     min_time = None
     max_time = None
     y_index = 0
@@ -413,7 +410,7 @@ def _unpack_data_series_dict(data, param: PlotParams):
     colors, palette_size = get_color_palette(series_count)
 
     for ser_name, series_def in data.items():
-        data_columns: Set[str] = set()
+        data_columns: set[str] = set()
         series_data = series_def["data"]
 
         if (
@@ -467,15 +464,13 @@ def _unpack_data_series_dict(data, param: PlotParams):
 # pylint: enable=too-many-locals
 
 
-def _create_dict_from_grouping(
-    data, source_columns, time_column, group_by, color, size=10
-):
+def _create_dict_from_grouping(data, source_columns, time_column, group_by, color, size=10):
     """Return data groupings as a dictionary."""
     data_columns = get_def_source_cols(data, source_columns)
     # If the time column not explicitly specified in source_columns, add it
     data_columns.add(time_column)
 
-    series_dict: Dict[str, Dict] = {}
+    series_dict: dict[str, dict] = {}
     # create group frame so that we can color each group separately
     if group_by:
         data_columns.add(group_by)

@@ -4,11 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Local Velociraptor Data Driver class."""
+
 import logging
 from collections import defaultdict
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import pandas as pd
 from tqdm.auto import tqdm
@@ -25,8 +26,7 @@ __author__ = "ianhelle"
 logger = logging.getLogger(__name__)
 
 _VELOCIRATOR_DOC_URL = (
-    "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
-    "DataProv-Velociraptor.html"
+    "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProv-Velociraptor.html"
 )
 
 
@@ -35,7 +35,7 @@ _VELOCIRATOR_DOC_URL = (
 class VelociraptorLogDriver(DriverBase):
     """Velociraptor driver class to ingest log data."""
 
-    def __init__(self, connection_str: Optional[str] = None, **kwargs):
+    def __init__(self, connection_str: str | None = None, **kwargs):
         """
         Instantiate Velociraptor driver and optionally connect.
 
@@ -54,7 +54,7 @@ class VelociraptorLogDriver(DriverBase):
             logger.setLevel(logging.DEBUG)
         super().__init__()
 
-        self._paths: List[str] = ["."]
+        self._paths: list[str] = ["."]
         # If data paths specified, use these
         # from kwargs or settings
         if data_paths := kwargs.get("data_paths"):
@@ -68,15 +68,15 @@ class VelociraptorLogDriver(DriverBase):
                 self._paths = prov_settings.args.get("data_paths", []) or self._paths
                 logger.info("data paths read from config %s", str(self._paths))
 
-        self.data_files: Dict[str, List[Path]] = {}
-        self._schema: Dict[str, Any] = {}
-        self._query_map: Dict[str, List[str]]
+        self.data_files: dict[str, list[Path]] = {}
+        self._schema: dict[str, Any] = {}
+        self._query_map: dict[str, list[str]]
         self._progress = kwargs.pop("progress", True)
         self._loaded = True
         self.has_driver_queries = True
         logger.info("data files to read %s", ",".join(self.data_files))
 
-    def connect(self, connection_str: Optional[str] = None, **kwargs):
+    def connect(self, connection_str: str | None = None, **kwargs):
         """
         Connect to data source.
 
@@ -91,7 +91,7 @@ class VelociraptorLogDriver(DriverBase):
         self._connected = True
 
     @property
-    def schema(self) -> Dict[str, Dict]:
+    def schema(self) -> dict[str, dict]:
         """
         Return current data schema of connection.
 
@@ -106,9 +106,7 @@ class VelociraptorLogDriver(DriverBase):
                 self.connect()
             # read the first row of each file to get the schema
             iter_data_files = (
-                tqdm(self.data_files.items())
-                if self._progress
-                else self.data_files.items()
+                tqdm(self.data_files.items()) if self._progress else self.data_files.items()
             )
             for table, files in iter_data_files:
                 if not files:
@@ -123,8 +121,8 @@ class VelociraptorLogDriver(DriverBase):
         return self._schema
 
     def query(
-        self, query: str, query_source: Optional[QuerySource] = None, **kwargs
-    ) -> Union[pd.DataFrame, Any]:
+        self, query: str, query_source: QuerySource | None = None, **kwargs
+    ) -> pd.DataFrame | Any:
         """
         Execute query string and return DataFrame of results.
 
@@ -154,7 +152,7 @@ class VelociraptorLogDriver(DriverBase):
             )
         return self._cached_query(query)
 
-    @lru_cache(maxsize=256)
+    @lru_cache(maxsize=256)  # noqa: B019
     def _cached_query(self, query: str) -> pd.DataFrame:
         iter_data_files = (
             tqdm(self.data_files[query]) if self._progress else self.data_files[query]
@@ -170,7 +168,7 @@ class VelociraptorLogDriver(DriverBase):
         return self.query(query, **kwargs), "OK"
 
     @property
-    def driver_queries(self) -> List[Dict[str, Any]]:
+    def driver_queries(self) -> list[dict[str, Any]]:
         """
         Return dynamic queries available on connection to data.
 
@@ -200,18 +198,15 @@ class VelociraptorLogDriver(DriverBase):
             ]
         return []
 
-    def _get_logfile_paths(self) -> Dict[str, List[Path]]:
+    def _get_logfile_paths(self) -> dict[str, list[Path]]:
         """Read files in data paths."""
-        data_files: Dict[str, List[Path]] = defaultdict(list)
+        data_files: dict[str, list[Path]] = defaultdict(list)
 
         for input_path in (Path(path_str) for path_str in self._paths):
-            files = {
-                file.relative_to(input_path): file
-                for file in input_path.rglob("*.json")
-            }
+            files = {file.relative_to(input_path): file for file in input_path.rglob("*.json")}
 
             file_names = [valid_pyname(str(file.with_suffix(""))) for file in files]
-            path_files = dict(zip(file_names, files.values()))
+            path_files = dict(zip(file_names, files.values(), strict=False))
             for file_name, file_path in path_files.items():
                 data_files[file_name].append(file_path)
 

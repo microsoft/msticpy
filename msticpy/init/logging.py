@@ -4,10 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """Logging global config."""
+
 import logging
 import os
 import sys
-from typing import NamedTuple, Optional, Union
+from typing import NamedTuple
 
 from .._version import VERSION
 from ..common.pkg_config import get_config
@@ -22,11 +23,11 @@ _MP_LOG_LEVEL_ENV = "MSTICPYLOGLEVEL"
 class LoggingConfig(NamedTuple):
     """Logging configuration tuple."""
 
-    log_file: Optional[str] = None
+    log_file: str | None = None
     log_level: int = logging.WARNING
 
 
-def set_logging_level(log_level: Union[int, str]):
+def set_logging_level(log_level: int | str):
     """
     Set global logging level.
 
