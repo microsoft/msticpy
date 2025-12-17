@@ -243,7 +243,7 @@ def display_timeseries_anomalies(  # noqa: PLR0915
         plot.scatter(marker="circle_x", **arg_dict)
 
     # interactive legend to hide single/multiple plots if selected
-    plot.legend.location = legend_pos
+    plot.legend.location = legend_pos  # type: ignore[assignment]
     plot.legend.click_policy = "hide"
 
     # Create plot for the score column to act as as range selector

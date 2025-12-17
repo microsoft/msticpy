@@ -370,7 +370,7 @@ class QuerySource:
                 # unit was specified
                 units = RD_UNIT_MAP.get(round_item or "d", "days")
                 # expand dict to args for relativedelta
-                result_date = result_date + relativedelta(**({units: +1}))
+                result_date = result_date + relativedelta(**({units: +1}))  # type: ignore[arg-type]
         return result_date
 
     @staticmethod
@@ -387,7 +387,7 @@ class QuerySource:
         # in the time range expression
         unit_param = RD_UNIT_MAP.get(tm_unit, "days")
         # expand dict to args for relativedelta
-        return relativedelta(**({unit_param: tm_val}))
+        return relativedelta(**({unit_param: tm_val}))  # type: ignore[arg-type,return-value]
 
     @staticmethod
     def _parse_param_list(param_value: str | list) -> list[Any]:

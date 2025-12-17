@@ -739,7 +739,7 @@ Alternatively, you can pass the account_id and api_key to the GeoLiteLookup clas
                 return True
             # Create a basic auth object for the request
             basic_auth = httpx.BasicAuth(
-                username=self._account_id,
+                username=self._account_id,  # type: ignore[arg-type]
                 password=self._api_key,  # type: ignore[arg-type]
             )
             # Stream download and write to file

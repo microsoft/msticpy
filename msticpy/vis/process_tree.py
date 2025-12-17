@@ -315,8 +315,8 @@ def plot_process_tree(
 
     # Plot options
     _set_plot_option_defaults(b_plot)
-    b_plot.xaxis.ticker = sorted(levels)
-    b_plot.xgrid.ticker = sorted(levels)
+    b_plot.xaxis.ticker = sorted(levels)  # type: ignore[assignment]
+    b_plot.xgrid.ticker = sorted(levels)  # type: ignore[assignment]
     b_plot.hover.renderers = [rect_plot]  # only hover element boxes
 
     # Selection callback

@@ -28,14 +28,12 @@ except ImportError:
     from distutils.version import LooseVersion as Version  # type: ignore[assignment]
 
     try:
-        from importlib_metadata import (
-            PackageNotFoundError,
-        )
+        from importlib_metadata import PackageNotFoundError  # type: ignore[assignment]
         from importlib_metadata import version as get_version
     except ImportError:
         # pylint: disable=invalid-name
         get_version = None  # type: ignore[assignment]
-        PackageNotFoundError = Exception
+        PackageNotFoundError = Exception  # type: ignore[assignment,misc]
 
 from .._version import VERSION
 from ..common.pkg_config import _HOME_PATH, get_config, refresh_config

@@ -85,7 +85,7 @@ def extract_process_tree(
 
 def _clean_proc_data(
     procs: pd.DataFrame,
-    schema: "ProcSchema",  # type: ignore  # noqa: F821
+    schema: ProcSchema,
 ) -> tuple[pd.DataFrame, ProcSchema]:
     """Return cleaned process data."""
     procs = ensure_df_datetimes(procs, columns=schema.time_stamp)
@@ -126,7 +126,7 @@ def _clean_proc_data(
 
 def _num_cols_to_str(
     procs_cln: pd.DataFrame,
-    schema: "ProcSchema",  # type: ignore  # noqa: F821
+    schema: ProcSchema,
 ) -> pd.DataFrame:
     """
     Change any numeric columns in our core schema to strings.
@@ -157,7 +157,7 @@ def _num_cols_to_str(
 
 def _merge_parent_by_time(
     procs: pd.DataFrame,
-    schema: "ProcSchema",  # type: ignore  # noqa: F821
+    schema: ProcSchema,
 ) -> pd.DataFrame:
     """Merge procs with parents using merge_asof."""
     parent_procs = (
@@ -201,7 +201,7 @@ def _merge_parent_by_time(
 
 def _extract_inferred_parents(
     merged_procs: pd.DataFrame,
-    schema: "ProcSchema",  # type: ignore  # noqa: F821
+    schema: ProcSchema,
 ) -> pd.DataFrame:
     """Find any inferred parents and creates rows for them."""
     tz_aware = merged_procs.iloc[0][schema.time_stamp].tz

@@ -135,7 +135,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         )
 
         if file is None:
-            self.current_file = current_config_path()
+            self.current_file = current_config_path()  # type: ignore[assignment]
             if self.current_file is None:
                 self.current_file = self._DEF_FILENAME
         else:

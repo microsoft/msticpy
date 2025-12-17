@@ -181,7 +181,7 @@ class Pivot:
     def _get_def_pivot_reg():
         try:
             # pylint: disable=import-outside-toplevel
-            from importlib.resources import (  # type: ignore[attr-defined]  # noqa: PLC0415
+            from importlib.resources import (  # noqa: PLC0415
                 files,
             )
 

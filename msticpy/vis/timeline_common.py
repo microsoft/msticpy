@@ -412,9 +412,9 @@ def get_tick_formatter() -> DatetimeTickFormatter:
     """Return tick formatting for different zoom levels."""
     # '%H:%M:%S.%3Nms
     tick_format = DatetimeTickFormatter()
-    tick_format.days = "%m-%d %H:%M"
-    tick_format.hours = "%H:%M:%S"
-    tick_format.minutes = "%H:%M:%S"
-    tick_format.seconds = "%H:%M:%S"
-    tick_format.milliseconds = "%H:%M:%S.%3N"
+    tick_format.days = "%m-%d %H:%M"  # type: ignore[assignment]
+    tick_format.hours = "%H:%M:%S"  # type: ignore[assignment]
+    tick_format.minutes = "%H:%M:%S"  # type: ignore[assignment]
+    tick_format.seconds = "%H:%M:%S"  # type: ignore[assignment]
+    tick_format.milliseconds = "%H:%M:%S.%3N"  # type: ignore[assignment]
     return tick_format

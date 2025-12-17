@@ -520,10 +520,10 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
             "fill_color": "node_color",
             "fill_alpha": 0.5,
         }
-    graph_renderer.node_renderer.glyph = Circle(**circle_parms)
+    graph_renderer.node_renderer.glyph = Circle(**circle_parms)  # type: ignore[attr-defined]
 
     # pylint: disable=no-member
-    plot.renderers.append(graph_renderer)
+    plot.renderers.append(graph_renderer)  # type: ignore[attr-defined]
 
     # Create labels
     label_layout = graph_renderer.layout_provider.graph_layout  # type: ignore[attr-defined]

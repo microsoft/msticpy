@@ -171,7 +171,7 @@ class Entity(ABC, Node):
                 if val in ENTITY_ENUMS.values():
                     self[attr] = val[src_entity[attr]]
                 elif val in ENTITY_ENUMS:
-                    self[attr] = ENTITY_ENUMS[val][src_entity[attr]]
+                    self[attr] = ENTITY_ENUMS[val][src_entity[attr]]  # type: ignore[index]
                     continue
             except KeyError:
                 # Catch key errors from invalid enum values
