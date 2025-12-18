@@ -7,6 +7,7 @@
 
 import os
 import sys
+import tempfile
 from contextlib import contextmanager, suppress
 from os import chdir, getcwd
 from pathlib import Path
@@ -69,9 +70,19 @@ def custom_mp_config(
     current_path = os.environ.get(pkg_config._CONFIG_ENV_VAR)
     if path_check and not Path(mp_path).is_file():
         raise FileNotFoundError(f"Setting MSTICPYCONFIG to non-existent file {mp_path}")
-    _lock_file_path = "./.mp_settings.lock"
+
+    # Use temp directory for lock file with Python version to isolate different builds
+    # Each Python version gets its own lock, but all test processes within that version share it
+    # Add GitHub run ID to isolate different CI workflow runs
+    python_version = f"{sys.version_info.major}_{sys.version_info.minor}"
+    run_id = os.environ.get("GITHUB_RUN_ID", "local")
+    _lock_file_path = (
+        Path(tempfile.gettempdir())
+        / f"msticpy_test_settings_{run_id}_{python_version}.lock"
+    )
+
     try:
-        with FileLock(_lock_file_path):
+        with FileLock(_lock_file_path, timeout=30):
             try:
                 # We need to lock the settings since these are global
                 # Otherwise the tests interfere with each other.
@@ -85,9 +96,9 @@ def custom_mp_config(
                     os.environ[pkg_config._CONFIG_ENV_VAR] = current_path
                 pkg_config.refresh_config()
     finally:
-        if Path(_lock_file_path).is_file():
+        if _lock_file_path.is_file():
             with suppress(Exception):
-                Path(_lock_file_path).unlink()
+                _lock_file_path.unlink()
 
 
 @contextmanager
@@ -95,16 +106,23 @@ def change_directory(path):
     """Change the current working directory temporarily."""
     path = Path(path).expanduser()
     prev_path = Path(getcwd())
-    cwd_lock = "./.mp_test_cwd.lock"
+    # Use temp directory for lock file with Python version to isolate different builds
+    # Each Python version gets its own lock, but all test processes within that version share it
+    # Add GitHub run ID to isolate different CI workflow runs
+    python_version = f"{sys.version_info.major}_{sys.version_info.minor}"
+    run_id = os.environ.get("GITHUB_RUN_ID", "local")
+    cwd_lock = (
+        Path(tempfile.gettempdir()) / f"msticpy_test_cwd_{run_id}_{python_version}.lock"
+    )
     try:
-        with FileLock(cwd_lock):
+        with FileLock(cwd_lock, timeout=30):
             chdir(str(path))
             yield
     finally:
         chdir(str(prev_path))
-        if Path(cwd_lock).is_file():
+        if cwd_lock.is_file():
             with suppress(Exception):
-                Path(cwd_lock).unlink()
+                cwd_lock.unlink()
 
 
 def exec_notebook(

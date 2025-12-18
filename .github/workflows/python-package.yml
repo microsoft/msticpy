@@ -30,6 +30,11 @@ jobs:
         run: echo "$JOB_CONTEXT"
       # end print details
       - uses: actions/checkout@v4
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo rm -rf /usr/share/locale/*
+          sudo rm -rf /usr/share/i18n/*
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -101,6 +106,11 @@ jobs:
         python-version: ["3.12"]
     steps:
       - uses: actions/checkout@v4
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo rm -rf /usr/share/locale/*
+          sudo rm -rf /usr/share/i18n/*
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -133,6 +143,11 @@ jobs:
         python-version: ["3.12"]
     steps:
       - uses: actions/checkout@v4
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo rm -rf /usr/share/locale/*
+          sudo rm -rf /usr/share/i18n/*
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:

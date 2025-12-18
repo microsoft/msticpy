@@ -211,9 +211,7 @@ class QuerySource:
         """
         return self.metadata["data_families"]
 
-    def create_query(
-        self, formatters: dict[str, Callable] = None, **kwargs
-    ) -> str:  # noqa: MC0001
+    def create_query(self, formatters: dict[str, Callable] = None, **kwargs) -> str:
         """
         Return query with values from kwargs and defaults substituted.
 
