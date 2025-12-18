@@ -55,7 +55,7 @@ EXTRAS = {
     "sql2kql": ["mo-sql-parsing>=11, <12.0.0"],
     "riskiq": ["passivetotal>=2.5.3", "requests>=2.31.0"],
     "panel": [],  # now in core install
-    "openobserve": ["python_openobserve>=0.4.1; python_version >= "3.10"],
+    "openobserve": ["python_openobserve>=0.4.1; python_version >= '3.10'"],
 }
 extras_all = [
     extra for name, extras in EXTRAS.items() for extra in extras if name != "dev"

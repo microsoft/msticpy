@@ -4,8 +4,10 @@
 #  license information.
 #  --------------------------------------------------------------------------
 """OpenObserve Driver class."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any
 
 import httpx
 import pandas as pd
@@ -48,7 +50,7 @@ class OpenObserveDriver(DriverBase):
 
     _DEF_TIMEOUT = 300
     _OPENOBSERVE_REQD_ARGS = ["connection_str", "user", "password", "verify"]
-    _CONNECT_DEFAULTS: Dict[str, Any] = {
+    _CONNECT_DEFAULTS: dict[str, Any] = {
         "connection_str": "https://localhost:5080",
         "verify": True,
         "timeout": _DEF_TIMEOUT,
@@ -68,13 +70,13 @@ class OpenObserveDriver(DriverBase):
         )
         self.timeout = self._DEF_TIMEOUT
 
-    def connect(self, connection_str: str = None, **kwargs):
+    def connect(self, connection_str: str | None = None, **kwargs):
         """
         Connect to OpenObserve via python-openobserve.
 
         Parameters
         ----------
-        connection_str :
+        connection_str : str | None
             OpenObserve API url endpoint. default: https://localhost:5080
 
         Other Parameters
@@ -129,10 +131,10 @@ class OpenObserveDriver(DriverBase):
         print(f"connected with user {arg_dict['user']}")
 
     def _get_connect_args(
-        self, connection_str: Optional[str], **kwargs
-    ) -> Dict[str, Any]:
+        self, connection_str: str | None = None, **kwargs
+    ) -> dict[str, Any]:
         """Check and consolidate connection parameters."""
-        cs_dict: Dict[str, Any] = self._CONNECT_DEFAULTS
+        cs_dict: dict[str, Any] = self._CONNECT_DEFAULTS
         # Fetch any config settings
         settings, cs_is_instance_name = self._get_openobserve_settings(connection_str)
         cs_dict.update(settings)
@@ -160,8 +162,8 @@ class OpenObserveDriver(DriverBase):
 
     # pylint: disable=broad-except
     def _query(
-        self, query: str, query_source: QuerySource = None, **kwargs
-    ) -> Union[pd.DataFrame, Any]:
+        self, query: str, query_source: QuerySource | None = None, **kwargs
+    ) -> pd.DataFrame | Any:
         """
         Execute OpenObserve query and retrieve results.
 
@@ -169,7 +171,7 @@ class OpenObserveDriver(DriverBase):
         ----------
         query : str
             OpenObserve query to execute
-        query_source : QuerySource
+        query_source : QuerySource | None
             Not used.
 
         Other Parameters
@@ -199,7 +201,7 @@ class OpenObserveDriver(DriverBase):
 
         Returns
         -------
-        Union[pd.DataFrame, Any]
+        pd.DataFrame | Any
             Query results in a dataframe.
             or query response if an error.
 
@@ -245,7 +247,7 @@ class OpenObserveDriver(DriverBase):
         return searchresults
 
     @staticmethod
-    def _raise_qry_except(err: Exception, mssg: str, action: Optional[str] = None):
+    def _raise_qry_except(err: Exception, mssg: str, action: str | None = None):
         if isinstance(err, httpx.HTTPError):
             raise MsticpyConnectionError(
                 f"Communication error connecting to OpenObserve: {err}",
@@ -283,7 +285,7 @@ class OpenObserveDriver(DriverBase):
     # pylint: disable=too-many-branches
     def query(  # noqa: MC0001
         self, query: str, query_source: QuerySource = None, **kwargs
-    ) -> Union[pd.DataFrame, Any]:
+    ) -> pd.DataFrame | Any:
         """
         Execute OpenObserve query and retrieve results.
 
@@ -329,7 +331,7 @@ class OpenObserveDriver(DriverBase):
 
         Returns
         -------
-        Union[pd.DataFrame, Any]
+        pd.DataFrame | Any
             Query results in a dataframe.
             or query response if an error.
 
@@ -377,7 +379,7 @@ class OpenObserveDriver(DriverBase):
 
         return dataframe_res.copy()
 
-    def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
+    def query_with_results(self, query: str, **kwargs) -> tuple[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
 
@@ -388,7 +390,7 @@ class OpenObserveDriver(DriverBase):
 
         Returns
         -------
-        Union[pd.DataFrame,Any]
+        tuple[pd.DataFrame, Any]
             A DataFrame (if successful) or
             the underlying provider result if an error occurs.
 
@@ -408,8 +410,8 @@ class OpenObserveDriver(DriverBase):
     # Read values from configuration
     @staticmethod
     def _get_openobserve_settings(
-        instance_name: str = None,
-    ) -> Tuple[Dict[str, Any], bool]:
+        instance_name: str | None = None,
+    ) -> tuple[dict[str, Any], bool]:
         """Get config from msticpyconfig."""
         data_provs = get_provider_settings(config_section="DataProviders")
         sl_settings = {
@@ -417,7 +419,7 @@ class OpenObserveDriver(DriverBase):
             for name, settings in data_provs.items()
             if name.startswith("OpenObserve")
         }
-        openobserve_settings: Optional[ProviderSettings]
+        openobserve_settings: ProviderSettings | None
         # Check if the connection string is an instance name
         openobserve_settings = sl_settings.get(f"OpenObserve-{instance_name}")
         if openobserve_settings:

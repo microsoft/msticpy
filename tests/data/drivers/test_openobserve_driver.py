@@ -19,7 +19,14 @@ from msticpy.common.exceptions import (
     MsticpyUserConfigError,
     MsticpyUserError,
 )
-from msticpy.data.drivers.openobserve_driver import OpenObserveDriver
+
+_OPEN_OBSERVE_NOT_LOADED = True
+try:
+    from msticpy.data.drivers.openobserve_driver import OpenObserveDriver
+
+    _OPEN_OBSERVE_NOT_LOADED = False
+except ImportError:
+    pass
 
 UTC = timezone.utc
 OO_HOST = OO_USER = OO_PASS = "MOCK_INPUT"
@@ -64,6 +71,7 @@ def mock_post(*args, **kwargs):
         )
 
 
+@pytest.mark.skipif(_OPEN_OBSERVE_NOT_LOADED, reason="OpenObserve driver not installed")
 def test_openobserve_connect_no_params():
     """Check failure with no args."""
     openobserve_driver = OpenObserveDriver()
@@ -75,6 +83,7 @@ def test_openobserve_connect_no_params():
     check.is_in("no OpenObserve connection parameters", mp_ex.value.args)
 
 
+@pytest.mark.skipif(_OPEN_OBSERVE_NOT_LOADED, reason="OpenObserve driver not installed")
 def test_openobserve_connect_req_params():
     """Check load/connect success with required params."""
     openobserve_driver = OpenObserveDriver()
@@ -88,6 +97,7 @@ def test_openobserve_connect_req_params():
     check.is_true(openobserve_driver.connected)
 
 
+@pytest.mark.skipif(_OPEN_OBSERVE_NOT_LOADED, reason="OpenObserve driver not installed")
 def test_openobserve_connect_errors():
     """Check connect failure errors."""
     openobserve_driver = OpenObserveDriver()
@@ -117,6 +127,7 @@ def test_openobserve_connect_errors():
         openobserve_driver.query('select * from "default"', days=1)
 
 
+@pytest.mark.skipif(_OPEN_OBSERVE_NOT_LOADED, reason="OpenObserve driver not installed")
 def test_openobserve_query_no_connect():
     """Check query fails when not connected true."""
     openobserve_driver = OpenObserveDriver()
@@ -127,6 +138,7 @@ def test_openobserve_query_no_connect():
     check.is_in("not connected to OpenObserve.", mp_ex.value.args)
 
 
+@pytest.mark.skipif(_OPEN_OBSERVE_NOT_LOADED, reason="OpenObserve driver not installed")
 @patch("requests.post", side_effect=mock_post)
 def test_openobserve_query(mock_post):
     """Check queries with different outcomes."""
@@ -142,6 +154,7 @@ def test_openobserve_query(mock_post):
     check.equal(len(df_result), 1)
 
 
+@pytest.mark.skipif(_OPEN_OBSERVE_NOT_LOADED, reason="OpenObserve driver not installed")
 @patch("requests.post", side_effect=mock_post)
 def test_openobserve_query_params(mock_post):
     """Check queries with different parameters."""
@@ -157,6 +170,7 @@ def test_openobserve_query_params(mock_post):
     check.is_in("Missing parameter.", mp_ex.value.args)
 
 
+@pytest.mark.skipif(_OPEN_OBSERVE_NOT_LOADED, reason="OpenObserve driver not installed")
 @patch("requests.post", side_effect=mock_post)
 def test_openobserve_query_export(mock_post, tmpdir):
     """Check queries with different parameters."""
