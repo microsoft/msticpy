@@ -214,6 +214,12 @@ DataProviders:
       ClientId: str(required=False, format=uuid)
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       ClientSecret: *cred_key_opt
+  Openobserve:
+    Args:
+      connection_str: str()
+      user: str()
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      password: *cred_key
 msticpy:
   FriendlyExceptions: bool(default=True, required=False)
   QueryDefinitions: list(required=False)
