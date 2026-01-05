@@ -21,7 +21,7 @@ deprecated>=1.2.4
 dnspython>=2.0.0, <3.0.0
 folium>=0.9.0
 geoip2>=2.9.0
-python_openobserve>=0.4.1; python_version >= "3.10"
+python_openobserve>=0.4.2; python_version >= "3.10"
 httpx>=0.23.0, <1.0.0
 html5lib
 ipython>=7.23.1
