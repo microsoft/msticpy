@@ -4,6 +4,7 @@
 #  license information.
 #  --------------------------------------------------------------------------
 """OpenObserve Driver class."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -65,9 +66,7 @@ class OpenObserveDriver(DriverBase):
         self._connected = False
         self._debug = kwargs.get("debug", False)
         self.set_driver_property(DriverProps.PUBLIC_ATTRS, {"client": self.service})
-        self.set_driver_property(
-            DriverProps.FORMATTERS, {"datetime": self._format_datetime}
-        )
+        self.set_driver_property(DriverProps.FORMATTERS, {"datetime": self._format_datetime})
         self.timeout = self._DEF_TIMEOUT
 
     def connect(self, connection_str: str | None = None, **kwargs):
@@ -130,9 +129,7 @@ class OpenObserveDriver(DriverBase):
         self._connected = True
         print(f"connected with user {arg_dict['user']}")
 
-    def _get_connect_args(
-        self, connection_str: str | None = None, **kwargs
-    ) -> dict[str, Any]:
+    def _get_connect_args(self, connection_str: str | None = None, **kwargs) -> dict[str, Any]:
         """Check and consolidate connection parameters."""
         cs_dict: dict[str, Any] = self._CONNECT_DEFAULTS
         # Fetch any config settings
@@ -216,11 +213,7 @@ class OpenObserveDriver(DriverBase):
 
         start_time, end_time = self._get_time_params(**kwargs)
 
-        if (
-            "limit" in kwargs
-            and kwargs["limit"] <= 10000
-            and " limit " not in query.lower()
-        ):
+        if "limit" in kwargs and kwargs["limit"] <= 10000 and " limit " not in query.lower():
             limit = kwargs["limit"]
             query = f"{query} limit {limit}"
         else:
@@ -283,8 +276,8 @@ class OpenObserveDriver(DriverBase):
         return self._format_datetime(start), self._format_datetime(end)
 
     # pylint: disable=too-many-branches
-    def query(  # noqa: MC0001
-        self, query: str, query_source: QuerySource = None, **kwargs
+    def query(
+        self, query: str, query_source: QuerySource | None = None, **kwargs
     ) -> pd.DataFrame | Any:
         """
         Execute OpenObserve query and retrieve results.
@@ -293,7 +286,7 @@ class OpenObserveDriver(DriverBase):
         ----------
         query : str
             OpenObserve query to execute
-        query_source : QuerySource
+        query_source : QuerySource | None
             Not used.
 
         Other Parameters
@@ -336,6 +329,8 @@ class OpenObserveDriver(DriverBase):
             or query response if an error.
 
         """
+        del query_source
+
         limit = kwargs.get("limit", None)
         verbosity = kwargs.get("verbosity", 0)
         exporting = kwargs.pop("exporting", False)
