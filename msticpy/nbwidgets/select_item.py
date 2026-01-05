@@ -4,8 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
+
 import random
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from collections.abc import Callable
+from typing import Any
 
 import ipywidgets as widgets
 from deprecated.sphinx import deprecated
@@ -34,8 +36,8 @@ class SelectItem(IPyDisplayMixin):
     def __init__(
         self,
         description: str = "Select an item",
-        options: Union[List[str], Dict[str, Any]] = None,
-        action: Callable[..., Optional[Tuple]] = None,
+        options: list[str] | dict[str, Any] | None = None,
+        action: Callable[..., tuple | None] | None = None,
         value: str = "",
         **kwargs,
     ):
@@ -130,7 +132,7 @@ class SelectItem(IPyDisplayMixin):
         # setup to use updatable display objects
         rand_id = random.randint(0, 999999)  # nosec
         self._output_id = f"{self.__class__.__name__}_{rand_id}"
-        self._disp_elems: List[Any] = []
+        self._disp_elems: list[Any] = []
 
         if auto_display:
             self.display()
@@ -182,9 +184,7 @@ class SelectItem(IPyDisplayMixin):
             return
         self._wgt_select.options = self._get_filtered_options(change["new"])
 
-    def _get_filtered_options(
-        self, substring: str = ""
-    ) -> List[Union[str, Tuple[str, str]]]:
+    def _get_filtered_options(self, substring: str = "") -> list[str | tuple[str, str]]:
         """Return optionally filtered list of option tuples."""
         if self.options is None:
             return []
@@ -205,7 +205,7 @@ class SelectItem(IPyDisplayMixin):
         if output_objs is None:
             self._clear_display()
             return
-        if not isinstance(output_objs, (tuple, list)):
+        if not isinstance(output_objs, tuple | list):
             output_objs = [output_objs]
         display_objs = dict(enumerate(self._disp_elems))
         for idx, out_obj in enumerate(output_objs):
@@ -229,9 +229,7 @@ class SelectItem(IPyDisplayMixin):
             self._run_action()
 
 
-@deprecated(
-    reason="Superceded by SelectItem. Will be removed in v2.0.0.", version="0.5.2"
-)
+@deprecated(reason="Superceded by SelectItem. Will be removed in v2.0.0.", version="0.5.2")
 class SelectString(SelectItem):
     """Selection list from list or dict."""
 
@@ -239,9 +237,9 @@ class SelectString(SelectItem):
     def __init__(
         self,
         description: str = "Select an item",
-        item_list: List[str] = None,
+        item_list: list[str] = None,
         action: Callable[..., None] = None,
-        item_dict: Dict[str, str] = None,
+        item_dict: dict[str, str] = None,
         auto_display: bool = False,
         height: str = "100px",
         width: str = "50%",

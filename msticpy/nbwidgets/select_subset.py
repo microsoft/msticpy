@@ -4,7 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
-from typing import Any, Dict, List, Union
+
+from typing import Any
 
 import ipywidgets as widgets
 
@@ -21,8 +22,8 @@ class SelectSubset(IPyDisplayMixin):
 
     def __init__(
         self,
-        source_items: Union[Dict[str, str], List[Any]],
-        default_selected: Union[Dict[str, str], List[Any]] = None,
+        source_items: dict[str, str] | list[Any],
+        default_selected: dict[str, str] | list[Any] | None = None,
         display_filter: bool = True,
         auto_display: bool = True,
     ):
@@ -91,9 +92,7 @@ class SelectSubset(IPyDisplayMixin):
         self._b_del_all.on_click(self._on_btn_del_all)
         self._b_add_all.on_click(self._on_btn_add_all)
 
-        v_box = widgets.VBox(
-            [self._b_add_all, self._b_add, self._b_del, self._b_del_all]
-        )
+        v_box = widgets.VBox([self._b_add_all, self._b_add, self._b_del, self._b_del_all])
         self.layout = widgets.HBox([self._source_list, v_box, self._select_list])
         if self._display_filter:
             self.layout = widgets.VBox([self._w_filter, self.layout])
@@ -101,12 +100,12 @@ class SelectSubset(IPyDisplayMixin):
             self.display()
 
     @property
-    def value(self) -> List[Any]:
+    def value(self) -> list[Any]:
         """Return currently selected value or values."""
         return self.selected_values
 
     @property
-    def selected_items(self) -> List[Any]:
+    def selected_items(self) -> list[Any]:
         """
         Return a list of the selected items.
 
@@ -122,7 +121,7 @@ class SelectSubset(IPyDisplayMixin):
         return list(self._select_list.options)
 
     @property
-    def selected_values(self) -> List[Any]:
+    def selected_values(self) -> list[Any]:
         """
         Return list of selected values.
 
@@ -135,9 +134,7 @@ class SelectSubset(IPyDisplayMixin):
             List of selected item values.
 
         """
-        if self._select_list.options and isinstance(
-            self._select_list.options[0], tuple
-        ):
+        if self._select_list.options and isinstance(self._select_list.options[0], tuple):
             return [item[1] for item in self._select_list.options]
         return self.selected_items
 
@@ -145,11 +142,7 @@ class SelectSubset(IPyDisplayMixin):
         """Filter the alert list by substring."""
         if change is not None and "new" in change:
             self._source_list.options = sorted(
-                {
-                    i
-                    for i in self.src_items
-                    if str(change["new"]).lower() in str(i).lower()
-                }
+                {i for i in self.src_items if str(change["new"]).lower() in str(i).lower()}
             )
 
     # pylint: disable=not-an-iterable
@@ -161,11 +154,11 @@ class SelectSubset(IPyDisplayMixin):
                 selected_set.add(self._src_dict[selected])
             else:
                 selected_set.add(selected)
-        self._select_list.options = sorted(list(selected_set))
+        self._select_list.options = sorted(selected_set)
 
     def _on_btn_add_all(self, button):
         del button
-        self._select_list.options = sorted(list(set(self._source_list.options)))
+        self._select_list.options = sorted(set(self._source_list.options))
 
     def _on_btn_del(self, button):
         del button
@@ -178,16 +171,16 @@ class SelectSubset(IPyDisplayMixin):
                     selected_set.remove(self._src_dict[selected])
                 else:
                     selected_set.remove(selected)
-            self._select_list.options = sorted(list(selected_set))
+            self._select_list.options = sorted(selected_set)
         if not self._select_list.options:
             return
         # try to set the index to the next item in the list
         if cur_index < len(self._select_list.options):
             next_item = cur_index or 0
-            self._select_list.index = tuple([next_item])
+            self._select_list.index = (next_item,)
         else:
             last_item = max(len(self._select_list.options) - 1, 0)
-            self._select_list.index = tuple([last_item])
+            self._select_list.index = (last_item,)
 
     # pylint: enable=not-an-iterable
 

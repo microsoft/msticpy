@@ -12,6 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
 from typing import Any, ClassVar
@@ -63,9 +64,7 @@ class BinaryEdge(HttpTIProvider):
             service_details: dict[str, Any] = {}
             for result in data_point["results"]:
                 if "service" in result["result"]["data"]:
-                    service_details["Banner"] = result["result"]["data"]["service"][
-                        "banner"
-                    ]
+                    service_details["Banner"] = result["result"]["data"]["service"]["banner"]
                 if "cert_info" in result["result"]["data"]:
                     service_details["Cert Info"] = result["result"]["data"]["cert_info"]
             result_dict[data_point["port"]] = service_details

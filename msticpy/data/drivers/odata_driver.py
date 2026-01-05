@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """OData Driver class."""
+
 from __future__ import annotations
 
 import abc
@@ -178,9 +179,7 @@ class OData(DriverBase):
             setting for setting in ("tenant_id", "client_id") if setting not in cs_dict
         ]
         auth_present: bool = (
-            "username" in cs_dict
-            or "client_secret" in cs_dict
-            or "certificate" in cs_dict
+            "username" in cs_dict or "client_secret" in cs_dict or "certificate" in cs_dict
         )
         if missing_settings:
             logger.error("Missing required connection parameters: %s", missing_settings)
@@ -335,9 +334,7 @@ class OData(DriverBase):
                 "Token acquisition failed: %s",
                 json_response.get("error_description", "Unknown error"),
             )
-            err_msg = (
-                f"Could not obtain access token - {json_response['error_description']}"
-            )
+            err_msg = f"Could not obtain access token - {json_response['error_description']}"
             raise MsticpyConnectionError(err_msg)
         logger.info("Successfully obtained access token via client secret")
 
@@ -360,9 +357,7 @@ class OData(DriverBase):
             )
         logger.debug("Authority URL: %s", authority)
         logger.debug("Scopes: %s", self.scopes)
-        logger.info(
-            "Initializing MSAL delegated auth for user: %s", cs_dict["username"]
-        )
+        logger.info("Initializing MSAL delegated auth for user: %s", cs_dict["username"])
 
         self.msal_auth = MSALDelegatedAuth(
             client_id=cs_dict["client_id"],
@@ -466,9 +461,7 @@ class OData(DriverBase):
         logger.warning("Response error: %s", response.json()["error"]["message"])
         if response.status_code == httpx.codes.UNAUTHORIZED:
             logger.error("Authentication failed - status code 401")
-            err_msg: str = (
-                "Authentication failed - possible timeout. Please re-connect."
-            )
+            err_msg: str = "Authentication failed - possible timeout. Please re-connect."
             raise ConnectionRefusedError(err_msg)
         # Raise an exception to handle hitting API limits
         if response.status_code == httpx.codes.TOO_MANY_REQUESTS:
@@ -540,10 +533,10 @@ def _map_config_dict_name(config_dict: dict[str, str]) -> dict[str, str]:
     """Map configuration parameter names to expected values."""
     logger.debug("Mapping configuration dictionary names")
     mapped_dict: dict[str, str] = config_dict.copy()
-    for provided_name in config_dict:
+    for provided_name, mapped_name in config_dict.items():
         for req_name, alternates in _CONFIG_NAME_MAP.items():
             if provided_name.casefold() in alternates:
-                mapped_dict[req_name] = config_dict[provided_name]
+                mapped_dict[req_name] = mapped_name
                 logger.debug("Mapped '%s' to '%s'", provided_name, req_name)
                 break
     return mapped_dict
@@ -555,13 +548,9 @@ def _get_driver_settings(
     instance: str | None = None,
 ) -> dict[str, str]:
     """Try to retrieve config settings for OAuth drivers."""
-    logger.debug(
-        "Getting driver settings for: %s (instance: %s)", config_name, instance
-    )
+    logger.debug("Getting driver settings for: %s (instance: %s)", config_name, instance)
     config_key: str = (
-        f"{config_name}-{instance}"
-        if instance and instance != "Default"
-        else config_name
+        f"{config_name}-{instance}" if instance and instance != "Default" else config_name
     )
     drv_config: ProviderSettings | None = get_provider_settings("DataProviders").get(
         config_key,

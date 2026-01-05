@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module docstring."""
+
 from abc import ABC
-from typing import List, Optional
 
 import ipywidgets as widgets
 
@@ -58,8 +58,7 @@ HELP_URIS = {
         + "msticpyconfig.html#specifying-secrets-as-key-vault-secrets"
     ),
     "MSTICPy Configuration": (
-        "https://msticpy.readthedocs.io/en/latest/"
-        + "getting_started/msticpyconfig.html"
+        "https://msticpy.readthedocs.io/en/latest/" + "getting_started/msticpyconfig.html"
     ),
     "Help on this tab": (
         "https://msticpy.readthedocs.io/en/latest/getting_started/"
@@ -137,7 +136,7 @@ class CEProviders(CEItemsBase, ABC):
 
     def _populate_edit_ctrls(
         self,
-        control_name: Optional[str] = None,
+        control_name: str | None = None,
         new_provider: bool = False,
     ):
         """Retrieve and populate form controls for the provider to display."""
@@ -145,9 +144,7 @@ class CEProviders(CEItemsBase, ABC):
             prov_name=control_name or self._prov_ctrl_name,
             mp_controls=self.mp_controls,
             conf_path=self._COMP_PATH,
-            prov_instance_name=(
-                self._select_prov_instance_name if not new_provider else ""
-            ),
+            prov_instance_name=(self._select_prov_instance_name if not new_provider else ""),
         )
         self.edit_frame.children = [self.edit_ctrls]
 
@@ -155,9 +152,7 @@ class CEProviders(CEItemsBase, ABC):
         """Update based on new selection in current providers."""
         del change
         self._populate_edit_ctrls()
-        self.mp_controls.populate_ctrl_values(
-            f"{self._COMP_PATH}.{self.select_item.label}"
-        )
+        self.mp_controls.populate_ctrl_values(f"{self._COMP_PATH}.{self.select_item.label}")
 
     def _add_provider(self, btn):
         """Add a new provider from prov_options."""
@@ -168,12 +163,8 @@ class CEProviders(CEItemsBase, ABC):
         if not self.prov_options.label:
             self.set_status("Error: please select a provider name to add.")
             return
-        self._populate_edit_ctrls(
-            control_name=self.prov_options.label, new_provider=True
-        )
-        self.mp_controls.save_ctrl_values(
-            f"{self._COMP_PATH}.{self.prov_options.label}"
-        )
+        self._populate_edit_ctrls(control_name=self.prov_options.label, new_provider=True)
+        self.mp_controls.save_ctrl_values(f"{self._COMP_PATH}.{self.prov_options.label}")
         self.select_item.options = self._get_select_opts()
         self.select_item.label = self.prov_options.label
 
@@ -201,7 +192,7 @@ class CEProviders(CEItemsBase, ABC):
 
 
 def _get_prov_ctrls(prov_name, mp_controls, conf_path, prov_instance_name: str = None):
-    ctrls: List[widgets.Widget] = []
+    ctrls: list[widgets.Widget] = []
     if not prov_name:
         return widgets.VBox(ctrls, layout=CompEditDisplayMixin.no_border_layout("95%"))
     # prov_path = f"{conf_path}.{prov_name}"

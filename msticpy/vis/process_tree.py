@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree Visualization."""
-import warnings
+
 from typing import Any, Dict, NamedTuple, Optional, Tuple, Union
 
 import numpy as np
@@ -17,7 +17,7 @@ try:
 except ImportError:
     Field = dict  # type: ignore
 from bokeh.layouts import column, row
-from bokeh.models import (  # type: ignore[attr-defined]
+from bokeh.models import (
     BoxSelectTool,
     ColorBar,
     ColumnDataSource,
@@ -33,7 +33,6 @@ from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
 from bokeh.palettes import viridis
 from bokeh.plotting import figure
 from bokeh.transform import dodge, factor_cmap, linear_cmap
-from deprecated.sphinx import deprecated
 
 from .._version import VERSION
 from ..common.utility import check_kwargs, export
@@ -159,7 +158,7 @@ def build_and_show_process_tree(
 
 # pylint: disable=too-many-locals, too-many-statements
 @export
-def plot_process_tree(  # noqa: MC0001
+def plot_process_tree(
     data: pd.DataFrame,
     schema: Union[ProcSchema, Dict[str, Any]] = None,
     output_var: str = None,
@@ -264,7 +263,7 @@ def plot_process_tree(  # noqa: MC0001
     b_plot.add_tools(hover)
 
     # dodge to align rectangle with grid
-    rect_x = dodge("Level", 1.75, range=b_plot.x_range)  # type: ignore
+    rect_x = dodge("Level", 1.75, range=b_plot.x_range)
     rect_plot_params = {
         "width": 3.5,
         "height": 0.95,
@@ -338,11 +337,11 @@ def plot_process_tree(  # noqa: MC0001
         y_col="Row",
         fill_map=fill_map,
     )
-    plot_elems: LayoutDOM = row(b_plot, range_tool)  # type: ignore
+    plot_elems: LayoutDOM = row(b_plot, range_tool)
     if show_table:
         data_table = _create_data_table(source, schema, legend_col)
         plot_elems = column(plot_elems, data_table)
-    show(plot_elems)  # type: ignore
+    show(plot_elems)
     return b_plot, plot_elems
 
 
@@ -393,13 +392,11 @@ def _pre_process_tree(
     levels = proc_tree["Level"].unique()
 
     proc_tree[schema.process_name] = proc_tree[schema.process_name].fillna("unknown")
-    proc_tree["__proc_name$$"] = proc_tree.apply(  # type: ignore
+    proc_tree["__proc_name$$"] = proc_tree.apply(
         lambda x: x[schema.process_name].split(schema.path_separator)[-1], axis=1
     )
     proc_tree[schema.process_id] = proc_tree[schema.process_id].fillna("unknown")
-    proc_tree["__proc_id$$"] = proc_tree[schema.process_id].apply(
-        _pid_fmt, args=(pid_fmt,)
-    )
+    proc_tree["__proc_id$$"] = proc_tree[schema.process_id].apply(_pid_fmt, args=(pid_fmt,))
 
     # Command line processing
     if not schema.cmd_line:
@@ -414,9 +411,9 @@ def _pre_process_tree(
         proc_tree[long_cmd][schema.cmd_line].str[:max_cmd_len] + "..."
     )
     # replace missing cmd lines
-    proc_tree.loc[~long_cmd, "__cmd_line$$"] = proc_tree[~long_cmd][
-        schema.cmd_line
-    ].fillna("cmdline unknown")
+    proc_tree.loc[~long_cmd, "__cmd_line$$"] = proc_tree[~long_cmd][schema.cmd_line].fillna(
+        "cmdline unknown"
+    )
     return TreeResult(proc_tree=proc_tree, schema=schema, levels=levels, n_rows=n_rows)
 
 
@@ -428,14 +425,18 @@ def _pid_fmt(pid, pid_fmt):
         return (
             f"PID: {pid}"
             if str(pid).startswith("0x")
-            else f"PID: 0x{int(pid):x}" if isinstance(pid, int) else "NA"
+            else f"PID: 0x{int(pid):x}"
+            if isinstance(pid, int)
+            else "NA"
         )
     if pid_fmt == "guid":
         return f"GUID: {pid}"
     return (
         f"PID: {pid}"
         if not str(pid).startswith("0x")
-        else f"PID: {int(pid, base=16)}" if isinstance(pid, int) else "NA"
+        else f"PID: {int(pid, base=16)}"
+        if isinstance(pid, int)
+        else "NA"
     )
 
 
@@ -518,7 +519,7 @@ def _create_fill_map(
             key_column, palette=viridis(max(3, len(values))), factors=values
         )
     elif col_kind in ["i", "u", "f", "M"]:
-        values = [val for val in source.data[key_column] if not np.isnan(val)]  # type: ignore
+        values = [val for val in source.data[key_column] if not np.isnan(val)]
         fill_map = linear_cmap(
             field_name=key_column,
             palette=viridis(256),
@@ -528,7 +529,9 @@ def _create_fill_map(
         if source_column is not None:
             # If user hasn't specified a legend column - don't create a bar
             color_bar = ColorBar(
-                color_mapper=fill_map["transform"], width=8, location=(0, 0)  # type: ignore
+                color_mapper=fill_map["transform"],
+                width=8,
+                location=(0, 0),
             )
     return fill_map, color_bar
 
@@ -573,9 +576,7 @@ def _create_vert_range_tool(
 # pylint: enable=too-many-arguments
 
 
-def _create_data_table(
-    source: ColumnDataSource, schema: ProcSchema, legend_col: str = None
-):
+def _create_data_table(source: ColumnDataSource, schema: ProcSchema, legend_col: str = None):
     """Return DataTable widget for source."""
     column_names = [
         schema.user_name,
@@ -601,9 +602,7 @@ def _create_data_table(
         )
     ]
     columns2 = [
-        TableColumn(field=col, title=col)
-        for col in column_names
-        if col in source.column_names
+        TableColumn(field=col, title=col) for col in column_names if col in source.column_names
     ]
 
     return DataTable(source=source, columns=columns + columns2, width=950, height=150)
@@ -615,103 +614,3 @@ def _check_proc_tree_schema(data):
         return {Col.proc_key}
     expected_cols = {Col.parent_key, "IsRoot", "IsLeaf", "IsBranch", "path"}
     return expected_cols - set(data.columns)
-
-
-# pylint: disable=too-few-public-methods
-@deprecated("Will be removed in version 2.0.0", version="1.7.0")
-@pd.api.extensions.register_dataframe_accessor("mp_process_tree")
-class ProcessTreeAccessor:
-    """Pandas api extension for Process Tree."""
-
-    def __init__(self, pandas_obj):
-        """Instantiate pandas extension class."""
-        self._df = pandas_obj
-
-    def plot(self, **kwargs) -> Tuple[figure, LayoutDOM]:
-        """
-        Build and plot a process tree.
-
-        Parameters
-        ----------
-        schema : ProcSchema, optional
-            The data schema to use for the data set, by default None
-            (if None the schema is inferred)
-        output_var : str, optional
-            Output variable for selected items in the tree,
-            by default None
-        legend_col : str, optional
-            The column used to color the tree items, by default None
-        show_table: bool
-            Set to True to show a data table, by default False.
-
-        Other Parameters
-        ----------------
-        height : int, optional
-            The height of the plot figure
-            (the default is 700)
-        width : int, optional
-            The width of the plot figure (the default is 900)
-        title : str, optional
-            Title to display (the default is None)
-        hide_legend : bool, optional
-            Hide the legend box, even if legend_col is specified.
-        pid_fmt : str, optional
-            Display Process ID as 'dec' (decimal), 'hex' (hexadecimal),
-            or 'guid' (string), default is 'hex'.
-
-        Returns
-        -------
-        Tuple[figure, LayoutDOM]:
-            figure - The main bokeh.plotting.figure
-            Layout - Bokeh layout structure.
-
-        """
-        warn_message = (
-            "This accessor method has been deprecated.\n"
-            "Please use df.mp_plot.process_tree() method instead."
-            "This will be removed in MSTICPy v2.2.0"
-        )
-        warnings.warn(warn_message, category=DeprecationWarning)
-        return build_and_show_process_tree(data=self._df, **kwargs)
-
-    def build(self, schema: ProcSchema = None, **kwargs) -> pd.DataFrame:
-        """
-        Build process trees from the process events.
-
-        Parameters
-        ----------
-        procs : pd.DataFrame
-            Process events (Windows 4688 or Linux Auditd)
-        schema : ProcSchema, optional
-            The column schema to use, by default None
-            If None, then the schema is inferred
-        show_summary : bool
-            Shows summary of the built tree, default is False. : bool
-        debug : bool
-            If True produces extra debugging output,
-            by default False
-
-        Returns
-        -------
-        pd.DataFrame
-            Process tree dataframe.
-
-        Notes
-        -----
-        It is not necessary to call this before `plot`. The process
-        tree is built automatically. This is only needed if you want
-        to return the processed tree data as a DataFrame
-
-        """
-        warn_message = (
-            "This accessor method has been deprecated.\n"
-            "Please use df.mp.build_process_tree() method instead."
-            "This will be removed in MSTICPy v2.2.0"
-        )
-        warnings.warn(warn_message, category=DeprecationWarning)
-        return build_process_tree(
-            procs=self._df,
-            schema=schema,
-            show_summary=kwargs.get("show_summary", kwargs.get("show_progress", False)),
-            debug=kwargs.get("debug", False),
-        )

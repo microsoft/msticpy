@@ -6,16 +6,15 @@
 """Helper module for computing training probabilities when modelling sessions."""
 
 from collections import defaultdict
-from typing import DefaultDict, Tuple, Union
 
 from ..utils.data_structures import StateMatrix
 
 
 def compute_cmds_probs(  # nosec
-    seq1_counts: Union[StateMatrix, dict],
-    seq2_counts: Union[StateMatrix, dict],
+    seq1_counts: StateMatrix | dict,
+    seq2_counts: StateMatrix | dict,
     unk_token: str,
-) -> Tuple[StateMatrix, StateMatrix]:
+) -> tuple[StateMatrix, StateMatrix]:
     """
     Compute command related probabilities.
 
@@ -40,8 +39,8 @@ def compute_cmds_probs(  # nosec
     """
     total_cmds = sum(seq1_counts.values())
 
-    prior_probs: DefaultDict[str, float] = defaultdict(lambda: 0)
-    trans_probs: DefaultDict[str, DefaultDict[str, float]] = defaultdict(
+    prior_probs: defaultdict[str, float] = defaultdict(lambda: 0)
+    trans_probs: defaultdict[str, defaultdict[str, float]] = defaultdict(
         lambda: defaultdict(lambda: 0)
     )
 
@@ -52,9 +51,7 @@ def compute_cmds_probs(  # nosec
     # compute trans probs
     for prev, currents in seq2_counts.items():
         for current in currents:
-            trans_probs[prev][current] = seq2_counts[prev][current] / sum(
-                seq2_counts[prev].values()
-            )
+            trans_probs[prev][current] = currents[current] / sum(currents.values())
 
     prior_probs_sm = StateMatrix(states=prior_probs, unk_token=unk_token)
     trans_probs_sm = StateMatrix(states=trans_probs, unk_token=unk_token)
@@ -63,11 +60,11 @@ def compute_cmds_probs(  # nosec
 
 
 def compute_params_probs(  # nosec
-    param_counts: Union[StateMatrix, dict],
-    cmd_param_counts: Union[StateMatrix, dict],
-    seq1_counts: Union[StateMatrix, dict],
+    param_counts: StateMatrix | dict,
+    cmd_param_counts: StateMatrix | dict,
+    seq1_counts: StateMatrix | dict,
     unk_token: str,
-) -> Tuple[StateMatrix, StateMatrix]:
+) -> tuple[StateMatrix, StateMatrix]:
     """
     Compute param related probabilities.
 
@@ -108,8 +105,8 @@ def compute_params_probs(  # nosec
         param conditional on command probabilities
 
     """
-    param_probs: DefaultDict[str, float] = defaultdict(lambda: 0)
-    param_cond_cmd_probs: DefaultDict[str, DefaultDict[str, float]] = defaultdict(
+    param_probs: defaultdict[str, float] = defaultdict(lambda: 0)
+    param_cond_cmd_probs: defaultdict[str, defaultdict[str, float]] = defaultdict(
         lambda: defaultdict(lambda: 0)
     )
 
@@ -123,18 +120,16 @@ def compute_params_probs(  # nosec
         param_probs[param] = count / tot_cmd
 
     param_probs_sm = StateMatrix(states=param_probs, unk_token=unk_token)
-    param_cond_cmd_probs_sm = StateMatrix(
-        states=param_cond_cmd_probs, unk_token=unk_token
-    )
+    param_cond_cmd_probs_sm = StateMatrix(states=param_cond_cmd_probs, unk_token=unk_token)
 
     return param_probs_sm, param_cond_cmd_probs_sm
 
 
 def compute_values_probs(  # nosec
-    value_counts: Union[StateMatrix, dict],
-    param_value_counts: Union[StateMatrix, dict],
+    value_counts: StateMatrix | dict,
+    param_value_counts: StateMatrix | dict,
     unk_token: str,
-) -> Tuple[StateMatrix, StateMatrix]:
+) -> tuple[StateMatrix, StateMatrix]:
     """
     Compute value related probabilities.
 
@@ -164,8 +159,8 @@ def compute_values_probs(  # nosec
         value conditional on param probabilities
 
     """
-    value_probs: DefaultDict[str, float] = defaultdict(lambda: 0)
-    value_cond_param_probs: DefaultDict[str, DefaultDict[str, float]] = defaultdict(
+    value_probs: defaultdict[str, float] = defaultdict(lambda: 0)
+    value_cond_param_probs: defaultdict[str, defaultdict[str, float]] = defaultdict(
         lambda: defaultdict(lambda: 0)
     )
 
@@ -179,8 +174,6 @@ def compute_values_probs(  # nosec
         value_probs[value] = count / tot_val
 
     value_probs_sm = StateMatrix(states=value_probs, unk_token=unk_token)
-    value_cond_param_probs_sm = StateMatrix(
-        states=value_cond_param_probs, unk_token=unk_token
-    )
+    value_cond_param_probs_sm = StateMatrix(states=value_cond_param_probs, unk_token=unk_token)
 
     return value_probs_sm, value_cond_param_probs_sm

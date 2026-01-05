@@ -4,8 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Local Data Driver class - for testing and demos."""
+
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import pandas as pd
 
@@ -38,19 +39,19 @@ class LocalDataDriver(DriverBase):
         self._debug = kwargs.get("debug", False)
         super().__init__(**kwargs)
 
-        self._paths: List[str] = ["."]
+        self._paths: list[str] = ["."]
         if data_paths := kwargs.get("data_paths"):
             self._paths = [path.strip() for path in data_paths]
         elif has_config("DataProviders.LocalData"):
             self._paths = get_config("LocalData.data_paths", self._paths)
 
-        self.data_files: Dict[str, str] = self._get_data_paths()
-        self._schema: Dict[str, Any] = {}
+        self.data_files: dict[str, str] = self._get_data_paths()
+        self._schema: dict[str, Any] = {}
         self._loaded = True
         self._connected = True
         self.current_connection = "; ".join(self._paths)
 
-    def _get_data_paths(self) -> Dict[str, str]:
+    def _get_data_paths(self) -> dict[str, str]:
         """Read files in data paths."""
         data_files = {}
         for path in self._paths:
@@ -65,7 +66,7 @@ class LocalDataDriver(DriverBase):
                 )
         return data_files
 
-    def connect(self, connection_str: Optional[str] = None, **kwargs):
+    def connect(self, connection_str: str | None = None, **kwargs):
         """
         Connect to data source.
 
@@ -80,7 +81,7 @@ class LocalDataDriver(DriverBase):
         print("Connected.")
 
     @property
-    def schema(self) -> Dict[str, Dict]:
+    def schema(self) -> dict[str, dict]:
         """
         Return current data schema of connection.
 
@@ -105,7 +106,7 @@ class LocalDataDriver(DriverBase):
 
     def query(
         self, query: str, query_source: QuerySource = None, **kwargs
-    ) -> Union[pd.DataFrame, Any]:
+    ) -> pd.DataFrame | Any:
         """
         Execute query string and return DataFrame of results.
 
@@ -127,9 +128,7 @@ class LocalDataDriver(DriverBase):
         query_name = query_source.name if query_source else query
         file_path = self.data_files.get(query.casefold())
         if not file_path:
-            raise FileNotFoundError(
-                f"Data file ({query}) for query {query_name} not found."
-            )
+            raise FileNotFoundError(f"Data file ({query}) for query {query_name} not found.")
         if file_path.endswith("csv"):
             try:
                 return pd.read_csv(file_path, parse_dates=["TimeGenerated"])

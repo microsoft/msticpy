@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """TI Providers Component Edit."""
+
 from .._version import VERSION
 from .ce_provider_base import HELP_URIS, CEProviders
 

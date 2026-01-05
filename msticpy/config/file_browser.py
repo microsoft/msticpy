@@ -6,8 +6,9 @@
 """File Browser class."""
 
 import contextlib
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any
 
 import ipywidgets as widgets
 
@@ -18,7 +19,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-StrOrPath = Union[str, Path]
+StrOrPath = str | Path
 
 
 # pylint: disable=too-many-instance-attributes
@@ -42,7 +43,7 @@ class FileBrowser(CompEditDisplayMixin):
 
         """
         self.current_folder = Path(path).resolve()
-        self.file: Optional[str] = None
+        self.file: str | None = None
         self.action = select_cb
 
         file_layout = widgets.Layout(height="200px", width="45%")
@@ -119,9 +120,7 @@ class FileBrowser(CompEditDisplayMixin):
         if tgt_folder == self.PARENT:
             tgt_folder = self.current_folder.parent
         if tgt_folder:
-            self.current_folder = (
-                Path(self.current_folder).joinpath(tgt_folder).resolve()
-            )
+            self.current_folder = Path(self.current_folder).joinpath(tgt_folder).resolve()
             self.txt_path.value = str(self.current_folder)
             folders, files = self.read_folder(self.current_folder)
             self.select_folder.options = self.get_folder_list(folders)
@@ -143,7 +142,7 @@ class FileBrowser(CompEditDisplayMixin):
             self.action(self.file)
 
     @staticmethod
-    def read_folder(folder: StrOrPath) -> Tuple[List[StrOrPath], List[StrOrPath]]:
+    def read_folder(folder: StrOrPath) -> tuple[list[StrOrPath], list[StrOrPath]]:
         """
         Return folder contents.
 
@@ -169,7 +168,7 @@ class FileBrowser(CompEditDisplayMixin):
                     folders.append(file)
         return folders, files  # type: ignore[return-value]
 
-    def get_folder_list(self, folders: List[StrOrPath]) -> List[StrOrPath]:
+    def get_folder_list(self, folders: list[StrOrPath]) -> list[StrOrPath]:
         """Return sorted list of folders with '..' inserted if not root."""
         if self.current_folder != Path(self.current_folder.parts[0]):
             return [self.PARENT, *(sorted(folders))]
@@ -179,10 +178,8 @@ class FileBrowser(CompEditDisplayMixin):
         """Handle event for search button."""
         del btn
         if self.txt_search.value:
-            found_files: Optional[List[Path]] = None
+            found_files: list[Path] | None = None
             while found_files is None:
                 with contextlib.suppress(FileNotFoundError):
                     found_files = list(self.current_folder.rglob(self.txt_search.value))
-            self.select_search.options = [
-                str(file) for file in found_files if file.exists()
-            ]
+            self.select_search.options = [str(file) for file in found_files if file.exists()]

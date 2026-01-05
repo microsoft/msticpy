@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data uploader base class."""
+
 import abc
 from abc import ABC
 

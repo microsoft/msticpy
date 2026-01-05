@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Cybereason Driver class."""
+
 from __future__ import annotations
 
 import datetime as dt
@@ -36,9 +37,7 @@ __author__ = "Florian Bracq"
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-_HELP_URI = (
-    "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html"
-)
+_HELP_URI = "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html"
 
 
 # pylint: disable=too-many-instance-attributes
@@ -224,13 +223,11 @@ class CybereasonDriver(DriverBase):
 
         """
         del kwargs
-        query_tasks: dict[str, partial[dict[str, Any]]] = (
-            self._create_paginated_query_tasks(
-                body=body,
-                page_size=page_size,
-                pagination_token=pagination_token,
-                total_results=total_results,
-            )
+        query_tasks: dict[str, partial[dict[str, Any]]] = self._create_paginated_query_tasks(
+            body=body,
+            page_size=page_size,
+            pagination_token=pagination_token,
+            total_results=total_results,
         )
 
         logger.info("Running %s paginated queries.", len(query_tasks))
@@ -527,7 +524,7 @@ class CybereasonDriver(DriverBase):
                 )
             else:
                 task_iter = as_completed(thread_tasks.values())
-            ids_and_tasks: dict[str, Future] = dict(zip(thread_tasks, task_iter))
+            ids_and_tasks: dict[str, Future] = dict(zip(thread_tasks, task_iter, strict=False))
             for query_id, thread_task in ids_and_tasks.items():
                 try:
                     result: dict[str, Any] = await thread_task
@@ -556,7 +553,9 @@ class CybereasonDriver(DriverBase):
                             exc_info=True,
                         )
             # Sort the results by the order of the tasks
-            results = [result for _, result in sorted(zip(thread_tasks, results))]
+            results = [
+                result for _, result in sorted(zip(thread_tasks, results, strict=False))
+            ]
         return pd.concat(results, ignore_index=True)
 
     # pylint: disable=too-many-branches
@@ -665,7 +664,7 @@ def _recursive_find_and_replace(
     param_dict: dict[str, Any],
 ) -> str | dict[str, Any] | list[str] | list[dict[str, Any]]:
     """Recursively find and replace parameters from query."""
-    if isinstance(parameters, (list, str, dict)):
+    if isinstance(parameters, list | str | dict):
         return _recursive_find_and_replace(parameters, param_dict)
     return parameters
 
@@ -693,9 +692,7 @@ def _(
         )
         if isinstance(updated_param, list):
             result.extend([param for param in updated_param if isinstance(param, str)])
-            dict_result.extend(
-                [param for param in updated_param if isinstance(param, dict)]
-            )
+            dict_result.extend([param for param in updated_param if isinstance(param, dict)])
         elif isinstance(updated_param, dict):
             dict_result.append(updated_param)
         else:
@@ -709,9 +706,7 @@ def _(parameters: str, param_dict: dict[str, Any]) -> str | list[str]:
     param_regex: str = r"{([^}]+)}"
     matches: re.Match[str] | None = re.match(param_regex, parameters)
     if matches:
-        result: list[str] = [
-            param_dict.get(match, parameters) for match in matches.groups()
-        ]
+        result: list[str] = [param_dict.get(match, parameters) for match in matches.groups()]
         if len(result) == 1:
             return result[0]
         return result

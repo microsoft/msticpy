@@ -4,7 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Entity Graph classes."""
-from typing import Any, Dict, Optional, Set
+
+from typing import Any
 
 from ..._version import VERSION
 
@@ -17,9 +18,9 @@ class Node:
 
     def __init__(self):
         """Initialize the node."""
-        self.edges: Set["Edge"] = set()
+        self.edges: set[Edge] = set()
 
-    def add_edge(self, target: "Node", edge_attrs: Optional[Dict[str, Any]] = None):
+    def add_edge(self, target: "Node", edge_attrs: dict[str, Any] | None = None):
         """
         Add an edge between self and target.
 
@@ -45,7 +46,7 @@ class Node:
 class Edge:
     """Entity edge class."""
 
-    def __init__(self, source: Node, target: Node, attrs: Dict[str, Any] = None):
+    def __init__(self, source: Node, target: Node, attrs: dict[str, Any] = None):
         """
         Create a new edge between `source` and `target`.
 
@@ -62,7 +63,7 @@ class Edge:
         self.source: Node = source
         self.target: Node = target
 
-        self.attrs: Dict[str, Any] = attrs or {}
+        self.attrs: dict[str, Any] = attrs or {}
 
     def add_attr(self, name: str, value: Any):
         """Add an edge attribute."""
@@ -74,9 +75,7 @@ class Edge:
 
     def __repr__(self):
         """Return full repr of edge."""
-        other_attrs = [
-            f"{name}='{val}'" for name, val in self.attrs.items() if name != "name"
-        ]
+        other_attrs = [f"{name}='{val}'" for name, val in self.attrs.items() if name != "name"]
         if not other_attrs:
             return f"Edge(name={str(self)})"
         return f"Edge(name={str(self)}, {', '.join(other_attrs)})"

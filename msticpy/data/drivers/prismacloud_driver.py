@@ -9,15 +9,18 @@
 
 __author__ = "Rajamani R"
 
+import json
 import logging
 from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, cast
-import json
+
 import httpx
 import pandas as pd
+
 from msticpy.common.exceptions import MsticpyConnectionError, MsticpyUserError
-from .driver_base import DriverBase
-from ..core.query_store import QuerySource, QueryStore
+
 from ...common.provider_settings import get_provider_settings
+from ..core.query_store import QuerySource, QueryStore
+from .driver_base import DriverBase
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -157,9 +160,7 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
 
     CONFIG_NAME: ClassVar[str] = "Prismacloud"
 
-    def __init__(
-        self, **kwargs: DriverConfig
-    ) -> None:  # pylint: disable=too-many-locals
+    def __init__(self, **kwargs: DriverConfig) -> None:  # pylint: disable=too-many-locals
         """
         Initialize the Prisma Cloud Driver and set up the HTTP client.
 
@@ -202,9 +203,7 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
 
         # preference 1 as argument , preference 2 from config file , third default value
         if not kwargs.get("base_url"):
-            self.base_url = (
-                cast(str, self.config.get("base_url")) or BASE_URL_API
-            )  # type: ignore[assignment]
+            self.base_url = cast(str, self.config.get("base_url")) or BASE_URL_API
         else:
             self.base_url = kwargs.get("base_url", BASE_URL_API)  # type: ignore[assignment]
         self.debug: bool = bool(kwargs.get("debug", False))
@@ -244,9 +243,7 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         self.queries_loaded: bool = False
 
     @staticmethod
-    def _get_driver_settings(
-        config_name: str, instance: str | None = None
-    ) -> dict[str, str]:
+    def _get_driver_settings(config_name: str, instance: str | None = None) -> dict[str, str]:
         """
         Retrieve Prisma Cloud settings from MSTICPY configuration.
 
@@ -339,9 +336,7 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         if connection_str:
             username = username or connection_str.split(":")[0]
             password = (
-                password or connection_str.split(":")[1]
-                if ":" in connection_str
-                else None
+                password or connection_str.split(":")[1] if ":" in connection_str else None
             )
         if not username or not password:
             username = self.config.get("username")
@@ -368,9 +363,7 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
                 self._loaded = True
                 logger.info("Prisma Cloud connection successful")
                 if "X-Redlock-Auth" not in self.client.headers:
-                    logger.debug(
-                        "X-Redlock-Auth not in self.client.headers did not match"
-                    )
+                    logger.debug("X-Redlock-Auth not in self.client.headers did not match")
                 return self
             logger.error("Login failed: %s", result.get("message", "Unknown error"))
             msg = f"Login failed: {result.get('message', 'Unknown error')}"

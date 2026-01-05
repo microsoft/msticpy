@@ -4,10 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Bookmark Features."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 from uuid import UUID, uuid4
 
 import httpx
@@ -179,10 +181,7 @@ class SentinelBookmarksMixin(SentinelUtilsMixin):
                 display(filtered_bookmarks[["name", "properties.displayName"]])
                 err_msg: str = "More than one incident found, please specify by GUID"
                 raise MsticpyUserError(err_msg) from bkmark_name
-            if (
-                not isinstance(filtered_bookmarks, pd.DataFrame)
-                or filtered_bookmarks.empty
-            ):
+            if not isinstance(filtered_bookmarks, pd.DataFrame) or filtered_bookmarks.empty:
                 err_msg = f"Incident {bookmark} not found"
                 raise MsticpyUserError(err_msg) from bkmark_name
             return filtered_bookmarks["name"].iloc[0]

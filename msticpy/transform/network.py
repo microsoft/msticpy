@@ -4,11 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for converting DataFrame to Networkx graph."""
-from typing import Callable, Dict, Iterable, Optional, Union
+
+from collections.abc import Callable, Iterable
+from typing import Literal
 
 import networkx as nx
 import pandas as pd
-from typing_extensions import Literal
 
 from .._version import VERSION
 
@@ -24,9 +25,9 @@ def df_to_networkx(
     data: pd.DataFrame,
     source_col: str,
     target_col: str,
-    source_attrs: Optional[Iterable[str]] = None,
-    target_attrs: Optional[Iterable[str]] = None,
-    edge_attrs: Optional[Iterable[str]] = None,
+    source_attrs: Iterable[str] | None = None,
+    target_attrs: Iterable[str] | None = None,
+    edge_attrs: Iterable[str] | None = None,
     graph_type: GraphType = "graph",
 ):
     """
@@ -56,9 +57,7 @@ def df_to_networkx(
 
     """
     create_as = nx.DiGraph if graph_type == "digraph" else nx.Graph
-    _verify_columns(
-        data, source_col, target_col, source_attrs, target_attrs, edge_attrs
-    )
+    _verify_columns(data, source_col, target_col, source_attrs, target_attrs, edge_attrs)
     # remove any source or target rows that are NaN
     data = data.dropna(axis=0, subset=[source_col, target_col])
     nx_graph = nx.from_pandas_edgelist(
@@ -78,14 +77,14 @@ def _set_node_attributes(
     data: pd.DataFrame,
     graph: nx.Graph,
     column: str,
-    attrib_cols: Optional[Iterable[str]],
+    attrib_cols: Iterable[str] | None,
     node_role: NodeRole,
 ):
     """Set node attributes from column values."""
     all_cols = [column, *attrib_cols] if attrib_cols else [column]
     # Create an 'agg' dictionary to apply to DataFrame
-    agg_dict: Dict[str, Union[str, Callable]] = (
-        {col: _pd_unique_list for col in attrib_cols} if attrib_cols else {}
+    agg_dict: dict[str, str | Callable] = (
+        dict.fromkeys(attrib_cols, _pd_unique_list) if attrib_cols else {}
     )
     # Add these two items as attributes
     agg_dict.update({"node_role": "first", "node_type": "first"})
@@ -112,9 +111,7 @@ def _pd_unique_list(series: pd.Series):
     return ", ".join([str(attrib) for attrib in unique_vals])
 
 
-def _verify_columns(
-    data, source_col, target_col, source_attrs, target_attrs, edge_attrs
-):
+def _verify_columns(data, source_col, target_col, source_attrs, target_attrs, edge_attrs):
     """Check specified columns are in data."""
     missing_columns = {
         **_verify_column(data, "source_col", source_col),

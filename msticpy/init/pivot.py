@@ -6,24 +6,19 @@
 """Pivot functions main module."""
 
 import contextlib
-import warnings
+from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta, timezone
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, Dict, Iterable, Optional, Type
+from typing import Any
 
 from .._version import VERSION
 from ..common.timespan import TimeSpan
+from ..common.utility.types import SingletonClass
 from ..context.tilookup import TILookup
 from ..data.core.data_providers import QueryProvider
 from ..datamodel import entities
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore", category=DeprecationWarning)
-    from ..datamodel import pivot as legacy_pivot
-
-from ..common.utility.types import SingletonClass
 from ..nbwidgets.query_time import QueryTime
 from . import pivot_init
 
@@ -53,9 +48,9 @@ class Pivot:
 
     def __init__(
         self,
-        namespace: Dict[str, Any] = None,
+        namespace: dict[str, Any] = None,
         providers: Iterable[Any] = None,
-        timespan: Optional[TimeSpan] = None,
+        timespan: TimeSpan | None = None,
     ):
         """
         Instantiate a Pivot environment.
@@ -80,13 +75,13 @@ class Pivot:
             self.timespan = timespan
 
         # acquire current providers
-        self._providers: Dict[str, Any] = {}
+        self._providers: dict[str, Any] = {}
         self._param_providers = providers
         self._param_namespace = namespace
 
     def reload_pivots(
         self,
-        namespace: Dict[str, Any] = None,
+        namespace: dict[str, Any] = None,
         providers: Iterable[Any] = None,
         clear_existing: bool = False,
     ):
@@ -132,7 +127,7 @@ class Pivot:
 
     def _get_all_providers(
         self,
-        namespace: Dict[str, Any] = None,
+        namespace: dict[str, Any] = None,
         providers: Iterable[Any] = None,
     ):
         self._providers["TILookup"] = (
@@ -166,8 +161,8 @@ class Pivot:
 
     @staticmethod
     def _get_provider_by_type(
-        provider_type: Type,
-        namespace: Dict[str, Any] = None,
+        provider_type: type,
+        namespace: dict[str, Any] = None,
         providers: Iterable[Any] = None,
     ) -> Any:
         if providers:
@@ -186,14 +181,16 @@ class Pivot:
     def _get_def_pivot_reg():
         try:
             # pylint: disable=import-outside-toplevel
-            from importlib.resources import files  # type: ignore[attr-defined]
+            from importlib.resources import (  # noqa: PLC0415
+                files,
+            )
 
             return files("msticpy").joinpath(_DEF_PIVOT_REG_FILE)
         except ImportError:
             return Path(__file__).parent.parent.joinpath(_DEF_PIVOT_REG_FILE)
 
     @property
-    def providers(self) -> Dict[str, Any]:
+    def providers(self) -> dict[str, Any]:
         """
         Return the current set of loaded providers.
 
@@ -223,7 +220,7 @@ class Pivot:
         """
         return self._providers.get(name)
 
-    def edit_query_time(self, timespan: Optional[TimeSpan] = None):
+    def edit_query_time(self, timespan: TimeSpan | None = None):
         """
         Display a QueryTime widget to get the timespan.
 
@@ -291,7 +288,7 @@ class Pivot:
             return
         self._query_time.set_time(timespan)
 
-    def set_timespan(self, value: Optional[Any] = None, **kwargs):
+    def set_timespan(self, value: Any | None = None, **kwargs):
         """
         Set the pivot timespan.
 
@@ -330,7 +327,7 @@ class Pivot:
     @staticmethod
     def register_pivot_providers(
         pivot_reg_path: str,
-        namespace: Dict[str, Any] = None,
+        namespace: dict[str, Any] = None,
         def_container: str = "custom",
         force_container: bool = False,
     ):
@@ -366,7 +363,7 @@ class Pivot:
     def add_pivot_function(
         func: Callable[[Any], Any],
         pivot_reg: "PivotRegistration" = None,
-        container: Optional[str] = None,
+        container: str | None = None,
         **kwargs,
     ):
         """
@@ -442,8 +439,3 @@ class Pivot:
     def browse():
         """Return PivotBrowser."""
         return PivotBrowser()
-
-
-# add link in datamodel for legacy location
-setattr(legacy_pivot, "Pivot", Pivot)
-setattr(legacy_pivot, "PivotRegistration", PivotRegistration)

@@ -4,10 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Notebook utility functions."""
+
 # pickle only used here for storing data.
 import pickle  # nosec
 from base64 import b64encode
-from typing import Any, Iterable, Optional, Union
+from collections.abc import Iterable
+from typing import Any
 
 from IPython import get_ipython
 from IPython.display import HTML, DisplayHandle, display
@@ -23,9 +25,9 @@ __author__ = "Ian Hellen"
 @export
 def md(
     string: str,
-    styles: Union[str, Iterable[str]] = None,
-    disp_id: Optional[Union[bool, DisplayHandle]] = None,
-) -> Optional[DisplayHandle]:
+    styles: str | Iterable[str] | None = None,
+    disp_id: bool | DisplayHandle | None = None,
+) -> DisplayHandle | None:
     """
     Display a string as Markdown with optional style.
 
@@ -73,7 +75,7 @@ def md(
 
 
 @export
-def md_warn(string: str, disp_id: Optional[DisplayHandle] = None):
+def md_warn(string: str, disp_id: DisplayHandle | None = None):
     """
     Return string as a warning - orange text prefixed by "Warning".
 
@@ -99,7 +101,7 @@ def md_warn(string: str, disp_id: Optional[DisplayHandle] = None):
 
 
 @export
-def md_error(string: str, disp_id: Optional[DisplayHandle] = None):
+def md_error(string: str, disp_id: DisplayHandle | None = None):
     """
     Return string as an error - red text prefixed by "Error".
 

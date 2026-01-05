@@ -6,7 +6,6 @@
 """Module for Model class for modelling sessions data."""
 
 from collections import defaultdict
-from typing import Dict, List, Union
 
 from ...common.exceptions import MsticpyException
 from .utils import cmds_only, cmds_params_only, cmds_params_values, probabilities
@@ -18,9 +17,7 @@ from .utils.data_structures import Cmd
 class Model:
     """Class for modelling sessions data."""
 
-    def __init__(
-        self, sessions: List[List[Union[str, Cmd]]], modellable_params: set = None
-    ):
+    def __init__(self, sessions: list[list[str | Cmd]], modellable_params: set = None):
         """
         Instantiate the Model class.
 
@@ -105,16 +102,16 @@ class Model:
         self.value_probs = None
         self.value_cond_param_probs = None
 
-        self.set_params_cond_cmd_probs: Dict[str, Dict[str, float]] = {}
+        self.set_params_cond_cmd_probs: dict[str, dict[str, float]] = {}
 
         self.session_likelihoods = None
         self.session_geomean_likelihoods = None
 
-        self.rare_windows: Dict[int, list] = {}
-        self.rare_window_likelihoods: Dict[int, list] = {}
+        self.rare_windows: dict[int, list] = {}
+        self.rare_window_likelihoods: dict[int, list] = {}
 
-        self.rare_windows_geo: Dict[int, list] = {}
-        self.rare_window_likelihoods_geo: Dict[int, list] = {}
+        self.rare_windows_geo: dict[int, list] = {}
+        self.rare_window_likelihoods_geo: dict[int, list] = {}
 
     def train(self):
         """
@@ -154,9 +151,7 @@ class Model:
 
         """
         if self.prior_probs is None:
-            raise MsticpyException(
-                "please train the model first before using this method"
-            )
+            raise MsticpyException("please train the model first before using this method")
         self.compute_likelihoods_of_sessions(use_start_end_tokens=use_start_end_tokens)
         self.compute_geomean_lik_of_sessions()
         self.compute_rarest_windows(
@@ -339,7 +334,7 @@ class Model:
         if self.session_type == SessionType.cmds_params_values:
             self._compute_probs_values()
 
-    def compute_setof_params_cond_cmd(self, use_geo_mean: bool):  # noqa: MC0001
+    def compute_setof_params_cond_cmd(self, use_geo_mean: bool):
         """
         Compute likelihood of combinations of params conditional on the cmd.
 
@@ -370,9 +365,7 @@ class Model:
 
         """
         if self.param_probs is None:
-            raise MsticpyException(
-                "please train the model first before using this method"
-            )
+            raise MsticpyException("please train the model first before using this method")
 
         if self.session_type is None:
             raise MsticpyException("session_type attribute should not be None")
@@ -442,9 +435,7 @@ class Model:
 
         """
         if self.prior_probs is None:
-            raise MsticpyException(
-                "please train the model first before using this method"
-            )
+            raise MsticpyException("please train the model first before using this method")
 
         result = []
 
@@ -556,9 +547,7 @@ class Model:
 
         """
         if self.prior_probs is None:
-            raise MsticpyException(
-                "please train the model first before using this method"
-            )
+            raise MsticpyException("please train the model first before using this method")
 
         if self.session_type == SessionType.cmds_only:
             rare_tuples = [
@@ -609,9 +598,7 @@ class Model:
 
         if use_geo_mean:
             self.rare_windows_geo[window_len] = [rare[0] for rare in rare_tuples]
-            self.rare_window_likelihoods_geo[window_len] = [
-                rare[1] for rare in rare_tuples
-            ]
+            self.rare_window_likelihoods_geo[window_len] = [rare[1] for rare in rare_tuples]
         else:
             self.rare_windows[window_len] = [rare[0] for rare in rare_tuples]
             self.rare_window_likelihoods[window_len] = [rare[1] for rare in rare_tuples]

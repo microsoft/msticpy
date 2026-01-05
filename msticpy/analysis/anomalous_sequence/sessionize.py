@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for creating sessions out of raw data."""
+
 from __future__ import annotations
 
 import numpy as np

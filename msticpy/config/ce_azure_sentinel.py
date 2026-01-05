@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module docstring."""
+
 from datetime import datetime
 
 import ipywidgets as widgets
@@ -192,9 +193,7 @@ class CEAzureSentinel(CEItemsBase):
             )
             self.select_item.options = self._get_select_opts()
             self.select_item.label = edited_provider_name
-        valid, status = _validate_ws(
-            edited_provider_name, self.mp_controls, self._COMP_PATH
-        )
+        valid, status = _validate_ws(edited_provider_name, self.mp_controls, self._COMP_PATH)
         if not valid:
             self.set_status(status)
 
@@ -244,9 +243,7 @@ class CEAzureSentinel(CEItemsBase):
         workspace_name = _get_named_control(self.edit_ctrls, "WorkspaceName").value
         resource_group = _get_named_control(self.edit_ctrls, "ResourceGroup").value
         if not (workspace_id or workspace_name):
-            self.set_status(
-                "Need at least WorkspaceId or WorkspaceName to lookup settings."
-            )
+            self.set_status("Need at least WorkspaceId or WorkspaceName to lookup settings.")
             return
         if workspace_id:
             self._update_settings(

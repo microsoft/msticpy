@@ -10,10 +10,11 @@ from __future__ import annotations
 import logging
 import os
 import sys
+from collections.abc import Callable, Iterator
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, ClassVar, Iterator
+from typing import Any, ClassVar
 
 from azure.common.credentials import get_cli_profile
 from azure.core.credentials import TokenCredential
@@ -45,9 +46,7 @@ __author__ = "Pete Bryan"
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-_HELP_URI = (
-    "https://msticpy.readthedocs.io/en/latest/getting_started/AzureAuthentication.html"
-)
+_HELP_URI = "https://msticpy.readthedocs.io/en/latest/getting_started/AzureAuthentication.html"
 
 
 @dataclass
@@ -71,9 +70,7 @@ class AzCredentials:
 class AzureCredEnvNames:
     """Enumeration of Azure environment credential names."""
 
-    AZURE_CLIENT_ID: ClassVar[str] = (
-        "AZURE_CLIENT_ID"  # The app ID for the service principal
-    )
+    AZURE_CLIENT_ID: ClassVar[str] = "AZURE_CLIENT_ID"  # The app ID for the service principal
     AZURE_TENANT_ID: ClassVar[str] = (
         "AZURE_TENANT_ID"  # The service principal's Azure AD tenant ID
     )
@@ -89,15 +86,11 @@ class AzureCredEnvNames:
     AZURE_CLIENT_CERTIFICATE_PATH: ClassVar[str] = "AZURE_CLIENT_CERTIFICATE_PATH"
     # (Optional) The password protecting the certificate file
     # (for PFX (PKCS12) certificates).
-    AZURE_CLIENT_CERTIFICATE_PASSWORD: ClassVar[str] = (
-        "AZURE_CLIENT_CERTIFICATE_PASSWORD"  # nosec  # noqa
-    )
+    AZURE_CLIENT_CERTIFICATE_PASSWORD: ClassVar[str] = "AZURE_CLIENT_CERTIFICATE_PASSWORD"  # nosec  # noqa
     # (Optional) Specifies whether an authentication request will include an x5c
     # header to support subject name / issuer based authentication.
     # When set to `true` or `1`, authentication requests include the x5c header.
-    AZURE_CLIENT_SEND_CERTIFICATE_CHAIN: ClassVar[str] = (
-        "AZURE_CLIENT_SEND_CERTIFICATE_CHAIN"
-    )
+    AZURE_CLIENT_SEND_CERTIFICATE_CHAIN: ClassVar[str] = "AZURE_CLIENT_SEND_CERTIFICATE_CHAIN"
 
     # Username and password:
     AZURE_USERNAME: ClassVar[str] = (
@@ -204,9 +197,7 @@ def _build_msi_client(
             return cred
         except ClientAuthenticationError:
             # If we fail again, just create with no params
-            logger.info(
-                "Managed Identity credential failed auth - retrying with no params"
-            )
+            logger.info("Managed Identity credential failed auth - retrying with no params")
             return ManagedIdentityCredential()
 
 
@@ -270,15 +261,13 @@ def _build_certificate_client(
 ) -> CertificateCredential | None:
     """Build a credential from Certificate."""
     if not client_id:
-        logger.info(
-            "'certificate' credential requested but client_id param not supplied"
-        )
+        logger.info("'certificate' credential requested but client_id param not supplied")
         return None
     return CertificateCredential(
         authority=aad_uri,
         tenant_id=tenant_id,  # type: ignore
         client_id=client_id,
-        **kwargs,  # type: ignore
+        **kwargs,
     )
 
 
@@ -288,27 +277,25 @@ def _build_powershell_client(**kwargs) -> AzurePowerShellCredential:
     return AzurePowerShellCredential()
 
 
-_CLIENTS: dict[str, Callable[..., TokenCredential | None]] = dict(
-    {
-        "env": _build_env_client,
-        "cli": _build_cli_client,
-        "msi": _build_msi_client,
-        "vscode": _build_vscode_client,
-        "powershell": _build_powershell_client,
-        "interactive": _build_interactive_client,
-        "interactive_browser": _build_interactive_client,
-        "devicecode": _build_device_code_client,
-        "device_code": _build_device_code_client,
-        "device": _build_device_code_client,
-        "environment": _build_env_client,
-        "managedidentity": _build_msi_client,
-        "managed_identity": _build_msi_client,
-        "clientsecret": _build_client_secret_client,
-        "client_secret": _build_client_secret_client,
-        "certificate": _build_certificate_client,
-        "cert": _build_certificate_client,
-    }
-)
+_CLIENTS: dict[str, Callable[..., TokenCredential | None]] = {
+    "env": _build_env_client,
+    "cli": _build_cli_client,
+    "msi": _build_msi_client,
+    "vscode": _build_vscode_client,
+    "powershell": _build_powershell_client,
+    "interactive": _build_interactive_client,
+    "interactive_browser": _build_interactive_client,
+    "devicecode": _build_device_code_client,
+    "device_code": _build_device_code_client,
+    "device": _build_device_code_client,
+    "environment": _build_env_client,
+    "managedidentity": _build_msi_client,
+    "managed_identity": _build_msi_client,
+    "clientsecret": _build_client_secret_client,
+    "client_secret": _build_client_secret_client,
+    "certificate": _build_certificate_client,
+    "cert": _build_certificate_client,
+}
 
 
 def list_auth_methods() -> list[str]:
@@ -412,12 +399,12 @@ def _az_connect_core(
         wrapped_credentials: CredentialWrapper = CredentialWrapper(
             chained_credential, resource_id=az_config.token_uri
         )
-        return AzCredentials(wrapped_credentials, chained_credential)  # type: ignore[arg-type]
+        return AzCredentials(wrapped_credentials, chained_credential)
 
     # Create the wrapped credential using the passed credential
     wrapped_credentials = CredentialWrapper(credential, resource_id=az_config.token_uri)
     return AzCredentials(
-        wrapped_credentials,  # type: ignore[arg-type]
+        wrapped_credentials,
         ChainedTokenCredential(credential),  # type: ignore[arg-type]
     )
 
@@ -514,10 +501,7 @@ def only_interactive_cred(chained_cred: ChainedTokenCredential):
 
 def _filter_credential_warning(record) -> bool:
     """Rewrite out credential not found message."""
-    if (
-        not record.name.startswith("azure.identity")
-        or record.levelno != logging.WARNING
-    ):
+    if not record.name.startswith("azure.identity") or record.levelno != logging.WARNING:
         return True
     message = record.getMessage()
     if ".get_token" in message:
@@ -555,16 +539,9 @@ def check_cli_credentials() -> tuple[AzureCliStatus, str | None]:
         cli_profile = get_cli_profile()
         raw_token = cli_profile.get_raw_token()
         bearer_token = None
-        if (
-            isinstance(raw_token, tuple)
-            and len(raw_token) == 3
-            and len(raw_token[0]) == 3
-        ):
+        if isinstance(raw_token, tuple) and len(raw_token) == 3 and len(raw_token[0]) == 3:
             bearer_token = raw_token[0][2]
-            if (
-                parser.parse(bearer_token.get("expiresOn", datetime.min))
-                < datetime.now()
-            ):
+            if parser.parse(bearer_token.get("expiresOn", datetime.min)) < datetime.now():
                 raise ValueError("AADSTS70043: The refresh token has expired")
 
         return AzureCliStatus.CLI_OK, "Azure CLI credentials available."

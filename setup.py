@@ -21,9 +21,7 @@ with open("requirements-dev.txt", encoding="utf-8") as fh:
 
 
 def _combine_extras(extras: list) -> list:
-    return list(
-        {pkg for name, pkgs in EXTRAS.items() for pkg in pkgs if name in extras}
-    )
+    return list({pkg for name, pkgs in EXTRAS.items() for pkg in pkgs if name in extras})
 
 
 # Extras definitions
@@ -32,7 +30,6 @@ EXTRAS = {
     "vt3": ["vt-py>=0.18.0", "vt-graph-api>=2.0"],
     "splunk": ["splunk-sdk>=1.6.0,!=2.0.0"],
     "sumologic": ["sumologic-sdk>=0.1.11", "openpyxl>=3.0"],
-    "kql": ["KqlmagicCustom[jupyter-extended]>=0.1.114.post22"],
     "azure": [
         "azure-mgmt-compute>=4.6.2",
         "azure-mgmt-core>=1.2.1",
@@ -63,9 +60,7 @@ extras_all = [
 EXTRAS["all"] = extras_all
 
 # Create combination extras
-EXTRAS["all"] = sorted(
-    _combine_extras(list({name for name in EXTRAS if name != "dev"}))
-)
+EXTRAS["all"] = sorted(_combine_extras(list({name for name in EXTRAS if name != "dev"})))
 
 EXTRAS["test"] = sorted(_combine_extras(["all", "dev"]))
 EXTRAS["sentinel"] = EXTRAS["azure"]

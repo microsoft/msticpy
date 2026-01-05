@@ -5,8 +5,9 @@
 # --------------------------------------------------------------------------
 """Module for common display functions."""
 
+from collections.abc import Callable, Iterable
 from importlib.metadata import version
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Literal
 
 import networkx as nx
 from bokeh.io import output_notebook
@@ -24,8 +25,7 @@ from bokeh.models import (  # type: ignore[attr-defined]
 )
 from bokeh.palettes import Spectral4
 from bokeh.plotting import figure, from_networkx, show
-from packaging.version import Version, parse
-from typing_extensions import Literal
+from packaging.version import Version, parse  # pylint: disable=no-name-in-module
 
 from .._version import VERSION
 from .figure_dimension import bokeh_figure
@@ -42,9 +42,9 @@ _BOKEH_VERSION: Version = parse(version("bokeh"))
 figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 
 
-GraphLayout = Union[
-    Callable[[Any], Dict[str, Tuple[float, float]]],
-    Literal[
+GraphLayout = (
+    Callable[[Any], dict[str, tuple[float, float]]]
+    | Literal[
         "spring",
         "bipartite",
         "circular",
@@ -55,9 +55,9 @@ GraphLayout = Union[
         "spectral",
         "spiral",
         "multi_partite",
-    ],
-    Dict[str, Tuple[float, float]],
-]
+    ]
+    | dict[str, tuple[float, float]]
+)
 
 
 # pylint: disable=too-many-arguments, too-many-locals
@@ -65,14 +65,14 @@ def plot_nx_graph(
     nx_graph: nx.Graph,
     title: str = "Data Graph",
     node_size: int = 25,
-    font_size: Union[int, str] = 10,
+    font_size: int | str = 10,
     height: int = 800,
     width: int = 800,
     scale: int = 2,
     hide: bool = False,
-    source_attrs: Optional[Iterable[str]] = None,
-    target_attrs: Optional[Iterable[str]] = None,
-    edge_attrs: Optional[Iterable[str]] = None,
+    source_attrs: Iterable[str] | None = None,
+    target_attrs: Iterable[str] | None = None,
+    edge_attrs: Iterable[str] | None = None,
     layout: GraphLayout = "spring",
     **kwargs,
 ) -> figure:
@@ -137,11 +137,7 @@ def plot_nx_graph(
     node_attrs = {
         node: attrs.get(
             "color",
-            (
-                source_color
-                if attrs.get("node_role", "source") == "source"
-                else target_color
-            ),
+            (source_color if attrs.get("node_role", "source") == "source" else target_color),
         )
         for node, attrs in nx_graph.nodes(data=True)
     }
@@ -190,9 +186,7 @@ def plot_nx_graph(
         _create_node_hover(source_attrs, target_attrs, [graph_renderer.node_renderer])
     ]
     if edge_attrs:
-        hover_tools.append(
-            _create_edge_hover(edge_attrs, [graph_renderer.edge_renderer])
-        )
+        hover_tools.append(_create_edge_hover(edge_attrs, [graph_renderer.edge_renderer]))
     plot.add_tools(*hover_tools, WheelZoomTool(), TapTool(), BoxSelectTool())
 
     # Create labels
@@ -225,9 +219,9 @@ def _get_graph_layout(nx_graph: nx.Graph, layout: GraphLayout, **kwargs):
 
 
 def _create_node_hover(
-    source_attrs: Optional[Iterable[str]],
-    target_attrs: Optional[Iterable[str]],
-    renderers: List[Renderer],
+    source_attrs: Iterable[str] | None,
+    target_attrs: Iterable[str] | None,
+    renderers: list[Renderer],
 ) -> HoverTool:
     """Create a hover tool for nodes."""
     node_attr_cols = set((list(source_attrs or [])) + (list(target_attrs or [])))
@@ -238,9 +232,7 @@ def _create_node_hover(
     return HoverTool(tooltips=node_tooltips, renderers=renderers)
 
 
-def _create_edge_hover(
-    edge_attrs: Iterable[str], renderers: List[Renderer]
-) -> HoverTool:
+def _create_edge_hover(edge_attrs: Iterable[str], renderers: list[Renderer]) -> HoverTool:
     """Create a hover tool for nodes."""
     edge_attr_cols = edge_attrs or []
     edge_tooltips = [
@@ -255,9 +247,7 @@ def _create_node_renderer(graph_renderer: Renderer, node_size: int, fill_color: 
         circle_size_param = {"radius": node_size // 2}
     else:
         circle_size_param = {"size": node_size // 2}
-    graph_renderer.node_renderer.glyph = Circle(
-        **circle_size_param, fill_color=fill_color
-    )
+    graph_renderer.node_renderer.glyph = Circle(**circle_size_param, fill_color=fill_color)
     graph_renderer.node_renderer.hover_glyph = Circle(
         **circle_size_param, fill_color=Spectral4[1]
     )
@@ -268,9 +258,7 @@ def _create_node_renderer(graph_renderer: Renderer, node_size: int, fill_color: 
 
 def _create_edge_renderer(graph_renderer: Renderer, edge_color: str):
     """Create graph render for edges."""
-    graph_renderer.edge_renderer.hover_glyph = MultiLine(
-        line_color=Spectral4[1], line_width=5
-    )
+    graph_renderer.edge_renderer.hover_glyph = MultiLine(line_color=Spectral4[1], line_width=5)
     graph_renderer.edge_renderer.glyph = MultiLine(
         line_alpha=0.8, line_color=edge_color, line_width=1
     )
@@ -282,7 +270,7 @@ def _create_edge_renderer(graph_renderer: Renderer, edge_color: str):
 def plot_entity_graph(
     entity_graph: nx.Graph,
     node_size: int = 25,
-    font_size: Union[int, str] = 10,
+    font_size: int | str = 10,
     height: int = 800,
     width: int = 800,
     scale: int = 2,
@@ -319,8 +307,7 @@ def plot_entity_graph(
     output_notebook()
     font_pnt = f"{font_size}pt" if isinstance(font_size, int) else font_size
     node_attrs = {
-        node: attrs.get("color", "green")
-        for node, attrs in entity_graph.nodes(data=True)
+        node: attrs.get("color", "green") for node, attrs in entity_graph.nodes(data=True)
     }
     nx.set_node_attributes(entity_graph, node_attrs, "node_color")
 
@@ -343,9 +330,7 @@ def plot_entity_graph(
         )
     )
 
-    graph_renderer = from_networkx(
-        entity_graph, nx.spring_layout, scale=scale, center=(0, 0)
-    )
+    graph_renderer = from_networkx(entity_graph, nx.spring_layout, scale=scale, center=(0, 0))
     if _BOKEH_VERSION > Version("3.2.0"):
         circle_size_param = {"radius": node_size // 2}
     else:

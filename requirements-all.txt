@@ -24,13 +24,10 @@ geoip2>=2.9.0
 python_openobserve>=0.4.1; python_version >= "3.10"
 httpx>=0.23.0, <1.0.0
 html5lib
-importlib-resources >= 6.4.0; python_version <= "3.8"
-ipython >= 7.1.1; python_version < "3.8"
-ipython >= 7.23.1; python_version >= "3.8"
+ipython>=7.23.1
 ipywidgets>=7.4.2, <9.0.0
 jinja2>=3.1.5  # (sec vuln) transitive dependency via multiple packages
 keyring>=13.2.1
-KqlmagicCustom[jupyter-extended]>=0.1.114.post22
 lxml>=4.6.5
 matplotlib>=3.0.0
 mo-sql-parsing>=11, <12.0.0

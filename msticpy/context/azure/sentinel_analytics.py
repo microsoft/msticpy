@@ -4,10 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Analytics Features."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 from uuid import UUID, uuid4
 
 import httpx
@@ -48,9 +50,7 @@ class SentinelHuntingMixin(SentinelUtilsMixin):
             item_type="ss_path",
             api_version="2020-08-01",
         )
-        return saved_query_df[
-            saved_query_df["properties.category"] == "Hunting Queries"
-        ]
+        return saved_query_df[saved_query_df["properties.category"] == "Hunting Queries"]
 
     get_hunting_queries: Callable[..., pd.DataFrame] = list_hunting_queries
 
@@ -198,9 +198,7 @@ class SentinelAnalyticsMixin(SentinelUtilsMixin):
         if template:
             template_id: str = self._get_template_id(template)
             templates: pd.DataFrame = self.list_analytic_templates()
-            template_details: pd.Series = templates[
-                templates["name"] == template_id
-            ].iloc[0]
+            template_details: pd.Series = templates[templates["name"] == template_id].iloc[0]
             name = template_details["properties.displayName"]
             query = template_details["properties.query"]
             query_frequency = template_details["properties.queryFrequency"]

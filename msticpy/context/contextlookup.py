@@ -12,9 +12,11 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import TYPE_CHECKING, ClassVar
 
 from typing_extensions import Self
 
@@ -36,9 +38,7 @@ __author__ = "Ian Hellen"
 class ContextLookup(Lookup):
     """Observable lookup from providers."""
 
-    _NO_PROVIDERS_MSG: ClassVar[
-        str
-    ] = """
+    _NO_PROVIDERS_MSG: ClassVar[str] = """
     No Context Providers are loaded - please check that
     you have correctly configured your msticpyconfig.yaml settings.
     """
@@ -171,7 +171,7 @@ class ContextLookup(Lookup):
     ) -> pd.DataFrame:
         """Lookup items async."""
         return await self._lookup_items_async(
-            data,  # type: ignore[arg-type]
+            data,
             item_col=obs_col,
             item_type_col=obs_type_col,
             query_type=query_type,

@@ -4,9 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for SecurityAlert class."""
+
 import json
 from json import JSONDecodeError
-from typing import Any, Dict, List
+from typing import Any
 
 import pandas as pd
 from deprecated.sphinx import deprecated
@@ -35,9 +36,9 @@ class SecurityAlert(SecurityBase):
         super().__init__(src_row=src_row)
 
         # add entities to dictionary to remove dups
-        self._src_entities: Dict[int, Entity] = {}
+        self._src_entities: dict[int, Entity] = {}
 
-        self.extended_properties: Dict[str, Any] = {}
+        self.extended_properties: dict[str, Any] = {}
         if src_row is not None:
             if "Entities" in src_row:
                 self._extract_entities(src_row)
@@ -47,20 +48,18 @@ class SecurityAlert(SecurityBase):
                     self.extended_properties = src_row.ExtendedProperties
                 elif isinstance(src_row.ExtendedProperties, str):
                     try:
-                        self.extended_properties = json.loads(
-                            src_row.ExtendedProperties
-                        )
+                        self.extended_properties = json.loads(src_row.ExtendedProperties)
                     except JSONDecodeError:
                         pass
         self._find_os_family()
 
     @property
-    def entities(self) -> List[Entity]:
+    def entities(self) -> list[Entity]:
         """Return a list of the Security Alert entities."""
         return list(self._src_entities.values())
 
     @property
-    def query_params(self) -> Dict[str, Any]:
+    def query_params(self) -> dict[str, Any]:
         """
         Query parameters derived from alert.
 
@@ -71,10 +70,7 @@ class SecurityAlert(SecurityBase):
 
         """
         params_dict = super().query_params
-        if (
-            "system_alert_id" not in params_dict
-            or params_dict["system_alert_id"] is None
-        ):
+        if "system_alert_id" not in params_dict or params_dict["system_alert_id"] is None:
             params_dict["system_alert_id"] = self._ids["SystemAlertId"]
         return params_dict
 
@@ -106,8 +102,7 @@ class SecurityAlert(SecurityBase):
 
         if self.extended_properties:
             str_rep = [
-                f"ExtProp: {prop}: {val}"
-                for prop, val in self.extended_properties.items()
+                f"ExtProp: {prop}: {val}" for prop, val in self.extended_properties.items()
             ]
             alert_props = alert_props + "\n" + "\n".join(str_rep)
 
@@ -144,8 +139,7 @@ class SecurityAlert(SecurityBase):
             ref_props_multi = {
                 name: prop
                 for name, prop in entity.properties.items()
-                if isinstance(prop, list)
-                and any(elem for elem in prop if "$ref" in elem)
+                if isinstance(prop, list) and any(elem for elem in prop if "$ref" in elem)
             }
             for prop_name, prop_val in ref_props_multi.items():
                 for idx, elem in enumerate(prop_val):
@@ -159,7 +153,7 @@ class SecurityAlert(SecurityBase):
                             edge_attrs={"name": prop_name},
                         )
 
-    def _extract_entities(self, src_row):  # noqa: MC0001
+    def _extract_entities(self, src_row):
         input_entities = []
 
         if isinstance(src_row.ExtendedProperties, str):

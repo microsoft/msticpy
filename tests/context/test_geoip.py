@@ -83,6 +83,7 @@ def test_geoiplite_download(tmp_path):
             tgt_folder.rmdir()
 
 
+@pytest.mark.filterwarnings("ignore:GeoIpLookup")
 def test_geoiplite_lookup():
     """Test GeoLite lookups."""
     ips = ["151.101.128.223", "151.101.0.223", "151.101.64.223", "151.101.192.223"]

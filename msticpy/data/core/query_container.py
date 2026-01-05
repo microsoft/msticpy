@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Query hierarchy attribute class."""
+
 from functools import partial
 
 from ..._version import VERSION

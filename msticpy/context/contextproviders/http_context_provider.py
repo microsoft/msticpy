@@ -11,6 +11,7 @@ It is used to interface with HTTP API providing additional contexts.
 It inherits from ContextProvider and HttpProvider
 
 """
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -126,9 +127,7 @@ class HttpContextProvider(ContextProvider, HttpProvider):
                 result["RawResult"] = response.json().copy()
                 result["Result"], result["Details"] = self.parse_results(result)
             except JSONDecodeError:
-                result[
-                    "RawResult"
-                ] = f"""There was a problem parsing results from this lookup:
+                result["RawResult"] = f"""There was a problem parsing results from this lookup:
                                     {response.text}"""
                 result["Result"] = False
                 result["Details"] = {}
@@ -139,7 +138,7 @@ class HttpContextProvider(ContextProvider, HttpProvider):
             result["Details"] = self._response_message(result["Status"])
         return result
 
-    @lru_cache(maxsize=256)
+    @lru_cache(maxsize=256)  # noqa: B019
     def lookup_observable(  # noqa:PLR0913
         self: Self,
         observable: str,

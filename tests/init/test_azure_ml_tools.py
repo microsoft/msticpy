@@ -49,12 +49,9 @@ _CURR_VERSION = [v for v in aml.__version__.split(".") if v.isnumeric()]
 _MP_FUT_VER = ".".join(f"{int(v) + 1}" for v in _CURR_VERSION)
 _MP_FUT_VER_T = tuple(int(v) + 1 for v in _CURR_VERSION)
 
-_EXP_ENV = {
-    "KQLMAGIC_EXTRAS_REQUIRE": "jupyter-basic",
-    "KQLMAGIC_AZUREML_COMPUTE": "myhost",
-}
+# Kqlmagic environment variables are no longer set
+_EXP_ENV = {}
 _EXP_ENV_JPX = _EXP_ENV.copy()
-_EXP_ENV_JPX["KQLMAGIC_EXTRAS_REQUIRE"] = "jupyter-extended"
 
 
 class _PyOs:
@@ -62,20 +59,6 @@ class _PyOs:
 
     def __init__(self):
         self.environ: Dict[str, Any] = {}
-
-
-class _ipython:
-    """Emulation for IPython shell."""
-
-    pgo_installed = False
-
-    def run_line_magic(self, *args, **kwargs):
-        """Return package list."""
-        del kwargs
-        if "apt list" in args:
-            if self.pgo_installed:
-                return ["libgirepository1.0-dev", "gir1.2-secret-1"]
-            return []
 
 
 CheckVers = namedtuple("CheckVers", "py_req, mp_req, extras, is_aml, excep, env")
@@ -112,7 +95,8 @@ def test_check_versions(monkeypatch, aml_file_sys, check_vers):
     # monkeypatch for various test cases
     _os = _PyOs()
     monkeypatch.setattr(aml, "os", _os)
-    monkeypatch.setattr(aml, "get_ipython", _ipython)
+    # get_ipython is no longer used in azure_ml_tools after Kqlmagic removal
+    # monkeypatch.setattr(aml, "get_ipython", _ipython)
     monkeypatch.setattr(aml, "_get_vm_fqdn", lambda: "myhost")
     if sys.version_info[:3] < (3, 10):
         monkeypatch.setattr(sys, "version_info", VersionInfo(3, 10, 0, "final", 0))

@@ -20,6 +20,7 @@ rate. Maxmind geolite uses a downloadable database, while IPStack is
 an online lookup (API key required).
 
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -30,11 +31,12 @@ import tarfile
 import warnings
 from abc import ABCMeta, abstractmethod
 from collections import abc
+from collections.abc import Iterable, Mapping
 from datetime import datetime, timedelta, timezone
 from json import JSONDecodeError
 from pathlib import Path
 from time import sleep
-from typing import Any, ClassVar, Iterable, Mapping
+from typing import Any, ClassVar
 
 import geoip2.database
 import httpx
@@ -206,15 +208,11 @@ class IPStackLookup(GeoIpLookup):
 
     """
 
-    _LICENSE_HTML: ClassVar[
-        str
-    ] = """
+    _LICENSE_HTML: ClassVar[str] = """
 This library uses services provided by ipstack.
 <a href="https://ipstack.com">https://ipstack.com</a>"""
 
-    _LICENSE_TXT: ClassVar[
-        str
-    ] = """
+    _LICENSE_TXT: ClassVar[str] = """
 This library uses services provided by ipstack (https://ipstack.com)"""
 
     _IPSTACK_API: ClassVar[str] = (
@@ -384,9 +382,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
             # Please upgrade your subscription."}}
 
             if "success" in results and not results["success"]:
-                err_msg: str = (
-                    f"Service unable to complete request. Error: {results['error']}"
-                )
+                err_msg: str = f"Service unable to complete request. Error: {results['error']}"
                 raise PermissionError(err_msg)
             return [(item, response.status_code) for item in results.values()]
 
@@ -436,8 +432,7 @@ class GeoLiteLookup(GeoIpLookup):
     """
 
     _MAXMIND_DOWNLOAD: ClassVar[str] = (
-        "https://download.maxmind.com/geoip/databases"
-        "/GeoLite2-City/download?suffix=tar.gz"
+        "https://download.maxmind.com/geoip/databases/GeoLite2-City/download?suffix=tar.gz"
     )
 
     _DB_HOME: ClassVar[str] = str(
@@ -446,23 +441,17 @@ class GeoLiteLookup(GeoIpLookup):
     _DB_ARCHIVE: ClassVar[str] = "GeoLite2-City.mmdb.{rand}.tar.gz"
     _DB_FILE: ClassVar[str] = "GeoLite2-City.mmdb"
 
-    _LICENSE_HTML: ClassVar[
-        str
-    ] = """
+    _LICENSE_HTML: ClassVar[str] = """
 This product includes GeoLite2 data created by MaxMind, available from
 <a href="https://www.maxmind.com">https://www.maxmind.com</a>.
 """
 
-    _LICENSE_TXT: ClassVar[
-        str
-    ] = """
+    _LICENSE_TXT: ClassVar[str] = """
 This product includes GeoLite2 data created by MaxMind, available from
 https://www.maxmind.com.
 """
 
-    _NO_API_KEY_MSSG: ClassVar[
-        str
-    ] = """
+    _NO_API_KEY_MSSG: ClassVar[str] = """
 You need both an API Key and an Account ID to download the Maxmind GeoIPLite database.
 If you do not have an account, go here to create one and obtain and API key
 and your account ID.
@@ -589,7 +578,7 @@ Alternatively, you can pass the account_id and api_key to the GeoLiteLookup clas
                 try:
                     geo_match_object = self._reader.city(ip_input)
                     if hasattr(geo_match_object, "raw"):
-                        geo_match = geo_match_object.raw  # type: ignore
+                        geo_match = geo_match_object.raw
                     elif hasattr(geo_match_object, "to_dict"):
                         geo_match = geo_match_object.to_dict()
                     else:
@@ -705,8 +694,7 @@ Alternatively, you can pass the account_id and api_key to the GeoLiteLookup clas
                     db_updated = False
             elif self._force_update:
                 logger.info(
-                    "force_update is set to True. "
-                    "Attempting to download new database to %s",
+                    "force_update is set to True. Attempting to download new database to %s",
                     self._db_folder,
                 )
                 if not self._download_and_extract_archive():
@@ -751,7 +739,8 @@ Alternatively, you can pass the account_id and api_key to the GeoLiteLookup clas
                 return True
             # Create a basic auth object for the request
             basic_auth = httpx.BasicAuth(
-                username=self._account_id, password=self._api_key  # type: ignore[arg-type]
+                username=self._account_id,  # type: ignore[arg-type]
+                password=self._api_key,  # type: ignore[arg-type]
             )
             # Stream download and write to file
             logger.info(
@@ -969,9 +958,7 @@ def entity_distance(ip_src: IpAddress, ip_dest: IpAddress) -> float:
 
     """
     if not ip_src.Location or not ip_dest.Location:
-        err_msg: str = (
-            "Source and destination entities must have defined Location properties."
-        )
+        err_msg: str = "Source and destination entities must have defined Location properties."
         raise AttributeError(err_msg)
 
     return geo_distance(

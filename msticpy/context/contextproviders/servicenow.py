@@ -12,6 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
 import datetime as dt
@@ -155,9 +156,7 @@ class ServiceNow(HttpContextProvider):
                     if result.get("sys_created_on")
                     else ""
                 ),
-                **(
-                    getattr(self, f"_parse_result_{response['ObservableType']}")(result)
-                ),
+                **(getattr(self, f"_parse_result_{response['ObservableType']}")(result)),
             }
             for result in results
         ]

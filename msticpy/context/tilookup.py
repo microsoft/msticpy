@@ -12,9 +12,11 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import TYPE_CHECKING, ClassVar
 
 from typing_extensions import Self
 
@@ -39,9 +41,7 @@ __author__ = "Ian Hellen"
 class TILookup(Lookup):
     """Threat Intel observable lookup from providers."""
 
-    _NO_PROVIDERS_MSG: ClassVar[
-        str
-    ] = """
+    _NO_PROVIDERS_MSG: ClassVar[str] = """
     No TI Providers are loaded - please check that
     you have correctly configured your msticpyconfig.yaml settings.
     """
@@ -233,7 +233,7 @@ class TILookup(Lookup):
     ) -> pd.DataFrame:
         """Lookup IoCs async."""
         return await self._lookup_items_async(
-            data,  # type: ignore[arg-type]
+            data,
             item_col=ioc_col,
             item_type_col=ioc_type_col,
             query_type=ioc_query_type,

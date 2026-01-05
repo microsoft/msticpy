@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Entity enumerations."""
+
 from enum import Enum
-from typing import Dict, Type
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -14,7 +14,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 # pylint: disable=invalid-name
-ENTITY_ENUMS: Dict[str, Type] = {}
+ENTITY_ENUMS: dict[str, type] = {}
 
 
 # pylint: disable=invalid-name

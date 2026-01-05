@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Unit tests for Folium wrapper."""
 import math
+import sys
 from pathlib import Path
 from typing import Any, Optional
 
@@ -109,6 +110,7 @@ def test_centering_algorithms(geo_loc_df):
     check.is_true(math.isclose(center[1], -87.36079411764706))
 
 
+@pytest.mark.filterwarnings("ignore:GeoIpLookup")
 def test_add_ips(geo_loc_df):
     """Test adding list of IPs."""
     ips = geo_loc_df.AllExtIPs
@@ -235,7 +237,7 @@ icon_map = {
 
 
 def icon_map_func(key):
-    """Test function for plot_map"""
+    """Test function for plot_map."""
     return icon_map.get(key, icon_map.get("default"))
 
 
@@ -279,7 +281,11 @@ _PM_TEST_PARAMS = [
 _PM_IDS = [pmt.name for pmt in _PM_TEST_PARAMS]
 
 
+@pytest.mark.filterwarnings("ignore:GeoIpLookup")
 @pytest.mark.parametrize("plot_test", _PM_TEST_PARAMS, ids=_PM_IDS)
+@pytest.mark.skipif(
+    sys.platform.startswith("linux"), reason="GeoIP database not configured in Docker"
+)
 def test_plot_map(plot_test, geo_loc_df):
     """Test plot_map with different parameters."""
     plot_kwargs = attr.asdict(plot_test)

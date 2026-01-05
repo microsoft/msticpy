@@ -5,6 +5,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Kusto Driver subclass."""
+
 from __future__ import annotations
 
 import base64
@@ -64,9 +65,7 @@ if TYPE_CHECKING:
 __version__: str = VERSION
 __author__: str = "Ian Hellen"
 
-_HELP_URL: str = (
-    "https://msticpy.readthedocs.io/en/latest/DataProviders/DataProv-Kusto.html"
-)
+_HELP_URL: str = "https://msticpy.readthedocs.io/en/latest/DataProviders/DataProv-Kusto.html"
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -651,9 +650,7 @@ class AzureKustoDriver(DriverBase):
     ) -> KustoConnectionStringBuilder:
         """Return full cluster URI and credential for cluster name or URI."""
         auth_params: AuthParams = self._get_auth_params_from_config(cluster_config)
-        connect_auth_types: list[str] = (
-            self._az_auth_types or AzureCloudConfig().auth_methods
-        )
+        connect_auth_types: list[str] = self._az_auth_types or AzureCloudConfig().auth_methods
         if auth_params.method == "clientsecret":
             logger.info("Client secret specified in config - using client secret authn")
             if "clientsecret" not in connect_auth_types:
@@ -715,13 +712,15 @@ class AzureKustoDriver(DriverBase):
             encoding=serialization.Encoding.PEM,
         )
         thumbprint: bytes = certificate.fingerprint(hashes.SHA256())
-        return KustoConnectionStringBuilder.with_aad_application_certificate_sni_authentication(
-            connection_string=self.cluster_uri,
-            aad_app_id=auth_params.params["client_id"],
-            private_certificate=private_cert.decode("utf-8"),
-            public_certificate=public_cert.decode("utf-8"),
-            thumbprint=thumbprint.hex().upper(),
-            authority_id=self._az_tenant_id,
+        return (
+            KustoConnectionStringBuilder.with_aad_application_certificate_sni_authentication(
+                connection_string=self.cluster_uri,
+                aad_app_id=auth_params.params["client_id"],
+                private_certificate=private_cert.decode("utf-8"),
+                public_certificate=public_cert.decode("utf-8"),
+                thumbprint=thumbprint.hex().upper(),
+                authority_id=self._az_tenant_id,
+            )
         )
 
     def _get_auth_params_from_config(
@@ -738,10 +737,7 @@ class AzureKustoDriver(DriverBase):
             logger.info(
                 "Using client secret authentication because client_secret in config",
             )
-        elif (
-            KFields.CERTIFICATE in cluster_config
-            and KFields.CLIENT_ID in cluster_config
-        ):
+        elif KFields.CERTIFICATE in cluster_config and KFields.CLIENT_ID in cluster_config:
             method = "certificate"
             auth_params_dict["client_id"] = cluster_config.ClientId
             auth_params_dict["certificate"] = cluster_config.Certificate
@@ -945,9 +941,7 @@ def _create_cluster_config(
 ) -> dict[str, KustoConfig]:
     """Return a dictionary of Kusto cluster settings from msticpyconfig.yaml."""
     return {
-        config[KFields.ARGS]
-        .get(KFields.CLUSTER)
-        .casefold(): KustoConfig(
+        config[KFields.ARGS].get(KFields.CLUSTER).casefold(): KustoConfig(
             tenant_id=_setting_or_default(
                 config[KFields.ARGS],
                 KFields.TENANT_ID,
@@ -988,8 +982,7 @@ def _section_or_default(
 ) -> dict[str, Any]:
     """Return a combined dictionary from the settings dictionary or the default."""
     return {
-        key: settings.get(key, default.get(key))
-        for key in (settings.keys() | default.keys())
+        key: settings.get(key, default.get(key)) for key in (settings.keys() | default.keys())
     }
 
 
@@ -1029,9 +1022,9 @@ def _parse_query_status(response: KustoResponseDataSet) -> dict[str, Any]:
     df_status: pd.DataFrame = dataframe_from_result_table(
         response.tables[query_info_idx],
     )
-    results: list[dict[Hashable, Any]] = df_status[
-        ["EventTypeName", "Payload"]
-    ].to_dict(orient="records")
+    results: list[dict[Hashable, Any]] = df_status[["EventTypeName", "Payload"]].to_dict(
+        orient="records"
+    )
     return {
         row.get("EventTypeName", "Unknown_field"): json.loads(
             row.get("Payload", "No Payload"),
@@ -1087,9 +1080,7 @@ def _raise_not_connected_error() -> NoReturn:
 
 def _raise_unknown_query_error(err: Exception) -> NoReturn:
     """Raise an error if unknown exception raised."""
-    err_msg: str = (
-        f"Unknown exception when executing query. Exception type: {type(err)}"
-    )
+    err_msg: str = f"Unknown exception when executing query. Exception type: {type(err)}"
     raise MsticpyDataQueryError(
         err_msg,
         *err.args,

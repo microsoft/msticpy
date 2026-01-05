@@ -4,9 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """Observation summary collector."""
+
 from collections import OrderedDict
+from collections.abc import Iterator, Mapping
 from datetime import datetime
-from typing import Any, Dict, Iterator, List, Mapping, Optional, Set, Tuple
+from typing import Any
 
 import attr
 import pandas as pd
@@ -57,20 +59,20 @@ class Observation:
 
     caption: str
     data: Any
-    description: Optional[str] = None
-    data_type: Optional[str] = None
-    link: Optional[str] = None
+    description: str | None = None
+    data_type: str | None = None
+    link: str | None = None
     score: int = 0
-    tags: List[str] = Factory(list)
-    additional_properties: Dict[str, Any] = Factory(dict)
-    timestamp: Optional[datetime] = None
-    time_span: Optional[TimeSpan] = None
-    time_column: Optional[str] = None
-    filter: Optional[str] = None
-    schema: Optional[str] = None
+    tags: list[str] = Factory(list)
+    additional_properties: dict[str, Any] = Factory(dict)
+    timestamp: datetime | None = None
+    time_span: TimeSpan | None = None
+    time_column: str | None = None
+    filter: str | None = None
+    schema: str | None = None
 
     @classmethod
-    def required_fields(cls) -> List[str]:
+    def required_fields(cls) -> list[str]:
         """
         Return required fields for Observation instance.
 
@@ -83,7 +85,7 @@ class Observation:
         return ["caption", "data"]
 
     @classmethod
-    def all_fields(cls) -> Set[str]:
+    def all_fields(cls) -> set[str]:
         """
         Return all fields of Observation class.
 
@@ -93,7 +95,7 @@ class Observation:
             Set of all field names.
 
         """
-        return {field.name for field in attr.fields(cls)}  # type: ignore[misc]
+        return {field.name for field in attr.fields(cls)}
 
     def display(self):
         """Display the observation."""
@@ -105,7 +107,7 @@ class Observation:
         if self.link:
             display(Markdown(f"[Go to details](#{self.link})"))
         if self.tags:
-            display(Markdown(f'tags: {", ".join(self.tags)}'))
+            display(Markdown(f"tags: {', '.join(self.tags)}"))
         display(self.filtered_data)
         if self.additional_properties:
             display(Markdown("### Additional Properties"))
@@ -144,7 +146,7 @@ class Observations:
             (the default is None)
 
         """
-        self.observation_list: Dict[str, Observation] = OrderedDict()
+        self.observation_list: dict[str, Observation] = OrderedDict()
         if observationlist is not None:
             self.observation_list.update(observationlist.observations)
 
@@ -152,7 +154,7 @@ class Observations:
         """Return the observation with a caption."""
         return self.observation_list[key]
 
-    def __iter__(self) -> Iterator[Tuple[str, Observation]]:
+    def __iter__(self) -> Iterator[tuple[str, Observation]]:
         """Return iterator over observations."""
         yield from self.observation_list.items()
 
@@ -208,9 +210,7 @@ class Observations:
                 )
 
             core_fields = {
-                key: value
-                for key, value in kwargs.items()
-                if key in Observation.all_fields()
+                key: value for key, value in kwargs.items() if key in Observation.all_fields()
             }
             new_observation = Observation(**core_fields)
             addl_fields = {

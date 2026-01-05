@@ -4,10 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Dataframe viewer using Panel Tabulator."""
+
+from collections.abc import Callable, Iterable
 from functools import partial
 from pprint import pformat
 from textwrap import wrap
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any
 
 import pandas as pd
 from IPython import get_ipython
@@ -32,7 +34,7 @@ class DataViewer:
     _DEF_HEIGHT = 550
     _DEFAULT_HIDDEN_COLS = ["TenantId"]
 
-    def __init__(self, data: pd.DataFrame, selected_cols: List[str] = None, **kwargs):
+    def __init__(self, data: pd.DataFrame, selected_cols: list[str] = None, **kwargs):
         """
         Initialize the DataViewer class.
 
@@ -97,10 +99,7 @@ class DataViewer:
         hidden_cols = kwargs.pop("hidden_cols", None)
         self._hidden_columns = self._default_hidden_cols(selected_cols, hidden_cols)
 
-        if (
-            not kwargs.pop("show_tenant_id", False)
-            and "TenantId" in self._hidden_columns
-        ):
+        if not kwargs.pop("show_tenant_id", False) and "TenantId" in self._hidden_columns:
             self._hidden_columns.remove("TenantId")
 
         # Create the tabulator control
@@ -119,13 +118,10 @@ class DataViewer:
         # Add the column chooser
         self.column_chooser = DataTableColumnChooser(
             data,
-            selected_cols=selected_cols
-            or list(set(data.columns) - set(self._hidden_columns)),  # type: ignore
+            selected_cols=selected_cols or list(set(data.columns) - set(self._hidden_columns)),
         )
         self.column_chooser.apply_button.on_click(self._update_columns)
-        self.accordion = pn.layout.Accordion(
-            ("Select columns", self.column_chooser.layout)
-        )
+        self.accordion = pn.layout.Accordion(("Select columns", self.column_chooser.layout))
         self._update_columns(btn=None)
         # set layout for the widget.
         self.layout = pn.layout.Column(self.data_table, self.accordion)
@@ -154,15 +150,15 @@ class DataViewer:
         self.accordion.active = []
 
     def _create_row_formatter(
-        self, detail_columns: Optional[List[str]] = None
-    ) -> Optional[Callable]:
+        self, detail_columns: list[str] | None = None
+    ) -> Callable | None:
         """Build formatter function for row-details."""
         if not detail_columns:
             return None
         row_view_cols = set(detail_columns) & set(self.data.columns)
         return partial(_display_column_details, columns=row_view_cols)
 
-    def _create_configuration(self, kwargs) -> Dict[str, Any]:
+    def _create_configuration(self, kwargs) -> dict[str, Any]:
         """Create Tabulator configuration dict to pass to JS Tabulator."""
         return {
             "columnDefaults": {"maxWidth": kwargs.pop("max_col_width", 500)},
@@ -177,7 +173,7 @@ class DataViewer:
             },
         }
 
-    def _default_hidden_cols(self, selected_cols, hidden_cols) -> List[str]:
+    def _default_hidden_cols(self, selected_cols, hidden_cols) -> list[str]:
         """Return list of of columns hidden by default."""
         return [
             hidden_col
@@ -208,7 +204,7 @@ class DataTableColumnChooser:
         self.layout = pn.layout.Column(self._col_select, self.apply_button)
 
     @property
-    def selected_columns(self) -> List[str]:
+    def selected_columns(self) -> list[str]:
         """Return a list of Bokeh column definitions for the DataFrame."""
         return self._col_select.value
 
@@ -217,7 +213,7 @@ class DataTableColumnChooser:
         """Return the selected set of DataFrame columns."""
         return self.data[self._reorder_cols(self.selected_columns)]
 
-    def _reorder_cols(self, columns: List[str]) -> List[str]:
+    def _reorder_cols(self, columns: list[str]) -> list[str]:
         """Return column list in original order."""
         # order the columns as originally specified (or as the DF)
         col_init = [col for col in self._initial_cols if col in columns]

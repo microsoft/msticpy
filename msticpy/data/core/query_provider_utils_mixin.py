@@ -4,9 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Query Provider mixin methods."""
+
 import re
 from collections import abc
-from typing import Dict, Iterable, List, NamedTuple, Optional, Pattern, Protocol, Union
+from collections.abc import Iterable
+from re import Pattern
+from typing import NamedTuple, Protocol
 
 from ..._version import VERSION
 from ...common.utility.package import delayed_import
@@ -43,8 +46,8 @@ class QueryParam(NamedTuple):
 
     name: str
     data_type: str
-    description: Optional[str] = None
-    default: Optional[str] = None
+    description: str | None = None
+    default: str | None = None
 
 
 # pylint: disable=super-init-not-called
@@ -80,7 +83,7 @@ class QueryProviderUtilsMixin(QueryProviderProtocol):
         return self._query_provider.current_connection
 
     @property
-    def schema(self) -> Dict[str, Dict]:
+    def schema(self) -> dict[str, dict]:
         """
         Return current data schema of connection.
 
@@ -93,7 +96,7 @@ class QueryProviderUtilsMixin(QueryProviderProtocol):
         return self._query_provider.schema
 
     @property
-    def schema_tables(self) -> List[str]:
+    def schema_tables(self) -> list[str]:
         """
         Return list of tables in the data schema of the connection.
 
@@ -106,7 +109,7 @@ class QueryProviderUtilsMixin(QueryProviderProtocol):
         return list(self._query_provider.schema.keys())
 
     @property
-    def instance(self) -> Optional[str]:
+    def instance(self) -> str | None:
         """
         Return instance name, if any for provider.
 
@@ -137,7 +140,7 @@ class QueryProviderUtilsMixin(QueryProviderProtocol):
         print(self._query_provider.__doc__)
 
     @classmethod
-    def list_data_environments(cls) -> List[str]:
+    def list_data_environments(cls) -> list[str]:
         """
         Return list of current data environments.
 
@@ -149,13 +152,11 @@ class QueryProviderUtilsMixin(QueryProviderProtocol):
         """
         # pylint: disable=not-an-iterable
         return [
-            de
-            for de in dir(DataEnvironment)
-            if de != "Unknown" and not de.startswith("_")
+            de for de in dir(DataEnvironment) if de != "Unknown" and not de.startswith("_")
         ]
         # pylint: enable=not-an-iterable
 
-    def list_queries(self, substring: Optional[str] = None) -> List[str]:
+    def list_queries(self, substring: str | None = None) -> list[str]:
         """
         Return list of family.query in the store.
 
@@ -174,7 +175,7 @@ class QueryProviderUtilsMixin(QueryProviderProtocol):
         if substring:
             return list(
                 filter(
-                    lambda x: substring in x.lower(),  # type: ignore
+                    lambda x: substring in x.lower(),
                     self.query_store.query_names,
                 )
             )
@@ -182,11 +183,11 @@ class QueryProviderUtilsMixin(QueryProviderProtocol):
 
     def search(
         self,
-        search: Union[str, Iterable[str]] = None,
-        table: Union[str, Iterable[str]] = None,
-        param: Union[str, Iterable[str]] = None,
+        search: str | Iterable[str] | None = None,
+        table: str | Iterable[str] | None = None,
+        param: str | Iterable[str] | None = None,
         ignore_case: bool = True,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Search queries for match properties.
 
@@ -227,7 +228,7 @@ class QueryProviderUtilsMixin(QueryProviderProtocol):
         glob_searches = _normalize_to_regex(search, ignore_case)
         table_searches = _normalize_to_regex(table, ignore_case)
         param_searches = _normalize_to_regex(param, ignore_case)
-        search_hits: List[str] = []
+        search_hits: list[str] = []
         for query, search_data in self.query_store.search_items.items():
             glob_match = (not glob_searches) or any(
                 re.search(term, prop)
@@ -292,9 +293,9 @@ class QueryProviderUtilsMixin(QueryProviderProtocol):
         self,
         name: str,
         query: str,
-        family: Union[str, Iterable[str]],
-        description: Optional[str] = None,
-        parameters: Optional[Iterable[QueryParam]] = None,
+        family: str | Iterable[str],
+        description: str | None = None,
+        parameters: Iterable[QueryParam] | None = None,
     ):
         """
         Add a custom function to the provider.
@@ -358,16 +359,14 @@ class QueryProviderUtilsMixin(QueryProviderProtocol):
             "parameters": param_dict,
         }
         metadata = {"data_families": [family] if isinstance(family, str) else family}
-        query_source = QuerySource(
-            name=name, source=source, defaults={}, metadata=metadata
-        )
+        query_source = QuerySource(name=name, source=source, defaults={}, metadata=metadata)
         self.query_store.add_data_source(query_source)
         self._add_query_functions()
 
 
 def _normalize_to_regex(
-    search_term: Union[str, Iterable[str], None], ignore_case: bool
-) -> List[Pattern[str]]:
+    search_term: str | Iterable[str] | None, ignore_case: bool
+) -> list[Pattern[str]]:
     """Return iterable or str search term as list of compiled reg expressions."""
     if not search_term:
         return []

@@ -12,10 +12,12 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
+from collections.abc import Iterable
 from json import JSONDecodeError
-from typing import Any, ClassVar, Iterable
+from typing import Any, ClassVar
 
 import httpx
 import pandas as pd
@@ -242,7 +244,8 @@ class OPR(HttpTIProvider):
     def _lookup_batch(self: Self, ioc_list: list) -> Iterable[dict]:
         # build the query string manually - of the form domains[N]=domN&domains[N+1]...
         qry_elements: list[str] = [
-            f"domains[{idx}]={dom}" for idx, dom in zip(range(len(ioc_list)), ioc_list)
+            f"domains[{idx}]={dom}"
+            for idx, dom in zip(range(len(ioc_list)), ioc_list, strict=False)
         ]
 
         qry_str: str = "&".join(qry_elements)

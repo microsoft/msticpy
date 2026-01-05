@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree builder for Windows security and Linux auditd events."""
+
 from dataclasses import asdict
-from typing import Tuple
 
 import pandas as pd
 
@@ -53,10 +53,10 @@ def extract_process_tree(
 
     """
     # Clean data
-    procs_cln, schema = _clean_proc_data(procs, schema)  # type: ignore
+    procs_cln, schema = _clean_proc_data(procs, schema)
 
     # Merge parent-child
-    merged_procs = _merge_parent_by_time(procs_cln, schema)  # type: ignore
+    merged_procs = _merge_parent_by_time(procs_cln, schema)
     if debug:
         _check_merge_status(procs_cln, merged_procs, schema)
 
@@ -85,13 +85,11 @@ def extract_process_tree(
 
 def _clean_proc_data(
     procs: pd.DataFrame,
-    schema: "ProcSchema",  # type: ignore  # noqa: F821
-) -> Tuple[pd.DataFrame, ProcSchema]:
+    schema: ProcSchema,
+) -> tuple[pd.DataFrame, ProcSchema]:
     """Return cleaned process data."""
     procs = ensure_df_datetimes(procs, columns=schema.time_stamp)
-    procs_cln = (
-        procs.drop_duplicates().sort_values(schema.time_stamp, ascending=True).copy()
-    )
+    procs_cln = procs.drop_duplicates().sort_values(schema.time_stamp, ascending=True).copy()
 
     # Filter out any non-process events
     if schema.event_id_column and schema.event_id_identifier:
@@ -102,7 +100,7 @@ def _clean_proc_data(
 
     if schema.logon_id not in procs_cln.columns:
         schema = ProcSchema(**(asdict(schema)))
-        schema.logon_id = None  # type: ignore
+        schema.logon_id = None
 
     if schema.logon_id:
         procs_cln[Col.EffectiveLogonId] = procs_cln[schema.logon_id]
@@ -121,14 +119,14 @@ def _clean_proc_data(
     if schema.parent_name:
         no_pproc = procs_cln[schema.parent_name] == ""
         procs_cln.loc[no_pproc, schema.parent_name] = "unknown"
-        procs_cln[Col.parent_proc_lc] = procs_cln[schema.parent_name].str.lower()  # type: ignore
+        procs_cln[Col.parent_proc_lc] = procs_cln[schema.parent_name].str.lower()
     procs_cln[Col.source_index] = procs_cln.index
     return procs_cln, schema
 
 
 def _num_cols_to_str(
     procs_cln: pd.DataFrame,
-    schema: "ProcSchema",  # type: ignore  # noqa: F821
+    schema: ProcSchema,
 ) -> pd.DataFrame:
     """
     Change any numeric columns in our core schema to strings.
@@ -140,9 +138,7 @@ def _num_cols_to_str(
     into a single string.
     """
     # Change float/int cols in our core schema to force int
-    schema_cols = [
-        col for col in asdict(schema).values() if col and col in procs_cln.columns
-    ]
+    schema_cols = [col for col in asdict(schema).values() if col and col in procs_cln.columns]
     force_int_cols = {
         col: "int"
         for col, col_type in procs_cln[schema_cols].dtypes.to_dict().items()
@@ -161,7 +157,7 @@ def _num_cols_to_str(
 
 def _merge_parent_by_time(
     procs: pd.DataFrame,
-    schema: "ProcSchema",  # type: ignore  # noqa: F821
+    schema: ProcSchema,
 ) -> pd.DataFrame:
     """Merge procs with parents using merge_asof."""
     parent_procs = (
@@ -204,7 +200,8 @@ def _merge_parent_by_time(
 
 
 def _extract_inferred_parents(
-    merged_procs: pd.DataFrame, schema: "ProcSchema"  # type: ignore  # noqa: F821
+    merged_procs: pd.DataFrame,
+    schema: ProcSchema,
 ) -> pd.DataFrame:
     """Find any inferred parents and creates rows for them."""
     tz_aware = merged_procs.iloc[0][schema.time_stamp].tz
@@ -212,9 +209,7 @@ def _extract_inferred_parents(
 
     # Fill in missing values for root processes
     root_procs_crit = merged_procs[Col.source_index_par].isna()
-    merged_procs.loc[root_procs_crit, "NewProcessId_par"] = merged_procs[
-        schema.parent_id
-    ]
+    merged_procs.loc[root_procs_crit, "NewProcessId_par"] = merged_procs[schema.parent_id]
     parent_col_name = schema.parent_name or "ParentName"
     if schema.parent_name:
         merged_procs.loc[root_procs_crit, Col.new_process_lc_par] = merged_procs[
@@ -312,9 +307,7 @@ def _check_merge_status(procs, merged_procs, schema):
     print("These two should add up to top line")
     row_dups = len(rows_with_dups2)
     print("Rows with dups", row_dups)
-    row_nodups = len(
-        merged_procs[~merged_procs[Col.source_index].isin(rows_with_dups2)]
-    )
+    row_nodups = len(merged_procs[~merged_procs[Col.source_index].isin(rows_with_dups2)])
     print("Rows with no dups", row_nodups)
     print(row_dups, "+", row_nodups, "=", row_dups + row_nodups)
 
@@ -333,20 +326,14 @@ def _check_inferred_parents(procs, procs_par):
 
 def _check_proc_keys(merged_procs_par, schema):
     """Diagnostic for _assign_proc_keys."""
-    crit1 = merged_procs_par[Col.timestamp_orig_par].isin(
-        merged_procs_par[schema.time_stamp]
-    )
-    crit2 = merged_procs_par[Col.EffectiveLogonId].isin(
-        merged_procs_par[schema.logon_id]
-    )
+    crit1 = merged_procs_par[Col.timestamp_orig_par].isin(merged_procs_par[schema.time_stamp])
+    crit2 = merged_procs_par[Col.EffectiveLogonId].isin(merged_procs_par[schema.logon_id])
     c2a = None
     if schema.target_logon_id:
         c2a = merged_procs_par[Col.EffectiveLogonId].isin(
             merged_procs_par[schema.target_logon_id]
         )
-    crit3 = merged_procs_par[Col.parent_proc_lc].isin(
-        merged_procs_par[Col.new_process_lc]
-    )
+    crit3 = merged_procs_par[Col.parent_proc_lc].isin(merged_procs_par[Col.new_process_lc])
     crit4 = merged_procs_par[schema.process_id].isin(merged_procs_par[schema.parent_id])
     crit5 = merged_procs_par[Col.parent_key].isin(merged_procs_par.index)
     crit6 = merged_procs_par[Col.parent_key].isna()

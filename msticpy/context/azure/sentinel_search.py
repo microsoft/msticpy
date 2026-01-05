@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Search Features."""
+
 from __future__ import annotations
 
 import datetime as dt
@@ -71,8 +72,7 @@ class SentinelSearchlistsMixin(SentinelUtilsMixin):
         search_start: dt.datetime = start or (search_end - dt.timedelta(days=90))
         search_name = (search_name or str(uuid4())).replace("_", "")
         search_url: str = (
-            self.sent_urls["search"]
-            + f"/{search_name}_SRCH?api-version=2021-12-01-preview"
+            self.sent_urls["search"] + f"/{search_name}_SRCH?api-version=2021-12-01-preview"
         )
         search_items: dict[str, dict[str, Any]] = {
             "searchResults": {
@@ -118,8 +118,7 @@ class SentinelSearchlistsMixin(SentinelUtilsMixin):
         """
         search_name = search_name.strip("_SRCH")
         search_url: str = (
-            self.sent_urls["search"]
-            + f"/{search_name}_SRCH?api-version=2021-12-01-preview"
+            self.sent_urls["search"] + f"/{search_name}_SRCH?api-version=2021-12-01-preview"
         )
         if not self._token:
             err_msg = "Token not found, can't check search status."
@@ -131,9 +130,7 @@ class SentinelSearchlistsMixin(SentinelUtilsMixin):
         if not search_check_response.is_success:
             raise CloudError(response=search_check_response)
 
-        check_result: str = search_check_response.json()["properties"][
-            "provisioningState"
-        ]
+        check_result: str = search_check_response.json()["properties"]["provisioningState"]
         logger.info("%s_SRCH status is '%s'", search_name, check_result)
         return check_result == "Succeeded"
 
@@ -154,8 +151,7 @@ class SentinelSearchlistsMixin(SentinelUtilsMixin):
         """
         search_name = search_name.strip("_SRCH")
         search_url: str = (
-            self.sent_urls["search"]
-            + f"/{search_name}_SRCH?api-version=2021-12-01-preview"
+            self.sent_urls["search"] + f"/{search_name}_SRCH?api-version=2021-12-01-preview"
         )
         if not self._token:
             err_msg = "Token not found, can't delete search."

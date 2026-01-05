@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """OAuthApplication Entity class."""
-from typing import Any, List, Mapping, Optional
+
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -65,14 +67,14 @@ class OAuthApplication(Entity):
             kw arguments.
 
         """
-        self.OAuthAppId: Optional[str] = None
-        self.OAuthObjectId: Optional[str] = None
-        self.Name: Optional[str] = None
-        self.TenantId: Optional[str] = None
-        self.PublisherName: Optional[str] = None
-        self.Risk: Optional[str] = None
-        self.Permissions: List[str] = []
-        self.RedirectURLs: List[str] = []
+        self.OAuthAppId: str | None = None
+        self.OAuthObjectId: str | None = None
+        self.Name: str | None = None
+        self.TenantId: str | None = None
+        self.PublisherName: str | None = None
+        self.Risk: str | None = None
+        self.Permissions: list[str] = []
+        self.RedirectURLs: list[str] = []
         self.AuthorizedBy: int = 0
 
         super().__init__(src_entity=src_entity, **kwargs)

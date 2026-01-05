@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """MailCluster Entity class."""
-from typing import Any, Dict, List, Mapping, Optional
+
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -85,21 +87,21 @@ class MailCluster(Entity):
             kw arguments.
 
         """
-        self.NetworkMessageIds: List[str] = []
-        self.CountByDeliveryStatus: Dict[str, int] = {}
-        self.CountByThreatType: Dict[str, int] = {}
-        self.CountByProtectionStatus: Dict[str, int] = {}
-        self.Threats: List[str] = []
-        self.Query: Optional[str] = None
+        self.NetworkMessageIds: list[str] = []
+        self.CountByDeliveryStatus: dict[str, int] = {}
+        self.CountByThreatType: dict[str, int] = {}
+        self.CountByProtectionStatus: dict[str, int] = {}
+        self.Threats: list[str] = []
+        self.Query: str | None = None
         self.QueryTime: Any = None
         self.MailCount: int = 0
         self.IsVolumeAnomaly: bool = False
-        self.Source: Optional[str] = None
-        self.ClusterSourceIdentifier: Optional[str] = None
-        self.ClusterSourceType: Optional[str] = None
+        self.Source: str | None = None
+        self.ClusterSourceIdentifier: str | None = None
+        self.ClusterSourceType: str | None = None
         self.ClusterQueryStartTime: Any = None
         self.ClusterQueryEndTime: Any = None
-        self.ClusterGroup: Optional[str] = None
+        self.ClusterGroup: str | None = None
 
         super().__init__(src_entity=src_entity, **kwargs)
         if src_event is not None:

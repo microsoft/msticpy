@@ -13,10 +13,12 @@ fields and performs some event-specific formatting and normalization
 line arguments into a single string). This is still a work-in-progress.
 
 """
+
 import codecs
 import re
+from collections.abc import Mapping
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
+from typing import Any
 
 import pandas as pd
 
@@ -25,7 +27,7 @@ from .proc_tree_builder import build_process_tree
 
 try:
     # pylint: disable=unused-import
-    from ..analysis import cluster_auditd  # type: ignore
+    from ..analysis import cluster_auditd
 except ImportError:
 
     def cluster_auditd(*args, **kwargs):  # type: ignore
@@ -40,14 +42,14 @@ __author__ = "Ian Hellen"
 
 # Constants
 # Fields that we know are frequently encoded
-_ENCODED_PARAMS: Dict[str, Set[str]] = {
+_ENCODED_PARAMS: dict[str, set[str]] = {
     "EXECVE": {"a0", "a1", "a2", "a3", "arch"},
     "PROCTITLE": {"proctitle"},
     "USER_CMD": {"cmd"},
 }
 
 # USER_START message schema
-_USER_START: Dict[str, Optional[str]] = {
+_USER_START: dict[str, str | None] = {
     "pid": "int",
     "uid": "int",
     "auid": "int",
@@ -62,7 +64,7 @@ _USER_START: Dict[str, Optional[str]] = {
 }
 
 # Message types schema
-_FIELD_DEFS: Dict[str, Dict[str, Optional[str]]] = {
+_FIELD_DEFS: dict[str, dict[str, str | None]] = {
     "SYSCALL": {
         "success": None,
         "ppid": "int",
@@ -106,7 +108,7 @@ _FIELD_DEFS: Dict[str, Dict[str, Optional[str]]] = {
 
 
 @export
-def unpack_auditd(audit_str: List[Dict[str, str]]) -> Mapping[str, Mapping[str, Any]]:
+def unpack_auditd(audit_str: list[dict[str, str]]) -> Mapping[str, Mapping[str, Any]]:
     """
     Unpack an Audit message and returns a dictionary of fields.
 
@@ -121,7 +123,7 @@ def unpack_auditd(audit_str: List[Dict[str, str]]) -> Mapping[str, Mapping[str, 
         The extracted message fields and values
 
     """
-    event_dict: Dict[str, Dict[str, Any]] = {}
+    event_dict: dict[str, dict[str, Any]] = {}
     # The audit_str should be a list of dicts - '{EXECVE : {'p1': 'foo', p2: 'bar'...},
     #                                      PATH: {'a1': 'xyz',....}}
 
@@ -129,7 +131,7 @@ def unpack_auditd(audit_str: List[Dict[str, str]]) -> Mapping[str, Mapping[str, 
         # process a single message type, splitting into type name
         # and contents
         for rec_key, rec_val in record.items():
-            rec_dict: Dict[str, Optional[str]] = {}
+            rec_dict: dict[str, str | None] = {}
             # Get our field mapping for encoded params for this
             # mssg_type (rec_key)
             encoded_fields_map = _ENCODED_PARAMS.get(rec_key, None)
@@ -151,7 +153,7 @@ def unpack_auditd(audit_str: List[Dict[str, str]]) -> Mapping[str, Mapping[str, 
                         # Mypy thinks codecs.decode returns a str so
                         # incorrectly issues a type warning - in this case it
                         # will return a bytes string.
-                        field_value = codecs.decode(  # type: ignore
+                        field_value = codecs.decode(
                             bytes(rec_split[1], "utf-8"), "hex"
                         ).decode("utf-8")
                     except ValueError:
@@ -170,7 +172,7 @@ def unpack_auditd(audit_str: List[Dict[str, str]]) -> Mapping[str, Mapping[str, 
     return event_dict
 
 
-def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, Any]]:
+def _extract_event(message_dict: Mapping[str, Any]) -> tuple[str, Mapping[str, Any]]:
     """
     Assemble discrete messages sharing the same message Id into a single event.
 
@@ -187,7 +189,7 @@ def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, A
     """
     # Handle process executions specially
     if "SYSCALL" in message_dict and "EXECVE" in message_dict:
-        proc_create_dict: Dict[str, Any] = {}
+        proc_create_dict: dict[str, Any] = {}
         for mssg_type in ["SYSCALL", "CWD", "EXECVE", "PROCTITLE"]:
             if mssg_type not in message_dict or mssg_type not in _FIELD_DEFS:
                 continue
@@ -195,13 +197,11 @@ def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, A
 
             if mssg_type == "EXECVE":
                 args = int(proc_create_dict.get("argc", 1))
-                arg_strs = [
-                    proc_create_dict.get(f"a{arg_idx}", "") for arg_idx in range(args)
-                ]
+                arg_strs = [proc_create_dict.get(f"a{arg_idx}", "") for arg_idx in range(args)]
                 proc_create_dict["cmdline"] = " ".join(arg_strs)
         return "SYSCALL_EXECVE", proc_create_dict
 
-    event_dict: Dict[str, Any] = {}
+    event_dict: dict[str, Any] = {}
     for mssg_type, _ in message_dict.items():
         if mssg_type in _FIELD_DEFS:
             _extract_mssg_value(mssg_type, message_dict, event_dict)
@@ -216,7 +216,7 @@ def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, A
 def _extract_mssg_value(
     mssg_type: str,
     message_dict: Mapping[str, Mapping[str, Any]],
-    event_dict: Dict[str, Any],
+    event_dict: dict[str, Any],
 ):
     """
     Extract field/value from the message dictionary.
@@ -302,9 +302,7 @@ def extract_events_to_df(
     # If the provided table has auditd messages as a string format and
     # extract key elements.
     if isinstance(data[input_column].head(1)[0], str):
-        data["mssg_id"] = data.apply(
-            lambda x: _extract_timestamp(x[input_column]), axis=1
-        )
+        data["mssg_id"] = data.apply(lambda x: _extract_timestamp(x[input_column]), axis=1)
         data[input_column] = data.apply(
             lambda x: _parse_audit_message(x[input_column]), axis=1
         )
@@ -349,9 +347,7 @@ def extract_events_to_df(
 
     # extract real timestamp from mssg_id
     tmp_df["TimeStamp"] = tmp_df.apply(
-        lambda x: datetime.fromtimestamp(
-            float(x["mssg_id"].split(":")[0]), tz=timezone.utc
-        ),
+        lambda x: datetime.fromtimestamp(float(x["mssg_id"].split(":")[0]), tz=timezone.utc),
         axis=1,
     )
     if "TimeGenerated" in tmp_df:
@@ -386,9 +382,7 @@ def get_event_subset(data: pd.DataFrame, event_type: str) -> pd.DataFrame:
         data['EventType'] == event_type
 
     """
-    return (
-        data[data["EventType"] == event_type].dropna(axis=1, how="all").infer_objects()
-    )
+    return data[data["EventType"] == event_type].dropna(axis=1, how="all").infer_objects()
 
 
 @export
@@ -433,9 +427,7 @@ def read_from_file(
     )
 
     # extract message ID into separate column
-    df_raw["mssg_id"] = df_raw.apply(
-        lambda x: _extract_timestamp(x["raw_data"]), axis=1
-    )
+    df_raw["mssg_id"] = df_raw.apply(lambda x: _extract_timestamp(x["raw_data"]), axis=1)
     # pylint: disable=unsupported-assignment-operation, no-member
     # Pack message type and content into a dictionary:
     # {'mssg_type: ['item1=x, item2=y....]}
@@ -445,9 +437,7 @@ def read_from_file(
 
     # Group the data by message id string and concatenate the message content
     # dictionaries in a list.
-    df_grouped_cols = (
-        df_raw.groupby(["mssg_id"]).agg({"AuditdMessage": list}).reset_index()
-    )
+    df_grouped_cols = df_raw.groupby(["mssg_id"]).agg({"AuditdMessage": list}).reset_index()
     # pylint: enable=unsupported-assignment-operation, no-member
 
     # pass this DataFrame to the event extractor.
@@ -459,7 +449,7 @@ def read_from_file(
     )
 
 
-def _parse_audit_message(audit_str: str) -> Dict[str, List[str]]:
+def _parse_audit_message(audit_str: str) -> dict[str, list[str]]:
     """
     Parse an auditd message string into Dict format required by unpack_auditd.
 
@@ -507,7 +497,7 @@ def _extract_timestamp(audit_str: str) -> str:
 
 # pylint: disable=too-many-branches
 @export
-def generate_process_tree(  # noqa: MC0001
+def generate_process_tree(
     audit_data: pd.DataFrame, branch_depth: int = 4, processes: pd.DataFrame = None
 ) -> pd.DataFrame:
     """

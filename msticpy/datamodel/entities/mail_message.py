@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """MailMessage Entity class."""
-from typing import Any, List, Mapping, Optional
+
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -107,32 +109,32 @@ class MailMessage(Entity):
             kw arguments.
 
         """
-        self.Recipient: Optional[str] = None
-        self.Files: List[Entity] = []
-        self.Urls: List[str] = []
-        self.Threats: List[str] = []
-        self.Sender: Optional[str] = None
-        self.P1Sender: Optional[str] = None
-        self.P1SenderDisplayName: Optional[str] = None
-        self.P1SenderDomain: Optional[str] = None
-        self.SenderIP: Optional[str] = None
-        self.P2Sender: Optional[str] = None
-        self.P2SenderDisplayName: Optional[str] = None
-        self.P2SenderDomain: Optional[str] = None
+        self.Recipient: str | None = None
+        self.Files: list[Entity] = []
+        self.Urls: list[str] = []
+        self.Threats: list[str] = []
+        self.Sender: str | None = None
+        self.P1Sender: str | None = None
+        self.P1SenderDisplayName: str | None = None
+        self.P1SenderDomain: str | None = None
+        self.SenderIP: str | None = None
+        self.P2Sender: str | None = None
+        self.P2SenderDisplayName: str | None = None
+        self.P2SenderDomain: str | None = None
         self.ReceivedDate: Any = None
-        self.NetworkMessageId: Optional[str] = None
-        self.InternetMessageId: Optional[str] = None
-        self.Subject: Optional[str] = None
-        self.BodyFingerprintBin1: Optional[str] = None
-        self.BodyFingerprintBin2: Optional[str] = None
-        self.BodyFingerprintBin3: Optional[str] = None
-        self.BodyFingerprintBin4: Optional[str] = None
-        self.BodyFingerprintBin5: Optional[str] = None
-        self.AntispamDirection: Optional[str] = None
-        self.DeliveryAction: Optional[str] = None
-        self.DeliveryLocation: Optional[str] = None
-        self.Language: Optional[str] = None
-        self.ThreatDetectionMethods: Optional[str] = None
+        self.NetworkMessageId: str | None = None
+        self.InternetMessageId: str | None = None
+        self.Subject: str | None = None
+        self.BodyFingerprintBin1: str | None = None
+        self.BodyFingerprintBin2: str | None = None
+        self.BodyFingerprintBin3: str | None = None
+        self.BodyFingerprintBin4: str | None = None
+        self.BodyFingerprintBin5: str | None = None
+        self.AntispamDirection: str | None = None
+        self.DeliveryAction: str | None = None
+        self.DeliveryLocation: str | None = None
+        self.Language: str | None = None
+        self.ThreatDetectionMethods: str | None = None
 
         super().__init__(src_entity=src_entity, **kwargs)
         if src_event:
@@ -166,11 +168,7 @@ class MailMessage(Entity):
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
-        return (
-            self.Subject
-            or f"MailMessage to: {self.Recipient}"
-            or self.__class__.__name__
-        )
+        return self.Subject or f"MailMessage to: {self.Recipient}" or self.__class__.__name__
 
     _entity_schema = {
         "Recipient": None,

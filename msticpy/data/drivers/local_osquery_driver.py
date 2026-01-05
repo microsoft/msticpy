@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Local Osquery Data Driver class - osquery.{results,snapshots}.log."""
+
 import json
 import logging
 
@@ -13,7 +14,7 @@ import pickle  # nosec
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import pandas as pd
 from pandas import to_datetime, to_numeric
@@ -64,8 +65,8 @@ class OSQueryLogDriver(DriverBase):
         del connection_str
         self._debug = kwargs.get("debug", False)
         super().__init__()
-        self._cache_file: Optional[str] = None
-        self._paths: List[str] = ["."]
+        self._cache_file: str | None = None
+        self._paths: list[str] = ["."]
         # If data paths specified, use these
         # from kwargs or settings
         if data_paths := kwargs.get("data_paths"):
@@ -81,17 +82,17 @@ class OSQueryLogDriver(DriverBase):
                 logger.info("data paths read from config %s", str(self._paths))
 
         self._progress = kwargs.pop("progress", True)
-        self.data_files: Dict[str, str] = self._get_logfile_paths()
-        self._schema: Dict[str, Any] = {}
-        self._data_cache: Dict[str, pd.DataFrame] = {}
-        self._query_map: Dict[str, List[str]]
+        self.data_files: dict[str, str] = self._get_logfile_paths()
+        self._schema: dict[str, Any] = {}
+        self._data_cache: dict[str, pd.DataFrame] = {}
+        self._query_map: dict[str, list[str]]
         self._cache_file = kwargs.pop("cache_file", self._cache_file)
         self._loaded = True
         self.has_driver_queries = True
         logger.info("data files to read %s", ",".join(self.data_files.values()))
         logger.info("cache file %s", self._cache_file)
 
-    def _get_logfile_paths(self) -> Dict[str, str]:
+    def _get_logfile_paths(self) -> dict[str, str]:
         """Read files in data paths."""
         data_files = {}
         for input_path in (Path(path_str) for path_str in self._paths):
@@ -110,7 +111,7 @@ class OSQueryLogDriver(DriverBase):
                     )
         return data_files
 
-    def connect(self, connection_str: Optional[str] = None, **kwargs):
+    def connect(self, connection_str: str | None = None, **kwargs):
         """
         Connect to data source.
 
@@ -127,7 +128,7 @@ class OSQueryLogDriver(DriverBase):
 
     # pylint: disable=too-many-branches
     @property
-    def schema(self) -> Dict[str, Dict]:
+    def schema(self) -> dict[str, dict]:
         """
         Return current data schema of connection.
 
@@ -148,7 +149,7 @@ class OSQueryLogDriver(DriverBase):
 
     def query(
         self, query: str, query_source: QuerySource = None, **kwargs
-    ) -> Union[pd.DataFrame, Any]:
+    ) -> pd.DataFrame | Any:
         """
         Execute query string and return DataFrame of results.
 
@@ -179,9 +180,7 @@ class OSQueryLogDriver(DriverBase):
         df_names = self._query_map[query_name]
         query_df = pd.concat([self._data_cache[df] for df in df_names])
         for date_column in self.OS_QUERY_DATEIME_COLS & set(query_df.columns):
-            query_df[date_column] = to_datetime(
-                query_df[date_column], unit="s", origin="unix"
-            )
+            query_df[date_column] = to_datetime(query_df[date_column], unit="s", origin="unix")
         logger.info("Query %s, returned %d rows", query_name, len(query_df))
         return query_df
 
@@ -190,7 +189,7 @@ class OSQueryLogDriver(DriverBase):
         return self.query(query, **kwargs), "OK"
 
     @property
-    def driver_queries(self) -> List[Dict[str, Any]]:
+    def driver_queries(self) -> list[dict[str, Any]]:
         """
         Return dynamic queries available on connection to data.
 
@@ -234,9 +233,7 @@ class OSQueryLogDriver(DriverBase):
 
         # Otherwise read in the data files.
         data_files = (
-            tqdm(self.data_files.values())
-            if self._progress
-            else self.data_files.values()
+            tqdm(self.data_files.values()) if self._progress else self.data_files.values()
         )
         for log_file in data_files:
             self._read_log_file(log_file)
@@ -284,16 +281,14 @@ class OSQueryLogDriver(DriverBase):
         # Likely resource intensive and better way to do.
         # Likely issue, multiple log files can contain same query mostly
         # because of log rotation
-        list_lines: List[Dict[str, Any]] = []
+        list_lines: list[dict[str, Any]] = []
         try:
-            with open(log_path, mode="r", encoding="utf-8") as logfile:
+            with open(log_path, encoding="utf-8") as logfile:
                 json_lines = logfile.readlines()
                 list_lines = [json.loads(line) for line in json_lines]
 
-        except (IOError, json.JSONDecodeError, ValueError) as exc:
-            raise MsticpyDataQueryError(
-                f"Read error on file {log_path}: {exc}."
-            ) from exc
+        except (OSError, json.JSONDecodeError, ValueError) as exc:
+            raise MsticpyDataQueryError(f"Read error on file {log_path}: {exc}.") from exc
         if not list_lines:
             raise MsticpyNoDataSourceError(
                 f"No log data retrieved from {log_path}",
@@ -302,9 +297,7 @@ class OSQueryLogDriver(DriverBase):
         logger.info("log %s read, %d lines read", log_path, len(list_lines))
         df_all_queries = pd.json_normalize(list_lines, max_level=3)
         # Don't want dot in columns name
-        df_all_queries.columns = df_all_queries.columns.str.replace(
-            ".", "_", regex=False
-        )
+        df_all_queries.columns = df_all_queries.columns.str.replace(".", "_", regex=False)
 
         for event_name in df_all_queries["name"].unique().tolist():
             combined_dfs = []
@@ -346,11 +339,7 @@ def _rename_columns(data: pd.DataFrame):
     for prefix in _PREFIXES:
         source_cols = data.filter(regex=f"{prefix}.*").columns
         rename_cols.update(
-            {
-                col: col.replace(prefix, "")
-                for col in source_cols
-                if isinstance(col, str)
-            }
+            {col: col.replace(prefix, "") for col in source_cols if isinstance(col, str)}
         )
     rename_cols = {
         col: ren_col if ren_col not in df_cols else f"{ren_col}_"

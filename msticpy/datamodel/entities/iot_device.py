@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """IoTDevice Entity class."""
-from typing import Any, Mapping, Optional
+
+from collections.abc import Mapping
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -75,20 +77,20 @@ class IoTDevice(Entity):
             kw arguments.
 
         """
-        self.IoTHub: Optional[str] = None
-        self.DeviceId: Optional[str] = None
-        self.DeviceName: Optional[str] = None
-        self.IoTSecurityAgentId: Optional[str] = None
-        self.DeviceType: Optional[str] = None
-        self.Source: Optional[str] = None
-        self.SourceRef: Optional[str] = None
-        self.Manufacturer: Optional[str] = None
-        self.Model: Optional[str] = None
-        self.OperatingSystem: Optional[str] = None
-        self.IpAddress: Optional[str] = None
-        self.MacAddress: Optional[str] = None
-        self.Protocols: Optional[str] = None
-        self.SerialNumber: Optional[str] = None
+        self.IoTHub: str | None = None
+        self.DeviceId: str | None = None
+        self.DeviceName: str | None = None
+        self.IoTSecurityAgentId: str | None = None
+        self.DeviceType: str | None = None
+        self.Source: str | None = None
+        self.SourceRef: str | None = None
+        self.Manufacturer: str | None = None
+        self.Model: str | None = None
+        self.OperatingSystem: str | None = None
+        self.IpAddress: str | None = None
+        self.MacAddress: str | None = None
+        self.Protocols: str | None = None
+        self.SerialNumber: str | None = None
 
         super().__init__(src_entity=src_entity, **kwargs)
 

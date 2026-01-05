@@ -11,6 +11,7 @@ multiple observables. Processing may require a an API key and
 processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 """
+
 from __future__ import annotations
 
 import datetime as dt
@@ -163,7 +164,9 @@ class IntSights(HttpTIProvider):
             else (
                 ResultSeverity.warning
                 if sev == "Medium"
-                else ResultSeverity.high if sev == "High" else ResultSeverity.unknown
+                else ResultSeverity.high
+                if sev == "High"
+                else ResultSeverity.unknown
             )
         )
 
