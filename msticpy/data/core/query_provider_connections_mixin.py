@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Query Provider additional connection methods."""
+
 from __future__ import annotations
 
 import asyncio
@@ -193,8 +194,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         """
         # Add the initial connection
         query_tasks: dict[str, partial[pd.DataFrame | str | None]] = {
-            self._query_provider.current_connection
-            or "0": partial(
+            self._query_provider.current_connection or "0": partial(
                 self._query_provider.query,
                 query,
                 **kwargs,
@@ -287,19 +287,16 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
             logger.warning("Cannot split a query with no 'start' and 'end' parameters")
             return None
 
-        split_queries: dict[tuple[datetime, datetime], str] = (
-            self._create_split_queries(
-                query_source=query_source,
-                query_params=query_params,
-                start=start,
-                end=end,
-                split_by=split_by,
-            )
+        split_queries: dict[tuple[datetime, datetime], str] = self._create_split_queries(
+            query_source=query_source,
+            query_params=query_params,
+            start=start,
+            end=end,
+            split_by=split_by,
         )
         if debug:
             return "\n\n".join(
-                f"{start}-{end}\n{query}"
-                for (start, end), query in split_queries.items()
+                f"{start}-{end}\n{query}" for (start, end), query in split_queries.items()
             )
 
         query_tasks: dict[str, partial[pd.DataFrame | str | None]] = (
@@ -444,7 +441,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                 )
             else:
                 task_iter = asyncio.as_completed(thread_tasks.values())
-            ids_and_tasks = dict(zip(thread_tasks, task_iter))
+            ids_and_tasks = dict(zip(thread_tasks, task_iter, strict=False))
             for query_id, thread_task in ids_and_tasks.items():
                 try:
                     result: pd.DataFrame | str | None = await thread_task
@@ -461,7 +458,7 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                     failed_tasks_ids.append(query_id)
 
         # Sort the results by the order of the tasks
-        results = [result for _, result in sorted(zip(thread_tasks, results))]
+        results = [result for _, result in sorted(zip(thread_tasks, results, strict=False))]
 
         if retry and failed_tasks_ids:
             failed_results: pd.DataFrame = (
@@ -512,7 +509,7 @@ def _calc_split_ranges(
     # get duplicates in these cases
     ranges: list[tuple[datetime, datetime]] = [
         (s_time, e_time - pd.Timedelta("1ns"))
-        for s_time, e_time in zip(s_ranges, e_ranges)
+        for s_time, e_time in zip(s_ranges, e_ranges, strict=False)
     ]
 
     # Since the generated time ranges are based on deltas from 'start'

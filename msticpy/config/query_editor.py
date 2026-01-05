@@ -5,12 +5,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Query Editor."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Callable, Literal, cast
+from typing import Any, Literal, cast
 
 import ipywidgets as widgets
 import yaml
@@ -174,9 +176,7 @@ class QueryParameterEditWidget(IPyDisplayMixin):
 
     """
 
-    def __init__(
-        self: QueryParameterEditWidget, container: Query | QueryDefaults
-    ) -> None:
+    def __init__(self: QueryParameterEditWidget, container: Query | QueryDefaults) -> None:
         """Initialize the class."""
         self._changed_data: bool = False
         self.param_container: Query | QueryDefaults = container
@@ -272,9 +272,7 @@ class QueryParameterEditWidget(IPyDisplayMixin):
         """Set the parameter container."""
         self.param_container = container
         if self.param_container and self.param_container.parameters:
-            self.parameter_dropdown.options = list(
-                self.param_container.parameters.keys()
-            )
+            self.parameter_dropdown.options = list(self.param_container.parameters.keys())
             init_change = CustomChange(new=next(iter(self.param_container.parameters)))
             self.populate_widgets(init_change)
         else:
@@ -430,12 +428,8 @@ class QueryEditWidget(IPyDisplayMixin):
         self.query_opts_widget.set_title(1, "Query metadata")
         self.query_opts_widget.selected_index = None
         self.add_query_button: widgets.Button = widgets.Button(description="New Query")
-        self.save_query_button: widgets.Button = widgets.Button(
-            description="Save Query"
-        )
-        self.delete_query_button: widgets.Button = widgets.Button(
-            description="Delete Query"
-        )
+        self.save_query_button: widgets.Button = widgets.Button(description="Save Query")
+        self.delete_query_button: widgets.Button = widgets.Button(description="Delete Query")
         self.queries_widget: widgets.VBox = widgets.VBox(
             children=[
                 widgets.Label(value="Query"),
@@ -569,9 +563,7 @@ class QueryEditWidget(IPyDisplayMixin):
             The formatted query string.
 
         """
-        return "\n|".join(
-            line.strip() for line in query.strip().split("|") if line.strip()
-        )
+        return "\n|".join(line.strip() for line in query.strip().split("|") if line.strip())
 
     def add_query(self: Self, button: widgets.Button) -> None:
         """
@@ -639,9 +631,7 @@ class QueryEditWidget(IPyDisplayMixin):
 class MetadataEditWidget(IPyDisplayMixin):
     """A class for editing Metadata properties."""
 
-    def __init__(
-        self: MetadataEditWidget, metadata: QueryMetadata | None = None
-    ) -> None:
+    def __init__(self: MetadataEditWidget, metadata: QueryMetadata | None = None) -> None:
         """
         Initialize a MetadataEditWidget object.
 
@@ -700,9 +690,7 @@ class MetadataEditWidget(IPyDisplayMixin):
             placeholder="(optional)",
             **txt_fmt(),
         )
-        self.save_metadata_widget: widgets.Button = widgets.Button(
-            description="Save metadata"
-        )
+        self.save_metadata_widget: widgets.Button = widgets.Button(description="Save metadata")
         self.save_metadata_widget.on_click(self.save_metadata)
 
         self.layout: widgets.VBox = widgets.VBox(
@@ -747,22 +735,16 @@ class MetadataEditWidget(IPyDisplayMixin):
         self.version_widget.value = self.metadata.version or ""
         self.description_widget.value = self.metadata.description or ""
         self.data_env_widget.value = (
-            tuple(self.metadata.data_environments)
-            if self.metadata.data_environments
-            else ()
+            tuple(self.metadata.data_environments) if self.metadata.data_environments else ()
         )
         self.data_families_widget.value = (
-            ", ".join(self.metadata.data_families)
-            if self.metadata.data_families
-            else ""
+            ", ".join(self.metadata.data_families) if self.metadata.data_families else ""
         )
         self.database_widget.value = self.metadata.database or ""
         self.cluster_widget.value = self.metadata.cluster or ""
         self.clusters_widget.value = "\n".join(self.metadata.clusters or [])
         self.cluster_groups_widget.value = "\n".join(self.metadata.cluster_groups or [])
-        self.tags_widget.value = (
-            ", ".join(self.metadata.tags) if self.metadata.tags else ""
-        )
+        self.tags_widget.value = ", ".join(self.metadata.tags) if self.metadata.tags else ""
         self.data_source_widget.value = self.metadata.data_source or ""
 
     def save_metadata(self: Self, button: widgets.Button) -> None:
@@ -772,9 +754,7 @@ class MetadataEditWidget(IPyDisplayMixin):
         self.metadata.description = self.description_widget.value
         self.metadata.data_environments = list(self.data_env_widget.value)
         self.metadata.data_families = [
-            fam.strip()
-            for fam in self.data_families_widget.value.split(",")
-            if fam.strip()
+            fam.strip() for fam in self.data_families_widget.value.split(",") if fam.strip()
         ]
         self.metadata.database = self.database_widget.value
         self.metadata.cluster = self.cluster_widget.value
@@ -782,8 +762,7 @@ class MetadataEditWidget(IPyDisplayMixin):
             cluster.strip() for cluster in self.clusters_widget.value.split("\n")
         ]
         self.metadata.cluster_groups = [
-            cluster_grp.strip()
-            for cluster_grp in self.cluster_groups_widget.value.split("\n")
+            cluster_grp.strip() for cluster_grp in self.cluster_groups_widget.value.split("\n")
         ]
         self.metadata.tags = [
             tag.strip() for tag in self.tags_widget.value.split(",") if tag.strip()
@@ -830,16 +809,12 @@ class QueryEditor(IPyDisplayMixin):
             description="Current file",
             layout=widgets.Layout(width="70%"),
         )
-        if isinstance(query_file, (Path, str)):
+        if isinstance(query_file, Path | str):
             self.filename_widget.value = str(query_file)
             self._open_initial_file()
         else:
-            self.query_collection: QueryCollection = (
-                query_file or self._new_collection()
-            )
-            self.filename_widget.value = (
-                self.query_collection.file_name or _DEF_FILENAME
-            )
+            self.query_collection: QueryCollection = query_file or self._new_collection()
+            self.filename_widget.value = self.query_collection.file_name or _DEF_FILENAME
         self.query_editor: QueryEditWidget = QueryEditWidget(self.query_collection)
         self.metadata_editor: MetadataEditWidget = MetadataEditWidget(
             self.query_collection.metadata
@@ -931,9 +906,7 @@ class QueryEditor(IPyDisplayMixin):
         """Open a new query collection."""
         del button
         if self._unsaved_changes() and not self.ignore_changes.value:
-            print(
-                "Please save or check 'Ignore changes' before opening a different file."
-            )
+            print("Please save or check 'Ignore changes' before opening a different file.")
             return
         self._reset_change_state()
         self.query_collection = load_queries_from_yaml(self.current_file)
@@ -995,9 +968,7 @@ class YamlLiteralBlockContext:
 
         def str_presenter(dumper: yaml.SafeDumper, data: str) -> yaml.ScalarNode:
             if "\n" in data:
-                data = "\n".join(
-                    line.rstrip() for line in data.splitlines(keepends=True)
-                )
+                data = "\n".join(line.rstrip() for line in data.splitlines(keepends=True))
                 return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
             return dumper.represent_scalar("tag:yaml.org,2002:str", data)
 
@@ -1037,7 +1008,7 @@ def load_queries_from_yaml(yaml_file: str | Path) -> QueryCollection:
         A QueryCollection object containing the loaded queries.
 
     """
-    with open(yaml_file, "r", encoding="utf-8") as f_handle:
+    with open(yaml_file, encoding="utf-8") as f_handle:
         yaml_data: dict[str, Any] = yaml.safe_load(f_handle)
 
     metadata = QueryMetadata(**yaml_data.get("metadata", {}))
@@ -1072,22 +1043,15 @@ def save_queries_to_yaml(
         del query_dict["file_name"]
     _rename_data_type(query_dict)
     with YamlLiteralBlockContext():
-        yaml_data: str = yaml.safe_dump(
-            _remove_none_values(query_dict), sort_keys=False
-        )
+        yaml_data: str = yaml.safe_dump(_remove_none_values(query_dict), sort_keys=False)
     Path(yaml_file).write_text(yaml_data, encoding="utf-8")
 
 
 def _create_query_defaults(defaults: dict[str, Any]) -> QueryDefaults:
     """Create a QueryDefaults object."""
-    def_metadata: dict[str, Any] = (
-        defaults["metadata"] if "metadata" in defaults else {}
-    )
+    def_metadata: dict[str, Any] = defaults["metadata"] if "metadata" in defaults else {}
     def_params: dict[str, QueryParameter] = (
-        {
-            name: _create_parameter(param)
-            for name, param in defaults["parameters"].items()
-        }
+        {name: _create_parameter(param) for name, param in defaults["parameters"].items()}
         if "parameters" in defaults and defaults["parameters"]
         else {}
     )
@@ -1098,9 +1062,7 @@ def _create_query(query_data: dict[str, Any]) -> Query:
     """Create a Query object."""
     parameters: dict[str, Any] = query_data.get("parameters", {})
     if parameters:
-        parameters = {
-            name: _create_parameter(param) for name, param in parameters.items()
-        }
+        parameters = {name: _create_parameter(param) for name, param in parameters.items()}
     return Query(
         description=query_data.get("description", ""),
         metadata=query_data.get("metadata", {}),
@@ -1119,14 +1081,14 @@ def _create_parameter(param_data: dict[str, Any]) -> QueryParameter:
 
 
 def _remove_none_values(
-    source_obj: dict[str, Any] | list[Any] | tuple[Any, ...]
+    source_obj: dict[str, Any] | list[Any] | tuple[Any, ...],
 ) -> dict[str, Any] | list[Any] | tuple[Any, ...]:
     """Recursively remove any item with a None value from a nested dictionary."""
     if isinstance(source_obj, dict):
         return {
             key: _remove_none_values(val)
             for key, val in source_obj.items()
-            if val is not None or (isinstance(val, (list, dict)) and len(val) > 0)
+            if val is not None or (isinstance(val, list | dict) and len(val) > 0)
         }
     if isinstance(source_obj, list):
         return [_remove_none_values(val) for val in source_obj if val is not None]
@@ -1144,6 +1106,6 @@ def _rename_data_type(source_obj: dict[str, Any] | list[Any] | tuple[Any]) -> No
             source_obj["type"] = val
         for value in source_obj.values():
             _rename_data_type(value)
-    if isinstance(source_obj, (list, tuple)):
+    if isinstance(source_obj, list | tuple):
         for value in source_obj:
             _rename_data_type(value)

@@ -67,7 +67,7 @@ def _read_config_settings(conf_file):
     if not conf_file:
         raise ValueError("Configuration file not found.")
     print(conf_file)
-    with open(conf_file, "r", encoding="utf-8") as conf_hdl:
+    with open(conf_file, encoding="utf-8") as conf_hdl:
         cur_settings = yaml.safe_load(conf_hdl)
 
     # temporarily set env var to point to conf_file
@@ -93,7 +93,7 @@ def _format_kv_name(setting_path):
     return re.sub("[^0-9a-zA-Z-]", "-", setting_path)
 
 
-def _get_config_secrets(cur_settings, section_name, sec_names):  # noqa: MC0001
+def _get_config_secrets(cur_settings, section_name, sec_names):
     kv_dict = {}
     sec_key_names = ["authkey", "apiid", "password", "clientsecret"]
     if sec_names:

@@ -12,6 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
 import traceback
@@ -151,9 +152,7 @@ class HttpProvider(Provider):
             self._request_params["Instance"] = Instance.strip()
 
         missing_params: list[str] = [
-            param
-            for param in self._REQUIRED_PARAMS
-            if param not in self._request_params
+            param for param in self._REQUIRED_PARAMS if param not in self._request_params
         ]
 
         missing_params = []

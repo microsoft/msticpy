@@ -31,12 +31,12 @@ import hashlib
 import io
 import re
 import tarfile
-import warnings
 import zipfile
 from collections import namedtuple
+from collections.abc import Callable, Iterable
 
 # pylint: disable=unused-import
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any
 
 import pandas as pd
 
@@ -92,7 +92,7 @@ _BASE64_REGEX_NG = "[A-Za-z0-9+/\\n\\r]{30,}={0,2}"
 # we use this to store a set of strings that match the B64 regex but
 # that we were unable to decode - so that we don't end up in an
 # infinite loop
-_UNDECODABLE_STRINGS: Set[str] = set()
+_UNDECODABLE_STRINGS: set[str] = set()
 
 # When True prints see more verbose execution
 # (set from 'trace' parameter to unpack_items)
@@ -103,11 +103,11 @@ _debug_trace = False
 _STRIP_TAGS = r"</?decoded[^>]*>"
 
 
-def _get_trace_setting() -> Callable[[Optional[bool]], bool]:
+def _get_trace_setting() -> Callable[[bool | None], bool]:
     """Closure for holding trace setting."""
     _trace = False
 
-    def _trace_enabled(trace: Optional[bool] = None) -> bool:
+    def _trace_enabled(trace: bool | None = None) -> bool:
         nonlocal _trace
         if trace is not None:
             _trace = trace
@@ -120,11 +120,11 @@ def _get_trace_setting() -> Callable[[Optional[bool]], bool]:
 GET_TRACE = _get_trace_setting()
 
 
-def _get_utf16_setting() -> Callable[[Optional[bool]], bool]:
+def _get_utf16_setting() -> Callable[[bool | None], bool]:
     """Closure for holding utf16 decoding setting."""
     _utf16 = False
 
-    def _utf16_enabled(utf16: Optional[bool] = None) -> bool:
+    def _utf16_enabled(utf16: bool | None = None) -> bool:
         nonlocal _utf16
         if utf16 is not None:
             _utf16 = utf16
@@ -221,7 +221,7 @@ def unpack_items(
 @export
 def unpack(
     input_string: str, trace: bool = False, utf16: bool = False
-) -> Tuple[str, pd.DataFrame]:
+) -> tuple[str, pd.DataFrame]:
     """
     Base64 decode an input string.
 
@@ -318,7 +318,7 @@ def unpack_df(
     GET_UTF16(utf16)
 
     output_df = pd.DataFrame(columns=BinaryRecord._fields)
-    row_results: List[pd.DataFrame] = []
+    row_results: list[pd.DataFrame] = []
     rows_with_b64_match = data[data[column].str.contains(_BASE64_REGEX_NG)]
     for input_row in rows_with_b64_match[[column]].itertuples():
         (decoded_string, output_frame) = _decode_b64_string_recursive(input_row[1])
@@ -338,7 +338,7 @@ def _decode_b64_string_recursive(
     max_recursion: int = 20,
     current_depth: int = 1,
     item_prefix: str = "",
-) -> Tuple[str, pd.DataFrame]:
+) -> tuple[str, pd.DataFrame]:
     """Recursively decode and unpack an encoded string."""
     _debug_print_trace("_decode_b64_string_recursive: ", max_recursion)
     _debug_print_trace("processing input: ", input_string[:200])
@@ -418,9 +418,7 @@ def _decode_b64_string_recursive(
     if decode_success:
         # stuff that we have already decoded may also contain further
         # base64 encoded strings
-        prefix = (
-            f"{item_prefix}.{fragment_index}." if item_prefix else f"{fragment_index}."
-        )
+        prefix = f"{item_prefix}.{fragment_index}." if item_prefix else f"{fragment_index}."
         next_level_string, child_records = _decode_b64_string_recursive(
             decoded_string,
             item_prefix=prefix,
@@ -442,7 +440,7 @@ def _add_to_results(
     current_depth: int,
     item_prefix: str,
     fragment_index: int,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Add current set of decoding results to collection."""
     new_rows = []
     for bin_record in binary_items:
@@ -474,7 +472,7 @@ def _decode_and_format_b64_string(
     item_prefix: str = "",
     current_depth: int = 1,
     current_index: int = 1,
-) -> Tuple[str, Optional[List[BinaryRecord]]]:
+) -> tuple[str, list[BinaryRecord] | None]:
     """Decode string and return displayable content plus list of decoded artifacts."""
     # Check if we recognize this as a known file type
     (_, f_type) = _is_known_b64_prefix(b64encoded_string)
@@ -505,9 +503,7 @@ def _decode_and_format_b64_string(
     _debug_print_trace("_decode_b64_binary returned multiple records")
 
     # Build child display strings
-    for child_index, (child_name, child_rec) in enumerate(
-        output_files.items(), start=1
-    ):
+    for child_index, (child_name, child_rec) in enumerate(output_files.items(), start=1):
         _debug_print_trace("Child_decode: ", child_rec)
         child_index_string = f"{item_prefix}{current_index}.{child_index}"
         disp_string = _format_single_record(
@@ -617,7 +613,7 @@ def _get_byte_encoding(bytes_array: bytes) -> BinaryRecord:
 
 def _is_known_b64_prefix(
     input_string: str,
-) -> Union[Tuple[str, str], Tuple[None, None]]:
+) -> tuple[str, str] | tuple[None, None]:
     """If this is known file type return the prefix and file type."""
     first160chars = input_string[0:160].replace("\n", "").replace("\r", "")
     for prefix, file_type in _BASE64_HEADER_TYPES.items():
@@ -633,7 +629,7 @@ def _is_known_b64_prefix(
 
 def _decode_b64_binary(
     input_string: str, file_type: str = None
-) -> Optional[Dict[str, BinaryRecord]]:
+) -> dict[str, BinaryRecord] | None:
     """Examine input string for known binaries and decode and unpack."""
     if not file_type:
         (_, f_type) = _is_known_b64_prefix(input_string)
@@ -651,7 +647,7 @@ def _decode_b64_binary(
 
 def _unpack_and_hash_b64_binary(
     input_bytes: bytes, file_type: str = None
-) -> Optional[Dict[str, BinaryRecord]]:
+) -> dict[str, BinaryRecord] | None:
     """
     If this is a known archive type extract the contents.
 
@@ -714,7 +710,7 @@ def _get_hashes_and_printable_string(extracted_file: bytes) -> BinaryRecord:
 
 def _get_items_from_archive(
     binary: bytes, archive_type: str = "zip"
-) -> Tuple[str, Dict[str, bytes]]:
+) -> tuple[str, dict[str, bytes]]:
     """Extract contained files from an archive type."""
     _debug_print_trace("_get_items_from_archive type: ", archive_type)
     if archive_type == "zip":
@@ -727,7 +723,7 @@ def _get_items_from_archive(
 
 
 @export
-def get_items_from_gzip(binary: bytes) -> Tuple[str, Dict[str, bytes]]:
+def get_items_from_gzip(binary: bytes) -> tuple[str, dict[str, bytes]]:
     """
     Return decompressed gzip contents.
 
@@ -747,7 +743,7 @@ def get_items_from_gzip(binary: bytes) -> Tuple[str, Dict[str, bytes]]:
 
 
 @export
-def get_items_from_zip(binary: bytes) -> Tuple[str, Dict[str, bytes]]:
+def get_items_from_zip(binary: bytes) -> tuple[str, dict[str, bytes]]:
     """
     Return dictionary of zip contents.
 
@@ -772,7 +768,7 @@ def get_items_from_zip(binary: bytes) -> Tuple[str, Dict[str, bytes]]:
 
 
 @export
-def get_items_from_tar(binary: bytes) -> Tuple[str, Dict[str, bytes]]:
+def get_items_from_tar(binary: bytes) -> tuple[str, dict[str, bytes]]:
     """
     Return dictionary of tar file contents.
 
@@ -790,7 +786,7 @@ def get_items_from_tar(binary: bytes) -> Tuple[str, Dict[str, bytes]]:
     file_obj = io.BytesIO(binary)
     # Open tarfile
     with tarfile.open(mode="r", fileobj=file_obj) as tar:
-        archive_dict: Dict[str, bytes] = {}
+        archive_dict: dict[str, bytes] = {}
         # Iterate over every member
         for item in tar.getnames():
             tar_file = tar.extractfile(item)
@@ -799,7 +795,7 @@ def get_items_from_tar(binary: bytes) -> Tuple[str, Dict[str, bytes]]:
 
 
 @export
-def get_hashes(binary: bytes) -> Dict[str, str]:
+def get_hashes(binary: bytes) -> dict[str, str]:
     """
     Return md5, sha1 and sha256 hashes of input byte string.
 
@@ -831,7 +827,7 @@ def get_hashes(binary: bytes) -> Dict[str, str]:
     return hash_dict
 
 
-def _binary_to_bytesio(binary: Union[bytes, io.BytesIO]) -> memoryview:
+def _binary_to_bytesio(binary: bytes | io.BytesIO) -> memoryview:
     if isinstance(binary, io.BytesIO):
         return binary.getbuffer()
     return io.BytesIO(binary).getbuffer()
@@ -846,70 +842,4 @@ def _b64_string_pad(string: str) -> str:
     return f"{string}{'A' * padding}"
 
 
-# pylint: disable=too-few-public-methods
-@pd.api.extensions.register_dataframe_accessor("mp_b64")
-class B64ExtractAccessor:
-    """Base64 Unpack pandas extension."""
-
-    def __init__(self, pandas_obj):
-        """Initialize the extension."""
-        self._df = pandas_obj
-
-    def extract(self, column, **kwargs) -> pd.DataFrame:
-        """
-        Base64 decode strings taken from a pandas dataframe.
-
-        Parameters
-        ----------
-        data : pd.DataFrame
-            dataframe containing column to decode
-        column : str
-            Name of dataframe text column
-        trace : bool, optional
-            Show additional status (the default is None)
-        utf16 : bool, optional
-            Attempt to decode UTF16 byte strings
-
-        Returns
-        -------
-        pd.DataFrame
-            Decoded string and additional metadata in dataframe
-
-        Notes
-        -----
-        Items that decode to utf-8 or utf-16 strings will be returned as decoded
-        strings replaced in the original string. If the encoded string is a
-        known binary type it will identify the file type and return the hashes
-        of the file. If any binary types are known archives (zip, tar, gzip) it
-        will unpack the contents of the archive.
-        For any binary it will return the decoded file as a byte array, and as a
-        printable list of byte values.
-
-        The columns of the output DataFrame are:
-
-        - decoded string: this is the input string with any decoded sections
-          replaced by the results of the decoding
-        - reference : this is an index that matches an index number in the
-          decoded string (e.g. <<encoded binary type=pdf index=1.2').
-        - original_string : the string prior to decoding - file_type : the type
-          of file if this could be determined
-        - file_hashes : a dictionary of hashes (the md5, sha1 and sha256 hashes
-          are broken out into separate columns)
-        - input_bytes : the binary image as a byte array
-        - decoded_string : printable form of the decoded string (either string
-          or list of hex byte values)
-        - encoding_type : utf-8, utf-16 or binary
-        - md5, sha1, sha256 : the respective hashes of the binary file_type,
-          file_hashes, input_bytes, md5, sha1, sha256 will be null if this item is
-          decoded to a string
-        - src_index - the index of the source row in the input
-          frame.
-
-        """
-        warn_message = (
-            "This accessor method has been deprecated.\n"
-            "Please use df.mp.b64extract() method instead."
-            "This will be removed in MSTICPy v2.2.0"
-        )
-        warnings.warn(warn_message, category=DeprecationWarning)
-        return unpack_df(data=self._df, column=column, **kwargs)
+# pylint: disable=trailing-newlines

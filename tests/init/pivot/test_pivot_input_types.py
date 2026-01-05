@@ -119,6 +119,7 @@ _PIVOT_QUERIES = [
 ]
 
 
+@pytest.mark.filterwarnings("ignore:GeoIpLookup")
 @pytest.mark.parametrize("test_case", _PIVOT_QUERIES)
 def test_pivot_funcs_value(create_pivot, test_case):
     """Test calling function with value."""

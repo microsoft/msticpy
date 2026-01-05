@@ -114,8 +114,8 @@ In the Azure ML and Azure Synapse environments, some additional
 initialization and checks are performed.
 
 """
-import os
-from typing import Iterable, Union
+
+from collections.abc import Iterable
 
 from . import nbwidgets  # noqa: F401
 
@@ -133,9 +133,6 @@ __author__ = "Ian Hellen, Pete Bryan, Ashwin Patil"
 refresh_config = settings.refresh_config
 get_config = settings.get_config
 setup_logging()
-
-if not os.environ.get("KQLMAGIC_EXTRAS_REQUIRES"):
-    os.environ["KQLMAGIC_EXTRAS_REQUIRES"] = "jupyter-basic"
 
 _LAZY_IMPORTS = {
     "msticpy.auth.azure_auth.az_connect",
@@ -159,7 +156,7 @@ _LAZY_IMPORTS = {
 module, __getattr__, __dir__ = lazy_import(__name__, _LAZY_IMPORTS)
 
 
-def load_plugins(plugin_paths: Union[str, Iterable[str]]):
+def load_plugins(plugin_paths: str | Iterable[str]):
     """
     Load plugins from specified paths or configuration.
 
@@ -177,6 +174,6 @@ def load_plugins(plugin_paths: Union[str, Iterable[str]]):
 
     """
     # pylint: disable=import-outside-toplevel
-    from .init.mp_plugins import read_plugins
+    from .init.mp_plugins import read_plugins  # noqa: PLC0415
 
     read_plugins(plugin_paths)

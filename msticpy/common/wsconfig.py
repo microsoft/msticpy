@@ -4,12 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for Log Analytics-related configuration."""
+
 import contextlib
 import json
 import os
 import re
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import ipywidgets as widgets
 from IPython.display import display
@@ -118,10 +119,10 @@ class WorkspaceConfig:
 
     def __init__(
         self,
-        workspace: Optional[str] = None,
-        config_file: Optional[str] = None,
+        workspace: str | None = None,
+        config_file: str | None = None,
         interactive: bool = True,
-        config: Optional[Dict[str, str]] = None,
+        config: dict[str, str] | None = None,
     ):
         """
         Load current Azure Notebooks configuration for Log Analytics.
@@ -144,11 +145,11 @@ class WorkspaceConfig:
             Workspace configuration as dictionary.
 
         """
-        self._config: Dict[str, Any] = {}
+        self._config: dict[str, Any] = {}
         self._interactive = interactive
         self._config_file = config_file
         self.workspace_key = workspace or "Default"
-        self.settings_key: Optional[str] = None
+        self.settings_key: str | None = None
 
         # If config file specified, use that
         if config:
@@ -162,9 +163,7 @@ class WorkspaceConfig:
         """Return attribute from configuration."""
         with contextlib.suppress(KeyError):
             return self[attribute]
-        raise AttributeError(
-            f"{self.__class__.__name__} has no attribute '{attribute}'"
-        )
+        raise AttributeError(f"{self.__class__.__name__} has no attribute '{attribute}'")
 
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
@@ -212,7 +211,7 @@ class WorkspaceConfig:
         """
         ws_value = self._config.get(self.CONF_WS_ID, None)
         ten_value = self._config.get(self.CONF_TENANT_ID, None)
-        return is_valid_uuid(ws_value) and is_valid_uuid(ten_value)  # type: ignore
+        return is_valid_uuid(ws_value) and is_valid_uuid(ten_value)
 
     @property
     def code_connect_str(self) -> str:
@@ -229,8 +228,7 @@ class WorkspaceConfig:
         ws_id = self[self.CONF_WS_ID]
         if not ten_id:
             raise KeyError(
-                f"Configuration setting for {self.CONF_TENANT_ID} "
-                + "could not be found."
+                f"Configuration setting for {self.CONF_TENANT_ID} " + "could not be found."
             )
         if not ws_id:
             raise KeyError(
@@ -251,27 +249,27 @@ class WorkspaceConfig:
         }
 
     @property
-    def args(self) -> Dict[str, str]:
+    def args(self) -> dict[str, str]:
         """Return any additional arguments."""
         return self._config.get(self.CONF_ARGS, {})
 
     @property
-    def settings_path(self) -> Optional[str]:
+    def settings_path(self) -> str | None:
         """Return the path to the settings in the MSTICPY config."""
         if self.settings_key:
             return f"AzureSentinel.Workspaces.{self.settings_key}"
         return None
 
     @property
-    def settings(self) -> Dict[str, Any]:
+    def settings(self) -> dict[str, Any]:
         """Return the current settings dictionary."""
         return get_config(self.settings_path, {})
 
     @classmethod
-    def from_settings(cls, settings: Dict[str, Any]) -> "WorkspaceConfig":
+    def from_settings(cls, settings: dict[str, Any]) -> "WorkspaceConfig":
         """Create a WorkstationConfig from MSTICPY Workspace settings."""
         return cls(
-            config={  # type: ignore
+            config={
                 cls.CONF_WS_NAME: settings.get(cls.CONF_WS_NAME),  # type: ignore
                 cls.CONF_SUB_ID: settings.get(cls.CONF_SUB_ID),  # type: ignore
                 cls.CONF_WS_ID: settings.get(cls.CONF_WS_ID),  # type: ignore
@@ -298,9 +296,7 @@ class WorkspaceConfig:
             tenant_id = match.groupdict()["tenant_id"]
         else:
             raise ValueError("Could not find tenant ID in connection string.")
-        if match := re.match(
-            workspace_regex, connection_str, re.IGNORECASE | re.VERBOSE
-        ):
+        if match := re.match(workspace_regex, connection_str, re.IGNORECASE | re.VERBOSE):
             workspace_id = match.groupdict()["workspace_id"]
         else:
             raise ValueError("Could not find workspace ID in connection string.")
@@ -308,19 +304,19 @@ class WorkspaceConfig:
             workspace_name = match.groupdict()["workspace_name"]
         return cls(
             config={
-                cls.CONF_WS_ID: workspace_id,  # type: ignore[dict-item]
-                cls.CONF_TENANT_ID: tenant_id,  # type: ignore[dict-item]
+                cls.CONF_WS_ID: workspace_id,
+                cls.CONF_TENANT_ID: tenant_id,
                 cls.CONF_WS_NAME: workspace_name,  # type: ignore[dict-item]
             }
         )
 
     @classmethod
-    def _read_config_values(cls, file_path: str) -> Dict[str, str]:
+    def _read_config_values(cls, file_path: str) -> dict[str, str]:
         """Read configuration file."""
         if not file_path:
             return {}
         with contextlib.suppress(json.JSONDecodeError):
-            with open(file_path, "r", encoding="utf-8") as json_file:
+            with open(file_path, encoding="utf-8") as json_file:
                 if json_file:
                     config_ws = json.load(json_file)
                     return {
@@ -331,7 +327,7 @@ class WorkspaceConfig:
         return {}
 
     @classmethod
-    def list_workspaces(cls) -> Dict:
+    def list_workspaces(cls) -> dict:
         """
         Return list of available workspaces.
 
@@ -418,12 +414,12 @@ class WorkspaceConfig:
                 )
             )
 
-    def _read_pkg_config_values(self, workspace_name: Optional[str] = None):
+    def _read_pkg_config_values(self, workspace_name: str | None = None):
         """Try to find a usable config from the MSTICPy config file."""
-        ws_settings = get_config("AzureSentinel", {}).get("Workspaces")  # type: ignore
+        ws_settings = get_config("AzureSentinel", {}).get("Workspaces")
         if not ws_settings:
             return
-        selected_workspace: Dict[str, str] = {}
+        selected_workspace: dict[str, str] = {}
         if workspace_name:
             selected_workspace, self.settings_key = self._lookup_ws_name_and_id(
                 workspace_name, ws_settings
@@ -449,7 +445,7 @@ class WorkspaceConfig:
                 return ws_config, name
         return {}, None
 
-    def _search_for_file(self, pattern: str) -> Optional[str]:
+    def _search_for_file(self, pattern: str) -> str | None:
         config_file = None
         for start_path in (".", ".."):
             searched_configs = list(Path(start_path).glob(pattern))

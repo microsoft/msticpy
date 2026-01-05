@@ -12,8 +12,9 @@ Designed to support standard linux syslog for investigations where
 auditd is not available.
 
 """
+
 import datetime as dt
-from typing import Any, Dict
+from typing import Any
 
 import ipywidgets as widgets
 import pandas as pd
@@ -58,7 +59,7 @@ def create_host_record(
         Details of the host data collected
 
     """
-    host_entity = Host(src_event=syslog_df.iloc[0])  # type: ignore
+    host_entity = Host(src_event=syslog_df.iloc[0])
     # Produce list of processes on the host that are not
     # part of a 'standard' linux distro
     _apps = syslog_df["ProcessName"].unique().tolist()
@@ -91,16 +92,16 @@ def create_host_record(
         host_entity.ComputerEnvironment = host_hb["ComputerEnvironment"]  # type: ignore
         host_entity.OmsSolutions = [  # type: ignore
             sol.strip() for sol in host_hb["Solutions"].split(",")
-        ]  # type: ignore
+        ]
         host_entity.Applications = applications  # type: ignore
         host_entity.VMUUID = host_hb["VMUUID"]  # type: ignore
         ip_entity = IpAddress()
         ip_entity.Address = host_hb["ComputerIP"]
         geoloc_entity = GeoLocation()
-        geoloc_entity.CountryOrRegionName = host_hb["RemoteIPCountry"]  # type: ignore
-        geoloc_entity.Longitude = host_hb["RemoteIPLongitude"]  # type: ignore
-        geoloc_entity.Latitude = host_hb["RemoteIPLatitude"]  # type: ignore
-        ip_entity.Location = geoloc_entity  # type: ignore
+        geoloc_entity.CountryOrRegionName = host_hb["RemoteIPCountry"]
+        geoloc_entity.Longitude = host_hb["RemoteIPLongitude"]
+        geoloc_entity.Latitude = host_hb["RemoteIPLatitude"]
+        ip_entity.Location = geoloc_entity
         host_entity.IPAddress = ip_entity  # type: ignore
 
     # If Azure network data present add this to host record
@@ -150,20 +151,12 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> pd.DataFrame:
     ses_closed = 0
     # Extract logon session opened and logon session closed data.
     logons_opened = (
-        (
-            logon_events[
-                logon_events["SyslogMessage"].str.contains("pam_unix.+session opened")
-            ]
-        )
+        (logon_events[logon_events["SyslogMessage"].str.contains("pam_unix.+session opened")])
         .set_index("TimeGenerated")
         .sort_index(ascending=True)
     )
     logons_closed = (
-        (
-            logon_events[
-                logon_events["SyslogMessage"].str.contains("pam_unix.+session closed")
-            ]
-        )
+        (logon_events[logon_events["SyslogMessage"].str.contains("pam_unix.+session closed")])
         .set_index("TimeGenerated")
         .sort_index(ascending=True)
     )
@@ -171,9 +164,7 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> pd.DataFrame:
         raise MsticpyException("There are no logon sessions in the supplied data set")
 
     # For each session identify the likely start and end times
-    while ses_opened < len(logons_opened.index) and ses_closed < len(
-        logons_closed.index
-    ):
+    while ses_opened < len(logons_opened.index) and ses_closed < len(logons_closed.index):
         ses_start = (logons_opened.iloc[ses_opened]).name
         ses_end = (logons_closed.iloc[ses_closed]).name
         # If we can identify a user for the session add this to the details
@@ -186,7 +177,7 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> pd.DataFrame:
         if ses_start <= ses_close_time and ses_opened != 0:
             ses_opened += 1
             continue
-        if ses_end < ses_start:  # type: ignore
+        if ses_end < ses_start:
             ses_closed += 1
             continue
         users.append(user)
@@ -231,8 +222,8 @@ def risky_sudo_sessions(
 
     # Depending on whether we have risky or suspicious acitons or both
     # identify sessions which these actions occur in
-    risky_act_sessions: Dict[str, Any] = {}
-    susp_act_sessions: Dict[str, Any] = {}
+    risky_act_sessions: dict[str, Any] = {}
+    susp_act_sessions: dict[str, Any] = {}
     if risky_actions is not None:
         risky_act_sessions = _find_risky_sudo_session(
             risky_actions=risky_actions, sudo_sessions=sessions

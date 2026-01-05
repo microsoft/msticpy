@@ -4,12 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot helper functions ."""
+
 from __future__ import annotations
 
 import warnings
 from collections import abc
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Callable
+from typing import Any
 
 import attr
 import pandas as pd
@@ -191,9 +193,7 @@ def create_pivot_func(
                     "Try again with a single row/value as input.",
                     "E.g. func(data=df.iloc[N], column=...)",
                 )
-            result_df = _iterate_func(
-                target_func, input_df, input_column, pivot_reg, **kwargs
-            )
+            result_df = _iterate_func(target_func, input_df, input_column, pivot_reg, **kwargs)
         else:
             result_df = target_func(**param_dict, **kwargs)  # type: ignore
         merge_key = pivot_reg.func_out_column_name or input_column
@@ -213,16 +213,14 @@ def create_pivot_func(
             ).drop(columns="src_row_index", errors="ignore")
         return result_df
 
-    setattr(
-        pivot_lookup,
-        "pivot_properties",
-        attr.asdict(pivot_reg, filter=(lambda _, val: val is not None)),
+    pivot_lookup.pivot_properties = attr.asdict(  # type: ignore[attr-defined]
+        pivot_reg, filter=lambda _, val: val is not None
     )
     return pivot_lookup
 
 
 def get_join_params(
-    func_kwargs: dict[str, Any]
+    func_kwargs: dict[str, Any],
 ) -> tuple[str | None, str | None, str | None, bool]:
     """
     Get join parameters from kwargs.
@@ -251,7 +249,8 @@ def get_join_params(
             "If you are specifying explicit join keys "
             "you must specify 'right_on' parameter with the "
             + "name of the output column to join on. "
-            + "Results will joined on index."
+            + "Results will joined on index.",
+            stacklevel=2,
         )
     if not left_on:
         col_keys = list(func_kwargs.keys() - {"start", "end", "data"})
@@ -265,7 +264,8 @@ def get_join_params(
             "Could not infer 'left' join column from source data. "
             + "Please specify 'left_on' parameter with the "
             + "name of the source column to join on. "
-            + "Results will joined on index."
+            + "Results will joined on index.",
+            stacklevel=2,
         )
     return join_type, left_on, right_on, join_ignore_case
 
@@ -312,7 +312,7 @@ def join_result(
             result_df,
             left_on=left_on,
             right_on=right_on,
-            how=how,  # type: ignore
+            how=how,
             suffixes=("_src", "_res"),
         )
 
@@ -325,7 +325,7 @@ def join_result(
         result_df,
         left_on=left_on,
         right_on=right_on,
-        how=how,  # type: ignore
+        how=how,
         suffixes=("_src", "_res"),
     ).drop(columns=[left_on, right_on])
 
@@ -388,14 +388,11 @@ def _check_valid_settings_for_input(input_value: Any, pivot_reg: PivotRegistrati
             isinstance(input_value, pd.DataFrame)
             or (
                 # pylint: disable=isinstance-second-argument-not-valid-type
-                isinstance(input_value, pd.DataFrame)
-                and not isinstance(input_value, str)
+                isinstance(input_value, pd.DataFrame) and not isinstance(input_value, str)
                 # pylint: enable=isinstance-second-argument-not-valid-type
             )
         ):
-            raise ValueError(
-                f"This function does not accept inputs of {type(input_value)}"
-            )
+            raise ValueError(f"This function does not accept inputs of {type(input_value)}")
 
 
 def _arg_to_dframe(arg_val, col_name: str = "param_value"):
@@ -433,7 +430,7 @@ def _create_input_df(input_value, pivot_reg, parent_kwargs):
     # to using the function input value arg.
     input_column = pivot_reg.func_df_col_param_name or pivot_reg.func_input_value_arg
     # If input_value is already a DF, this call just returns the original DF
-    input_df = _arg_to_dframe(input_value, input_column)  # type: ignore
+    input_df = _arg_to_dframe(input_value, input_column)
 
     if isinstance(input_value, pd.DataFrame):
         # If the original input_value is a DataFrame
@@ -480,7 +477,7 @@ def _iterate_func(target_func, input_df, input_column, pivot_reg, **kwargs):
     results = []
     # Add any static parameters to all_rows_kwargs
     all_rows_kwargs = kwargs.copy()
-    all_rows_kwargs.update((pivot_reg.func_static_params or {}))
+    all_rows_kwargs.update(pivot_reg.func_static_params or {})
     res_key_col_name = pivot_reg.func_out_column_name or pivot_reg.func_input_value_arg
 
     for row_index, row in enumerate(input_df[[input_column]].itertuples(index=False)):

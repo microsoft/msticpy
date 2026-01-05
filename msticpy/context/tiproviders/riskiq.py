@@ -12,10 +12,12 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import partial
-from typing import TYPE_CHECKING, Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import pandas as pd
 from typing_extensions import Self
@@ -250,9 +252,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
             "reputation": pt_result.reputation.as_dict,
         }
         ti_result["RawResult"] = ti_result["Details"]
-        ti_result["Result"] = (
-            pt_result.summary.total != 0 or pt_result.reputation.score != 0
-        )
+        ti_result["Result"] = pt_result.summary.total != 0 or pt_result.reputation.score != 0
 
         rep_severity: ResultSeverity = self._severity_rep(
             pt_result.reputation.classification,
@@ -321,14 +321,8 @@ class RiskIQ(TIProvider, TIPivotProvider):
 
         """
         changed = False
-        start = (
-            start or self._pivot_get_timespan().start
-            if self._pivot_get_timespan
-            else None
-        )
-        end = (
-            end or self._pivot_get_timespan().end if self._pivot_get_timespan else None
-        )
+        start = start or self._pivot_get_timespan().start if self._pivot_get_timespan else None
+        end = end or self._pivot_get_timespan().end if self._pivot_get_timespan else None
         if (
             start
             and end

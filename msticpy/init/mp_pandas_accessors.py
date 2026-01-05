@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """MSTICPy core pandas accessor methods."""
-from typing import Any, Dict, List, Mapping, Union
+
+from collections.abc import Mapping
+from typing import Any
 
 import pandas as pd
 
@@ -84,7 +86,7 @@ class MsticpyCoreAccessor:
         """
         return unpack_df(data=self._df, column=column, **kwargs)
 
-    def ioc_extract(self, columns: List[str], **kwargs) -> pd.DataFrame:
+    def ioc_extract(self, columns: list[str], **kwargs) -> pd.DataFrame:
         """
         Extract IoCs from either a pandas DataFrame.
 
@@ -131,7 +133,7 @@ class MsticpyCoreAccessor:
 
     def build_process_tree(
         self,
-        schema: Union[ProcSchema, Dict[str, Any]] = None,
+        schema: ProcSchema | dict[str, Any] | None = None,
         show_summary: bool = False,
         debug: bool = False,
     ) -> pd.DataFrame:
@@ -289,7 +291,7 @@ class MsticpyCoreAccessor:
         if self._data_viewer_class is None:
             try:
                 # pylint: disable=import-outside-toplevel
-                from ..vis.data_viewer_panel import DataViewer
+                from ..vis.data_viewer_panel import DataViewer  # noqa: PLC0415
             except ImportError:
                 print("This component needs the panel package.")
                 return self._df

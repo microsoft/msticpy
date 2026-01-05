@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Azure component edit."""
+
 from .._version import VERSION
 from .ce_simple_settings import CESimpleSettings
 

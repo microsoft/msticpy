@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Code cleanup functions to re-format obfuscated code."""
+
 import re
 
 from .._version import VERSION

@@ -4,8 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """QueryProvider Query Browser."""
+
 import textwrap
-from typing import Any, Generator
+from collections.abc import Generator
+from typing import Any
 
 from IPython.display import HTML
 

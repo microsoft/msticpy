@@ -10,6 +10,7 @@ Includes functions to conduct common investigation steps when dealing
 with a domain or url, such as getting a screenshot or validating the TLD.
 
 """
+
 from __future__ import annotations
 
 import datetime as dt
@@ -17,9 +18,10 @@ import json
 import logging
 import ssl
 import time
+from collections.abc import Callable
 from dataclasses import asdict
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 from urllib.error import HTTPError, URLError
 
 import httpx

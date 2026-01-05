@@ -4,9 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """Component Edit base and mixin classes."""
+
 from abc import ABC, abstractmethod
 from time import sleep
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import ipywidgets as widgets
 from IPython.display import display
@@ -82,13 +83,12 @@ class CompEditHelp:
 
     _DEFAULT_URI = {
         "MSTICPy Config": (
-            "https://msticpy.readthedocs.io/en/latest/"
-            + "getting_started/msticpyconfig.html"
+            "https://msticpy.readthedocs.io/en/latest/" + "getting_started/msticpyconfig.html"
         )
     }
     _HELP_STYLE = "color: blue; text-decoration: underline;"
 
-    def __init__(self, help_text: str = "", help_uri: Dict[str, str] = None):
+    def __init__(self, help_text: str = "", help_uri: dict[str, str] = None):
         """
         Create help sub-component.
 
@@ -106,7 +106,7 @@ class CompEditHelp:
         self.accdn_help.selected_index = None
         self.set_help(help_text, help_uri)
 
-    def set_help(self, help_text: str = "", help_uri: Dict[str, str] = None):
+    def set_help(self, help_text: str = "", help_uri: dict[str, str] = None):
         """Set the help string (HTML) and URIs."""
         if not help_uri:
             help_uri = self._DEFAULT_URI
@@ -173,9 +173,7 @@ class CompEditItems(CompEditFrame):
     def __init__(self, description: str):
         """Initialize the class. Set a label with `description` as content."""
         super().__init__(description=description)
-        self.select_item = widgets.Select(
-            layout=widgets.Layout(height="200px", width="99%")
-        )
+        self.select_item = widgets.Select(layout=widgets.Layout(height="200px", width="99%"))
         self.edit_frame = widgets.VBox(layout=self.border_layout("99%"))
         self.edit_buttons = CompEditItemButtons()
         self.items_frame = widgets.VBox(
@@ -218,8 +216,7 @@ class CEItemsBase(CompEditItems, ABC):
     _HELP_TEXT = """"""
     _HELP_URI = {
         "MSTICPy Configuration": (
-            "https://msticpy.readthedocs.io/en/latest/"
-            + "getting_started/msticpyconfig.html"
+            "https://msticpy.readthedocs.io/en/latest/" + "getting_started/msticpyconfig.html"
         )
     }
 
@@ -241,21 +238,21 @@ class SettingsControl(ABC):
 
     @property
     @abstractmethod
-    def value(self) -> Union[str, Dict[str, Optional[str]]]:
+    def value(self) -> str | dict[str, str | None]:
         """Return the current value of the control."""
 
-    @value.setter
-    def value(self, value: Union[str, Dict[str, Optional[str]]]):
+    @value.setter  # noqa: B027
+    def value(self, value: str | dict[str, str | None]):
         """Set value of controls from dict."""
 
 
-CETabControlDef = Tuple[type, Union[List[Any], Dict[str, Any]]]
+CETabControlDef = tuple[type, list[Any] | dict[str, Any]]
 
 
 class CompEditTabs:
     """Tab class."""
 
-    def __init__(self, tabs: Optional[Dict[str, CETabControlDef]] = None):
+    def __init__(self, tabs: dict[str, CETabControlDef] | None = None):
         """
         Initialize the CompEditTabs class.
 
@@ -270,10 +267,10 @@ class CompEditTabs:
         self.tab = widgets.Tab()
         self.layout = self.tab
         tabs = tabs or {}
-        self._tab_state: List[widgets.Widget] = []
-        self._tab_lazy_load: Dict[int, CETabControlDef] = {}
-        self._tab_names: List[str] = []
-        self.controls: Dict[str, Any] = {}
+        self._tab_state: list[widgets.Widget] = []
+        self._tab_lazy_load: dict[int, CETabControlDef] = {}
+        self._tab_names: list[str] = []
+        self.controls: dict[str, Any] = {}
         if tabs:
             for tab_name, tab_ctrl in tabs.items():
                 if isinstance(tab_ctrl, CEItemsBase):
@@ -330,7 +327,7 @@ class CompEditTabs:
         self.tab.children = self._tab_state
         self.tab.set_title(new_idx, tab_name)
 
-    def set_tab(self, tab_name: Optional[str], index: int = 0):
+    def set_tab(self, tab_name: str | None, index: int = 0):
         """Programatically set the tab by name or index."""
         if tab_name:
             tab_index = [
@@ -344,11 +341,11 @@ class CompEditTabs:
         self.tab.selected_index = index
 
     @property
-    def tab_names(self) -> List[str]:
+    def tab_names(self) -> list[str]:
         """Return a list of current tabs."""
         return self._tab_names
 
     @property
-    def tab_controls(self) -> Dict[str, Any]:
+    def tab_controls(self) -> dict[str, Any]:
         """Return a list of current tab names and controls."""
         return self.controls

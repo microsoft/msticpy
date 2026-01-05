@@ -4,9 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """Alert Entity class."""
+
 import json
+from collections.abc import Mapping
 from datetime import datetime
-from typing import Any, Dict, List, Mapping, Optional, Tuple
+from typing import Any
 
 import pandas as pd
 
@@ -80,18 +82,18 @@ class Alert(Entity):
             kw arguments.
 
         """
-        self.DisplayName: Optional[str] = None
-        self.CompromisedEntity: Optional[str] = None
+        self.DisplayName: str | None = None
+        self.CompromisedEntity: str | None = None
         self.Count: Any = None
-        self.StartTimeUtc: Optional[datetime] = None
-        self.EndTimeUtc: Optional[datetime] = None
+        self.StartTimeUtc: datetime | None = None
+        self.EndTimeUtc: datetime | None = None
         self.Severity: Any = None
-        self.SystemAlertId: Optional[str] = None
-        self.SystemAlertIds: List[str] = []
-        self.AlertType: Optional[str] = None
-        self.VendorName: Optional[str] = None
-        self.ProviderName: Optional[str] = None
-        self.Entities: Optional[List] = None
+        self.SystemAlertId: str | None = None
+        self.SystemAlertIds: list[str] = []
+        self.AlertType: str | None = None
+        self.VendorName: str | None = None
+        self.ProviderName: str | None = None
+        self.Entities: list | None = None
         self.Version = "3.0"
         super().__init__(src_entity=src_entity, **kwargs)
         if src_entity is not None:
@@ -100,7 +102,7 @@ class Alert(Entity):
         if isinstance(src_event, pd.Series) and not src_event.empty:
             self._create_from_event(src_event)
 
-    def _create_from_ent(self, src_entity):  # noqa: MC0001
+    def _create_from_ent(self, src_entity):
         if "StartTime" in src_entity:
             self.TimeGeneratedUtc = src_entity["StartTime"]
         if "TimeGenerated" in src_entity:
@@ -143,11 +145,9 @@ class Alert(Entity):
         return f"Alert: {alert_name}" or self.__class__.__name__
 
     @property
-    def AlertId(self) -> Optional[str]:  # noqa: N802
+    def AlertId(self) -> str | None:  # noqa: N802
         """Return the system alert ID."""
-        return self.SystemAlertId or (
-            self.SystemAlertIds[0] if self.SystemAlertIds else None
-        )
+        return self.SystemAlertId or (self.SystemAlertIds[0] if self.SystemAlertIds else None)
 
     @AlertId.setter
     def AlertId(self, value: str):  # noqa: N802
@@ -291,10 +291,10 @@ class Alert(Entity):
         """Create alert entities from returned dicts."""
         new_ents = []
         for ent in entities:
-            if isinstance(ent, Tuple):
+            if isinstance(ent, tuple):
                 ent_details = ent[1]
                 ent_type = ent[0]
-            elif isinstance(ent, Dict):
+            elif isinstance(ent, dict):
                 ent_details = ent
                 ent_type = ent.get("Type", "Unknown")
             else:
@@ -341,14 +341,12 @@ def _extract_entities(ents: list):
             out_ents.append(_find_original_entity(entity, base_ents))
         else:
             for k, val in entity.items():
-                if isinstance(val, (list, dict)):
+                if isinstance(val, list | dict):
                     if isinstance(val, list):
                         nested_ents = []
                         for item in val:
                             if isinstance(item, dict) and "$ref" in item:
-                                nested_ents.append(
-                                    _find_original_entity(item, base_ents)
-                                )
+                                nested_ents.append(_find_original_entity(item, base_ents))
                                 entity[k] = nested_ents
                     elif isinstance(val, dict) and "$ref" in val:
                         entity[k] = _find_original_entity(val, base_ents)
@@ -365,7 +363,7 @@ def _find_original_entity(ent, base_ents):
         return ent
 
 
-def _generate_base_ents(ents: list) -> list:  # noqa: MC0001
+def _generate_base_ents(ents: list) -> list:
     """Generate a list of all enties form a set of nested entities."""
     base_ents = []
     for ent in ents:
@@ -380,10 +378,7 @@ def _generate_base_ents(ents: list) -> list:  # noqa: MC0001
                                 for p in prop[val]:
                                     if isinstance(p, dict) and "$id" in p.keys():
                                         base_ents.append(p)
-                            elif (
-                                isinstance(prop[val], dict)
-                                and "$id" in prop[val].keys()
-                            ):
+                            elif isinstance(prop[val], dict) and "$id" in prop[val].keys():
                                 base_ents.append(val)
             elif isinstance(item, dict) and "$id" in item.keys():
                 base_ents.append(item)

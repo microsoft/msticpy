@@ -4,10 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """HostLogonSession Entity class."""
+
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
-from typing import Any, Mapping, Optional
+from typing import Any
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -71,10 +73,10 @@ class HostLogonSession(Entity):
 
 
         """
-        self.Account: Optional[Account] = None
+        self.Account: Account | None = None
         self.StartTimeUtc: datetime = datetime.min
         self.EndTimeUtc: datetime = datetime.min
-        self.Host: Optional[Host] = None
+        self.Host: Host | None = None
         self.SessionId: str | None = None
         super().__init__(src_entity=src_entity, **kwargs)
 

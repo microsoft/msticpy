@@ -5,19 +5,73 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
-[tool.isort]
-profile = "black"
-src_paths = ["msticpy", "tests"]
+[tool.ruff]
+line-length = 95
+target-version = "py310"
 
-[tool.pydocstyle]
-convention = "numpy"
+# Exclude directories
+exclude = [
+    ".git",
+    "__pycache__",
+    "docs/source/conf.py",
+    "build",
+    "dist",
+    "tests",
+    "test*.py",
+]
 
 [tool.ruff.lint]
-# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
-# Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
-# McCabe complexity (`C901`) by default.
-select = ["E4", "E7", "E9", "F", "W", "D"]
-ignore = ["D212", "D203", "D417"]
+# Enable the rule sets you want
+select = [
+    "E",    # pycodestyle errors (flake8)
+    "W",    # pycodestyle warnings (flake8)
+    "F",    # pyflakes (flake8)
+    "I",    # isort
+    "D",    # pydocstyle
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "PL",   # pylint (subset)
+]
+
+# Ignore specific rules to match your current config
+ignore = [
+    "E401",   # Multiple imports on one line (from flake8 config)
+    "E501",   # Line too long (handled by formatter)
+    #"W503",   # Line break before binary operator (from flake8 config)
+    "D212",   # Multi-line docstring summary should start at the first line (from pydocstyle)
+    "D203",   # 1 blank line required before class docstring (from pydocstyle)
+    "D417",   # Missing argument descriptions (from pydocstyle)
+    "PLR0913", # Too many arguments
+    "PLR2004", # Magic value comparison
+    "PLW2901", # Loop variable overwritten
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore certain rules in test files
+"tests/**" = ["D", "PL"]
+"test_*.py" = ["D", "PL"]
 
 [tool.ruff.lint.pydocstyle]
+# Use numpy convention (from your config)
 convention = "numpy"
+
+[tool.ruff.lint.isort]
+# Match your isort config
+# profile = "black"
+known-first-party = ["msticpy"]
+
+[tool.ruff.lint.pylint]
+# Match your pylint config
+max-args = 10
+max-branches = 15
+
+[tool.ruff.format]
+# Use double quotes (Black style)
+quote-style = "double"
+# Indent with spaces
+indent-style = "space"
+# Like Black, respect magic trailing comma
+skip-magic-trailing-comma = false
+# Like Black, automatically detect line endings
+line-ending = "auto"

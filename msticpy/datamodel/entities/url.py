@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Url Entity class."""
-from typing import Any, Dict, Mapping, Optional
+
+from collections.abc import Mapping
+from typing import Any
 
 from urllib3.exceptions import LocationParseError
 from urllib3.util import parse_url
@@ -62,8 +64,8 @@ class Url(Entity):
             kw arguments.
 
         """
-        self.Url: Optional[str] = None
-        self.DetonationVerdict: Optional[str] = None
+        self.Url: str | None = None
+        self.DetonationVerdict: str | None = None
         super().__init__(src_entity=src_entity, **kwargs)
         if src_event:
             self._create_from_event(src_event)
@@ -99,7 +101,7 @@ class Url(Entity):
                 return val
         return super().__getattr__(name)
 
-    _entity_schema: Dict[str, Any] = {
+    _entity_schema: dict[str, Any] = {
         # Url (type System.String)
         "Url": None,
         "DetonationVerdict": None,
@@ -109,7 +111,7 @@ class Url(Entity):
     }
 
 
-def _url_components(url: str) -> Dict[str, str]:
+def _url_components(url: str) -> dict[str, str]:
     """Return parsed Url components as dict."""
     try:
         return parse_url(url)._asdict()

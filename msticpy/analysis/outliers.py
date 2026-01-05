@@ -227,7 +227,7 @@ class RobustRandomCutForest:
         rng = np.random.RandomState(42)
         return rng.choice(rows, n_samples, replace=False)
 
-    def fit(self, x: np.ndarray) -> "RobustRandomCutForest":
+    def fit(self, x: np.ndarray) -> RobustRandomCutForest:
         """
         Build the forest from training data.
 
@@ -322,9 +322,7 @@ class RobustRandomCutForest:
         scores = np.sum(tree_scores, axis=0) / self.num_trees
         return scores
 
-    def _process_tree(
-        self, tree: rrcf.RCTree, x_sub: np.ndarray, batches: list
-    ) -> np.ndarray:
+    def _process_tree(self, tree: rrcf.RCTree, x_sub: np.ndarray, batches: list) -> np.ndarray:
         """
         Process a single tree with batched operations.
 
@@ -349,7 +347,7 @@ class RobustRandomCutForest:
             temp_indices = np.arange(1000000 + start, 1000000 + end)
 
             # Insert batch
-            for idx, point in zip(temp_indices, batch):
+            for idx, point in zip(temp_indices, batch, strict=False):
                 tree.insert_point(point, index=idx)
 
             # Calculate CoDisp
@@ -476,7 +474,7 @@ def identify_outliers_rrcf(
 
 
 # pylint: disable=too-many-arguments, too-many-locals
-def plot_outlier_results(
+def plot_outlier_results(  # noqa: PLR0915
     clf: IsolationForest | RobustRandomCutForest,
     x: np.ndarray,
     x_predict: np.ndarray,
@@ -516,9 +514,7 @@ def plot_outlier_results(
             np.c_[
                 xx.ravel(),
                 yy.ravel(),
-                np.zeros(
-                    (xx.ravel().shape[0], clf.n_features_in_ - len(feature_columns))
-                ),
+                np.zeros((xx.ravel().shape[0], clf.n_features_in_ - len(feature_columns))),
             ]
         )
         z = z.reshape(xx.shape)
@@ -530,9 +526,7 @@ def plot_outlier_results(
         plt.contourf(xx, yy, z, cmap=plt.cm.Blues_r)  # type: ignore
 
         b1 = plt.scatter(x[:, 0], x[:, 1], c="white", s=20, edgecolor="k")
-        b2 = plt.scatter(
-            x_predict[:, 0], x_predict[:, 1], c="green", s=40, edgecolor="k"
-        )
+        b2 = plt.scatter(x_predict[:, 0], x_predict[:, 1], c="green", s=40, edgecolor="k")
         c = plt.scatter(x_outliers[:, 0], x_outliers[:, 1], c="red", marker="x", s=200)
         plt.axis("tight")
 
@@ -584,11 +578,9 @@ def plot_outlier_results(
                     z = z.reshape(xx.shape)
 
                     # pylint: disable=no-member
-                    axes[i, j].contourf(xx, yy, z, cmap=plt.cm.Blues_r)  # type: ignore[index,attr-defined]
+                    axes[i, j].contourf(xx, yy, z, cmap=plt.cm.Blues_r)  # type: ignore[attr-defined, index]
 
-                    b1 = axes[i, j].scatter(  # type: ignore[index]
-                        x[:, j], x[:, i], c="white", edgecolor="k"
-                    )
+                    b1 = axes[i, j].scatter(x[:, j], x[:, i], c="white", edgecolor="k")  # type: ignore[index]
                     b2 = axes[i, j].scatter(  # type: ignore[index]
                         x_predict[:, j], x_predict[:, i], c="green", edgecolor="k"
                     )
@@ -648,7 +640,7 @@ def remove_common_items(data: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
     # pylint: disable=cell-var-from-loop
     for col in columns:
         filtered_df = filtered_df.filter(
-            lambda x: (x[col].std() == 0 and x[col].count() > 10)  # type: ignore
+            lambda x, col=col: (x[col].std() == 0 and x[col].count() > 10)
         )
 
     return filtered_df

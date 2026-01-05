@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Bokeh matrix plot."""
+
 import math
-from typing import List, Optional, Union
 
 import attr
 import numpy as np
@@ -32,38 +32,38 @@ figure = bokeh_figure(figure)  # type: ignore[assignment, misc]
 class PlotParams:
     """Plot params for time_duration."""
 
-    title: Optional[str] = "Interaction Plot"
-    x: Optional[str] = None
-    x_col: Optional[str] = None
-    y: Optional[str] = None
-    y_col: Optional[str] = None
+    title: str | None = "Interaction Plot"
+    x: str | None = None
+    x_col: str | None = None
+    y: str | None = None
+    y_col: str | None = None
     intersect: bool = False
     height: int = 700
     width: int = 900
     color: str = "red"
-    value_col: Optional[str] = None
+    value_col: str | None = None
     dist_count: bool = False
     log_size: bool = False
     invert: bool = False
-    sort: Optional[Union[str, bool]] = None
-    sort_x: Optional[Union[str, bool]] = None
-    sort_y: Optional[Union[str, bool]] = None
+    sort: str | bool | None = None
+    sort_x: str | bool | None = None
+    sort_y: str | bool | None = None
     hide: bool = False
-    font_size: Optional[int] = None
+    font_size: int | None = None
     max_label_font_size: int = 11
 
     @property
-    def x_column(self) -> Optional[str]:
+    def x_column(self) -> str | None:
         """Return the current x column value."""
         return self.x or self.x_col
 
     @property
-    def y_column(self) -> Optional[str]:
+    def y_column(self) -> str | None:
         """Return the current y column value."""
         return self.y or self.y_col
 
     @classmethod
-    def field_list(cls) -> List[str]:
+    def field_list(cls) -> list[str]:
         """Return field names as a list."""
         return list(attr.fields_dict(cls).keys())
 
@@ -163,9 +163,7 @@ def plot_matrix(data: pd.DataFrame, **kwargs) -> LayoutDOM:
     plot_data = _prep_data(data, param)
 
     x_range = _sort_labels(plot_data, param.x_column, param.sort_x or param.sort)
-    y_range = _sort_labels(
-        plot_data, param.y_column, param.sort_y or param.sort, invert=True
-    )
+    y_range = _sort_labels(plot_data, param.y_column, param.sort_y or param.sort, invert=True)
 
     # Rescale the size so that it matches the graph
     max_size = plot_data["size"].max()
@@ -278,14 +276,14 @@ def _prep_data(data: pd.DataFrame, param: PlotParams):
 
     if param.value_col is None:
         # calculate a count of rows in each group
-        other_cols = list(set(data.columns) - set([param.x_column, param.y_column]))
+        other_cols = list(set(data.columns) - {param.x_column, param.y_column})
         if other_cols:
             count_col = other_cols[0]
         else:
             count_col = data.index.name or "index"
             data = data.reset_index()
         count_rows_df = (
-            data[[param.x_column, param.y_column, count_col]]  # type: ignore
+            data[[param.x_column, param.y_column, count_col]]
             .groupby([param.x_column, param.y_column])
             .count()
             .rename(columns={count_col: "row_count"})
@@ -299,20 +297,18 @@ def _prep_data(data: pd.DataFrame, param: PlotParams):
     if param.dist_count:
         # If distinct count of values required, get nunique
         tmp_df = (
-            data[[param.x_column, param.y_column, param.value_col]]  # type: ignore
+            data[[param.x_column, param.y_column, param.value_col]]
             .groupby([param.x_column, param.y_column])
             .nunique()
             .reset_index()
         )
     else:
         tmp_df = (
-            data[[param.x_column, param.y_column, param.value_col]]  # type: ignore
+            data[[param.x_column, param.y_column, param.value_col]]
             .groupby([param.x_column, param.y_column])
             .sum()
             .reset_index()
         )
     return tmp_df.assign(
-        size=lambda x: _size_scale(
-            tmp_df[param.value_col], param.log_size, param.invert
-        )
+        size=lambda x: _size_scale(tmp_df[param.value_col], param.log_size, param.invert)
     )

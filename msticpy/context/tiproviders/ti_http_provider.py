@@ -12,6 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -133,9 +134,7 @@ class HttpTIProvider(TIProvider, HttpProvider):
                     result,
                 )
             except JSONDecodeError:
-                result[
-                    "RawResult"
-                ] = f"""There was a problem parsing results from this lookup:
+                result["RawResult"] = f"""There was a problem parsing results from this lookup:
                                     {response.text}"""
                 result["Result"] = False
                 severity = ResultSeverity.information
@@ -150,7 +149,7 @@ class HttpTIProvider(TIProvider, HttpProvider):
             result["Details"] = self._response_message(result["Status"])
         return result
 
-    @lru_cache(maxsize=256)
+    @lru_cache(maxsize=256)  # noqa: B019
     def lookup_ioc(  # noqa: PLR0913
         self: Self,
         ioc: str,

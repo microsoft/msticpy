@@ -50,6 +50,7 @@ Configuring your environment notebook
 https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/ConfiguringNotebookEnvironment.ipynb
 
 """
+
 from __future__ import annotations
 
 import importlib
@@ -197,51 +198,40 @@ VERBOSITY: Callable[[int | None], int] = _get_verbosity_setting()
 
 # pylint: disable=use-dict-literal
 _NB_IMPORTS = [
-    dict(pkg="pandas", alias="pd"),
-    dict(pkg="IPython", tgt="get_ipython"),
-    dict(pkg="IPython.display", tgt="display"),
-    dict(pkg="IPython.display", tgt="HTML"),
-    dict(pkg="IPython.display", tgt="Markdown"),
+    {"pkg": "pandas", "alias": "pd"},
+    {"pkg": "IPython", "tgt": "get_ipython"},
+    {"pkg": "IPython.display", "tgt": "display"},
+    {"pkg": "IPython.display", "tgt": "HTML"},
+    {"pkg": "IPython.display", "tgt": "Markdown"},
     # dict(pkg="ipywidgets", alias="widgets"),
-    dict(pkg="pathlib", tgt="Path"),
-    dict(pkg="numpy", alias="np"),
+    {"pkg": "pathlib", "tgt": "Path"},
+    {"pkg": "numpy", "alias": "np"},
 ]
 if sns is not None:
-    _NB_IMPORTS.append(dict(pkg="seaborn", alias="sns"))
+    _NB_IMPORTS.append({"pkg": "seaborn", "alias": "sns"})
 
 _MP_IMPORTS = [
-    dict(pkg="msticpy"),
-    dict(pkg="msticpy.data", tgt="QueryProvider"),
-    # dict(pkg="msticpy.vis.foliummap", tgt="FoliumMap"),
-    # dict(pkg="msticpy.context", tgt="TILookup"),
-    # dict(pkg="msticpy.context", tgt="GeoLiteLookup"),
-    # dict(pkg="msticpy.context", tgt="IPStackLookup"),
-    # dict(pkg="msticpy.transform", tgt="IoCExtract"),
-    dict(pkg="msticpy.common.utility", tgt="md"),
-    dict(pkg="msticpy.common.utility", tgt="md_warn"),
-    dict(pkg="msticpy.common.wsconfig", tgt="WorkspaceConfig"),
-    dict(pkg="msticpy.init.pivot", tgt="Pivot"),
-    dict(pkg="msticpy.datamodel", tgt="entities"),
-    dict(pkg="msticpy.init", tgt="nbmagics"),
-    # dict(pkg="msticpy.nbtools", tgt="SecurityAlert"),
-    dict(pkg="msticpy.vis", tgt="mp_pandas_plot"),
-    # dict(pkg="msticpy.vis", tgt="nbdisplay"),
-    dict(pkg="msticpy.init", tgt="mp_pandas_accessors"),
-    # dict(pkg="msticpy", tgt="nbwidgets"),
+    {"pkg": "msticpy"},
+    {"pkg": "msticpy.data", "tgt": "QueryProvider"},
+    {"pkg": "msticpy.common.utility", "tgt": "md"},
+    {"pkg": "msticpy.common.utility", "tgt": "md_warn"},
+    {"pkg": "msticpy.common.wsconfig", "tgt": "WorkspaceConfig"},
+    {"pkg": "msticpy.init.pivot", "tgt": "Pivot"},
+    {"pkg": "msticpy.datamodel", "tgt": "entities"},
+    {"pkg": "msticpy.init", "tgt": "nbmagics"},
+    {"pkg": "msticpy.vis", "tgt": "mp_pandas_plot"},
+    {"pkg": "msticpy.init", "tgt": "mp_pandas_accessors"},
 ]
 
 _MP_IMPORT_ALL: list[dict[str, str]] = [
-    dict(module_name="msticpy.datamodel.entities"),
+    {"module_name": "msticpy.datamodel.entities"},
 ]
 # pylint: enable=use-dict-literal
 
-_CONF_URI = (
-    "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html"
-)
+_CONF_URI = "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html"
 
 _AZNB_GUIDE = (
-    "Please run the <i>Getting Started Guide for Azure Sentinel "
-    "ML Notebooks</i> notebook."
+    "Please run the <i>Getting Started Guide for Azure Sentinel ML Notebooks</i> notebook."
 )
 
 current_providers: dict[str, Any] = {}  # pylint: disable=invalid-name
@@ -410,9 +400,7 @@ def init_notebook(
         _check_msticpy_version()
 
     if _detect_env("synapse", **kwargs) and is_in_synapse():
-        synapse_params = {
-            key: val for key, val in kwargs.items() if key in _SYNAPSE_KWARGS
-        }
+        synapse_params = {key: val for key, val in kwargs.items() if key in _SYNAPSE_KWARGS}
         try:
             init_synapse(**synapse_params)
         except Exception as err:  # pylint: disable=broad-except
@@ -492,7 +480,7 @@ def _err_output(*args):
 
 def _load_user_defaults(namespace):
     """Load user defaults, if defined."""
-    global current_providers  # pylint: disable=global-statement, invalid-name
+    global current_providers  # pylint: disable=global-statement, invalid-name  # noqa: PLW0603
     stdout_cap = io.StringIO()
     with redirect_stdout(stdout_cap):
         _pr_output("Loading user defaults.")
@@ -567,8 +555,7 @@ def _show_init_warnings(imp_ok, conf_ok):
     if not conf_ok:
         md("One or more configuration items were missing or set incorrectly.")
         md(
-            _AZNB_GUIDE
-            + f" and the <a href='{_CONF_URI}'>msticpy configuration guide</a>.",
+            _AZNB_GUIDE + f" and the <a href='{_CONF_URI}'>msticpy configuration guide</a>.",
         )
     md("This notebook may still run but with reduced functionality.")
     return False
@@ -793,13 +780,6 @@ def _set_nb_options(namespace):
     pd.set_option("display.max_columns", 50)
     pd.set_option("display.max_colwidth", 100)
 
-    os.environ["KQLMAGIC_LOAD_MODE"] = "silent"
-    # Kqlmagic config will use AZ CLI login if available
-    kql_config = os.environ.get("KQLMAGIC_CONFIGURATION", "")
-    if "try_azcli_login" not in kql_config:
-        kql_config = ";".join([kql_config, "try_azcli_login=True"])
-        os.environ["KQLMAGIC_CONFIGURATION"] = kql_config
-
 
 def _load_pivots(namespace):
     """Load pivot functions."""
@@ -809,7 +789,7 @@ def _load_pivots(namespace):
         pivot.reload_pivots()
         namespace["pivot"] = pivot
         # pylint: disable=import-outside-toplevel, cyclic-import
-        import msticpy
+        import msticpy  # noqa: PLC0415
 
         msticpy.pivot = pivot
 
@@ -920,9 +900,7 @@ def _check_and_reload_pkg(
     if pkg_version < required_version:
         _err_output(_MISSING_PKG_WARN.format(package=pkg_name))
         # sourcery skip: swap-if-expression
-        resp = (
-            input("Install the package now? (y/n)") if not unit_testing() else "y"
-        )  # nosec
+        resp = input("Install the package now? (y/n)") if not unit_testing() else "y"  # nosec
         if resp.casefold().startswith("y"):
             warn_mssg.append(f"{pkg_name} was installed or upgraded.")
             pkg_spec = f"{pkg_name}>={required_version}"

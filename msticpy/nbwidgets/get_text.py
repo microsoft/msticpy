@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
-from typing import Optional
 
 import ipywidgets as widgets
 from ipywidgets import Layout
@@ -27,7 +26,7 @@ class GetText(RegisteredWidget, IPyDisplayMixin):
 
     def __init__(
         self,
-        default: Optional[str] = None,
+        default: str | None = None,
         description: str = "Enter the value: ",
         auto_display: bool = False,
         **kwargs,

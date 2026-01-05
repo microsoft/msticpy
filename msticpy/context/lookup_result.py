@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Lookup Status class."""
+
 from __future__ import annotations
 
 from enum import Enum

@@ -9,6 +9,7 @@ IPQualityScore Provider.
 This provider offers contextual lookup services and fraud scoring for IP addresses.
 https://www.ipqualityscore.com/
 """
+
 from __future__ import annotations
 
 from typing import Any, ClassVar

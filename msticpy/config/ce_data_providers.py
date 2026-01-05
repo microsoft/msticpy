@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data Providers Component Edit."""
+
 import re
-from typing import Optional
 
 import ipywidgets as widgets
 
@@ -63,12 +63,14 @@ class CEDataProviders(CEProviders):
             **TEXT_LAYOUT,
         )
         super().__init__(mp_controls)
-        self._last_instance_path: Optional[str] = None
+        self._last_instance_path: str | None = None
 
     @property
     def _current_path(self):
         if self._form_current_instance_name:
-            return f"{self._COMP_PATH}.{self._prov_ctrl_name}-{self._form_current_instance_name}"
+            return (
+                f"{self._COMP_PATH}.{self._prov_ctrl_name}-{self._form_current_instance_name}"
+            )
         return f"{self._COMP_PATH}.{self._prov_ctrl_name}"
 
     @property
@@ -98,13 +100,11 @@ class CEDataProviders(CEProviders):
 
     def _populate_edit_ctrls(
         self,
-        control_name: Optional[str] = None,
+        control_name: str | None = None,
         new_provider: bool = False,
     ):
         """Retrieve and populate form controls for the provider to display."""
-        super()._populate_edit_ctrls(
-            control_name=control_name, new_provider=new_provider
-        )
+        super()._populate_edit_ctrls(control_name=control_name, new_provider=new_provider)
         # add the instance text box
         self.edit_ctrls.children = [
             self.text_prov_instance,
@@ -120,15 +120,11 @@ class CEDataProviders(CEProviders):
     def _save_provider(self, btn):
         if self._form_current_instance_name:
             if not re.match(r"^[\w._:]+$", self._form_current_instance_name):
-                self.set_status(
-                    "Error: instance name can only contain alphanumeric and '._:'"
-                )
+                self.set_status("Error: instance name can only contain alphanumeric and '._:'")
                 return
             # The instance name may have changed, which alters the path
             if self._last_instance_path != self._current_path:
-                self.mp_controls.rename_path(
-                    self._last_instance_path, self._current_path
-                )
+                self.mp_controls.rename_path(self._last_instance_path, self._current_path)
         super()._save_provider(btn)
         # refresh the item list and re-select the current item
         edited_provider = self._prov_name

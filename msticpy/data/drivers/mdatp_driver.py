@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """MS Defender/Defender 365 OData Driver class."""
+
 from __future__ import annotations
 
 import logging
@@ -120,9 +121,7 @@ class MDATPDriver(OData):
         else:
             logger.debug("Using cloud from configuration: %s", self.cloud)
 
-        logger.info(
-            "Selecting API configuration for environment: %s", self.data_environment
-        )
+        logger.info("Selecting API configuration for environment: %s", self.data_environment)
         m365d_params: M365DConfiguration = _select_api(
             self.data_environment,
             self.cloud,
@@ -296,7 +295,7 @@ def _select_api(data_environment: DataEnvironment, cloud: str) -> M365DConfigura
                 "Please use Microsoft Graph Security Hunting API instead - "
                 "provider name = 'M365DGraph'."
             )
-            warnings.warn(warn_message, DeprecationWarning)
+            warnings.warn(warn_message, DeprecationWarning, stacklevel=2)
 
         # MDE Advanced Queries API
         logger.info("Using MDE Advanced Queries API (default)")

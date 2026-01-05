@@ -4,11 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Reads pivot registration config files."""
+
 from __future__ import annotations
 
 import importlib
 import warnings
-from typing import Any, Callable, Generator
+from collections.abc import Callable, Generator
+from typing import Any
 
 import yaml
 
@@ -146,13 +148,13 @@ def add_unbound_pivot_function(
 
 def _read_reg_file(file_path: str) -> Generator[PivotRegistration, Any, None]:
     """Read the yaml file and return generator of PivotRegistrations."""
-    with open(file_path, "r", encoding="utf-8") as f_handle:
+    with open(file_path, encoding="utf-8") as f_handle:
         # use safe_load instead load
         pivot_regs = yaml.safe_load(f_handle)
 
     for entry_name, settings in pivot_regs.get("pivot_providers").items():
         try:
-            yield PivotRegistration(  # type: ignore[call-arg]
+            yield PivotRegistration(
                 src_config_path=file_path, src_config_entry=entry_name, **settings
             )
         except TypeError as err:
@@ -204,7 +206,8 @@ def _get_func_from_class(src_module, namespace, piv_reg):
         except Exception as err:  # pylint: disable=broad-except
             warnings.warn(
                 f"Could not create instance of class {src_class.__name__}. "
-                + f"Exception was {err}"
+                + f"Exception was {err}",
+                stacklevel=2,
             )
             return None
     # get the function from the object
