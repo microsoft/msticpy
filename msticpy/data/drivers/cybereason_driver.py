@@ -123,7 +123,7 @@ class CybereasonDriver(DriverBase):
         )
         self._debug: bool = debug
 
-    def query(
+    def query(  # pylint: disable=too-many-locals
         self: Self,
         query: str,
         query_source: QuerySource | None = None,
