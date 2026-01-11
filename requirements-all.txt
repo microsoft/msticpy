@@ -3,7 +3,7 @@ azure-common>=1.1.18
 azure-core>=1.24.0
 azure-identity>=1.16.1
 azure-keyvault-secrets>=4.0.0
-azure-kusto-data>=4.4.0, <=5.0.0
+azure-kusto-data>=4.4.0, <=5.0.5
 azure-mgmt-compute>=4.6.2
 azure-mgmt-core>=1.2.1
 azure-mgmt-keyvault>=2.0.0
