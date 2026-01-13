@@ -55,6 +55,7 @@ _PKG_RENAME_NAME = {
     "dateutil": "python-dateutil",
     "splunklib": "splunk-sdk",
     "sumologic": "sumologic-sdk",
+    "openobserve": "python-openobserve",
     "vt": "vt-py",
     "kqlmagic": "KqlmagicCustom",
     "jwt": "pyjwt",

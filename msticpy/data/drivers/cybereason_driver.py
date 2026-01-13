@@ -39,6 +39,8 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 _HELP_URI = "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html"
 
+HTTP_TIMEOUT: float = 120.0
+
 
 # pylint: disable=too-many-instance-attributes
 class CybereasonDriver(DriverBase):
@@ -55,7 +57,7 @@ class CybereasonDriver(DriverBase):
     def __init__(
         self: CybereasonDriver,
         *,
-        timeout: int = 120,
+        timeout: float | None = None,
         max_results: int = 1000,
         debug: bool = False,
         **kwargs,
@@ -65,8 +67,8 @@ class CybereasonDriver(DriverBase):
 
         Additional Parameters
         ---------------------
-        timeout : int
-            Query timeout in seconds. Defaults to 120 seconds
+        timeout : int | None
+            Query timeout in seconds. Defaults to None
         max_results : int
             Number of total results to return. Defaults to 1000
             Max is 10,000.
@@ -90,14 +92,17 @@ class CybereasonDriver(DriverBase):
             "perGroupLimit": 100,
             "perFeatureLimit": 100,
             "templateContext": "SPECIFIC",
-            "queryTimeout": timeout * 1000,
+            "queryTimeout": (timeout or HTTP_TIMEOUT) * 1000,
             "customFields": [],
         }
         self.search_endpoint: str = "/rest/visualsearch/query/simple"
         self._loaded: bool = True
         self.client: httpx.Client = httpx.Client(
             follow_redirects=True,
-            timeout=self.get_http_timeout(timeout=timeout, def_timeout=120),
+            timeout=self.get_http_timeout(
+                timeout=timeout,
+                def_timeout=HTTP_TIMEOUT,
+            ),
             headers=mp_ua_header(),
         )
         self.set_driver_property(
@@ -116,12 +121,16 @@ class CybereasonDriver(DriverBase):
         )
         self._debug: bool = debug
 
-    def query(
+    def query(  # pylint: disable=too-many-locals
         self: Self,
         query: str,
         query_source: QuerySource | None = None,
         *,
         page_size: int = 100,
+        timeout: float | None = None,
+        retry_on_error: bool = False,
+        progress: bool = True,
+        max_retry: int = 3,
         **__,
     ) -> pd.DataFrame | str | None:
         """
@@ -135,6 +144,14 @@ class CybereasonDriver(DriverBase):
             The query definition object
         page_size : int
             Number of results to return per page. Defaults to 100
+        timeout : float | None
+            Number of seconds for HTTP requests to timeout. Defaults to None
+        retry_on_error : bool
+            True if threaded queries should be tried again. Defaults to False
+        progress : bool
+            True if progress bar should be displayed. Defaults to True
+        max_retry : int
+            Number of retries to do. Defaults to 3
 
         Returns
         -------
@@ -150,11 +167,23 @@ class CybereasonDriver(DriverBase):
         page_size = min(page_size, 4000)
         logger.debug("Set page size to %d", page_size)
         json_query: dict[str, Any] = json.loads(query)
-        body: dict[str, Any] = {**self.req_body, **json_query}
+        body: dict[str, Any] = {
+            **self.req_body,
+            **json_query,
+        }
+        if timeout:
+            body["queryTimeout"] = timeout * 1000
+        else:
+            timeout = self.client.timeout.read or HTTP_TIMEOUT
 
         # The query must be executed at least once to retrieve the number
         # of results and the pagination token.
-        response: dict[str, Any] = self.__execute_query(body, page_size=page_size)
+        response: dict[str, Any] = self.__execute_query(
+            body,
+            page_size=page_size,
+            timeout=timeout,
+            max_retry=max_retry,
+        )
 
         total_results: int = response["data"]["totalResults"]
         pagination_token: str = response["data"]["paginationToken"]
@@ -170,6 +199,10 @@ class CybereasonDriver(DriverBase):
                 page_size=page_size,
                 pagination_token=pagination_token,
                 total_results=total_results,
+                timeout=timeout,
+                retry_on_error=retry_on_error,
+                progress=progress,
+                max_retry=max_retry,
             )
         else:
             df_result = self._format_result_to_dataframe(result=response)
@@ -183,8 +216,10 @@ class CybereasonDriver(DriverBase):
         pagination_token: str,
         total_results: int,
         *,
-        progress: bool = True,
-        retry_on_error: bool = False,
+        progress: bool,
+        retry_on_error: bool,
+        timeout: float,
+        max_retry: int,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -202,11 +237,15 @@ class CybereasonDriver(DriverBase):
             Number of results for the executed query.
 
         Additional Parameters
-        ----------
+        ---------------------
         progress: bool, optional
             Show progress bar, by default True
         retry_on_error: bool, optional
             Retry failed queries, by default False
+        timeout : float
+            Number of seconds for HTTP requests to timeout. Defaults to 120
+        max_retry : int
+            Number of retries to do. Defaults to 3
         **kwargs : dict[str, Any]
             Additional keyword arguments to pass to the query method.
 
@@ -228,6 +267,8 @@ class CybereasonDriver(DriverBase):
             page_size=page_size,
             pagination_token=pagination_token,
             total_results=total_results,
+            timeout=timeout,
+            max_retry=max_retry,
         )
 
         logger.info("Running %s paginated queries.", len(query_tasks))
@@ -412,6 +453,8 @@ class CybereasonDriver(DriverBase):
         page_size: int,
         pagination_token: str,
         total_results: int,
+        timeout: float,
+        max_retry: int,
     ) -> dict[str, partial[dict[str, Any]]]:
         """Return dictionary of partials to execute queries."""
         # Compute the number of queries to execute
@@ -426,6 +469,8 @@ class CybereasonDriver(DriverBase):
                 page_size=page_size,
                 pagination_token=pagination_token,
                 page=page,
+                timeout=timeout,
+                max_retry=max_retry,
             )
             for page in range(total_pages)
         }
@@ -434,10 +479,11 @@ class CybereasonDriver(DriverBase):
         self: Self,
         body: dict[str, Any],
         *,
+        page_size: int,
+        timeout: float,
+        max_retry: int,
         page: int = 0,
-        page_size: int = 2000,
         pagination_token: str | None = None,
-        max_retry: int = 3,
     ) -> dict[str, Any]:
         """
         Run query with pagination enabled.
@@ -448,6 +494,8 @@ class CybereasonDriver(DriverBase):
         ----------
         body: dict[str, Any]
             Body of the HTTP Request
+        timeout : float
+            Number of seconds for HTTP requests to timeout.
         page_size: int
             Size of the page for results
         page: int
@@ -479,12 +527,17 @@ class CybereasonDriver(DriverBase):
         status: str | None = None
         cur_try: int = 0
         while status != "SUCCESS" and cur_try < max_retry:
-            response: httpx.Response = self.client.post(
-                self.search_endpoint,
-                json={**body, **pagination},
-                headers=headers,
-                params=params,
-            )
+            try:
+                response: httpx.Response = self.client.post(
+                    self.search_endpoint,
+                    json={**body, **pagination},
+                    headers=headers,
+                    params=params,
+                    timeout=timeout,
+                )
+            except httpx.ReadTimeout:
+                logger.warning("Hit a timeout error, you should update the timeout parameter.")
+                raise
             response.raise_for_status()
             json_result: dict[str, Any] = response.json()
             status = json_result["status"]

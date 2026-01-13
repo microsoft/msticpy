@@ -75,7 +75,7 @@ def _add_script_args():
     parser.add_argument(
         "--pyver",
         "-y",
-        default="3.8",
+        default="3.10",
         required=False,
         help="Python version to use in the generated Pipfile",
     )
@@ -90,7 +90,7 @@ def _add_script_args():
         "--diff",
         "-d",
         required=False,
-        default=True,
+        default=False,
         action="store_true",
         help="Print diffs, don't write file.",
     )
@@ -229,7 +229,7 @@ if __name__ == "__main__":
         _write_requirements(file_name=args.req_all_path, requirements=all_reqs)
 
     # We may need to create and write a Pipfile
-    if args.pipfile and diff_reqs or not Path(args.pipfile).is_file():
+    if args.pipfile and (diff_reqs or not Path("Pipfile").is_file()):
         pipfile_text = _create_pipfile(reqs=all_reqs, reqs_dev=dev_reqs, py_ver=args.pyver)
         Path("Pipfile").write_text(pipfile_text, encoding="utf-8")
     sys.exit(0)
