@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Requirements file writer from setup.py extras."""
+
 from __future__ import annotations
 
 import argparse
@@ -12,16 +13,18 @@ import sys
 from importlib import import_module
 from pathlib import Path
 
+# Import Requirement with fallbacks for isolated environments (e.g., pre-commit)
 try:
     from packaging.requirements import Requirement
 except ImportError:
-    # Fallback for older environments
     try:
-        from importlib_metadata import Requirement
+        from importlib_metadata import Requirement  # type: ignore[assignment]
     except ImportError:
-        # Last resort fallback
-        # pylint: disable=deprecated-module
-        from pkg_resources import Requirement
+        # Suppress deprecation warning in isolated environments where we have no choice
+        import warnings
+
+        warnings.filterwarnings("ignore", ".*pkg_resources.*", DeprecationWarning)
+        from pkg_resources import Requirement  # type: ignore[assignment]
 
 from setuptools.config import read_configuration
 
@@ -65,9 +68,7 @@ python_version = "{py_ver}"
 
 def _add_script_args():
     """Define script arguments."""
-    parser = argparse.ArgumentParser(
-        description=f"Requirements sync script. v.{VERSION}"
-    )
+    parser = argparse.ArgumentParser(description=f"Requirements sync script. v.{VERSION}")
     parser.add_argument(
         "--req-all-path",
         "-r",
@@ -86,7 +87,7 @@ def _add_script_args():
     parser.add_argument(
         "--pyver",
         "-y",
-        default="3.8",
+        default="3.10",
         required=False,
         help="Python version to use in the generated Pipfile",
     )
@@ -101,7 +102,7 @@ def _add_script_args():
         "--diff",
         "-d",
         required=False,
-        default=True,
+        default=False,
         action="store_true",
         help="Print diffs, don't write file.",
     )
@@ -147,7 +148,7 @@ def _compare_reqs(new: list[Requirement], current: list[Requirement]) -> list[st
 def _write_requirements(file_name: str, requirements: list[Requirement]) -> None:
     """Write requirements file."""
     Path(file_name).write_text(
-        "\n".join(str(req) for req in requirements), encoding="utf-8"
+        "\n".join(str(req) for req in sorted(requirements, key=str)), encoding="utf-8"
     )
 
 
@@ -157,9 +158,7 @@ def _get_pyver_from_setup(setup_cfg: str = "setup.cfg") -> str:
     return str(settings["options"]["python_requires"])
 
 
-def _create_pipfile(
-    reqs: list[Requirement], reqs_dev: list[Requirement], py_ver: str
-) -> str:
+def _create_pipfile(reqs: list[Requirement], reqs_dev: list[Requirement], py_ver: str) -> str:
     """Return the text of a Pipfile."""
     packages = [f'{req.name} = "{req.specifier}"' for req in reqs]
     dev_packages = [f'{req.name} = "{req.specifier}"' for req in reqs_dev]
@@ -195,13 +194,11 @@ def _get_extras_from_setup(
 
     """
     setup_mod = import_module("setup")
-    extras = getattr(setup_mod, "EXTRAS").get(extra)
+    extras = setup_mod.EXTRAS.get(extra)
     if include_base:
-        base_install = getattr(setup_mod, "INSTALL_REQUIRES")
-        extras.extend(
-            [req.strip() for req in base_install if not req.strip().startswith("#")]
-        )
-    return list(parse_requirements(sorted(list(set(extras)), key=str.casefold)))
+        base_install = setup_mod.INSTALL_REQUIRES
+        extras.extend([req.strip() for req in base_install if not req.strip().startswith("#")])
+    return list(parse_requirements(sorted(set(extras), key=str.casefold)))
 
 
 # pylint: disable=invalid-name
@@ -246,9 +243,7 @@ if __name__ == "__main__":
         _write_requirements(file_name=args.req_all_path, requirements=all_reqs)
 
     # We may need to create and write a Pipfile
-    if args.pipfile and diff_reqs or not Path(args.pipfile).is_file():
-        pipfile_text = _create_pipfile(
-            reqs=all_reqs, reqs_dev=dev_reqs, py_ver=args.pyver
-        )
+    if args.pipfile and (diff_reqs or not Path("Pipfile").is_file()):
+        pipfile_text = _create_pipfile(reqs=all_reqs, reqs_dev=dev_reqs, py_ver=args.pyver)
         Path("Pipfile").write_text(pipfile_text, encoding="utf-8")
     sys.exit(0)

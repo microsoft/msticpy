@@ -39,6 +39,7 @@ class DataFamily(Enum):
     Cybereason = 11
     Elastic = 14
     Prismacloud = 21
+    OpenObserve = 22
 
     @classmethod
     def parse(cls, value: str | int) -> "DataFamily":
@@ -119,6 +120,7 @@ class DataEnvironment(Enum):
     Velociraptor = 18
     M365DGraph = 20
     Prismacloud = 21
+    OpenObserve = 22
 
     MSSentinelSearch = 25
 
