@@ -13,15 +13,7 @@ from pathlib import Path
 import pytest
 import pytest_check as check
 
-try:
-    from packaging.requirements import Requirement
-except ImportError:
-    # Fallback for older environments
-    try:
-        from importlib_metadata import Requirement
-    except ImportError:
-        # Last resort fallback
-        from pkg_resources import Requirement
+from packaging.requirements import Requirement
 
 from tools.toollib.import_analyzer import analyze_imports, get_setup_reqs
 

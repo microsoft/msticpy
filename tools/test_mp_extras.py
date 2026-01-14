@@ -12,15 +12,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-try:
-    from packaging.requirements import Requirement
-except ImportError:
-    # Fallback for older environments
-    try:
-        from importlib_metadata import Requirement
-    except ImportError:
-        # Last resort fallback
-        from pkg_resources import Requirement
+from packaging.requirements import Requirement
 
 __author__ = "Ian Hellen"
 

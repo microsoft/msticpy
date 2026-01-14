@@ -37,9 +37,7 @@ __author__ = "Florian Bracq"
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-_HELP_URI = (
-    "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html"
-)
+_HELP_URI = "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html"
 
 HTTP_TIMEOUT: float = 120.0
 
@@ -264,15 +262,13 @@ class CybereasonDriver(DriverBase):
 
         """
         del kwargs
-        query_tasks: dict[str, partial[dict[str, Any]]] = (
-            self._create_paginated_query_tasks(
-                body=body,
-                page_size=page_size,
-                pagination_token=pagination_token,
-                total_results=total_results,
-                timeout=timeout,
-                max_retry=max_retry,
-            )
+        query_tasks: dict[str, partial[dict[str, Any]]] = self._create_paginated_query_tasks(
+            body=body,
+            page_size=page_size,
+            pagination_token=pagination_token,
+            total_results=total_results,
+            timeout=timeout,
+            max_retry=max_retry,
         )
 
         logger.info("Running %s paginated queries.", len(query_tasks))
@@ -540,9 +536,7 @@ class CybereasonDriver(DriverBase):
                     timeout=timeout,
                 )
             except httpx.ReadTimeout:
-                logger.warning(
-                    "Hit a timeout error, you should update the timeout parameter."
-                )
+                logger.warning("Hit a timeout error, you should update the timeout parameter.")
                 raise
             response.raise_for_status()
             json_result: dict[str, Any] = response.json()

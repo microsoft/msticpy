@@ -10,22 +10,11 @@ from __future__ import annotations
 import argparse
 import difflib
 import sys
+from collections.abc import Iterable
 from importlib import import_module
 from pathlib import Path
 
-# Import Requirement with fallbacks for isolated environments (e.g., pre-commit)
-try:
-    from packaging.requirements import Requirement
-except ImportError:
-    try:
-        from importlib_metadata import Requirement  # type: ignore[assignment]
-    except ImportError:
-        # Suppress deprecation warning in isolated environments where we have no choice
-        import warnings
-
-        warnings.filterwarnings("ignore", ".*pkg_resources.*", DeprecationWarning)
-        from pkg_resources import Requirement  # type: ignore[assignment]
-
+from packaging.requirements import Requirement
 from setuptools.config import read_configuration
 
 VERSION = "1.0.0"
@@ -34,7 +23,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-def parse_requirements(requirements: list[str]) -> list[Requirement]:
+def parse_requirements(requirements: Iterable[str]) -> list[Requirement]:
     """Parse a list of requirement strings into Requirement objects."""
     parsed_reqs = set()
     for req in requirements:
@@ -147,9 +136,7 @@ def _compare_reqs(new: list[Requirement], current: list[Requirement]) -> list[st
 
 def _write_requirements(file_name: str, requirements: list[Requirement]) -> None:
     """Write requirements file."""
-    Path(file_name).write_text(
-        "\n".join(str(req) for req in sorted(requirements, key=str)), encoding="utf-8"
-    )
+    Path(file_name).write_text("\n".join(str(req) for req in requirements), encoding="utf-8")
 
 
 def _get_pyver_from_setup(setup_cfg: str = "setup.cfg") -> str:
