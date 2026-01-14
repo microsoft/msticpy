@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import difflib
 import sys
+from collections.abc import Iterable
 from importlib import import_module
 from pathlib import Path
 
@@ -22,7 +23,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-def parse_requirements(requirements: list[str]) -> list[Requirement]:
+def parse_requirements(requirements: Iterable[str]) -> list[Requirement]:
     """Parse a list of requirement strings into Requirement objects."""
     parsed_reqs = set()
     for req in requirements:

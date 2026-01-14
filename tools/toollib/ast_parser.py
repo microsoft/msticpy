@@ -4,10 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """AST Parser for limited node types."""
+
+from __future__ import annotations
+
 import ast
 from collections import defaultdict
+from pathlib import Path
 from pprint import pprint
-from typing import Any, Dict, List
+from typing import Any
 
 from . import VERSION
 
@@ -16,27 +20,27 @@ __author__ = "Ian Hellen"
 
 
 def analyze(
-    src_file: str, quiet: bool = True, node_types: List[str] = None
-) -> Dict[str, Any]:
+    src_file: str | Path, quiet: bool = True, node_types: list[str] | None = None
+) -> dict[str, Any]:
     """
-    Analyze AST of module using Analyser visitor class.
+    Analyze AST of module using Analyzer visitor class.
 
     Parameters
     ----------
-    src_file : [type]
+    src_file : str | Path
         Input file
     quiet : bool, optional
         Hide reported information, by default True
-    node_types : List[str], optional
+    node_types : list[str] | None, optional
         The node types to be returned, by default None
 
     Returns
     -------
-    Dict[str, Any]
+    dict[str, Any]
         Dictionary of node results keyed by node type.
 
     """
-    with open(src_file, "r", encoding="utf-8") as source:
+    with open(src_file, encoding="utf-8") as source:
         tree = ast.parse(source.read())
 
     analyzer = Analyzer()
@@ -45,9 +49,7 @@ def analyze(
         analyzer.report(node_types=node_types)
     if node_types:
         return {
-            n_type: res
-            for n_type, res in analyzer.results.items()
-            if n_type in node_types
+            n_type: res for n_type, res in analyzer.results.items() if n_type in node_types
         }
     return analyzer.results
 
@@ -59,7 +61,7 @@ class Analyzer(ast.NodeVisitor):
 
     Attributes
     ----------
-    nodes : Dict[str, Any]
+    nodes : dict[str, Any]
         Dictionary of nodes in AST
 
     """
@@ -67,7 +69,7 @@ class Analyzer(ast.NodeVisitor):
     def __init__(self):
         """Instantiate Analyzer."""
         self.supported_types = ["imports", "imports_from", "calls", "funcs"]
-        self.nodes: Dict[str, Any] = {}
+        self.nodes: dict[str, Any] = {}
         self.nodes["imports"] = []
         self.nodes["imports_from"] = defaultdict(list)
         self.nodes["calls"] = defaultdict(list)
@@ -132,13 +134,13 @@ class Analyzer(ast.NodeVisitor):
         self.nodes["funcs"][node.name].append(node.lineno)
         self.generic_visit(node)
 
-    def report(self, node_types: List[str] = None):
+    def report(self, node_types: list[str] | None = None) -> None:
         """
         Print report of analysis.
 
         Parameters
         ----------
-        node_types : List[str], optional
+        node_types : list[str] | None, optional
             Optional list of node types, by default None
 
         """
@@ -148,13 +150,13 @@ class Analyzer(ast.NodeVisitor):
                 pprint(results)
 
     @property
-    def results(self) -> Dict[str, Any]:
+    def results(self) -> dict[str, Any]:
         """
         Return dictionary of results.
 
         Returns
         -------
-        Dict[str, Any]
+        dict[str, Any]
             Dictionary of results keyed by node_type.
 
         """

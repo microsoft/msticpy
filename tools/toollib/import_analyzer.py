@@ -17,6 +17,7 @@ from typing import Any
 import networkx as nx
 import pandas as pd
 from packaging.requirements import Requirement
+from packaging.specifiers import SpecifierSet
 
 from . import VERSION
 
@@ -211,12 +212,13 @@ def build_import_graph(modules: dict[str, ModuleImports]) -> nx.Graph:
     return import_graph
 
 
+# pylint: disable=too-many-locals
 def get_setup_reqs(
     package_root: str,
     req_file: str = "requirements.txt",
     extras: list[str] | None = None,
     skip_setup: bool = True,
-) -> tuple[dict[str, Any], dict[str, str]]:
+) -> tuple[dict[str, str], dict[str, SpecifierSet]]:
     """
     Return list of extras from setup.py.
 
@@ -234,12 +236,13 @@ def get_setup_reqs(
 
     Returns
     -------
-    Tuple[Dict[str, SpecifierSet], Dict[str, str]]
-        Tuple of Dict[pkg_name_lower, pkg_name], Dict[pkg_name, version_spec]
-        of package requirements.
+    tuple[dict[str, str], dict[str, SpecifierSet]]
+        Tuple of (setup_reqs, setup_versions) where:
+        - setup_reqs: Dict[pkg_name_lower, pkg_name]
+        - setup_versions: Dict[pkg_name_lower, version_spec]
 
     """
-    with open(Path(package_root).joinpath(req_file), encoding="utf-8") as req_f:
+    with Path(package_root).joinpath(req_file).open(encoding="utf-8") as req_f:
         req_list = req_f.readlines()
 
     setup_pkgs = _extract_pkg_specs(req_list)
@@ -250,16 +253,15 @@ def get_setup_reqs(
             setup_pkgs = setup_pkgs | extra_pkgs
         except ImportError:
             print("Could not process modifed 'setup.py'")
-    setup_versions = {
-        req.name.casefold(): req.specifier
-        for req in setup_pkgs
-        if req.marker is None or req.marker.evaluate()
-    }
-    setup_reqs = {
-        req.name.casefold(): req.name
-        for req in setup_pkgs
-        if req.marker is None or req.marker.evaluate()
-    }
+
+    # Build both setup_versions and setup_reqs in a single pass
+    setup_versions = {}
+    setup_reqs = {}
+    for req in setup_pkgs:
+        if req.marker is None or req.marker.evaluate():
+            req_name_lower = req.name.casefold()
+            setup_versions[req_name_lower] = req.specifier
+            setup_reqs[req_name_lower] = req.name
 
     # for packages that do not match top-level names
     # add the mapping
@@ -309,12 +311,21 @@ def get_extras_from_setup(
     return sorted(set(extras), key=str.casefold)
 
 
-def _analyze_module_imports(py_file, pkg_modules, setup_reqs):
+def _analyze_module_imports(
+    py_file: Path, pkg_modules: set[str], setup_reqs: dict[str, str]
+) -> ModuleImports:
+    """Analyze imports from a Python file and categorize them."""
     file_analysis = analyze(py_file)
 
     # create a set of all imports
-    all_imports = {file.strip() for file in file_analysis["imports"] if file}
-    all_imports.update(file.strip() for file in file_analysis["imports_from"].keys() if file)
+    all_imports = {
+        file.strip()
+        for file in (
+            file_analysis.get("imports", [])
+            + list(file_analysis.get("imports_from", {}).keys())
+        )
+        if file
+    }
 
     if None in all_imports:
         all_imports.remove(None)  # type: ignore
@@ -324,11 +335,10 @@ def _analyze_module_imports(py_file, pkg_modules, setup_reqs):
     # remove known modules from the current package
     # to get the list of external imports
     ext_imports = set(all_imports) - pkg_modules
-    (
-        module_imports.standard,
-        module_imports.external,
-        module_imports.unknown,
-    ) = _check_std_lib(ext_imports)
+    stdlib_result = _check_std_lib(ext_imports)
+    module_imports.standard = stdlib_result.standard
+    module_imports.external = stdlib_result.external
+    module_imports.unknown = stdlib_result.unknown
 
     module_imports.setup_reqs, module_imports.missing_reqs = _match_pkg_to_reqs(
         module_imports.external, setup_reqs
@@ -337,7 +347,10 @@ def _analyze_module_imports(py_file, pkg_modules, setup_reqs):
 
 
 # Local imports analysis functions
-def _analyze_module_local_imports(py_file, pkg_modules):
+def _analyze_module_local_imports(
+    py_file: Path, pkg_modules: set[str]
+) -> dict[str, list[str]]:
+    """Analyze local package imports from a Python file."""
     file_analysis = analyze(py_file)
 
     # create a set of all imports
@@ -358,7 +371,7 @@ def _analyze_module_local_imports(py_file, pkg_modules):
     }
 
 
-def _create_module_reverse_mapping(pkg_mod_mapping):
+def _create_module_reverse_mapping(pkg_mod_mapping: dict[str, set[str]]) -> dict[str, str]:
     """Return dict of partial module names to full names."""
     pkg_mod_mapping = {
         par.replace(".__init__", ""): variants for par, variants in pkg_mod_mapping.items()
@@ -442,9 +455,9 @@ def _extract_pkg_specs(pkg_specs: list[str]) -> set[Requirement]:
 # https://stackoverflow.com/questions/22195382/how-to-check-
 # if-a-module-library-package-is-part-of-the-python-standard-library
 # /25646050#25646050
-def _check_std_lib(modules):
-    external = set()
-    std_libs = set()
+def _check_std_lib(modules: set[str]) -> ModuleImports:
+    """Categorize modules as standard library, external, or unknown."""
+    result = ModuleImports()
     imp_errors = set()
     paths = {p.casefold() for p in sys.path}
     paths.update({str(Path(p).resolve()).casefold() for p in sys.path})
@@ -467,23 +480,25 @@ def _check_std_lib(modules):
 
         stdlib_module = _check_stdlib_path(module, mod_name, stdlib_paths)
         if stdlib_module:
-            std_libs.add(mod_name)
+            result.standard.add(mod_name)
             continue
 
         parts = mod_name.split(".")
         for i, part in enumerate(parts):
             partial = ".".join(parts[:i] + [part])
-            if partial in external or partial in std_libs:
+            if partial in result.external or partial in result.standard:
                 # already listed or exempted
                 break
             if partial in sys.modules and sys.modules[partial]:
                 # if match, add as external import
-                external.add(mod_name)
+                result.external.add(mod_name)
                 break
-    return std_libs, external, imp_errors
+    result.unknown = imp_errors
+    return result
 
 
-def _check_stdlib_path(module, mod_name, stdlib_paths):
+def _check_stdlib_path(module: Any, mod_name: str, stdlib_paths: set[str]) -> str | None:
+    """Check if a module is in the standard library by path."""
     if not module or mod_name in sys.builtin_module_names or not hasattr(module, "__file__"):
         # an import sentinel, built-in module or not a real module, really
         return mod_name
@@ -504,7 +519,10 @@ def _check_stdlib_path(module, mod_name, stdlib_paths):
     return None
 
 
-def _get_pkg_from_path(pkg_file: str, pkg_root: str) -> Generator[str, None, None]:
+def _get_pkg_from_path(
+    pkg_file: str | Path, pkg_root: str | Path
+) -> Generator[str, None, None]:
+    """Generate module name variants from a file path."""
     module = ""
     py_file = Path(pkg_file)
     rel_path = py_file.relative_to(pkg_root)
@@ -515,7 +533,7 @@ def _get_pkg_from_path(pkg_file: str, pkg_root: str) -> Generator[str, None, Non
         yield module
 
 
-def _get_pkg_modules(pkg_root) -> set[str]:
+def _get_pkg_modules(pkg_root: Path) -> set[str]:
     """Get the list of all modules from file paths."""
     pkg_modules = set()
     for py_file in pkg_root.glob("**/*.py"):
@@ -525,7 +543,7 @@ def _get_pkg_modules(pkg_root) -> set[str]:
     return pkg_modules
 
 
-def _get_pkg_module_paths(pkg_root) -> defaultdict[str, set[str]]:
+def _get_pkg_module_paths(pkg_root: Path) -> defaultdict[str, set[str]]:
     """Get the list of all modules from file paths."""
     pkg_modules = defaultdict(set)
     for py_file in pkg_root.glob("**/*.py"):
@@ -536,7 +554,10 @@ def _get_pkg_module_paths(pkg_root) -> defaultdict[str, set[str]]:
     return pkg_modules
 
 
-def _match_pkg_to_reqs(imports, setup_reqs):
+def _match_pkg_to_reqs(
+    imports: set[str], setup_reqs: dict[str, str]
+) -> tuple[set[str], set[str]]:
+    """Match imports to setup requirements and identify missing requirements."""
     req_libs = set()
     req_missing = set()
     for imp in imports:
