@@ -524,34 +524,136 @@ class CybereasonDriver(DriverBase):
             pagination = {"pagination": {"pageSize": page_size}}
             headers = {}
         params: dict[str, Any] = {"page": page, "itemsPerPage": page_size}
-        status: str | None = None
-        cur_try: int = 0
-        while status != "SUCCESS" and cur_try < max_retry:
-            try:
-                response: httpx.Response = self.client.post(
-                    self.search_endpoint,
-                    json={**body, **pagination},
-                    headers=headers,
-                    params=params,
+
+        try:
+            response: httpx.Response = self.client.post(
+                self.search_endpoint,
+                json={**body, **pagination},
+                headers=headers,
+                params=params,
+                timeout=timeout,
+            )
+        except httpx.ReadTimeout:
+            logger.warning(
+                "Hit a timeout error, you should update the timeout parameter.",
+            )
+            raise
+        match response.status_code:
+            case httpx.codes.OK:
+                return self.__parse_succesful_query_response(
+                    response,
+                    body=body,
+                    page=page,
+                    page_size=page_size,
+                    pagination_token=pagination_token,
+                    max_retry=max_retry,
                     timeout=timeout,
                 )
-            except httpx.ReadTimeout:
-                logger.warning("Hit a timeout error, you should update the timeout parameter.")
-                raise
-            response.raise_for_status()
-            json_result: dict[str, Any] = response.json()
-            status = json_result["status"]
-            cur_try += 1
+            case httpx.codes.TOO_MANY_REQUESTS:
+                logger.warning("Hit too many requests, stopping for 5 seconds")
+                logger.warning(response.headers)
+            case httpx.codes.INTERNAL_SERVER_ERROR:
+                logger.warning("Received an error 500, most likely due to a bad query")
+                logger.debug(
+                    json.dumps(
+                        json.loads(response.request.content),
+                        indent=4,
+                    ),
+                )
+            case _:
+                response.raise_for_status()
 
-        if cur_try >= max_retry:
-            err_msg: str = f"{status}: {json_result['message']}"
-            raise httpx.HTTPStatusError(
-                err_msg,
-                request=response.request,
-                response=response,
-            )
+        err_msg: str = "Something went wrong"
+        raise httpx.HTTPStatusError(
+            err_msg,
+            request=response.request,
+            response=response,
+        )
 
-        return json_result
+    def __parse_succesful_query_response(
+        self: Self,
+        response: httpx.Response,
+        body: dict[str, Any],
+        *,
+        page_size: int,
+        timeout: float,
+        max_retry: int,
+        page: int = 0,
+        pagination_token: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Parse successful response to ensure everything was properly retrieved.
+
+        Parameters
+        ----------
+        response: httpx.Response
+            Response of an HTTP request with return code 200
+        body: dict[str, Any]
+            Body of the HTTP Request
+        timeout : float
+            Number of seconds for HTTP requests to timeout.
+        page_size: int
+            Size of the page for results
+        page: int
+            Page number to query
+        pagination_token: str
+            Token of the current search
+        max_retry: int
+            Maximum retries in case of API no cuccess response
+
+        Returns
+        -------
+        dict[str, Any]
+
+        """
+        try:
+            parsed_response: dict[str, Any] = response.json()
+        except json.decoder.JSONDecodeError:
+            logger.warning("Failed to parse %s", response)
+            parsed_response = {}
+        match parsed_response:
+            case {"status": "SUCCESS"}:
+                logger.info("Successful query!")
+                return parsed_response
+            case {
+                "status": "PARTIAL_SUCCESS",
+                "message": message,
+            }:
+                logger.warning(
+                    "Query partially failed: %s.",
+                    message,
+                )
+                if max_retry > 0:
+                    logger.warning("Retrying %d time(s)", max_retry)
+                    return self.__execute_query(
+                        body=body,
+                        page=page,
+                        page_size=page_size,
+                        pagination_token=pagination_token,
+                        timeout=timeout + 60,
+                        max_retry=max_retry - 1,
+                    )
+                logger.warning("Returning result as-is")
+                return parsed_response
+            case _:
+                logger.warning(
+                    "Query failed, received %s",
+                    parsed_response,
+                )
+                if max_retry > 0:
+                    logger.warning(
+                        "Retrying %d time(s)",
+                        max_retry,
+                    )
+                    return self.__execute_query(
+                        body=body,
+                        page=page,
+                        page_size=page_size,
+                        pagination_token=pagination_token,
+                        timeout=timeout,
+                        max_retry=max_retry - 1,
+                    )
+                return parsed_response
 
     async def __run_threaded_queries(
         self: Self,
