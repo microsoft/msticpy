@@ -14,19 +14,15 @@ import re
 from asyncio import AbstractEventLoop, Future, as_completed
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial, singledispatch
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Self
 
 import httpx
 import pandas as pd
 from tqdm.auto import tqdm
-from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserConfigError
-from ...common.provider_settings import (
-    ProviderSettings,
-    get_provider_settings,
-)
+from ...common.provider_settings import ProviderSettings, get_provider_settings
 from ...common.utility import mp_ua_header
 from ..core.query_defns import Formatters
 from ..core.query_provider_connections_mixin import _get_event_loop
@@ -37,7 +33,9 @@ __author__ = "Florian Bracq"
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-_HELP_URI = "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html"
+_HELP_URI = (
+    "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html"
+)
 
 HTTP_TIMEOUT: float = 120.0
 
@@ -209,7 +207,7 @@ class CybereasonDriver(DriverBase):
         df_result["instance"] = self.instance
         return df_result
 
-    def _exec_paginated_queries(  # noqa: PLR0913
+    def _exec_paginated_queries(
         self: Self,
         body: dict[str, Any],
         page_size: int,
@@ -220,7 +218,7 @@ class CybereasonDriver(DriverBase):
         retry_on_error: bool,
         timeout: float,
         max_retry: int,
-        **kwargs,
+        **__,
     ) -> pd.DataFrame:
         """
         Return results of paginated queries.
@@ -246,8 +244,6 @@ class CybereasonDriver(DriverBase):
             Number of seconds for HTTP requests to timeout. Defaults to 120
         max_retry : int
             Number of retries to do. Defaults to 3
-        **kwargs : dict[str, Any]
-            Additional keyword arguments to pass to the query method.
 
         Returns
         -------
@@ -261,14 +257,15 @@ class CybereasonDriver(DriverBase):
         The queries are executed asynchronously.
 
         """
-        del kwargs
-        query_tasks: dict[str, partial[dict[str, Any]]] = self._create_paginated_query_tasks(
-            body=body,
-            page_size=page_size,
-            pagination_token=pagination_token,
-            total_results=total_results,
-            timeout=timeout,
-            max_retry=max_retry,
+        query_tasks: dict[str, partial[dict[str, Any]]] = (
+            self._create_paginated_query_tasks(
+                body=body,
+                page_size=page_size,
+                pagination_token=pagination_token,
+                total_results=total_results,
+                timeout=timeout,
+                max_retry=max_retry,
+            )
         )
 
         logger.info("Running %s paginated queries.", len(query_tasks))
@@ -679,14 +676,20 @@ class CybereasonDriver(DriverBase):
                 )
             else:
                 task_iter = as_completed(thread_tasks.values())
-            ids_and_tasks: dict[str, Future] = dict(zip(thread_tasks, task_iter, strict=False))
+            ids_and_tasks: dict[str, Future] = dict(
+                zip(
+                    thread_tasks,
+                    task_iter,
+                    strict=False,
+                ),
+            )
             for query_id, thread_task in ids_and_tasks.items():
                 try:
                     result: dict[str, Any] = await thread_task
                     df_result: pd.DataFrame = self._format_result_to_dataframe(result)
                     logger.info("Query task '%s' completed successfully.", query_id)
                     results.append(df_result)
-                except Exception:  # pylint: disable=broad-except
+                except Exception:  # pylint: disable=broad-except #noqa: BLE001
                     logger.warning(
                         "Query task '%s' failed with exception",
                         query_id,
@@ -701,7 +704,7 @@ class CybereasonDriver(DriverBase):
                         result = await thread_task
                         df_result = self._format_result_to_dataframe(result)
                         results.append(df_result)
-                    except Exception:  # pylint: disable=broad-except
+                    except Exception:  # pylint: disable=broad-except #noqa: BLE001
                         logger.warning(
                             "Retried query task '%s' failed with exception",
                             query_id,
@@ -709,7 +712,14 @@ class CybereasonDriver(DriverBase):
                         )
             # Sort the results by the order of the tasks
             results = [
-                result for _, result in sorted(zip(thread_tasks, results, strict=False))
+                result
+                for _, result in sorted(
+                    zip(
+                        thread_tasks,
+                        results,
+                        strict=False,
+                    ),
+                )
             ]
         return pd.concat(results, ignore_index=True)
 
@@ -756,7 +766,7 @@ class CybereasonDriver(DriverBase):
         try:
             return dt.datetime.fromtimestamp(
                 timestamp // 1000,
-                tz=dt.timezone.utc,
+                tz=dt.UTC,
             )
         except TypeError:
             return timestamp
@@ -834,7 +844,8 @@ def _(parameters: dict[str, Any], param_dict: dict[str, Any]) -> dict[str, Any]:
 
 @_recursive_find_and_replace.register(list)
 def _(
-    parameters: list[str] | list[dict[str, Any]], param_dict: dict[str, Any]
+    parameters: list[str] | list[dict[str, Any]],
+    param_dict: dict[str, Any],
 ) -> list[str] | list[dict[str, Any]]:
     result: list[str] = []
     dict_result: list[dict[str, Any]] = []
@@ -847,7 +858,9 @@ def _(
         )
         if isinstance(updated_param, list):
             result.extend([param for param in updated_param if isinstance(param, str)])
-            dict_result.extend([param for param in updated_param if isinstance(param, dict)])
+            dict_result.extend(
+                [param for param in updated_param if isinstance(param, dict)],
+            )
         elif isinstance(updated_param, dict):
             dict_result.append(updated_param)
         else:
@@ -861,7 +874,9 @@ def _(parameters: str, param_dict: dict[str, Any]) -> str | list[str]:
     param_regex: str = r"{([^}]+)}"
     matches: re.Match[str] | None = re.match(param_regex, parameters)
     if matches:
-        result: list[str] = [param_dict.get(match, parameters) for match in matches.groups()]
+        result: list[str] = [
+            param_dict.get(match, parameters) for match in matches.groups()
+        ]
         if len(result) == 1:
             return result[0]
         return result
