@@ -56,6 +56,9 @@ class AzSTI(KqlTIProvider):
     _QUERIES["hostname"] = _QUERIES["dns"]
 
     _REQUIRED_TABLES: ClassVar[list[str]] = ["ThreatIntelIndicators"]
+    
+    # Confidence threshold for high severity classification
+    _HIGH_CONFIDENCE_THRESHOLD: ClassVar[int] = 80
 
     def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """
@@ -140,7 +143,7 @@ class AzSTI(KqlTIProvider):
             # Determine severity
             if extracted_data["Action"].lower() in ["alert", "block"]:
                 severity = ResultSeverity.high
-            elif extracted_data["ConfidenceScore"] >= 80:
+            elif extracted_data["ConfidenceScore"] >= self._HIGH_CONFIDENCE_THRESHOLD:
                 severity = ResultSeverity.high
             
             return True, severity, extracted_data
@@ -192,7 +195,7 @@ class AzSTI(KqlTIProvider):
             # Determine severity
             if d_frame["Action"].str.lower().isin(["alert", "block"]).any():
                 severity = ResultSeverity.high
-            elif "ConfidenceScore" in d_frame.columns and (d_frame["ConfidenceScore"] >= 80).any():
+            elif "ConfidenceScore" in d_frame.columns and (d_frame["ConfidenceScore"] >= self._HIGH_CONFIDENCE_THRESHOLD).any():
                 severity = ResultSeverity.high
 
             return (
@@ -277,11 +280,14 @@ class AzSTI(KqlTIProvider):
         if "Action" not in data_result.columns:
             data_result["Action"] = "alert"
         
+        # Use class constant for threshold
+        high_threshold = AzSTI._HIGH_CONFIDENCE_THRESHOLD
+        
         return data_result.apply(
             lambda x: (
                 ResultSeverity.high.name
                 if (hasattr(x, "Action") and x.Action.lower() in ["alert", "block"]) 
-                   or (hasattr(x, "ConfidenceScore") and x.ConfidenceScore >= 80)
+                   or (hasattr(x, "ConfidenceScore") and x.ConfidenceScore >= high_threshold)
                 else ResultSeverity.warning.name
             ),
             axis=1,
