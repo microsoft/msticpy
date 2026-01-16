@@ -55,7 +55,7 @@ class AzSTI(KqlTIProvider):
     _QUERIES["linux_path"] = _QUERIES["windows_path"]
     _QUERIES["hostname"] = _QUERIES["dns"]
 
-    _REQUIRED_TABLES: ClassVar[list[str]] = ["ThreatIntelligenceIndicator"]
+    _REQUIRED_TABLES: ClassVar[list[str]] = ["ThreatIntelIndicators"]
 
     def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
         """
@@ -80,18 +80,70 @@ class AzSTI(KqlTIProvider):
         severity = ResultSeverity.warning
         # if this is a series (single row) return a dictionary
         if isinstance(response["RawResult"], pd.Series):
-            extracted_data: dict[str, Any] = response["RawResult"][
-                ["Action", "ThreatType", "ThreatSeverity", "Active", "ConfidenceScore"]
-            ].to_dict()
-            if extracted_data["Action"].lower() in ["alert", "block"]:
+            result_series = response["RawResult"]
+            # Extract fields from the new schema
+            extracted_data: dict[str, Any] = {}
+            
+            # Map new fields to old field names for compatibility
+            extracted_data["ConfidenceScore"] = result_series.get("Confidence", 0)
+            extracted_data["Active"] = result_series.get("IsActive", False)
+            
+            # Extract data from Data column (STIX format) if available
+            if "Data" in result_series and pd.notna(result_series["Data"]):
+                stix_data = result_series["Data"]
+                if isinstance(stix_data, dict):
+                    # Extract labels as ThreatType
+                    labels = stix_data.get("labels", [])
+                    extracted_data["ThreatType"] = labels[0] if labels else "unknown"
+                    extracted_data["Description"] = stix_data.get("description", "")
+                else:
+                    extracted_data["ThreatType"] = "unknown"
+                    extracted_data["Description"] = ""
+            else:
+                extracted_data["ThreatType"] = "unknown"
+                extracted_data["Description"] = ""
+            
+            # Set default values for fields not in new schema
+            extracted_data["Action"] = "alert"  # Default action
+            extracted_data["ThreatSeverity"] = "unknown"
+            
+            # Determine severity based on confidence or labels
+            if extracted_data["ConfidenceScore"] >= 80:
                 severity = ResultSeverity.high
-            return True, ResultSeverity.warning, extracted_data
+            
+            return True, severity, extracted_data
+        
         # if this is a dataframe (multiple rows)
         # concatenate the values for each column/record into a list
         # and return as a dictionary
         if isinstance(response["RawResult"], pd.DataFrame):
             d_frame: pd.DataFrame = response["RawResult"]
-            if d_frame["Action"].str.lower().isin(["alert", "block"]).any():
+            
+            # Map new fields to old field names for compatibility
+            if "Confidence" in d_frame.columns:
+                d_frame["ConfidenceScore"] = d_frame["Confidence"]
+            if "IsActive" in d_frame.columns:
+                d_frame["Active"] = d_frame["IsActive"]
+            
+            # Extract data from Data column if available
+            if "Data" in d_frame.columns:
+                # Extract ThreatType from labels in Data
+                d_frame["ThreatType"] = d_frame["Data"].apply(
+                    lambda x: x.get("labels", ["unknown"])[0] if isinstance(x, dict) and x.get("labels") else "unknown"
+                )
+                d_frame["Description"] = d_frame["Data"].apply(
+                    lambda x: x.get("description", "") if isinstance(x, dict) else ""
+                )
+            else:
+                d_frame["ThreatType"] = "unknown"
+                d_frame["Description"] = ""
+            
+            # Set default values for fields not in new schema
+            d_frame["Action"] = "alert"
+            d_frame["ThreatSeverity"] = "unknown"
+            
+            # Determine severity based on confidence
+            if "ConfidenceScore" in d_frame.columns and (d_frame["ConfidenceScore"] >= 80).any():
                 severity = ResultSeverity.high
 
             return (
@@ -112,6 +164,30 @@ class AzSTI(KqlTIProvider):
     def _get_detail_summary(data_result: pd.DataFrame) -> pd.Series:
         # For the input frame return details in a series with
         # Details in dict
+        # Map new schema fields to old field names
+        if "Confidence" in data_result.columns:
+            data_result["ConfidenceScore"] = data_result["Confidence"]
+        if "IsActive" in data_result.columns:
+            data_result["Active"] = data_result["IsActive"]
+        
+        # Extract from Data column if available
+        if "Data" in data_result.columns:
+            data_result["ThreatType"] = data_result["Data"].apply(
+                lambda x: x.get("labels", ["unknown"])[0] if isinstance(x, dict) and x.get("labels") else "unknown"
+            )
+            data_result["Description"] = data_result["Data"].apply(
+                lambda x: x.get("description", "") if isinstance(x, dict) else ""
+            )
+        else:
+            data_result["ThreatType"] = "unknown"
+            data_result["Description"] = ""
+        
+        # Set defaults for missing fields
+        if "Action" not in data_result.columns:
+            data_result["Action"] = "alert"
+        if "ThreatSeverity" not in data_result.columns:
+            data_result["ThreatSeverity"] = "unknown"
+        
         return data_result.apply(
             lambda x: {
                 "Action": x.Action,
@@ -127,10 +203,19 @@ class AzSTI(KqlTIProvider):
     @staticmethod
     def _get_severity(data_result: pd.DataFrame) -> pd.Series:
         # For the input frame return severity in a series
+        # Map Confidence to ConfidenceScore if needed
+        if "Confidence" in data_result.columns and "ConfidenceScore" not in data_result.columns:
+            data_result["ConfidenceScore"] = data_result["Confidence"]
+        
+        # Set default Action if not present
+        if "Action" not in data_result.columns:
+            data_result["Action"] = "alert"
+        
         return data_result.apply(
             lambda x: (
                 ResultSeverity.high.name
-                if x.Action.lower() in ["alert", "block"]
+                if (hasattr(x, "Action") and x.Action.lower() in ["alert", "block"]) 
+                   or (hasattr(x, "ConfidenceScore") and x.ConfidenceScore >= 80)
                 else ResultSeverity.warning.name
             ),
             axis=1,
