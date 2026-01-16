@@ -81,34 +81,66 @@ class AzSTI(KqlTIProvider):
         # if this is a series (single row) return a dictionary
         if isinstance(response["RawResult"], pd.Series):
             result_series = response["RawResult"]
-            # Extract fields from the new schema
             extracted_data: dict[str, Any] = {}
             
-            # Map new fields to old field names for compatibility
-            extracted_data["ConfidenceScore"] = result_series.get("Confidence", 0)
-            extracted_data["Active"] = result_series.get("IsActive", False)
-            
-            # Extract data from Data column (STIX format) if available
-            if "Data" in result_series and pd.notna(result_series["Data"]):
+            # Try to use old schema fields first (for backward compatibility)
+            if "ThreatType" in result_series.index:
+                extracted_data["ThreatType"] = result_series["ThreatType"]
+            elif "Data" in result_series.index and pd.notna(result_series["Data"]):
+                # Extract from new schema Data column (STIX format)
                 stix_data = result_series["Data"]
                 if isinstance(stix_data, dict):
-                    # Extract labels as ThreatType
                     labels = stix_data.get("labels", [])
                     extracted_data["ThreatType"] = labels[0] if labels else "unknown"
-                    extracted_data["Description"] = stix_data.get("description", "")
                 else:
                     extracted_data["ThreatType"] = "unknown"
-                    extracted_data["Description"] = ""
             else:
                 extracted_data["ThreatType"] = "unknown"
+            
+            # Handle Description field
+            if "Description" in result_series.index:
+                extracted_data["Description"] = result_series["Description"]
+            elif "Data" in result_series.index and pd.notna(result_series["Data"]):
+                stix_data = result_series["Data"]
+                if isinstance(stix_data, dict):
+                    extracted_data["Description"] = stix_data.get("description", "")
+                else:
+                    extracted_data["Description"] = ""
+            else:
                 extracted_data["Description"] = ""
             
-            # Set default values for fields not in new schema
-            extracted_data["Action"] = "alert"  # Default action
-            extracted_data["ThreatSeverity"] = "unknown"
+            # Handle ConfidenceScore field (old schema) or Confidence (new schema)
+            if "ConfidenceScore" in result_series.index:
+                extracted_data["ConfidenceScore"] = result_series["ConfidenceScore"]
+            elif "Confidence" in result_series.index:
+                extracted_data["ConfidenceScore"] = result_series["Confidence"]
+            else:
+                extracted_data["ConfidenceScore"] = 0
             
-            # Determine severity based on confidence or labels
-            if extracted_data["ConfidenceScore"] >= 80:
+            # Handle Active field (old schema) or IsActive (new schema)
+            if "Active" in result_series.index:
+                extracted_data["Active"] = result_series["Active"]
+            elif "IsActive" in result_series.index:
+                extracted_data["Active"] = result_series["IsActive"]
+            else:
+                extracted_data["Active"] = False
+            
+            # Handle Action field (old schema only, default for new schema)
+            if "Action" in result_series.index:
+                extracted_data["Action"] = result_series["Action"]
+            else:
+                extracted_data["Action"] = "alert"
+            
+            # Handle ThreatSeverity field (old schema only)
+            if "ThreatSeverity" in result_series.index:
+                extracted_data["ThreatSeverity"] = result_series["ThreatSeverity"]
+            else:
+                extracted_data["ThreatSeverity"] = "unknown"
+            
+            # Determine severity
+            if extracted_data["Action"].lower() in ["alert", "block"]:
+                severity = ResultSeverity.high
+            elif extracted_data["ConfidenceScore"] >= 80:
                 severity = ResultSeverity.high
             
             return True, severity, extracted_data
@@ -117,33 +149,50 @@ class AzSTI(KqlTIProvider):
         # concatenate the values for each column/record into a list
         # and return as a dictionary
         if isinstance(response["RawResult"], pd.DataFrame):
-            d_frame: pd.DataFrame = response["RawResult"]
+            d_frame: pd.DataFrame = response["RawResult"].copy()
             
-            # Map new fields to old field names for compatibility
-            if "Confidence" in d_frame.columns:
+            # Handle ThreatType field
+            if "ThreatType" not in d_frame.columns:
+                if "Data" in d_frame.columns:
+                    d_frame["ThreatType"] = d_frame["Data"].apply(
+                        lambda x: x.get("labels", ["unknown"])[0] if isinstance(x, dict) and x.get("labels") else "unknown"
+                    )
+                else:
+                    d_frame["ThreatType"] = "unknown"
+            
+            # Handle Description field
+            if "Description" not in d_frame.columns:
+                if "Data" in d_frame.columns:
+                    d_frame["Description"] = d_frame["Data"].apply(
+                        lambda x: x.get("description", "") if isinstance(x, dict) else ""
+                    )
+                else:
+                    d_frame["Description"] = ""
+            
+            # Handle ConfidenceScore field
+            if "ConfidenceScore" not in d_frame.columns and "Confidence" in d_frame.columns:
                 d_frame["ConfidenceScore"] = d_frame["Confidence"]
-            if "IsActive" in d_frame.columns:
+            elif "ConfidenceScore" not in d_frame.columns:
+                d_frame["ConfidenceScore"] = 0
+            
+            # Handle Active field
+            if "Active" not in d_frame.columns and "IsActive" in d_frame.columns:
                 d_frame["Active"] = d_frame["IsActive"]
+            elif "Active" not in d_frame.columns:
+                d_frame["Active"] = False
             
-            # Extract data from Data column if available
-            if "Data" in d_frame.columns:
-                # Extract ThreatType from labels in Data
-                d_frame["ThreatType"] = d_frame["Data"].apply(
-                    lambda x: x.get("labels", ["unknown"])[0] if isinstance(x, dict) and x.get("labels") else "unknown"
-                )
-                d_frame["Description"] = d_frame["Data"].apply(
-                    lambda x: x.get("description", "") if isinstance(x, dict) else ""
-                )
-            else:
-                d_frame["ThreatType"] = "unknown"
-                d_frame["Description"] = ""
+            # Handle Action field
+            if "Action" not in d_frame.columns:
+                d_frame["Action"] = "alert"
             
-            # Set default values for fields not in new schema
-            d_frame["Action"] = "alert"
-            d_frame["ThreatSeverity"] = "unknown"
+            # Handle ThreatSeverity field
+            if "ThreatSeverity" not in d_frame.columns:
+                d_frame["ThreatSeverity"] = "unknown"
             
-            # Determine severity based on confidence
-            if "ConfidenceScore" in d_frame.columns and (d_frame["ConfidenceScore"] >= 80).any():
+            # Determine severity
+            if d_frame["Action"].str.lower().isin(["alert", "block"]).any():
+                severity = ResultSeverity.high
+            elif "ConfidenceScore" in d_frame.columns and (d_frame["ConfidenceScore"] >= 80).any():
                 severity = ResultSeverity.high
 
             return (
@@ -164,23 +213,36 @@ class AzSTI(KqlTIProvider):
     def _get_detail_summary(data_result: pd.DataFrame) -> pd.Series:
         # For the input frame return details in a series with
         # Details in dict
-        # Map new schema fields to old field names
-        if "Confidence" in data_result.columns:
-            data_result["ConfidenceScore"] = data_result["Confidence"]
-        if "IsActive" in data_result.columns:
-            data_result["Active"] = data_result["IsActive"]
+        # Handle both old and new schema fields
+        data_result = data_result.copy()
         
-        # Extract from Data column if available
-        if "Data" in data_result.columns:
+        # Handle ThreatType field
+        if "ThreatType" not in data_result.columns and "Data" in data_result.columns:
             data_result["ThreatType"] = data_result["Data"].apply(
                 lambda x: x.get("labels", ["unknown"])[0] if isinstance(x, dict) and x.get("labels") else "unknown"
             )
+        elif "ThreatType" not in data_result.columns:
+            data_result["ThreatType"] = "unknown"
+        
+        # Handle Description field
+        if "Description" not in data_result.columns and "Data" in data_result.columns:
             data_result["Description"] = data_result["Data"].apply(
                 lambda x: x.get("description", "") if isinstance(x, dict) else ""
             )
-        else:
-            data_result["ThreatType"] = "unknown"
+        elif "Description" not in data_result.columns:
             data_result["Description"] = ""
+        
+        # Handle ConfidenceScore field
+        if "ConfidenceScore" not in data_result.columns and "Confidence" in data_result.columns:
+            data_result["ConfidenceScore"] = data_result["Confidence"]
+        elif "ConfidenceScore" not in data_result.columns:
+            data_result["ConfidenceScore"] = 0
+        
+        # Handle Active field
+        if "Active" not in data_result.columns and "IsActive" in data_result.columns:
+            data_result["Active"] = data_result["IsActive"]
+        elif "Active" not in data_result.columns:
+            data_result["Active"] = False
         
         # Set defaults for missing fields
         if "Action" not in data_result.columns:
@@ -203,9 +265,13 @@ class AzSTI(KqlTIProvider):
     @staticmethod
     def _get_severity(data_result: pd.DataFrame) -> pd.Series:
         # For the input frame return severity in a series
+        data_result = data_result.copy()
+        
         # Map Confidence to ConfidenceScore if needed
         if "Confidence" in data_result.columns and "ConfidenceScore" not in data_result.columns:
             data_result["ConfidenceScore"] = data_result["Confidence"]
+        elif "ConfidenceScore" not in data_result.columns:
+            data_result["ConfidenceScore"] = 0
         
         # Set default Action if not present
         if "Action" not in data_result.columns:
