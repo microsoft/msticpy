@@ -56,7 +56,7 @@ class AzSTI(KqlTIProvider):
     _QUERIES["hostname"] = _QUERIES["dns"]
 
     _REQUIRED_TABLES: ClassVar[list[str]] = ["ThreatIntelIndicators"]
-    
+
     # Confidence threshold for high severity classification
     _HIGH_CONFIDENCE_THRESHOLD: ClassVar[int] = 80
 
@@ -85,7 +85,7 @@ class AzSTI(KqlTIProvider):
         if isinstance(response["RawResult"], pd.Series):
             result_series = response["RawResult"]
             extracted_data: dict[str, Any] = {}
-            
+
             # Try to use old schema fields first (for backward compatibility)
             if "ThreatType" in result_series.index:
                 extracted_data["ThreatType"] = result_series["ThreatType"]
@@ -99,7 +99,7 @@ class AzSTI(KqlTIProvider):
                     extracted_data["ThreatType"] = "unknown"
             else:
                 extracted_data["ThreatType"] = "unknown"
-            
+
             # Handle Description field
             if "Description" in result_series.index:
                 extracted_data["Description"] = result_series["Description"]
@@ -111,7 +111,7 @@ class AzSTI(KqlTIProvider):
                     extracted_data["Description"] = ""
             else:
                 extracted_data["Description"] = ""
-            
+
             # Handle ConfidenceScore field (old schema) or Confidence (new schema)
             if "ConfidenceScore" in result_series.index:
                 extracted_data["ConfidenceScore"] = result_series["ConfidenceScore"]
@@ -119,7 +119,7 @@ class AzSTI(KqlTIProvider):
                 extracted_data["ConfidenceScore"] = result_series["Confidence"]
             else:
                 extracted_data["ConfidenceScore"] = 0
-            
+
             # Handle Active field (old schema) or IsActive (new schema)
             if "Active" in result_series.index:
                 extracted_data["Active"] = result_series["Active"]
@@ -127,42 +127,44 @@ class AzSTI(KqlTIProvider):
                 extracted_data["Active"] = result_series["IsActive"]
             else:
                 extracted_data["Active"] = False
-            
+
             # Handle Action field (old schema only, default for new schema)
             if "Action" in result_series.index:
                 extracted_data["Action"] = result_series["Action"]
             else:
                 extracted_data["Action"] = "alert"
-            
+
             # Handle ThreatSeverity field (old schema only)
             if "ThreatSeverity" in result_series.index:
                 extracted_data["ThreatSeverity"] = result_series["ThreatSeverity"]
             else:
                 extracted_data["ThreatSeverity"] = "unknown"
-            
+
             # Determine severity
             if extracted_data["Action"].lower() in ["alert", "block"]:
                 severity = ResultSeverity.high
             elif extracted_data["ConfidenceScore"] >= self._HIGH_CONFIDENCE_THRESHOLD:
                 severity = ResultSeverity.high
-            
+
             return True, severity, extracted_data
-        
+
         # if this is a dataframe (multiple rows)
         # concatenate the values for each column/record into a list
         # and return as a dictionary
         if isinstance(response["RawResult"], pd.DataFrame):
             d_frame: pd.DataFrame = response["RawResult"].copy()
-            
+
             # Handle ThreatType field
             if "ThreatType" not in d_frame.columns:
                 if "Data" in d_frame.columns:
                     d_frame["ThreatType"] = d_frame["Data"].apply(
-                        lambda x: x.get("labels", ["unknown"])[0] if isinstance(x, dict) and x.get("labels") else "unknown"
+                        lambda x: x.get("labels", ["unknown"])[0]
+                        if isinstance(x, dict) and x.get("labels")
+                        else "unknown"
                     )
                 else:
                     d_frame["ThreatType"] = "unknown"
-            
+
             # Handle Description field
             if "Description" not in d_frame.columns:
                 if "Data" in d_frame.columns:
@@ -171,31 +173,34 @@ class AzSTI(KqlTIProvider):
                     )
                 else:
                     d_frame["Description"] = ""
-            
+
             # Handle ConfidenceScore field
             if "ConfidenceScore" not in d_frame.columns and "Confidence" in d_frame.columns:
                 d_frame["ConfidenceScore"] = d_frame["Confidence"]
             elif "ConfidenceScore" not in d_frame.columns:
                 d_frame["ConfidenceScore"] = 0
-            
+
             # Handle Active field
             if "Active" not in d_frame.columns and "IsActive" in d_frame.columns:
                 d_frame["Active"] = d_frame["IsActive"]
             elif "Active" not in d_frame.columns:
                 d_frame["Active"] = False
-            
+
             # Handle Action field
             if "Action" not in d_frame.columns:
                 d_frame["Action"] = "alert"
-            
+
             # Handle ThreatSeverity field
             if "ThreatSeverity" not in d_frame.columns:
                 d_frame["ThreatSeverity"] = "unknown"
-            
+
             # Determine severity
             if d_frame["Action"].str.lower().isin(["alert", "block"]).any():
                 severity = ResultSeverity.high
-            elif "ConfidenceScore" in d_frame.columns and (d_frame["ConfidenceScore"] >= self._HIGH_CONFIDENCE_THRESHOLD).any():
+            elif (
+                "ConfidenceScore" in d_frame.columns
+                and (d_frame["ConfidenceScore"] >= self._HIGH_CONFIDENCE_THRESHOLD).any()
+            ):
                 severity = ResultSeverity.high
 
             return (
@@ -218,15 +223,17 @@ class AzSTI(KqlTIProvider):
         # Details in dict
         # Handle both old and new schema fields
         data_result = data_result.copy()
-        
+
         # Handle ThreatType field
         if "ThreatType" not in data_result.columns and "Data" in data_result.columns:
             data_result["ThreatType"] = data_result["Data"].apply(
-                lambda x: x.get("labels", ["unknown"])[0] if isinstance(x, dict) and x.get("labels") else "unknown"
+                lambda x: x.get("labels", ["unknown"])[0]
+                if isinstance(x, dict) and x.get("labels")
+                else "unknown"
             )
         elif "ThreatType" not in data_result.columns:
             data_result["ThreatType"] = "unknown"
-        
+
         # Handle Description field
         if "Description" not in data_result.columns and "Data" in data_result.columns:
             data_result["Description"] = data_result["Data"].apply(
@@ -234,25 +241,28 @@ class AzSTI(KqlTIProvider):
             )
         elif "Description" not in data_result.columns:
             data_result["Description"] = ""
-        
+
         # Handle ConfidenceScore field
-        if "ConfidenceScore" not in data_result.columns and "Confidence" in data_result.columns:
+        if (
+            "ConfidenceScore" not in data_result.columns
+            and "Confidence" in data_result.columns
+        ):
             data_result["ConfidenceScore"] = data_result["Confidence"]
         elif "ConfidenceScore" not in data_result.columns:
             data_result["ConfidenceScore"] = 0
-        
+
         # Handle Active field
         if "Active" not in data_result.columns and "IsActive" in data_result.columns:
             data_result["Active"] = data_result["IsActive"]
         elif "Active" not in data_result.columns:
             data_result["Active"] = False
-        
+
         # Set defaults for missing fields
         if "Action" not in data_result.columns:
             data_result["Action"] = "alert"
         if "ThreatSeverity" not in data_result.columns:
             data_result["ThreatSeverity"] = "unknown"
-        
+
         return data_result.apply(
             lambda x: {
                 "Action": x.Action,
@@ -269,25 +279,28 @@ class AzSTI(KqlTIProvider):
     def _get_severity(data_result: pd.DataFrame) -> pd.Series:
         # For the input frame return severity in a series
         data_result = data_result.copy()
-        
+
         # Map Confidence to ConfidenceScore if needed
-        if "Confidence" in data_result.columns and "ConfidenceScore" not in data_result.columns:
+        if (
+            "Confidence" in data_result.columns
+            and "ConfidenceScore" not in data_result.columns
+        ):
             data_result["ConfidenceScore"] = data_result["Confidence"]
         elif "ConfidenceScore" not in data_result.columns:
             data_result["ConfidenceScore"] = 0
-        
+
         # Set default Action if not present
         if "Action" not in data_result.columns:
             data_result["Action"] = "alert"
-        
+
         # Use class constant for threshold
         high_threshold = AzSTI._HIGH_CONFIDENCE_THRESHOLD
-        
+
         return data_result.apply(
             lambda x: (
                 ResultSeverity.high.name
-                if (hasattr(x, "Action") and x.Action.lower() in ["alert", "block"]) 
-                   or (hasattr(x, "ConfidenceScore") and x.ConfidenceScore >= high_threshold)
+                if (hasattr(x, "Action") and x.Action.lower() in ["alert", "block"])
+                or (hasattr(x, "ConfidenceScore") and x.ConfidenceScore >= high_threshold)
                 else ResultSeverity.warning.name
             ),
             axis=1,

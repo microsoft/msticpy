@@ -42,19 +42,19 @@ class KqlTestDriver(DriverBase):
 
         indicator_file = Path(_TEST_DATA).joinpath("as_threatintel")
         self.test_df = pd.read_pickle(indicator_file)
-        
+
         # Map old schema to new schema for testing
         # Create ObservableValue and ObservableKey from old schema
         self.ip_df = self.test_df[self.test_df["NetworkIP"].str.len() > 0].copy()
         self.ip_df["ObservableKey"] = "ipv4-addr:value"
         self.ip_df["ObservableValue"] = self.ip_df["NetworkIP"]
         self.ip_df["IoC"] = self.ip_df["NetworkIP"].str.lower()
-        
+
         self.url_df = self.test_df[self.test_df["Url"].str.len() > 0].copy()
         self.url_df["ObservableKey"] = "url:value"
         self.url_df["ObservableValue"] = self.url_df["Url"]
         self.url_df["IoC"] = self.url_df["Url"].str.lower()
-        
+
         # Map old fields to new schema fields
         if "Active" in self.test_df.columns:
             self.test_df["IsActive"] = self.test_df["Active"]
@@ -80,12 +80,12 @@ class KqlTestDriver(DriverBase):
         del query_source, kwargs
 
         query_toks = [tok.lower() for tok in query.split("'") if tok != ","]
-        
+
         # Handle new schema queries with ObservableKey and ObservableValue
         if 'ObservableKey in ("ipv4-addr:value"' in query or 'ObservableKey in ("ipv4-addr:value", "ipv6-addr:value")' in query:
             result_df = self.ip_df[self.ip_df["IoC"].isin(query_toks)]
             return result_df
-        
+
         # Legacy support for old queries (in case they're still used)
         if "where NetworkIP" in query:
             result_df = self.ip_df[self.ip_df["IoC"].isin(query_toks)]
@@ -94,7 +94,7 @@ class KqlTestDriver(DriverBase):
         if 'ObservableKey == "url:value"' in query:
             result_df = self.url_df[self.url_df["IoC"].isin(query_toks)]
             return result_df
-        
+
         # Legacy support for old queries
         if "where Url" in query:
             result_df = self.url_df[self.url_df["IoC"].isin(query_toks)]
