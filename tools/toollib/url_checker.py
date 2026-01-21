@@ -4,9 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Python file import analyzer."""
+
 from collections import defaultdict, namedtuple
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
 from urllib import parse
 
 import httpx
@@ -50,9 +50,7 @@ def check_url(url: str) -> UrlResult:
                 resp.status_code, resp.history, url, "No error. Redirect to " + resp.url
             )
         elif resp.status_code == 200:
-            result = UrlResult(
-                resp.status_code, resp.history, url, "No error. No redirect."
-            )
+            result = UrlResult(resp.status_code, resp.history, url, "No error. No redirect.")
         else:
             result = UrlResult(resp.status_code, resp.history, url, "Error?")
     except Exception as err:
@@ -73,10 +71,10 @@ PAGES_TO_SKIP = [
 def check_site(
     page_url: str,
     all_links: bool = False,
-    top_root: Optional[str] = None,
-    checked_links: Dict[str, UrlResult] = None,
-    visited_pages: Dict[str, Set[str]] = None,
-) -> Tuple[Dict[str, UrlResult], Dict[str, Set[str]]]:
+    top_root: str | None = None,
+    checked_links: dict[str, UrlResult] = None,
+    visited_pages: dict[str, set[str]] = None,
+) -> tuple[dict[str, UrlResult], dict[str, set[str]]]:
     """
     Recursively check URL page and child links.
 
@@ -172,10 +170,10 @@ def check_site(
 def _check_single_link(
     url_link: str,
     all_links: bool,
-    checked_links: Dict[str, UrlResult],
+    checked_links: dict[str, UrlResult],
     page_url: str,
     top_root: str,
-) -> Tuple[Optional[UrlResult], bool]:
+) -> tuple[UrlResult | None, bool]:
     result = None
     if url_link[0:4] == "http":
         if url_link in checked_links:
@@ -203,8 +201,8 @@ def check_html_doc(
     html_path: str,
     all_links: bool = False,
     top_root: str = None,
-    checked_links: Dict[str, UrlResult] = None,
-) -> Dict[str, UrlResult]:
+    checked_links: dict[str, UrlResult] = None,
+) -> dict[str, UrlResult]:
     """
     Check links in an html document (file).
 
@@ -231,7 +229,7 @@ def check_html_doc(
     """
     if checked_links is None:
         checked_links = {}
-    result_links: Dict[str, UrlResult] = {}
+    result_links: dict[str, UrlResult] = {}
 
     print(f"\nPage: {html_path}")
     with open(html_path, "rb") as html_file:
@@ -258,7 +256,7 @@ def check_html_doc(
     return result_links
 
 
-def check_md_document(doc_path: str) -> Dict[str, UrlResult]:
+def check_md_document(doc_path: str) -> dict[str, UrlResult]:
     """
     Check links in Markdown document.
 
@@ -281,7 +279,7 @@ def check_md_document(doc_path: str) -> Dict[str, UrlResult]:
 
     page_links = {link.get("href") for link in links}
 
-    checked_links: Dict[str, UrlResult] = {}
+    checked_links: dict[str, UrlResult] = {}
     print("Checking page...")
     for url_link in page_links:
         if url_link[0:4] == "http":
@@ -301,7 +299,7 @@ def check_md_document(doc_path: str) -> Dict[str, UrlResult]:
     return checked_links
 
 
-def _print_url_results(results: List[UrlResult]):
+def _print_url_results(results: list[UrlResult]):
     """
     Print results of any URLs that did not return 200 status.
 
@@ -336,7 +334,7 @@ def _print_url_results(results: List[UrlResult]):
 
 def check_site_links(
     start_url: str, all_links: bool = False
-) -> Tuple[Dict[str, UrlResult], Dict[str, Set[str]]]:
+) -> tuple[dict[str, UrlResult], dict[str, set[str]]]:
     """
     Check a URL and child pages for broken links.
 
@@ -366,9 +364,7 @@ def check_site_links(
     return checked_links, visits
 
 
-def check_html_docs(
-    doc_path: str, recurse: bool = True
-) -> Dict[str, Dict[str, UrlResult]]:
+def check_html_docs(doc_path: str, recurse: bool = True) -> dict[str, dict[str, UrlResult]]:
     """
     Check multiple HTML files in `doc_path`.
 
@@ -391,8 +387,8 @@ def check_html_docs(
     else:
         glob_pattern = "*.html"
     html_files = list(Path(doc_path).glob(glob_pattern))
-    checked_pages: Dict[str, Dict[str, UrlResult]] = {}
-    checked_links: Dict[str, UrlResult] = {}
+    checked_pages: dict[str, dict[str, UrlResult]] = {}
+    checked_links: dict[str, UrlResult] = {}
     for html_file in html_files:
         pg_links = check_html_doc(str(html_file), checked_links=checked_links)
         checked_links = {**checked_links, **pg_links}

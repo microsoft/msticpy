@@ -92,4 +92,3 @@ sources:
         description: Query end time
         type: datetime
         default: 0  # fake default to prevent this being viewed as required
-  

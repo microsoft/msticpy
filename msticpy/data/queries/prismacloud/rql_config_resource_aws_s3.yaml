@@ -56,13 +56,13 @@ defaults:
         default is empty - not used
       type: str
       default: |-
-         
+
     additional_query_condition:
       description: |-
         Additional query condition to search default is empty
       type: str
       default: |-
-         
+
 sources:
   config_resource_logging_disabled_aws_s3bucket:
     description: |-
@@ -258,7 +258,7 @@ sources:
       If this query returns results, investigate buckets where an `AllUsers` ACL grant or `policyStatus.isPublic` is effectively honored.
       Public access via ACLs or bucket policies can lead to unauthorized enumeration, data exposure, or tampering of S3 objects.
       This risk can result in compliance violations, data breaches, and reputational damage.
-      Security teams should enable Public Access Block 
+      Security teams should enable Public Access Block
       (BlockPublicAcls, BlockPublicPolicy, RestrictPublicBuckets), disable ACLs, and enforce BucketOwnerEnforced on all S3 buckets.
     metadata: {}
     args:
@@ -334,7 +334,7 @@ sources:
     description: |-
       List of AWS S3 buckets encrypted with a customer-managed KMS key whose default key
       policy grants access to any principal without conditions.
-      If this query returns results, investigate each bucket `kmsMasterKeyID` and 
+      If this query returns results, investigate each bucket `kmsMasterKeyID` and
       inspect the corresponding CMK default policy for unconditioned `Principal="*"` or wildcard ARNs.
       An unscoped key policy allows unauthorized AWS principals to decrypt, encrypt, or re-encrypt bucket objects,
       leading to data exfiltration, tampering, or bypass of encryption controls.
