@@ -22,9 +22,9 @@ import pandas as pd
 from ..._version import VERSION
 from ...auth.azure_auth import az_connect
 from ...common.exceptions import MsticpyDataQueryError, MsticpyKqlConnectionError
+from ..core.query_defns import DataEnvironment
 from .azure_monitor_driver import AzureMonitorDriver
 from .driver_base import DriverProps, QuerySource
-from ..core.query_defns import DataEnvironment
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -56,10 +56,13 @@ class AzureSearchDriver(AzureMonitorDriver):
         self._auth_header: dict[str, Any] | None = None
         self._try_get_schema = False
         # Override the EFFECTIVE_ENV set by AzureMonitorDriver
-        self.set_driver_property(DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinelSearch.name)
+        self.set_driver_property(
+            DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinelSearch.name
+        )
         # Override query filter to include MSSentinelSearch
         self.add_query_filter(
-            "data_environments", ("MSSentinelSearch", "MSSentinel", "LogAnalytics", "AzureSentinel")
+            "data_environments",
+            ("MSSentinelSearch", "MSSentinel", "LogAnalytics", "AzureSentinel"),
         )
 
     def _ensure_connected(self):
