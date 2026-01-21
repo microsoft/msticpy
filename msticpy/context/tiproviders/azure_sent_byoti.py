@@ -60,7 +60,9 @@ class AzSTI(KqlTIProvider):
     # Confidence threshold for high severity classification
     _HIGH_CONFIDENCE_THRESHOLD: ClassVar[int] = 80
 
-    def parse_results(self: Self, response: dict) -> tuple[bool, ResultSeverity, Any]:
+    def parse_results(  # noqa: PLR0912, PLR0915  # pylint: disable=too-many-branches
+        self: Self, response: dict
+    ) -> tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
