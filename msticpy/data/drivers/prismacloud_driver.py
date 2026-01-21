@@ -618,11 +618,18 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         limitpage : int, optional
             The number of results per page. Defaults to 100.
         **kwargs : QueryArgs
-            Additional optional query parameters.
-            ``timeout`` (int): API request timeout in seconds.
-            ``unit`` (str): Time unit for the query (e.g., ``"minute"``, ``"hour"``).
-            ``amount`` (int): Time range quantity in the specified unit.
-            ``cloudtype`` (str): Cloud provider filter (``"aws"``, ``"gcp"``, ``"azure"``).
+            Additional optional query parameters (see Other Parameters).
+
+        Other Parameters
+        ----------------
+        timeout : int, optional
+            API request timeout in seconds.
+        unit : str, optional
+            Time unit for the query (e.g., ``"minute"``, ``"hour"``).
+        amount : int, optional
+            Time range quantity in the specified unit.
+        cloudtype : str, optional
+            Cloud provider filter (``"aws"``, ``"gcp"``, ``"azure"``).
 
         Returns
         -------
@@ -694,11 +701,18 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         endpoint : str
             The API endpoint to send the query to.
         **kwargs : QueryArgs
-            Additional optional query parameters.
-            ``timeout`` (int): API request timeout in seconds.
-            ``limit`` (int): Maximum number of results to retrieve.
-            ``unit`` (str): Time unit for the query (e.g., ``"minute"``, ``"hour"``).
-            ``amount`` (int): Time range quantity in the specified unit.
+            Additional optional query parameters (see Other Parameters).
+
+        Other Parameters
+        ----------------
+        timeout : int, optional
+            API request timeout in seconds.
+        limit : int, optional
+            Maximum number of results to retrieve.
+        unit : str, optional
+            Time unit for the query (e.g., ``"minute"``, ``"hour"``).
+        amount : int, optional
+            Time range quantity in the specified unit.
 
         Returns
         -------
@@ -772,12 +786,20 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         endpoint : str
             The API endpoint to send the query to.
         **kwargs : QueryArgs
-            Additional optional query parameters.
-            ``timeout`` (int): API request timeout in seconds.
-            ``max_retries`` (int): Maximum retry attempts for failed requests.
-            ``unit`` (str): Time unit for the query (e.g., ``"minute"``, ``"hour"``, ``"day"``).
-            ``amount`` (int): Time range quantity in the specified unit.
-            ``limit`` (int): Maximum number of results to retrieve.
+            Additional optional query parameters (see Other Parameters).
+
+        Other Parameters
+        ----------------
+        timeout : int, optional
+            API request timeout in seconds.
+        max_retries : int, optional
+            Maximum retry attempts for failed requests.
+        unit : str, optional
+            Time unit for the query (e.g., ``"minute"``, ``"hour"``, ``"day"``).
+        amount : int, optional
+            Time range quantity in the specified unit.
+        limit : int, optional
+            Maximum number of results to retrieve.
 
         Returns
         -------
@@ -848,11 +870,18 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         endpoint : str
             The API endpoint to send the query to.
         **kwargs : QueryArgs
-            Additional optional query parameters.
-            ``timeout`` (int): API request timeout in seconds.
-            ``max_retries`` (int): Maximum retry attempts for failed requests.
-            ``limit`` (int): Maximum number of results to retrieve (default: 1000).
-            ``withResourceJson`` (bool): Whether to include resource JSON details.
+            Additional optional query parameters (see Other Parameters).
+
+        Other Parameters
+        ----------------
+        timeout : int, optional
+            API request timeout in seconds.
+        max_retries : int, optional
+            Maximum retry attempts for failed requests.
+        limit : int, optional
+            Maximum number of results to retrieve (default: 1000).
+        withResourceJson : bool, optional
+            Whether to include resource JSON details.
 
         Returns
         -------
@@ -910,12 +939,20 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
             The source of the query, determining which search function to use.
             Options: `"config_resource"`, `"assets"`, `"events"`, `"network"`.
         **kwargs : QueryArgs
-            Additional optional query parameters.
-            ``timeout`` (int): API request timeout in seconds.
-            ``max_retries`` (int): Maximum retry attempts for failed requests.
-            ``limit`` (int): Maximum number of results to retrieve.
-            ``unit`` (str): Time unit for the query (e.g., ``"minute"``, ``"hour"``, ``"day"``).
-            ``amount`` (int): Time range quantity in the specified unit.
+            Additional optional query parameters (see Other Parameters).
+
+        Other Parameters
+        ----------------
+        timeout : int, optional
+            API request timeout in seconds.
+        max_retries : int, optional
+            Maximum retry attempts for failed requests.
+        limit : int, optional
+            Maximum number of results to retrieve.
+        unit : str, optional
+            Time unit for the query (e.g., ``"minute"``, ``"hour"``, ``"day"``).
+        amount : int, optional
+            Time range quantity in the specified unit.
 
         Returns
         -------
