@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Compare two requirements files."""
+
 import argparse
 import re
 
@@ -30,7 +31,7 @@ def _parse_line(line):
 
 
 def _parse_reqs(file):
-    with open(file, "r", encoding="utf-8") as file_reqs:
+    with open(file, encoding="utf-8") as file_reqs:
         req_lines = file_reqs.readlines()
     p_lines = [_parse_line(line) for line in req_lines]
     return {pkg: (op, ver) for pkg, op, ver in p_lines}
@@ -57,11 +58,7 @@ if __name__ == "__main__":
         if v2 in spec1:
             compat.append(f"Compatible: {pkg}, {src_dict[pkg]}, {tgt_dict[pkg]}")
         else:
-            not_compat.append(
-                f"Not compatible: {pkg}, {src_dict[pkg]}, {tgt_dict[pkg]}"
-            )
-    print(
-        f"Common packages: {len(compat)} compatible, {len(not_compat)} not compatible."
-    )
+            not_compat.append(f"Not compatible: {pkg}, {src_dict[pkg]}, {tgt_dict[pkg]}")
+    print(f"Common packages: {len(compat)} compatible, {len(not_compat)} not compatible.")
     print("\n".join(compat))
     print("\n".join(not_compat))

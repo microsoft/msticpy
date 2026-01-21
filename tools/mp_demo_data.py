@@ -4,11 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Demo QueryProvider."""
+
 import pickle  # nosec
+from collections.abc import Iterable
 from functools import partial
 from pathlib import Path
 from time import sleep
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any
 
 import pandas as pd
 import yaml
@@ -66,14 +68,14 @@ class QueryProviderDemo(QueryProvider):
             data_srcs = self._DATA_DEFS
             # raise ValueError("no query definition file name")
         else:
-            with open(data_src_file, "r", encoding="utf-8") as src_file:
+            with open(data_src_file, encoding="utf-8") as src_file:
                 data_srcs = yaml.safe_load(src_file)
         self.query_store = {}
         self._query_provider = _DataDriver()
         self.all_queries = QueryContainer()
         self._add_demo_query_functions(data_srcs)
 
-    def _add_demo_query_functions(self, data_defs: Dict[str, Dict[str, str]]):
+    def _add_demo_query_functions(self, data_defs: dict[str, dict[str, str]]):
         for family, queries in data_defs.items():
             if not hasattr(self, family):
                 setattr(self, family, QueryContainer())
@@ -105,7 +107,7 @@ class QueryProviderDemo(QueryProvider):
         return self._query_provider.connect(connection_str=connection_str, **kwargs)
 
     @property
-    def schema(self) -> Dict[str, Dict]:
+    def schema(self) -> dict[str, dict]:
         """
         Return current data schema of connection.
 
@@ -118,7 +120,7 @@ class QueryProviderDemo(QueryProvider):
         return {}
 
     @property
-    def schema_tables(self) -> List[str]:
+    def schema_tables(self) -> list[str]:
         """
         Return list of tables in the data schema of the connection.
 
@@ -142,7 +144,7 @@ class QueryProviderDemo(QueryProvider):
         """
         raise NotImplementedError()
 
-    def list_queries(self, substring: Optional[str] = None) -> List[str]:
+    def list_queries(self, substring: str | None = None) -> list[str]:
         """
         Return list of family.query in the store.
 
@@ -165,7 +167,7 @@ class QueryProviderDemo(QueryProvider):
         """Print help for query."""
         print(f"query_prov.{self.query_store[query_name]}(**kwargs)")
 
-    def exec_query(self, query: str, **kwargs) -> Union[pd.DataFrame, Any]:
+    def exec_query(self, query: str, **kwargs) -> pd.DataFrame | Any:
         """
         Execute simple query string.
 
@@ -183,7 +185,7 @@ class QueryProviderDemo(QueryProvider):
         """
         raise NotImplementedError()
 
-    def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
+    def _execute_query(self, *args, **kwargs) -> pd.DataFrame | Any:
         if not self._query_provider.loaded:
             raise ValueError("Provider is not loaded.")
         if not self._query_provider.connected:
@@ -200,9 +202,7 @@ class QueryProviderDemo(QueryProvider):
 def read_pd_df(data_file, query_name):
     """Read DataFrame from file."""
     if not Path(data_file).is_file():
-        raise FileNotFoundError(
-            f"Data file {data_file} for query {query_name} not found."
-        )
+        raise FileNotFoundError(f"Data file {data_file} for query {query_name} not found.")
 
     if data_file.lower().endswith("csv"):
         return pd.read_csv(data_file, parse_dates=["TimeGenerated"])
