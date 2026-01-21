@@ -1,6 +1,6 @@
 {
     "engines:trojan and tag:signed and p:60+ and microsoft:clean and not tag:invalid-signature and ls:2d+": [
-        
+
     ],
     "engines:trojan and tag:signed and p:60+ and microsoft:clean and not tag:invalid-signature and ls:30d+": [
           {

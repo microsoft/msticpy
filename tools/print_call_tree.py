@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Python file import analyzer."""
+
 import argparse
 
 from toollib import VERSION

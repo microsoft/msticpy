@@ -9,13 +9,14 @@ Test run notebooks.
 The script runs all of the notebooks in the --nb_path folder
 (exceptions for notebooks that cannot be run without authentication
 """
+
 import argparse
 import os
 from collections import namedtuple
 from functools import partial
 from multiprocessing import Process, Queue
 from pathlib import Path
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
 import nbformat
 from nbconvert import HTMLExporter
@@ -51,7 +52,7 @@ def test_all_notebooks(
     kernel: str = "python3",
     run_all: bool = False,
     links: bool = False,
-    ignore_urls: List[str] = None,
+    ignore_urls: list[str] = None,
 ):
     """
     Run notebooks.
@@ -72,7 +73,7 @@ def test_all_notebooks(
         List of URLs to skip checks on.
 
     """
-    notebook_exec_errors: List[Tuple[str, str, str, str]] = []
+    notebook_exec_errors: list[tuple[str, str, str, str]] = []
     for notebook_file in Path(src_path).glob("*.ipynb"):
         if str(notebook_file).casefold().endswith("-err.ipynb"):
             continue
@@ -99,7 +100,7 @@ def test_all_notebooks_mp(
     kernel: str = "python3",
     run_all: bool = False,
     links: bool = False,
-    ignore_urls: List[str] = None,
+    ignore_urls: list[str] = None,
 ):
     """
     Run notebooks.
@@ -144,9 +145,7 @@ def test_all_notebooks_mp(
     for index in range(0, len(nbs_to_run), 4):
         print(f"Running tasks {index} - {index + 4}")
         for notebook_task in nbs_to_run[index : index + 4]:  # noqa: E203
-            Process(
-                target=test_notebook_task, kwargs={"notebook_file": notebook_task}
-            ).start()
+            Process(target=test_notebook_task, kwargs={"notebook_file": notebook_task}).start()
 
     print("Processing finished, reading queue")
     print(result_queue.qsize())
@@ -162,9 +161,7 @@ def test_notebook_mp(queue, *args, **kwargs):
 
 
 # pylint: disable=too-many-locals
-def test_notebook(
-    notebook_file, out_path, kernel, links, ignore_urls
-) -> Optional[NBError]:
+def test_notebook(notebook_file, out_path, kernel, links, ignore_urls) -> NBError | None:
     """
     Test single notebook.
 
@@ -223,9 +220,7 @@ def test_notebook(
     if links:
         print(f"{notebook_file.name} - checking notebook links: ...")
         html_body, _ = html_exporter.from_notebook_node(nb_content)
-        page_errors = _check_notebook_links(
-            html_body, ignore_urls, name=notebook_file.name
-        )
+        page_errors = _check_notebook_links(html_body, ignore_urls, name=notebook_file.name)
         if page_errors:
             print(f"Unreachable links in source notebook: {notebook_file.absolute()}")
             for page in page_errors:
@@ -311,7 +306,7 @@ if __name__ == "__main__":
     script_args = arg_parser.parse_args()
 
     ignore_uris_file = Path("tests/ignored_uri_links.txt")
-    ignore_uris: List[str] = []
+    ignore_uris: list[str] = []
     if ignore_uris_file.is_file():
         ignore_uris = [
             line
