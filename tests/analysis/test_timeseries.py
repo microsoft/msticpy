@@ -94,17 +94,17 @@ def test_ts_anomalies_seasonal_zero():
     values = [100 + i * 0.1 + np.random.normal(0, 5) for i in range(100)]
     # Add a clear spike
     values[50] = 200
-    
+
     df = pd.DataFrame({
         "TimeGenerated": dates,
         "value": values
     })
-    
+
     # Run the analysis - this should not raise an error even if seasonal == 0
     results = timeseries.ts_anomalies_stl(
         df, time_column="TimeGenerated", data_column="value", seasonal=7, period=24
     )
-    
+
     # Verify that anomalies column exists and contains only valid values (0, 1, -1)
     check.is_in("anomalies", results.columns)
     check.is_true(results["anomalies"].dtype == "int64")
