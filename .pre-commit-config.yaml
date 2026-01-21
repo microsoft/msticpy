@@ -41,4 +41,4 @@ repos:
         pass_filenames: False
         language: python
         types: [python]
-        additional_dependencies: ['packaging>=24.0']
+        additional_dependencies: ['packaging>=24.0', 'setuptools']
