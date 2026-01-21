@@ -76,9 +76,7 @@ class TestParseTimespan:
         # Test with exactly 7 decimal places (KQL format)
         result = parse_timespan("1.19:37:05.1697513")
         # Should be exactly 169751300 nanoseconds, not rounded due to float conversion
-        expected = pd.Timedelta(
-            days=1, hours=19, minutes=37, seconds=5, nanoseconds=169751300
-        )
+        expected = pd.Timedelta(days=1, hours=19, minutes=37, seconds=5, nanoseconds=169751300)
         assert result == expected
 
         # Verify the nanosecond component is exact by checking the full value
@@ -157,7 +155,9 @@ class TestEnsureDfTimedeltas:
 
         assert pd.api.types.is_timedelta64_dtype(result["duration"])
         assert result["duration"].iloc[0] == pd.Timedelta(days=1)
-        assert result["duration"].iloc[1] == pd.Timedelta(days=3, hours=12, minutes=34, seconds=56)
+        assert result["duration"].iloc[1] == pd.Timedelta(
+            days=3, hours=12, minutes=34, seconds=56
+        )
         assert result["duration"].iloc[2] == pd.Timedelta(days=10, milliseconds=1)
 
     def test_convert_mixed_timespan_column(self):
@@ -173,11 +173,13 @@ class TestEnsureDfTimedeltas:
 
     def test_convert_multiple_columns(self):
         """Test converting multiple timespan columns."""
-        df = pd.DataFrame({
-            "duration1": ["00:00:01", "1.00:00:00"],
-            "duration2": ["00:10:30", "2.12:00:00"],
-            "other": ["a", "b"],
-        })
+        df = pd.DataFrame(
+            {
+                "duration1": ["00:00:01", "1.00:00:00"],
+                "duration2": ["00:10:30", "2.12:00:00"],
+                "other": ["a", "b"],
+            }
+        )
         result = ensure_df_timedeltas(df, columns=["duration1", "duration2"])
 
         assert pd.api.types.is_timedelta64_dtype(result["duration1"])
@@ -186,11 +188,13 @@ class TestEnsureDfTimedeltas:
 
     def test_auto_detect_timespan_columns(self):
         """Test auto-detection of timespan columns."""
-        df = pd.DataFrame({
-            "duration": ["00:00:01", "1.00:00:00"],
-            "time_elapsed": ["00:10:30", "2.12:00:00"],
-            "other": ["a", "b"],
-        })
+        df = pd.DataFrame(
+            {
+                "duration": ["00:00:01", "1.00:00:00"],
+                "time_elapsed": ["00:10:30", "2.12:00:00"],
+                "other": ["a", "b"],
+            }
+        )
         result = ensure_df_timedeltas(df)
 
         assert pd.api.types.is_timedelta64_dtype(result["duration"])

@@ -35,7 +35,7 @@ def ensure_df_datetimes(
     ----------
     data : pd.DataFrame
         Input dataframe
-    columns : Union[str, List[str], None], optional
+    columns : str | list[str] | None, optional
         column (str) or list of columns to convert, by default None.
         If this parameter is not supplied then any column containing
         the substring "time" is used as a candidate for conversion.
@@ -87,7 +87,7 @@ def parse_timespan(timespan: str | pd.Timedelta | None) -> pd.Timedelta | None:
 
     Parameters
     ----------
-    timespan : Union[str, pd.Timedelta, None]
+    timespan : str | pd.Timedelta | None
         The timespan to parse. Can be:
         - A string in KQL timespan format (e.g., "1.00:00:00", "00:00:00.001")
         - An existing pd.Timedelta object (returned as-is)
@@ -95,7 +95,7 @@ def parse_timespan(timespan: str | pd.Timedelta | None) -> pd.Timedelta | None:
 
     Returns
     -------
-    Optional[pd.Timedelta]
+    pd.Timedelta | None
         Parsed timedelta with nanosecond resolution, or None if input is None.
 
     Raises
@@ -176,7 +176,7 @@ def ensure_df_timedeltas(
     ----------
     data : pd.DataFrame
         Input dataframe
-    columns : Union[str, List[str], None], optional
+    columns : str | list[str] | None, optional
         column (str) or list of columns to convert, by default None.
         If this parameter is not supplied, the function will attempt to
         auto-detect timespan columns by checking for string columns that
