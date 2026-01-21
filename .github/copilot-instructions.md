@@ -13,14 +13,14 @@
 ### Python Standards (Enforced by Ruff)
 - **Line length**: 93 characters
 - **Type hints**: Required (enforced by mypy, annotations checked)
-  - Always use built-in types like `list`, `dict`, for type annotations and avoid use 
+  - Always use built-in types like `list`, `dict`, for type annotations and avoid use
     types from `typing`.
-  - E.g. use `list[str]` instead of `List[str]`, `str | None` instead of 
+  - E.g. use `list[str]` instead of `List[str]`, `str | None` instead of
     `Optional[str]`.
 - **Docstrings**: Required for public functions (D-series rules) - use numpy style.
-  - Document parameters, return type and exceptions raised for public 
+  - Document parameters, return type and exceptions raised for public
     functions/methods.
-  - **Single-line**: Keep on same line as triple quotes: 
+  - **Single-line**: Keep on same line as triple quotes:
     `"""Return the user name."""`
   - **Multi-line**: Summary starts on new line after opening quotes, blank line before
     Parameters/Returns sections, blank line before closing quotes:
@@ -44,7 +44,7 @@
 - **Imports and Formatting**: Sorted/grouped automatically (isort)
 
 ### General Coding Style
-- Avoid using Python built-in `open` function for file operations. Use 
+- Avoid using Python built-in `open` function for file operations. Use
   `pathlib.Path` methods instead. Prefer `Path.*` methods over legacy `os.*` methods.
 - **Logging**: Create a logger per module `logger = logging.getLogger(__name__)`.
   - When adding logging calls, use `%s`, `%d` style variable substitution rather than
@@ -52,10 +52,23 @@
 - Never use inline import statements. Always place imports at the top of the file
   (there are some exceptional cases where conditional imports are used but, these
   should also be at the top of the file, before the main code).
-- When generating code, be careful with indentation - always replace lines using the 
+- When generating code, be careful with indentation - always replace lines using the
   same indentation unless introducing branches, etc.
-- Try to avoid a line length of over 90 characters - this applies to code, 
+- Try to avoid a line length of over 90 characters - this applies to code,
   docstrings, comments and suppressions.
+
+## Documentation
+
+- If you are adding/changing/removing any public API you must update the Sphinx API
+  documentation using the following command to re-generate the RST files:
+```bash
+cd docs
+del /Q source\api\*
+sphinx-apidoc --o source/api --force --module-first --separate ../msticpy
+del source\api\modules.rst
+```
+- Then add any changed files to the commit. The docs build process will generate
+  the necessary HTML files and issue any errors/warnings when the CI build is run.
 
 ## Testing
 
@@ -67,7 +80,7 @@
 - Always add at least a single-line docstring to fixtures and test functions.
   If the context of the parameters is not obvious, explain them in the docstring.
 - Unit test coverage should be >= 85% on new code.
-- Test "secrets" - if you need to mock a secret value (password, key, etc.), always 
+- Test "secrets" - if you need to mock a secret value (password, key, etc.), always
   use the value `"[PLACEHOLDER]"` as the value of the secret.
 
 ### Running Tests
