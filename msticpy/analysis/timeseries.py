@@ -290,11 +290,12 @@ def ts_anomalies_stl(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     # this column does not contain seasonal/trend components
     result["score"] = stats.zscore(result["residual"])
     # create spikes(1) and dips(-1) based on threshold and seasonal columns
+    # Initialize anomalies to 0 (default for no anomaly)
+    result["anomalies"] = 0
     result.loc[(result["score"] > score_threshold) & (result["seasonal"] > 0), "anomalies"] = 1
     result.loc[
         (result["score"] > score_threshold) & (result["seasonal"] < 0), "anomalies"
     ] = -1
-    result.loc[(result["score"] < score_threshold), "anomalies"] = 0
     # Datatype casting
     result["anomalies"] = result["anomalies"].astype("int64")
 

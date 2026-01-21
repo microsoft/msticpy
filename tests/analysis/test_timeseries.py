@@ -83,6 +83,37 @@ def test_new_threshold(df_data):
     check.equal(new_anoms.query("anomalies != 0").shape, (12, 5))
 
 
+def test_ts_anomalies_seasonal_zero():
+    """Test ts_anomalies_stl handles seasonal == 0 case correctly."""
+    # Create synthetic data with a case where seasonal could be zero
+    import numpy as np
+    from datetime import datetime, timedelta
+    
+    # Create a simple time series with minimal seasonal variation
+    dates = [datetime(2019, 1, 1) + timedelta(hours=i) for i in range(100)]
+    # Create data with some anomalies but potentially zero seasonal component
+    values = [100 + i * 0.1 + np.random.normal(0, 5) for i in range(100)]
+    # Add a clear spike
+    values[50] = 200
+    
+    df = pd.DataFrame({
+        "TimeGenerated": dates,
+        "value": values
+    })
+    
+    # Run the analysis - this should not raise an error even if seasonal == 0
+    results = timeseries.ts_anomalies_stl(
+        df, time_column="TimeGenerated", data_column="value", seasonal=7, period=24
+    )
+    
+    # Verify that anomalies column exists and contains only valid values (0, 1, -1)
+    check.is_in("anomalies", results.columns)
+    check.is_true(results["anomalies"].dtype == "int64")
+    check.is_true(results["anomalies"].isin([0, 1, -1]).all())
+    # Ensure no NaN values in anomalies column
+    check.equal(results["anomalies"].isna().sum(), 0)
+
+
 def test_pd_accessors(df_data):
     """Test accessors have imported docs."""
     for func_name in ("analyze", "anomaly_periods", "apply_threshold", "kql_periods"):
