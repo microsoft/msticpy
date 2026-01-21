@@ -54,7 +54,7 @@ sources:
         version: 1
         description: Fancy description for a sample query
         data_environments: MyEnvironment
-        data_families: 
+        data_families:
           - SecurityAlert
         tags:
           - alert

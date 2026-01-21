@@ -27,6 +27,7 @@ values, is written to the file specified in the --output argument.
 --verbose will show more details of the changes that are being made.
 
 """
+
 import argparse
 import json
 import os
@@ -126,9 +127,7 @@ def _transform_settings(cur_settings, sec_names):
     kv_secrets_dict = {}
 
     for section in ["TIProviders", "OtherProviders", "DataProviders"]:
-        kv_vals, section_settings = _get_config_secrets(
-            cur_settings, section, sec_names
-        )
+        kv_vals, section_settings = _get_config_secrets(cur_settings, section, sec_names)
         if not kv_vals:
             continue
         kv_secrets_dict.update(kv_vals)
@@ -309,9 +308,7 @@ if __name__ == "__main__":
     if not args.show:
         if not args.output:
             raise ValueError("No output file specified. --output value is required.")
-        _add_secrets_to_vault(
-            vault_name=vault, secrets=kv_secrets, confirm=prompt, **kv_args
-        )
+        _add_secrets_to_vault(vault_name=vault, secrets=kv_secrets, confirm=prompt, **kv_args)
         _write_config_settings(
             conf_file=args.output, conf_settings=new_settings, confirm=prompt
         )

@@ -4,12 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Generate documentation of current queries."""
+
 import argparse
 from pathlib import Path
 
 import pandas as pd
-from tabulate import tabulate  # type: ignore
 import tqdm
+from tabulate import tabulate  # type: ignore
 
 from msticpy.data import QueryProvider
 
@@ -70,9 +71,7 @@ def get_query_list():
             }
             query_series.append(pd.Series(q_dict))
     print()
-    return pd.DataFrame(query_series).sort_values(
-        ["Environment", "QueryGroup", "Query"]
-    )
+    return pd.DataFrame(query_series).sort_values(["Environment", "QueryGroup", "Query"])
 
 
 def generate_document(query_df):  # sourcery skip: identity-comprehension
