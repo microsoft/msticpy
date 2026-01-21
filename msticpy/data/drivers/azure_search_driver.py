@@ -62,6 +62,11 @@ class AzureSearchDriver(AzureMonitorDriver):
             "data_environments", ("MSSentinelSearch", "MSSentinel", "LogAnalytics", "AzureSentinel")
         )
 
+    def _ensure_connected(self):
+        """Check if the driver is connected and has valid authentication."""
+        if not self._connected or self._auth_header is None:
+            raise MsticpyKqlConnectionError("Not connected. Call connect() before querying.")
+
     def _create_query_client(self, connection_str: str | None = None, **kwargs):
         """Create a query client using the /search endpoint."""
         az_auth_types = kwargs.pop("auth_types", kwargs.get("mp_az_auth"))
@@ -117,8 +122,7 @@ class AzureSearchDriver(AzureMonitorDriver):
             the underlying provider result if an error.
 
         """
-        if not self._connected or not hasattr(self, "_auth_header"):
-            raise MsticpyKqlConnectionError("Not connected. Call connect() before querying.")
+        self._ensure_connected()
         if query_source:
             self._check_table_exists(query_source)
         data, result = self.query_with_results(query, **kwargs)
@@ -139,8 +143,7 @@ class AzureSearchDriver(AzureMonitorDriver):
             The resulting DataFrame and a status dictionary.
 
         """
-        if not self._connected or not hasattr(self, "_auth_header"):
-            raise MsticpyKqlConnectionError("Not connected. Call connect() before querying.")
+        self._ensure_connected()
         time_span_value = self._get_time_span_value(**kwargs)
         if not time_span_value:
             raise MsticpyDataQueryError(
