@@ -14,6 +14,14 @@ from .._version import VERSION
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+# KQL/Kusto timespan pattern: [-][d.]hh:mm:ss[.fffffff]
+# This pattern matches timespan strings returned by KQL queries
+_TIMESPAN_PATTERN = re.compile(
+    r"^(?P<sign>-?)(?:(?P<days>\d+)\.)?"
+    r"(?P<hours>\d+):(?P<minutes>\d+):(?P<seconds>\d+)"
+    r"(?P<frac_seconds>\.\d+)?$"
+)
+
 
 def ensure_df_datetimes(
     data: pd.DataFrame,
@@ -119,19 +127,8 @@ def parse_timespan(timespan: str | pd.Timedelta | None) -> pd.Timedelta | None:
     if isinstance(timespan, pd.Timedelta):
         return timespan
 
-    # Pattern matches: [-][d.]hh:mm:ss[.fffffff]
-    # Groups: sign, days, hours, minutes, seconds, frac_seconds
-    # Note: We don't validate that hours/minutes/seconds are in valid ranges
-    # (e.g., hours 0-23, minutes/seconds 0-59) because:
-    # 1. KQL may return these values as emitted from the database
-    # 2. pandas.Timedelta handles normalization (e.g., 90 minutes -> 1h 30m)
-    # 3. It's more robust to accept the format and let pandas normalize
-    pattern = re.compile(
-        r"(?P<sign>-?)(?:(?P<days>\d+)\.)?"
-        r"(?P<hours>\d+):(?P<minutes>\d+):(?P<seconds>\d+)"
-        r"(?P<frac_seconds>\.\d+)?"
-    )
-    match = pattern.match(str(timespan))
+    # Use the shared timespan pattern
+    match = _TIMESPAN_PATTERN.match(str(timespan))
     if not match:
         msg = f"Invalid timespan format: {timespan}"
         raise ValueError(msg)
@@ -142,7 +139,7 @@ def parse_timespan(timespan: str | pd.Timedelta | None) -> pd.Timedelta | None:
     hours = int(match_groups["hours"])
     minutes = int(match_groups["minutes"])
     seconds = int(match_groups["seconds"])
-    
+
     # Parse fractional seconds as string to avoid floating-point precision errors
     # KQL returns up to 7 decimal places (e.g., .1697513 = 169751300 nanoseconds)
     frac_str = match_groups["frac_seconds"]
@@ -253,16 +250,12 @@ def _detect_timespan_columns(data: pd.DataFrame) -> list[str]:
         List of column names that likely contain timespan values
 
     """
-    timespan_pattern = re.compile(
-        r"^-?(?:\d+\.)?(?:\d{1,2}):(?:\d{1,2}):(?:\d{1,2})(?:\.\d+)?$"
-    )
-
     timespan_columns = []
     # Only check object/string columns
     for col in data.select_dtypes(include=["object", "string"]).columns:
         # Sample first non-null value
         sample_val = data[col].dropna().head(1)
-        if not sample_val.empty and timespan_pattern.match(str(sample_val.iloc[0])):
+        if not sample_val.empty and _TIMESPAN_PATTERN.match(str(sample_val.iloc[0])):
             timespan_columns.append(col)
 
     return timespan_columns

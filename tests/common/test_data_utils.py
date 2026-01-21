@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Tests for data_utils module."""
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -79,7 +80,7 @@ class TestParseTimespan:
             days=1, hours=19, minutes=37, seconds=5, nanoseconds=169751300
         )
         assert result == expected
-        
+
         # Verify the nanosecond component is exact by checking the full value
         # Timedelta stores total nanoseconds in the 'value' attribute
         assert result.value == expected.value
@@ -246,7 +247,6 @@ class TestEnsureDfTimedeltas:
 
         assert pd.api.types.is_timedelta64_dtype(result["print_0"])
         # Check that values are numpy.timedelta64
-        import numpy as np
         assert isinstance(result["print_0"].values[0], np.timedelta64)
 
     def test_issue_example_large_timespan(self):
@@ -256,6 +256,5 @@ class TestEnsureDfTimedeltas:
 
         assert pd.api.types.is_timedelta64_dtype(result["print_0"])
         # Check that values are numpy.timedelta64
-        import numpy as np
         assert isinstance(result["print_0"].values[0], np.timedelta64)
         assert result["print_0"].iloc[0] == pd.Timedelta(days=1)
