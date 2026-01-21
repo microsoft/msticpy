@@ -23,6 +23,8 @@ from ..._version import VERSION
 from ...auth.azure_auth import az_connect
 from ...common.exceptions import MsticpyDataQueryError, MsticpyKqlConnectionError
 from .azure_monitor_driver import AzureMonitorDriver
+from .driver_base import DriverProps, QuerySource
+from ..core.query_defns import DataEnvironment
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -53,6 +55,12 @@ class AzureSearchDriver(AzureMonitorDriver):
         super().__init__(connection_str=connection_str, **kwargs)
         self._auth_header: dict[str, Any] | None = None
         self._try_get_schema = False
+        # Override the EFFECTIVE_ENV set by AzureMonitorDriver
+        self.set_driver_property(DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinelSearch.name)
+        # Override query filter to include MSSentinelSearch
+        self.add_query_filter(
+            "data_environments", ("MSSentinelSearch", "MSSentinel", "LogAnalytics", "AzureSentinel")
+        )
 
     def _create_query_client(self, connection_str: str | None = None, **kwargs):
         """Create a query client using the /search endpoint."""
@@ -83,6 +91,38 @@ class AzureSearchDriver(AzureMonitorDriver):
         # Mark as connected
         self._connected = True
         logger.info("Created HTTP-based query client using /search endpoint.")
+
+    def query(
+        self, query: str, query_source: QuerySource | None = None, **kwargs
+    ) -> pd.DataFrame | Any:
+        """
+        Execute query string and return DataFrame of results.
+
+        Parameters
+        ----------
+        query : str
+            The query to execute
+        query_source : QuerySource | None
+            The query definition object
+
+        Other Parameters
+        ----------------
+        timeout : int (seconds)
+            Specify a timeout for the query. Default is 300 seconds.
+
+        Returns
+        -------
+        pd.DataFrame | Any
+            A DataFrame (if successful) or
+            the underlying provider result if an error.
+
+        """
+        if not self._connected or not hasattr(self, "_auth_header"):
+            raise MsticpyKqlConnectionError("Not connected. Call connect() before querying.")
+        if query_source:
+            self._check_table_exists(query_source)
+        data, result = self.query_with_results(query, **kwargs)
+        return data if data is not None else result
 
     def query_with_results(self, query: str, **kwargs) -> tuple[pd.DataFrame, dict[str, Any]]:
         """

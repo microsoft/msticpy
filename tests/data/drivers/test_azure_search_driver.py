@@ -50,6 +50,10 @@ def test_azure_search_driver_init():
     driver = AzureSearchDriver()
     check.is_false(driver.connected, "Driver should not be connected on init")
     check.is_none(driver._auth_header, "Auth header not set initially")
+    # Verify the EFFECTIVE_ENV is set to MSSentinelSearch
+    from msticpy.data.drivers.driver_base import DriverProps
+    effective_env = driver.get_driver_property(DriverProps.EFFECTIVE_ENV)
+    check.equal(effective_env, "MSSentinelSearch", "EFFECTIVE_ENV should be MSSentinelSearch")
 
 
 @respx.mock
