@@ -272,8 +272,8 @@ def ts_anomalies_stl(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     data = data[[data_column]]
 
     # STL method does Season-Trend decomposition using LOESS.
-    # Accepts timeseries dataframe
-    stl = STL(data[data_column].values, seasonal=seasonal, period=period)
+    # Accepts 1D timeseries data (pandas Series)
+    stl = STL(data[data_column], seasonal=seasonal, period=period)
     # Fitting the data - Estimate season, trend and residuals components.
     res = stl.fit()
     result = data.copy()
