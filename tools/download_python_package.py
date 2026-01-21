@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Create MSTICPy install archive using docker."""
+
 import argparse
 import os
 import subprocess
@@ -44,9 +45,7 @@ def download_python_package(
         # get base name if module name includes additional dependencies
         module_base_name = package_name.split("[")[0]
 
-        pipstring = (
-            f"{package_name}=={package_version}" if package_version else package_name
-        )
+        pipstring = f"{package_name}=={package_version}" if package_version else package_name
 
         # Define Dockerfile content
         dockerfile_content = f"""
@@ -111,26 +110,22 @@ def download_python_package(
 
     finally:
         # Delete the Docker volume
-        subprocess.run(["docker", "rm", f"{module_base_name}"])  # nosec
+        subprocess.run(["docker", "rm", f"{module_base_name}"], check=False)  # nosec
 
-        subprocess.run(["docker", "volume", "rm", f"{python_version}"])  # nosec
+        subprocess.run(["docker", "volume", "rm", f"{python_version}"], check=False)  # nosec
 
         # Delete the Docker image
-        subprocess.run(["docker", "rmi", image_tag])  # nosec
+        subprocess.run(["docker", "rmi", image_tag], check=False)  # nosec
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Download Python package for local use"
-    )
+    parser = argparse.ArgumentParser(description="Download Python package for local use")
     parser.add_argument("-v", "--python-version", help="Python version", required=True)
     parser.add_argument(
         "-d", "--directory", help="Directory for saved zip file", required=True
     )
     parser.add_argument("-p", "--package-name", help="Package name", required=True)
-    parser.add_argument(
-        "-pv", "--package-version", help="Package version", required=False
-    )
+    parser.add_argument("-pv", "--package-version", help="Package version", required=False)
 
     args = parser.parse_args()
 

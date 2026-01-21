@@ -8,11 +8,11 @@
 
   <!-- Each of these exclusions is a folder name - if any folder or file starts with "\[name]", it will be skipped -->
   <!--<Exclusion Type="FolderPathStart">ABC|XYZ</Exclusion>-->
-  
+
   <!-- Each of these file types will be completely skipped for the entire scan -->
   <Exclusion Type="FileType">.CSV</Exclusion>
-  
+
   <!-- The specified file names will be skipped during the scan regardless which folder they are in -->
   <Exclusion Type="FileName">TLD_SEED.TXT|QUERY_DATA.CSV|SIGNIN_CHARTS.YAML|GEOPIP.PY</Exclusion>
-  
+
   </PoliCheckExclusions>

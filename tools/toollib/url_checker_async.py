@@ -4,10 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """Python file import analyzer."""
+
 import asyncio
 from collections import defaultdict, namedtuple
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Set, Union
 from urllib import parse
 
 import markdown
@@ -30,9 +31,9 @@ def check_docs(
     recurse: bool = True,
     max_threads: int = 10,
     delay: float = 0,
-    ignore_uris: Optional[List[str]] = None,
-    path_rewrite: Dict[str, str] = None,
-) -> Dict[str, Dict[str, UrlResult]]:
+    ignore_uris: list[str] | None = None,
+    path_rewrite: dict[str, str] = None,
+) -> dict[str, dict[str, UrlResult]]:
     """
     Check multiple HTML files in `doc_path`.
 
@@ -59,8 +60,8 @@ def check_docs(
         is a dictionary of checked links for the page.
 
     """
-    page_results: Dict[str, Dict[str, UrlResult]] = defaultdict(dict)
-    link_results: Dict[str, UrlResult] = {}
+    page_results: dict[str, dict[str, UrlResult]] = defaultdict(dict)
+    link_results: dict[str, UrlResult] = {}
 
     links_to_check = _get_links_from_files(doc_path, recurse, path_rewrite)
     links_to_check = remove_ignored_uris(links_to_check, ignore_uris)
@@ -79,12 +80,12 @@ def check_docs(
 
 # pylint: disable=too-many-locals
 def check_doc(
-    doc_path: Union[str, Path],
+    doc_path: str | Path,
     max_threads: int = 10,
     delay: float = 0,
-    ignore_uris: Optional[List[str]] = None,
-    path_rewrite: Dict[str, str] = None,
-) -> Dict[str, Dict[str, UrlResult]]:
+    ignore_uris: list[str] | None = None,
+    path_rewrite: dict[str, str] = None,
+) -> dict[str, dict[str, UrlResult]]:
     """
     Check single HTML file `doc_path`.
 
@@ -109,11 +110,11 @@ def check_doc(
         is a dictionary of checked links for the page.
 
     """
-    page_results: Dict[str, Dict[str, UrlResult]] = defaultdict(dict)
-    link_results: Dict[str, UrlResult] = {}
+    page_results: dict[str, dict[str, UrlResult]] = defaultdict(dict)
+    link_results: dict[str, UrlResult] = {}
 
     pg_links = _get_doc_links(Path(doc_path))
-    links_to_check: Dict[str, Set[str]] = defaultdict(set)
+    links_to_check: dict[str, set[str]] = defaultdict(set)
 
     page = str(doc_path)
     if path_rewrite:
@@ -142,9 +143,9 @@ def check_html(
     doc_type: str = "html",
     max_threads: int = 10,
     delay: float = 0,
-    ignore_uris: Optional[List[str]] = None,
-    path_rewrite: Dict[str, str] = None,
-) -> Dict[str, Dict[str, UrlResult]]:
+    ignore_uris: list[str] | None = None,
+    path_rewrite: dict[str, str] = None,
+) -> dict[str, dict[str, UrlResult]]:
     """
     Check single HTML string.
 
@@ -173,11 +174,11 @@ def check_html(
         is a dictionary of checked links for the page.
 
     """
-    page_results: Dict[str, Dict[str, UrlResult]] = defaultdict(dict)
-    link_results: Dict[str, UrlResult] = {}
+    page_results: dict[str, dict[str, UrlResult]] = defaultdict(dict)
+    link_results: dict[str, UrlResult] = {}
 
     pg_links = _get_doc_links(doc=html, doc_type=doc_type)
-    links_to_check: Dict[str, Set[str]] = defaultdict(set)
+    links_to_check: dict[str, set[str]] = defaultdict(set)
 
     page = doc_name
     if path_rewrite:
@@ -199,9 +200,9 @@ def check_html(
 
 
 def _get_links_from_files(
-    doc_path: str, recurse: bool = True, path_rewrite: Dict[str, str] = None
-) -> Dict[str, Set[str]]:
-    links_to_check: Dict[str, Set[str]] = defaultdict(set)
+    doc_path: str, recurse: bool = True, path_rewrite: dict[str, str] = None
+) -> dict[str, set[str]]:
+    links_to_check: dict[str, set[str]] = defaultdict(set)
 
     html_glob_pattern = "**/*.html" if recurse else "*.html"
     all_files = [path.absolute() for path in Path(doc_path).glob(html_glob_pattern)]
@@ -230,15 +231,11 @@ def remove_ignored_uris(links_to_check, ignore_uris):
     return {
         link: pages
         for link, pages in links_to_check.items()
-        if not any(
-            link.casefold().startswith(ignore.casefold()) for ignore in ignore_uris
-        )
+        if not any(link.casefold().startswith(ignore.casefold()) for ignore in ignore_uris)
     }
 
 
-def _get_doc_links(
-    doc_path: Path = None, doc: str = None, doc_type: str = "html"
-) -> Set[str]:
+def _get_doc_links(doc_path: Path = None, doc: str = None, doc_type: str = "html") -> set[str]:
     """
     Check links in an HTML or Markdown document.
 
@@ -281,7 +278,7 @@ def _get_doc_links(
 
 def _resolve_rel_link(
     url_link: str, all_links: bool, page_url: str, top_root: str
-) -> Optional[str]:
+) -> str | None:
     if url_link.startswith("http"):
         if all_links or (top_root.lower() not in url_link.lower()):
             return url_link
@@ -351,9 +348,7 @@ async def _check_url_async(url: str, session: ClientSession) -> UrlResult:
                     f"No error. Redirect to {resp.url}",
                 )
             elif resp.status == 200:
-                result = UrlResult(
-                    resp.status, resp.history, url, "No error. No redirect."
-                )
+                result = UrlResult(resp.status, resp.history, url, "No error. No redirect.")
             else:
                 result = UrlResult(resp.status, resp.history, url, "Error?")
     except ClientResponseError as client_err:
@@ -390,7 +385,7 @@ async def _check_uris_async(
         return results
 
 
-def _print_url_results(results: Dict[str, Dict[str, UrlResult]]):
+def _print_url_results(results: dict[str, dict[str, UrlResult]]):
     """
     Print results of any URLs that did not return 200 status.
 

@@ -108,7 +108,7 @@ def _install_pkg(app_args):
     print("start", start)
     print(sp_run)
     if not test:
-        subprocess.run(sp_run, shell=True)  # nosec
+        subprocess.run(sp_run, check=False, shell=True)  # nosec
 
     end = datetime.now()
     print("end", end)
@@ -123,7 +123,7 @@ def _reset_pkgs():
         "list",
         "--disable-pip-version-check",
     ]
-    proc_call = subprocess.run(sp_run, shell=True, capture_output=True)  # nosec
+    proc_call = subprocess.run(sp_run, check=False, shell=True, capture_output=True)  # nosec
     inst_pkgs = proc_call.stdout.decode("utf-8").split("\n")[2:]
     inst_pkgs = {pkg.split()[0] for pkg in inst_pkgs if pkg and not pkg.startswith("-")}
     print(f"{len(inst_pkgs)} packages installed")
@@ -135,7 +135,7 @@ def _reset_pkgs():
         sp_run.extend(["-y", *remove_pkgs])
         print(sp_run)
         if not test:
-            subprocess.run(sp_run, shell=True)  # nosec
+            subprocess.run(sp_run, check=False, shell=True)  # nosec
     else:
         print("No packages to remove")
 
@@ -161,7 +161,7 @@ def _run_tests():
     if test:
         cur_dir = os.getcwd()
         os.chdir(_MP_SRC)
-        subprocess.run(sp_run, shell=True)  # nosec
+        subprocess.run(sp_run, check=False, shell=True)  # nosec
         os.chdir(cur_dir)
 
 
