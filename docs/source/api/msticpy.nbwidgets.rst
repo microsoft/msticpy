@@ -3,8 +3,8 @@ msticpy.nbwidgets package
 
 .. automodule:: msticpy.nbwidgets
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------

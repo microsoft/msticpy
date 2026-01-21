@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Mordor/OTRF Security datasets driver."""
 
+from __future__ import annotations
+
 import json
 import pickle  # nosec
 import zipfile
@@ -435,7 +437,7 @@ class MordorEntry:
 
     title: str
     id: str
-    type: str
+    entry_type: str
     creation_date: datetime = attr.ib(converter=_to_datetime)
     modification_date: datetime = attr.ib(converter=_to_datetime)
     contributors: list[str] = attr.Factory(list)
@@ -630,6 +632,9 @@ def _fetch_mdr_metadata(cache_folder: str | None = None) -> dict[str, MordorEntr
         doc_id = metadata_doc.get("id")
         mdr_entry = metadata_doc.copy()
         mdr_entry.pop(_LAST_UPDATE_KEY, None)
+        # Rename 'type' to 'entry_type' to match the MordorEntry attribute
+        if "type" in mdr_entry:
+            mdr_entry["entry_type"] = mdr_entry.pop("type")
         md_metadata[doc_id] = MordorEntry(**mdr_entry)
 
     _write_mordor_cache(md_cached_metadata, cache_folder)

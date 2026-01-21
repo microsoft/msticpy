@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Data Providers Component Edit."""
 
+from __future__ import annotations
+
 import re
 
 import ipywidgets as widgets

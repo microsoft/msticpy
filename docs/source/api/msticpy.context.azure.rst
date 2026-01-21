@@ -3,8 +3,8 @@ msticpy.context.azure package
 
 .. automodule:: msticpy.context.azure
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------

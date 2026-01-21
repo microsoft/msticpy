@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Component edit utility functions."""
 
+from __future__ import annotations
+
 from typing import Any
 
 import httpx
@@ -301,7 +303,7 @@ def dict_to_txt(dict_val: str | dict[str, Any]) -> str:
 def get_wgt_ctrl(
     setting_path: str,
     var_name: str,
-    mp_controls: "MpConfigControls",  # type: ignore
+    mp_controls: MpConfigControls,  # type: ignore  # pylint: disable=undefined-variable
     wgt_style: dict[str, Any] | None = None,
     instance_name: str = None,
 ) -> widgets.Widget:
@@ -427,7 +429,7 @@ def get_defn_or_default(defn: tuple[str, Any] | Any) -> tuple[str, dict]:
 
 # flake8: noqa: F821
 def get_or_create_mpc_section(
-    mp_controls: "MpConfigControls",  # type: ignore[name-defined]
+    mp_controls: MpConfigControls,  # type: ignore[name-defined]  # pylint: disable=undefined-variable
     section: str,
     subkey: str | None = None,
 ) -> Any:

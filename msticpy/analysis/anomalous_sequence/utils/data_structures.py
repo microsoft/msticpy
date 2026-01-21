@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Useful helper data structure classes for modelling sessions."""
 
+from __future__ import annotations
+
 from collections import defaultdict
 
 from ....common.exceptions import MsticpyException

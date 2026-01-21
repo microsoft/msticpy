@@ -15,16 +15,8 @@ This module performs several steps to initialize MSTICPy:
 In the Azure ML and Azure Synapse environments, some additional
 initialization and checks are performed.
 
-One frequent problem in bootstrapping MSTICPy    for imp_spec in extra_imports:
-        params: list[str | None] = [None, None, None]
-        for idx, param in enumerate(imp_spec.split(",")):
-            params[idx] = param.strip() or None
-
-        if params[0] is None:
-            raise MsticpyException(
-                f"First parameter in extra_imports is mandatory: {imp_spec}"
-            )ning or
-creating a valid `msticpyconfig.yaml`. This is needed for many
+One frequent problem in bootstrapping MSTICPy is running or
+creating a valid ``msticpyconfig.yaml``. This is needed for many
 configuration settings such as MS Sentinel workspaces, Threat
 Intelligence (TI) providers, Azure authentication, Key Vault
 settings and more.

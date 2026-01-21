@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Data utility functions."""
 
+from __future__ import annotations
+
 import pandas as pd
 
 from .._version import VERSION

@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Local Data Driver class - for testing and demos."""
 
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Any
 
