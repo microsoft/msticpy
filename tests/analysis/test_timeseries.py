@@ -5,7 +5,9 @@
 # --------------------------------------------------------------------------
 """Test time series anomalies module."""
 from collections import Counter
+from datetime import datetime, timedelta
 
+import numpy as np
 import pandas as pd
 import pytest
 import pytest_check as check
@@ -86,9 +88,6 @@ def test_new_threshold(df_data):
 def test_ts_anomalies_seasonal_zero():
     """Test ts_anomalies_stl handles seasonal == 0 case correctly."""
     # Create synthetic data with a case where seasonal could be zero
-    import numpy as np
-    from datetime import datetime, timedelta
-    
     # Create a simple time series with minimal seasonal variation
     dates = [datetime(2019, 1, 1) + timedelta(hours=i) for i in range(100)]
     # Create data with some anomalies but potentially zero seasonal component
