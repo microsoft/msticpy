@@ -43,7 +43,7 @@ class SecurityGraphDriver(OData):
         self.api_root = az_cloud_config.endpoints.get("microsoftGraphResourceId")
         self.req_body = {
             "client_id": None,
-            "client_secret": None,
+            "client_secret": None,  # nosec
             "grant_type": "client_credentials",
             "scope": f"{self.api_root}.default",
         }
