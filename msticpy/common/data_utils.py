@@ -121,6 +121,11 @@ def parse_timespan(timespan: str | pd.Timedelta | None) -> pd.Timedelta | None:
 
     # Pattern matches: [-][d.]hh:mm:ss[.fffffff]
     # Groups: sign, days, hours, minutes, seconds, frac_seconds
+    # Note: We don't validate that hours/minutes/seconds are in valid ranges
+    # (e.g., hours 0-23, minutes/seconds 0-59) because:
+    # 1. KQL may return these values as emitted from the database
+    # 2. pandas.Timedelta handles normalization (e.g., 90 minutes -> 1h 30m)
+    # 3. It's more robust to accept the format and let pandas normalize
     pattern = re.compile(
         r"(?P<sign>-?)(?:(?P<days>\d+)\.)?"
         r"(?P<hours>\d+):(?P<minutes>\d+):(?P<seconds>\d+)"
@@ -137,8 +142,18 @@ def parse_timespan(timespan: str | pd.Timedelta | None) -> pd.Timedelta | None:
     hours = int(match_groups["hours"])
     minutes = int(match_groups["minutes"])
     seconds = int(match_groups["seconds"])
-    frac_seconds = float(match_groups["frac_seconds"]) if match_groups["frac_seconds"] else 0
-    nano_seconds = int(round(frac_seconds, ndigits=9) * 1e9)
+    
+    # Parse fractional seconds as string to avoid floating-point precision errors
+    # KQL returns up to 7 decimal places (e.g., .1697513 = 169751300 nanoseconds)
+    frac_str = match_groups["frac_seconds"]
+    if frac_str:
+        # Remove leading '.' and pad/truncate to 9 digits (nanoseconds)
+        frac_digits = frac_str[1:]  # Remove the '.'
+        # Pad with zeros if less than 9 digits, truncate if more
+        frac_digits = frac_digits.ljust(9, "0")[:9]
+        nano_seconds = int(frac_digits)
+    else:
+        nano_seconds = 0
 
     return sign * pd.Timedelta(
         days=days,

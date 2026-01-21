@@ -70,6 +70,20 @@ class TestParseTimespan:
         )
         assert result == expected
 
+    def test_parse_fractional_precision_no_float_errors(self):
+        """Test that fractional seconds are parsed without floating-point errors."""
+        # Test with exactly 7 decimal places (KQL format)
+        result = parse_timespan("1.19:37:05.1697513")
+        # Should be exactly 169751300 nanoseconds, not rounded due to float conversion
+        expected = pd.Timedelta(
+            days=1, hours=19, minutes=37, seconds=5, nanoseconds=169751300
+        )
+        assert result == expected
+        
+        # Verify the nanosecond component is exact by checking the full value
+        # Timedelta stores total nanoseconds in the 'value' attribute
+        assert result.value == expected.value
+
     def test_parse_negative_small_timespan(self):
         """Test parsing negative small timespan."""
         result = parse_timespan("-00:00:01")
