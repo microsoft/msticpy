@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Entity graph property."""
 
+from __future__ import annotations
+
 from ..._version import VERSION
 
 __version__ = VERSION
@@ -26,11 +28,11 @@ def graph_property(name: str, prop_type: type | str, edge_name: str = None) -> p
             "'prop_type' must be a type of Entity or the string 'self'",
         )
 
-    def prop_getter(self: "Entity") -> "Entity":  # type: ignore
+    def prop_getter(self: Entity) -> Entity:  # type: ignore  # pylint: disable=undefined-variable
         """Return property value."""
         return getattr(self, storage_name, None)
 
-    def prop_setter(self: "Entity", value: "Entity"):  # type: ignore
+    def prop_setter(self: Entity, value: Entity):  # type: ignore  # pylint: disable=undefined-variable
         """Set property value and add graph edge."""
         nonlocal prop_type
         if prop_type == "self":

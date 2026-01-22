@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Module for common display functions."""
 
+from __future__ import annotations
+
 from collections.abc import Callable, Iterable
 from importlib.metadata import version
 from typing import Any, Literal

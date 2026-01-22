@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Helper module for computations when each session is a list of strings."""
 
+from __future__ import annotations
+
 import copy
 from collections import defaultdict
 

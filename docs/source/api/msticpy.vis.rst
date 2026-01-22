@@ -3,8 +3,8 @@ msticpy.vis package
 
 .. automodule:: msticpy.vis
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------
@@ -20,7 +20,6 @@ Submodules
    msticpy.vis.foliummap
    msticpy.vis.matrix_plot
    msticpy.vis.mordor_browser
-   msticpy.vis.morph_charts
    msticpy.vis.mp_pandas_plot
    msticpy.vis.nbdisplay
    msticpy.vis.network_plot
@@ -30,7 +29,6 @@ Submodules
    msticpy.vis.timeline
    msticpy.vis.timeline_common
    msticpy.vis.timeline_duration
-   msticpy.vis.timeline_pd_accessor
    msticpy.vis.timeline_values
    msticpy.vis.timeseries
    msticpy.vis.vtobject_browser

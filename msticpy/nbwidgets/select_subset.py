@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
 
+from __future__ import annotations
+
 from typing import Any
 
 import ipywidgets as widgets

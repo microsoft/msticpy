@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Observation summary collector."""
 
+from __future__ import annotations
+
 from collections import OrderedDict
 from collections.abc import Iterator, Mapping
 from datetime import datetime
@@ -135,7 +137,7 @@ class Observation:
 class Observations:
     """Class to collect and display investigation observations."""
 
-    def __init__(self, observationlist: "Observations" = None):
+    def __init__(self, observationlist: Observations = None):
         """
         Create an observation list.
 

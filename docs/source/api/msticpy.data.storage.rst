@@ -3,8 +3,8 @@ msticpy.data.storage package
 
 .. automodule:: msticpy.data.storage
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------
