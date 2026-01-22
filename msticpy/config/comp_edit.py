@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Component Edit base and mixin classes."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from time import sleep
 from typing import Any

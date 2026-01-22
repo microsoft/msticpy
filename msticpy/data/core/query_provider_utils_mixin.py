@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Query Provider mixin methods."""
 
+from __future__ import annotations
+
 import re
 from collections import abc
 from collections.abc import Iterable

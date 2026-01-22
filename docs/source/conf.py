@@ -50,7 +50,7 @@ version = _ver
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
-needs_sphinx = "5.0"
+needs_sphinx = "9.0"
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -62,8 +62,8 @@ extensions = [
     "sphinxcontrib.jquery",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosectionlabel",
-    "sphinx.ext.intersphinx",
-    "seed_intersphinx_mapping",
+    # "sphinx.ext.intersphinx",
+    # "seed_intersphinx_mapping",
 ]
 
 autosectionlabel_prefix_document = True
@@ -212,6 +212,9 @@ autodoc_default_options = {
 }
 
 autoclass_content = "both"
+autodoc_type_aliases = {}
+autodoc_typehints = "description"
+autodoc_typehints_format = "short"
 
 autoapi_dirs = ["../../msticpy"]
 
@@ -274,12 +277,17 @@ autodoc_mock_imports = [
     "pygeohash",
     "pygments",
     "python-dateutil",
+    "python_openobserve",
     "respx",
+    "rrcf",
     "scipy",
     "seaborn",
     "sklearn",
     "splunk-sdk",
     "splunklib",
+    "splunklib.client",
+    "splunklib.six",
+    "splunklib.six.moves",
     "statsmodels",
     "sumologic",
     "tldextract",

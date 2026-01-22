@@ -3,8 +3,8 @@ msticpy.datamodel.soc package
 
 .. automodule:: msticpy.datamodel.soc
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------

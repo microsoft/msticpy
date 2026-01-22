@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Module for Model class for modelling sessions data."""
 
+from __future__ import annotations
+
 from collections import defaultdict
 
 from ...common.exceptions import MsticpyException

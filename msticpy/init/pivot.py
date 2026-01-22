@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Pivot functions main module."""
 
+from __future__ import annotations
+
 import contextlib
 from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta, timezone
@@ -362,7 +364,7 @@ class Pivot:
     @staticmethod
     def add_pivot_function(
         func: Callable[[Any], Any],
-        pivot_reg: "PivotRegistration" = None,
+        pivot_reg: PivotRegistration = None,
         container: str | None = None,
         **kwargs,
     ):

@@ -11,6 +11,8 @@ of the Cmd datatype with the params attribute set to a set
 of accompanying params.
 """
 
+from __future__ import annotations
+
 import copy
 from collections import defaultdict
 

@@ -3,8 +3,8 @@ msticpy.common.utility package
 
 .. automodule:: msticpy.common.utility
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------
