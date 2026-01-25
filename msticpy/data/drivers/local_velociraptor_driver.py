@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Local Velociraptor Data Driver class."""
 
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
 from functools import lru_cache

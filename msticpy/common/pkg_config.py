@@ -13,6 +13,8 @@ a file `msticpyconfig.yaml` in the current directory.
 
 """
 
+from __future__ import annotations
+
 import contextlib
 import numbers
 import os

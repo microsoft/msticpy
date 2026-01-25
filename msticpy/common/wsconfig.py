@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Module for Log Analytics-related configuration."""
 
+from __future__ import annotations
+
 import contextlib
 import json
 import os
@@ -266,7 +268,7 @@ class WorkspaceConfig:
         return get_config(self.settings_path, {})
 
     @classmethod
-    def from_settings(cls, settings: dict[str, Any]) -> "WorkspaceConfig":
+    def from_settings(cls, settings: dict[str, Any]) -> WorkspaceConfig:
         """Create a WorkstationConfig from MSTICPY Workspace settings."""
         return cls(
             config={
@@ -279,7 +281,7 @@ class WorkspaceConfig:
         )
 
     @classmethod
-    def from_connection_string(cls, connection_str: str) -> "WorkspaceConfig":
+    def from_connection_string(cls, connection_str: str) -> WorkspaceConfig:
         """Create a WorkstationConfig from a connection string."""
         tenant_regex = r"""
         .*tenant\s?[=\(]\s?['\"]\{?

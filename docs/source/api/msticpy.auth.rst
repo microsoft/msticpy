@@ -3,8 +3,8 @@ msticpy.auth package
 
 .. automodule:: msticpy.auth
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------

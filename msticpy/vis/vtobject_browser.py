@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """VirusTotal Object browser."""
 
+from __future__ import annotations
+
 import pprint
 
 import ipywidgets as widgets

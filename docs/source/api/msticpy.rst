@@ -3,8 +3,8 @@ msticpy package
 
 .. automodule:: msticpy
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Subpackages
 -----------
@@ -12,7 +12,6 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   msticpy.aiagents
    msticpy.analysis
    msticpy.auth
    msticpy.common

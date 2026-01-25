@@ -33,7 +33,7 @@ OPENOBSERVE_CONNECT_ARGS = {
         "(string) The url endpoint (the default is" + " 'https://localhost:5080')."
     ),
     "user": "(string) OpenObserve user, which is used to authenticate.",
-    "password": "(string) The matching OpenObserve password.",
+    "password": "(string) The matching OpenObserve password.",  # nosec
     "verify": "(bool) Validate TLS certificate (default True).",
     "timeout": "(int) requests timeout (default 300).",
 }

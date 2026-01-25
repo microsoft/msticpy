@@ -4,7 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Python file import analyzer."""
-from typing import Any, Dict, Tuple
+
+from typing import Any
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -47,7 +48,7 @@ def analyze_calls(module: str, all_calls=False) -> nx.DiGraph:
 
 
 def _create_call_graph(
-    calls: Dict[str, Any], funcs: Dict[str, Any], all_calls=False
+    calls: dict[str, Any], funcs: dict[str, Any], all_calls=False
 ) -> nx.MultiDiGraph:
     # Calculate the span (line numbers) of each function
     func_span = {}
@@ -83,15 +84,13 @@ def _create_call_graph(
 def _add_call_edge(
     call_graph: nx.DiGraph,
     call_name: str,
-    func_span: Dict[str, Any],
+    func_span: dict[str, Any],
     call_lines,
     call_type="local",
 ):
     call_graph.add_node(call_name, call_type=call_type)
     for line in call_lines:
-        calling_func = [
-            func for func, span in func_span.items() if span[0] <= line <= span[1]
-        ]
+        calling_func = [func for func, span in func_span.items() if span[0] <= line <= span[1]]
         if calling_func:
             call_graph.add_edge(calling_func[0], call_name, line=line)
         else:
@@ -111,7 +110,7 @@ def _print_decendents(graph, par_node, indent=0):
                 _print_decendents(graph, t_node, indent + 4)
 
 
-def plot_graph(call_graph: nx.Graph, size: Tuple[int, int] = (10, 10)):
+def plot_graph(call_graph: nx.Graph, size: tuple[int, int] = (10, 10)):
     """
     Plot circular graph using matplotlib.
 

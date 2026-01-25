@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Object container class."""
 
+from __future__ import annotations
+
 from typing import Any
 
 from .._version import VERSION

@@ -24,6 +24,8 @@ get_items_from_tar(binary): Return dictionary of tar file contents
 get_hashes(binary): Return md5, sha1 and sha256 hashes of input byte string
 """
 
+from __future__ import annotations
+
 import base64
 import binascii
 import gzip

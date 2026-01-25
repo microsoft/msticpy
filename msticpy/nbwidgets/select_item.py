@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
 
+from __future__ import annotations
+
 import random
 from collections.abc import Callable
 from typing import Any
