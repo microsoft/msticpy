@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Help functions for Synapse pipelines notebooks."""
 
+from __future__ import annotations
+
 import logging
 import os
 import re

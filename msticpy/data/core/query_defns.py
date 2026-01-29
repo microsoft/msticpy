@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Query helper definitions."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from enum import Enum
 
@@ -42,7 +44,7 @@ class DataFamily(Enum):
     OpenObserve = 22
 
     @classmethod
-    def parse(cls, value: str | int) -> "DataFamily":
+    def parse(cls, value: str | int) -> DataFamily:
         """
         Convert string or int to enum.
 
@@ -125,7 +127,7 @@ class DataEnvironment(Enum):
     MSSentinelSearch = 25
 
     @classmethod
-    def parse(cls, value: str | int) -> "DataEnvironment":
+    def parse(cls, value: str | int) -> DataEnvironment:
         """
         Convert string or int to enum.
 

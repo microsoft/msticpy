@@ -3,8 +3,8 @@ msticpy.analysis package
 
 .. automodule:: msticpy.analysis
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Subpackages
 -----------

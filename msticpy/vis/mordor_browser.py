@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Mordor dataset browser."""
 
+from __future__ import annotations
+
 from collections.abc import Iterable
 from pprint import pformat
 from typing import Any

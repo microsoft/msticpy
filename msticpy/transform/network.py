@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Module for converting DataFrame to Networkx graph."""
 
+from __future__ import annotations
+
 from collections.abc import Callable, Iterable
 from typing import Literal
 

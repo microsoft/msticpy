@@ -3,8 +3,8 @@ msticpy.init.pivot\_core package
 
 .. automodule:: msticpy.init.pivot_core
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------

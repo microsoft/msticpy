@@ -3,8 +3,8 @@ msticpy.data.core package
 
 .. automodule:: msticpy.data.core
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------

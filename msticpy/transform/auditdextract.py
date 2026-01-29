@@ -14,6 +14,8 @@ line arguments into a single string). This is still a work-in-progress.
 
 """
 
+from __future__ import annotations
+
 import codecs
 import re
 from collections.abc import Mapping

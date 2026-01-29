@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
 
+from __future__ import annotations
+
 import asyncio
 from collections.abc import Iterable
 from typing import Any
