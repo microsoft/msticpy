@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Creates an entity graph for a Microsoft Sentinel Incident."""
 
+from __future__ import annotations
+
 from datetime import datetime, timezone
 from importlib.metadata import version
 

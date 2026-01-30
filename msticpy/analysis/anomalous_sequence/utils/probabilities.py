@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Helper module for computing training probabilities when modelling sessions."""
 
+from __future__ import annotations
+
 from collections import defaultdict
 
 from ..utils.data_structures import StateMatrix

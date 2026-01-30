@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Security Graph OData Driver class."""
 
+from __future__ import annotations
+
 from typing import Any
 
 import pandas as pd

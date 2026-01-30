@@ -3,8 +3,8 @@ msticpy.init package
 
 .. automodule:: msticpy.init
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Subpackages
 -----------

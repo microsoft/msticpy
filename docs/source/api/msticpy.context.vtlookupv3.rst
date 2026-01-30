@@ -3,8 +3,8 @@ msticpy.context.vtlookupv3 package
 
 .. automodule:: msticpy.context.vtlookupv3
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------

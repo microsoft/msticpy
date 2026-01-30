@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """PrismaCloud Driver class."""
 
+from __future__ import annotations
+
 # pylint: disable=C0302  # Too many lines in module
 
 __author__ = "Rajamani R"
@@ -275,7 +277,7 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         password: str | None = None,
         connection_str: str | None = None,
         **kwargs: Any,
-    ) -> "PrismaCloudDriver":
+    ) -> PrismaCloudDriver:
         """
         Authenticate with Prisma Cloud and establish an authenticated session.
 
@@ -616,22 +618,24 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         limitpage : int, optional
             The number of results per page. Defaults to 100.
         **kwargs : QueryArgs
-            Additional optional query parameters:
-            - timeout (int): API request timeout in seconds.
-            - unit (str): Time unit for the query (e.g., `"minute"`, `"hour"`).
-            - amount (int): Time range quantity in the specified unit.
-            - cloudtype (str): Cloud provider filter (`"aws"`, `"gcp"`, `"azure"`).
+            Additional optional query parameters (see Other Parameters).
 
-        Behavior
-        --------
-        - Constructs a search payload including query, time range, and cloud provider filter.
-        - Calls `_paginate_prisma_search()` to retrieve results in multiple pages.
-        - Converts the retrieved data into a Pandas DataFrame.
+        Other Parameters
+        ----------------
+        timeout : int, optional
+            API request timeout in seconds.
+        unit : str, optional
+            Time unit for the query (e.g., ``"minute"``, ``"hour"``).
+        amount : int, optional
+            Time range quantity in the specified unit.
+        cloudtype : str, optional
+            Cloud provider filter (``"aws"``, ``"gcp"``, ``"azure"``).
 
-        Logging
+        Returns
         -------
-        - Logs the request payload before sending the API request.
-        - Logs the total number of records retrieved.
+        pd.DataFrame
+            A DataFrame containing the retrieved network data.
+            Returns an empty DataFrame if no results are found.
 
         Raises
         ------
@@ -640,19 +644,13 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
 
         Example
         -------
-        network_data = driver.prisma_search_network(
-            query="network where cloud.type = 'aws'",
-            endpoint="/search",
-            limitresult=5000,
-            unit="day",
-            amount=7
-        )
-
-        Returns
-        -------
-        pd.DataFrame
-            A DataFrame containing the retrieved network data.
-            Returns an empty DataFrame if no results are found.
+        >>> network_data = driver.prisma_search_network(
+        ...     query="network where cloud.type = 'aws'",
+        ...     endpoint="/search",
+        ...     limitresult=5000,
+        ...     unit="day",
+        ...     amount=7,
+        ... )
         """
         timeout = int(kwargs.get("timeout", self.timeout))  # type: ignore[arg-type]
         unit = str(kwargs.get("unit", "hour"))
@@ -703,22 +701,24 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         endpoint : str
             The API endpoint to send the query to.
         **kwargs : QueryArgs
-            Additional optional query parameters:
-            - timeout (int): API request timeout in seconds.
-            - limit (int): Maximum number of results to retrieve.
-            - unit (str): Time unit for the query (e.g., `"minute"`, `"hour"`).
-            - amount (int): Time range quantity in the specified unit.
+            Additional optional query parameters (see Other Parameters).
 
-        Behavior
-        --------
-        - Constructs a search payload including query and time range.
-        - Calls `_paginate_prisma_search()` to retrieve results in multiple pages.
-        - Converts the retrieved data into a Pandas DataFrame.
+        Other Parameters
+        ----------------
+        timeout : int, optional
+            API request timeout in seconds.
+        limit : int, optional
+            Maximum number of results to retrieve.
+        unit : str, optional
+            Time unit for the query (e.g., ``"minute"``, ``"hour"``).
+        amount : int, optional
+            Time range quantity in the specified unit.
 
-        Logging
+        Returns
         -------
-        - Logs the query being executed.
-        - Logs the total number of records retrieved.
+        pd.DataFrame
+            A DataFrame containing the retrieved asset data.
+            Returns an empty DataFrame if no results are found.
 
         Raises
         ------
@@ -727,19 +727,13 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
 
         Example
         -------
-        asset_data = driver.prisma_search_assets(
-            query="config where cloud.type = 'aws'",
-            endpoint="/search/api/v1/asset",
-            limit=5000,
-            unit="day",
-            amount=7
-        )
-
-        Returns
-        -------
-        pd.DataFrame
-            A DataFrame containing the retrieved asset data.
-            Returns an empty DataFrame if no results are found.
+        >>> asset_data = driver.prisma_search_assets(
+        ...     query="config where cloud.type = 'aws'",
+        ...     endpoint="/search/api/v1/asset",
+        ...     limit=5000,
+        ...     unit="day",
+        ...     amount=7,
+        ... )
         """
         timeout = int(kwargs.get("timeout", self.timeout))  # type: ignore[arg-type]
         limitresult = int(kwargs.get("limit", 10000))  # type: ignore[arg-type]
@@ -792,24 +786,26 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         endpoint : str
             The API endpoint to send the query to.
         **kwargs : QueryArgs
-            Additional optional query parameters:
-            - timeout (int): API request timeout in seconds.
-            - max_retries (int): Maximum retry attempts for failed requests.
-            - unit (str): Time unit for the query (e.g., `"minute"`, `"hour"`, `"day"`).
-            - amount (int): Time range quantity in the specified unit.
-            - limit (int): Maximum number of results to retrieve.
+            Additional optional query parameters (see Other Parameters).
 
-        Behavior
-        --------
-        - Constructs a search payload with the query, time range, and limit.
-        - Calls `_fetch_prisma_data()` to send the request and retrieve the data.
-        - Extracts event records from the response and converts them into a Pandas DataFrame.
+        Other Parameters
+        ----------------
+        timeout : int, optional
+            API request timeout in seconds.
+        max_retries : int, optional
+            Maximum retry attempts for failed requests.
+        unit : str, optional
+            Time unit for the query (e.g., ``"minute"``, ``"hour"``, ``"day"``).
+        amount : int, optional
+            Time range quantity in the specified unit.
+        limit : int, optional
+            Maximum number of results to retrieve.
 
-        Logging
+        Returns
         -------
-        - Logs the query being executed.
-        - Logs the request payload before sending the API request.
-        - Logs the number of event records retrieved.
+        pd.DataFrame
+            A DataFrame containing the retrieved event data.
+            Returns an empty DataFrame if no results are found.
 
         Raises
         ------
@@ -818,19 +814,13 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
 
         Example
         -------
-        event_data = driver.prisma_search_events(
-            query="event where cloud.type = 'aws'",
-            endpoint="/search/event",
-            limit=5000,
-            unit="hour",
-            amount=24
-        )
-
-        Returns
-        -------
-        pd.DataFrame
-            A DataFrame containing the retrieved event data.
-            Returns an empty DataFrame if no results are found.
+        >>> event_data = driver.prisma_search_events(
+        ...     query="event where cloud.type = 'aws'",
+        ...     endpoint="/search/event",
+        ...     limit=5000,
+        ...     unit="hour",
+        ...     amount=24,
+        ... )
         """
         timeout = int(kwargs.get("timeout", self.timeout))  # type: ignore[arg-type]
         max_retries = int(kwargs.get("max_retries", self.max_retries))  # type: ignore[arg-type]
@@ -880,22 +870,24 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         endpoint : str
             The API endpoint to send the query to.
         **kwargs : QueryArgs
-            Additional optional query parameters:
-            - timeout (int): API request timeout in seconds.
-            - max_retries (int): Maximum retry attempts for failed requests.
-            - limit (int): Maximum number of results to retrieve (default: 1000).
-            - withResourceJson (bool): Whether to include resource JSON details.
+            Additional optional query parameters (see Other Parameters).
 
-        Behavior
-        --------
-        - Constructs a search payload with the query and optional parameters.
-        - Calls `_fetch_prisma_data()` to send the request and retrieve the data.
-        - Extracts configuration from the response,converts them into a df.
+        Other Parameters
+        ----------------
+        timeout : int, optional
+            API request timeout in seconds.
+        max_retries : int, optional
+            Maximum retry attempts for failed requests.
+        limit : int, optional
+            Maximum number of results to retrieve (default: 1000).
+        withResourceJson : bool, optional
+            Whether to include resource JSON details.
 
-        Logging
+        Returns
         -------
-        - Logs the query being executed.
-        - Logs the number of configuration records retrieved.
+        pd.DataFrame
+            A DataFrame containing the retrieved configuration data.
+            Returns an empty DataFrame if no results are found.
 
         Raises
         ------
@@ -904,18 +896,12 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
 
         Example
         -------
-        config_data = driver.prisma_search_config_resource(
-            query="config where cloud.type = 'aws'",
-            endpoint="/search/api/v2/config",
-            limit=5000,
-            withResourceJson=True
-        )
-
-        Returns
-        -------
-        pd.DataFrame
-            A DataFrame containing the retrieved configuration data.
-            Returns an empty DataFrame if no results are found.
+        >>> config_data = driver.prisma_search_config_resource(
+        ...     query="config where cloud.type = 'aws'",
+        ...     endpoint="/search/api/v2/config",
+        ...     limit=5000,
+        ...     withResourceJson=True,
+        ... )
         """
         timeout = int(kwargs.get("timeout", self.timeout))  # type: ignore[arg-type]
         max_retries = int(kwargs.get("max_retries", self.max_retries))  # type: ignore[arg-type]
@@ -953,48 +939,43 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
             The source of the query, determining which search function to use.
             Options: `"config_resource"`, `"assets"`, `"events"`, `"network"`.
         **kwargs : QueryArgs
-            Additional optional query parameters, such as:
-            - timeout (int): API request timeout in seconds.
-            - max_retries (int): Maximum retry attempts for failed requests.
-            - limit (int): Maximum number of results to retrieve.
-            - unit (str): Time unit for the query (e.g., `"minute"`, `"hour"`, `"day"`).
-            - amount (int): Time range quantity in the specified unit.
+            Additional optional query parameters (see Other Parameters).
 
-        Behavior
-        --------
-        - Checks if authentication is active (`"X-Redlock-Auth"` in headers).
-        - Validates `query_source` and maps it to the corresponding API endpoint.
-        - Calls the appropriate Prisma Cloud search function based on the query type.
-        - Converts the retrieved data into a Pandas DataFrame.
-
-        Logging
-        -------
-        - Logs the query execution details.
-        - Logs warnings for invalid query sources.
-        - Logs errors if the API request fails.
-
-        Raises
-        ------
-        PrismaCloudQueryError
-            If the driver is not authenticated.
-        MsticpyUserError
-            If the `query_source` is invalid or not supported.
-
-        Example
-        -------
-        query_result = driver.direct_execute_query(
-            query="config where cloud.type = 'aws'",
-            query_source="config_resource",
-            limit=1000,
-            unit="day",
-            amount=7
-        )
+        Other Parameters
+        ----------------
+        timeout : int, optional
+            API request timeout in seconds.
+        max_retries : int, optional
+            Maximum retry attempts for failed requests.
+        limit : int, optional
+            Maximum number of results to retrieve.
+        unit : str, optional
+            Time unit for the query (e.g., ``"minute"``, ``"hour"``, ``"day"``).
+        amount : int, optional
+            Time range quantity in the specified unit.
 
         Returns
         -------
         pd.DataFrame
             A DataFrame containing the retrieved query results.
             Returns an empty DataFrame if no results are found.
+
+        Raises
+        ------
+        PrismaCloudQueryError
+            If the driver is not authenticated.
+        MsticpyUserError
+            If the ``query_source`` is invalid or not supported.
+
+        Example
+        -------
+        >>> query_result = driver.direct_execute_query(
+        ...     query="config where cloud.type = 'aws'",
+        ...     query_source="config_resource",
+        ...     limit=1000,
+        ...     unit="day",
+        ...     amount=7,
+        ... )
         """
         logger.info(
             "Entering direct_execute_query() with query: %s, query_endpoint: %s, kwargs: %s",
@@ -1071,14 +1052,17 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         Notes
         -----
         - The method expects the query string to include a "querymetadata" with the following keys:
+
             - "unit": The time unit for the query (e.g., "minute", "hour").
             - "amount": The quantity of the time unit.
             - "start_time": The start of the time range in ISO 8601 format.
             - "end_time": The end of the time range in ISO 8601 format.
             - "query_by_user": The actual query to execute.
             - "endpoint": The target API endpoint for the query.
+
         - If an error occurs during JSON parsing (a broad exception is caught),
-        the error is logged and the method returns an empty DataFrame.
+          the error is logged and the method returns an empty DataFrame.
+
         """
         del query_source
         logger.info("Entering query() with query: %s, kwargs: %s", query, kwargs)

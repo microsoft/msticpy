@@ -115,6 +115,8 @@ initialization and checks are performed.
 
 """
 
+from __future__ import annotations
+
 from collections.abc import Iterable
 
 from . import nbwidgets  # noqa: F401

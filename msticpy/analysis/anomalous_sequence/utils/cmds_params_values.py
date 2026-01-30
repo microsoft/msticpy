@@ -11,6 +11,8 @@ Cmd datatype with the params attribute set to a dictionary of
 accompanying params and values.
 """
 
+from __future__ import annotations
+
 import copy
 from collections import defaultdict
 

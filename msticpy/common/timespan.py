@@ -5,10 +5,12 @@
 # --------------------------------------------------------------------------
 """Timespan class."""
 
+from __future__ import annotations
+
 import contextlib
 from datetime import datetime, timedelta, timezone
 from numbers import Number
-from typing import Any, Union
+from typing import Any
 
 import pandas as pd
 from dateutil.parser import ParserError
@@ -26,7 +28,7 @@ class TimeSpan:
     def __init__(
         self,
         *args,
-        timespan: Union["TimeSpan", tuple[Any, Any], Any] | None = None,
+        timespan: TimeSpan | tuple[Any, Any] | Any | None = None,
         start: datetime | str | None = None,
         end: datetime | str | None = None,
         period: timedelta | str | None = None,
