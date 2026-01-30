@@ -3,8 +3,8 @@ msticpy.analysis.anomalous\_sequence package
 
 .. automodule:: msticpy.analysis.anomalous_sequence
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Subpackages
 -----------

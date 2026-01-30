@@ -55,7 +55,7 @@ defaults:
         Additional query condition to search default is empty
       type: str
       default: |-
-         
+
 sources:
   search_event_relative:
     description: Retrieve event data from Prisma Cloud using relative time using dynamic queries.

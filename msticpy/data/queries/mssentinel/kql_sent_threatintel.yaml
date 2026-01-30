@@ -11,7 +11,7 @@ defaults:
       table:
         description: Table name
         type: str
-        default: 'ThreatIntelligenceIndicator'
+        default: 'ThreatIntelIndicators'
       query_project:
         description: Project clause to limit/change return column names
         type: str
@@ -36,7 +36,7 @@ sources:
         {query_project}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | summarize arg_max(TimeGenerated, *) by IndicatorId
+        | summarize arg_max(TimeGenerated, *) by Id
         {add_query_items}'
       uri: None
   list_indicators_by_ip:
@@ -48,20 +48,10 @@ sources:
         {query_project}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where NetworkIP in ({ip_address_list})
-          or NetworkDestinationIP in ({ip_address_list})
-          or NetworkSourceIP in ({ip_address_list})
-          or EmailSourceIpAddress in ({ip_address_list})
-        | extend IoC = tolower(
-            iff(isnotempty(NetworkIP) and NetworkIP in ({ip_address_list}), NetworkIP,
-              iff(isnotempty(NetworkDestinationIP) and NetworkDestinationIP in ({ip_address_list}), NetworkDestinationIP,
-                iff(isnotempty(NetworkSourceIP) and NetworkSourceIP in ({ip_address_list}), NetworkSourceIP,
-                  iff(isnotempty(EmailSourceIpAddress) and EmailSourceIpAddress in ({ip_address_list}), EmailSourceIpAddress, "")
-                  )
-                )
-              )
-            )
-        | summarize arg_max(TimeGenerated, *) by IndicatorId
+        | where ObservableKey in ("ipv4-addr:value", "ipv6-addr:value")
+          and ObservableValue in ({ip_address_list})
+        | extend IoC = tolower(ObservableValue)
+        | summarize arg_max(TimeGenerated, *) by Id
         {add_query_items}'
     parameters:
       ip_address_list:
@@ -78,9 +68,10 @@ sources:
         {query_project}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where FileHashValue in~ ({file_hash_list})
-        | extend IoC = tolower(FileHashValue)
-        | summarize arg_max(TimeGenerated, *) by IndicatorId
+        | where ObservableKey in ("file:hashes.MD5", "file:hashes.SHA-1", "file:hashes.SHA-256", "file:hashes.''SHA-1''", "file:hashes.''SHA-256''")
+          and ObservableValue in~ ({file_hash_list})
+        | extend IoC = tolower(ObservableValue)
+        | summarize arg_max(TimeGenerated, *) by Id
         {add_query_items}'
     parameters:
       file_hash_list:
@@ -97,9 +88,10 @@ sources:
         {query_project}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where FilePath in~ ({observables})
-        | extend IoC = tolower(FilePath)
-        | summarize arg_max(TimeGenerated, *) by IndicatorId
+        | where ObservableKey in ("file:name", "directory:path")
+          and ObservableValue in~ ({observables})
+        | extend IoC = tolower(ObservableValue)
+        | summarize arg_max(TimeGenerated, *) by Id
         {add_query_items}'
     parameters:
       observables:
@@ -114,14 +106,10 @@ sources:
         {query_project}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where DomainName in~ ({domain_list})
-          or EmailSourceDomain in~ ({domain_list})
-        | extend IoC = tolower(
-            iff(isnotempty(DomainName) and DomainName in~ ({domain_list}), DomainName,
-              iff(isnotempty(EmailSourceDomain) and EmailSourceDomain in~ ({domain_list}), EmailSourceDomain, "")
-              )
-            )
-        | summarize arg_max(TimeGenerated, *) by IndicatorId
+        | where ObservableKey == "domain-name:value"
+          and ObservableValue in~ ({domain_list})
+        | extend IoC = tolower(ObservableValue)
+        | summarize arg_max(TimeGenerated, *) by Id
         {add_query_items}'
     parameters:
       domain_list:
@@ -138,14 +126,10 @@ sources:
         {query_project}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where EmailRecipient in~ ({observables})
-          or EmailSenderAddress in~ ({observables})
-        | extend IoC = tolower(
-            iff(isnotempty(EmailRecipient) and EmailRecipient in~ ({observables}), EmailRecipient,
-              iff(isnotempty(EmailSenderAddress) and EmailSenderAddress in~ ({observables}), EmailSenderAddress, "")
-              )
-            )
-        | summarize arg_max(TimeGenerated, *) by IndicatorId
+        | where ObservableKey == "email-addr:value"
+          and ObservableValue in~ ({observables})
+        | extend IoC = tolower(ObservableValue)
+        | summarize arg_max(TimeGenerated, *) by Id
         {add_query_items}'
     parameters:
       observables:
@@ -160,9 +144,10 @@ sources:
         {query_project}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where Url in~ ({url_list})
-        | extend IoC = tolower(Url)
-        | summarize arg_max(TimeGenerated, *) by IndicatorId
+        | where ObservableKey == "url:value"
+          and ObservableValue in~ ({url_list})
+        | extend IoC = tolower(ObservableValue)
+        | summarize arg_max(TimeGenerated, *) by Id
         {add_query_items}'
     parameters:
       url_list:

@@ -3,8 +3,8 @@ msticpy.datamodel package
 
 .. automodule:: msticpy.datamodel
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Subpackages
 -----------
@@ -14,11 +14,3 @@ Subpackages
 
    msticpy.datamodel.entities
    msticpy.datamodel.soc
-
-Submodules
-----------
-
-.. toctree::
-   :maxdepth: 4
-
-   msticpy.datamodel.pivot

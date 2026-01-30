@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Python file import analyzer."""
+
 import argparse
 import sys
 
@@ -18,9 +19,7 @@ __author__ = "Ian Hellen"
 
 
 def _add_script_args():
-    parser = argparse.ArgumentParser(
-        description=f"Package imports analyer. v.{VERSION}"
-    )
+    parser = argparse.ArgumentParser(description=f"Package imports analyer. v.{VERSION}")
     parser.add_argument(
         "--path",
         "-p",
@@ -70,9 +69,7 @@ def _add_script_args():
     parser.add_argument(
         "--modules", action="store_true", default=False, help="Show imports by module."
     )
-    parser.add_argument(
-        "--version", action="store_true", default=False, help="Show version."
-    )
+    parser.add_argument("--version", action="store_true", default=False, help="Show version.")
     parser.add_argument(
         "--pkg_graph", action="store_true", default=False, help="Show dependency tree."
     )

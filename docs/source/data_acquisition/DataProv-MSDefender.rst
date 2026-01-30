@@ -409,7 +409,7 @@ Other Microsoft Defender Documentation
 --------------------------------------
 
 For examples of using the MS Defender provider, see the sample
-`Microsoft Defender Notebook<https://github.com/microsoft/msticpy/blob/master/docs/notebooks/MDATPQuery.ipynb>`__
+`Microsoft Defender Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/MDATPQuery.ipynb>`__
 
 Built-in :ref:`data_acquisition/DataQueries:Queries for Microsoft Defender`.
 

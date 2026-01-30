@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Dataframe viewer."""
 
+from __future__ import annotations
+
 from collections import namedtuple
 
 import ipywidgets as widgets

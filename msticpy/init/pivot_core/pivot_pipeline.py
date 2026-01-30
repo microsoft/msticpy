@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Pivot pipeline class."""
 
+from __future__ import annotations
+
 from collections import namedtuple
 from collections.abc import Iterable
 from typing import Any
@@ -185,7 +187,7 @@ class Pipeline:
         )
 
     @classmethod
-    def parse_pipeline(cls, pipeline: dict[str, dict[str, Any]]) -> "Pipeline":
+    def parse_pipeline(cls, pipeline: dict[str, dict[str, Any]]) -> Pipeline:
         """
         Parse single pipeline from dictionary.
 
@@ -213,7 +215,7 @@ class Pipeline:
         raise ValueError("Dictionary could not be parsed.")
 
     @staticmethod
-    def parse_pipelines(pipelines: dict[str, dict[str, Any]]) -> Iterable["Pipeline"]:
+    def parse_pipelines(pipelines: dict[str, dict[str, Any]]) -> Iterable[Pipeline]:
         """
         Parse dict of pipelines.
 
@@ -232,7 +234,7 @@ class Pipeline:
             yield Pipeline.parse_pipeline({p_name: pipeline})
 
     @classmethod
-    def from_yaml(cls, yml_str: str) -> Iterable["Pipeline"]:
+    def from_yaml(cls, yml_str: str) -> Iterable[Pipeline]:
         """
         Parse pipelines from yaml string.
 

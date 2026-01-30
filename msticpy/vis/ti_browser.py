@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Threat Intel Results Browser."""
 
+from __future__ import annotations
+
 import pprint
 
 import pandas as pd

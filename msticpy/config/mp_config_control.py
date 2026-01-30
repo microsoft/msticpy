@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """MP Config Control Class."""
 
+from __future__ import annotations
+
 import pkgutil
 import re
 from collections import namedtuple

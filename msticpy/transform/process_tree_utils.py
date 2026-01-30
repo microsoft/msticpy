@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Process Tree Visualization."""
 
+from __future__ import annotations
+
 import textwrap
 from collections import Counter
 from typing import Any, NamedTuple

@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Entity Graph classes."""
 
+from __future__ import annotations
+
 from typing import Any
 
 from ..._version import VERSION
@@ -20,7 +22,7 @@ class Node:
         """Initialize the node."""
         self.edges: set[Edge] = set()
 
-    def add_edge(self, target: "Node", edge_attrs: dict[str, Any] | None = None):
+    def add_edge(self, target: Node, edge_attrs: dict[str, Any] | None = None):
         """
         Add an edge between self and target.
 

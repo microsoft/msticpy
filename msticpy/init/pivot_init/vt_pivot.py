@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """VirusTotal Pivot functions."""
 
+from __future__ import annotations
+
 from enum import Flag, auto
 from functools import partial
 

@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Local Osquery Data Driver class - osquery.{results,snapshots}.log."""
 
+from __future__ import annotations
+
 import json
 import logging
 

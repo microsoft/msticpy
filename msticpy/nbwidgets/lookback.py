@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta, timezone
 
 import ipywidgets as widgets

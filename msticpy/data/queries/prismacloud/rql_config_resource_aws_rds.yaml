@@ -53,12 +53,12 @@ defaults:
 sources:
   config_resource_rds_internet_accessible_aws_rds_db_instance:
     description: |-
-      Identifies AWS RDS instances whose associated DB subnets are part of route tables with active internet 
-      gateway routes to 0.0.0.0/0 or ::/0. While RDS is typically designed for internal access, placing instances 
-      in subnets with direct internet exposure increases the risk of unintended access or misconfiguration-based 
-      attacks — especially if additional public endpoints or weak authentication is present. This condition 
-      should be reviewed to ensure that database services are isolated within private subnets and that 
-      no default route to the internet exists unless absolutely required. Security teams should assess if 
+      Identifies AWS RDS instances whose associated DB subnets are part of route tables with active internet
+      gateway routes to 0.0.0.0/0 or ::/0. While RDS is typically designed for internal access, placing instances
+      in subnets with direct internet exposure increases the risk of unintended access or misconfiguration-based
+      attacks — especially if additional public endpoints or weak authentication is present. This condition
+      should be reviewed to ensure that database services are isolated within private subnets and that
+      no default route to the internet exists unless absolutely required. Security teams should assess if
       RDS public access is enabled and whether these routes serve a legitimate purpose or expose sensitive data.
     metadata: {}
     args:

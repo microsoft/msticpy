@@ -3,8 +3,8 @@ msticpy.data.uploaders package
 
 .. automodule:: msticpy.data.uploaders
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------
