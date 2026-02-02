@@ -984,10 +984,7 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
             kwargs,
         )
         # Check if authentication token is present
-
-        if "X-Redlock-Auth" not in self.client.headers:
-            msg = "Driver not connected to Prisma Cloud."
-            raise PrismaCloudQueryError(msg)
+        self._ensure_connected("Prisma Cloud")
         # Check if query_source is valid
 
         if not query_endpoint or query_endpoint not in self.ENDPOINT_MAP:

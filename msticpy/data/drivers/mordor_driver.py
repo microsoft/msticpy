@@ -146,8 +146,7 @@ class MordorDriver(DriverBase):
 
         """
         del query_source
-        if not self._connected:
-            raise self._create_not_connected_err("OTRF Datasets")
+        self._ensure_connected("OTRF Datasets")
         use_cached = kwargs.pop("used_cached", self.use_cached)
         save_folder = kwargs.pop("save_folder", self.save_folder)
         save_folder = _resolve_cache_folder(save_folder)
@@ -193,8 +192,7 @@ class MordorDriver(DriverBase):
             Iterable of Dictionaries containing query definitions.
 
         """
-        if not self._connected:
-            raise self._create_not_connected_err("OTRF Datasets")
+        self._ensure_connected("OTRF Datasets")
         if not self._driver_queries:
             self._driver_queries = list(self._get_driver_queries())
         return self._driver_queries
@@ -253,8 +251,7 @@ class MordorDriver(DriverBase):
 
 
         """
-        if not self._connected:
-            raise self._create_not_connected_err("OTRF Datasets")
+        self._ensure_connected("OTRF Datasets")
         matches = []
         for mdr_id in search_mdr_data(self.mordor_data, terms=search):
             for file_path in self.mordor_data[mdr_id].get_file_paths():

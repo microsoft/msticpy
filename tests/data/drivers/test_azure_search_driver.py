@@ -15,8 +15,13 @@ import pytest_check as check
 import respx
 
 from msticpy.auth.azure_auth_core import AzCredentials
-from msticpy.common.exceptions import MsticpyDataQueryError, MsticpyKqlConnectionError
+from msticpy.common.exceptions import (
+    MsticpyDataQueryError,
+    MsticpyKqlConnectionError,
+    MsticpyNotConnectedError,
+)
 from msticpy.data.drivers.azure_search_driver import AzureSearchDriver
+from msticpy.data.drivers.driver_base import DriverProps
 
 from ...unit_test_lib import custom_mp_config, get_test_data_path
 
@@ -50,6 +55,9 @@ def test_azure_search_driver_init():
     driver = AzureSearchDriver()
     check.is_false(driver.connected, "Driver should not be connected on init")
     check.is_none(driver._auth_header, "Auth header not set initially")
+    # Verify the EFFECTIVE_ENV is set to MSSentinelSearch
+    effective_env = driver.get_driver_property(DriverProps.EFFECTIVE_ENV)
+    check.equal(effective_env, "MSSentinelSearch", "EFFECTIVE_ENV should be MSSentinelSearch")
 
 
 @respx.mock
@@ -81,7 +89,7 @@ def test_azure_search_driver_connect(mock_az_connect, mock_credentials, read_sch
 def test_azure_search_driver_query_not_connected():
     """Test that calling query without connect raises an error."""
     driver = AzureSearchDriver()
-    with pytest.raises(MsticpyKqlConnectionError):
+    with pytest.raises(MsticpyNotConnectedError):
         driver.query_with_results("MyTable | take 10")
 
 

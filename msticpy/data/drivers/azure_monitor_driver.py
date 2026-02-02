@@ -37,7 +37,6 @@ from ...common.exceptions import (
     MsticpyKqlConnectionError,
     MsticpyMissingDependencyError,
     MsticpyNoDataSourceError,
-    MsticpyNotConnectedError,
 )
 from ...common.provider_settings import get_protected_setting
 from ...common.settings import get_http_proxies, get_http_timeout
@@ -287,13 +286,7 @@ class AzureMonitorDriver(DriverBase):
             the underlying provider result if an error.
 
         """
-        if not self._connected or self._query_client is None:
-            raise MsticpyNotConnectedError(
-                "Please run connect() to connect to the workspace",
-                "before running a query.",
-                title="Workspace not connected.",
-                help_uri=_HELP_URL,
-            )
+        self._ensure_connected("Azure Monitor")
         if query_source:
             self._check_table_exists(query_source)
         data, result = self.query_with_results(query, **kwargs)
@@ -316,13 +309,7 @@ class AzureMonitorDriver(DriverBase):
             Query status dictionary.
 
         """
-        if not self._connected or self._query_client is None:
-            raise MsticpyNotConnectedError(
-                "Please run connect() to connect to the workspace",
-                "before running a query.",
-                title="Workspace not connected.",
-                help_uri=_HELP_URL,
-            )
+        self._ensure_connected("Azure Monitor")
         time_span_value = self._get_time_span_value(**kwargs)
         fail_on_partial = kwargs.get(
             "fail_if_partial", kwargs.get("fail_on_partial", self._fail_on_partial)
@@ -340,7 +327,7 @@ class AzureMonitorDriver(DriverBase):
         )
         logger.info("Timeout %s", server_timeout)
         try:
-            result = self._query_client.query_workspace(
+            result = self._query_client.query_workspace(  # type: ignore[union-attr]
                 workspace_id=workspace_id,  # type: ignore[arg-type]
                 query=query,
                 timespan=time_span_value,
