@@ -13,6 +13,7 @@ from typing import Any
 import pandas as pd
 
 from .._version import VERSION
+from ..common.data_utils import ensure_df_timedeltas
 from ..context.ip_utils import get_whois_df
 from ..data.data_obfus import mask_df
 from ..transform.base64unpack import unpack_df
@@ -219,6 +220,49 @@ class MsticpyCoreAccessor:
 
         """
         return mask_df(data=self._df, column_map=column_map, use_default=use_default)
+
+    def convert_timedeltas(self, columns: str | list[str]) -> pd.DataFrame:
+        """
+        Convert KQL timespan columns to pandas timedelta64[ns].
+
+        This converts string columns containing KQL timespan values to
+        pandas timedelta64[ns] dtype. It handles both small timespans (< 1 day)
+        and large timespans (>= 1 day) which use the "d.hh:mm:ss.fffffff" format.
+
+        Parameters
+        ----------
+        columns : str | list[str]
+            Column name (str) or list of column names to convert.
+
+        Returns
+        -------
+        pd.DataFrame
+            Converted DataFrame with timespan columns as timedelta64[ns].
+
+        Raises
+        ------
+        ValueError
+            If any timespan string in the specified columns cannot be parsed.
+
+        Examples
+        --------
+        >>> df_converted = df.mp.convert_timedeltas("duration")
+        >>> df_converted["duration"].dtype
+        dtype('timedelta64[ns]')
+
+        >>> # Specify multiple columns
+        >>> df_converted = df.mp.convert_timedeltas(["duration", "elapsed"])
+
+        Notes
+        -----
+        Uses azure.kusto.data.helpers.parse_timedelta for parsing.
+
+        See Also
+        --------
+        msticpy.common.data_utils.ensure_df_timedeltas
+
+        """
+        return ensure_df_timedeltas(data=self._df, columns=columns)
 
     def whois(self, ip_column, **kwargs):
         """
