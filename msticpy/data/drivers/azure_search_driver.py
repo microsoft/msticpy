@@ -60,15 +60,7 @@ class AzureSearchDriver(AzureMonitorDriver):
             DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinelSearch.name
         )
         # Override query filter to include MSSentinelSearch
-        self.add_query_filter(
-            "data_environments",
-            ("MSSentinelSearch", "MSSentinel", "LogAnalytics", "AzureSentinel"),
-        )
-
-    def _ensure_connected(self):
-        """Check if the driver is connected and has valid authentication."""
-        if not self._connected or self._auth_header is None:
-            raise MsticpyKqlConnectionError("Not connected. Call connect() before querying.")
+        self.add_query_filter("data_environments", "MSSentinelSearch")
 
     def _create_query_client(self, connection_str: str | None = None, **kwargs):
         """Create a query client using the /search endpoint."""
@@ -125,7 +117,6 @@ class AzureSearchDriver(AzureMonitorDriver):
             the underlying provider result if an error.
 
         """
-        self._ensure_connected()
         if query_source:
             self._check_table_exists(query_source)
         data, result = self.query_with_results(query, **kwargs)

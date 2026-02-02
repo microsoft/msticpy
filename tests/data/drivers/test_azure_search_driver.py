@@ -15,7 +15,11 @@ import pytest_check as check
 import respx
 
 from msticpy.auth.azure_auth_core import AzCredentials
-from msticpy.common.exceptions import MsticpyDataQueryError, MsticpyKqlConnectionError
+from msticpy.common.exceptions import (
+    MsticpyDataQueryError,
+    MsticpyKqlConnectionError,
+    MsticpyNotConnectedError,
+)
 from msticpy.data.drivers.azure_search_driver import AzureSearchDriver
 from msticpy.data.drivers.driver_base import DriverProps
 
@@ -85,7 +89,7 @@ def test_azure_search_driver_connect(mock_az_connect, mock_credentials, read_sch
 def test_azure_search_driver_query_not_connected():
     """Test that calling query without connect raises an error."""
     driver = AzureSearchDriver()
-    with pytest.raises(MsticpyKqlConnectionError):
+    with pytest.raises(MsticpyNotConnectedError):
         driver.query_with_results("MyTable | take 10")
 
 
