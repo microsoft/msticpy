@@ -16,11 +16,13 @@ import respx
 import msticpy.init.mp_pandas_accessors  # noqa: F401
 from msticpy.context.ip_utils import (
     _IpWhoIsResult,
+    _whois_lookup,
     get_asn_details,
     get_asn_from_ip,
     get_asn_from_name,
     get_ip_type,
     get_whois_df,
+    get_whois_info,
     ip_whois,
 )
 
@@ -28,9 +30,16 @@ from ..unit_test_lib import TEST_DATA_PATH, get_test_data_path
 
 
 # pylint: disable=redefined-outer-name
-@pytest.fixture(scope="module")
+@pytest.fixture(autouse=True)
+def clear_whois_cache():
+    """Clear LRU caches before each test to ensure isolation."""
+    get_whois_info.cache_clear()
+    _whois_lookup.cache_clear()
+
+
+@pytest.fixture
 def net_df():
-    """Return network dataframe."""
+    """Return network dataframe with random sample."""
     input_file = os.path.join(TEST_DATA_PATH, "az_net_flows.csv")
     return pd.read_csv(input_file).sample(10)
 
