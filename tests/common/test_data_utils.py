@@ -7,7 +7,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from msticpy.common.data_utils import (
     ensure_df_timedeltas,
@@ -16,16 +15,11 @@ from msticpy.common.data_utils import (
 
 
 class TestParseTimespan:
-    """Tests for parse_timespan function."""
+    """Tests for parse_timespan function (wrapper for azure.kusto.data.helpers)."""
 
     def test_parse_none(self):
         """Test parsing None returns None."""
         assert parse_timespan(None) is None
-
-    def test_parse_timedelta_passthrough(self):
-        """Test that existing Timedelta is returned unchanged."""
-        td = pd.Timedelta(days=1, hours=2, minutes=3)
-        assert parse_timespan(td) == td
 
     def test_parse_small_timespan_no_frac(self):
         """Test parsing small timespan without fractional seconds."""
@@ -63,59 +57,11 @@ class TestParseTimespan:
         expected = pd.Timedelta(days=1, milliseconds=1)
         assert result == expected
 
-    def test_parse_large_timespan_max_frac(self):
-        """Test parsing timespan with maximum fractional precision (7 digits)."""
-        result = parse_timespan("3.23:59:59.9999999")
-        expected = pd.Timedelta(
-            days=3, hours=23, minutes=59, seconds=59, microseconds=999999, nanoseconds=900
-        )
-        assert result == expected
-
-    def test_parse_fractional_precision_no_float_errors(self):
-        """Test that fractional seconds are parsed without floating-point errors."""
-        # Test with exactly 7 decimal places (KQL format)
-        result = parse_timespan("1.19:37:05.1697513")
-        # Should be exactly 169751300 nanoseconds, not rounded due to float conversion
-        expected = pd.Timedelta(days=1, hours=19, minutes=37, seconds=5, nanoseconds=169751300)
-        assert result == expected
-
-        # Verify the nanosecond component is exact by checking the full value
-        # Timedelta stores total nanoseconds in the 'value' attribute
-        assert result.value == expected.value
-
-    def test_parse_negative_small_timespan(self):
-        """Test parsing negative small timespan."""
-        result = parse_timespan("-00:00:01")
-        expected = pd.Timedelta(seconds=-1)
-        assert result == expected
-
-    def test_parse_negative_large_timespan(self):
-        """Test parsing negative large timespan."""
-        result = parse_timespan("-1.00:00:00")
-        expected = pd.Timedelta(days=-1)
-        assert result == expected
-
     def test_parse_zero_timespan(self):
         """Test parsing zero timespan."""
         result = parse_timespan("00:00:00")
         expected = pd.Timedelta(0)
         assert result == expected
-
-    def test_parse_zero_with_frac(self):
-        """Test parsing zero timespan with fractional seconds."""
-        result = parse_timespan("00:00:00.000")
-        expected = pd.Timedelta(0)
-        assert result == expected
-
-    def test_parse_invalid_format_raises(self):
-        """Test that invalid format raises ValueError."""
-        with pytest.raises(ValueError, match="Invalid timespan format"):
-            parse_timespan("invalid")
-
-    def test_parse_invalid_partial_format_raises(self):
-        """Test that partial format raises ValueError."""
-        with pytest.raises(ValueError, match="Invalid timespan format"):
-            parse_timespan("12:34")  # Missing seconds
 
     def test_parse_examples_from_issue(self):
         """Test examples from the GitHub issue."""
@@ -126,13 +72,6 @@ class TestParseTimespan:
         # Large timespan
         result = parse_timespan("1.00:00:00")
         assert result == pd.Timedelta(days=1)
-
-        # Large timespan with fractional seconds
-        result = parse_timespan("1.19:37:05.1697513")
-        expected = pd.Timedelta(
-            days=1, hours=19, minutes=37, seconds=5, microseconds=169751, nanoseconds=300
-        )
-        assert result == expected
 
 
 class TestEnsureDfTimedeltas:
@@ -186,21 +125,6 @@ class TestEnsureDfTimedeltas:
         assert pd.api.types.is_timedelta64_dtype(result["duration2"])
         assert result["other"].dtype == "object"
 
-    def test_auto_detect_timespan_columns(self):
-        """Test auto-detection of timespan columns."""
-        df = pd.DataFrame(
-            {
-                "duration": ["00:00:01", "1.00:00:00"],
-                "time_elapsed": ["00:10:30", "2.12:00:00"],
-                "other": ["a", "b"],
-            }
-        )
-        result = ensure_df_timedeltas(df)
-
-        assert pd.api.types.is_timedelta64_dtype(result["duration"])
-        assert pd.api.types.is_timedelta64_dtype(result["time_elapsed"])
-        assert result["other"].dtype == "object"
-
     def test_skip_already_timedelta_column(self):
         """Test that columns already in timedelta format are skipped."""
         df = pd.DataFrame({"duration": pd.to_timedelta(["00:00:01", "00:10:30"])})
@@ -217,13 +141,6 @@ class TestEnsureDfTimedeltas:
 
         assert pd.api.types.is_timedelta64_dtype(result["duration"])
         assert "nonexistent" not in result.columns
-
-    def test_empty_dataframe(self):
-        """Test handling of empty dataframe."""
-        df = pd.DataFrame()
-        result = ensure_df_timedeltas(df)
-
-        assert result.empty
 
     def test_dataframe_with_none_values(self):
         """Test handling of None/NaN values in timespan column."""

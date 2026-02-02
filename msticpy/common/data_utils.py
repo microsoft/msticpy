@@ -7,22 +7,16 @@
 
 from __future__ import annotations
 
-import re
-
 import pandas as pd
+from azure.kusto.data.helpers import parse_timedelta as parse_timespan
 
 from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-# KQL/Kusto timespan pattern: [-][d.]hh:mm:ss[.fffffff]
-# This pattern matches timespan strings returned by KQL queries
-_TIMESPAN_PATTERN = re.compile(
-    r"^(?P<sign>-?)(?:(?P<days>\d+)\.)?"
-    r"(?P<hours>\d+):(?P<minutes>\d+):(?P<seconds>\d+)"
-    r"(?P<frac_seconds>\.\d+)?$"
-)
+# Re-export parse_timespan (from azure.kusto.data.helpers.parse_timedelta)
+__all__ = ["parse_timespan", "ensure_df_datetimes", "ensure_df_timedeltas", "df_has_data"]
 
 
 def ensure_df_datetimes(
@@ -78,94 +72,9 @@ def df_has_data(data) -> bool:
     return isinstance(data, pd.DataFrame) and not data.empty
 
 
-def parse_timespan(timespan: str | pd.Timedelta | None) -> pd.Timedelta | None:
-    """
-    Parse a KQL/Kusto timespan-like formatted string into a pandas Timedelta.
-
-    This function handles the timespan format returned by KQL queries, which
-    uses "d.hh:mm:ss.fffffff" format for timespans >= 1 day. This format is
-    not compatible with pandas' to_timedelta function, which expects only
-    "hh:mm:ss" format.
-
-    Parameters
-    ----------
-    timespan : str | pd.Timedelta | None
-        The timespan to parse. Can be:
-        - A string in KQL timespan format (e.g., "1.00:00:00", "00:00:00.001")
-        - An existing pd.Timedelta object (returned as-is)
-        - None (returned as None)
-
-    Returns
-    -------
-    pd.Timedelta | None
-        Parsed timedelta with nanosecond resolution, or None if input is None.
-
-    Raises
-    ------
-    ValueError
-        If the timespan string does not match the expected format.
-
-    Examples
-    --------
-    >>> parse_timespan("00:00:00.001")
-    Timedelta('0 days 00:00:00.001000')
-    >>> parse_timespan("1.00:00:00")
-    Timedelta('1 days 00:00:00')
-    >>> parse_timespan("3.23:59:59.9999999")
-    Timedelta('3 days 23:59:59.999999900')
-    >>> parse_timespan("-1.00:00:00")
-    Timedelta('-2 days +00:00:00')
-
-    Notes
-    -----
-    - Requires at minimum "hh:mm:ss" format to be present in the string
-    - Returns a nanosecond resolution Timedelta object (pandas default)
-    - Handles negative timespans with a leading "-" sign
-    - Fractional seconds are rounded to nanosecond precision
-
-    """
-    if timespan is None:
-        return None
-    if isinstance(timespan, pd.Timedelta):
-        return timespan
-
-    # Use the shared timespan pattern
-    match = _TIMESPAN_PATTERN.match(str(timespan))
-    if not match:
-        msg = f"Invalid timespan format: {timespan}"
-        raise ValueError(msg)
-
-    match_groups = match.groupdict()
-    sign = -1 if match_groups["sign"] == "-" else 1
-    days = int(match_groups["days"]) if match_groups["days"] else 0
-    hours = int(match_groups["hours"])
-    minutes = int(match_groups["minutes"])
-    seconds = int(match_groups["seconds"])
-
-    # Parse fractional seconds as string to avoid floating-point precision errors
-    # KQL returns up to 7 decimal places (e.g., .1697513 = 169751300 nanoseconds)
-    frac_str = match_groups["frac_seconds"]
-    if frac_str:
-        # Remove leading '.' and pad/truncate to 9 digits (nanoseconds)
-        frac_digits = frac_str[1:]  # Remove the '.'
-        # Pad with zeros if less than 9 digits, truncate if more
-        frac_digits = frac_digits.ljust(9, "0")[:9]
-        nano_seconds = int(frac_digits)
-    else:
-        nano_seconds = 0
-
-    return sign * pd.Timedelta(
-        days=days,
-        hours=hours,
-        minutes=minutes,
-        seconds=seconds,
-        nanoseconds=nano_seconds,
-    )
-
-
 def ensure_df_timedeltas(
     data: pd.DataFrame,
-    columns: str | list[str] | None = None,
+    columns: str | list[str],
 ) -> pd.DataFrame:
     """
     Return dataframe with KQL timespan columns converted to timedelta64[ns].
@@ -178,32 +87,32 @@ def ensure_df_timedeltas(
     ----------
     data : pd.DataFrame
         Input dataframe
-    columns : str | list[str] | None, optional
-        column (str) or list of columns to convert, by default None.
-        If this parameter is not supplied, the function will attempt to
-        auto-detect timespan columns by checking for string columns that
-        match the timespan pattern.
+    columns : str | list[str]
+        Column name (str) or list of column names to convert.
 
     Returns
     -------
     pd.DataFrame
         Converted DataFrame with timespan columns as timedelta64[ns].
 
+    Raises
+    ------
+    ValueError
+        If any timespan string in the specified columns cannot be parsed.
+
     Examples
     --------
     >>> df = pd.DataFrame({"duration": ["1.00:00:00", "00:00:00.001"]})
-    >>> df_converted = ensure_df_timedeltas(df)
+    >>> df_converted = ensure_df_timedeltas(df, columns="duration")
     >>> df_converted["duration"].dtype
     dtype('timedelta64[ns]')
 
-    >>> # Specify columns explicitly
-    >>> df_converted = ensure_df_timedeltas(df, columns="duration")
+    >>> # Specify multiple columns
+    >>> df_converted = ensure_df_timedeltas(df, columns=["duration", "elapsed"])
 
     Notes
     -----
-    - This function uses vectorized operations where possible for efficiency
-    - Columns that are already timedelta dtype are skipped
-    - Invalid timespan strings will raise a ValueError during conversion
+    Uses azure.kusto.data.helpers.parse_timedelta for parsing.
 
     See Also
     --------
@@ -213,10 +122,7 @@ def ensure_df_timedeltas(
     """
     converted_data = data.copy()
 
-    # Auto-detect timespan columns if not specified
-    if columns is None:
-        columns = _detect_timespan_columns(data)
-    elif isinstance(columns, str):
+    if isinstance(columns, str):
         columns = [columns]
 
     # Convert each timespan column
@@ -227,37 +133,6 @@ def ensure_df_timedeltas(
         if pd.api.types.is_timedelta64_dtype(data[col]):
             continue
 
-        # Try vectorized conversion first (for small timespans)
-        try:
-            converted_data[col] = pd.to_timedelta(data[col])
-        except (ValueError, TypeError):
-            # Fall back to element-wise parsing for large timespans
-            converted_data[col] = data[col].apply(parse_timespan)
+        converted_data[col] = data[col].apply(parse_timespan)
 
     return converted_data
-
-
-def _detect_timespan_columns(data: pd.DataFrame) -> list[str]:
-    """
-    Detect columns that likely contain KQL timespan values.
-
-    Parameters
-    ----------
-    data : pd.DataFrame
-        Input dataframe to analyze
-
-    Returns
-    -------
-    list[str]
-        List of column names that likely contain timespan values
-
-    """
-    timespan_columns = []
-    # Only check object/string columns
-    for col in data.select_dtypes(include=["object", "string"]).columns:
-        # Sample first non-null value
-        sample_val = data[col].dropna().head(1)
-        if not sample_val.empty and _TIMESPAN_PATTERN.match(str(sample_val.iloc[0])):
-            timespan_columns.append(col)
-
-    return timespan_columns
