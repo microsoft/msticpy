@@ -376,6 +376,9 @@ def get_whois_df(  # noqa: PLR0913
         and not whois_data.empty
         and "query" in whois_data.columns
     ):
+        # Deduplicate whois_data by query column to prevent row multiplication
+        # during merge (can happen if whois results contain duplicate entries)
+        whois_data = whois_data.drop_duplicates(subset=["query"], keep="first")
         data = data.merge(
             whois_data,
             how="left",
