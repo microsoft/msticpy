@@ -207,7 +207,7 @@ class SumologicDriver(DriverBase):
 
         """
         del query_source
-        self._ensure_connected("SumoLogic")
+        self._ensure_connected()
 
         verbosity = kwargs.pop("verbosity", 0)
         timezone = kwargs.pop("timezone", "UTC")

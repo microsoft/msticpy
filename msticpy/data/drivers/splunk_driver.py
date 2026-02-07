@@ -278,7 +278,7 @@ class SplunkDriver(DriverBase):
 
         """
         del query_source
-        self._ensure_connected("Splunk")
+        self._ensure_connected()
 
         # default to unlimited query unless count is specified
         count = kwargs.pop("count", 0)

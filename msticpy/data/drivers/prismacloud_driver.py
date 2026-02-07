@@ -244,6 +244,24 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
         self.query_store: QueryStore = QueryStore(environment="Prismacloud")
         self.queries_loaded: bool = False
 
+    @property
+    def connected(self) -> bool:
+        """
+        Return the connection status.
+
+        Returns
+        -------
+        bool
+            True if the driver is connected and authenticated, False otherwise.
+
+        Notes
+        -----
+        This checks both the connection flag and the presence of the
+        authentication token in the client headers.
+
+        """
+        return self._connected and "X-Redlock-Auth" in self.client.headers
+
     @staticmethod
     def _get_driver_settings(config_name: str, instance: str | None = None) -> dict[str, str]:
         """
@@ -983,10 +1001,9 @@ class PrismaCloudDriver(DriverBase):  # pylint: disable=R0902
             query_endpoint,
             kwargs,
         )
-        # Check if authentication token is present
-        self._ensure_connected("Prisma Cloud")
+        # Check if driver is connected
+        self._ensure_connected()
         # Check if query_source is valid
-
         if not query_endpoint or query_endpoint not in self.ENDPOINT_MAP:
             msg = f"Invalid or missing query endpoint: {query_endpoint}"
             raise MsticpyUserError(msg)

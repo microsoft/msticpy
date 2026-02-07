@@ -218,6 +218,7 @@ def test_azure_search_driver_no_workspace_ids():
     """Test that we raise an error if no workspace is configured."""
     driver = AzureSearchDriver()
     driver._connected = True  # Fake connecting, but without workspace
+    driver._auth_header = {"Authorization": "Bearer fake_token"}  # Fake auth header
     time_span = dict(start="2025-02-05T00:00:00Z", end="2025-02-05T01:00:00Z")
     with pytest.raises(MsticpyKqlConnectionError):
         driver.query_with_results(query="SomeTable | take 10", time_span=time_span)

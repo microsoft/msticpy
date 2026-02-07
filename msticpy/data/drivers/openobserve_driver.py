@@ -204,7 +204,7 @@ class OpenObserveDriver(DriverBase):
 
         """
         del query_source
-        self._ensure_connected("OpenObserve")
+        self._ensure_connected()
 
         verbosity = kwargs.pop("verbosity", 0)
         timezone = kwargs.pop("timezone", "UTC")

@@ -328,7 +328,7 @@ class DriverBase(ABC):
             If the driver is not connected.
 
         """
-        if not self._connected:
+        if not self.connected:
             raise self._create_not_connected_err(provider_name or self.__class__.__name__)
 
     @staticmethod

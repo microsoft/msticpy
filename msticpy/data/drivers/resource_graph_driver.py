@@ -154,7 +154,7 @@ class ResourceGraphDriver(DriverBase):
         """
         if not self.connected:
             self.connect()
-        self._ensure_connected("Resource Graph")
+        self._ensure_connected()
 
         result_truncated = False
 

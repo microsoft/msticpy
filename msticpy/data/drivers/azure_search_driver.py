@@ -24,7 +24,7 @@ from ...auth.azure_auth import az_connect
 from ...common.exceptions import MsticpyDataQueryError, MsticpyKqlConnectionError
 from ..core.query_defns import DataEnvironment
 from .azure_monitor_driver import AzureMonitorDriver
-from .driver_base import DriverProps, QuerySource
+from .driver_base import DriverProps
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -59,8 +59,26 @@ class AzureSearchDriver(AzureMonitorDriver):
         self.set_driver_property(
             DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinelSearch.name
         )
-        # Override query filter to include MSSentinelSearch
+        # Extend query filter to include MSSentinelSearch
         self.add_query_filter("data_environments", "MSSentinelSearch")
+
+    @property
+    def connected(self) -> bool:
+        """
+        Return true if at least one connection has been made.
+
+        Returns
+        -------
+        bool
+            True if a successful connection has been made.
+
+        Notes
+        -----
+        This checks both the connection flag and the presence of the
+        authentication header to ensure a valid connection state.
+
+        """
+        return self._connected and self._auth_header is not None
 
     def _create_query_client(self, connection_str: str | None = None, **kwargs):
         """Create a query client using the /search endpoint."""
@@ -91,36 +109,6 @@ class AzureSearchDriver(AzureMonitorDriver):
         # Mark as connected
         self._connected = True
         logger.info("Created HTTP-based query client using /search endpoint.")
-
-    def query(
-        self, query: str, query_source: QuerySource | None = None, **kwargs
-    ) -> pd.DataFrame | Any:
-        """
-        Execute query string and return DataFrame of results.
-
-        Parameters
-        ----------
-        query : str
-            The query to execute
-        query_source : QuerySource | None
-            The query definition object
-
-        Other Parameters
-        ----------------
-        timeout : int (seconds)
-            Specify a timeout for the query. Default is 300 seconds.
-
-        Returns
-        -------
-        pd.DataFrame | Any
-            A DataFrame (if successful) or
-            the underlying provider result if an error.
-
-        """
-        if query_source:
-            self._check_table_exists(query_source)
-        data, result = self.query_with_results(query, **kwargs)
-        return data if data is not None else result
 
     def query_with_results(self, query: str, **kwargs) -> tuple[pd.DataFrame, dict[str, Any]]:
         """
