@@ -396,21 +396,23 @@ class CybereasonDriver(DriverBase):
 
         """
         result: dict[str, Any] = {}
+
         for name, values in simple_values.items():
-            if not values["values"]:
-                return result
-            result[name] = list(
-                {
-                    (
-                        CybereasonDriver._format_to_datetime(int(value))
-                        if "Time" in name
-                        else value.strip().rstrip("\x00")
-                    )
-                    for value in values["values"]
-                },
-            )
-            if values["totalValues"] == 1:
-                result[name] = result[name][0]
+            match values:
+                case {"total_values": 1, "values": values}:
+                    result[name] = values[0]
+                case {"values": values}:
+                    unique_values: list[str] = list(set(values))
+                    result[name] = [
+                        (
+                            CybereasonDriver._format_to_datetime(int(value))
+                            if "Time" in name
+                            else value.strip().rstrip("\x00")
+                        )
+                        for value in unique_values
+                    ]
+                case _:
+                    return result
 
         return result
 
