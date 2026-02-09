@@ -350,8 +350,7 @@ class SplunkDriver(DriverBase):
             Name of container to add queries to.
 
         """
-        if not self.connected:
-            raise self._create_not_connected_err("Splunk")
+        self._ensure_connected()
         if hasattr(self.service, "saved_searches") and self.service.saved_searches:
             queries = {
                 search.name.strip().replace(" ", "_"): f"search {search['search']}"
@@ -377,8 +376,7 @@ class SplunkDriver(DriverBase):
             If called before driver is connected.
 
         """
-        if not self.connected:
-            raise self._create_not_connected_err("Splunk")
+        self._ensure_connected()
         if hasattr(self.service, "saved_searches") and self.service.saved_searches:
             return [
                 {
@@ -501,8 +499,7 @@ class SplunkDriver(DriverBase):
             Dataframe with list of saved searches with name and query columns.
 
         """
-        if not self.connected:
-            raise self._create_not_connected_err("Splunk")
+        self._ensure_connected()
         savedsearches = self.service.saved_searches
 
         out_df = pd.DataFrame(columns=["name", "query"])
@@ -540,8 +537,7 @@ class SplunkDriver(DriverBase):
             Dataframe with list of fired alerts with alert name and count columns.
 
         """
-        if not self.connected:
-            raise self._create_not_connected_err("Splunk")
+        self._ensure_connected()
         firedalerts = self.service.fired_alerts
 
         out_df = pd.DataFrame(columns=["name", "count"])
