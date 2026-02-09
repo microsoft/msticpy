@@ -552,7 +552,15 @@ class CybereasonDriver(DriverBase):
                     page_size=page_size,
                     pagination_token=pagination_token,
                     max_retry=max_retry,
+            case httpx.codes.REQUEST_TIMEOUT:
+                return self._handle_request_timeout(
+                    response=response,
+                    body=body,
+                    page=page,
                     timeout=timeout,
+                    page_size=page_size,
+                    pagination_token=pagination_token,
+                    max_retry=max_retry,
                 )
             case httpx.codes.TOO_MANY_REQUESTS:
                 logger.warning("Hit too many requests, stopping for 5 seconds")
@@ -628,37 +636,93 @@ class CybereasonDriver(DriverBase):
                     "Query partially failed: %s.",
                     message,
                 )
-                if max_retry > 0:
-                    logger.warning("Retrying %d time(s)", max_retry)
-                    return self.__execute_query(
+                if (
+                    message
+                    == "Received Non-OK status code HTTP/1.1 408 Request Timeout"
+                ):
+                    return self._handle_request_timeout(
+                        response=response,
                         body=body,
                         page=page,
+                        timeout=timeout,
                         page_size=page_size,
                         pagination_token=pagination_token,
-                        timeout=timeout + 60,
-                        max_retry=max_retry - 1,
+                        max_retry=max_retry,
                     )
-                logger.warning("Returning result as-is")
-                return parsed_response
+                logger.warning(
+                    "Received message %s. Don't know how to handle, returning result."
+                )
+                return response.json()
             case _:
                 logger.warning(
                     "Query failed, received %s",
                     parsed_response,
                 )
-                if max_retry > 0:
-                    logger.warning(
-                        "Retrying %d time(s)",
-                        max_retry,
-                    )
-                    return self.__execute_query(
-                        body=body,
-                        page=page,
-                        page_size=page_size,
-                        pagination_token=pagination_token,
-                        timeout=timeout,
-                        max_retry=max_retry - 1,
-                    )
-                return parsed_response
+                return self.__execute_query(
+                    body=body,
+                    page=page,
+                    page_size=page_size,
+                    pagination_token=pagination_token,
+                    previous_response=response,
+                    timeout=timeout,
+                    max_retry=max_retry - 1,
+                )
+
+    def _handle_request_timeout(
+        self: Self,
+        response: httpx.Response,
+        body: dict[str, Any],
+        *,
+        page_size: int,
+        timeout: float,
+        max_retry: int,
+        page: int = 0,
+        pagination_token: str | None = None,
+        factor: float = 1.5,
+    ) -> dict[str, Any]:
+        """
+        Run queries again when a timeout was received.
+
+        Parameters
+        ----------
+        body: dict[str, Any]
+            Body of the HTTP Request
+        response: httpx.Response,
+            previously received response
+        timeout : float
+            Number of seconds for HTTP requests to timeout.
+        page_size: int
+            Size of the page for results
+        page: int
+            Page number to query
+        pagination_token: str
+            Token of the current search
+        max_retry: int
+            Maximum retries in case of API no cuccess response
+        factor: float
+            Factor by which to increase the timeout. Default to 50%
+
+        Returns
+        -------
+        dict[str, Any]
+
+        """
+        new_timeout: float = timeout * factor
+        logger.info(
+            "Retrying %d time(s) with timeout increased from %d to %d ",
+            max_retry,
+            timeout,
+            new_timeout,
+        )
+        return self.__execute_query(
+            body=body,
+            page=page,
+            page_size=page_size,
+            pagination_token=pagination_token,
+            timeout=new_timeout,
+            previous_response=response,
+            max_retry=max_retry - 1,
+        )
 
     async def __run_threaded_queries(
         self: Self,
