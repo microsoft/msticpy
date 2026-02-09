@@ -368,16 +368,27 @@ class CybereasonDriver(DriverBase):
         dict[str, Any]
 
         """
-        result: dict[str, Any] = {}
         # Retrieve simpleValues and add them to the output
         simple_values: dict[str, Any] = entry.get("simpleValues", {})
-        result = CybereasonDriver._flatten_simple_values(simple_values)
+        result: dict[str, Any] = CybereasonDriver._flatten_simple_values(simple_values)
 
         elt_value: list[dict[str, Any]] | dict[str, Any] = entry.get(
             "elementValues",
             {},
         )
         result.update(**CybereasonDriver._flatten_element_values(elt_value))
+        for key in [
+            "totalSuspicious",
+            "totalMalicious",
+            "suspicions",
+            "isMalicious",
+            "suspicionCount",
+            "malopPriority",
+            "malicious",
+            "suspect",
+        ]:
+            if key in entry:
+                result[key] = entry[key]
         return result
 
     @staticmethod
