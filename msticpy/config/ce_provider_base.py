@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Module docstring."""
 
+from __future__ import annotations
+
 from abc import ABC
 
 import ipywidgets as widgets

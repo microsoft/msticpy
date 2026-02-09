@@ -5,6 +5,8 @@
 #  --------------------------------------------------------------------------
 """Splunk Driver class."""
 
+from __future__ import annotations
+
 import logging
 from collections.abc import Iterable
 from datetime import datetime, timedelta, timezone
@@ -76,7 +78,7 @@ SPLUNK_CONNECT_ARGS = {
         "(string) The Splunk account username, which is used to "
         + "authenticate the Splunk instance."
     ),
-    "password": "(string) The password for the Splunk account.",
+    "password": "(string) The password for the Splunk account.",  # nosec
     "bearer_token": (
         "(string) The Authorization Bearer Token <JWT> created in the Splunk."
         + " (Named as 'splunkToken' in Splunk Python SDK)"

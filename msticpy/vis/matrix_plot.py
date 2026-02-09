@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Bokeh matrix plot."""
 
+from __future__ import annotations
+
 import math
 
 import attr

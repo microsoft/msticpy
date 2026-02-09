@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Module for timeseries analysis functions."""
 
+from __future__ import annotations
+
 import inspect
 from datetime import datetime
 
@@ -272,8 +274,8 @@ def ts_anomalies_stl(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     data = data[[data_column]]
 
     # STL method does Season-Trend decomposition using LOESS.
-    # Accepts timeseries dataframe
-    stl = STL(data[data_column].values, seasonal=seasonal, period=period)
+    # Accepts 1D timeseries data (pandas Series)
+    stl = STL(data[data_column], seasonal=seasonal, period=period)
     # Fitting the data - Estimate season, trend and residuals components.
     res = stl.fit()
     result = data.copy()
@@ -290,11 +292,12 @@ def ts_anomalies_stl(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     # this column does not contain seasonal/trend components
     result["score"] = stats.zscore(result["residual"])
     # create spikes(1) and dips(-1) based on threshold and seasonal columns
+    # Initialize anomalies to 0 (default for no anomaly)
+    result["anomalies"] = 0
     result.loc[(result["score"] > score_threshold) & (result["seasonal"] > 0), "anomalies"] = 1
     result.loc[
         (result["score"] > score_threshold) & (result["seasonal"] < 0), "anomalies"
     ] = -1
-    result.loc[(result["score"] < score_threshold), "anomalies"] = 0
     # Datatype casting
     result["anomalies"] = result["anomalies"].astype("int64")
 

@@ -3,8 +3,8 @@ msticpy.context package
 
 .. automodule:: msticpy.context
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Subpackages
 -----------

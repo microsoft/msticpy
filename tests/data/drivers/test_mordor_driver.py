@@ -135,6 +135,9 @@ def test_mordor_cache(save_folder, qry_provider):
     check.is_instance(item, dict)
     mdr_entry_dict = item.copy()
     mdr_entry_dict.pop("mp_last_updated")
+    # Rename 'type' to 'entry_type' to match the MordorEntry attribute
+    if "type" in mdr_entry_dict:
+        mdr_entry_dict["entry_type"] = mdr_entry_dict.pop("type")
     mordor_entry = MordorEntry(**mdr_entry_dict)
     check.is_instance(mordor_entry, MordorEntry)
 

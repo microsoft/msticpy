@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Test script for checking package version alignment."""
+
 import re
 
 KQL_REQUIRES = [
@@ -36,7 +37,7 @@ PKG_VER_PATTERN = r"([\w\-_]+)\s*([><=]{2})\s*([\d.]+)"
 def extract_pkgs(req_file=None, pkg_reqs=None):
     """Get reqs from requirements.txt."""
     if req_file is not None:
-        with open(req_file, "r") as req_fh:
+        with open(req_file) as req_fh:
             pkg_reqs = req_fh.readlines()
     if not pkg_reqs:
         return {}

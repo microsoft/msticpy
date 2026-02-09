@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Azure Cloud Mappings."""
 
+from __future__ import annotations
+
 import contextlib
 from functools import cache
 from typing import Any

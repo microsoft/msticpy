@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """MSTICPy query template definition."""
 
+from __future__ import annotations
+
 from dataclasses import field
 from typing import Any
 

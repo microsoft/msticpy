@@ -3,8 +3,8 @@ msticpy.transform package
 
 .. automodule:: msticpy.transform
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------
