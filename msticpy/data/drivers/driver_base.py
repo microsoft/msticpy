@@ -312,6 +312,25 @@ class DriverBase(ABC):
             help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
         )
 
+    def _ensure_connected(self, provider_name: str | None = None) -> None:
+        """
+        Check connection state and raise error if not connected.
+
+        Parameters
+        ----------
+        provider_name : str, optional
+            The name of the provider to use in error message.
+            If not provided, uses the class name.
+
+        Raises
+        ------
+        MsticpyNotConnectedError
+            If the driver is not connected.
+
+        """
+        if not self.connected:
+            raise self._create_not_connected_err(provider_name or self.__class__.__name__)
+
     @staticmethod
     def get_http_timeout(**kwargs):
         """Get http timeout from settings or kwargs."""

@@ -226,7 +226,7 @@ def test_sumologic_query_no_connect():
     with pytest.raises(MsticpyNotConnectedError) as mp_ex:
         sumologic_driver.query("some query")
     check.is_false(sumologic_driver.connected)
-    check.is_in("not connected to SumoLogic.", mp_ex.value.args)
+    check.is_in("not connected to SumologicDriver.", mp_ex.value.args)
 
 
 @pytest.fixture
