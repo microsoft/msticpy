@@ -638,10 +638,7 @@ class CybereasonDriver(DriverBase):
                     "Query partially failed: %s.",
                     message,
                 )
-                if (
-                    message
-                    == "Received Non-OK status code HTTP/1.1 408 Request Timeout"
-                ):
+                if "status code HTTP/1.1 408 Request Timeout" in message:
                     return self._handle_request_timeout(
                         response=response,
                         body=body,
