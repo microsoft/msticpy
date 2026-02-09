@@ -135,7 +135,7 @@ def test_openobserve_query_no_connect():
     with pytest.raises(MsticpyNotConnectedError) as mp_ex:
         openobserve_driver.query("some query")
     check.is_false(openobserve_driver.connected)
-    check.is_in("not connected to OpenObserve.", mp_ex.value.args)
+    check.is_in("not connected to OpenObserveDriver.", mp_ex.value.args)
 
 
 @pytest.mark.skipif(_OPEN_OBSERVE_NOT_LOADED, reason="OpenObserve driver not installed")

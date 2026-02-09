@@ -40,7 +40,7 @@ try:
     from azure.core.exceptions import ClientAuthenticationError
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.resource import ResourceManagementClient
-    from azure.mgmt.resource.subscriptions import SubscriptionClient
+    from azure.mgmt.subscription import SubscriptionClient
 
     if parse(version("azure.mgmt.monitor")) > Version("1.0.1"):
         # Try new version but keep backward compat with 1.0.1
@@ -105,8 +105,8 @@ class Items:  # pylint:disable=too-many-instance-attributes
     properties: Any = None
     kind: str | None = None
     managed_by: str | None = None
-    sku: str | None = None
-    identity: str | None = None
+    sku: Any = None
+    identity: Any = None
     state: Any = None
 
 
@@ -698,12 +698,12 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
             )
 
         # Get first API version that isn't in preview
-        if not resource_types:
+        if not resource_types or not resource_types.api_versions:
             err_msg = "Resource provider not found"
             raise MsticpyResourceError(err_msg)
 
         api_version = [v for v in resource_types.api_versions if "preview" not in v.lower()]
-        if api_version is None or not api_version:
+        if not api_version:
             api_ver = resource_types.api_versions[0]
         else:
             api_ver = api_version[0]
@@ -994,18 +994,20 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
                 | MonitorManagementClient
                 | ComputeManagementClient
             ] = _CLIENT_MAPPING[client_name]
-            if sub_id is None:
-                if issubclass(client, SubscriptionClient):
+            if issubclass(client, SubscriptionClient):
+                if sub_id is None:
                     setattr(
                         self,
                         client_name,
-                        client(
+                        SubscriptionClient(
                             self.credentials.modern,
                             base_url=self.az_cloud_config.resource_manager,
-                            credential_scopes=[self.az_cloud_config.token_uri],
+                            credential_scopes=[
+                                self.az_cloud_config.token_uri,
+                            ],
                         ),
                     )
-            else:
+            elif sub_id is not None:
                 setattr(
                     self,
                     client_name,
@@ -1013,7 +1015,9 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
                         self.credentials.modern,
                         subscription_id=sub_id,
                         base_url=self.az_cloud_config.resource_manager,
-                        credential_scopes=[self.az_cloud_config.token_uri],
+                        credential_scopes=[
+                            self.az_cloud_config.token_uri,
+                        ],
                     ),
                 )
 
@@ -1043,18 +1047,20 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
             | MonitorManagementClient
             | ComputeManagementClient
         ] = _CLIENT_MAPPING[client_name]
-        if sub_id is None:
-            if issubclass(client, SubscriptionClient):
+        if issubclass(client, SubscriptionClient):
+            if sub_id is None:
                 setattr(
                     self,
                     client_name,
-                    client(
+                    SubscriptionClient(
                         self.credentials.legacy,  # type:ignore[arg-type]
                         base_url=self.az_cloud_config.resource_manager,
-                        credential_scopes=[self.az_cloud_config.token_uri],
+                        credential_scopes=[
+                            self.az_cloud_config.token_uri,
+                        ],
                     ),
                 )
-        else:
+        elif sub_id is not None:
             setattr(
                 self,
                 client_name,
@@ -1062,7 +1068,9 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
                     self.credentials.legacy,  # type:ignore[arg-type]
                     subscription_id=sub_id,
                     base_url=self.az_cloud_config.resource_manager,
-                    credential_scopes=[self.az_cloud_config.token_uri],
+                    credential_scopes=[
+                        self.az_cloud_config.token_uri,
+                    ],
                 ),
             )
 

@@ -233,7 +233,7 @@ def test_splunk_fired_alerts(splunk_client):
         sp_driver._get_fired_alerts()
         check.is_false(sp_driver.connected)
         check.is_none(sp_driver._fired_alerts)
-    check.is_in("not connected to Splunk.", mp_ex.value.args)
+    check.is_in("not connected to SplunkDriver.", mp_ex.value.args)
 
     # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
     sp_driver.connect(host="localhost", username="ian", password=_FAKE_STRING)  # nosec
@@ -256,7 +256,7 @@ def test_splunk_saved_searches(splunk_client):
         sp_driver._get_saved_searches()
         check.is_false(sp_driver.connected)
         check.is_none(sp_driver._saved_searches)
-    check.is_in("not connected to Splunk.", mp_ex.value.args)
+    check.is_in("not connected to SplunkDriver.", mp_ex.value.args)
 
     # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
     sp_driver.connect(host="localhost", username="ian", password=_FAKE_STRING)  # nosec
@@ -288,7 +288,7 @@ def test_splunk_query_success(splunk_client, splunk_results):
     with pytest.raises(MsticpyNotConnectedError) as mp_ex:
         sp_driver.query("some query")
         check.is_false(sp_driver.connected)
-    check.is_in("not connected to Splunk.", mp_ex.value.args)
+    check.is_in("not connected to SplunkDriver.", mp_ex.value.args)
 
     # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
     sp_driver.connect(host="localhost", username="ian", password=_FAKE_STRING)  # nosec
