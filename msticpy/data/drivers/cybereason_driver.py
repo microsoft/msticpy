@@ -481,6 +481,7 @@ class CybereasonDriver(DriverBase):
         max_retry: int,
         page: int = 0,
         pagination_token: str | None = None,
+        previous_response: httpx.Response | None = None,
     ) -> dict[str, Any]:
         """
         Run query with pagination enabled.
@@ -507,6 +508,13 @@ class CybereasonDriver(DriverBase):
         dict[str, Any]
 
         """
+        if max_retry < 0:
+            if not previous_response:
+                err_msg: str = (
+                    "Will not retry query, and no previous response available"
+                )
+                raise ValueError(err_msg)
+            return previous_response.json()
         if pagination_token:
             pagination: dict[str, Any] = {
                 "pagination": {
