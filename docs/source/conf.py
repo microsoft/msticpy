@@ -240,7 +240,6 @@ autodoc_mock_imports = [
     "azure.mgmt.monitor",
     "azure.mgmt.network",
     "azure.mgmt.resource",
-    "azure.mgmt.resource.subscriptions",
     "azure.mgmt.resourcegraph",
     "azure.mgmt.resourcegraph.models",
     "azure.mgmt.subscription",

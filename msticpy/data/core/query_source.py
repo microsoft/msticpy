@@ -342,8 +342,9 @@ class QuerySource:
     @classmethod
     def _calc_timeoffset(cls, time_offset: str) -> datetime:
         """Calculate date from offset specification."""
-        delta = time_offset.split("@")[0]
-        rounding = time_offset.split("@")[1].casefold() if "@" in time_offset else None
+        parts = time_offset.split("@", maxsplit=1)
+        delta = parts[0]
+        rounding = parts[1].casefold() if len(parts) > 1 else None
         # Calculate the raw offset
         t_delta = cls._parse_timedelta(delta)
         result_date = datetime.now(tz=timezone.utc) + t_delta
