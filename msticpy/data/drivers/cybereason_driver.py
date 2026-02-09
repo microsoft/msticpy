@@ -432,16 +432,19 @@ class CybereasonDriver(DriverBase):
 
         """
         result: dict[str, Any] = {}
-        if isinstance(element_values, list):
-            for values in element_values:
-                result[values["elementType"]] = values["name"]
-                result[f"{values['elementType']}.guid"] = values["guid"]
-        elif isinstance(element_values, dict):
-            for key, values in element_values.items():
-                flattened = CybereasonDriver._flatten_result(values)
-                if flattened:
-                    for subkey, subvalues in flattened.items():
-                        result[f"{key}.{subkey}"] = subvalues
+        match element_values:
+            case list():
+                for values in element_values:
+                    result[values["elementType"]] = values["name"]
+                    result[f"{values['elementType']}.guid"] = values["guid"]
+            case dict():
+                for key, values in element_values.items():
+                    flattened: dict[str, Any] = CybereasonDriver._flatten_result(values)
+                    if flattened:
+                        for subkey, subvalues in flattened.items():
+                            result[f"{key}.{subkey}"] = subvalues
+            case _:
+                logger.warning("Unsupported type %s", type(element_values))
         return result
 
     def _create_paginated_query_tasks(
