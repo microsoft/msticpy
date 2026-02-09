@@ -318,7 +318,7 @@ class CybereasonDriver(DriverBase):
         # let user override config settings with function kwargs
         cs_dict.update(kwargs)
 
-        missing_settings = [
+        missing_settings: list[str] = [
             setting
             for setting in ("tenant_id", "client_id", "client_secret")
             if setting not in cs_dict
@@ -546,12 +546,14 @@ class CybereasonDriver(DriverBase):
         match response.status_code:
             case httpx.codes.OK:
                 return self.__parse_succesful_query_response(
-                    response,
+                    response=response,
                     body=body,
                     page=page,
+                    timeout=timeout,
                     page_size=page_size,
                     pagination_token=pagination_token,
                     max_retry=max_retry,
+                )
             case httpx.codes.REQUEST_TIMEOUT:
                 return self._handle_request_timeout(
                     response=response,
@@ -576,7 +578,7 @@ class CybereasonDriver(DriverBase):
             case _:
                 response.raise_for_status()
 
-        err_msg: str = "Something went wrong"
+        err_msg = "Something went wrong"
         raise httpx.HTTPStatusError(
             err_msg,
             request=response.request,
