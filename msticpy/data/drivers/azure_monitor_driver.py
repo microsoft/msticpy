@@ -37,7 +37,6 @@ from ...common.exceptions import (
     MsticpyKqlConnectionError,
     MsticpyMissingDependencyError,
     MsticpyNoDataSourceError,
-    MsticpyNotConnectedError,
 )
 from ...common.provider_settings import get_protected_setting
 from ...common.settings import get_http_proxies, get_http_timeout
@@ -132,7 +131,8 @@ class AzureMonitorDriver(DriverBase):
         self._try_get_schema: bool = True
         self._fail_on_partial: bool = kwargs.get("fail_on_partial", False)
         self.add_query_filter(
-            "data_environments", ("MSSentinel", "LogAnalytics", "AzureSentinel")
+            "data_environments",
+            ("MSSentinel", "LogAnalytics", "AzureSentinel"),
         )
         self.set_driver_property(DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinel.name)
         self.set_driver_property(DriverProps.SUPPORTS_THREADING, value=True)
@@ -245,6 +245,24 @@ class AzureMonitorDriver(DriverBase):
 
         return self._connected
 
+    @property
+    def connected(self) -> bool:
+        """
+        Return true if at least one connection has been made.
+
+        Returns
+        -------
+        bool
+            True if a successful connection has been made.
+
+        Notes
+        -----
+        This checks both the connection flag and the presence of the
+        query client to ensure a valid connection state.
+
+        """
+        return self._connected and self._query_client is not None
+
     # pylint: disable=too-many-branches
 
     @property
@@ -287,13 +305,7 @@ class AzureMonitorDriver(DriverBase):
             the underlying provider result if an error.
 
         """
-        if not self._connected or self._query_client is None:
-            raise MsticpyNotConnectedError(
-                "Please run connect() to connect to the workspace",
-                "before running a query.",
-                title="Workspace not connected.",
-                help_uri=_HELP_URL,
-            )
+        self._ensure_connected()
         if query_source:
             self._check_table_exists(query_source)
         data, result = self.query_with_results(query, **kwargs)
@@ -316,13 +328,7 @@ class AzureMonitorDriver(DriverBase):
             Query status dictionary.
 
         """
-        if not self._connected or self._query_client is None:
-            raise MsticpyNotConnectedError(
-                "Please run connect() to connect to the workspace",
-                "before running a query.",
-                title="Workspace not connected.",
-                help_uri=_HELP_URL,
-            )
+        self._ensure_connected()
         time_span_value = self._get_time_span_value(**kwargs)
         fail_on_partial = kwargs.get(
             "fail_if_partial", kwargs.get("fail_on_partial", self._fail_on_partial)
@@ -340,7 +346,7 @@ class AzureMonitorDriver(DriverBase):
         )
         logger.info("Timeout %s", server_timeout)
         try:
-            result = self._query_client.query_workspace(
+            result = self._query_client.query_workspace(  # type: ignore[union-attr]
                 workspace_id=workspace_id,  # type: ignore[arg-type]
                 query=query,
                 timespan=time_span_value,

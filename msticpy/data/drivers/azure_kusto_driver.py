@@ -480,8 +480,7 @@ class AzureKustoDriver(DriverBase):
 
         """
         del kwargs
-        if not self._connected:
-            _raise_not_connected_error()
+        self._ensure_connected()
 
         if query_source and not self.query_usable(query_source):
             query_spec: dict[str, str] = self._get_cluster_spec_from_query_source(

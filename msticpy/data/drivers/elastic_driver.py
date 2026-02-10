@@ -136,8 +136,7 @@ class ElasticDriver(DriverBase):
 
         """
         del query_source
-        if not self._connected:
-            raise self._create_not_connected_err("Elastic")
+        self._ensure_connected("Elastic")
 
         # TBD
         # Run query and return results

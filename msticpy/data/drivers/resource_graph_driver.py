@@ -19,7 +19,7 @@ from pandas.core.frame import DataFrame
 from ..._version import VERSION
 from ...auth.azure_auth import AzureCloudConfig, az_connect
 from ...auth.azure_auth_core import only_interactive_cred
-from ...common.exceptions import MsticpyImportExtraError, MsticpyNotConnectedError
+from ...common.exceptions import MsticpyImportExtraError
 from ...common.utility import export
 from .driver_base import DriverBase, QuerySource
 
@@ -154,10 +154,7 @@ class ResourceGraphDriver(DriverBase):
         """
         if not self.connected:
             self.connect()
-        if not self.connected:
-            raise MsticpyNotConnectedError(
-                "Source is not connected. ", "Please call connect() and retry."
-            )
+        self._ensure_connected()
 
         result_truncated = False
 

@@ -22,7 +22,9 @@ import pandas as pd
 from ..._version import VERSION
 from ...auth.azure_auth import az_connect
 from ...common.exceptions import MsticpyDataQueryError, MsticpyKqlConnectionError
+from ..core.query_defns import DataEnvironment
 from .azure_monitor_driver import AzureMonitorDriver
+from .driver_base import DriverProps
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -53,6 +55,30 @@ class AzureSearchDriver(AzureMonitorDriver):
         super().__init__(connection_str=connection_str, **kwargs)
         self._auth_header: dict[str, Any] | None = None
         self._try_get_schema = False
+        # Override the EFFECTIVE_ENV set by AzureMonitorDriver
+        self.set_driver_property(
+            DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinelSearch.name
+        )
+        # Extend query filter to include MSSentinelSearch
+        self.add_query_filter("data_environments", "MSSentinelSearch")
+
+    @property
+    def connected(self) -> bool:
+        """
+        Return true if at least one connection has been made.
+
+        Returns
+        -------
+        bool
+            True if a successful connection has been made.
+
+        Notes
+        -----
+        This checks both the connection flag and the presence of the
+        authentication header to ensure a valid connection state.
+
+        """
+        return self._connected and self._auth_header is not None
 
     def _create_query_client(self, connection_str: str | None = None, **kwargs):
         """Create a query client using the /search endpoint."""
@@ -99,8 +125,7 @@ class AzureSearchDriver(AzureMonitorDriver):
             The resulting DataFrame and a status dictionary.
 
         """
-        if not self._connected or not hasattr(self, "_auth_header"):
-            raise MsticpyKqlConnectionError("Not connected. Call connect() before querying.")
+        self._ensure_connected()
         time_span_value = self._get_time_span_value(**kwargs)
         if not time_span_value:
             raise MsticpyDataQueryError(

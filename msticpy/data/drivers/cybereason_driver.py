@@ -159,8 +159,7 @@ class CybereasonDriver(DriverBase):
 
         """
         del query_source
-        if not self._connected:
-            raise self._create_not_connected_err(self.__class__.__name__)
+        self._ensure_connected()
 
         page_size = min(page_size, 4000)
         logger.debug("Set page size to %d", page_size)

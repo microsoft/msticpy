@@ -397,10 +397,7 @@ class OData(DriverBase):
         if not self.connected:
             logger.info("Not connected, attempting to connect")
             self.connect(self.current_connection)
-        if not self.connected:
-            logger.error("Failed to establish connection")
-            err_msg: str = "Source is not connected. Please call connect() and retry."
-            raise ConnectionError(err_msg)
+        self._ensure_connected()
 
         if self._debug:
             logger.debug("Query: %s", query)
