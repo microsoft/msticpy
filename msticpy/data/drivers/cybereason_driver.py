@@ -557,10 +557,15 @@ class CybereasonDriver(DriverBase):
                 params=params,
                 timeout=timeout,
             )
-        except httpx.ReadTimeout as http_timeout:
-            err_msg = f"Hit a timeout error, you should update the timeout parameter. Current value: {timeout}"
-            logger.warning(err_msg)
-            raise MsticpyDataQueryError(err_msg) from http_timeout
+        except httpx.ReadTimeout:
+            self._handle_request_timeout(
+                body=body,
+                page=page,
+                timeout=timeout,
+                page_size=page_size,
+                pagination_token=pagination_token,
+                max_retry=max_retry,
+            )
         match response.status_code:
             case httpx.codes.OK:
                 return self.__parse_succesful_query_response(
@@ -686,12 +691,12 @@ class CybereasonDriver(DriverBase):
 
     def _handle_request_timeout(
         self: Self,
-        response: httpx.Response,
-        body: dict[str, Any],
         *,
+        body: dict[str, Any],
         page_size: int,
         timeout: float,
         max_retry: int,
+        response: httpx.Response | None = None,
         page: int = 0,
         pagination_token: str | None = None,
         factor: float = 1.5,
