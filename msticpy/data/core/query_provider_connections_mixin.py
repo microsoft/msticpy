@@ -447,10 +447,12 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                     result: pd.DataFrame | str | None = await thread_task
                     logger.info("Query task '%s' completed successfully.", query_id)
                     results.append(result)
-                except Exception:  # pylint: disable=broad-exception-caught
+                except Exception as exc:  # pylint: disable=broad-exception-caught
                     logger.warning(
-                        "Query task '%s' failed with exception",
+                        "Query task '%s' failed with exception %s - %s",
                         query_id,
+                        exc.__class__.__name__,
+                        exc.args,
                     )
                     # Reusing thread task would result in:
                     # RuntimeError: cannot reuse already awaited coroutine
