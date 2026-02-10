@@ -14,6 +14,7 @@ import re
 from asyncio import AbstractEventLoop, Future, as_completed
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial, singledispatch
+from time import sleep
 from typing import Any, ClassVar, Self
 
 import httpx
@@ -588,8 +589,24 @@ class CybereasonDriver(DriverBase):
                     max_retry=max_retry,
                 )
             case httpx.codes.TOO_MANY_REQUESTS:
-                logger.warning("Hit too many requests, stopping for 5 seconds")
-                logger.warning(response.headers)
+                logger.debug(response.headers)
+                # Answer should contain a retry-after header, that can be leverage to define the
+                # waiting time before trying again the query.
+                sleep_time: int = int(response.headers.get("Retry-After", 5))
+                logger.warning(
+                    "Hit too many requests, stopping for %d seconds",
+                    sleep_time,
+                )
+                sleep(sleep_time)
+                self.__execute_query(
+                    body=body,
+                    page=page,
+                    page_size=page_size,
+                    pagination_token=pagination_token,
+                    previous_response=response,
+                    timeout=timeout,
+                    max_retry=max_retry - 1,
+                )
             case httpx.codes.INTERNAL_SERVER_ERROR:
                 logger.warning("Received an error 500, most likely due to a bad query")
                 logger.debug(
