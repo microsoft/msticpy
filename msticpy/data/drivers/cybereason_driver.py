@@ -642,13 +642,12 @@ class CybereasonDriver(DriverBase):
             parsed_response = {}
         match parsed_response:
             case {"status": "SUCCESS"}:
-                logger.info("Successful query!")
                 return parsed_response
             case {
                 "status": "PARTIAL_SUCCESS",
                 "message": message,
             }:
-                logger.warning(
+                logger.info(
                     "Query partially failed: %s.",
                     message,
                 )
@@ -663,7 +662,8 @@ class CybereasonDriver(DriverBase):
                         max_retry=max_retry,
                     )
                 logger.warning(
-                    "Received message %s. Don't know how to handle, returning result."
+                    "Received message %s. Don't know how to handle, returning result.",
+                    message,
                 )
                 return response.json()
             case _:
