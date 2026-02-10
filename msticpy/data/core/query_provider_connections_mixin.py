@@ -447,6 +447,16 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                     result: pd.DataFrame | str | None = await thread_task
                     logger.info("Query task '%s' completed successfully.", query_id)
                     results.append(result)
+                except MsticpyDataQueryError as msticpy_dqe:
+                    logger.warning(
+                        "Query task '%s' failed",
+                        query_id,
+                    )
+                    msticpy_dqe.display_exception()
+                    # Reusing thread task would result in:
+                    # RuntimeError: cannot reuse already awaited coroutine
+                    # A new task should be queued
+                    failed_tasks_ids.append(query_id)
                 except Exception as exc:  # pylint: disable=broad-exception-caught
                     logger.warning(
                         "Query task '%s' failed with exception %s - %s",
