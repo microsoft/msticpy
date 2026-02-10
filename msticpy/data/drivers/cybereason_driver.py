@@ -22,7 +22,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 from ..._version import VERSION
-from ...common.exceptions import MsticpyUserConfigError, MsticpyDataQueryError
+from ...common.exceptions import MsticpyDataQueryError, MsticpyUserConfigError
 from ...common.provider_settings import ProviderSettings, get_provider_settings
 from ...common.utility import mp_ua_header
 from ..core.query_defns import Formatters
