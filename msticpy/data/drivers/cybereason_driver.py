@@ -21,7 +21,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 from ..._version import VERSION
-from ...common.exceptions import MsticpyUserConfigError
+from ...common.exceptions import MsticpyUserConfigError, MsticpyDataQueryError
 from ...common.provider_settings import ProviderSettings, get_provider_settings
 from ...common.utility import mp_ua_header
 from ..core.query_defns import Formatters
@@ -345,8 +345,12 @@ class CybereasonDriver(DriverBase):
         }
 
         # Authenticate and obtain cookie for future calls
-        response = self.client.post(self.auth_endpoint, data=req_body)
-        response.raise_for_status()
+        response: httpx.Response = self.client.post(self.auth_endpoint, data=req_body)
+        try:
+            response.raise_for_status()
+        except httpx.HTTPStatusError as http_exc:
+            err_msg = f"Received HTTP Return code {response.status_code}"
+            raise MsticpyDataQueryError(err_msg) from http_exc
 
         logger.info("Connected.")
         self._connected: bool = True
@@ -528,7 +532,7 @@ class CybereasonDriver(DriverBase):
                 err_msg: str = (
                     "Will not retry query, and no previous response available"
                 )
-                raise ValueError(err_msg)
+                raise MsticpyDataQueryError(err_msg)
             return previous_response.json()
         if pagination_token:
             pagination: dict[str, Any] = {
@@ -553,11 +557,10 @@ class CybereasonDriver(DriverBase):
                 params=params,
                 timeout=timeout,
             )
-        except httpx.ReadTimeout:
-            logger.warning(
-                "Hit a timeout error, you should update the timeout parameter.",
-            )
-            raise
+        except httpx.ReadTimeout as http_timeout:
+            err_msg = f"Hit a timeout error, you should update the timeout parameter. Current value: {timeout}"
+            logger.warning(err_msg)
+            raise MsticpyDataQueryError(err_msg) from http_timeout
         match response.status_code:
             case httpx.codes.OK:
                 return self.__parse_succesful_query_response(
@@ -594,11 +597,7 @@ class CybereasonDriver(DriverBase):
                 response.raise_for_status()
 
         err_msg = "Something went wrong"
-        raise httpx.HTTPStatusError(
-            err_msg,
-            request=response.request,
-            response=response,
-        )
+        raise MsticpyDataQueryError(err_msg)
 
     def __parse_succesful_query_response(
         self: Self,
