@@ -890,7 +890,7 @@ class CybereasonDriver(DriverBase):
         try:
             return dt.datetime.fromtimestamp(
                 timestamp // 1000,
-                tz=dt.UTC,
+                tz=dt.timezone.utc,
             )
         except TypeError:
             return timestamp
