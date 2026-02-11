@@ -449,7 +449,6 @@ class CybereasonDriver(DriverBase):
         Returns
         -------
         dict[str, Any]
-
         """
         result: dict[str, Any] = {}
         match element_values:
@@ -469,6 +468,7 @@ class CybereasonDriver(DriverBase):
 
     def _create_paginated_query_tasks(
         self: Self,
+        *,
         body: dict[str, Any],
         page_size: int,
         pagination_token: str,
