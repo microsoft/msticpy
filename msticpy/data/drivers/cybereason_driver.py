@@ -64,20 +64,15 @@ class CybereasonDriver(DriverBase):
         """
         Instantiate Cybereason driver.
 
-        Additional Parameters
-        ---------------------
+        Parameters
+        ----------
         timeout : int | None
             Query timeout in seconds. Defaults to None
         max_results : int
             Number of total results to return. Defaults to 1000
             Max is 10,000.
-
-        Returns
-        -------
-        Union[pd.DataFrame, Any]
-            A DataFrame (if successfull) or
-            the underlying provider result if an error.
-
+        debug: bool
+            Set to true to display debug logs. Default to False
         """
         super().__init__(**kwargs)
         logger.debug("Set timeout to %d", timeout)
@@ -473,7 +468,13 @@ class CybereasonDriver(DriverBase):
         timeout: float,
         max_retry: int,
     ) -> dict[str, partial[dict[str, Any]]]:
-        """Return dictionary of partials to execute queries."""
+        """
+        Return dictionary of partials to execute queries.
+
+        Returns
+        -------
+        dict[str, partial[dict[str, Any]]]
+        """
         # Compute the number of queries to execute
         total_pages: int = total_results // page_size + 1
         # The first query (page 0) as to be re-run due to a bug in
@@ -506,8 +507,6 @@ class CybereasonDriver(DriverBase):
         """
         Run query with pagination enabled.
 
-        :raises httpx.HTTPStatusError: if max_retry reached
-
         Parameters
         ----------
         body: dict[str, Any]
@@ -522,11 +521,17 @@ class CybereasonDriver(DriverBase):
             Token of the current search
         max_retry: int
             Maximum retries in case of API no cuccess response
+        previous_response: httpx.Response | None = None
+            Define when re-running queries, this is used as a return value when the
+            new query fails.
 
         Returns
         -------
         dict[str, Any]
 
+        Raises
+        ------
+        MsticpyDataQueryError
         """
         if max_retry < 0:
             if not previous_response:
@@ -835,13 +840,6 @@ class CybereasonDriver(DriverBase):
         ----------
         query : str
             The kql query to execute
-
-        Returns
-        -------
-        Tuple[pd.DataFrame, results.ResultSet]
-            A DataFrame (if successfull) and
-            Kql ResultSet.
-
         """
         del query
         err_msg: str = f"Not supported for {self.__class__.__name__}"
@@ -850,18 +848,36 @@ class CybereasonDriver(DriverBase):
     # Parameter Formatting method
     @staticmethod
     def _format_datetime(date_time: dt.datetime) -> int:
-        """Return datetime formatted as timestamp in milliseconds."""
+        """
+        Return datetime formatted as timestamp in milliseconds.
+
+        Returns
+        -------
+        int
+        """
         return int(date_time.timestamp() * 1000)
 
     @staticmethod
     def _format_list(value: list[str]) -> list[str]:
-        """Return list as itself."""
+        """
+        Return list as itself.
+
+        Returns
+        -------
+        list[str]
+        """
         return value
 
     # Parameter Formatting method
     @staticmethod
     def _format_to_datetime(timestamp: int) -> dt.datetime | int:
-        """Return datetime from a timestamp in milliseconds."""
+        """
+        Return datetime from a timestamp in milliseconds.
+
+        Returns
+        -------
+        dt.datetime|int
+        """
         try:
             return dt.datetime.fromtimestamp(
                 timestamp // 1000,
@@ -872,7 +888,13 @@ class CybereasonDriver(DriverBase):
 
     @staticmethod
     def _format_result_to_dataframe(result: dict[str, Any]) -> pd.DataFrame:
-        """Return a dataframe from a cybereason result object."""
+        """
+        Return a dataframe from a cybereason result object.
+
+        Returns
+        -------
+        pd.DataFrame
+        """
         df_result: list[dict[str, Any]] = [
             {
                 **CybereasonDriver._flatten_result(values),
@@ -885,7 +907,13 @@ class CybereasonDriver(DriverBase):
     # Retrieve configuration parameters with aliases
     @staticmethod
     def _map_config_dict_name(config_dict: dict[str, str]) -> dict[str, str]:
-        """Map configuration parameter names to expected values."""
+        """
+        Map configuration parameter names to expected values.
+
+        Returns
+        -------
+        dict[str, str]
+        """
         mapped_dict: dict[str, str] = config_dict.copy()
         for provided_name, value in config_dict.items():
             for req_name, alternates in CybereasonDriver._CONFIG_NAME_MAP.items():
@@ -900,7 +928,13 @@ class CybereasonDriver(DriverBase):
         config_name: str,
         instance: str | None = None,
     ) -> dict[str, str]:
-        """Try to retrieve config settings for Cybereason drivers."""
+        """
+        Try to retrieve config settings for Cybereason drivers.
+
+        Returns
+        -------
+        dict[str, str]
+        """
         config_key: str = f"{config_name}-{instance}" if instance else config_name
         drv_config: ProviderSettings | None = get_provider_settings(
             "DataProviders",
@@ -916,7 +950,13 @@ class CybereasonDriver(DriverBase):
 
     @staticmethod
     def _custom_param_handler(query: str, param_dict: dict[str, Any]) -> str:
-        """Replace parameters in query template for Cybereason JSON queries."""
+        """
+        Replace parameters in query template for Cybereason JSON queries.
+
+        Returns
+        -------
+        str
+        """
         query_dict: dict[str, Any] = json.loads(query)
 
         return json.dumps(_recursive_find_and_replace(query_dict, param_dict))
@@ -927,7 +967,13 @@ def _recursive_find_and_replace(
     parameters: str | dict[str, Any] | list[str] | list[dict[str, Any]],
     param_dict: dict[str, Any],
 ) -> str | dict[str, Any] | list[str] | list[dict[str, Any]]:
-    """Recursively find and replace parameters from query."""
+    """
+    Recursively find and replace parameters from query.
+
+    Returns
+    -------
+    str | dict[str, Any] | list[str] | list[dict[str, Any]]
+    """
     if isinstance(parameters, list | str | dict):
         return _recursive_find_and_replace(parameters, param_dict)
     return parameters
@@ -969,7 +1015,13 @@ def _(
 
 @_recursive_find_and_replace.register(str)
 def _(parameters: str, param_dict: dict[str, Any]) -> str | list[str]:
-    """Recursively find and replace parameters from query."""
+    """
+    Recursively find and replace parameters from query.
+
+    Returns
+    -------
+    str | list[str]
+    """
     param_regex: str = r"{([^}]+)}"
     matches: re.Match[str] | None = re.match(param_regex, parameters)
     if matches:
