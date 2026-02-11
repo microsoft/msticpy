@@ -22,7 +22,11 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 from ..._version import VERSION
-from ...common.exceptions import MsticpyDataQueryError, MsticpyUserConfigError
+from ...common.exceptions import (
+    MsticpyConnectionError,
+    MsticpyDataQueryError,
+    MsticpyUserConfigError,
+)
 from ...common.provider_settings import ProviderSettings, get_provider_settings
 from ...common.utility import mp_ua_header
 from ..core.query_defns import Formatters
@@ -294,13 +298,17 @@ class CybereasonDriver(DriverBase):
         kwargs:
             Extra parameters to connect.
 
+        Raises
+        ------
+        MsticpyConnectionError
+        MsticpyUserConfigError
+
         Notes
         -----
         Connection string fields:
             instance
             client_id
             client_secret
-
         """
         del connection_str
         cs_dict: dict[str, Any] = {}
@@ -346,7 +354,7 @@ class CybereasonDriver(DriverBase):
             response.raise_for_status()
         except httpx.HTTPStatusError as http_exc:
             err_msg = f"Received HTTP Return code {response.status_code}"
-            raise MsticpyDataQueryError(err_msg) from http_exc
+            raise MsticpyConnectionError(err_msg) from http_exc
 
         logger.info("Connected.")
         self._connected: bool = True
