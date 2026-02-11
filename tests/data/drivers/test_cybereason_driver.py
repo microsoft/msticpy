@@ -175,7 +175,7 @@ _CR_PARTIAL_SUCCESS_RESULT = {
     },
     "status": "PARTIAL_SUCCESS",
     "hidePartialSuccess": False,
-    "message": "Received Non-OK status code HTTP/1.1 500 Internal Server Error",
+    "message": "Received Non-OK status code HTTP/1.1 408 Request Timeout",
     "expectedResults": 0,
     "failures": 0,
     "failedServersInfo": None,
@@ -283,6 +283,7 @@ def test_query(driver):
         check.is_instance(data, pd.DataFrame)
         check.is_true("instance" in data.columns)
 
+
 @respx.mock
 def test_partial_success_query(driver):
     """Test query calling returns data in expected format."""
@@ -301,13 +302,13 @@ def test_partial_success_query(driver):
         httpx.Response(200, json=_CR_PARTIAL_SUCCESS_RESULT),
     ]
     with custom_mp_config(MP_PATH):
-        with pytest.raises(httpx.HTTPStatusError, match=r"PARTIAL_SUCCESS:.*"):
-            driver.connect()
-            driver.query('{"test": "test"}')
+        driver.connect()
+        driver.query('{"test": "test"}')
 
         check.is_true(connect.called or driver.connected)
         check.is_true(query.called)
-        check.equal(query.call_count, 3)
+        check.equal(query.call_count, 4)
+
 
 @respx.mock
 def test_paginated_query(driver):
