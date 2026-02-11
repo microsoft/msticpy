@@ -549,24 +549,13 @@ class CybereasonDriver(DriverBase):
             pagination = {"pagination": {"pageSize": page_size}}
             headers = {}
         params: dict[str, Any] = {"page": page, "itemsPerPage": page_size}
-
-        try:
-            response: httpx.Response = self.client.post(
-                self.search_endpoint,
-                json={**body, **pagination},
-                headers=headers,
-                params=params,
-                timeout=timeout,
-            )
-        except httpx.ReadTimeout:
-            self._handle_request_timeout(
-                body=body,
-                page=page,
-                timeout=timeout,
-                page_size=page_size,
-                pagination_token=pagination_token,
-                max_retry=max_retry,
-            )
+        response: httpx.Response = self.client.post(
+            self.search_endpoint,
+            json={**body, **pagination},
+            headers=headers,
+            params=params,
+            timeout=None,  # timeout for queries are managed in the body
+        )
         match response.status_code:
             case httpx.codes.OK:
                 return self.__parse_succesful_query_response(
