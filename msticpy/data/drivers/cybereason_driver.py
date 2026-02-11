@@ -664,7 +664,7 @@ class CybereasonDriver(DriverBase):
                 )
                 if (
                     "status code HTTP/1.1 408 Request Timeout" in message
-                    or "120000 MILLISECONDS" in message
+                    or "MILLISECONDS" in message
                 ):
                     return self._handle_request_timeout(
                         response=response,
