@@ -15,11 +15,12 @@ from asyncio import AbstractEventLoop, Future, as_completed
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial, singledispatch
 from time import sleep
-from typing import Any, ClassVar, Self
+from typing import Any, ClassVar
 
 import httpx
 import pandas as pd
 from tqdm.auto import tqdm
+from typing_extensions import Self
 
 from ..._version import VERSION
 from ...common.exceptions import (
