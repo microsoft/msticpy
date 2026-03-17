@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from urllib import parse
 
 import httpx
-from msrestazure import tools as az_tools
+from azure.mgmt.core import tools as az_tools
 from typing_extensions import Self
 
 from msticpy.context.azure.sentinel_utils import SentinelUtilsMixin
