@@ -36,8 +36,7 @@ from ...common.exceptions import (
 )
 
 try:
-    from azure.common.exceptions import CloudError
-    from azure.core.exceptions import ClientAuthenticationError
+    from azure.core.exceptions import ClientAuthenticationError, HttpResponseError
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.resource import ResourceManagementClient
     from azure.mgmt.subscription import SubscriptionClient
@@ -198,7 +197,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
 
         Raises
         ------
-        CloudError
+        ClientAuthenticationError
             If no valid credentials are found or if subscription client can't be created
 
         See Also
@@ -220,7 +219,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
         )
         if not self.credentials:
             err_msg: str = "Could not obtain credentials."
-            raise CloudError(err_msg)
+            raise ClientAuthenticationError(err_msg)
         if only_interactive_cred(self.credentials.modern) and not silent:
             logger.warning("Check your default browser for interactive sign-in prompt.")
 
@@ -231,7 +230,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
         )
         if not self.sub_client:
             err_msg = "Could not create a Subscription client."
-            raise CloudError(err_msg)
+            raise ClientAuthenticationError(err_msg)
         logger.info("Connected to Azure Subscription Client")
         self.connected = True
 
@@ -454,7 +453,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
                         "2019-08-01",
                     ).properties
 
-                except CloudError:
+                except HttpResponseError:
                     props = self.resource_client.resources.get_by_id(
                         resource.id,
                         self._get_api(resource_id=resource.id, sub_id=sub_id),
@@ -1023,7 +1022,7 @@ class AzureData:  # pylint:disable=too-many-instance-attributes
 
         if getattr(self, client_name) is None:
             err_msg = "Could not create client"
-            raise CloudError(err_msg)
+            raise ClientAuthenticationError(err_msg)
 
     def _legacy_auth(self: Self, client_name: str, sub_id: str | None = None) -> None:
         """
