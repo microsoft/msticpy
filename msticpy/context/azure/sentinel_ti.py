@@ -505,7 +505,7 @@ class SentinelTIMixin(SentinelUtilsMixin):
                     raise HttpResponseError(err_msg)
         logger.info("Indicator deleted.")
 
-    def query_indicators(  # pylint:disable=too-many-arguments, too-many-locals #noqa:PLR0913
+    def query_indicators(  # pylint:disable=too-many-arguments, too-many-locals, too-many-branches #noqa:PLR0913
         self: Self,
         *,
         include_disabled: bool = False,

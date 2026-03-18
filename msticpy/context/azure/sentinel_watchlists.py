@@ -190,7 +190,7 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
             appendix=watchlist_name_str,
         )
 
-    def add_watchlist_item(
+    def add_watchlist_item(  # noqa: PLR0912 # pylint:disable=too-many-branches
         self: Self,
         watchlist_name: str,
         item: dict | pd.Series | pd.DataFrame,

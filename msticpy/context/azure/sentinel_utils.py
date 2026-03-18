@@ -94,7 +94,7 @@ class SentinelUtilsMixin(AzureData):
             timeout=get_http_timeout(),
         )
 
-    def _list_items(  # noqa:PLR0913
+    def _list_items(  # noqa:PLR0913 #pylint: disable=too-many-locals
         self: Self,
         item_type: str,
         api_version: str = "2020-01-01",

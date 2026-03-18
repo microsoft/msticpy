@@ -114,7 +114,8 @@ class SentinelSearchlistsMixin(SentinelUtilsMixin):
                     raise ResourceNotModifiedError()
                 case _:
                     err_msg = (
-                        f"Received HTTP return code {search_create_response.status_code}: {search_create_response.text}"
+                        f"Received HTTP return code {search_create_response.status_code}: "
+                        f"{search_create_response.text}"
                     )
                     raise HttpResponseError(err_msg)
         logger.info("Search job created with for %s_SRCH.", search_name)
@@ -166,7 +167,8 @@ class SentinelSearchlistsMixin(SentinelUtilsMixin):
                     raise ResourceNotModifiedError()
                 case _:
                     err_msg = (
-                        f"Received HTTP return code {search_check_response.status_code}: {search_check_response.text}"
+                        f"Received HTTP return code {search_check_response.status_code}: "
+                        f"{search_check_response.text}"
                     )
                     raise HttpResponseError(err_msg)
 
@@ -216,7 +218,8 @@ class SentinelSearchlistsMixin(SentinelUtilsMixin):
                     raise ResourceNotModifiedError()
                 case _:
                     err_msg = (
-                        f"Received HTTP return code {search_delete_response.status_code}: {search_delete_response.text}"
+                        f"Received HTTP return code {search_delete_response.status_code}: "
+                        f"{search_delete_response.text}"
                     )
                     raise HttpResponseError(err_msg)
         logger.info("%s_SRCH set for deletion.", search_name)

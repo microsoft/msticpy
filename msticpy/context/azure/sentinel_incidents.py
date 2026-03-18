@@ -339,7 +339,7 @@ class SentinelIncidentsMixin(SentinelBookmarksMixin):
         logger.info("Incident updated.")
         return response.json().get("name")
 
-    def create_incident(  # pylint: disable=too-many-arguments, too-many-locals #noqa:PLR0913
+    def create_incident(  # pylint: disable=too-many-arguments, too-many-locals, too-many-branches #noqa:PLR0913
         self: Self,
         title: str,
         severity: str,
