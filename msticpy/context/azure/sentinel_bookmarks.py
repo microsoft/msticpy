@@ -14,7 +14,13 @@ from uuid import UUID, uuid4
 
 import httpx
 import pandas as pd
-from azure.common.exceptions import CloudError
+from azure.core.exceptions import (
+    ClientAuthenticationError,
+    HttpResponseError,
+    ResourceExistsError,
+    ResourceNotFoundError,
+    ResourceNotModifiedError,
+)
 from IPython.display import display
 from typing_extensions import Self
 
@@ -79,7 +85,11 @@ class SentinelBookmarksMixin(SentinelUtilsMixin):
 
         Raises
         ------
-        CloudError
+        ClientAuthenticationError
+        ResourceNotFoundError
+        ResourceExistsError
+        ResourceNotModifiedError
+        HttpResponseError
             If API returns an error.
 
         """
@@ -112,7 +122,20 @@ class SentinelBookmarksMixin(SentinelUtilsMixin):
         if response.is_success:
             logger.info("Bookmark created.")
             return response.json().get("name")
-        raise CloudError(response=response)
+        match response.status_code:
+            case httpx.codes.UNAUTHORIZED:
+                raise ClientAuthenticationError()
+            case httpx.codes.NOT_FOUND:
+                raise ResourceNotFoundError()
+            case httpx.codes.CONFLICT:
+                raise ResourceExistsError()
+            case httpx.codes.NOT_MODIFIED:
+                raise ResourceNotModifiedError()
+            case _:
+                err_msg = (
+                    f"Received HTTP return code {response.status_code}: {response.text}"
+                )
+                raise HttpResponseError(err_msg)
 
     def delete_bookmark(
         self: Self,
@@ -128,7 +151,11 @@ class SentinelBookmarksMixin(SentinelUtilsMixin):
 
         Raises
         ------
-        CloudError
+        ClientAuthenticationError
+        ResourceNotFoundError
+        ResourceExistsError
+        ResourceNotModifiedError
+        HttpResponseError
             If the API returns an error.
 
         """
@@ -147,8 +174,20 @@ class SentinelBookmarksMixin(SentinelUtilsMixin):
         )
         if response.is_success:
             logger.info("Bookmark deleted.")
-        else:
-            raise CloudError(response=response)
+        match response.status_code:
+            case httpx.codes.UNAUTHORIZED:
+                raise ClientAuthenticationError()
+            case httpx.codes.NOT_FOUND:
+                raise ResourceNotFoundError()
+            case httpx.codes.CONFLICT:
+                raise ResourceExistsError()
+            case httpx.codes.NOT_MODIFIED:
+                raise ResourceNotModifiedError()
+            case _:
+                err_msg = (
+                    f"Received HTTP return code {response.status_code}: {response.text}"
+                )
+                raise HttpResponseError(err_msg)
 
     def _get_bookmark_id(self: Self, bookmark: str) -> str:
         """
