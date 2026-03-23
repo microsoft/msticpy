@@ -225,6 +225,20 @@ def test_get_schema(az_connect, read_schema, monkeypatch):
     check.is_false(azmon_driver.schema)
 
 
+def test_workspace_args_are_normalized(monkeypatch):
+    """Test that workspace Args are mapped to az_connect keyword names."""
+    with custom_mp_config(
+        get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
+    ):
+        azmon_driver = AzureMonitorDriver(debug=True)
+        azmon_driver._get_workspaces(workspace="MyTestWS")
+        connect_kwargs = azmon_driver._get_workspace_settings_args()
+
+    check.equal(connect_kwargs["client_id"], "11111111-1111-1111-1111-111111111111")
+    check.equal(connect_kwargs["certificate_path"], "c:/certs/test-cert.pem")
+    check.equal(connect_kwargs["password"], "[PLACEHOLDER]")
+
+
 def test_query_not_connected():
     """Test KqlDriverAZMon query when not connected."""
     with pytest.raises(MsticpyNotConnectedError):

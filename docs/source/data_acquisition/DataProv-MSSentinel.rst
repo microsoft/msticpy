@@ -215,6 +215,73 @@ You can override several authentication parameters including:
 * auth_types - a list of authentication types to try in order
 * tenant_id - the Azure tenant ID to use for authentication
 
+Using Certificate-based Service Principal Authentication
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Microsoft Sentinel QueryProvider connections support certificate-based
+service principal authentication.
+
+There are two supported ways to use this:
+
+1. Use ``auth_types=["env"]`` and set the Azure SDK certificate
+   environment variables described in
+   :doc:`Azure Authentication <../getting_started/AzureAuthentication>`.
+2. Use ``auth_types=["certificate"]`` and pass the certificate
+   parameters directly to ``connect``.
+
+The environment-variable route is the simplest if you already have a
+working :py:func:`msticpy.auth.azure_auth.az_connect` certificate flow.
+
+.. code:: python
+
+    qry_prov = QueryProvider("MSSentinel")
+    qry_prov.connect(workspace="Default", auth_types=["env"])
+
+If you want to pass the certificate details directly, use Azure SDK
+parameter names:
+
+.. code:: python
+
+    qry_prov = QueryProvider("MSSentinel")
+    qry_prov.connect(
+        workspace="Default",
+        auth_types=["certificate"],
+        tenant_id="<tenant-id>",
+        client_id="<app-id>",
+        certificate_path="/path/to/sp-cert.pem",
+    )
+
+For password-protected PFX certificates, add ``password="<pfx-password>"``.
+If your tenant requires subject name/issuer authentication, add
+``send_certificate_chain=True``.
+
+If you want to keep these settings in ``msticpyconfig.yaml`` for a
+workspace, put them under the workspace ``Args`` section. These values
+are passed through to ``az_connect`` when the provider connects.
+
+.. code:: yaml
+
+    AzureSentinel:
+      Workspaces:
+        Default:
+          WorkspaceId: 271f17d3-5457-4237-9131-ae98a6f55c37
+          TenantId: 335b56ab-67a2-4118-ac14-6eb454f350af
+          Args:
+            client_id: 00000000-0000-0000-0000-000000000000
+            certificate_path: /path/to/sp-cert.pem
+            password:
+              EnvironmentVar: AZURE_CLIENT_CERTIFICATE_PASSWORD
+
+For compatibility, MSTICPy also normalizes common config names such as
+``ClientId``, ``Certificate`` and ``CertificatePassword`` when reading
+workspace ``Args``.
+
+If you see a log message like
+``'certificate' credential requested but client_id param not supplied``
+it usually means that the provider received the certificate request but
+did not receive a ``client_id`` value in the format expected by the
+Azure identity credential builder.
+
 If you are using a Sovereign cloud rather than the Azure global cloud,
 you should follow the guidance in
 :doc:`Azure Authentication <../getting_started/AzureAuthentication>`
