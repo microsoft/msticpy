@@ -174,6 +174,7 @@ class SentinelBookmarksMixin(SentinelUtilsMixin):
         )
         if response.is_success:
             logger.info("Bookmark deleted.")
+            return
         match response.status_code:
             case httpx.codes.UNAUTHORIZED:
                 raise ClientAuthenticationError()
