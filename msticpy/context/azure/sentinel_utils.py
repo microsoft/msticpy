@@ -14,7 +14,13 @@ from typing import Any, cast
 
 import httpx
 import pandas as pd
-from azure.common.exceptions import CloudError
+from azure.core.exceptions import (
+    ClientAuthenticationError,
+    HttpResponseError,
+    ResourceExistsError,
+    ResourceNotFoundError,
+    ResourceNotModifiedError,
+)
 from azure.mgmt.core import tools as az_tools
 
 # pylint: disable=import-error, no-name-in-module
@@ -88,7 +94,7 @@ class SentinelUtilsMixin(AzureData):
             timeout=get_http_timeout(),
         )
 
-    def _list_items(  # noqa:PLR0913
+    def _list_items(  # noqa:PLR0913 #pylint: disable=too-many-locals
         self: Self,
         item_type: str,
         api_version: str = "2020-01-01",
@@ -120,7 +126,11 @@ class SentinelUtilsMixin(AzureData):
 
         Raises
         ------
-        CloudError
+        ClientAuthenticationError
+        ResourceNotFoundError
+        ResourceExistsError
+        ResourceNotModifiedError
+        HttpResponseError
             If a valid result is not returned.
 
         """
@@ -134,7 +144,18 @@ class SentinelUtilsMixin(AzureData):
         if response.is_success:
             results_df: pd.DataFrame = _azs_api_result_to_df(response)
         else:
-            raise CloudError(response=response)
+            match response.status_code:
+                case httpx.codes.UNAUTHORIZED:
+                    raise ClientAuthenticationError()
+                case httpx.codes.NOT_FOUND:
+                    raise ResourceNotFoundError()
+                case httpx.codes.CONFLICT:
+                    raise ResourceExistsError()
+                case httpx.codes.NOT_MODIFIED:
+                    raise ResourceNotModifiedError()
+                case _:
+                    err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
+                    raise HttpResponseError(err_msg)
         j_resp: dict[str, Any] = response.json()
         results: list[pd.DataFrame] = [results_df]
         # If nextLink in response, go get that data as well
@@ -341,7 +362,9 @@ def parse_resource_id(res_id: str) -> dict[str, Any]:
     """Extract components from workspace resource ID."""
     if not res_id.startswith("/"):
         res_id = f"/{res_id}"
-    res_id_parts: dict[str, str] = cast(dict[str, str], az_tools.parse_resource_id(res_id))
+    res_id_parts: dict[str, str] = cast(
+        dict[str, str], az_tools.parse_resource_id(res_id)
+    )
     workspace_name: str | None = None
     if (
         res_id_parts.get("namespace") == "Microsoft.OperationalInsights"

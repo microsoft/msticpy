@@ -83,7 +83,7 @@ _TOKEN_WRAPPER = ["Bearer", "__b64_str__"]
 _TOKEN = {
     "tokenType": "Bearer",
     "expiresIn": 3000,
-    "expiresOn": str(datetime.now() + timedelta(0.1)),
+    "expiresOn": (datetime.now() + timedelta(0.1)).timestamp(),
     "resource": "https://management.core.windows.net/",
     "accessToken": "_b64_token_string_",
     "refreshToken": "_b64_token_string2_",
@@ -92,7 +92,7 @@ _TOKEN = {
 _CLI_TESTS = [
     (({}, None), AzureCliStatus.CLI_OK),
     (
-        ({"expiresOn": str(datetime.now() - timedelta(0.1))}, None),
+        ({"expiresOn": (datetime.now() - timedelta(0.1)).timestamp()}, None),
         AzureCliStatus.CLI_TOKEN_EXPIRED,
     ),
     (({}, ImportError), AzureCliStatus.CLI_NOT_INSTALLED),
@@ -123,8 +123,15 @@ class CliProfile:
         """Return raw token."""
         return (*_TOKEN_WRAPPER, self.token), None, None
 
+    def get_token_info(self, scope):
+        """Return raw token."""
+        del scope
+        token: MagicMock = MagicMock()
+        token.expires_on = self.token["expiresOn"]
+        return token
 
-@patch(check_cli_credentials.__module__ + ".get_cli_profile")
+
+@patch(check_cli_credentials.__module__ + ".AzureCliCredential")
 @pytest.mark.parametrize("test, expected", _CLI_TESTS, ids=_test_ids(_CLI_TESTS))
 def test_check_cli_credentials(get_cli_profile, test, expected):
     # sourcery skip: use-fstring-for-concatenation

@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from urllib import parse
 
 import httpx
-from msrestazure import tools as az_tools
+from azure.mgmt.core import tools as az_tools
 from typing_extensions import Self
 
 from msticpy.context.azure.sentinel_utils import SentinelUtilsMixin
@@ -334,7 +334,10 @@ class SentinelWorkspacesMixin(SentinelUtilsMixin):
 
         raw_res_id: str = uri_match.groupdict()["res_id"]
         raw_res_id = parse.unquote(raw_res_id)
-        res_components: dict[str, Any] = az_tools.parse_resource_id(raw_res_id)
+        res_components: dict[str, Any] = {
+            key: str(value)
+            for key, value in az_tools.parse_resource_id(raw_res_id).items()
+        }
         try:
             resource_id: str = cls._normalize_resource_id(res_components)
         except KeyError:

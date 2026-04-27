@@ -16,8 +16,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, ClassVar
 
-from azure.common.credentials import get_cli_profile
-from azure.core.credentials import TokenCredential
+from azure.core.credentials import AccessTokenInfo, TokenCredential
 from azure.core.exceptions import ClientAuthenticationError
 from azure.identity import (
     AzureCliCredential,
@@ -31,7 +30,6 @@ from azure.identity import (
     ManagedIdentityCredential,
     VisualStudioCodeCredential,
 )
-from dateutil import parser
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyAzureConfigError
@@ -536,13 +534,10 @@ class AzureCliStatus(Enum):
 def check_cli_credentials() -> tuple[AzureCliStatus, str | None]:
     """Check to see if there is a CLI session with a valid AAD token."""
     try:
-        cli_profile = get_cli_profile()
-        raw_token = cli_profile.get_raw_token()
-        bearer_token = None
-        if isinstance(raw_token, tuple) and len(raw_token) == 3 and len(raw_token[0]) == 3:
-            bearer_token = raw_token[0][2]
-            if parser.parse(bearer_token.get("expiresOn", datetime.min)) < datetime.now():
-                raise ValueError("AADSTS70043: The refresh token has expired")
+        cli_profile: AzureCliCredential = AzureCliCredential()
+        token: AccessTokenInfo = cli_profile.get_token_info("/.default")
+        if token.expires_on < datetime.now().timestamp():
+            raise ValueError("AADSTS70043: The refresh token has expired")
 
         return AzureCliStatus.CLI_OK, "Azure CLI credentials available."
     except ImportError:
