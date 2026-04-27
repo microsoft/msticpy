@@ -13,7 +13,13 @@ from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 import httpx
-from azure.common.exceptions import CloudError
+from azure.core.exceptions import (
+    ClientAuthenticationError,
+    HttpResponseError,
+    ResourceExistsError,
+    ResourceNotFoundError,
+    ResourceNotModifiedError,
+)
 from typing_extensions import Self
 
 from ..._version import VERSION
@@ -61,7 +67,11 @@ class SentinelSearchlistsMixin(SentinelUtilsMixin):
 
         Raises
         ------
-        CloudError
+        ClientAuthenticationError
+        ResourceNotFoundError
+        ResourceExistsError
+        ResourceNotModifiedError
+        HttpResponseError
             If there is an error creating the search job.
 
         """
@@ -93,7 +103,21 @@ class SentinelSearchlistsMixin(SentinelUtilsMixin):
             timeout=60,
         )
         if not search_create_response.is_success:
-            raise CloudError(response=search_create_response)
+            match search_create_response.status_code:
+                case httpx.codes.UNAUTHORIZED:
+                    raise ClientAuthenticationError()
+                case httpx.codes.NOT_FOUND:
+                    raise ResourceNotFoundError()
+                case httpx.codes.CONFLICT:
+                    raise ResourceExistsError()
+                case httpx.codes.NOT_MODIFIED:
+                    raise ResourceNotModifiedError()
+                case _:
+                    err_msg = (
+                        f"Received HTTP return code {search_create_response.status_code}: "
+                        f"{search_create_response.text}"
+                    )
+                    raise HttpResponseError(err_msg)
         logger.info("Search job created with for %s_SRCH.", search_name)
 
     def check_search_status(self: Self, search_name: str) -> bool:
@@ -112,7 +136,11 @@ class SentinelSearchlistsMixin(SentinelUtilsMixin):
 
         Raises
         ------
-        CloudError
+        ClientAuthenticationError
+        ResourceNotFoundError
+        ResourceExistsError
+        ResourceNotModifiedError
+        HttpResponseError
             If error in checking the search job status.
 
         """
@@ -128,7 +156,21 @@ class SentinelSearchlistsMixin(SentinelUtilsMixin):
             headers=get_api_headers(self._token),
         )
         if not search_check_response.is_success:
-            raise CloudError(response=search_check_response)
+            match search_check_response.status_code:
+                case httpx.codes.UNAUTHORIZED:
+                    raise ClientAuthenticationError()
+                case httpx.codes.NOT_FOUND:
+                    raise ResourceNotFoundError()
+                case httpx.codes.CONFLICT:
+                    raise ResourceExistsError()
+                case httpx.codes.NOT_MODIFIED:
+                    raise ResourceNotModifiedError()
+                case _:
+                    err_msg = (
+                        f"Received HTTP return code {search_check_response.status_code}: "
+                        f"{search_check_response.text}"
+                    )
+                    raise HttpResponseError(err_msg)
 
         check_result: str = search_check_response.json()["properties"]["provisioningState"]
         logger.info("%s_SRCH status is '%s'", search_name, check_result)
@@ -145,7 +187,11 @@ class SentinelSearchlistsMixin(SentinelUtilsMixin):
 
         Raises
         ------
-        CloudError
+        ClientAuthenticationError
+        ResourceNotFoundError
+        ResourceExistsError
+        ResourceNotModifiedError
+        HttpResponseError
             If an error occurs when attempting to delete the search
 
         """
@@ -161,5 +207,19 @@ class SentinelSearchlistsMixin(SentinelUtilsMixin):
             headers=get_api_headers(self._token),
         )
         if not search_delete_response.is_success:
-            raise CloudError(response=search_delete_response)
+            match search_delete_response.status_code:
+                case httpx.codes.UNAUTHORIZED:
+                    raise ClientAuthenticationError()
+                case httpx.codes.NOT_FOUND:
+                    raise ResourceNotFoundError()
+                case httpx.codes.CONFLICT:
+                    raise ResourceExistsError()
+                case httpx.codes.NOT_MODIFIED:
+                    raise ResourceNotModifiedError()
+                case _:
+                    err_msg = (
+                        f"Received HTTP return code {search_delete_response.status_code}: "
+                        f"{search_delete_response.text}"
+                    )
+                    raise HttpResponseError(err_msg)
         logger.info("%s_SRCH set for deletion.", search_name)
