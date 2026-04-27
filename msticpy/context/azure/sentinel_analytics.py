@@ -270,7 +270,9 @@ class SentinelAnalyticsMixin(SentinelUtilsMixin):
                 case httpx.codes.NOT_MODIFIED:
                     raise ResourceNotModifiedError()
                 case _:
-                    err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
+                    err_msg = (
+                        f"Received HTTP return code {response.status_code}: {response.text}"
+                    )
                     raise HttpResponseError(err_msg)
         logger.info("Analytic Created.")
         return response.json().get("name")
@@ -355,7 +357,9 @@ class SentinelAnalyticsMixin(SentinelUtilsMixin):
                 case httpx.codes.CONFLICT:
                     raise ResourceExistsError()
                 case _:
-                    err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
+                    err_msg = (
+                        f"Received HTTP return code {response.status_code}: {response.text}"
+                    )
                     raise HttpResponseError(err_msg)
         logger.info("Analytic Deleted.")
 
