@@ -265,7 +265,6 @@ autodoc_mock_imports = [
     "msal",
     "msal_extensions",
     "msrest",
-    "msrestazure",
     "msrest.authentication",
     "nest_asyncio",
     "networkx",
