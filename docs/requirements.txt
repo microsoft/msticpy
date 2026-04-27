@@ -18,6 +18,6 @@ pyyaml>=3.13
 typing-extensions>=4.2.0
 readthedocs-sphinx-ext>=2.2.5
 seed_intersphinx_mapping
-sphinx-rtd-theme>=3.0.0,<4.0
+sphinx-rtd-theme>=3.1.0,<4.0
 sphinx>=9.0,<10.0
 sphinxcontrib-jquery>=4.1,<5
