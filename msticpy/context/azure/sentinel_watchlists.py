@@ -13,7 +13,13 @@ from uuid import uuid4
 
 import httpx
 import pandas as pd
-from azure.common.exceptions import CloudError
+from azure.core.exceptions import (
+    ClientAuthenticationError,
+    HttpResponseError,
+    ResourceExistsError,
+    ResourceNotFoundError,
+    ResourceNotModifiedError,
+)
 from typing_extensions import Self
 
 from ..._version import VERSION
@@ -45,7 +51,11 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
 
         Raises
         ------
-        CloudError
+        ClientAuthenticationError
+        ResourceNotFoundError
+        ResourceExistsError
+        ResourceNotModifiedError
+        HttpResponseError
             If a valid result is not returned.
 
         """
@@ -94,7 +104,11 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
         ------
         MsticpyUserError
             Raised if the watchlist name already exists.
-        CloudError
+        ClientAuthenticationError
+        ResourceNotFoundError
+        ResourceExistsError
+        ResourceNotModifiedError
+        HttpResponseError
             If there is an issue creating the watchlist.
 
         """
@@ -126,7 +140,18 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
             timeout=get_http_timeout(),
         )
         if not response.is_success:
-            raise CloudError(response=response)
+            match response.status_code:
+                case httpx.codes.UNAUTHORIZED:
+                    raise ClientAuthenticationError()
+                case httpx.codes.NOT_FOUND:
+                    raise ResourceNotFoundError()
+                case httpx.codes.CONFLICT:
+                    raise ResourceExistsError()
+                case httpx.codes.NOT_MODIFIED:
+                    raise ResourceNotModifiedError()
+                case _:
+                    err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
+                    raise HttpResponseError(err_msg)
 
         logger.info("Watchlist created.")
         return response.json().get("name")
@@ -150,7 +175,11 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
 
         Raises
         ------
-        CloudError
+        ClientAuthenticationError
+        ResourceNotFoundError
+        ResourceExistsError
+        ResourceNotModifiedError
+        HttpResponseError
             If a valid result is not returned.
 
         """
@@ -161,7 +190,7 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
             appendix=watchlist_name_str,
         )
 
-    def add_watchlist_item(
+    def add_watchlist_item(  # noqa: PLR0912 # pylint:disable=too-many-branches
         self: Self,
         watchlist_name: str,
         item: dict | pd.Series | pd.DataFrame,
@@ -187,7 +216,11 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
             If the specified Watchlist does not exist.
         MsticpyUserError
             If the item already exists in the Watchlist and overwrite is set to False
-        CloudError
+        ClientAuthenticationError
+        ResourceNotFoundError
+        ResourceExistsError
+        ResourceNotModifiedError
+        HttpResponseError
             If the API returns an error.
 
         """
@@ -253,7 +286,18 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
                 timeout=get_http_timeout(),
             )
             if not response.is_success:
-                raise CloudError(response=response)
+                match response.status_code:
+                    case httpx.codes.UNAUTHORIZED:
+                        raise ClientAuthenticationError()
+                    case httpx.codes.NOT_FOUND:
+                        raise ResourceNotFoundError()
+                    case httpx.codes.CONFLICT:
+                        raise ResourceExistsError()
+                    case httpx.codes.NOT_MODIFIED:
+                        raise ResourceNotModifiedError()
+                    case _:
+                        err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
+                        raise HttpResponseError(err_msg)
 
         logger.info("Items added to %s", watchlist_name)
 
@@ -273,7 +317,11 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
         ------
         MsticpyUserError
             If Watchlist does not exist.
-        CloudError
+        ClientAuthenticationError
+        ResourceNotFoundError
+        ResourceExistsError
+        ResourceNotModifiedError
+        HttpResponseError
             If the API returns an error.
 
         """
@@ -294,7 +342,18 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
             timeout=get_http_timeout(),
         )
         if not response.is_success:
-            raise CloudError(response=response)
+            match response.status_code:
+                case httpx.codes.UNAUTHORIZED:
+                    raise ClientAuthenticationError()
+                case httpx.codes.NOT_FOUND:
+                    raise ResourceNotFoundError()
+                case httpx.codes.CONFLICT:
+                    raise ResourceExistsError()
+                case httpx.codes.NOT_MODIFIED:
+                    raise ResourceNotModifiedError()
+                case _:
+                    err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
+                    raise HttpResponseError(err_msg)
         logger.info("Watchlist %s deleted", watchlist_name)
 
     def delete_watchlist_item(
@@ -316,7 +375,11 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
         ------
         MsticpyUserError
             If the specified Watchlist does not exist.
-        CloudError
+        ClientAuthenticationError
+        ResourceNotFoundError
+        ResourceExistsError
+        ResourceNotModifiedError
+        HttpResponseError
             If the API returns an error.
 
         """
@@ -340,7 +403,18 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
             timeout=get_http_timeout(),
         )
         if not response.is_success:
-            raise CloudError(response=response)
+            match response.status_code:
+                case httpx.codes.UNAUTHORIZED:
+                    raise ClientAuthenticationError()
+                case httpx.codes.NOT_FOUND:
+                    raise ResourceNotFoundError()
+                case httpx.codes.CONFLICT:
+                    raise ResourceExistsError()
+                case httpx.codes.NOT_MODIFIED:
+                    raise ResourceNotModifiedError()
+                case _:
+                    err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
+                    raise HttpResponseError(err_msg)
 
         logger.info("Item deleted from %s", watchlist_name)
 

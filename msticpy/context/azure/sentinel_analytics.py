@@ -14,7 +14,13 @@ from uuid import UUID, uuid4
 
 import httpx
 import pandas as pd
-from azure.common.exceptions import CloudError
+from azure.core.exceptions import (
+    ClientAuthenticationError,
+    HttpResponseError,
+    ResourceExistsError,
+    ResourceNotFoundError,
+    ResourceNotModifiedError,
+)
 from IPython.display import display
 from typing_extensions import Self
 
@@ -190,7 +196,11 @@ class SentinelAnalyticsMixin(SentinelUtilsMixin):
         ------
         MsticpyUserError
             If template provided isn't found.
-        CloudError
+        ClientAuthenticationError
+        ResourceNotFoundError
+        ResourceExistsError
+        ResourceNotModifiedError
+        HttpResponseError
             If the API returns an error.
 
         """
@@ -250,7 +260,18 @@ class SentinelAnalyticsMixin(SentinelUtilsMixin):
             timeout=get_http_timeout(),
         )
         if not response.is_success:
-            raise CloudError(response=response)
+            match response.status_code:
+                case httpx.codes.UNAUTHORIZED:
+                    raise ClientAuthenticationError()
+                case httpx.codes.NOT_FOUND:
+                    raise ResourceNotFoundError()
+                case httpx.codes.CONFLICT:
+                    raise ResourceExistsError()
+                case httpx.codes.NOT_MODIFIED:
+                    raise ResourceNotModifiedError()
+                case _:
+                    err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
+                    raise HttpResponseError(err_msg)
         logger.info("Analytic Created.")
         return response.json().get("name")
 
@@ -305,7 +326,10 @@ class SentinelAnalyticsMixin(SentinelUtilsMixin):
 
         Raises
         ------
-        CloudError
+        ClientAuthenticationError
+        ResourceNotFoundError
+        ResourceExistsError
+        HttpResponseError
             If the API returns an error.
 
         """
@@ -323,7 +347,16 @@ class SentinelAnalyticsMixin(SentinelUtilsMixin):
             timeout=get_http_timeout(),
         )
         if response.is_error:
-            raise CloudError(response=response)
+            match response.status_code:
+                case httpx.codes.UNAUTHORIZED:
+                    raise ClientAuthenticationError()
+                case httpx.codes.NOT_FOUND:
+                    raise ResourceNotFoundError()
+                case httpx.codes.CONFLICT:
+                    raise ResourceExistsError()
+                case _:
+                    err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
+                    raise HttpResponseError(err_msg)
         logger.info("Analytic Deleted.")
 
     def list_analytic_templates(self) -> pd.DataFrame:
@@ -337,7 +370,11 @@ class SentinelAnalyticsMixin(SentinelUtilsMixin):
 
         Raises
         ------
-        CloudError
+        ClientAuthenticationError
+        ResourceNotFoundError
+        ResourceExistsError
+        ResourceNotModifiedError
+        HttpResponseError
             If a valid result is not returned.
 
         """

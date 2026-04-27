@@ -7,7 +7,7 @@
 # pylint: disable=missing-function-docstring,redefined-outer-name,unused-argument
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 import pandas as pd
 import pytest
@@ -22,6 +22,8 @@ from msticpy.common.exceptions import (
 
 _OPEN_OBSERVE_NOT_LOADED = True
 try:
+    import httpx
+
     from msticpy.data.drivers.openobserve_driver import OpenObserveDriver
 
     _OPEN_OBSERVE_NOT_LOADED = False
@@ -31,44 +33,21 @@ except ImportError:
 UTC = timezone.utc
 OO_HOST = OO_USER = OO_PASS = "MOCK_INPUT"
 
-
-def mock_post(*args, **kwargs):
-    """MockResponse function for openobserve calls of requests.post."""
-    url = args[0]
-
-    class MockResponse:
-        """MockResponse class for openobserve calls of requests.post."""
-
-        def __init__(self, json_data, status_code):
-            self.json_data = json_data
-            self.status_code = status_code
-
-        def json(self):
-            return self.json_data
-
-    if "/api/default/_search" in url:
-        return MockResponse(
-            {
-                "took": 155,
-                "hits": [
-                    {
-                        "_p": "F",
-                        "_timestamp": 1674213225158000,
-                        "log": (
-                            "[2023-01-20T11:13:45Z INFO  actix_web::middleware::logger] "
-                            '10.2.80.192 "POST /api/demo/_bulk HTTP/1.1" 200 68 "-" '
-                            '"go-resty/2.7.0 (https://github.com/go-resty/resty)" 0.001074',
-                        ),
-                        "stream": "stderr",
-                    }
-                ],
-                "total": 27179431,
-                "from": 0,
-                "size": 1,
-                "scan_size": 28943,
-            },
-            200,
-        )
+_SEARCH_RESULT_DF = pd.DataFrame(
+    [
+        {
+            "_p": "F",
+            "_timestamp": 1674213225158000,
+            "log": (
+                "[2023-01-20T11:13:45Z INFO  actix_web::middleware::logger] "
+                '10.2.80.192 "POST /api/demo/_bulk HTTP/1.1" 200 68 "-" '
+                '"go-resty/2.7.0 (https://github.com/go-resty/resty)"'
+                " 0.001074"
+            ),
+            "stream": "stderr",
+        }
+    ]
+)
 
 
 @pytest.mark.skipif(_OPEN_OBSERVE_NOT_LOADED, reason="OpenObserve driver not installed")
@@ -105,24 +84,31 @@ def test_openobserve_connect_errors():
     openobserve_driver.connect(
         connection_str="invalid", user="***", password="***"
     )  # nosec
-
-    with pytest.raises(MsticpyConnectionError) as mp_ex:
-        openobserve_driver.query('select * from "default"', days=1)
-    check.is_in(
-        (
-            "Failed to search job: Invalid URL 'invalid/api/default/_search': "
-            "No scheme supplied. Perhaps you meant https://invalid/api/default/_search?"
+    openobserve_driver.service.search2df = MagicMock(
+        side_effect=httpx.UnsupportedProtocol(
+            "Request URL is missing an 'http://' or 'https://' protocol."
         ),
-        mp_ex.value.args,
     )
+    with pytest.raises(
+        MsticpyConnectionError,
+        match="Communication error connecting to OpenObserve:",
+    ):
+        openobserve_driver.query('select * from "default"', days=1)
 
     openobserve_driver = OpenObserveDriver()
     openobserve_driver.connect(
-        connection_str="https://nonexistent.example.com", user="***", password="***"
+        connection_str="https://nonexistent.example.com",
+        user="***",
+        password="***",
     )  # nosec
+    openobserve_driver.service.search2df = MagicMock(
+        side_effect=httpx.ConnectError(
+            "[Errno -5] No address associated with hostname"
+        ),
+    )
     with pytest.raises(
         MsticpyConnectionError,
-        match="Max retries exceeded with url:",
+        match="Communication error connecting to OpenObserve:",
     ):
         openobserve_driver.query('select * from "default"', days=1)
 
@@ -139,11 +125,13 @@ def test_openobserve_query_no_connect():
 
 
 @pytest.mark.skipif(_OPEN_OBSERVE_NOT_LOADED, reason="OpenObserve driver not installed")
-@patch("requests.post", side_effect=mock_post)
-def test_openobserve_query(mock_post):
+def test_openobserve_query():
     """Check queries with different outcomes."""
     openobserve_drv = OpenObserveDriver()
     openobserve_drv.connect(connection_str=OO_HOST, user=OO_USER, password=OO_PASS)
+    openobserve_drv.service.search2df = MagicMock(
+        return_value=_SEARCH_RESULT_DF.copy()
+    )
     end = datetime.now(UTC)
     start = end - timedelta(1)
 
@@ -155,11 +143,13 @@ def test_openobserve_query(mock_post):
 
 
 @pytest.mark.skipif(_OPEN_OBSERVE_NOT_LOADED, reason="OpenObserve driver not installed")
-@patch("requests.post", side_effect=mock_post)
-def test_openobserve_query_params(mock_post):
+def test_openobserve_query_params():
     """Check queries with different parameters."""
     openobserve_drv = OpenObserveDriver()
     openobserve_drv.connect(connection_str=OO_HOST, user=OO_USER, password=OO_PASS)
+    openobserve_drv.service.search2df = MagicMock(
+        return_value=_SEARCH_RESULT_DF.copy()
+    )
 
     df_result = openobserve_drv.query("RecordSuccess", days=1)
     check.is_instance(df_result, pd.DataFrame)
@@ -171,11 +161,13 @@ def test_openobserve_query_params(mock_post):
 
 
 @pytest.mark.skipif(_OPEN_OBSERVE_NOT_LOADED, reason="OpenObserve driver not installed")
-@patch("requests.post", side_effect=mock_post)
-def test_openobserve_query_export(mock_post, tmpdir):
+def test_openobserve_query_export(tmpdir):
     """Check queries with different parameters."""
     openobserve_drv = OpenObserveDriver()
     openobserve_drv.connect(connection_str=OO_HOST, user=OO_USER, password=OO_PASS)
+    openobserve_drv.service.search2df = MagicMock(
+        return_value=_SEARCH_RESULT_DF.copy()
+    )
     ext = "csv"
     exp_file = f"openobserve_test.{ext}"
     f_path = tmpdir.join(exp_file)

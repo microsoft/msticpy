@@ -32,7 +32,7 @@ EXTRAS = {
     "sumologic": ["sumologic-sdk>=0.1.11", "openpyxl>=3.0"],
     "azure": [
         "azure-mgmt-compute>=4.6.2",
-        "azure-mgmt-core>=1.2.1",
+        "azure-mgmt-core>=1.6.0",
         "azure-mgmt-monitor>=2.0.0",
         "azure-mgmt-network>=2.7.0",
         "azure-mgmt-resource>=16.1.0",
