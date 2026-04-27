@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import logging
+import sys
 import tarfile
 import zipfile
 from pathlib import Path
@@ -60,15 +61,13 @@ def validate_archive_member_path(
         )
     dest = Path(dest_dir).resolve()
     target = (dest / member_name).resolve()
-    if not (target == dest or str(target).startswith(str(dest) + "\\")):
-        # Also check with forward slash for cross-platform safety
-        if not str(target).startswith(str(dest) + "/"):
-            raise MsticpyUserError(
-                f"Archive member path escapes the destination directory: '{member_name}'.",
-                f"Resolved path '{target}' is outside '{dest}'.",
-                "This may indicate a malicious archive (path traversal attack).",
-                title="Unsafe archive member path",
-            )
+    if not target.is_relative_to(dest):
+        raise MsticpyUserError(
+            f"Archive member path escapes the destination directory: '{member_name}'.",
+            f"Resolved path '{target}' is outside '{dest}'.",
+            "This may indicate a malicious archive (path traversal attack).",
+            title="Unsafe archive member path",
+        )
     logger.debug("Validated archive member path: %s", member_name)
     return target
 
@@ -100,10 +99,22 @@ def safe_tar_extract(
         symlink/hardlink pointing outside dest_dir.
 
     """
-    if member.issym() or member.islnk():
-        _validate_tar_link(member, dest_dir)
+    if not (member.isreg() or member.isdir()):
+        if member.issym() or member.islnk():
+            _validate_tar_link(member, dest_dir)
+        else:
+            raise MsticpyUserError(
+                "Archive contains an unsupported member"
+                f" type: '{member.name}'"
+                f" (type={member.type}).",
+                "Only regular files and directories are allowed.",
+                title="Unsafe archive member type",
+            )
     validate_archive_member_path(member.name, dest_dir)
-    tar.extract(member, dest_dir)
+    if sys.version_info >= (3, 12):
+        tar.extract(member, dest_dir, filter="data")
+    else:
+        tar.extract(member, dest_dir)
 
 
 def safe_zip_extract(
@@ -168,11 +179,7 @@ def _validate_tar_link(
     # Resolve link target relative to the member's directory
     member_dir = (dest / member.name).resolve().parent
     resolved_link = (member_dir / link_target).resolve()
-    if not (
-        resolved_link == dest
-        or str(resolved_link).startswith(str(dest) + "\\")
-        or str(resolved_link).startswith(str(dest) + "/")
-    ):
+    if not resolved_link.is_relative_to(dest):
         raise MsticpyUserError(
             "Archive contains a link that escapes the"
             f" destination: '{member.name}'"

@@ -132,14 +132,15 @@ def get_sentinel_queries_from_github(
             archive = zipfile.ZipFile(repo_zip, mode="r")
 
         # Only extract Detections and Hunting Queries Folder
-        for file in archive.namelist():  # type: ignore
-            if file.startswith(  # type: ignore
-                (
-                    "Azure-Sentinel-master/Detections/",
-                    "Azure-Sentinel-master/Hunting Queries/",
-                )
-            ):
-                safe_zip_extract(archive, file, outputdir)  # type: ignore
+        with archive:  # type: ignore
+            for file in archive.namelist():  # type: ignore
+                if file.startswith(  # type: ignore
+                    (
+                        "Azure-Sentinel-master/Detections/",
+                        "Azure-Sentinel-master/Hunting Queries/",
+                    )
+                ):
+                    safe_zip_extract(archive, file, outputdir)  # type: ignore
         print("Downloaded and Extracted Files successfully")
         return True
 

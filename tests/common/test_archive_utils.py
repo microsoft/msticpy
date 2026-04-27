@@ -139,6 +139,19 @@ class TestSafeTarExtract:
                 with pytest.raises(MsticpyUserError):
                     safe_tar_extract(tar, member, tmp_path)
 
+    def test_rejects_device_member(self, tmp_path: Path) -> None:
+        """Reject tar member with unsupported type (device file)."""
+        buf = io.BytesIO()
+        with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+            info = tarfile.TarInfo(name="devfile")
+            info.type = tarfile.CHRTYPE
+            tar.addfile(info)
+        buf.seek(0)
+        with tarfile.open(fileobj=buf, mode="r:gz") as tar:
+            for member in tar.getmembers():
+                with pytest.raises(MsticpyUserError, match="unsupported"):
+                    safe_tar_extract(tar, member, tmp_path)
+
 
 class TestSafeZipExtract:
     """Tests for safe_zip_extract."""
