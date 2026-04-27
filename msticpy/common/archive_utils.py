@@ -106,7 +106,7 @@ def safe_tar_extract(
             raise MsticpyUserError(
                 "Archive contains an unsupported member"
                 f" type: '{member.name}'"
-                f" (type={member.type}).",
+                f" (type={member.type!r}).",
                 "Only regular files and directories are allowed.",
                 title="Unsafe archive member type",
             )

@@ -154,7 +154,9 @@ class SentinelUtilsMixin(AzureData):
                 case httpx.codes.NOT_MODIFIED:
                     raise ResourceNotModifiedError()
                 case _:
-                    err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
+                    err_msg = (
+                        f"Received HTTP return code {response.status_code}: {response.text}"
+                    )
                     raise HttpResponseError(err_msg)
         j_resp: dict[str, Any] = response.json()
         results: list[pd.DataFrame] = [results_df]
@@ -362,9 +364,7 @@ def parse_resource_id(res_id: str) -> dict[str, Any]:
     """Extract components from workspace resource ID."""
     if not res_id.startswith("/"):
         res_id = f"/{res_id}"
-    res_id_parts: dict[str, str] = cast(
-        dict[str, str], az_tools.parse_resource_id(res_id)
-    )
+    res_id_parts: dict[str, str] = cast(dict[str, str], az_tools.parse_resource_id(res_id))
     workspace_name: str | None = None
     if (
         res_id_parts.get("namespace") == "Microsoft.OperationalInsights"
