@@ -164,6 +164,41 @@ AZURE_TENANT_ID	      id of the application's Azure Active Directory tenant
 AZURE_CLIENT_SECRET	  one of the application's client secrets
 ==================== ========================================================
 
+To use AppID and certificate authentication, set these environment variables
+
+======================================= ========================================================
+variable name	                         value
+======================================= ========================================================
+AZURE_CLIENT_ID	                         id of an Azure Active Directory application
+AZURE_TENANT_ID	                         id of the application's Azure Active Directory tenant
+AZURE_CLIENT_CERTIFICATE_PATH	         path to a PEM or PFX certificate containing the private key
+AZURE_CLIENT_CERTIFICATE_PASSWORD	     optional password for a PFX certificate
+AZURE_CLIENT_SEND_CERTIFICATE_CHAIN	   optional boolean (`true`/`1`) to send the x5c certificate chain
+======================================= ========================================================
+
+Using Certificate Credentials Directly
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**auth_method = "certificate"**
+
+If you don't want to rely on environment variables, you can pass the
+certificate settings directly to :py:func:`msticpy.auth.azure_auth.az_connect`.
+
+.. code:: python
+
+  from msticpy.auth.azure_auth import az_connect
+
+  creds = az_connect(
+    auth_methods=["certificate"],
+    tenant_id="<tenant-id>",
+    client_id="<app-id>",
+    certificate_path="/path/to/sp-cert.pem",
+  )
+
+For password-protected PFX certificates, add the ``password`` keyword
+argument. If your tenant requires subject name/issuer authentication,
+you can also pass ``send_certificate_chain=True``.
+
 Using Device-code Credentials
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -220,6 +255,9 @@ include:
 - The :py:func:`az_connect <msticpy.auth.azure_auth.az_connect>` function.
 - The :py:meth:`QueryProvider.connect <msticpy.data.core.data_providers.QueryProvider.connect>`
   for Azure data services (such as Microsoft Sentinel)
+
+For :py:meth:`QueryProvider.connect <msticpy.data.core.data_providers.QueryProvider.connect>`
+the equivalent parameter name is ``auth_types``.
 
 Specify the list of one or more ``auth_methods`` that you want to use
 as a list of strings. The authentication methods will be tried in
