@@ -1,6 +1,6 @@
 aiohttp>=3.7.4
 async-cache>=1.1.1
-bandit>=1.7.0
+bandit>=1.9.4
 beautifulsoup4>=4.0.0
 coverage>=5.5
 docutils<0.22.0
