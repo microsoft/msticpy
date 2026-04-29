@@ -1,4 +1,4 @@
-aiohttp>=3.7.4
+aiohttp>=3.13.5
 async-cache>=1.1.1
 bandit>=1.7.0
 beautifulsoup4>=4.0.0
