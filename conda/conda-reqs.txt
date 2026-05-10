@@ -51,5 +51,5 @@ statsmodels
 tldextract>=2.2.2
 tornado>=6.4.2  # (sec vuln) transitive dependency via bokeh
 tqdm>=4.36.1
-typing-extensions>=4.2.0
+typing-extensions>=4.15.0
 urllib3>=2.6.3
