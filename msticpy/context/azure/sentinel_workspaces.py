@@ -335,8 +335,7 @@ class SentinelWorkspacesMixin(SentinelUtilsMixin):
         raw_res_id: str = uri_match.groupdict()["res_id"]
         raw_res_id = parse.unquote(raw_res_id)
         res_components: dict[str, Any] = {
-            key: str(value)
-            for key, value in az_tools.parse_resource_id(raw_res_id).items()
+            key: str(value) for key, value in az_tools.parse_resource_id(raw_res_id).items()
         }
         try:
             resource_id: str = cls._normalize_resource_id(res_components)

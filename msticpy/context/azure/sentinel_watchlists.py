@@ -150,7 +150,9 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
                 case httpx.codes.NOT_MODIFIED:
                     raise ResourceNotModifiedError()
                 case _:
-                    err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
+                    err_msg = (
+                        f"Received HTTP return code {response.status_code}: {response.text}"
+                    )
                     raise HttpResponseError(err_msg)
 
         logger.info("Watchlist created.")
@@ -352,7 +354,9 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
                 case httpx.codes.NOT_MODIFIED:
                     raise ResourceNotModifiedError()
                 case _:
-                    err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
+                    err_msg = (
+                        f"Received HTTP return code {response.status_code}: {response.text}"
+                    )
                     raise HttpResponseError(err_msg)
         logger.info("Watchlist %s deleted", watchlist_name)
 
@@ -413,7 +417,9 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
                 case httpx.codes.NOT_MODIFIED:
                     raise ResourceNotModifiedError()
                 case _:
-                    err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
+                    err_msg = (
+                        f"Received HTTP return code {response.status_code}: {response.text}"
+                    )
                     raise HttpResponseError(err_msg)
 
         logger.info("Item deleted from %s", watchlist_name)

@@ -160,9 +160,11 @@ class AzSTI(KqlTIProvider):
             if "ThreatType" not in d_frame.columns:
                 if "Data" in d_frame.columns:
                     d_frame["ThreatType"] = d_frame["Data"].apply(
-                        lambda x: x.get("labels", ["unknown"])[0]
-                        if isinstance(x, dict) and x.get("labels")
-                        else "unknown"
+                        lambda x: (
+                            x.get("labels", ["unknown"])[0]
+                            if isinstance(x, dict) and x.get("labels")
+                            else "unknown"
+                        )
                     )
                 else:
                     d_frame["ThreatType"] = "unknown"
@@ -229,9 +231,11 @@ class AzSTI(KqlTIProvider):
         # Handle ThreatType field
         if "ThreatType" not in data_result.columns and "Data" in data_result.columns:
             data_result["ThreatType"] = data_result["Data"].apply(
-                lambda x: x.get("labels", ["unknown"])[0]
-                if isinstance(x, dict) and x.get("labels")
-                else "unknown"
+                lambda x: (
+                    x.get("labels", ["unknown"])[0]
+                    if isinstance(x, dict) and x.get("labels")
+                    else "unknown"
+                )
             )
         elif "ThreatType" not in data_result.columns:
             data_result["ThreatType"] = "unknown"

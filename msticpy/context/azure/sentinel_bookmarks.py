@@ -132,9 +132,7 @@ class SentinelBookmarksMixin(SentinelUtilsMixin):
             case httpx.codes.NOT_MODIFIED:
                 raise ResourceNotModifiedError()
             case _:
-                err_msg = (
-                    f"Received HTTP return code {response.status_code}: {response.text}"
-                )
+                err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
                 raise HttpResponseError(err_msg)
 
     def delete_bookmark(
@@ -185,9 +183,7 @@ class SentinelBookmarksMixin(SentinelUtilsMixin):
             case httpx.codes.NOT_MODIFIED:
                 raise ResourceNotModifiedError()
             case _:
-                err_msg = (
-                    f"Received HTTP return code {response.status_code}: {response.text}"
-                )
+                err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
                 raise HttpResponseError(err_msg)
 
     def _get_bookmark_id(self: Self, bookmark: str) -> str:

@@ -7,7 +7,8 @@ cryptography
 deprecated>=1.2.4
 docutils<0.22.0
 httpx==0.27.0
-ipython >= 7.1.1
+ipython>=8.39.0; python_version <= '3.10'
+ipython>=9.13.0; python_version >= '3.11'
 jinja2<3.2.0
 numpy>=1.15.4
 pandas>=1.1.5
@@ -18,6 +19,6 @@ pyyaml>=3.13
 typing-extensions>=4.2.0
 readthedocs-sphinx-ext>=2.2.5
 seed_intersphinx_mapping
-sphinx-rtd-theme>=3.0.0,<4.0
+sphinx-rtd-theme>=3.1.0,<4.0
 sphinx>=9.0,<10.0
 sphinxcontrib-jquery>=4.1,<5
