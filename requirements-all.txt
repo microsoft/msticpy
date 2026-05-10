@@ -50,7 +50,7 @@ python-dateutil>=2.8.1
 python_openobserve>=0.4.2
 pytz>=2019.2
 pyyaml>=3.13
-requests>=2.31.0
+requests>=2.33.1
 rrcf==0.4.4
 scikit-learn>=1.0.0
 scipy>=1.1.0
