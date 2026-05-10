@@ -2,7 +2,7 @@ aiohttp>=3.7.4
 async-cache>=1.1.1
 bandit>=1.9.4
 beautifulsoup4>=4.0.0
-coverage>=5.5
+coverage>=7.13.5
 docutils<0.22.0
 filelock>=3.0.0
 httpx>=0.23.0, <0.28.0
