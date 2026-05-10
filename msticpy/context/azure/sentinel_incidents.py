@@ -103,7 +103,9 @@ class SentinelIncidentsMixin(SentinelBookmarksMixin):
                 case httpx.codes.NOT_MODIFIED:
                     raise ResourceNotModifiedError()
                 case _:
-                    err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
+                    err_msg = (
+                        f"Received HTTP return code {response.status_code}: {response.text}"
+                    )
                     raise HttpResponseError(err_msg)
 
         incident_df: pd.DataFrame = _azs_api_result_to_df(response)
@@ -334,7 +336,9 @@ class SentinelIncidentsMixin(SentinelBookmarksMixin):
                 case httpx.codes.NOT_MODIFIED:
                     raise ResourceNotModifiedError()
                 case _:
-                    err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
+                    err_msg = (
+                        f"Received HTTP return code {response.status_code}: {response.text}"
+                    )
                     raise HttpResponseError(err_msg)
         logger.info("Incident updated.")
         return response.json().get("name")
@@ -429,7 +433,9 @@ class SentinelIncidentsMixin(SentinelBookmarksMixin):
                 case httpx.codes.NOT_MODIFIED:
                     raise ResourceNotModifiedError()
                 case _:
-                    err_msg = f"Received HTTP return code {response.status_code}: {response.text}"
+                    err_msg = (
+                        f"Received HTTP return code {response.status_code}: {response.text}"
+                    )
                     raise HttpResponseError(err_msg)
         if bookmarks:
             for mark in bookmarks:

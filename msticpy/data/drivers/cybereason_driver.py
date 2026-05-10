@@ -39,9 +39,7 @@ __author__ = "Florian Bracq"
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-_HELP_URI = (
-    "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html"
-)
+_HELP_URI = "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html"
 
 HTTP_TIMEOUT: float = 120.0
 
@@ -257,15 +255,13 @@ class CybereasonDriver(DriverBase):
         The queries are executed asynchronously.
 
         """
-        query_tasks: dict[str, partial[dict[str, Any]]] = (
-            self._create_paginated_query_tasks(
-                body=body,
-                page_size=page_size,
-                pagination_token=pagination_token,
-                total_results=total_results,
-                timeout=timeout,
-                max_retry=max_retry,
-            )
+        query_tasks: dict[str, partial[dict[str, Any]]] = self._create_paginated_query_tasks(
+            body=body,
+            page_size=page_size,
+            pagination_token=pagination_token,
+            total_results=total_results,
+            timeout=timeout,
+            max_retry=max_retry,
         )
 
         logger.info("Running %s paginated queries.", len(query_tasks))
@@ -544,9 +540,7 @@ class CybereasonDriver(DriverBase):
         """
         if max_retry < 0:
             if not previous_response:
-                err_msg: str = (
-                    "Will not retry query, and no previous response available"
-                )
+                err_msg: str = "Will not retry query, and no previous response available"
                 raise MsticpyDataQueryError(err_msg)
             return previous_response.json()
         if pagination_token:
@@ -1034,9 +1028,7 @@ def _(parameters: str, param_dict: dict[str, Any]) -> str | list[str]:
     param_regex: str = r"{([^}]+)}"
     matches: re.Match[str] | None = re.match(param_regex, parameters)
     if matches:
-        result: list[str] = [
-            param_dict.get(match, parameters) for match in matches.groups()
-        ]
+        result: list[str] = [param_dict.get(match, parameters) for match in matches.groups()]
         if len(result) == 1:
             return result[0]
         return result
