@@ -129,10 +129,8 @@ def get_sentinel_queries_from_github(
                     file.write(data)
             progress_bar.close()
 
-            archive = zipfile.ZipFile(repo_zip, mode="r")
-
         # Only extract Detections and Hunting Queries Folder
-        with archive:  # type: ignore
+        with zipfile.ZipFile(repo_zip, mode="r") as archive:
             for file in archive.namelist():  # type: ignore
                 if file.startswith(  # type: ignore
                     (
