@@ -43,7 +43,7 @@ def download_python_package(
         image_tag = f"{python_version}:{int(time.time())}"
 
         # get base name if module name includes additional dependencies
-        module_base_name = package_name.split("[")[0]
+        module_base_name = package_name.split("[", maxsplit=1)[0]
 
         pipstring = f"{package_name}=={package_version}" if package_version else package_name
 
