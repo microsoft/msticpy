@@ -24,6 +24,7 @@ import yaml
 from tqdm.auto import tqdm
 
 from ..._version import VERSION
+from ...common.archive_utils import safe_zip_extract
 from ...common.exceptions import MsticpyUserError
 from ...common.pkg_config import get_config
 from ...common.utility import mp_ua_header
@@ -785,7 +786,7 @@ def _extract_zip_file_to_df(
 
     file_path = Path(save_folder).joinpath(file_name)
     if not use_cached or not file_path.is_file():
-        zip_file.extract(file_name, path=save_folder)
+        safe_zip_extract(zip_file, file_name, save_folder)
 
     out_df = pd.DataFrame()
     if file_path.suffix.lower() == ".json":

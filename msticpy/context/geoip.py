@@ -47,6 +47,7 @@ from IPython.display import display
 from typing_extensions import Self
 
 from .._version import VERSION
+from ..common.archive_utils import safe_tar_extract
 from ..common.exceptions import MsticpyUserConfigError
 from ..common.pkg_config import current_config_path, get_http_timeout
 from ..common.provider_settings import ProviderSettings, get_provider_settings
@@ -809,7 +810,7 @@ Alternatively, you can pass the account_id and api_key to the GeoLiteLookup clas
                     # Skip the dirs to extract only file objects
                     continue
                 self._pr_debug(f"extracting {member} to {self._db_folder}")
-                tar_archive.extract(member, self._db_folder)
+                safe_tar_extract(tar_archive, member, self._db_folder)
                 # The files are extracted to a subfolder (with a date in the name)
                 # We want to move these into the main folder above this.
                 targetname: str = Path(member.name).name
