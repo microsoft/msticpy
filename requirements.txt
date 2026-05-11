@@ -10,7 +10,7 @@ azure-mgmt-subscription>=3.0.0
 azure-monitor-query>=1.0.0, <=3.0.0
 beautifulsoup4>=4.0.0
 bokeh>=3.0.0
-cryptography>=43.0.1
+cryptography>=48.0.0
 deprecated>=1.2.4
 dnspython>=2.0.0, <3.0.0
 folium>=0.9.0
