@@ -13,7 +13,7 @@ jinja2<3.2.0
 numpy>=1.15.4
 pandas>=1.1.5
 pydantic>=1.8.0, <3.0.0
-python-dateutil>=2.8.1
+python-dateutil>=2.9.0.post0
 pytz>=2019.2
 pyyaml>=3.13
 typing-extensions>=4.15.0
