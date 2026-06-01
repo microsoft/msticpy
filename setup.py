@@ -21,7 +21,9 @@ with open("requirements-dev.txt", encoding="utf-8") as fh:
 
 
 def _combine_extras(extras: list) -> list:
-    return list({pkg for name, pkgs in EXTRAS.items() for pkg in pkgs if name in extras})
+    return list(
+        {pkg for name, pkgs in EXTRAS.items() for pkg in pkgs if name in extras}
+    )
 
 
 # Extras definitions
@@ -36,7 +38,7 @@ EXTRAS = {
         "azure-mgmt-monitor>=2.0.0",
         "azure-mgmt-network>=2.7.0",
         "azure-mgmt-resource>=16.1.0",
-        "azure-storage-blob>=12.5.0",
+        "azure-storage-blob>=12.28.0",
         "azure-mgmt-resourcegraph>=8.0.0",
     ],
     "azure_query": [],  # now in core install
@@ -54,11 +56,15 @@ EXTRAS = {
     "panel": [],  # now in core install
     "openobserve": ["python_openobserve>=0.4.2"],
 }
-extras_all = [extra for name, extras in EXTRAS.items() for extra in extras if name != "dev"]
+extras_all = [
+    extra for name, extras in EXTRAS.items() for extra in extras if name != "dev"
+]
 EXTRAS["all"] = extras_all
 
 # Create combination extras
-EXTRAS["all"] = sorted(_combine_extras(list({name for name in EXTRAS if name != "dev"})))
+EXTRAS["all"] = sorted(
+    _combine_extras(list({name for name in EXTRAS if name != "dev"}))
+)
 
 EXTRAS["test"] = sorted(_combine_extras(["all", "dev"]))
 EXTRAS["sentinel"] = EXTRAS["azure"]
