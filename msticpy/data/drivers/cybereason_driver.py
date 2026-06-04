@@ -542,7 +542,14 @@ class CybereasonDriver(DriverBase):
             if not previous_response:
                 err_msg: str = "Will not retry query, and no previous response available"
                 raise MsticpyDataQueryError(err_msg)
-            return previous_response.json()
+            try:
+                return previous_response.json()
+            except json.decoder.JSONDecodeError as exc:
+                err_msg = (
+                    f"Failed to parse previous response: {previous_response.text}."
+                )
+                raise MsticpyDataQueryError(err_msg) from exc
+
         if pagination_token:
             pagination: dict[str, Any] = {
                 "pagination": {
