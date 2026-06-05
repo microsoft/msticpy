@@ -22,6 +22,7 @@ from attr import attrs
 from tqdm.notebook import tqdm
 
 from ..._version import VERSION
+from ...common.archive_utils import safe_zip_extract
 
 __version__ = VERSION
 __author__ = "Jannie Li"
@@ -128,17 +129,16 @@ def get_sentinel_queries_from_github(
                     file.write(data)
             progress_bar.close()
 
-            archive = zipfile.ZipFile(repo_zip, mode="r")
-
         # Only extract Detections and Hunting Queries Folder
-        for file in archive.namelist():  # type: ignore
-            if file.startswith(  # type: ignore
-                (
-                    "Azure-Sentinel-master/Detections/",
-                    "Azure-Sentinel-master/Hunting Queries/",
-                )
-            ):
-                archive.extract(file, path=outputdir)  # type: ignore
+        with zipfile.ZipFile(repo_zip, mode="r") as archive:
+            for file in archive.namelist():  # type: ignore
+                if file.startswith(  # type: ignore
+                    (
+                        "Azure-Sentinel-master/Detections/",
+                        "Azure-Sentinel-master/Hunting Queries/",
+                    )
+                ):
+                    safe_zip_extract(archive, file, outputdir)  # type: ignore
         print("Downloaded and Extracted Files successfully")
         return True
 

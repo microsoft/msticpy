@@ -136,13 +136,9 @@ class AzureMonitorDriver(DriverBase):
             "data_environments",
             ("MSSentinel", "LogAnalytics", "AzureSentinel"),
         )
-        self.set_driver_property(
-            DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinel.name
-        )
+        self.set_driver_property(DriverProps.EFFECTIVE_ENV, DataEnvironment.MSSentinel.name)
         self.set_driver_property(DriverProps.SUPPORTS_THREADING, value=True)
-        self.set_driver_property(
-            DriverProps.MAX_PARALLEL, value=kwargs.get("max_threads", 4)
-        )
+        self.set_driver_property(DriverProps.MAX_PARALLEL, value=kwargs.get("max_threads", 4))
         self.az_cloud_config = AzureCloudConfig()
         logger.info(
             "AzureMonitorDriver loaded. connect_str  %s, kwargs: %s",
@@ -318,9 +314,7 @@ class AzureMonitorDriver(DriverBase):
         return data if data is not None else result
 
     # pylint: disable=too-many-branches
-    def query_with_results(
-        self, query: str, **kwargs
-    ) -> tuple[pd.DataFrame, dict[str, Any]]:
+    def query_with_results(self, query: str, **kwargs) -> tuple[pd.DataFrame, dict[str, Any]]:
         """
         Execute query string and return DataFrame of results.
 
@@ -346,9 +340,7 @@ class AzureMonitorDriver(DriverBase):
         workspace_id = next(iter(self._workspace_ids), None) or self._workspace_id
         additional_workspaces = self._workspace_ids[1:] if self._workspace_ids else None
         logger.info("Query to run %s", query)
-        logger.info(
-            "Workspaces %s", ",".join(self._workspace_ids) or self._workspace_id
-        )
+        logger.info("Workspaces %s", ",".join(self._workspace_ids) or self._workspace_id)
         logger.info(
             "Time span %s - %s",
             str(time_span_value[0]) if time_span_value else "none",
@@ -409,9 +401,7 @@ class AzureMonitorDriver(DriverBase):
         # check for additional Args in settings but allow kwargs to override
         connect_args = self._get_workspace_settings_args()
         connect_args.update(kwargs)
-        connect_args.update(
-            {"auth_methods": az_auth_types, "tenant_id": self._az_tenant_id}
-        )
+        connect_args.update({"auth_methods": az_auth_types, "tenant_id": self._az_tenant_id})
         credentials = az_connect(**connect_args)
         logger.info(
             "Created query client. Auth type: %s, Url: %s, Proxies: %s",
@@ -440,9 +430,7 @@ class AzureMonitorDriver(DriverBase):
             "sendcertificatechain": "send_certificate_chain",
         }
         return {
-            arg_name_map.get(name.casefold(), name): get_protected_setting(
-                args_path, name
-            )
+            arg_name_map.get(name.casefold(), name): get_protected_setting(args_path, name)
             for name in args_settings.keys()
         }
 
@@ -463,16 +451,12 @@ class AzureMonitorDriver(DriverBase):
         connection_str = connection_str or self._def_connection_str
         if workspace_name or connection_str is None:
             ws_config = WorkspaceConfig(workspace=workspace_name)
-            logger.info(
-                "WorkspaceConfig created from workspace name %s", workspace_name
-            )
+            logger.info("WorkspaceConfig created from workspace name %s", workspace_name)
         elif isinstance(connection_str, str):
             self._def_connection_str = connection_str
             with contextlib.suppress(ValueError):
                 ws_config = WorkspaceConfig.from_connection_string(connection_str)
-                logger.info(
-                    "WorkspaceConfig created from connection_str %s", connection_str
-                )
+                logger.info("WorkspaceConfig created from connection_str %s", connection_str)
         elif isinstance(connection_str, WorkspaceConfig):
             logger.info("WorkspaceConfig as parameter %s", connection_str.workspace_id)
             ws_config = connection_str
@@ -516,9 +500,9 @@ class AzureMonitorDriver(DriverBase):
 
     def _get_workspaces_by_name(self, workspaces):
         workspace_configs = {
-            WorkspaceConfig(workspace)[WorkspaceConfig.CONF_WS_ID]: WorkspaceConfig(
-                workspace
-            )[WorkspaceConfig.CONF_TENANT_ID]
+            WorkspaceConfig(workspace)[WorkspaceConfig.CONF_WS_ID]: WorkspaceConfig(workspace)[
+                WorkspaceConfig.CONF_TENANT_ID
+            ]
             for workspace in workspaces
         }
         if len(set(workspace_configs.values())) > 1:
@@ -710,9 +694,7 @@ def _schema_format_tables(
 
 def _schema_format_columns(table_schema: dict[str, Any]) -> dict[str, str]:
     """Return a sorted dictionary of column names and types."""
-    columns = {
-        col["name"]: col["type"] for col in table_schema.get("standardColumns", {})
-    }
+    columns = {col["name"]: col["type"] for col in table_schema.get("standardColumns", {})}
     for col in table_schema.get("customColumns", []):
         columns[col["name"]] = col["type"]
     return dict(sorted(columns.items()))

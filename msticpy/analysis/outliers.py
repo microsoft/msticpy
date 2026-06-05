@@ -640,7 +640,7 @@ def remove_common_items(data: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
     # pylint: disable=cell-var-from-loop
     for col in columns:
         filtered_df = filtered_df.filter(
-            lambda x, col=col: (x[col].std() == 0 and x[col].count() > 10)
+            lambda x, col=col: x[col].std() == 0 and x[col].count() > 10
         )
 
     return filtered_df
