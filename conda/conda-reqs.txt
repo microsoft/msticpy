@@ -48,7 +48,7 @@ scikit-learn>=1.0.0
 scipy
 setuptools>=40.6.3
 statsmodels
-tldextract>=2.2.2
+tldextract>=5.3.1
 tornado>=6.4.2  # (sec vuln) transitive dependency via bokeh
 tqdm>=4.36.1
 typing-extensions>=4.15.0
