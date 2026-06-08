@@ -4,7 +4,7 @@ bandit>=1.9.4
 beautifulsoup4>=4.0.0
 coverage>=7.13.5
 docutils<0.22.0
-filelock>=3.0.0
+filelock>=3.29.1
 httpx>=0.23.0, <0.28.0
 jsonschema>=4.17.3
 markdown>=3.3.4
