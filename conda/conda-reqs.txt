@@ -10,7 +10,7 @@ azure-mgmt-core>=1.6.0
 azure-mgmt-keyvault>=2.0.0
 azure-mgmt-monitor
 azure-mgmt-network>=2.7.0
-azure-mgmt-resource>=16.1.0
+azure-mgmt-resource>=16.1.0, <26.0.0  # (compat) v26+ moved ResourceManagementClient to azure.mgmt.resource.resources
 azure-mgmt-subscription
 azure-monitor-query>=1.0.0, <=3.0.0
 azure-storage-blob>=12.28.0
@@ -46,14 +46,14 @@ Pillow>=12.2.0  # (sec vuln) transitive dependency via bokeh
 pydantic>=1.8.0, <3.0.0
 pygments>=2.20.0
 pyjwt>=2.13.0
-python-dateutil>=2.8.1
+python-dateutil>=2.9.0.post0
 pytz>=2019.2
 pyyaml>=3.13
 scikit-learn>=1.0.0
 scipy
 setuptools>=40.6.3
 statsmodels
-tldextract>=2.2.2
+tldextract>=5.3.1
 tornado>=6.5.5  # (sec vuln) transitive dependency via bokeh
 tqdm>=4.36.1
 typing-extensions>=4.15.0

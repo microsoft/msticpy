@@ -30,7 +30,7 @@ from ..datamodel.entities import Entity, GeoLocation, IpAddress
 try:
     import pygeohash
 except ImportError:
-    pygeohash = None  # pylint: disable=invalid-name
+    pygeohash = None  # type: ignore[assignment]  # pylint: disable=invalid-name
 
 
 __version__ = VERSION

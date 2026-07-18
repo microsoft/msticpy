@@ -37,7 +37,7 @@ EXTRAS = {
         "azure-mgmt-core>=1.6.0",
         "azure-mgmt-monitor>=2.0.0",
         "azure-mgmt-network>=2.7.0",
-        "azure-mgmt-resource>=16.1.0",
+        "azure-mgmt-resource>=16.1.0, <26.0.0",
         "azure-storage-blob>=12.28.0",
         "azure-mgmt-resourcegraph>=8.0.0",
     ],
