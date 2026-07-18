@@ -698,7 +698,7 @@ def plot_cluster(  # noqa: C901
     for cluster_id, color in zip(unique_labels, colors, strict=False):
         if cluster_id == -1:
             # Black used for noise.
-            color = [0, 0, 0, 1]
+            color = (0.0, 0.0, 0.0, 1.0)
         class_member_mask = labels == cluster_id
 
         cluster_size = counts[cluster_id]

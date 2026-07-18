@@ -25,7 +25,7 @@ try:
 except ImportError:
     # Fallback for older environments
     # pylint: disable=deprecated-module
-    from distutils.version import LooseVersion as Version  # type: ignore[assignment]
+    from distutils.version import LooseVersion as Version  # type: ignore[assignment,no-redef]
 
     try:
         from importlib_metadata import (  # type: ignore[assignment,no-redef]

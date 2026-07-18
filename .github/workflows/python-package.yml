@@ -180,8 +180,12 @@ jobs:
             ${{ runner.os }}-build-mypy-${{ github.ref }}
             ${{ runner.os }}-build-mypy
       - name: mypy
+        # --python-version is set explicitly to the job's Python version because mypy
+        # otherwise infers its syntax target from setup.cfg's python_requires (the
+        # package's minimum supported version), which can cause false positives on
+        # newer-syntax stubs (e.g. PEP 695 `type` statements in recent numpy releases).
         run: |
-          mypy --ignore-missing-imports --follow-imports=silent --show-column-numbers --show-error-end --show-error-context --disable-error-code annotation-unchecked --junit-xml junit/mypy-test-${{ matrix.python-version }}-results.xml msticpy
+          mypy --ignore-missing-imports --follow-imports=silent --show-column-numbers --show-error-end --show-error-context --disable-error-code annotation-unchecked --python-version ${{ matrix.python-version }} --junit-xml junit/mypy-test-${{ matrix.python-version }}-results.xml msticpy
         if: ${{ always() }}
       - name: Upload mypy test results
         uses: actions/upload-artifact@v4
