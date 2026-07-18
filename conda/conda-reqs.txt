@@ -10,7 +10,7 @@ azure-mgmt-core>=1.6.0
 azure-mgmt-keyvault>=2.0.0
 azure-mgmt-monitor
 azure-mgmt-network>=2.7.0
-azure-mgmt-resource>=16.1.0
+azure-mgmt-resource>=16.1.0, <26.0.0  # (compat) v26+ moved ResourceManagementClient to azure.mgmt.resource.resources
 azure-mgmt-subscription
 azure-monitor-query>=1.0.0, <=3.0.0
 azure-storage-blob>=12.28.0
