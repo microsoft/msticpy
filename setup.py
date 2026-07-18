@@ -55,6 +55,7 @@ EXTRAS = {
     "riskiq": ["passivetotal>=2.5.3", "requests>=2.31.0"],
     "panel": [],  # now in core install
     "openobserve": ["python_openobserve>=0.4.2"],
+    "mcp": ["mcp>=1.27,<2"],
 }
 extras_all = [
     extra for name, extras in EXTRAS.items() for extra in extras if name != "dev"

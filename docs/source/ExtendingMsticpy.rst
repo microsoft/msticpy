@@ -31,6 +31,7 @@ Extension points documentation
    extending/Queries
    extending/QueryFileEditor
    extending/PivotFunctions
+   extending/McpServer
    extending/WritingDataProviders
    extending/WritingTIAndContextProviders
    extending/PluginFramework

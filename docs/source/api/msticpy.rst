@@ -20,6 +20,7 @@ Subpackages
    msticpy.data
    msticpy.datamodel
    msticpy.init
+   msticpy.mcp
    msticpy.nbtools
    msticpy.nbwidgets
    msticpy.transform
