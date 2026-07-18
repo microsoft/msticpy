@@ -461,8 +461,16 @@ def _check_std_lib(modules: set[str]) -> ModuleImports:
     imp_errors = set()
     paths = {p.casefold() for p in sys.path}
     paths.update({str(Path(p).resolve()).casefold() for p in sys.path})
+    # Use both sys.prefix and sys.base_prefix: in a venv, sys.prefix points at the
+    # venv itself, while the physical stdlib files live under sys.base_prefix (this
+    # is especially true for tools like uv that install the base Python outside the
+    # venv directory entirely). Without base_prefix, stdlib modules get misclassified
+    # as missing external packages when running from a venv.
+    stdlib_prefixes = {sys.prefix.casefold(), sys.base_prefix.casefold()}
     stdlib_paths = {
-        p for p in paths if p.startswith(sys.prefix.casefold()) and "site-packages" not in p
+        p
+        for p in paths
+        if any(p.startswith(prefix) for prefix in stdlib_prefixes) and "site-packages" not in p
     }
     for mod_name in modules:
         if mod_name not in sys.modules:

@@ -1,2 +1,0 @@
-async-cache>=1.1.1
-types-attrs>=19.0.0
