@@ -52,7 +52,7 @@ pydantic<3.0.0,>=1.8.0
 pygments>=2.20.0
 pyjwt>=2.13.0
 python_openobserve>=0.4.2
-python-dateutil>=2.8.1
+python-dateutil>=2.9.0.post0
 pytz>=2019.2
 pyyaml>=3.13
 requests>=2.31.0
@@ -63,7 +63,7 @@ setuptools>=40.6.3
 splunk-sdk!=2.0.0,>=1.6.0
 statsmodels>=0.11.1
 sumologic-sdk>=0.1.11
-tldextract>=2.2.2
+tldextract>=5.3.1
 tornado>=6.5.5  # (sec vuln) transitive dependency via bokeh
 tqdm>=4.36.1
 typing-extensions>=4.2.0
