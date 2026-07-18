@@ -1,25 +1,25 @@
 attrs>=18.2.0
+azure.mgmt.compute
+azure.mgmt.monitor
 azure.mgmt.network
 azure.mgmt.resource
-azure.mgmt.monitor
-azure.mgmt.compute
-cryptography
+cryptography>=48.0.0
 deprecated>=1.2.4
 docutils<0.22.0
-httpx==0.27.0
+httpx>=0.28.0, <1.0.0
 ipython>=8.39.0; python_version <= '3.10'
 ipython>=9.13.0; python_version >= '3.11'
-jinja2<3.2.0
+jinja2>=3.1.6, <3.2.0
 numpy>=1.15.4
 pandas>=1.1.5
 pydantic>=1.8.0, <3.0.0
 python-dateutil>=2.8.1
 pytz>=2019.2
 pyyaml>=3.13
-typing-extensions>=4.15.0
 readthedocs-sphinx-ext>=2.2.5
 seed_intersphinx_mapping
 sphinx-rtd-theme>=3.1.0,<4.0
 sphinx>=8.1.3; python_version <= '3.11'
 sphinx>=9.1.0; python_version >= '3.12'
 sphinxcontrib-jquery>=4.1,<5
+typing-extensions>=4.15.0
