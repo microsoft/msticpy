@@ -3,12 +3,8 @@ FROM mcr.microsoft.com/vscode/devcontainers/anaconda
 LABEL maintainer="Msticpy Dev Team <msticpy@microsoft.com>"
 
 #installing Msticpy requirements and dependencies
-COPY ./requirements-all.txt /tmp/
-COPY ./requirements-dev.txt /tmp/
-RUN pip install --requirement /tmp/requirements-all.txt & \
-pip install --requirement /tmp/requirements-dev.txt & \
-pip install -e git+https://github.com/microsoft/msticpy
 COPY . /tmp/
+RUN pip install -e "git+https://github.com/microsoft/msticpy#egg=msticpy[test]"
 
 # Activate ipywidgets extension in the environment that runs the notebook server
 RUN jupyter nbextension enable --py widgetsnbextension --sys-prefix && \

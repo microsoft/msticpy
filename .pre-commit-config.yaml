@@ -33,12 +33,3 @@ repos:
       - id: ruff-format
         args:
         - msticpy
-  - repo: local
-    hooks:
-      - id: check_reqs_all
-        name: check_reqs_all
-        entry: python -m tools.create_reqs_all
-        pass_filenames: False
-        language: python
-        types: [python]
-        additional_dependencies: ['packaging>=24.0', 'setuptools>=42']

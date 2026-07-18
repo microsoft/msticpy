@@ -3,7 +3,30 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Requirements file writer from setup.py extras."""
+"""
+Requirements file writer from setup.py extras.
+
+This is a manual, on-demand developer tool - it is not run automatically by CI
+or pre-commit. `requirements-all.txt` is not tracked in the repository; use this
+script to generate a local, frozen copy if you need one (e.g. for an offline
+install or to inspect the fully-resolved "all extras" dependency set).
+
+Usage
+-----
+    python -m tools.create_reqs_all
+        Write requirements-all.txt in the current directory (default path).
+
+    python -m tools.create_reqs_all --req-all-path /path/to/requirements-all.txt
+        Write to a custom path.
+
+    python -m tools.create_reqs_all --print
+        Print the resolved requirements to stdout instead of writing a file.
+
+    python -m tools.create_reqs_all --diff
+        Compare the resolved requirements against an existing file (if any)
+        and print the differences without writing.
+
+"""
 
 from __future__ import annotations
 
