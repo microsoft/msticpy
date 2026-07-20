@@ -23,7 +23,7 @@ idna>=3.15  # (sec vuln) transitive dependency via various
 ipython>=8.39.0; python_version <= '3.10'
 ipython>=9.13.0; python_version >= '3.11'
 ipywidgets>=7.4.2, <9.0.0
-jaraco.context>=6.1.0  # (sec vuln) transitive dependency via keyring
+jaraco.context>=6.1.2  # (sec vuln) transitive dependency via keyring
 jinja2>=3.1.6  # (sec vuln) transitive dependency via multiple packages
 keyring>=13.2.1
 lxml>=6.1.1
