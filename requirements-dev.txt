@@ -24,7 +24,7 @@ pytest-xdist>=2.5.0
 pytest>=5.0.1
 readthedocs-sphinx-ext==2.2.5
 responses>=0.13.2
-respx>=0.22.0  # required for httpx>=0.28.0 compatibility
+respx>=0.23.1  # required for httpx>=0.28.0 compatibility
 ruff>=0.15.16
 sphinx-rtd-theme>=3.1.0
 sphinx>=8.1.3; python_version <= '3.11'
