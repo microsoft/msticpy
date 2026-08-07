@@ -23,3 +23,15 @@ pipelines:
           lastModifiedDate: 2026-08-07
         armory:
           lastModifiedDate: 2026-08-07
+  28:
+    usedNonDefaultBranch: true
+    retail:
+      source:
+        policheck:
+          lastModifiedDate: 2026-08-07
+        eslint:
+          lastModifiedDate: 2026-08-07
+        bandit:
+          lastModifiedDate: 2026-08-07
+        armory:
+          lastModifiedDate: 2026-08-07
