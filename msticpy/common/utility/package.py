@@ -191,7 +191,7 @@ _MSTICPY_USER_AGENT = _get_mp_ua()
 @export
 def mp_ua_header() -> dict[str, str]:
     """Return headers dict for MSTICPy User Agent."""
-    return {"UserAgent": _get_mp_ua()}
+    return {"User-Agent": _get_mp_ua()}
 
 
 @export
