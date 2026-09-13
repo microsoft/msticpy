@@ -204,7 +204,8 @@ class OpenObserveDriver(DriverBase):
 
         """
         del query_source
-        self._ensure_connected()
+        if not self._connected:
+            raise self._create_not_connected_err("OpenObserve")
 
         verbosity = kwargs.pop("verbosity", 0)
         timezone = kwargs.pop("timezone", "UTC")
@@ -318,6 +319,8 @@ class OpenObserveDriver(DriverBase):
             file path for exporte results.
         time_columns: array[string]
             returning columns which format should be dataframe timestamp
+        time_unit: string
+            pandas to_datetime unit argument, usually 'us' for epoch microseconds
         numeric_columns: array[string]
             returning columns which format should be dataframe numeric
 
@@ -335,6 +338,7 @@ class OpenObserveDriver(DriverBase):
         exporting = kwargs.pop("exporting", False)
         export_path = kwargs.pop("export_path", "")
         time_columns = kwargs.pop("time_columns", [])
+        time_unit = kwargs.pop("time_unit", "")
         numeric_columns = kwargs.pop("numeric_columns", [])
 
         dataframe_res = self._query(query, **kwargs)
@@ -351,7 +355,9 @@ class OpenObserveDriver(DriverBase):
                 if col in numeric_columns:
                     dataframe_res[col] = pd.to_numeric(dataframe_res[col])
                 # ensure timestamp format
-                if col in ["_timestamp"] + time_columns:
+                if col in ["_timestamp"] + time_columns and time_unit != "":
+                    dataframe_res[col] = pd.to_datetime(dataframe_res[col], unit=time_unit)
+                if col in ["_timestamp"] + time_columns and time_unit == "":
                     dataframe_res[col] = pd.to_datetime(dataframe_res[col])
 
             except Exception as err:
@@ -423,3 +429,39 @@ class OpenObserveDriver(DriverBase):
             openobserve_settings = sl_settings.get("OpenObserve")
             is_instance_name = False
         return getattr(openobserve_settings, "args", {}), is_instance_name
+
+    def list_streams(self) -> tuple[pd.DataFrame, Any]:
+        """
+        List streams (aka available tables) and return DataFrame of results.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        tuple[pd.DataFrame, Any]
+            A DataFrame (if successful) or
+            the underlying provider result if an error occurs.
+
+        """
+        df_streams = self.service.list_objects2df("streams")
+        return df_streams
+
+    def list_alerts(self) -> tuple[pd.DataFrame, Any]:
+        """
+        List alerts and return DataFrame of results.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        tuple[pd.DataFrame, Any]
+            A DataFrame (if successful) or
+            the underlying provider result if an error occurs.
+
+        """
+        df_alerts = self.service.list_objects2df("alerts")
+        return df_alerts
