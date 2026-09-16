@@ -68,6 +68,9 @@ TIProviders:
       AuthKey: ""
     Primary: True
     Provider: "GreyNoise"
+  ScanMalware:
+    Primary: True
+    Provider: "ScanMalware"
   OpenPageRank:
     Args:
       AuthKey:

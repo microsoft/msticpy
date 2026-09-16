@@ -28,6 +28,7 @@ Submodules
    msticpy.context.tiproviders.pulsedive
    msticpy.context.tiproviders.result_severity
    msticpy.context.tiproviders.riskiq
+   msticpy.context.tiproviders.scanmalware
    msticpy.context.tiproviders.ti_http_provider
    msticpy.context.tiproviders.ti_provider_base
    msticpy.context.tiproviders.tor_exit_nodes
