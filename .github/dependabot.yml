@@ -16,3 +16,12 @@ updates:
     versions:
     - 4.18.21031
     - 4.21.21059
+- package-ecosystem: "github-actions"
+  directory: "/"
+  groups:
+    github-actions:
+      patterns: ["*"]
+  schedule:
+    interval: "weekly"
+  cooldown:
+    default-days: 7

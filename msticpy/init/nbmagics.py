@@ -8,8 +8,8 @@
 import re
 
 # pylint: enable=unused-import
-from IPython import get_ipython
 from IPython.core import magic_arguments
+from IPython.core.getipython import get_ipython
 from IPython.core.magic import (
     Magics,
     line_cell_magic,
