@@ -14,7 +14,7 @@ from textwrap import wrap
 from typing import Any
 
 import pandas as pd
-from IPython import get_ipython
+from IPython.core.getipython import get_ipython
 from IPython.display import display
 
 from ..common.exceptions import MsticpyMissingDependencyError
