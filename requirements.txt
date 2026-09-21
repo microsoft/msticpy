@@ -38,7 +38,7 @@ numpy>=2.5.1; python_version >= '3.12'
 packaging>=26.2
 pandas>=1.4.0, <3.0.0
 panel>=1.9.3
-Pillow>=12.2.0  # (sec vuln) transitive dependency via bokeh
+Pillow>=12.3.0  # (sec vuln) transitive dependency via bokeh
 pydantic>=1.8.0, <3.0.0
 pygments>=2.20.0
 pyjwt>=2.13.0
