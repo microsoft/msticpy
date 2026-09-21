@@ -6,7 +6,7 @@
 """Pivot browser widget."""
 
 import ipywidgets as widgets
-from IPython import get_ipython
+from IPython.core.getipython import get_ipython
 from IPython.display import display
 
 from ..._version import VERSION
