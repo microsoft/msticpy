@@ -43,7 +43,7 @@ from ...common.exceptions import (
 from ...common.provider_settings import get_protected_setting
 from ...common.settings import get_http_proxies, get_http_timeout
 from ...common.timespan import TimeSpan
-from ...common.utility import export, mp_ua_header
+from ...common.utility import MSTICPY_USER_AGENT, export, mp_ua_header
 from ...common.wsconfig import WorkspaceConfig
 from ..core.query_defns import DataEnvironment
 from .driver_base import DriverBase, DriverProps, QuerySource
@@ -117,7 +117,7 @@ class AzureMonitorDriver(DriverBase):
             {"list": self._format_list},
         )
         self._loaded = True
-        self._ua_policy = UserAgentPolicy(user_agent=mp_ua_header()["UserAgent"])
+        self._ua_policy = UserAgentPolicy(user_agent=MSTICPY_USER_AGENT)
         self._def_timeout = kwargs.get(
             "timeout", kwargs.get("server_timeout", self._DEFAULT_TIMEOUT)
         )
