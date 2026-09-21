@@ -117,6 +117,7 @@ Currently supported provider names are:
 - OpenPageRank
 - CrowdSec
 - AbuseIPDB
+- ScanMalware
 
 .. code:: yaml
 
@@ -148,6 +149,9 @@ Currently supported provider names are:
           AuthKey: 1234567890
         Primary: True
         Provider: "AbuseIPDB"
+      ScanMalware:
+        Primary: True
+        Provider: "ScanMalware"
 
 .. note:: You store values in the ``Args`` section as simple strings,
    as names of environment variables containing the value, or

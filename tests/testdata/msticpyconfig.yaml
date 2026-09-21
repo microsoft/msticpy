@@ -40,6 +40,9 @@ TIProviders:
       AuthKey: ""
     Primary: True
     Provider: "GreyNoise"
+  ScanMalware:
+    Primary: True
+    Provider: "ScanMalware"
   AzureSentinel:
     Args:
       WorkspaceID: "a927809c-8142-43e1-96b3-4ad87cfe95a3"

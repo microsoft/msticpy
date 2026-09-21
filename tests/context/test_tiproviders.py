@@ -182,6 +182,7 @@ _TI_PROVIDER_TESTS = [
     TiTestCase("AbuseIPDB", exp_responses=20),
     TiTestCase("IPQualityScore", exp_responses=20),
     TiTestCase("BinaryEdge"),
+    TiTestCase("ScanMalware"),
 ]
 
 
@@ -255,6 +256,7 @@ def verify_result(result, ti_lookup):
                 "AbuseIPDB",
                 "IPQualityScore",
                 "BinaryEdge",
+                "ScanMalware",
             ],
         )
         check.is_not_none(lu_result["Ioc"])
@@ -665,7 +667,63 @@ def _get_riskiq_classification():
         return "UNKNOWN"
 
 
+def _scanmalware_scans(**kwargs):
+    """Return a scan list for the host in the request URL.
+
+    ScanMalware's scan-list endpoint returns a bare JSON list. The mock session
+    handles str-with-params, dict or callable only, so a list needs this form.
+    """
+    host = kwargs["url"].split("/api/v1/domains/")[-1].split("/scans")[0]
+    return [
+        {
+            "scan_id": "redirector-scan",
+            "url": "https://unrelated-redirector.test/",
+            "final_url": f"https://{host}/",
+            "matched_on": ["final_url"],
+            "status": "completed",
+            "title": "Redirector",
+            "completed_at": "2026-09-15T19:38:29",
+        },
+        {
+            "scan_id": "scan-id-1",
+            "url": f"https://{host}",
+            "final_url": f"https://{host}/",
+            "matched_on": ["url", "final_url"],
+            "status": "completed",
+            "title": "A scanned page",
+            "completed_at": "2026-09-14T10:00:00",
+        },
+    ]
+
+
 _PROVIDER_RESPONSES = {
+    "https://scanmalware.com/api/v1/domains": {
+        "ioc_param": "url",
+        "params": {},
+        "response": _scanmalware_scans,
+    },
+    "https://scanmalware.com/api/v1/result": {
+        "ioc_param": "url",
+        "response": {
+            "security_verdict": {
+                "verdict": "High Risk",
+                "risk_level": "high",
+                "confidence": 90,
+                "risk_factors": ["phishing"],
+            },
+        },
+    },
+    "https://scanmalware.com/api/v1/ct/ip": {
+        "ioc_param": "url",
+        "response": {
+            "ip": "185.92.220.35",
+            "total": 2,
+            "domains": [
+                {"domain": "one.test", "record_count": 5},
+                {"domain": "two.test", "record_count": 3},
+            ],
+        },
+    },
     "https://otx.alienvault.com": {
         "ioc_param": "url",
         "response": {

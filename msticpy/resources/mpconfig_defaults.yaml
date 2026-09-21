@@ -101,6 +101,9 @@ TIProviders:
       AuthKey: *cred_key
     Primary: bool(default=True)
     Provider: "GreyNoise"
+  ScanMalware:
+    Primary: bool(default=True)
+    Provider: "ScanMalware"
   RiskIQ:
     Primary: bool(default=True)
     Provider: "RiskIQ"

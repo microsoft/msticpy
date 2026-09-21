@@ -32,6 +32,7 @@ Features
    -  **GreyNoise**
    -  **CrowdSec**
    -  **AbuseIPDB**
+   -  **ScanMalware**
 
 -  Other pseudo-TI providers are also included:
 
@@ -282,6 +283,9 @@ fictitious - the format of the keys may differ from what is shown
           AuthKey: 1234567890
         Primary: True
         Provider: "AbuseIPDB"
+      ScanMalware:
+        Primary: True
+        Provider: "ScanMalware"
 
 You need to tell `TILookup` to refresh its configuration.
 
@@ -302,7 +306,8 @@ of providers loaded.
   'GreyNoise - GreyNoise Lookup. (primary)',
   'AzSTI - Microsoft Sentinel TI provider class. (primary)',
   'CrowdSec - CrowdSec CTI Smoke Lookup. (primary)',
-  'AbuseIPDB - AbuseIPDB Lookup. (primary)']
+  'AbuseIPDB - AbuseIPDB Lookup. (primary)',
+  'ScanMalware - ScanMalware Lookup. (primary)']
 
 .. warning:: Depending on the type of account that you
   have with a provider, they will typically impose a limit
