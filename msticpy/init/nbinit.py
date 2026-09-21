@@ -60,7 +60,7 @@ from typing import Any, Literal
 
 import ipywidgets as widgets
 import pandas as pd
-from IPython import get_ipython
+from IPython.core.getipython import get_ipython
 from IPython.core.interactiveshell import InteractiveShell
 from IPython.display import HTML, display
 

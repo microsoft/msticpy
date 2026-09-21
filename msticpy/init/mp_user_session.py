@@ -62,7 +62,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from IPython import get_ipython
+from IPython.core.getipython import get_ipython
 
 from .._version import VERSION
 from ..data.core.data_providers import QueryProvider
