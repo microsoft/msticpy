@@ -13,7 +13,7 @@ from base64 import b64encode
 from collections.abc import Iterable
 from typing import Any
 
-from IPython import get_ipython
+from IPython.core.getipython import get_ipython
 from IPython.display import HTML, DisplayHandle, display
 
 from ..._version import VERSION
