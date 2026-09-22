@@ -28,10 +28,10 @@ pipelines:
     retail:
       source:
         policheck:
-          lastModifiedDate: 2026-08-07
+          lastModifiedDate: 2026-09-22
         eslint:
-          lastModifiedDate: 2026-08-07
+          lastModifiedDate: 2026-09-22
         bandit:
-          lastModifiedDate: 2026-08-07
+          lastModifiedDate: 2026-09-22
         armory:
-          lastModifiedDate: 2026-08-07
+          lastModifiedDate: 2026-09-22
