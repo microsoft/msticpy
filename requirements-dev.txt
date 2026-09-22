@@ -5,7 +5,7 @@ beautifulsoup4>=4.15.0
 coverage>=7.16.1
 docutils<0.22.0
 filelock>=3.29.1
-jsonschema>=4.17.3
+jsonschema>=4.26.0
 markdown>=3.3.4
 mypy>=2.3.0
 nbdime>=2.1.0
