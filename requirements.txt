@@ -49,6 +49,6 @@ pyyaml>=3.13
 setuptools>=40.6.3
 tldextract>=5.3.1
 tornado>=6.5.5  # (sec vuln) transitive dependency via bokeh
-tqdm>=4.36.1
+tqdm>=4.70.1
 typing-extensions>=4.15.0
 urllib3>=2.7.0
