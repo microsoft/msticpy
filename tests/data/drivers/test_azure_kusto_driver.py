@@ -235,6 +235,25 @@ _TEST_CONNECT_ARGS = (
             == "https://help.kusto.windows.net",
             lambda driver: driver._az_tenant_id == "test_tenant_id",
             lambda driver: driver._az_auth_types == ["device_code"],
+            lambda az_connect: az_connect.connect_kwargs["auth_methods"]
+            == ["device_code"],
+        ],
+    ),
+    ConnectTest(
+        name="sentinel-data-lake",
+        init_args={},
+        connect_args={
+            "cluster": "https://api.securityplatform.microsoft.com/lake/kql",
+            "database": "workspace-workspace-id",
+            "auth_types": ["cli", "interactive"],
+        },
+        tests=[
+            lambda driver: driver.client._query_endpoint
+            == "https://api.securityplatform.microsoft.com/lake/kql/v2/rest/query",
+            lambda driver: driver.client._aad_helper.token_provider.name()
+            == "AzureIdentityTokenProvider",
+            lambda az_connect: az_connect.connect_kwargs["auth_methods"]
+            == ["cli", "interactive"],
         ],
     ),
     ConnectTest(
@@ -296,7 +315,7 @@ _TEST_CONNECT_ARGS = (
         },
         tests=[
             lambda az_connect: "clientsecret"
-            in az_connect.connect_kwargs["auth_types"],
+            in az_connect.connect_kwargs["auth_methods"],
         ],
     ),
     ConnectTest(
