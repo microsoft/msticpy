@@ -413,6 +413,26 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         return split_queries
 
     @staticmethod
+    async def _run_tagged_task(
+        query_id: str, future: asyncio.Future[pd.DataFrame]
+    ) -> tuple[str, pd.DataFrame | None, Exception | None]:
+        """Await `future`, returning its query_id alongside the outcome.
+
+        `asyncio.as_completed` yields tasks in completion order, not the
+        order they were submitted in, and does not preserve any link back
+        to the key `future` was stored under. Tagging the outcome with its
+        own query_id here means identity survives being raced through
+        `as_completed`, instead of being reconstructed afterwards by
+        zipping the completion-ordered results against the (differently
+        ordered) submission keys.
+        """
+        try:
+            result: pd.DataFrame = await future
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            return query_id, None, exc
+        return query_id, result, None
+
+    @staticmethod
     async def _exec_queries_threaded(
         query_tasks: dict[str, partial],
         *,
@@ -431,46 +451,46 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                 query_id: event_loop.run_in_executor(executor, query_func)
                 for query_id, query_func in query_tasks.items()
             }
-            results: list[pd.DataFrame] = []
+            results: dict[str, pd.DataFrame] = {}
             failed_tasks_ids: list[str] = []
+            tagged_tasks = [
+                QueryProviderConnectionsMixin._run_tagged_task(query_id, future)
+                for query_id, future in thread_tasks.items()
+            ]
+            task_iter = asyncio.as_completed(tagged_tasks)
             if progress:
                 task_iter = tqdm(
-                    asyncio.as_completed(thread_tasks.values()),
+                    task_iter,
+                    total=len(tagged_tasks),
                     unit="sub-queries",
                     desc="Running",
                 )
-            else:
-                task_iter = asyncio.as_completed(thread_tasks.values())
-            ids_and_tasks = dict(zip(thread_tasks, task_iter, strict=False))
-            for query_id, thread_task in ids_and_tasks.items():
-                try:
-                    result: pd.DataFrame | str | None = await thread_task
+            for coro in task_iter:
+                query_id, result, exc = await coro
+                if exc is None:
                     logger.info("Query task '%s' completed successfully.", query_id)
-                    results.append(result)
-                except MsticpyDataQueryError as msticpy_dqe:
+                    results[query_id] = result
+                elif isinstance(exc, MsticpyDataQueryError):
                     logger.warning(
                         "Query task '%s' failed",
                         query_id,
                     )
-                    msticpy_dqe.display_exception()
-                    # Reusing thread task would result in:
-                    # RuntimeError: cannot reuse already awaited coroutine
-                    # A new task should be queued
+                    exc.display_exception()
                     failed_tasks_ids.append(query_id)
-                except Exception as exc:  # pylint: disable=broad-exception-caught
+                else:
                     logger.warning(
                         "Query task '%s' failed with exception %s - %s",
                         query_id,
                         exc.__class__.__name__,
                         exc.args,
                     )
-                    # Reusing thread task would result in:
-                    # RuntimeError: cannot reuse already awaited coroutine
-                    # A new task should be queued
                     failed_tasks_ids.append(query_id)
 
-        # Sort the results by the order of the tasks
-        results = [result for _, result in sorted(zip(thread_tasks, results, strict=False))]
+        # Results are keyed by query_id, so this restores the original
+        # submission order regardless of the order tasks completed in.
+        ordered_results: list[pd.DataFrame] = [
+            results[query_id] for query_id in thread_tasks if query_id in results
+        ]
 
         if retry and failed_tasks_ids:
             failed_results: pd.DataFrame = (
@@ -485,9 +505,9 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
                 )
             )
             if not failed_results.empty:
-                results.append(failed_results)
-        if results:
-            return pd.concat(results, ignore_index=True)
+                ordered_results.append(failed_results)
+        if ordered_results:
+            return pd.concat(ordered_results, ignore_index=True)
 
         logger.warning("All queries failed.")
         return pd.DataFrame()
