@@ -138,6 +138,36 @@ Loading a QueryProvider for Kusto
     import msticpy as mp
     kql_prov = mp.QueryProvider("Kusto")
 
+Querying the Microsoft Sentinel data lake
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Kusto provider can query lake-only and archived Microsoft Sentinel data
+through the Sentinel data lake KQL endpoint. The Sentinel data lake must be
+onboarded and the signed-in identity must have the required permissions.
+
+Specify the lake endpoint as the cluster and identify the target workspace
+using the ``workspace-name-workspace-id`` database format.
+
+.. code:: ipython3
+
+    lake_prov = mp.QueryProvider("Kusto")
+    lake_prov.connect(
+        cluster="https://api.securityplatform.microsoft.com/lake/kql",
+        database="<workspace-name>-<workspace-id>",
+        auth_types=["cli", "interactive"],
+    )
+    result = lake_prov.exec_query("SigninLogs | take 10")
+
+The Kusto SDK retrieves the authentication resource for the endpoint from its
+service metadata. Service principals and user credentials are supported,
+subject to the permissions and limitations documented for the Sentinel data
+lake API.
+
+For more information, see `Run KQL queries on Microsoft Sentinel data lake
+using APIs <https://learn.microsoft.com/azure/sentinel/datalake/kql-queries-api>`__
+and `Microsoft Sentinel data lake service limits
+<https://learn.microsoft.com/azure/sentinel/datalake/sentinel-lake-service-limits>`__.
+
 Optional parameters
 ~~~~~~~~~~~~~~~~~~~
 
