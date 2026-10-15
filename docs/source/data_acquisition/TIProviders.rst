@@ -916,6 +916,10 @@ Address or URL) for all providers.
 For each provider that returns a result for an IoC, the summarized details
 will be shown in a table below the browse list.
 
+Provider-supplied values, including raw results, are displayed as text rather
+than interpreted as HTML. Only absolute HTTP and HTTPS reference URLs are
+clickable; other references are displayed as plain text.
+
 .. figure:: _static/ti_browser_results1.png
    :alt: Threat Intel results browser
    :width: 5.23000in
