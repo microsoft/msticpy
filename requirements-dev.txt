@@ -15,7 +15,8 @@ pipreqs>=0.4.9
 pre-commit>=2.7.1
 pydocstyle>=6.3.0
 pygeohash>=1.2.0
-pylint>=2.5.3
+# Match pre-commit; review new checks explicitly when upgrading.
+pylint==4.0.9
 pyroma>=5.0.1
 pytest-check>=1.0.1
 pytest-cov>=7.1.0
