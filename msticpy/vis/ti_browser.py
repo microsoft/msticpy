@@ -8,6 +8,9 @@
 from __future__ import annotations
 
 import pprint
+from html import escape
+from typing import Any
+from urllib.parse import urlsplit
 
 import pandas as pd
 from IPython.display import HTML
@@ -110,15 +113,16 @@ def ti_details_display(ti_data):
         ioc, provs = ioc_prov
         h2_style = "border: 1px solid;background-color: DarkGray; padding: 6px"
         h3_style = "background-color: SteelBlue; padding: 6px"
-        results = [f"<h2 style='{h2_style}'>{ioc}</h2>"]
+        results = [f"<h2 style='{h2_style}'>{escape(str(ioc))}</h2>"]
         for prov in provs:
             ioc_match = ti_data[(ti_data["Ioc"] == ioc) & (ti_data["Provider"] == prov)].iloc[
                 0
             ]
             results.extend(
                 (
-                    f"<h3 style='{h3_style}'>Type: '{ioc_match.IocType}', Provider: {prov}, "
-                    + f"severity: {ioc_match.Severity}</h3>",
+                    f"<h3 style='{h3_style}'>Type: '{escape(str(ioc_match.IocType))}', "
+                    + f"Provider: {escape(str(prov))}, "
+                    + f"severity: {escape(str(ioc_match.Severity))}</h3>",
                     "<h4>Details</h4>",
                 )
             )
@@ -126,8 +130,7 @@ def ti_details_display(ti_data):
             results.append(_ti_detail_table(ioc_match.Details))
             results.extend(
                 (
-                    f"<h4>Reference: </h4><a href='{ioc_match.Reference}'>"
-                    + f"{ioc_match.Reference}</a><br>",
+                    "<h4>Reference: </h4>" + _reference_html(ioc_match.Reference) + "<br>",
                     "<hr>",
                     "<h4>Raw Results</h4>",
                 )
@@ -141,13 +144,28 @@ def ti_details_display(ti_data):
 
 def raw_results(raw_result: str) -> str:
     """Create pre-formatted details for raw results."""
-    fmt_details = pprint.pformat(raw_result).replace("\n", "<br>").replace(" ", "&nbsp;")
+    fmt_details = (
+        escape(pprint.pformat(raw_result)).replace("\n", "<br>").replace(" ", "&nbsp;")
+    )
     return f"""
         <details>
         <summary> <u>Raw results from provider...</u></summary>
         <pre  style="font-size:11px">{fmt_details}</pre>
         </details>
         """
+
+
+def _reference_html(reference: object) -> str:
+    """Render HTTP/HTTPS references as links and other references as text."""
+    reference_text = str(reference)
+    escaped_reference = escape(reference_text)
+    try:
+        parsed = urlsplit(reference_text)
+    except ValueError:
+        return escaped_reference
+    if parsed.scheme.lower() in {"http", "https"} and parsed.hostname:
+        return f"<a href='{escaped_reference}'>{escaped_reference}</a>"
+    return escaped_reference
 
 
 _TI_TABLE_STYLE = """
@@ -173,14 +191,17 @@ def _ti_detail_table(detail_dict: dict) -> str:
     )
 
 
-def _dict_to_html(detail_dict):
+def _dict_to_html(detail_dict: Any) -> list[str]:
+    """Render nested details with escaped keys and values."""
     html_txt = []
     if not isinstance(detail_dict, dict):
-        return detail_dict
+        return [escape(str(detail_dict))]
     for key, val in detail_dict.items():
-        html_txt.append(f"<tr class='cell_ti'><td class='cell_ti_first'>{key}</td>")
+        html_txt.append(
+            f"<tr class='cell_ti'><td class='cell_ti_first'>{escape(str(key))}</td>"
+        )
         if not isinstance(val, dict):
-            html_txt.append(f"<td class='cell_ti'>{val}</td></tr>")
+            html_txt.append(f"<td class='cell_ti'>{escape(str(val))}</td></tr>")
         else:
             html_txt.extend(_dict_to_html(val))
             html_txt.append("</tr>")

@@ -174,6 +174,13 @@ will apply to all queries.
    metadata will be cached so you will not have to download this again
    in this session.
 
+.. note:: MITRE techniques and tactics are cached as
+   ``mitre_tech_cache.json`` and ``mitre_tact_cache.json`` in the save folder.
+   Legacy ``.pkl`` caches are never loaded or migrated; the first connection
+   after upgrading downloads fresh MITRE data. Old pickle cache files can
+   be deleted. JSON cache files expire after 30 days, and invalid MITRE
+   caches are logged and refreshed.
+
 Using these parameters in the query will override the provider settings
 and defaults for that query.
 
@@ -423,4 +430,3 @@ for more details.
 .. figure:: _static/MordorBrowser-std-query-browser.png
    :alt: Using the standard query browser to view Mordor queries.
    :width: 5in
-
