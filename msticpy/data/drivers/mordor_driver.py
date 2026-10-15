@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import json
-import pickle  # nosec
+import logging
 import zipfile
 from collections import defaultdict
 from collections.abc import Generator, Iterable
@@ -34,6 +34,8 @@ from .driver_base import DriverBase, DriverProps
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+logger = logging.getLogger(__name__)
+
 
 _MORDOR_TREE_URI = (
     "https://api.github.com/repos/OTRF/Security-Datasets/git/trees/master?recursive=1"
@@ -50,8 +52,8 @@ _MTR_TECH_CAT_URI = "https://attack.mitre.org/techniques/{cat}/"
 MITRE_TECHNIQUES: pd.DataFrame | None = None
 MITRE_TACTICS: pd.DataFrame | None = None
 
-_MITRE_TECH_CACHE = "mitre_tech_cache.pkl"
-_MITRE_TACTICS_CACHE = "mitre_tact_cache.pkl"
+_MITRE_TECH_CACHE = "mitre_tech_cache.json"
+_MITRE_TACTICS_CACHE = "mitre_tact_cache.json"
 _MORDOR_CACHE = "mordor_cache.json"
 
 _HTTP_TIMEOUT = DriverBase.get_http_timeout()
@@ -645,6 +647,8 @@ def _fetch_mdr_metadata(cache_folder: str | None = None) -> dict[str, MordorEntr
 def _read_mordor_cache(cache_folder) -> dict[str, Any]:
     """Return dictionary of cached metadata if cached_folder is a valid path."""
     md_cached_metadata: dict[str, Any] = {}
+    if cache_folder is None:
+        return md_cached_metadata
     mordor_cache = Path(cache_folder).joinpath(_MORDOR_CACHE)
     if _valid_cache(mordor_cache):
         try:
@@ -657,6 +661,8 @@ def _read_mordor_cache(cache_folder) -> dict[str, Any]:
 
 def _write_mordor_cache(md_cached_metadata, cache_folder):
     """Write dictionary of cached metadata if cached_folder is a valid path."""
+    if cache_folder is None:
+        return
     mordor_cache = Path(cache_folder).joinpath(_MORDOR_CACHE)
     json_text = json.dumps(md_cached_metadata, indent=4)
     Path(mordor_cache).write_text(json_text, encoding="utf-8")
@@ -900,12 +906,18 @@ def _get_mitre_categories(
         tactics_cache = Path(cache_folder).joinpath(_MITRE_TACTICS_CACHE)
         if _valid_cache(tech_cache) and _valid_cache(tactics_cache):
             try:
-                # caching location only used if sepcified.
-                tech_df = pd.read_pickle(tech_cache)  # nosec
-                tactics_df = pd.read_pickle(tactics_cache)  # nosec
+                tech_df = _read_mitre_cache(tech_cache)
+                tactics_df = _read_mitre_cache(tactics_cache)
+                for cached_df in (tech_df, tactics_df):
+                    if cached_df.index.name != "ID" or list(cached_df.columns) != [
+                        "Name",
+                        "Description",
+                        "url",
+                    ]:
+                        raise ValueError("Invalid MITRE cache schema")
                 return tech_df, tactics_df
-            except pickle.PickleError:
-                pass
+            except (ValueError, KeyError, TypeError) as cache_err:
+                logger.warning("Invalid MITRE cache in %s: %s", cache_folder, cache_err)
     resp = httpx.get(_MITRE_JSON_URL, timeout=_HTTP_TIMEOUT, headers=mp_ua_header())
     mitre = pd.json_normalize(resp.json()["objects"])
 
@@ -916,10 +928,16 @@ def _get_mitre_categories(
     tech_df = _reshape_mitre_df(mitre[mitre.type == "attack-pattern"])
     tactics_df = _reshape_mitre_df(mitre[mitre.type == "x-mitre-tactic"])
     if cache_folder:
-        tech_df.to_pickle(tech_cache)
-        tactics_df.to_pickle(tactics_cache)
+        tech_df.to_json(tech_cache, orient="table", indent=2)
+        tactics_df.to_json(tactics_cache, orient="table", indent=2)
 
     return tech_df, tactics_df
+
+
+def _read_mitre_cache(cache_path: Path) -> pd.DataFrame:
+    """Read JSON while preserving text-column dtypes and null values."""
+    cached_df = pd.read_json(cache_path, orient="table").astype(object)
+    return cached_df.where(cached_df.notna(), None)
 
 
 def _valid_cache(path: Path, expired_days=30):

@@ -1,4 +1,7 @@
-# This workflow will upload a Python Package using Twine when a release is created
+# Publishing is intentionally disabled. Remove the false job guards only after
+# configuring the protected "pypi" environment and a PyPI trusted publisher for
+# microsoft/msticpy, python-publish.yml, and the "pypi" environment.
+# The environment must require approval and restrict deployments to release tags.
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
 
 # This workflow uses actions that are not certified by GitHub.
@@ -11,18 +14,22 @@ name: Upload Python Package to PyPI Prod
 on:
   release:
     types: [published]
-  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  deploy:
-
+  build:
+    if: >-
+      ${{ false && github.event_name == 'release' &&
+          !github.event.release.prerelease && startsWith(github.ref, 'refs/tags/v') }}
     runs-on: ubuntu-latest
-    permissions: read-all
+    permissions:
+      contents: read
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
     - name: Set up Python
       uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
       with:
@@ -38,8 +45,31 @@ jobs:
         --sdist
         --wheel
         --outdir dist/
+    - name: Upload distributions
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: python-distributions
+        path: dist/
+        if-no-files-found: error
+        retention-days: 1
+
+  publish:
+    needs: build
+    if: >-
+      ${{ false && needs.build.result == 'success' &&
+          github.event_name == 'release' && !github.event.release.prerelease &&
+          startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/msticpy
+    permissions:
+      id-token: write
+    steps:
+    - name: Download distributions
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      with:
+        name: python-distributions
+        path: dist/
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}

@@ -76,9 +76,6 @@ stages:
         cp $(Build.SourcesDirectory)/tests/testdata/geolite/GeoLite2-City.mmdb ~/.msticpy
         touch ~/.msticpy/GeoLite2-City.mmdb
         cp -r $(Build.SourcesDirectory)/tests/testdata/mordor/* ~/.msticpy/mordor
-        touch ~/.msticpy/mordor/mitre_tact_cache.pkl
-        touch ~/.msticpy/mordor/mitre_tech_cache.pkl
-        touch ~/.msticpy/mordor/mordor_cache.pkl
       condition: ne(variables.imageName, 'windows-latest')
       displayName: 'Prepare test dummy data - Linux'
     - script: |
@@ -88,6 +85,23 @@ stages:
         copy /Y $(Build.SourcesDirectory)\tests\testdata\mordor\* %USERPROFILE%\.msticpy\mordor
       condition: eq(variables.imageName, 'windows-latest')
       displayName: 'Prepare test dummy data - Windows'
+    - task: PythonScript@0
+      displayName: 'Refresh Mordor JSON test caches'
+      inputs:
+        scriptSource: inline
+        script: |
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          cache_folder = Path.home().joinpath(".msticpy", "mordor")
+          for filename in ("mitre_tact_cache.json", "mitre_tech_cache.json"):
+              cache_folder.joinpath(filename).touch()
+          metadata_path = cache_folder.joinpath("mordor_cache.json")
+          metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+          for item in metadata.values():
+              item["mp_last_updated"] = datetime.now(timezone.utc).isoformat()
+          metadata_path.write_text(json.dumps(metadata, indent=4), encoding="utf-8")
     - script: |
         echo MSTICPYCONFIG: $(Build.SourcesDirectory)/tests/msticpyconfig-test.yaml
         echo Env $MSTICPYCONFIG or %MSTICPYCONFIG%
