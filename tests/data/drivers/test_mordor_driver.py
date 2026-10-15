@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mordor data driver test."""
+
 import contextlib
 import io
 import json
@@ -13,11 +14,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
+import httpx
 import pandas as pd
 import pytest
 import pytest_check as check
 
 from msticpy.data import QueryProvider
+from msticpy.data.drivers import mordor_driver
 from msticpy.data.drivers.mordor_driver import (
     _MITRE_TACTICS_CACHE,
     _MITRE_TECH_CACHE,
@@ -42,8 +45,8 @@ _SAVE_FOLDER = "mordor_test"
 def save_folder(tmp_path_factory):
     """Query Provider fixture."""
     cache_folder = tmp_path_factory.mktemp(_SAVE_FOLDER)
-    for file in get_test_data_path().joinpath("mordor").glob("*.pkl"):
-        shutil.copy(str(file), str(cache_folder))
+    for filename in (_MITRE_TECH_CACHE, _MITRE_TACTICS_CACHE):
+        shutil.copy(get_test_data_path().joinpath("mordor", filename), cache_folder)
     shutil.copy(
         str(get_test_data_path().joinpath("mordor").joinpath("mordor_cache.json")),
         str(cache_folder),
@@ -52,9 +55,7 @@ def save_folder(tmp_path_factory):
     mdr_cache = json.loads(mordor_cache_file.read_text(encoding="utf-8"))
     for item in mdr_cache.values():
         item["mp_last_updated"] = pd.Timestamp.now(tz=timezone.utc).isoformat()
-    Path(mordor_cache_file).write_text(
-        json.dumps(mdr_cache, indent=4), encoding="utf-8"
-    )
+    Path(mordor_cache_file).write_text(json.dumps(mdr_cache, indent=4), encoding="utf-8")
 
     return str(cache_folder)
 
@@ -69,11 +70,19 @@ def get_mdr_data_paths(save_folder):
 
 @pytest.fixture
 @patch("msticpy.data.drivers.mordor_driver.get_mdr_data_paths")
-def qry_provider(get_paths, save_folder):
+def qry_provider(get_paths, save_folder, monkeypatch):
     """Query Provider fixture."""
+    monkeypatch.setattr(mordor_driver, "MITRE_TECHNIQUES", None)
+    monkeypatch.setattr(mordor_driver, "MITRE_TACTICS", None)
+    monkeypatch.setattr(
+        mordor_driver, "_GET_MORDOR_METADATA", mordor_driver._create_mdr_metadata_cache()
+    )
     get_paths.return_value = get_mdr_data_paths(save_folder)
-    qry_prov = QueryProvider("Mordor", save_folder=save_folder)
-    qry_prov.connect()
+    with patch.object(
+        mordor_driver.httpx, "get", side_effect=AssertionError("Unexpected network request")
+    ):
+        qry_prov = QueryProvider("Mordor", save_folder=save_folder)
+        qry_prov.connect()
     return qry_prov
 
 
@@ -121,10 +130,10 @@ def test_mordor_cache(save_folder, qry_provider):
     check.is_true(tech_cache.is_file())
     check.is_true(mordor_cache.is_file())
 
-    tactics_df = pd.read_pickle(tactics_cache)
+    tactics_df = pd.read_json(tactics_cache, orient="table")
     check.is_instance(tactics_df, pd.DataFrame)
     check.greater_equal(len(tactics_df), 10)
-    techniques_df = pd.read_pickle(tech_cache)
+    techniques_df = pd.read_json(tech_cache, orient="table")
     check.is_instance(techniques_df, pd.DataFrame)
     check.greater_equal(len(techniques_df), 50)
 
@@ -152,9 +161,7 @@ def test_mordor_search(mdr_driver: MordorDriver):
 
     emp_power = search_mdr_data(mdr_driver.mordor_data, "Empire+Power")
     check.greater_equal(len(emp_power), 18)
-    check.greater_equal(
-        len(search_mdr_data(mdr_driver.mordor_data, "Empire, Windows")), 50
-    )
+    check.greater_equal(len(search_mdr_data(mdr_driver.mordor_data, "Empire, Windows")), 50)
 
     subset_search = search_mdr_data(mdr_driver.mordor_data, "Power", subset=subset)
     check.equal(len(emp_power), len(subset_search))
@@ -206,3 +213,89 @@ def test_mordor_query_provider(qry_provider):
     d_frame = q_func()
     check.is_instance(d_frame, pd.DataFrame)
     check.greater_equal(len(d_frame), 10)
+
+
+@pytest.fixture
+def mitre_response(respx_mock):
+    """Mock the fixed MITRE endpoint with representative string and null values."""
+    objects = [
+        {
+            "type": entry_type,
+            "name": "001",
+            "description": description,
+            "x_mitre_deprecated": False,
+            "external_references": [
+                {
+                    "source_name": "mitre-attack",
+                    "external_id": entry_id,
+                    "url": f"https://attack.mitre.org/{entry_id}/",
+                }
+            ],
+        }
+        for entry_type, entry_id, description in [
+            ("attack-pattern", "T0001", "2020-01-01\nquoted & text"),
+            ("x-mitre-tactic", "TA0001", None),
+        ]
+    ]
+    return respx_mock.get(mordor_driver._MITRE_JSON_URL).mock(
+        return_value=httpx.Response(200, json={"objects": objects})
+    )
+
+
+def test_mitre_json_cache_round_trip(tmp_path, mitre_response):
+    """Preserve MITRE indices, columns and dtypes without another HTTP request."""
+    original = mordor_driver._get_mitre_categories(str(tmp_path))
+    with patch.object(pd, "read_pickle", side_effect=AssertionError("Pickle forbidden")):
+        restored = mordor_driver._get_mitre_categories(str(tmp_path))
+    assert mitre_response.call_count == 1
+    for expected, actual in zip(original, restored, strict=True):
+        pd.testing.assert_frame_equal(expected, actual)
+        assert actual.index.name == "ID"
+        assert list(actual.columns) == ["Name", "Description", "url"]
+    assert not list(tmp_path.glob("*.pkl"))
+
+
+@pytest.mark.parametrize(
+    "cache_state", ["missing", "stale", "corrupt", "wrong-schema", "legacy"]
+)
+def test_mitre_cache_refresh(tmp_path, mitre_response, cache_state, caplog):
+    """Refresh unavailable or invalid JSON caches without opening legacy pickles."""
+    original = mordor_driver._get_mitre_categories(str(tmp_path))
+    for filename in (_MITRE_TECH_CACHE, _MITRE_TACTICS_CACHE):
+        cache_path = tmp_path.joinpath(filename)
+        if cache_state in {"missing", "legacy"}:
+            cache_path.unlink()
+        if cache_state == "legacy":
+            cache_path.with_suffix(".pkl").write_bytes(b"legacy cache must not be read")
+        if cache_state == "stale":
+            stale_time = (pd.Timestamp.now() - pd.Timedelta(days=31)).timestamp()
+            os.utime(cache_path, (stale_time, stale_time))
+        if cache_state == "corrupt":
+            cache_path.write_text("{invalid json", encoding="utf-8")
+        if cache_state == "wrong-schema":
+            pd.DataFrame({"unexpected": ["value"]}).to_json(cache_path, orient="table")
+    with patch.object(pd, "read_pickle", side_effect=AssertionError("Pickle forbidden")):
+        refreshed = mordor_driver._get_mitre_categories(str(tmp_path))
+    assert mitre_response.call_count == 2
+    for expected, actual in zip(original, refreshed, strict=True):
+        pd.testing.assert_frame_equal(expected, actual)
+    for filename in (_MITRE_TECH_CACHE, _MITRE_TACTICS_CACHE):
+        assert tmp_path.joinpath(filename).is_file()
+    if cache_state in {"corrupt", "wrong-schema"}:
+        assert "Invalid MITRE cache" in caplog.text
+
+
+def test_mordor_uncached_connection(tmp_path, monkeypatch, mitre_response):
+    """Connect with disk caching disabled without reading or writing cache files."""
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(mordor_driver, "MITRE_TECHNIQUES", None)
+    monkeypatch.setattr(mordor_driver, "MITRE_TACTICS", None)
+    monkeypatch.setattr(
+        mordor_driver, "_GET_MORDOR_METADATA", mordor_driver._create_mdr_metadata_cache()
+    )
+    monkeypatch.setattr(mordor_driver, "get_mdr_data_paths", lambda _: [])
+    driver = MordorDriver(used_cached=False, save_folder=str(tmp_path))
+    driver.connect()
+    assert driver.connected
+    assert mitre_response.call_count == 1
+    assert not list(tmp_path.iterdir())
