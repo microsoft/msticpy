@@ -433,6 +433,57 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         return query_id, result, None
 
     @staticmethod
+    async def _run_tasks_threaded(
+        thread_tasks: dict[str, asyncio.Future[pd.DataFrame]],
+        *,
+        progress: bool,
+    ) -> tuple[dict[str, pd.DataFrame], list[str]]:
+        """Await already-submitted futures, returning results by query_id.
+
+        Shared by the first attempt and the retry pass in
+        `_exec_queries_threaded` so both merge into the same
+        query_id-keyed results dict before final ordering is computed --
+        that is what lets a query that only succeeds on retry still land
+        in its correct submission-order position rather than being
+        appended after every query that succeeded on the first attempt.
+        """
+        results: dict[str, pd.DataFrame] = {}
+        failed_tasks_ids: list[str] = []
+        tagged_tasks = [
+            QueryProviderConnectionsMixin._run_tagged_task(query_id, future)
+            for query_id, future in thread_tasks.items()
+        ]
+        task_iter = asyncio.as_completed(tagged_tasks)
+        if progress:
+            task_iter = tqdm(
+                task_iter,
+                total=len(tagged_tasks),
+                unit="sub-queries",
+                desc="Running",
+            )
+        for coro in task_iter:
+            query_id, result, exc = await coro
+            if exc is None:
+                logger.info("Query task '%s' completed successfully.", query_id)
+                results[query_id] = result
+            elif isinstance(exc, MsticpyDataQueryError):
+                logger.warning(
+                    "Query task '%s' failed",
+                    query_id,
+                )
+                exc.display_exception()
+                failed_tasks_ids.append(query_id)
+            else:
+                logger.warning(
+                    "Query task '%s' failed with exception %s - %s",
+                    query_id,
+                    exc.__class__.__name__,
+                    exc.args,
+                )
+                failed_tasks_ids.append(query_id)
+        return results, failed_tasks_ids
+
+    @staticmethod
     async def _exec_queries_threaded(
         query_tasks: dict[str, partial],
         *,
@@ -446,66 +497,42 @@ class QueryProviderConnectionsMixin(QueryProviderProtocol):
         event_loop: asyncio.AbstractEventLoop = _get_event_loop()
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            # add the additional connections
             thread_tasks: dict[str, asyncio.Future[pd.DataFrame]] = {
                 query_id: event_loop.run_in_executor(executor, query_func)
                 for query_id, query_func in query_tasks.items()
             }
-            results: dict[str, pd.DataFrame] = {}
-            failed_tasks_ids: list[str] = []
-            tagged_tasks = [
-                QueryProviderConnectionsMixin._run_tagged_task(query_id, future)
-                for query_id, future in thread_tasks.items()
-            ]
-            task_iter = asyncio.as_completed(tagged_tasks)
-            if progress:
-                task_iter = tqdm(
-                    task_iter,
-                    total=len(tagged_tasks),
-                    unit="sub-queries",
-                    desc="Running",
+            results, failed_tasks_ids = (
+                await QueryProviderConnectionsMixin._run_tasks_threaded(
+                    thread_tasks, progress=progress
                 )
-            for coro in task_iter:
-                query_id, result, exc = await coro
-                if exc is None:
-                    logger.info("Query task '%s' completed successfully.", query_id)
-                    results[query_id] = result
-                elif isinstance(exc, MsticpyDataQueryError):
-                    logger.warning(
-                        "Query task '%s' failed",
-                        query_id,
+            )
+
+        if retry and failed_tasks_ids:
+            with ThreadPoolExecutor(max_workers=max_workers) as retry_executor:
+                retry_thread_tasks: dict[str, asyncio.Future[pd.DataFrame]] = {
+                    query_id: event_loop.run_in_executor(
+                        retry_executor, query_tasks[query_id]
                     )
-                    exc.display_exception()
-                    failed_tasks_ids.append(query_id)
-                else:
-                    logger.warning(
-                        "Query task '%s' failed with exception %s - %s",
-                        query_id,
-                        exc.__class__.__name__,
-                        exc.args,
+                    for query_id in failed_tasks_ids
+                }
+                retry_results, _ = (
+                    await QueryProviderConnectionsMixin._run_tasks_threaded(
+                        retry_thread_tasks, progress=progress
                     )
-                    failed_tasks_ids.append(query_id)
+                )
+            # Merge back into the same query_id-keyed dict the first
+            # attempt populated, so a query that only succeeded on retry
+            # still lands in its correct submission-order position below
+            # instead of being appended after every query that succeeded
+            # on the first attempt.
+            results.update(retry_results)
 
         # Results are keyed by query_id, so this restores the original
-        # submission order regardless of the order tasks completed in.
+        # submission order regardless of which attempt each one
+        # succeeded on, or the order tasks completed in.
         ordered_results: list[pd.DataFrame] = [
             results[query_id] for query_id in thread_tasks if query_id in results
         ]
-
-        if retry and failed_tasks_ids:
-            failed_results: pd.DataFrame = (
-                await QueryProviderConnectionsMixin._exec_queries_threaded(
-                    {
-                        failed_tasks_id: query_tasks[failed_tasks_id]
-                        for failed_tasks_id in failed_tasks_ids
-                    },
-                    progress=progress,
-                    retry=False,
-                    max_workers=max_workers,
-                )
-            )
-            if not failed_results.empty:
-                ordered_results.append(failed_results)
         if ordered_results:
             return pd.concat(ordered_results, ignore_index=True)
 

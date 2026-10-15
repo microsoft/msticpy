@@ -367,7 +367,13 @@ def test_exec_queries_threaded_retries_the_task_that_actually_failed():
     # must only have been called once.
     check.equal(call_counts["a"], 2)
     check.equal(call_counts["b"], 1)
-    check.equal(sorted(result["query_id"]), ["a", "b"])
+    # "a" was submitted first, so its row must come first in the result
+    # even though it only succeeded on retry (after "b" had already
+    # completed on the first attempt). Asserting the exact order --
+    # not just the sorted set of query_ids -- is what catches the
+    # retried-results-appended-at-the-end bug: a naive fix passes the
+    # sorted comparison but still produces ["b", "a"] here.
+    check.equal(list(result["query_id"]), ["a", "b"])
 
 
 def test_split_queries_sync():
