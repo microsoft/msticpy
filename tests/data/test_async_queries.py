@@ -5,7 +5,10 @@
 # --------------------------------------------------------------------------
 """Test async connections and split queries."""
 
+import asyncio
+import time
 from datetime import datetime, timedelta, timezone
+from functools import partial
 from unittest.mock import patch
 
 import pandas as pd
@@ -14,7 +17,10 @@ import pytest_check as check
 from msticpy.common.exceptions import MsticpyDataQueryError
 from msticpy.data.core.data_providers import QueryProvider
 from msticpy.data.drivers.local_data_driver import LocalDataDriver
-from msticpy.data.core.query_provider_connections_mixin import _calc_split_ranges
+from msticpy.data.core.query_provider_connections_mixin import (
+    QueryProviderConnectionsMixin,
+    _calc_split_ranges,
+)
 from msticpy.data.drivers.driver_base import DriverProps
 
 from ..unit_test_lib import get_test_data_path
@@ -288,6 +294,86 @@ def test_multiple_connections_threaded():
         check.is_true(
             multi_results_exception_raised_retried_success.equals(multi_results)
         )
+
+
+def test_exec_queries_threaded_preserves_identity_out_of_order():
+    """Results must stay attached to the query_id that actually produced them.
+
+    asyncio.as_completed() yields tasks in completion order, not the order
+    they were submitted in. A correct implementation cannot recover which
+    result belongs to which query_id by position (e.g. zipping the
+    submission-ordered keys against the completion-ordered results) --
+    that silently mislabels results whenever tasks don't finish in
+    submission order, which is the common case under real concurrency.
+    """
+
+    def _tagged_result(label: str, delay: float) -> pd.DataFrame:
+        time.sleep(delay)
+        return pd.DataFrame({"query_id": [label]})
+
+    # "slow" is submitted first but finishes last.
+    query_tasks = {
+        "slow": partial(_tagged_result, "slow", 0.2),
+        "fast": partial(_tagged_result, "fast", 0.0),
+    }
+
+    result: pd.DataFrame = asyncio.run(
+        QueryProviderConnectionsMixin._exec_queries_threaded(
+            query_tasks, progress=False
+        )
+    )
+
+    # Each row must carry the query_id of the task that actually produced
+    # it, and the final frame must preserve submission order (slow before
+    # fast) regardless of which one completed first.
+    check.equal(list(result["query_id"]), ["slow", "fast"])
+
+
+def test_exec_queries_threaded_retries_the_task_that_actually_failed():
+    """The retry mechanism must retry the query_id that failed, not
+    whichever query_id happened to occupy the same position once results
+    were (mis)reconstructed."""
+
+    def _fast_ok(label: str) -> pd.DataFrame:
+        return pd.DataFrame({"query_id": [label]})
+
+    def _slow_fail(label: str) -> pd.DataFrame:
+        time.sleep(0.2)
+        raise MsticpyDataQueryError(label)
+
+    call_counts: dict[str, int] = {"a": 0, "b": 0}
+
+    def _tracked(label: str, should_fail: bool) -> pd.DataFrame:
+        call_counts[label] += 1
+        if should_fail and call_counts[label] == 1:
+            return _slow_fail(label)
+        return _fast_ok(label)
+
+    # "a" is submitted first and fails on its first attempt; "b" is
+    # submitted second, is quick, and always succeeds. "a" finishes after
+    # "b" since it is the one with the artificial delay.
+    query_tasks = {
+        "a": partial(_tracked, "a", True),
+        "b": partial(_tracked, "b", False),
+    }
+
+    result: pd.DataFrame = asyncio.run(
+        QueryProviderConnectionsMixin._exec_queries_threaded(
+            query_tasks, progress=False, retry=True
+        )
+    )
+
+    # "a" must have been retried (called twice); "b" never failed, so it
+    # must only have been called once.
+    check.equal(call_counts["a"], 2)
+    check.equal(call_counts["b"], 1)
+    # "a" was submitted first, so its row must come first in the result
+    # even though it only succeeded on retry (after "b" had already
+    # completed on the first attempt). Asserting the exact order --
+    # not just the sorted set of query_ids -- is what catches the
+    # retried-results-appended-at-the-end bug: a naive fix passes the
+    # sorted comparison but still produces ["b", "a"] here.
+    check.equal(list(result["query_id"]), ["a", "b"])
 
 
 def test_split_queries_sync():
