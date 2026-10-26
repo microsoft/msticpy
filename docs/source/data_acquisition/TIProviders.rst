@@ -33,6 +33,7 @@ Features
    -  **CrowdSec**
    -  **AbuseIPDB**
    -  **ScanMalware**
+   -  **NetAPI**
 
 -  Other pseudo-TI providers are also included:
 
@@ -286,6 +287,9 @@ fictitious - the format of the keys may differ from what is shown
       ScanMalware:
         Primary: True
         Provider: "ScanMalware"
+      NetAPI:
+        Primary: True
+        Provider: "NetAPI"
 
 You need to tell `TILookup` to refresh its configuration.
 
@@ -307,7 +311,8 @@ of providers loaded.
   'AzSTI - Microsoft Sentinel TI provider class. (primary)',
   'CrowdSec - CrowdSec CTI Smoke Lookup. (primary)',
   'AbuseIPDB - AbuseIPDB Lookup. (primary)',
-  'ScanMalware - ScanMalware Lookup. (primary)']
+  'ScanMalware - ScanMalware Lookup. (primary)',
+  'NetAPI - NetAPI Lookup. (primary)']
 
 .. warning:: Depending on the type of account that you
   have with a provider, they will typically impose a limit
