@@ -77,6 +77,20 @@ def test_url(ioc_extract):
     _run_extract(ioc_extract, "url2", {"url": 1, "dns": 1, "ipv4": 1})
 
 
+@pytest.mark.parametrize(
+    "test_input",
+    [
+        "http://%65vil.com/x http://good.org/y",
+        "http://good.org/y http://%65vil.com/x",
+    ],
+)
+def test_url_encoded_host(test_input, ioc_extract):
+    """Test that URL-decoded hosts are found when the URL is not the first one."""
+    results = ioc_extract.extract(test_input)
+    check.is_in("http://evil.com/x", results["url"])
+    check.is_in("evil.com", results["dns"])
+
+
 def test_windows_path(ioc_extract):
     _run_extract(ioc_extract, "windows_path", {"windows_path": 3})
 

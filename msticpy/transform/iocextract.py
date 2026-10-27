@@ -675,8 +675,7 @@ class IoCExtract:
             if ioc_types and ioc_type not in ioc_types:
                 continue
 
-            match_pos = 0
-            for rgx_match in rgx_def.comp_regex.finditer(src, match_pos):
+            for rgx_match in rgx_def.comp_regex.finditer(src):
                 if rgx_match is None:
                     break
                 # If the rgx_def names a group to match on, use that
@@ -691,8 +690,7 @@ class IoCExtract:
 
                 self._add_highest_pri_match(iocs_found, match_str, rgx_def)
                 if ioc_type == "url":
-                    self._check_decode_url(match_str, rgx_def, match_pos, iocs_found)
-                match_pos = rgx_match.end()
+                    self._check_decode_url(match_str, rgx_def, iocs_found)
 
         for ioc, ioc_result in iocs_found.items():
             if not defanged and ioc_result[0] in [
@@ -707,10 +705,10 @@ class IoCExtract:
 
         return ioc_results
 
-    def _check_decode_url(self, match_str, rgx_def, match_pos, iocs_found):
+    def _check_decode_url(self, match_str, rgx_def, iocs_found):
         """Get any other IoCs from decoded URL."""
         decoded_url = unquote(match_str)
-        for url_match in rgx_def.comp_regex.finditer(decoded_url, match_pos):
+        for url_match in rgx_def.comp_regex.finditer(decoded_url):
             if url_match is not None:
                 self._add_highest_pri_match(iocs_found, url_match.group(), rgx_def)
                 self._add_highest_pri_match(
