@@ -6,9 +6,9 @@
 """
 NetAPI Provider.
 
-Looks up domains, hostnames and URLs in the NetAPI compromised feed: the
-hosts that public threat feeds (CERT Polska, blackbook and others) report for
-malware or phishing. The default query answers whether the
+Looks up domains, hostnames, URLs and IP addresses in the NetAPI compromised
+feed: the hosts that public threat feeds (URLhaus, CERT Polska, blackbook and
+others) report for malware or phishing. The default query answers whether the
 observable is listed now (seen within the last 24 hours), was listed in the
 past only, or was never listed. The ``rank`` query subtype returns the
 position of a domain in the NetAPI Top 1M, a daily popularity ranking.
@@ -55,11 +55,13 @@ class NetAPI(HttpTIProvider):
     _BASE_URL: ClassVar[str] = "https://netapi.com"
 
     # The feed matches a hostname or a URL through its registered domain, so
-    # every name type uses the same query.
+    # every name type uses the same query. Addresses have no popularity rank.
     _QUERIES: ClassVar[dict[str, APILookupParams]] = {
         "dns": _CHECK,
         "hostname": _CHECK,
         "url": _CHECK,
+        "ipv4": _CHECK,
+        "ipv6": _CHECK,
         "dns-rank": _RANK,
         "hostname-rank": _RANK,
     }

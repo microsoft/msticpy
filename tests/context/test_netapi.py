@@ -5,38 +5,29 @@
 # --------------------------------------------------------------------------
 """NetAPI TI provider tests.
 
-The provider looks up domains, hostnames and URLs only. The shared
-parametrized harness in test_tiproviders.py looks up IP addresses in bulk,
-so this provider is tested here: loading through TILookup, current, past
-and never-listed results, the registered-domain match, the `rank` query
-subtype and the request parameters.
+These cover what the shared parametrized harness in test_tiproviders.py
+cannot reach: past and never-listed results, the registered-domain match,
+the `rank` query subtype and the request parameters.
 
 No network access. The provider's httpx client is replaced throughout.
 """
 
 from __future__ import annotations
 
-import warnings
-from pathlib import Path
 from typing import Any
 
 import httpx
 import pytest
 import pytest_check as check
 
-from msticpy.common import pkg_config
-from msticpy.context.tilookup import TILookup
 from msticpy.context.tiproviders.netapi import NetAPI
 from msticpy.context.tiproviders.result_severity import ResultSeverity
-
-from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 __author__ = "Slava Olesik"
 
 pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
-# Answers of the live API on 2026-10-26 and 2026-10-27, trimmed to the fields
-# the provider reads.
+# Answers of the live API on 2026-10-26, trimmed to the fields the provider reads.
 _LISTED_NOW: dict[str, Any] = {
     "value": "www.000359.xyz",
     "type": "domain",
@@ -53,14 +44,14 @@ _LISTED_NOW: dict[str, Any] = {
     },
 }
 _LISTED_PAST: dict[str, Any] = {
-    "value": "0-07.ru",
-    "type": "domain",
+    "value": "1.1.1.1",
+    "type": "ip",
     "listed_now": False,
     "listed_ever": True,
-    "matched_value": "0-07.ru",
-    "first_seen": "2019-12-18",
-    "last_seen": "2019-12-25 00:00:00 UTC",
-    "block_reason": "suspicious",
+    "matched_value": "1.1.1.1",
+    "first_seen": "2026-06-14",
+    "last_seen": "2026-06-17 01:05:02 UTC",
+    "block_reason": "urlhaus.abuse.ch",
     "registrar": None,
 }
 _NOT_LISTED: dict[str, Any] = {
@@ -131,25 +122,6 @@ def _lookup(
     return result.to_dict(orient="records")[0], client
 
 
-def test_lookup_through_tilookup():
-    """The provider loads from the test config and answers through TILookup."""
-    config_path = Path(get_test_data_path()).joinpath(pkg_config._CONFIG_FILE)
-    with custom_mp_config(config_path):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=UserWarning)
-            ti_lookup = TILookup()
-    client = _Client(_LISTED_NOW)
-    ti_lookup.loaded_providers["NetAPI"]._httpx_client = client
-
-    result = ti_lookup.lookup_ioc("www.000359.xyz", "hostname", providers=["NetAPI"])
-    row = result.to_dict(orient="records")[0]
-
-    check.equal(row["Provider"], "NetAPI")
-    check.is_true(row["Result"])
-    check.equal(row["Severity"], ResultSeverity.high.name)
-    check.equal(len(client.requests), 1)
-
-
 def test_current_listing_is_high_severity():
     """A host reported within the last 24 hours is a current listing."""
     row, client = _lookup(_LISTED_NOW, "www.000359.xyz", "hostname")
@@ -173,12 +145,12 @@ def test_past_listing_is_reported_but_not_rated():
     It is a hit with its dates, but it must not carry the severity of a
     current listing.
     """
-    row, _ = _lookup(_LISTED_PAST, "0-07.ru", "dns")
+    row, _ = _lookup(_LISTED_PAST, "1.1.1.1", "ipv4")
 
     check.is_true(row["Result"])
     check.equal(row["Severity"], ResultSeverity.information.name)
     check.is_false(row["Details"]["Listed Now"])
-    check.equal(row["Details"]["Last Seen"], "2019-12-25 00:00:00 UTC")
+    check.equal(row["Details"]["Last Seen"], "2026-06-17 01:05:02 UTC")
 
 
 def test_never_listed_is_a_negative_result():
@@ -238,17 +210,9 @@ def test_no_key_and_own_user_agent():
     check.is_false(any(key.lower() == "authorization" for key in headers))
 
 
-@pytest.mark.parametrize(
-    ("ioc", "ioc_type"),
-    [
-        ("7657fcb7d772448a6d8504e4b20168b7", "md5_hash"),
-        ("185.92.220.35", "ipv4"),
-        ("2345:0425:2CA1:0000:0000:0567:5673:23b5", "ipv6"),
-    ],
-)
-def test_hashes_and_ip_addresses_are_not_supported(ioc, ioc_type):
-    """Hashes and IP addresses are not looked up and no request is made."""
-    row, client = _lookup(_NOT_LISTED, ioc, ioc_type)
+def test_file_hashes_are_not_supported():
+    """Hashes are not looked up and no request is made."""
+    row, client = _lookup(_NOT_LISTED, "7657fcb7d772448a6d8504e4b20168b7", "md5_hash")
 
     check.is_false(row["Result"])
     check.equal(client.requests, [])
