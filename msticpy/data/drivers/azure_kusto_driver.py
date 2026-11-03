@@ -22,7 +22,7 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from typing_extensions import Self
 
 from ..._version import VERSION
-from ...auth.azure_auth import az_connect, get_default_resource_name
+from ...auth.azure_auth import az_connect
 from ...auth.cloud_mappings import AzureCloudConfig
 from ...common.exceptions import (
     MsticpyDataQueryError,
@@ -58,7 +58,6 @@ except ImportError as imp_err:
 
 if TYPE_CHECKING:
     import pandas as pd
-    from azure.core.credentials import AccessToken
 
     from msticpy.auth.azure_auth_core import AzCredentials
 
@@ -649,37 +648,30 @@ class AzureKustoDriver(DriverBase):
     ) -> KustoConnectionStringBuilder:
         """Return full cluster URI and credential for cluster name or URI."""
         auth_params: AuthParams = self._get_auth_params_from_config(cluster_config)
-        connect_auth_types: list[str] = self._az_auth_types or AzureCloudConfig().auth_methods
+        connect_auth_types: list[str] = list(
+            self._az_auth_types or AzureCloudConfig().auth_methods,
+        )
         if auth_params.method == "clientsecret":
             logger.info("Client secret specified in config - using client secret authn")
             if "clientsecret" not in connect_auth_types:
                 connect_auth_types.insert(0, "clientsecret")
             credential: AzCredentials = az_connect(
-                auth_types=connect_auth_types,
+                auth_methods=connect_auth_types,
                 **(auth_params.params),
             )
         elif auth_params.method == "certificate":
             logger.info("Certificate specified in config - using certificate authn")
-            connect_auth_types.insert(0, "certificate")
-            credential = az_connect(
-                auth_types=self._az_auth_types,
-                **(auth_params.params),
-            )
-            return self._create_kusto_cert_connection_str(auth_params)
+            return self._create_kql_cert_connection_str(auth_params)
         else:
             logger.info("Using integrated authn")
             credential = az_connect(
-                auth_types=self._az_auth_types,
+                auth_methods=connect_auth_types,
                 **(auth_params.params),
             )
         logger.info("Credentials obtained %s", type(credential.modern).__name__)
-        token: AccessToken = credential.modern.get_token(
-            get_default_resource_name(auth_params.uri),
-        )
-        logger.info("Token obtained for %s", auth_params.uri)
-        return KustoConnectionStringBuilder.with_aad_user_token_authentication(
+        return KustoConnectionStringBuilder.with_azure_token_credential(
             connection_string=auth_params.uri,
-            user_token=token.token,
+            credential=credential.modern,
         )
 
     def _create_kql_cert_connection_str(
