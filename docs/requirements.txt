@@ -3,7 +3,7 @@ azure.mgmt.compute
 azure.mgmt.monitor
 azure.mgmt.network
 azure.mgmt.resource
-cryptography>=48.0.0
+cryptography>=50.0.1
 deprecated>=1.2.4
 docutils<0.22.0
 httpx>=0.28.0, <1.0.0
