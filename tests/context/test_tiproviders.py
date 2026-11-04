@@ -183,6 +183,7 @@ _TI_PROVIDER_TESTS = [
     TiTestCase("IPQualityScore", exp_responses=20),
     TiTestCase("BinaryEdge"),
     TiTestCase("ScanMalware"),
+    TiTestCase("NetAPI"),
 ]
 
 
@@ -257,6 +258,7 @@ def verify_result(result, ti_lookup):
                 "IPQualityScore",
                 "BinaryEdge",
                 "ScanMalware",
+                "NetAPI",
             ],
         )
         check.is_not_none(lu_result["Ioc"])
@@ -697,6 +699,20 @@ def _scanmalware_scans(**kwargs):
 
 
 _PROVIDER_RESPONSES = {
+    "https://netapi.com/api-json/": {
+        "ioc_param": "params.value",
+        "response": {
+            "value": "badplace.net",
+            "type": "domain",
+            "listed_now": True,
+            "listed_ever": True,
+            "matched_value": "badplace.net",
+            "first_seen": "2026-09-01",
+            "last_seen": "2026-10-26 01:05:27 UTC",
+            "block_reason": "urlhaus.abuse.ch",
+            "registrar": None,
+        },
+    },
     "https://scanmalware.com/api/v1/domains": {
         "ioc_param": "url",
         "params": {},

@@ -24,6 +24,7 @@ Submodules
    msticpy.context.tiproviders.ip_quality_score
    msticpy.context.tiproviders.kql_base
    msticpy.context.tiproviders.mblookup
+   msticpy.context.tiproviders.netapi
    msticpy.context.tiproviders.open_page_rank
    msticpy.context.tiproviders.pulsedive
    msticpy.context.tiproviders.result_severity
