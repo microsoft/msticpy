@@ -7,10 +7,14 @@
 NetAPI Provider.
 
 Looks up domains, hostnames, URLs and IP addresses in the NetAPI compromised
-feed: the hosts that public threat feeds (URLhaus, CERT Polska, blackbook and
-others) report for malware or phishing. The default query answers whether the
-observable is listed now (seen within the last 24 hours), was listed in the
-past only, or was never listed. The ``rank`` query subtype returns the
+feed. For domains it holds the hosts that public threat feeds (CERT Polska,
+blackbook and other sources) report for malware or phishing, and a domain is
+listed now when it was seen within the last 24 hours. For IP addresses it is
+NetAPI's own feed, no longer a compilation of third-party blocklists: the IPv4
+addresses that attacked the sensors of NetAPI Nightwatch, NetAPI's own honeypot
+network, listed now within the last 48 hours. The IP feed holds IPv4 addresses
+only. The default query answers whether the observable is listed now, was
+listed in the past only, or was never listed. The ``rank`` query subtype returns the
 position of a domain in the NetAPI Top 1M, a daily popularity ranking.
 
 The API needs no key. Anonymous use is limited to 30 requests a minute and
