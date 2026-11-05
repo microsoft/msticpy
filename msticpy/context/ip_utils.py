@@ -690,11 +690,15 @@ def _create_net(data: dict[str, Any]) -> dict[str, Any]:
     address: str | None = None
     created: str | None = None
     updated: str | None = None
-    for item in data["events"]:
-        created = item["eventDate"] if item["eventAction"] == "last changed" else None
-        updated = item["eventDate"] if item["eventAction"] == "registration" else None
-    for entity in data["entities"]:
+    for item in data.get("events", []):
+        if item.get("eventAction") == "registration":
+            created = item.get("eventDate")
+        elif item.get("eventAction") == "last changed":
+            updated = item.get("eventDate")
+    for entity in data.get("entities", []):
         address = _find_address(entity)
+        if address:
+            break
     regex = r"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*"
     emails: list[str] = re.findall(regex, str(data))
     return {
