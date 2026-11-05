@@ -15,6 +15,7 @@ import respx
 
 import msticpy.init.mp_pandas_accessors  # noqa: F401
 from msticpy.context.ip_utils import (
+    _create_net,
     _IpWhoIsResult,
     _whois_lookup,
     get_asn_details,
@@ -535,3 +536,35 @@ def test_asn_query_features(mock_asn_whois_query):
     check.is_in("AS3598", asn_name_details.keys())
     check.is_instance(asn_name_details, dict)
     check.equal(asn_name_details["AS3598"], "MICROSOFT-CORP-AS, US")
+
+
+def test_create_net_event_dates_and_address():
+    """Test RDAP events map to created/updated and address is kept."""
+    net = _create_net(RDAP_RESPONSE)
+    check.equal(net["created"], "2015-03-26T13:58:18-04:00")
+    check.equal(net["updated"], "2021-12-14T20:28:53-05:00")
+    check.equal(net["address"], "One Microsoft Way\nRedmond\nWA\n98052\nUnited States")
+
+    # Event order should not matter.
+    reordered = {**RDAP_RESPONSE, "events": list(reversed(RDAP_RESPONSE["events"]))}
+    net = _create_net(reordered)
+    check.equal(net["created"], "2015-03-26T13:58:18-04:00")
+    check.equal(net["updated"], "2021-12-14T20:28:53-05:00")
+
+    # A later entity without an address should not clear an earlier one.
+    no_addr_entity = {"handle": "NOADDR", "vcardArray": ["vcard", []]}
+    extra_entity = {
+        **RDAP_RESPONSE,
+        "entities": [*RDAP_RESPONSE["entities"], no_addr_entity],
+    }
+    net = _create_net(extra_entity)
+    check.equal(net["address"], "One Microsoft Way\nRedmond\nWA\n98052\nUnited States")
+
+    # Events and entities are optional in RDAP responses.
+    minimal = {
+        k: v for k, v in RDAP_RESPONSE.items() if k not in ("events", "entities")
+    }
+    net = _create_net(minimal)
+    check.is_none(net["created"])
+    check.is_none(net["updated"])
+    check.is_none(net["address"])
