@@ -68,23 +68,23 @@ class TimeSpan:
             *args, timespan=timespan, start=start, end=end, period=period
         )
 
-        if not start and not period:
+        if not start and period is None:
             raise ValueError(
                 "start, period",
                 "At least one of 'start' or 'period' must be specified.",
             )
 
         self._period = None
-        if period:
+        if period is not None:
             self._period = self._parse_timedelta(period)
 
         self._end = self._parse_time(end, "end")
         self._start = self._parse_time(start, "start")
-        if self._start and self._period:
+        if self._start and self._period is not None:
             self._end = self._start + self._period
         if self._end is None:
             self._end = datetime.now(timezone.utc)
-        if self._start is None and self._period:
+        if self._start is None and self._period is not None:
             self._start = self._end - self._period
 
     def __eq__(self, value):
@@ -143,7 +143,7 @@ class TimeSpan:
             Period timedelta.
 
         """
-        if not self._period:
+        if self._period is None:
             self._period = self.end - self.start
         return self._period
 
@@ -162,7 +162,8 @@ class TimeSpan:
             if _is_timespan_type(timespan):
                 start = start or getattr(timespan, "start", None)
                 end = end or getattr(timespan, "end", None)
-                period = period or getattr(timespan, "period", None)
+                if period is None:
+                    period = getattr(timespan, "period", None)
             elif isinstance(timespan, tuple):
                 start = timespan[0]
                 end = timespan[1]

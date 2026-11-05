@@ -57,6 +57,17 @@ def test_timespan_parms():
     _validate_timespan(tspan, period=period)
 
 
+@pytest.mark.parametrize("period", [timedelta(0), "0s"])
+@pytest.mark.parametrize("endpoint", ["start", "end"])
+def test_zero_period(endpoint, period):
+    """A zero-length span starts and ends at the supplied timestamp."""
+    timestamp = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    span = TimeSpan(**{endpoint: timestamp}, period=period)
+
+    assert span.start == span.end == timestamp
+    assert span.period == timedelta(0)
+
+
 def test_timespan_eq():
     """Test creating Timespan from another Timespan."""
     period = timedelta(days=1)
@@ -71,6 +82,14 @@ def test_timespan_eq():
     check.equal(tspan2, tspan)
     tspan2 = TimeSpan(timespan=(str(tspan.start), str(tspan.end)))
     check.equal(tspan2, tspan)
+
+
+def test_zero_period_override():
+    """An explicit zero period takes precedence when copying a span."""
+    original = TimeSpan(start="2024-01-01", period="1D")
+    span = TimeSpan(timespan=original, period=timedelta(0))
+
+    assert span.start == span.end == original.start
 
 
 def test_timespan_timeselector():
