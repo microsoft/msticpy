@@ -291,15 +291,7 @@ def ts_anomalies_stl(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     # Calculate zscore based on residual column
     # this column does not contain seasonal/trend components
     result["score"] = stats.zscore(result["residual"])
-    # create spikes(1) and dips(-1) based on threshold and seasonal columns
-    # Initialize anomalies to 0 (default for no anomaly)
-    result["anomalies"] = 0
-    result.loc[(result["score"] > score_threshold) & (result["seasonal"] > 0), "anomalies"] = 1
-    result.loc[
-        (result["score"] > score_threshold) & (result["seasonal"] < 0), "anomalies"
-    ] = -1
-    # Datatype casting
-    result["anomalies"] = result["anomalies"].astype("int64")
+    result["anomalies"] = _threshold_scores(result["score"], score_threshold, score_threshold)
 
     time_index_name = data.index.name or "index"
     return result.reset_index().sort_values(time_index_name, ascending=True)
@@ -473,14 +465,16 @@ def set_new_anomaly_threshold(
         Output DataFrame with recalculated anomalies.
 
     """
-    new_anoms_col = "__new_anomalies__"
-    threshold_low = threshold_low or threshold
-    new_df = data.assign(__new_anomalies__=0)
-    new_df.loc[new_df["score"] >= threshold, new_anoms_col] = 1
-    new_df.loc[new_df["score"] <= -threshold_low, new_anoms_col] = -1
-    return new_df.drop(columns=[anomalies_column]).rename(
-        columns={new_anoms_col: anomalies_column}
-    )
+    flags = _threshold_scores(data["score"], threshold, threshold_low or threshold)
+    return data.assign(**{anomalies_column: flags})
+
+
+def _threshold_scores(scores: pd.Series, threshold: float, threshold_low: float) -> pd.Series:
+    """Mark spikes and dips by their signed residual score."""
+    flags = pd.Series(0, index=scores.index, dtype="int64")
+    flags.loc[scores >= threshold] = 1
+    flags.loc[scores <= -threshold_low] = -1
+    return flags
 
 
 def _doc_remove_data(func, remove_other_params: bool = False):
