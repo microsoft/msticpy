@@ -35,7 +35,9 @@ def test_ts_anomalies_stl(df_data):
     results = timeseries.ts_anomalies_stl(
         df_data, time_column="TimeGenerated", data_column="TotalBytesSent"
     )
-    check.equal(len(results.query("anomalies != 0")), 3)
+    check.equal(len(results.query("anomalies == 1")), 3)
+    check.equal(len(results.query("anomalies == -1")), 5)
+    check.is_true(results.loc[results["anomalies"] == -1, "score"].le(-3).all())
 
     check.is_in("residual", results.columns)
     check.is_in("trend", results.columns)
@@ -49,7 +51,9 @@ def test_ts_anomalies_stl(df_data):
     results = df_data.mp_timeseries.analyze(
         time_column="TimeGenerated", data_column="TotalBytesSent"
     )
-    check.equal(len(results.query("anomalies != 0")), 3)
+    pd.testing.assert_series_equal(
+        results["anomalies"], results.mp_timeseries.apply_threshold(threshold=3)["anomalies"]
+    )
 
 
 def test_anomaly_periods(df_data):
