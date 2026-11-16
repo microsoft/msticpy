@@ -118,6 +118,7 @@ Currently supported provider names are:
 - CrowdSec
 - AbuseIPDB
 - ScanMalware
+- VPNDetection
 
 .. code:: yaml
 
@@ -152,6 +153,9 @@ Currently supported provider names are:
       ScanMalware:
         Primary: True
         Provider: "ScanMalware"
+      VPNDetection:
+        Primary: True
+        Provider: "VPNDetection"
 
 .. note:: You store values in the ``Args`` section as simple strings,
    as names of environment variables containing the value, or

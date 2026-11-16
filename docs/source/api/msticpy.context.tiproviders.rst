@@ -33,3 +33,4 @@ Submodules
    msticpy.context.tiproviders.ti_provider_base
    msticpy.context.tiproviders.tor_exit_nodes
    msticpy.context.tiproviders.virustotal
+   msticpy.context.tiproviders.vpndetection

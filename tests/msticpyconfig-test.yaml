@@ -71,6 +71,9 @@ TIProviders:
   ScanMalware:
     Primary: True
     Provider: "ScanMalware"
+  VPNDetection:
+    Primary: True
+    Provider: "VPNDetection"
   OpenPageRank:
     Args:
       AuthKey:
