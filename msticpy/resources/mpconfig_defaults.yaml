@@ -104,6 +104,12 @@ TIProviders:
   ScanMalware:
     Primary: bool(default=True)
     Provider: "ScanMalware"
+  VPNDetection:
+    Args:
+      # Leave AuthKey empty to use the API without a key, or set one for the proxy and hosting flags.
+      AuthKey: *cred_key
+    Primary: bool(default=False)
+    Provider: "VPNDetection"
   RiskIQ:
     Primary: bool(default=True)
     Provider: "RiskIQ"

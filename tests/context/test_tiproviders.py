@@ -183,6 +183,7 @@ _TI_PROVIDER_TESTS = [
     TiTestCase("IPQualityScore", exp_responses=20),
     TiTestCase("BinaryEdge"),
     TiTestCase("ScanMalware"),
+    TiTestCase("VPNDetection"),
 ]
 
 
@@ -257,6 +258,7 @@ def verify_result(result, ti_lookup):
                 "IPQualityScore",
                 "BinaryEdge",
                 "ScanMalware",
+                "VPNDetection",
             ],
         )
         check.is_not_none(lu_result["Ioc"])
@@ -277,6 +279,37 @@ def verify_result(result, ti_lookup):
         # test convert to DF
         result_df = ti_lookup.result_to_df(riskiq_result)
         check.is_instance(result_df, pd.DataFrame)
+
+
+def test_vpndetection_auth_header(ti_lookup):
+    """Test VPNDetection sends a key only when one is configured."""
+    ti_provider = ti_lookup.loaded_providers["VPNDetection"]
+    _, req = ti_provider._substitute_parms("146.70.116.130", "ipv4")
+    check.equal(req["url"], "https://api.vpndetection.io/146.70.116.130")
+    check.is_not_in("Authorization", req["headers"])
+
+    ti_provider._request_params["AuthKey"] = "test-key"
+    try:
+        _, req = ti_provider._substitute_parms("2001:db8::1", "ipv6")
+    finally:
+        ti_provider._request_params["AuthKey"] = None
+    check.equal(req["headers"]["Authorization"], "Bearer test-key")
+
+
+def test_vpndetection_parse_results(ti_lookup):
+    """Test VPNDetection flags an anonymizer as a warning."""
+    ti_provider = ti_lookup.loaded_providers["VPNDetection"]
+    raw = _PROVIDER_RESPONSES["https://api.vpndetection.io"]["response"]
+    result, severity, details = ti_provider.parse_results({"Status": 200, "RawResult": raw})
+    check.is_true(result)
+    check.equal(severity, ResultSeverity.warning)
+    check.is_true(details["IsVPN"])
+    check.equal(details["ASN"], 9009)
+    check.equal(details["CountryOrRegion"], "AT")
+
+    clean = {**raw, "is_vpn": False}
+    _, severity, _ = ti_provider.parse_results({"Status": 200, "RawResult": clean})
+    check.equal(severity, ResultSeverity.information)
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
@@ -774,6 +807,26 @@ _PROVIDER_RESPONSES = {
             "link": "https://viz.greynoise.io/ip/51.91.185.74",
             "last_seen": "2021-03-18",
             "message": "Success",
+        },
+    },
+    "https://api.vpndetection.io": {
+        "ioc_param": "url",
+        "response": {
+            "ip": "146.70.116.130",
+            "is_bogon": False,
+            "is_vpn": True,
+            "is_relay": False,
+            "is_tor": False,
+            "relay": {},
+            "tor": {},
+            "location": {"country": "AT", "country_name": "Austria"},
+            "asn": {
+                "asn": 9009,
+                "name": "M247 Europe SRL",
+                "domain": "m247global.com",
+                "type": "hosting",
+                "prefix": "146.70.116.0/24",
+            },
         },
     },
     "https://www.ipqualityscore.com": {
