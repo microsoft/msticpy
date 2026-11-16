@@ -136,7 +136,7 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
             watchlist_url,
             headers=get_api_headers(self._token),
             params=params,
-            content=str(request_data),
+            json=request_data,
             timeout=get_http_timeout(),
         )
         if not response.is_success:
@@ -261,9 +261,9 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
                 copy=False,
             )
             if (current_df == item_series).all(axis=1).any() and overwrite:
-                watchlist_id: str = current_items[
-                    current_items.isin(list(new_item.values())).any(axis=1)
-                ]["properties.watchlistItemId"].iloc[0]
+                watchlist_id: str = current_items[(current_df == item_series).all(axis=1)][
+                    "properties.watchlistItemId"
+                ].iloc[0]
             # If not in watchlist already generate new ID
             elif not (current_df == item_series).all(axis=1).any():
                 watchlist_id = str(uuid4())
@@ -284,7 +284,7 @@ class SentinelWatchlistsMixin(SentinelUtilsMixin):
                 watchlist_url,
                 headers=get_api_headers(self._token),
                 params={"api-version": "2021-04-01"},
-                content=str({"properties": {"itemsKeyValue": item}}),
+                json={"properties": {"itemsKeyValue": new_item}},
                 timeout=get_http_timeout(),
             )
             if not response.is_success:
