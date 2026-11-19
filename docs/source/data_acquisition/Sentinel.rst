@@ -39,7 +39,7 @@ e.g.
     )
 
 Alternatively you can provide the Subscription ID, Resource Group name and Workspace name
-seperately and let the class build the resource ID for you.
+separately and let the class build the resource ID for you.
 Alternatively you can provide the Subscription ID, Resource Group name and Workspace name.
 e.g.
 
