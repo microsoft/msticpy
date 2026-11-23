@@ -71,6 +71,12 @@ TIProviders:
   ScanMalware:
     Primary: True
     Provider: "ScanMalware"
+  DarkEye:
+    Args:
+      HIBRAuthKey: "[PLACEHOLDER]"
+      BreachHouseAuthKey: "[PLACEHOLDER]"
+    Primary: True
+    Provider: "DarkEye"
   OpenPageRank:
     Args:
       AuthKey:

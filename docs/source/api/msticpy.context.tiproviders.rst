@@ -18,6 +18,7 @@ Submodules
    msticpy.context.tiproviders.binaryedge
    msticpy.context.tiproviders.crowdsec
    msticpy.context.tiproviders.cyberint
+   msticpy.context.tiproviders.darkeye
    msticpy.context.tiproviders.greynoise
    msticpy.context.tiproviders.ibm_xforce
    msticpy.context.tiproviders.intsights

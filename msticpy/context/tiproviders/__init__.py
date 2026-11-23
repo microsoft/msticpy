@@ -31,4 +31,5 @@ TI_PROVIDERS: dict[str, tuple[str, str]] = {
     "BinaryEdge": ("binaryedge", "BinaryEdge"),
     "Cyberint": ("cyberint", "Cyberint"),
     "ScanMalware": ("scanmalware", "ScanMalware"),
+    "DarkEye": ("darkeye", "DarkEye"),
 }

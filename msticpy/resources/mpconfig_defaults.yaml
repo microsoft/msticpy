@@ -104,6 +104,14 @@ TIProviders:
   ScanMalware:
     Primary: bool(default=True)
     Provider: "ScanMalware"
+  DarkEye:
+    Args:
+      # Each key is optional, but at least one is needed. A product without a key
+      # is not queried.
+      HIBRAuthKey: *cred_key_opt
+      BreachHouseAuthKey: *cred_key_opt
+    Primary: bool(default=False)
+    Provider: "DarkEye"
   RiskIQ:
     Primary: bool(default=True)
     Provider: "RiskIQ"
