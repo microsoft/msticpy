@@ -54,7 +54,15 @@ __author__ = "Florian Bracq"
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-_HTTP_PROVIDER_LEGAL_KWARGS: list[str] = ["timeout", "ApiID", "AuthKey", "Instance"]
+_HTTP_PROVIDER_LEGAL_KWARGS: list[str] = [
+    "timeout",
+    "ApiID",
+    "AuthKey",
+    "Instance",
+    # DarkEye has one optional key for each of its two products
+    "HIBRAuthKey",
+    "BreachHouseAuthKey",
+]
 
 
 class ProgressCounter:

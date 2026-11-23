@@ -33,6 +33,7 @@ Features
    -  **CrowdSec**
    -  **AbuseIPDB**
    -  **ScanMalware**
+   -  **DarkEye** (HaveIBeenRansom and Breach House)
 
 -  Other pseudo-TI providers are also included:
 
@@ -286,6 +287,12 @@ fictitious - the format of the keys may differ from what is shown
       ScanMalware:
         Primary: True
         Provider: "ScanMalware"
+      DarkEye:
+        Args:
+          HIBRAuthKey: 1234567890
+          BreachHouseAuthKey: 1234567890
+        Primary: True
+        Provider: "DarkEye"
 
 You need to tell `TILookup` to refresh its configuration.
 
@@ -307,7 +314,8 @@ of providers loaded.
   'AzSTI - Microsoft Sentinel TI provider class. (primary)',
   'CrowdSec - CrowdSec CTI Smoke Lookup. (primary)',
   'AbuseIPDB - AbuseIPDB Lookup. (primary)',
-  'ScanMalware - ScanMalware Lookup. (primary)']
+  'ScanMalware - ScanMalware Lookup. (primary)',
+  'DarkEye - DarkEye Lookup (HaveIBeenRansom and Breach House). (primary)']
 
 .. warning:: Depending on the type of account that you
   have with a provider, they will typically impose a limit

@@ -118,6 +118,7 @@ Currently supported provider names are:
 - CrowdSec
 - AbuseIPDB
 - ScanMalware
+- DarkEye
 
 .. code:: yaml
 
@@ -152,6 +153,16 @@ Currently supported provider names are:
       ScanMalware:
         Primary: True
         Provider: "ScanMalware"
+      DarkEye:
+        Args:
+          HIBRAuthKey: 1234567890
+          BreachHouseAuthKey: 1234567890
+        Primary: True
+        Provider: "DarkEye"
+
+.. note:: DarkEye covers two products: HaveIBeenRansom (``HIBRAuthKey``)
+   and Breach House (``BreachHouseAuthKey``). Each key is optional but at
+   least one is required. Only the products that have a key are queried.
 
 .. note:: You store values in the ``Args`` section as simple strings,
    as names of environment variables containing the value, or
