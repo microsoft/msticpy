@@ -91,6 +91,30 @@ def test_hashes(ioc_extract):
     _run_extract(ioc_extract, "sha256_hash", {"sha256_hash": 3})
 
 
+_ADJ_HASHES = {
+    "md5_hash": ["00236a2ae558018ed13b5222ef1bd98" + str(i) for i in range(3)],
+    "sha1_hash": ["00236a2ae558018ed13b5222ef1bd9870000000" + str(i) for i in range(3)],
+    "sha256_hash": [
+        "00236a2ae558018ed13b5222ef1bd9870000000142424678904242467890123" + str(i)
+        for i in range(3)
+    ],
+}
+
+
+@pytest.mark.parametrize("sep", [" ", ",", ", "], ids=["space", "comma", "comma_sp"])
+@pytest.mark.parametrize("ioc_type", list(_ADJ_HASHES))
+def test_adjacent_hashes(ioc_extract, ioc_type, sep):
+    """Test hashes separated by a single character are all extracted."""
+    hashes = _ADJ_HASHES[ioc_type]
+    src = f"hashes: {sep.join(hashes)}"
+    results = ioc_extract.extract(src, ioc_types=[ioc_type])
+    check.equal(results[ioc_type], set(hashes))
+
+    data = pd.DataFrame({"input": [src]})
+    df_results = ioc_extract.extract(data=data, columns=["input"], ioc_types=[ioc_type])
+    check.equal(set(df_results["Observable"]), set(hashes))
+
+
 def test_dns(ioc_extract):
     _run_extract(ioc_extract, "domain1", {"dns": 1})
     _run_extract(ioc_extract, "domain_neg", {"dns": 0})

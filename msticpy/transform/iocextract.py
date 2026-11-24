@@ -182,9 +182,9 @@ class IoCExtract:
             (?P<folder>/(?:[^\\/:*?<>|\r\n]+/)*)
             (?P<file>[^/\0<>|\r\n ]+)
     """
-    MD5_REGEX = r"(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{32})(?:$|[^A-Fa-f0-9])"
-    SHA1_REGEX = r"(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{40})(?:$|[^A-Fa-f0-9])"
-    SHA256_REGEX = r"(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{64})(?:$|[^A-Fa-f0-9])"
+    MD5_REGEX = r"(?<![A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{32})(?![A-Fa-f0-9])"
+    SHA1_REGEX = r"(?<![A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{40})(?![A-Fa-f0-9])"
+    SHA256_REGEX = r"(?<![A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{64})(?![A-Fa-f0-9])"
 
     _content_regex: dict[str, IoCPattern] = {}
     _content_df_regex: dict[str, IoCPattern] = {}
