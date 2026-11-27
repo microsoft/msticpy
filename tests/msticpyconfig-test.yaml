@@ -71,6 +71,9 @@ TIProviders:
   ScanMalware:
     Primary: True
     Provider: "ScanMalware"
+  NetAPI:
+    Primary: True
+    Provider: "NetAPI"
   OpenPageRank:
     Args:
       AuthKey:

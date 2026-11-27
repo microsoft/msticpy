@@ -43,6 +43,9 @@ TIProviders:
   ScanMalware:
     Primary: True
     Provider: "ScanMalware"
+  NetAPI:
+    Primary: True
+    Provider: "NetAPI"
   AzureSentinel:
     Args:
       WorkspaceID: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
