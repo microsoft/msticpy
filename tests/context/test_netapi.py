@@ -27,31 +27,31 @@ __author__ = "Slava Olesik"
 
 pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
-# Answers of the live API on 2026-10-26, trimmed to the fields the provider reads.
+# Answers of the live API on 2026-11-27 (rank: 2026-10-26), trimmed to the fields the provider reads.
 _LISTED_NOW: dict[str, Any] = {
-    "value": "www.000359.xyz",
+    "value": "www.govsafebreakthrough.com",
     "type": "domain",
     "listed_now": True,
     "listed_ever": True,
-    "matched_value": "000359.xyz",
-    "first_seen": "2023-02-25",
-    "last_seen": "2026-10-26 01:05:27 UTC",
-    "block_reason": "blackbook",
+    "matched_value": "govsafebreakthrough.com",
+    "first_seen": "2025-03-18",
+    "last_seen": "2026-11-26 16:01:31 UTC",
+    "block_reason": "NetAPI: sinkholed malware domain",
     "registrar": {
-        "id": 1599,
-        "name": "Alibaba Cloud Computing Ltd.",
-        "brand_name": "Alibaba Cloud",
+        "id": 292,
+        "name": "MarkMonitor Inc.",
+        "brand_name": "MarkMonitor",
     },
 }
 _LISTED_PAST: dict[str, Any] = {
-    "value": "1.1.1.1",
+    "value": "190.196.253.71",
     "type": "ip",
     "listed_now": False,
     "listed_ever": True,
-    "matched_value": "1.1.1.1",
-    "first_seen": "2026-06-14",
-    "last_seen": "2026-06-17 01:05:02 UTC",
-    "block_reason": "urlhaus.abuse.ch",
+    "matched_value": "190.196.253.71",
+    "first_seen": "2026-11-09",
+    "last_seen": "2026-11-09 14:23:38 UTC",
+    "block_reason": "NetAPI network sensors: infection attempt",
     "registrar": None,
 }
 _NOT_LISTED: dict[str, Any] = {
@@ -123,17 +123,17 @@ def _lookup(
 
 
 def test_current_listing_is_high_severity():
-    """A host reported within the last 24 hours is a current listing."""
-    row, client = _lookup(_LISTED_NOW, "www.000359.xyz", "hostname")
+    """A host listed within the last 48 hours is a current listing."""
+    row, client = _lookup(_LISTED_NOW, "www.govsafebreakthrough.com", "hostname")
 
     check.is_true(row["Result"])
     check.equal(row["Severity"], ResultSeverity.high.name)
-    check.equal(row["Details"]["Matched Value"], "000359.xyz")
-    check.equal(row["Details"]["Reported By"], "blackbook")
-    check.equal(row["Details"]["Registrar"], "Alibaba Cloud")
+    check.equal(row["Details"]["Matched Value"], "govsafebreakthrough.com")
+    check.equal(row["Details"]["Reported By"], "NetAPI: sinkholed malware domain")
+    check.equal(row["Details"]["Registrar"], "MarkMonitor")
     check.equal(
         client.requests[0]["params"],
-        {"method": "compromised-check", "value": "www.000359.xyz"},
+        {"method": "compromised-check", "value": "www.govsafebreakthrough.com"},
     )
     check.equal(client.requests[0]["url"], "https://netapi.com/api-json/")
 
@@ -145,12 +145,12 @@ def test_past_listing_is_reported_but_not_rated():
     It is a hit with its dates, but it must not carry the severity of a
     current listing.
     """
-    row, _ = _lookup(_LISTED_PAST, "1.1.1.1", "ipv4")
+    row, _ = _lookup(_LISTED_PAST, "190.196.253.71", "ipv4")
 
     check.is_true(row["Result"])
     check.equal(row["Severity"], ResultSeverity.information.name)
     check.is_false(row["Details"]["Listed Now"])
-    check.equal(row["Details"]["Last Seen"], "2026-06-17 01:05:02 UTC")
+    check.equal(row["Details"]["Last Seen"], "2026-11-09 14:23:38 UTC")
 
 
 def test_never_listed_is_a_negative_result():
@@ -164,10 +164,10 @@ def test_never_listed_is_a_negative_result():
 
 def test_url_is_sent_to_the_compromised_check():
     """The API reduces a URL to its host itself."""
-    _, client = _lookup(_LISTED_NOW, "https://www.000359.xyz/login", "url")
+    _, client = _lookup(_LISTED_NOW, "https://www.govsafebreakthrough.com/login", "url")
 
     check.equal(client.requests[0]["params"]["method"], "compromised-check")
-    check.is_in("000359.xyz", client.requests[0]["params"]["value"])
+    check.is_in("govsafebreakthrough.com", client.requests[0]["params"]["value"])
 
 
 @pytest.mark.parametrize("ioc_type", ["dns", "hostname"])

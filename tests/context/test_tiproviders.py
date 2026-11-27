@@ -709,7 +709,7 @@ _PROVIDER_RESPONSES = {
             "matched_value": "badplace.net",
             "first_seen": "2026-09-01",
             "last_seen": "2026-10-26 01:05:27 UTC",
-            "block_reason": "urlhaus.abuse.ch",
+            "block_reason": "hole.cert.pl",
             "registrar": None,
         },
     },
